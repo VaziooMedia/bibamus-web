@@ -12,10 +12,11 @@ export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn,
   const [confirmReset, setConfirmReset] = useState(false);
   const [cleanupMessage, setCleanupMessage] = useState(null);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
-  const stats = venue.stats;
-  const moneyEuro = stats.moneySpent.euro || 0;
-  const moneyJeton = stats.moneySpent.jeton || 0;
-  const drinkEntries = Object.entries(stats.personalDrinksByType).filter(([, n]) => n > 0);
+  const stats = venue.stats || {};
+  const moneySpent = stats.moneySpent || {};
+  const moneyEuro = moneySpent.euro || 0;
+  const moneyJeton = moneySpent.jeton || 0;
+  const drinkEntries = Object.entries(stats.personalDrinksByType || {}).filter(([, n]) => n > 0);
   const address = formatAddress(venue);
   const likes = venue.likes || [];
   const iLike = likes.includes(myBibroCode);
@@ -166,11 +167,11 @@ export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn,
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
           <div>
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>VISITES</div>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{stats.visits}</div>
+            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{stats.visits || 0}</div>
           </div>
           <div>
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>BOISSONS COMMANDÉES</div>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{stats.drinksOrdered}</div>
+            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{stats.drinksOrdered || 0}</div>
           </div>
         </div>
         {(moneyEuro > 0 || moneyJeton > 0) && (
