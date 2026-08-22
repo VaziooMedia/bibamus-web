@@ -27,6 +27,7 @@ import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
+import { ImportDataScreen } from "./components/ImportDataScreen.jsx";
 import { BibrosListScreen, BibroDetailScreen, AddBibroScreen, AdminUnlockScreen } from "./components/BibrosScreens.jsx";
 import {
   loadPublicVenues,
@@ -922,7 +923,20 @@ export default function App() {
                 }}
               />
             )}
-            {screen === "settings" && <SettingsScreen onBack={() => setScreen("home")} />}
+            {screen === "settings" && (
+              <SettingsScreen onBack={() => setScreen("home")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} />
+            )}
+            {screen === "importData" && (
+              <ImportDataScreen
+                onBack={async () => {
+                  setVenues(await loadPublicVenues());
+                  setDrinksDirectory(await loadDrinksDirectory());
+                  setBreweriesDirectory(await loadBreweriesDirectory());
+                  setBrandsDirectory(await loadBrandsDirectory());
+                  setScreen("settings");
+                }}
+              />
+            )}
             {screen === "eventHistory" && (
               <EventHistoryScreen
                 myName={profile.name}
@@ -1126,7 +1140,7 @@ export default function App() {
                 description="Cette fonctionnalité arrive dans un prochain bloc de la migration."
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newEvent", "newSalonEvent", "joinSalon", "eventDashboard", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "editDrink", "editVenue", "breweryDetail", "brandDetail"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newEvent", "newSalonEvent", "joinSalon", "eventDashboard", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

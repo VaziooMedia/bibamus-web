@@ -3,7 +3,7 @@
 // quel depuis le prototype Claude.
 // ============================================================
 import React, { useState } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, AVATAR_EMOJIS, COUNTRIES, LANGUAGES, CITIES_BY_COUNTRY } from "../constants.js";
 import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";

@@ -4,7 +4,7 @@
 // fusion de doublons, création à la volée).
 // ============================================================
 import React, { useState } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton } from "./ui.jsx";
 import { normalizeForSearch } from "../utils.js";

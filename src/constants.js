@@ -576,3 +576,10 @@ export const DRINK_FIELD_LABELS = {
 export const MONTH_NAMES_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
 export const ADMIN_PASSPHRASE = "bibamus-admin"; // Mehdi: change this string any time you want a new passphrase.
+
+export const AVATAR_EMOJIS = ["👤", "🍺", "🍷", "🥂", "🍸", "🥃", "🍾", "🎉", "🎊", "🌙", "⭐", "🔥"];
+export const LANGUAGES = [{ code: "fr", label: "Français" }];
+
+export const BREWERY_FIELD_LABELS = { name: "Nom", country: "Pays d'origine" };
+export const BRAND_FIELD_LABELS = { name: "Nom" };
+export const WEEKDAY_SHORT_MON_FIRST = ["L", "M", "M", "J", "V", "S", "D"];

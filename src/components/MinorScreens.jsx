@@ -8,7 +8,7 @@ import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, Pri
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { formatDate } from "../utils.js";
 
-export function SettingsScreen({ onBack }) {
+export function SettingsScreen({ onBack, isAdmin, goToImport }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -24,6 +24,23 @@ export function SettingsScreen({ onBack }) {
           <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px" }}>🔒 Politique de confidentialité</div>
           <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>À rédiger.</div>
         </div>
+        {isAdmin && (
+          <button
+            onClick={goToImport}
+            style={{
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.amber}`,
+              borderRadius: "12px",
+              padding: "14px 16px",
+              textAlign: "left",
+              cursor: "pointer",
+              color: COLORS.ink,
+            }}
+          >
+            <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px" }}>⬆️ Importer des données</div>
+            <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Charger un export JSON depuis l'artefact Claude (admin uniquement)</div>
+          </button>
+        )}
       </div>
       <PageFooterNav onBack={onBack} />
     </div>

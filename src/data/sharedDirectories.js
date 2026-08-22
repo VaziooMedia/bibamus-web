@@ -140,6 +140,15 @@ function rowToDrink(row) {
     averageJetonValue: row.average_jeton_value,
     avatarEmoji: row.avatar_emoji,
     submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
+    description: row.description,
+    snackType: row.snack_type,
+    weightG: row.weight_g,
+    countsAsDrinkId: row.counts_as_drink_id,
+    ratings: row.ratings || {},
+    ratingDates: row.rating_dates || {},
+    ratedServingModes: row.rated_serving_modes || {},
+    pendingEdit: row.pending_edit || null,
   };
 }
 
@@ -163,6 +172,15 @@ function drinkToRow(d, partial = false) {
     average_jeton_value: d.averageJetonValue,
     avatar_emoji: d.avatarEmoji,
     submitted_by: d.submittedBy,
+    submitted_at: d.submittedAt ? new Date(d.submittedAt).toISOString() : undefined,
+    description: d.description,
+    snack_type: d.snackType,
+    weight_g: d.weightG,
+    counts_as_drink_id: d.countsAsDrinkId,
+    ratings: d.ratings,
+    rating_dates: d.ratingDates,
+    rated_serving_modes: d.ratedServingModes,
+    pending_edit: d.pendingEdit,
   };
   if (!partial) row.id = d.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
@@ -200,11 +218,26 @@ export async function deleteBrewery(id) {
 }
 
 function rowToBrewery(row) {
-  return { id: row.id, name: row.name, country: row.country, status: row.status, submittedBy: row.submitted_by };
+  return {
+    id: row.id,
+    name: row.name,
+    country: row.country,
+    status: row.status,
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
+    pendingEdit: row.pending_edit || null,
+  };
 }
 
 function breweryToRow(b, partial = false) {
-  const row = { name: b.name, country: b.country, status: b.status, submitted_by: b.submittedBy };
+  const row = {
+    name: b.name,
+    country: b.country,
+    status: b.status,
+    submitted_by: b.submittedBy,
+    submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
+    pending_edit: b.pendingEdit,
+  };
   if (!partial) row.id = b.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
@@ -241,11 +274,24 @@ export async function deleteBrand(id) {
 }
 
 function rowToBrand(row) {
-  return { id: row.id, name: row.name, status: row.status, submittedBy: row.submitted_by };
+  return {
+    id: row.id,
+    name: row.name,
+    status: row.status,
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
+    pendingEdit: row.pending_edit || null,
+  };
 }
 
 function brandToRow(b, partial = false) {
-  const row = { name: b.name, status: b.status, submitted_by: b.submittedBy };
+  const row = {
+    name: b.name,
+    status: b.status,
+    submitted_by: b.submittedBy,
+    submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
+    pending_edit: b.pendingEdit,
+  };
   if (!partial) row.id = b.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;

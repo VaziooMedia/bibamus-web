@@ -3,7 +3,7 @@
 // — copiées telles quelles depuis le prototype Claude.
 // ============================================================
 import React, { useState } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS } from "../constants.js";
 import { VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";

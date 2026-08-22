@@ -4,7 +4,7 @@
 // de statistique. Copiés tels quels depuis le prototype Claude.
 // ============================================================
 import React, { useState } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, WEEKDAY_SHORT_MON_FIRST } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, computeCurrentStreak, computeLongestAlcoholFreeStreak } from "../utils.js";
 
