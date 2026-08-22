@@ -48,7 +48,7 @@ import {
   deletePublicVenue,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId } from "./utils.js";
 import { ADMIN_PASSPHRASE } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -131,7 +131,18 @@ export default function App() {
 
   const startNewRound = () => {
     const selfEntry = { id: "self", name: profile.name, isSelf: true, code: profile.myBibroCode };
-    setDraftFriends([selfEntry]);
+    const rounds = currentEvent?.rounds || [];
+    const lastRound = rounds.length > 0 ? rounds[rounds.length - 1] : null;
+    const lastOthers = lastRound ? lastRound.friends.filter((f) => !f.isSelf).map((f) => ({ id: nextId(), name: f.name, code: f.code || null })) : [];
+
+    // Also pre-fill with any known participants not already covered by self/last round — easier
+    // to remove someone skipping this particular round than to re-add everyone who's actually there.
+    const alreadyNamed = new Set([(profile.name || "").toLowerCase(), ...lastOthers.map((f) => f.name.toLowerCase())]);
+    const knownExtras = (currentEvent?.knownFriends || [])
+      .filter((n) => !alreadyNamed.has((n || "").toLowerCase()))
+      .map((n) => ({ id: nextId(), name: n, code: null }));
+
+    setDraftFriends([selfEntry, ...lastOthers, ...knownExtras]);
     setDraftOrders([]);
     setActiveFriendId("self");
     setScreen("roundCompose");
@@ -693,9 +704,13 @@ export default function App() {
                 mode={screen === "newSalonEvent" ? "salon" : "solo"}
                 onCreate={createEvent}
                 onCancel={() => setScreen("sessionHub")}
-                venues={[]}
+                venues={venues.filter((v) => favoriteVenueIds.includes(v.id))}
                 publicVenues={venues}
-                onResolvePublicVenue={(id) => venues.find((v) => v.id === id)}
+                onResolvePublicVenue={(publicVenueOrDraft) =>
+                  publicVenueOrDraft && publicVenueOrDraft.id
+                    ? venues.find((v) => v.id === publicVenueOrDraft.id) || publicVenueOrDraft
+                    : publicVenueOrDraft
+                }
                 bibros={bibros}
               />
             )}
