@@ -67,7 +67,27 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "26px", letterSpacing: "4px" }}>{myBibroCode || "…"}</div>
           <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px" }}>Partage-le à un ami pour qu'il t'ajoute comme Bibax.</p>
         </div>
-        {myBibroCode && <QRCodeSVG value={myBibroCode} size={72} color={COLORS.paper} background={COLORS.ink} />}
+        {myBibroCode && (
+          <div style={{ position: "relative", opacity: 0.4, flexShrink: 0 }}>
+            <QRCodeSVG value={myBibroCode} size={72} color={COLORS.paper} background={COLORS.ink} />
+            <span
+              style={{
+                position: "absolute",
+                top: "-6px",
+                right: "-6px",
+                fontSize: "8px",
+                fontWeight: 700,
+                letterSpacing: "0.3px",
+                color: COLORS.redFluo,
+                background: COLORS.paperAlt,
+                borderRadius: "999px",
+                padding: "2px 6px",
+              }}
+            >
+              Soon
+            </span>
+          </div>
+        )}
       </div>
 
       <PrimaryButton onClick={goToAddBibro} style={{ width: "100%", marginBottom: "14px" }}>
