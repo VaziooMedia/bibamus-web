@@ -124,7 +124,21 @@ export default function App() {
   React.useEffect(() => {
     if (!currentEvent || !currentEvent.salonCode) return;
     const unsubscribe = subscribeToSalon(currentEvent.salonCode, (updatedData) => {
-      setEvents((prev) => prev.map((e) => (e.id === currentEvent.id ? normalizeEvent({ ...e, ...updatedData }) : e)));
+      setEvents((prev) =>
+        prev.map((e) => {
+          if (e.id !== currentEvent.id) return e;
+          // Fusionne les participants par union plutôt que d'écraser — une mise à jour arrivée
+          // dans le mauvais ordre (course entre deux appareils qui rejoignent en même temps) ne
+          // peut alors plus faire "disparaître" quelqu'un qui vient vraiment de rejoindre.
+          const merged = { ...e, ...updatedData };
+          const byCode = new Map();
+          [...(e.participants || []), ...(updatedData.participants || [])].forEach((p) => {
+            if (p && p.code) byCode.set(p.code, { ...byCode.get(p.code), ...p });
+          });
+          merged.participants = Array.from(byCode.values());
+          return normalizeEvent(merged);
+        })
+      );
     });
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,12 +152,20 @@ export default function App() {
 
     // Also pre-fill with any known participants not already covered by self/last round — easier
     // to remove someone skipping this particular round than to re-add everyone who's actually there.
+    // Two sources of "known people": friends typed in manually at creation (knownFriends, names
+    // only) and Bibax who joined the shared salon via its code (event.participants, with codes).
     const alreadyNamed = new Set([(profile.name || "").toLowerCase(), ...lastOthers.map((f) => f.name.toLowerCase())]);
+    const alreadyCoded = new Set([profile.myBibroCode, ...lastOthers.map((f) => f.code).filter(Boolean)]);
+
     const knownExtras = (currentEvent?.knownFriends || [])
       .filter((n) => !alreadyNamed.has((n || "").toLowerCase()))
       .map((n) => ({ id: nextId(), name: n, code: null }));
 
-    setDraftFriends([selfEntry, ...lastOthers, ...knownExtras]);
+    const salonExtras = (currentEvent?.participants || [])
+      .filter((p) => !alreadyCoded.has(p.code) && !alreadyNamed.has((p.name || "").toLowerCase()))
+      .map((p) => ({ id: nextId(), name: p.name, code: p.code || null }));
+
+    setDraftFriends([selfEntry, ...lastOthers, ...knownExtras, ...salonExtras]);
     setDraftOrders([]);
     setActiveFriendId("self");
     setScreen("roundCompose");
@@ -237,7 +259,18 @@ export default function App() {
       prev.map((e) => {
         if (e.id !== id) return e;
         const updated = updater(e);
-        if (updated.salonCode) saveSalon(updated.salonCode, updated);
+        if (updated.salonCode) {
+          // Avant d'écrire, on fusionne avec le dernier état serveur connu — évite qu'une
+          // écriture locale légèrement en retard n'efface quelqu'un qui vient de rejoindre le
+          // salon sur un autre appareil au même moment.
+          loadSalon(updated.salonCode).then((latest) => {
+            const byCode = new Map();
+            [...((latest && latest.participants) || []), ...(updated.participants || [])].forEach((p) => {
+              if (p && p.code) byCode.set(p.code, { ...byCode.get(p.code), ...p });
+            });
+            saveSalon(updated.salonCode, { ...updated, participants: Array.from(byCode.values()) });
+          });
+        }
         return updated;
       })
     );
