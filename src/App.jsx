@@ -887,6 +887,7 @@ export default function App() {
                 goToProducts={() => setScreen("myProducts")}
                 goToVenues={() => setScreen("venueDirectory")}
                 goToHistory={() => setScreen("eventHistory")}
+                goToSettings={() => setScreen("settings")}
               />
             )}
             {screen === "myInfo" && (
