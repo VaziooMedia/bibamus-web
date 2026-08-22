@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Bibamus</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800;900&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
@@ -46,6 +46,13 @@
       select option {
         background: #16273D;
         color: #F2F2E8;
+      }
+      /* Empêche iOS Safari de zoomer automatiquement à la mise au point d'un champ —
+         ça ne se déclenche que si la taille de police est inférieure à 16px. */
+      @media (max-width: 480px) {
+        input, select, textarea {
+          font-size: 16px !important;
+        }
       }
     </style>
   </head>
