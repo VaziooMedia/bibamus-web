@@ -661,7 +661,7 @@ export default function App() {
           color: "#F2F2E8",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
           <BibamusLogoFull height={38} />
           <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: "#FF3B4E", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "2px 7px", letterSpacing: "0.5px" }}>
             Test
