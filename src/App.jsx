@@ -47,7 +47,7 @@ import {
   deleteDrink,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
-import { randomCode, computeDrinkDiff, todayISO } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent } from "./utils.js";
 import { ADMIN_PASSPHRASE } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -83,7 +83,7 @@ export default function App() {
     if (!loaded.myBibroCode) loaded.myBibroCode = randomCode(5);
     return loaded;
   });
-  const [events, setEvents] = useState(() => loadLocal("bibamus-events", []));
+  const [events, setEvents] = useState(() => loadLocal("bibamus-events", []).map(normalizeEvent));
   const [bibros, setBibros] = useState(() => loadLocal("bibamus-bibros", []));
   const [bibroStatuses] = useState({});
 
@@ -122,7 +122,7 @@ export default function App() {
   React.useEffect(() => {
     if (!currentEvent || !currentEvent.salonCode) return;
     const unsubscribe = subscribeToSalon(currentEvent.salonCode, (updatedData) => {
-      setEvents((prev) => prev.map((e) => (e.id === currentEvent.id ? { ...e, ...updatedData } : e)));
+      setEvents((prev) => prev.map((e) => (e.id === currentEvent.id ? normalizeEvent({ ...e, ...updatedData }) : e)));
     });
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -192,7 +192,7 @@ export default function App() {
       await createSalon(code, newEvent);
     }
 
-    setEvents((prev) => [...prev, newEvent]);
+    setEvents((prev) => [...prev, normalizeEvent(newEvent)]);
     setActiveEventId(newEvent.id);
     setScreen("eventDashboard");
   };
@@ -202,8 +202,9 @@ export default function App() {
     if (!salonData) {
       throw new Error("Salon introuvable — vérifie le code.");
     }
-    setEvents((prev) => (prev.some((e) => e.salonCode === code) ? prev : [...prev, salonData]));
-    setActiveEventId(salonData.id);
+    const normalized = normalizeEvent(salonData);
+    setEvents((prev) => (prev.some((e) => e.salonCode === code) ? prev : [...prev, normalized]));
+    setActiveEventId(normalized.id);
     setScreen("eventDashboard");
   };
 

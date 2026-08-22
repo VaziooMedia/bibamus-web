@@ -370,3 +370,26 @@ export const computeDrinkDiff = (original, submitted) => {
   });
   return diff;
 };
+
+// Garantit qu'un événement a toujours tous les champs attendus, même si l'objet vient d'une
+// ancienne sauvegarde (stockage local, ou salon Supabase) créée avant que ces champs existent —
+// évite un plantage à l'affichage plutôt que de devoir corriger chaque lecture individuellement.
+export const normalizeEvent = (e) => ({
+  ...e,
+  menu: e.menu || [],
+  rounds: e.rounds || [],
+  knownFriends: e.knownFriends || [],
+  personalOrders: e.personalOrders || [],
+  ticketPurchases: e.ticketPurchases || [],
+  participants: e.participants || [],
+  bibaBob: e.bibaBob || {},
+  pot: e.pot || null,
+  splitParticipants: e.splitParticipants || null,
+  finalTotal: e.finalTotal != null ? e.finalTotal : null,
+  tip: e.tip || 0,
+  jetonUnitValue: e.jetonUnitValue || 0,
+  closed: !!e.closed,
+  paused: !!e.paused,
+  isHome: !!e.isHome,
+  salonCode: e.salonCode || null,
+});
