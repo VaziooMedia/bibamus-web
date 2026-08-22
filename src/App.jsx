@@ -219,8 +219,14 @@ export default function App() {
       throw new Error("Salon introuvable — vérifie le code.");
     }
     const normalized = normalizeEvent(salonData);
-    setEvents((prev) => (prev.some((e) => e.salonCode === code) ? prev : [...prev, normalized]));
-    setActiveEventId(normalized.id);
+    const participants = normalized.participants || [];
+    const alreadyIn = participants.some((p) => p.code === profile.myBibroCode);
+    const withMe = alreadyIn
+      ? normalized
+      : { ...normalized, participants: [...participants, { code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }] };
+    if (!alreadyIn) await saveSalon(code, withMe);
+    setEvents((prev) => (prev.some((e) => e.salonCode === code) ? prev : [...prev, withMe]));
+    setActiveEventId(withMe.id);
     setScreen("eventDashboard");
   };
 
@@ -718,7 +724,17 @@ export default function App() {
             justifyContent: "center",
           }}
         >
-          <div style={{ width: "100%", maxWidth: "480px", minHeight: "100vh", display: "flex", flexDirection: "column", paddingBottom: "calc(76px + env(safe-area-inset-bottom, 0px))" }}>
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "480px",
+              minHeight: "100vh",
+              display: "flex",
+              flexDirection: "column",
+              paddingTop: "env(safe-area-inset-top, 0px)",
+              paddingBottom: "calc(76px + env(safe-area-inset-bottom, 0px))",
+            }}
+          >
             {screen === "home" && (
               <HomeScreen
                 events={events}
@@ -819,7 +835,10 @@ export default function App() {
                 myBibroCode={profile.myBibroCode}
                 bibros={bibros}
                 onAdjustVenuePersonalDrink={adjustVenuePersonalDrink}
-                onCloseEvent={() => setScreen("home")}
+                onCloseEvent={() => {
+                  updateEvent(activeEventId, (e) => ({ ...e, closed: true, closedAt: Date.now() }));
+                  setScreen("home");
+                }}
                 onOpenSettings={() => setScreen("eventSettings")}
                 onDeleteRound={(roundId) => deleteRound(activeEventId, roundId)}
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
