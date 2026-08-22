@@ -259,18 +259,7 @@ export default function App() {
       prev.map((e) => {
         if (e.id !== id) return e;
         const updated = updater(e);
-        if (updated.salonCode) {
-          // Avant d'écrire, on fusionne avec le dernier état serveur connu — évite qu'une
-          // écriture locale légèrement en retard n'efface quelqu'un qui vient de rejoindre le
-          // salon sur un autre appareil au même moment.
-          loadSalon(updated.salonCode).then((latest) => {
-            const byCode = new Map();
-            [...((latest && latest.participants) || []), ...(updated.participants || [])].forEach((p) => {
-              if (p && p.code) byCode.set(p.code, { ...byCode.get(p.code), ...p });
-            });
-            saveSalon(updated.salonCode, { ...updated, participants: Array.from(byCode.values()) });
-          });
-        }
+        if (updated.salonCode) saveSalon(updated.salonCode, updated);
         return updated;
       })
     );

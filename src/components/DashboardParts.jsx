@@ -235,6 +235,33 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
   const salonCode = event.salonCode;
   const participants = event.participants || [];
 
+  // Filet de sécurité : en plus de la synchronisation en temps réel (gérée au niveau de
+  // App.jsx), on revérifie ici périodiquement auprès du serveur — et on fusionne par union
+  // plutôt que d'écraser, pour ne jamais faire "disparaître" quelqu'un par erreur de timing.
+  React.useEffect(() => {
+    if (!salonCode) return;
+    const refresh = async () => {
+      try {
+        const latest = await loadSalon(salonCode);
+        if (!latest) return;
+        const latestParticipants = latest.participants || [];
+        const byCode = new Map();
+        [...participants, ...latestParticipants].forEach((p) => {
+          if (p && p.code) byCode.set(p.code, { ...byCode.get(p.code), ...p });
+        });
+        const merged = Array.from(byCode.values());
+        if (merged.length !== participants.length) {
+          updateEvent(event.id, (e) => ({ ...e, participants: merged }));
+        }
+      } catch (e) {
+        // silent fail on background refresh
+      }
+    };
+    const interval = setInterval(refresh, 5000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [salonCode, participants.length]);
+
   const createSalon = async () => {
     setLoading(true);
     setError("");
