@@ -8,6 +8,7 @@ import React, { useState, useEffect } from "react";
 import { NavigationContext, ProfileNavContext } from "./contexts.js";
 import { BottomNav } from "./components/ui.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
+import { BibamusLogoFull } from "./components/icons.jsx";
 import { SessionHubScreen, RepertoireHubScreen, ComingSoonScreen } from "./components/HubScreens.jsx";
 import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
 import { EventDashboardScreen } from "./components/EventDashboardScreen.jsx";
@@ -660,10 +661,12 @@ export default function App() {
           color: "#F2F2E8",
         }}
       >
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", marginBottom: "8px", textAlign: "center" }}>
-          <span style={{ color: "#F2F2E8" }}>Biba</span>
-          <span style={{ color: "#39FF66" }}>mus</span>
-        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+          <BibamusLogoFull height={38} />
+          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: "#FF3B4E", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "2px 7px", letterSpacing: "0.5px" }}>
+            Test
+          </span>
+        </div>
         <p style={{ fontSize: "14px", color: "#8792A6", marginBottom: "24px", textAlign: "center" }}>Comment veux-tu que tes Bibax te voient ?</p>
         <form
           onSubmit={(e) => {

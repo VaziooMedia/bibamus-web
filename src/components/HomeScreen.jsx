@@ -90,8 +90,11 @@ export function HomeScreen({
   return (
     <div style={{ padding: "20px 20px 28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-        <div style={{ height: "76px", display: "flex", alignItems: "center", marginTop: "-16px" }}>
+        <div style={{ height: "76px", display: "flex", alignItems: "center", gap: "8px", marginTop: "-16px" }}>
           <BibamusLogoFull height={38} />
+          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "11px", color: COLORS.redFluo, border: `2px solid ${COLORS.redFluo}`, borderRadius: "6px", padding: "1px 6px", letterSpacing: "0.5px" }}>
+            Test
+          </span>
         </div>
         <button
           onClick={goToProfile}
