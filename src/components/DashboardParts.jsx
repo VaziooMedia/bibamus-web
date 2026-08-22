@@ -234,6 +234,7 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
 
   const salonCode = event.salonCode;
   const participants = event.participants || [];
+  console.log("[DIAGNOSTIC] SalonSection render — participants:", JSON.stringify(participants), "event.id:", event.id);
 
   // Filet de sécurité : en plus de la synchronisation en temps réel (gérée au niveau de
   // App.jsx), on revérifie ici périodiquement auprès du serveur — et on fusionne par union

@@ -118,6 +118,7 @@ export default function App() {
   const [activeFriendId, setActiveFriendId] = useState(null);
 
   const currentEvent = events.find((e) => e.id === activeEventId) || null;
+  console.log("[DIAGNOSTIC] App render — currentEvent.participants:", JSON.stringify(currentEvent?.participants), "screen:", screen);
 
   // Synchronisation en direct : dès qu'un autre Bibax modifie ce salon (nouvelle tournée, quelqu'un
   // qui rejoint...), on le voit apparaître ici automatiquement, sans devoir rafraîchir.
