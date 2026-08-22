@@ -226,7 +226,6 @@ export function PotCard({ event, updateEvent, myName }) {
 }
 
 export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }) {
-  const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mode, setMode] = useState(null); // null | 'join'
@@ -234,39 +233,16 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
   const [confirmLeave, setConfirmLeave] = useState(false);
 
   const salonCode = event.salonCode;
-
-  const refresh = async (code) => {
-    try {
-      const r = await loadSalon(code);
-      if (r) setRoom(r);
-    } catch (e) {
-      // silent fail on background refresh
-    }
-  };
-
-  React.useEffect(() => {
-    if (!salonCode) return;
-    refresh(salonCode);
-    const interval = setInterval(() => refresh(salonCode), 5000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [salonCode]);
+  const participants = event.participants || [];
 
   const createSalon = async () => {
     setLoading(true);
     setError("");
     try {
       const code = await generateRoomCode();
-      const newRoom = {
-        code,
-        participants: [{ code: myBibroCode, name: myName, joinedAt: Date.now() }],
-        roundLog: [],
-        pot: { contributions: (event.pot && event.pot.contributions) || [] },
-        config: { name: event.name, date: event.date, currency: event.currency, jetonUnitValue: event.jetonUnitValue, menu: event.menu, mode: event.mode },
-      };
-      await saveSalon(code, newRoom);
-      updateEvent(event.id, (e) => ({ ...e, salonCode: code, mySalonName: myName, myParticipantCode: myBibroCode }));
-      setRoom(newRoom);
+      const updated = { ...event, salonCode: code, participants: [{ code: myBibroCode, name: myName, joinedAt: Date.now() }] };
+      await saveSalon(code, updated);
+      updateEvent(event.id, (e) => ({ ...e, salonCode: code, participants: updated.participants }));
     } catch (e) {
       setError("Impossible de créer le BibaRoom. Réessayez.");
     }
@@ -285,14 +261,14 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
         setLoading(false);
         return;
       }
-      const already = existing.participants.some((p) => p.code === myBibroCode);
-      let updated = existing;
+      const existingParticipants = existing.participants || [];
+      const already = existingParticipants.some((p) => p.code === myBibroCode);
+      const nextParticipants = already ? existingParticipants : [...existingParticipants, { code: myBibroCode, name: myName, joinedAt: Date.now() }];
       if (!already) {
-        updated = { ...existing, participants: [...existing.participants, { code: myBibroCode, name: myName, joinedAt: Date.now() }] };
-        await saveSalon(code, updated);
+        await saveSalon(code, { ...existing, participants: nextParticipants });
       }
-      updateEvent(event.id, (e) => ({ ...e, salonCode: code, mySalonName: myName, myParticipantCode: myBibroCode }));
-      setRoom(updated);
+      // On rejoint le salon complet de l'autre Bibax — remplace notre propre événement local par le sien.
+      updateEvent(event.id, () => ({ ...existing, participants: nextParticipants }));
       setMode(null);
     } catch (e) {
       setError("Impossible de rejoindre le BibaRoom. Réessayez.");
@@ -301,19 +277,18 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
   };
 
   const leaveSalon = () => {
-    updateEvent(event.id, (e) => ({ ...e, salonCode: null, mySalonName: null, myParticipantCode: null }));
-    setRoom(null);
+    updateEvent(event.id, (e) => ({ ...e, salonCode: null, participants: [] }));
     setMode(null);
   };
 
   // Self-pause: a Bibax stepping away temporarily (joining another group for a bit, say) without
   // leaving the room. Paused people are skipped for "next up" and can't be picked as a drinker
   // when composing a round — either for themselves or by someone else ordering on their behalf.
-  const togglePauseSelf = async () => {
-    if (!room) return;
-    const updated = { ...room, participants: room.participants.map((p) => (p.code === myBibroCode ? { ...p, paused: !p.paused } : p)) };
-    setRoom(updated);
-    await saveSalon(salonCode, updated);
+  const togglePauseSelf = () => {
+    updateEvent(event.id, (e) => ({
+      ...e,
+      participants: (e.participants || []).map((p) => (p.code === myBibroCode ? { ...p, paused: !p.paused } : p)),
+    }));
   };
 
   if (!salonCode) {
@@ -370,20 +345,13 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
     );
   }
 
-  if (!room) {
-    return (
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft }}>Connexion au BibaRoom {salonCode}...</p>
-      </div>
-    );
-  }
-
-  const order = [...room.participants].sort((a, b) => a.joinedAt - b.joinedAt);
+  const order = [...participants].sort((a, b) => a.joinedAt - b.joinedAt);
   const activeOrder = order.filter((p) => !p.paused);
-  const currentIndex = activeOrder.length ? room.roundLog.length % activeOrder.length : 0;
+  const rounds = event.rounds || [];
+  const currentIndex = activeOrder.length ? rounds.length % activeOrder.length : 0;
   const currentParticipant = activeOrder.length ? activeOrder[currentIndex] : null;
-  const myEntry = room.participants.find((p) => p.code === myBibroCode);
-  const roundsBought = (p) => room.roundLog.filter((r) => (r.buyerCode ? r.buyerCode === p.code : r.buyerName === p.name)).length;
+  const myEntry = participants.find((p) => p.code === myBibroCode);
+  const roundsBought = (p) => rounds.filter((r) => r.buyerName === p.name).length;
 
   const resolvedName = (p) => {
     const bibro = (bibros || []).find((b) => b.code === p.code);

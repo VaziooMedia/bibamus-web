@@ -46,7 +46,7 @@ import {
   deleteBrand,
   deleteDrink,
 } from "./data/sharedDirectories.js";
-import { loadSalon, createSalon, saveSalon } from "./data/salons.js";
+import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
 import { randomCode, computeDrinkDiff, todayISO } from "./utils.js";
 import { ADMIN_PASSPHRASE } from "./constants.js";
 
@@ -117,6 +117,17 @@ export default function App() {
 
   const currentEvent = events.find((e) => e.id === activeEventId) || null;
 
+  // Synchronisation en direct : dès qu'un autre Bibax modifie ce salon (nouvelle tournée, quelqu'un
+  // qui rejoint...), on le voit apparaître ici automatiquement, sans devoir rafraîchir.
+  React.useEffect(() => {
+    if (!currentEvent || !currentEvent.salonCode) return;
+    const unsubscribe = subscribeToSalon(currentEvent.salonCode, (updatedData) => {
+      setEvents((prev) => prev.map((e) => (e.id === currentEvent.id ? { ...e, ...updatedData } : e)));
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentEvent?.salonCode]);
+
   const startNewRound = () => {
     const selfEntry = { id: "self", name: profile.name, isSelf: true, code: profile.myBibroCode };
     setDraftFriends([selfEntry]);
@@ -171,11 +182,13 @@ export default function App() {
       createdAt: Date.now(),
       bibaBob: {},
       paused: false,
+      participants: [],
     };
 
     if (isSalon) {
       const code = randomCode(4);
       newEvent.salonCode = code;
+      newEvent.participants = [{ code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }];
       await createSalon(code, newEvent);
     }
 
