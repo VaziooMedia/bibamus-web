@@ -7,7 +7,7 @@ import { COLORS } from "../constants.js";
 import { EyeOffIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { ProfileHeader, WeekTracker, StatResetControl } from "./ProfileParts.jsx";
-import { formatMoney, kcalForDrink, isAlcoholicDrink, realMoneySpentFor, realMoneySpentSince } from "../utils.js";
+import { formatMoney, kcalForDrink, isAlcoholicDrink, realMoneySpentFor, realMoneySpentSince, buildAlcoholDaysMap } from "../utils.js";
 
 export function MyStatsScreen({ venues, events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, drinksDirectory, onResetStatField, onResetMoney, onBack, openVenue, openBibro }) {
   const [confirmingReset, setConfirmingReset] = useState(null); // which field is pending confirmation

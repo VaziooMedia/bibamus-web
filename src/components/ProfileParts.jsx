@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { COLORS, WEEKDAY_SHORT_MON_FIRST } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
-import { formatMemberSince, normalizeUrl, formatDDMMYYYY, computeCurrentStreak, computeLongestAlcoholFreeStreak } from "../utils.js";
+import { formatMemberSince, normalizeUrl, formatDDMMYYYY, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
 
 export function ProfileHeader({ myName, profile, bibros, checkIns }) {
   return (

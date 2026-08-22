@@ -2,7 +2,7 @@
 // Fiche détaillée d'un produit — copiée telle quelle depuis
 // le prototype Claude.
 // ============================================================
-import React from "react";
+import React, { useState } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS, RATABLE_DRINK_TYPES, SERVING_MODE_LABELS, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { NavIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";

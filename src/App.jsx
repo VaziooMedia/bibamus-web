@@ -45,6 +45,7 @@ import {
   deleteBrewery,
   deleteBrand,
   deleteDrink,
+  deletePublicVenue,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent } from "./utils.js";
@@ -238,13 +239,19 @@ export default function App() {
   };
 
   const submitVenue = async (venueData) => {
-    const created = await createPublicVenue({ ...venueData, status: "pending", menu: venueData.menu || [], likes: [] });
+    const created = await createPublicVenue({
+      id: `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      ...venueData,
+      status: "pending",
+      menu: venueData.menu || [],
+      likes: [],
+    });
     if (created) setVenues((prev) => [...prev, created]);
     setScreen("venueDirectory");
   };
 
   const submitDrink = async (drinkData) => {
-    const created = await createDrink({ ...drinkData, status: "pending" });
+    const created = await createDrink({ id: `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`, ...drinkData, status: "pending" });
     if (created) setDrinksDirectory((prev) => [...prev, created]);
     setScreen("drinksDirectory");
   };

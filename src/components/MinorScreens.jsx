@@ -2,7 +2,7 @@
 // Écrans annexes — Paramètres, Historique des événements, Hub
 // "Mes produits". Copiés tels quels depuis le prototype Claude.
 // ============================================================
-import React from "react";
+import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";

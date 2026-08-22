@@ -2,7 +2,7 @@
 // Fiche détaillée d'un établissement — copiée telle quelle
 // depuis le prototype Claude.
 // ============================================================
-import React from "react";
+import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx";
