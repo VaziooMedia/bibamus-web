@@ -1,0 +1,252 @@
+// ============================================================
+// Accès aux 4 répertoires partagés (établissements, produits,
+// brasseries & producteurs, marques) via Supabase.
+//
+// Contrairement à l'ancien système (un seul gros bloc JSON par
+// répertoire, tout réécrit à chaque modification), chaque élément
+// est maintenant sa propre ligne dans la base — donc plus besoin
+// du filet de sécurité "sauvegarde + récupération automatique"
+// qu'on avait mis en place côté Claude : Supabase gère déjà ça
+// nativement, et une modification n'affecte plus jamais les autres
+// lignes par accident.
+// ============================================================
+
+import { supabase } from "../supabaseClient.js";
+
+/* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
+
+export async function loadPublicVenues() {
+  const { data, error } = await supabase.from("public_venues").select("*").order("name");
+  if (error) {
+    console.error("loadPublicVenues:", error);
+    return [];
+  }
+  return data.map(rowToVenue);
+}
+
+export async function createPublicVenue(venue) {
+  const row = venueToRow(venue);
+  const { data, error } = await supabase.from("public_venues").insert(row).select().single();
+  if (error) {
+    console.error("createPublicVenue:", error);
+    return null;
+  }
+  return rowToVenue(data);
+}
+
+export async function updatePublicVenue(id, patch) {
+  const { error } = await supabase.from("public_venues").update(venueToRow(patch, true)).eq("id", id);
+  if (error) console.error("updatePublicVenue:", error);
+}
+
+export async function deletePublicVenue(id) {
+  const { error } = await supabase.from("public_venues").delete().eq("id", id);
+  if (error) console.error("deletePublicVenue:", error);
+}
+
+function rowToVenue(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    country: row.country,
+    city: row.city,
+    address: row.address,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    phone: row.phone,
+    website: row.website,
+    description: row.description,
+    defaultCurrency: row.default_currency,
+    status: row.status,
+    likes: row.likes || [],
+    menu: row.menu || [],
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
+  };
+}
+
+function venueToRow(v, partial = false) {
+  const row = {
+    name: v.name,
+    country: v.country,
+    city: v.city,
+    address: v.address,
+    latitude: v.latitude,
+    longitude: v.longitude,
+    phone: v.phone,
+    website: v.website,
+    description: v.description,
+    default_currency: v.defaultCurrency,
+    status: v.status,
+    likes: v.likes,
+    menu: v.menu,
+    submitted_by: v.submittedBy,
+  };
+  if (!partial) row.id = v.id;
+  // Only include keys that were actually provided, so a partial update doesn't null out
+  // fields the caller didn't mean to touch.
+  Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
+  return row;
+}
+
+/* ---------------- PRODUITS (RÉPERTOIRE DES BOISSONS) ---------------- */
+
+export async function loadDrinksDirectory() {
+  const { data, error } = await supabase.from("drinks_directory").select("*").order("name");
+  if (error) {
+    console.error("loadDrinksDirectory:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
+export async function createDrink(drink) {
+  const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
+  if (error) {
+    console.error("createDrink:", error);
+    return null;
+  }
+  return rowToDrink(data);
+}
+
+export async function updateDrink(id, patch) {
+  const { error } = await supabase.from("drinks_directory").update(drinkToRow(patch, true)).eq("id", id);
+  if (error) console.error("updateDrink:", error);
+}
+
+export async function deleteDrink(id) {
+  const { error } = await supabase.from("drinks_directory").delete().eq("id", id);
+  if (error) console.error("deleteDrink:", error);
+}
+
+function rowToDrink(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    brewery: row.brewery,
+    brand: row.brand,
+    nationality: row.nationality,
+    abv: row.abv,
+    kcalPer100ml: row.kcal_per_100ml,
+    volumeCl: row.volume_cl,
+    glutenFree: row.gluten_free,
+    bio: row.bio,
+    servingMode: row.serving_mode,
+    beerTags: row.beer_tags || [],
+    status: row.status,
+    isGeneric: row.is_generic,
+    averagePrice: row.average_price,
+    averageJetonValue: row.average_jeton_value,
+    avatarEmoji: row.avatar_emoji,
+    submittedBy: row.submitted_by,
+  };
+}
+
+function drinkToRow(d, partial = false) {
+  const row = {
+    name: d.name,
+    type: d.type,
+    brewery: d.brewery,
+    brand: d.brand,
+    nationality: d.nationality,
+    abv: d.abv,
+    kcal_per_100ml: d.kcalPer100ml,
+    volume_cl: d.volumeCl,
+    gluten_free: d.glutenFree,
+    bio: d.bio,
+    serving_mode: d.servingMode,
+    beer_tags: d.beerTags,
+    status: d.status,
+    is_generic: d.isGeneric,
+    average_price: d.averagePrice,
+    average_jeton_value: d.averageJetonValue,
+    avatar_emoji: d.avatarEmoji,
+    submitted_by: d.submittedBy,
+  };
+  if (!partial) row.id = d.id;
+  Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
+  return row;
+}
+
+/* ---------------- BRASSERIES & PRODUCTEURS ---------------- */
+
+export async function loadBreweriesDirectory() {
+  const { data, error } = await supabase.from("breweries_directory").select("*").order("name");
+  if (error) {
+    console.error("loadBreweriesDirectory:", error);
+    return [];
+  }
+  return data.map(rowToBrewery);
+}
+
+export async function createBrewery(brewery) {
+  const { data, error } = await supabase.from("breweries_directory").insert(breweryToRow(brewery)).select().single();
+  if (error) {
+    console.error("createBrewery:", error);
+    return null;
+  }
+  return rowToBrewery(data);
+}
+
+export async function updateBrewery(id, patch) {
+  const { error } = await supabase.from("breweries_directory").update(breweryToRow(patch, true)).eq("id", id);
+  if (error) console.error("updateBrewery:", error);
+}
+
+export async function deleteBrewery(id) {
+  const { error } = await supabase.from("breweries_directory").delete().eq("id", id);
+  if (error) console.error("deleteBrewery:", error);
+}
+
+function rowToBrewery(row) {
+  return { id: row.id, name: row.name, country: row.country, status: row.status, submittedBy: row.submitted_by };
+}
+
+function breweryToRow(b, partial = false) {
+  const row = { name: b.name, country: b.country, status: b.status, submitted_by: b.submittedBy };
+  if (!partial) row.id = b.id;
+  Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
+  return row;
+}
+
+/* ---------------- MARQUES ---------------- */
+
+export async function loadBrandsDirectory() {
+  const { data, error } = await supabase.from("brands_directory").select("*").order("name");
+  if (error) {
+    console.error("loadBrandsDirectory:", error);
+    return [];
+  }
+  return data.map(rowToBrand);
+}
+
+export async function createBrand(brand) {
+  const { data, error } = await supabase.from("brands_directory").insert(brandToRow(brand)).select().single();
+  if (error) {
+    console.error("createBrand:", error);
+    return null;
+  }
+  return rowToBrand(data);
+}
+
+export async function updateBrand(id, patch) {
+  const { error } = await supabase.from("brands_directory").update(brandToRow(patch, true)).eq("id", id);
+  if (error) console.error("updateBrand:", error);
+}
+
+export async function deleteBrand(id) {
+  const { error } = await supabase.from("brands_directory").delete().eq("id", id);
+  if (error) console.error("deleteBrand:", error);
+}
+
+function rowToBrand(row) {
+  return { id: row.id, name: row.name, status: row.status, submittedBy: row.submitted_by };
+}
+
+function brandToRow(b, partial = false) {
+  const row = { name: b.name, status: b.status, submitted_by: b.submittedBy };
+  if (!partial) row.id = b.id;
+  Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
+  return row;
+}
