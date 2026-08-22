@@ -48,7 +48,7 @@ import {
   deletePublicVenue,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem } from "./utils.js";
 import { ADMIN_PASSPHRASE } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -168,7 +168,10 @@ export default function App() {
     const isSalon = screen === "newSalonEvent";
     const isHome = venueId === "@home";
     const venue = venueId && !isHome ? venues.find((v) => v.id === venueId) : null;
-    const menu = venue && venue.menu && venue.menu.length ? venue.menu.map((d) => ({ ...d, id: `local-${Date.now()}-${Math.random()}` })) : [];
+    const menu =
+      venue && venue.menu && venue.menu.length
+        ? venue.menu.map((d) => ({ ...resolveMenuItem(d, drinksDirectory), id: `local-${Date.now()}-${Math.random()}` }))
+        : [];
 
     const newEvent = {
       id: `local-${Date.now()}`,
