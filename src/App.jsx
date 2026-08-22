@@ -141,23 +141,39 @@ export default function App() {
     setScreen("eventDashboard");
   };
 
-  const createEvent = async (name, currency, date, jetonUnitValue, venueId, eventMode, participants) => {
-    const isSalon = eventMode !== "solo" || false; // NewEventScreen passes mode via screenKind at call site
+  const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants) => {
+    const isSalon = screen === "newSalonEvent";
+    const isHome = venueId === "@home";
+    const venue = venueId && !isHome ? venues.find((v) => v.id === venueId) : null;
+    const menu = venue && venue.menu && venue.menu.length ? venue.menu.map((d) => ({ ...d, id: `local-${Date.now()}-${Math.random()}` })) : [];
+
     const newEvent = {
       id: `local-${Date.now()}`,
       name,
       currency,
       date,
-      jetonUnitValue,
-      venueId,
-      eventMode,
-      knownFriends: participants || [],
+      jetonUnitValue: jetonUnitValue || 0,
+      mode,
+      pot: mode === "cagnotte" ? { contributions: [] } : null,
+      splitParticipants: mode === "addition" ? [] : null,
+      menu,
       rounds: [],
-      createdAt: Date.now(),
+      knownFriends: participants || [],
+      personalOrders: [],
+      ticketPurchases: [],
+      finalTotal: null,
+      venueId: isHome ? null : venueId || null,
+      isHome,
+      salonCode: null,
       closed: false,
+      tip: 0,
+      closedAt: null,
+      createdAt: Date.now(),
+      bibaBob: {},
+      paused: false,
     };
 
-    if (eventMode === "salon" || eventMode === "openbar") {
+    if (isSalon) {
       const code = randomCode(4);
       newEvent.salonCode = code;
       await createSalon(code, newEvent);
@@ -966,8 +982,8 @@ export default function App() {
             {screen === "eventSettings" && currentEvent && (
               <EventSettingsScreen
                 event={currentEvent}
-                onSave={(eventMode, jetonUnitValue) => {
-                  updateEvent(activeEventId, (e) => ({ ...e, eventMode, jetonUnitValue }));
+                onSave={(mode, jetonUnitValue) => {
+                  updateEvent(activeEventId, (e) => ({ ...e, mode, jetonUnitValue }));
                   setScreen("eventDashboard");
                 }}
                 onBack={() => setScreen("eventDashboard")}
