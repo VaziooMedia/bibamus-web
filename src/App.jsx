@@ -194,13 +194,30 @@ export default function App() {
       knownFriends: Array.from(new Set([...(e.knownFriends || []), ...otherFriends.map((f) => f.name)])),
       personalOrders: [...(e.personalOrders || []), ...selfOrders],
     }));
+
+    if (currentEvent && currentEvent.venueId && !currentEvent.isHome && currentEvent.venueId !== "@event") {
+      const venue = venues.find((v) => v.id === currentEvent.venueId);
+      if (venue) {
+        const prevStats = venue.stats || {};
+        const prevMoney = prevStats.moneySpent || { euro: 0, jeton: 0 };
+        const amount = offeredBy ? 0 : finalAmount || 0;
+        const newStats = {
+          ...prevStats,
+          drinksOrdered: (prevStats.drinksOrdered || 0) + draftOrders.length,
+          moneySpent: { ...prevMoney, [currentEvent.currency]: (prevMoney[currentEvent.currency] || 0) + amount },
+        };
+        updatePublicVenue(venue.id, { stats: newStats });
+        setVenues((prev) => prev.map((v) => (v.id === venue.id ? { ...v, stats: newStats } : v)));
+      }
+    }
     setScreen("eventDashboard");
   };
 
   const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants) => {
     const isSalon = screen === "newSalonEvent";
     const isHome = venueId === "@home";
-    const venue = venueId && !isHome ? venues.find((v) => v.id === venueId) : null;
+    const isEventPlace = venueId === "@event";
+    const venue = venueId && !isHome && !isEventPlace ? venues.find((v) => v.id === venueId) : null;
     const menu =
       venue && venue.menu && venue.menu.length
         ? venue.menu.map((d) => ({ ...resolveMenuItem(d, drinksDirectory), id: `local-${Date.now()}-${Math.random()}` }))
@@ -238,6 +255,12 @@ export default function App() {
       newEvent.salonCode = code;
       newEvent.participants = [{ code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }];
       await createSalon(code, newEvent);
+    }
+
+    if (venue) {
+      const newStats = { ...(venue.stats || {}), visits: (venue.stats?.visits || 0) + 1 };
+      updatePublicVenue(venue.id, { stats: newStats });
+      setVenues((prev) => prev.map((v) => (v.id === venue.id ? { ...v, stats: newStats } : v)));
     }
 
     setEvents((prev) => [...prev, normalizeEvent(newEvent)]);

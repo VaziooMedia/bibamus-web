@@ -203,23 +203,6 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
       </div>
 
 
-      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px" }}>Date</label>
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        style={{
-          padding: "13px 14px",
-          borderRadius: "10px",
-          border: `2px solid ${COLORS.paperAlt}`,
-          fontSize: "15px",
-          outline: "none",
-          marginBottom: "20px",
-          fontFamily: "'Work Sans', sans-serif",
-          color: COLORS.ink,
-        }}
-      />
-
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>
         Participants
       </label>

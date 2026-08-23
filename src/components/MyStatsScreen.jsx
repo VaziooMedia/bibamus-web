@@ -53,6 +53,12 @@ export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibr
       acc.drinksOrdered += rounds
         .filter((r) => !resetDates.drinksOrdered || r.timestamp >= resetDates.drinksOrdered)
         .reduce((s, r) => s + (r.orders || []).length, 0);
+      rounds
+        .filter((r) => !r.offeredBy && (!resetDates.money || (r.createdAt || r.timestamp) >= resetDates.money))
+        .forEach((r) => {
+          const key = ev.currency === "jeton" ? "moneyJeton" : "moneyEuro";
+          acc[key] += r.total || 0;
+        });
       orders.forEach((o) => {
         const drink = (ev.menu || []).find((d) => d.id === o.drinkId);
         if (!drink) return;
@@ -64,7 +70,7 @@ export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibr
       });
       return acc;
     },
-    { visits: 0, drinksOrdered: 0, calories: 0, drinksByName: {} }
+    { visits: 0, drinksOrdered: 0, calories: 0, drinksByName: {}, moneyEuro: 0, moneyJeton: 0 }
   );
 
   const totals = venues.reduce(
@@ -77,7 +83,7 @@ export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibr
       acc.personalDrinks += Object.values(v.stats.personalDrinksByType || {}).reduce((s, n) => s + n, 0);
       return acc;
     },
-    { visits: noVenueTotals.visits, drinksOrdered: noVenueTotals.drinksOrdered, moneyEuro: 0, moneyJeton: 0, calories: noVenueTotals.calories, personalDrinks: 0 }
+    { visits: noVenueTotals.visits, drinksOrdered: noVenueTotals.drinksOrdered, moneyEuro: noVenueTotals.moneyEuro, moneyJeton: noVenueTotals.moneyJeton, calories: noVenueTotals.calories, personalDrinks: 0 }
   );
   totals.personalDrinks += Object.values(noVenueTotals.drinksByName).reduce((s, n) => s + n, 0);
 
