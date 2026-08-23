@@ -184,7 +184,16 @@ export default function App() {
       offeredBy,
       createdAt: Date.now(),
     };
-    updateEvent(activeEventId, (e) => ({ ...e, rounds: [...e.rounds, round] }));
+    const otherFriends = draftFriends.filter((f) => !f.isSelf);
+    const selfOrders = draftOrders
+      .filter((o) => o.friendId === "self")
+      .map((o) => ({ id: nextId(), drinkId: o.drinkId, timestamp: Date.now(), roundId: round.id }));
+    updateEvent(activeEventId, (e) => ({
+      ...e,
+      rounds: [...e.rounds, round],
+      knownFriends: Array.from(new Set([...(e.knownFriends || []), ...otherFriends.map((f) => f.name)])),
+      personalOrders: [...(e.personalOrders || []), ...selfOrders],
+    }));
     setScreen("eventDashboard");
   };
 

@@ -144,7 +144,6 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
                 }}
               >
                 <div style={{ fontWeight: 700, fontSize: "12.5px" }}>Résultat définitif</div>
-                <div style={{ fontSize: "10.5px", opacity: 0.8, marginTop: "2px" }}>Ce sera ça, sans retour en arrière</div>
               </button>
               <button
                 onClick={() => setIsBinding(false)}
@@ -160,7 +159,6 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
                 }}
               >
                 <div style={{ fontWeight: 700, fontSize: "12.5px" }}>Juste une idée</div>
-                <div style={{ fontSize: "10.5px", opacity: 0.8, marginTop: "2px" }}>Possibilité de choisir autre chose ensuite</div>
               </button>
             </div>
 
