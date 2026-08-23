@@ -393,3 +393,13 @@ export const normalizeEvent = (e) => ({
   isHome: !!e.isHome,
   salonCode: e.salonCode || null,
 });
+
+export const formatDuration = (startMs, endMs) => {
+  if (!startMs || !endMs || endMs < startMs) return "";
+  const totalMinutes = Math.round((endMs - startMs) / 60000);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} h`;
+  return `${h} h ${m}`;
+};

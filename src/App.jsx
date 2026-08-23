@@ -26,6 +26,7 @@ import { ProfileHubScreen } from "./components/ProfileHubScreen.jsx";
 import { MyProfileScreen } from "./components/MyProfileScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
+import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
 import { ImportDataScreen } from "./components/ImportDataScreen.jsx";
@@ -49,8 +50,8 @@ import {
   deletePublicVenue,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem } from "./utils.js";
-import { ADMIN_PASSPHRASE } from "./constants.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, kcalForDrink } from "./utils.js";
+import { ADMIN_PASSPHRASE, BEER_TYPES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
 function loadLocal(key, fallback) {
@@ -334,6 +335,7 @@ export default function App() {
 
   const [viewedVenueId, setViewedVenueId] = useState(null);
   const [viewedDrinkId, setViewedDrinkId] = useState(null);
+  const [viewedHistoryEventId, setViewedHistoryEventId] = useState(null);
   const [onboardingName, setOnboardingName] = useState("");
   const [checkIns] = useState([]);
   const [checkedInVenueId, setCheckedInVenueId] = useState(null);
@@ -374,6 +376,11 @@ export default function App() {
         ratings: { ...(drink.ratings || {}), [profile.myBibroCode]: value },
         ratingDates: { ...(drink.ratingDates || {}), [profile.myBibroCode]: Date.now() },
       });
+      // Noter une bière n'a de sens que si on l'a goûtée — les deux restent synchronisés plutôt
+      // que de risquer une bière notée mais jamais marquée dégustée, ou encore sur la liste d'envie.
+      if (BEER_TYPES.includes(drink.type) && !tastedDrinkIds.includes(drinkId)) {
+        toggleTastedDrink(drinkId);
+      }
     }
   };
 
@@ -383,18 +390,22 @@ export default function App() {
         if (d.id !== drinkId) return d;
         const ratings = { ...(d.ratings || {}) };
         const ratingDates = { ...(d.ratingDates || {}) };
+        const ratedServingModes = { ...(d.ratedServingModes || {}) };
         delete ratings[profile.myBibroCode];
         delete ratingDates[profile.myBibroCode];
-        return { ...d, ratings, ratingDates };
+        delete ratedServingModes[profile.myBibroCode];
+        return { ...d, ratings, ratingDates, ratedServingModes };
       })
     );
     const drink = drinksDirectory.find((d) => d.id === drinkId);
     if (drink) {
       const ratings = { ...(drink.ratings || {}) };
       const ratingDates = { ...(drink.ratingDates || {}) };
+      const ratedServingModes = { ...(drink.ratedServingModes || {}) };
       delete ratings[profile.myBibroCode];
       delete ratingDates[profile.myBibroCode];
-      updateDrink(drinkId, { ratings, ratingDates });
+      delete ratedServingModes[profile.myBibroCode];
+      updateDrink(drinkId, { ratings, ratingDates, ratedServingModes });
     }
   };
 
@@ -684,6 +695,54 @@ export default function App() {
   // très proche existe déjà en mémoire et renvoie son nom canonique immédiatement — sinon, l'ajoute
   // optimistiquement en local tout de suite (pour un retour visuel instantané) et la persiste dans
   // Supabase en arrière-plan.
+  const reopenEvent = (id) => {
+    updateEvent(id, (e) => ({ ...e, closed: false, closedAt: null }));
+  };
+
+  // Supprimer un événement annule aussi exactement ce qu'il avait contribué aux statistiques
+  // de son établissement — la visite, les verres/argent de chaque tournée, les verres/calories
+  // personnels — pour que les totaux du lieu restent justes plutôt que de garder une trace
+  // fantôme d'un événement qui n'existe plus.
+  const deleteEvent = (id) => {
+    const ev = events.find((e) => e.id === id);
+    try {
+      if (ev && ev.venueId && !ev.isHome && ev.venueId !== "@event") {
+        const venue = venues.find((v) => v.id === ev.venueId);
+        if (venue) {
+          const stats = venue.stats || {};
+          const rounds = ev.rounds || [];
+          const totalDrinks = rounds.reduce((sum, r) => sum + (r.orders || []).length, 0);
+          const totalMoney = rounds.reduce((sum, r) => sum + (r.total || 0), 0);
+          const prevMoney = stats.moneySpent || { euro: 0, jeton: 0 };
+          const personalDrinksByType = { ...(stats.personalDrinksByType || {}) };
+          let caloriesTotal = stats.caloriesTotal || 0;
+          (ev.personalOrders || []).forEach((o) => {
+            const drink = (ev.menu || []).find((d) => d.id === o.drinkId);
+            if (!drink) return;
+            const key = drink.name;
+            personalDrinksByType[key] = Math.max(0, (personalDrinksByType[key] || 0) - 1);
+            const kcal = kcalForDrink(drink);
+            if (kcal != null) caloriesTotal = Math.max(0, caloriesTotal - kcal);
+          });
+          const newStats = {
+            ...stats,
+            visits: Math.max(0, (stats.visits || 0) - 1),
+            drinksOrdered: Math.max(0, (stats.drinksOrdered || 0) - totalDrinks),
+            moneySpent: { ...prevMoney, [ev.currency]: Math.max(0, (prevMoney[ev.currency] || 0) - totalMoney) },
+            personalDrinksByType,
+            caloriesTotal,
+          };
+          updatePublicVenue(venue.id, { stats: newStats });
+          setVenues((prev) => prev.map((v) => (v.id === venue.id ? { ...v, stats: newStats } : v)));
+        }
+      }
+    } catch (e) {
+      // Même si l'annulation des statistiques échoue pour une raison ou une autre, la
+      // suppression de l'événement lui-même doit quand même avoir lieu.
+    }
+    setEvents((prev) => prev.filter((e) => e.id !== id));
+  };
+
   const registerBrewery = (name, country) => {
     const trimmed = (name || "").trim();
     if (!trimmed) return trimmed;
@@ -1137,10 +1196,33 @@ export default function App() {
                 displayTotalFor={() => 0}
                 onBack={() => setScreen("profile")}
                 openEvent={(id) => {
-                  setActiveEventId(id);
+                  setViewedHistoryEventId(id);
+                  setScreen("eventHistoryDetail");
+                }}
+                onDeleteEvent={deleteEvent}
+              />
+            )}
+            {screen === "eventHistoryDetail" && (
+              <EventHistoryDetailScreen
+                event={events.find((e) => e.id === viewedHistoryEventId)}
+                venues={venues}
+                displayTotal={0}
+                roundsSum={(events.find((e) => e.id === viewedHistoryEventId)?.rounds || []).reduce((s, r) => s + (r.total || 0), 0)}
+                onBack={() => setScreen("eventHistory")}
+                openVenue={(id) => {
+                  setViewedVenueId(id);
+                  setScreen("venueDetail");
+                }}
+                onReopen={() => {
+                  reopenEvent(viewedHistoryEventId);
+                  setActiveEventId(viewedHistoryEventId);
                   setScreen("eventDashboard");
                 }}
-                onDeleteEvent={(id) => setEvents((prev) => prev.filter((e) => e.id !== id))}
+                onDelete={() => {
+                  deleteEvent(viewedHistoryEventId);
+                  setScreen("eventHistory");
+                }}
+                onDeleteRound={(roundId) => deleteRound(viewedHistoryEventId, roundId)}
               />
             )}
             {screen === "myProducts" && (

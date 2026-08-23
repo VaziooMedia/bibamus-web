@@ -19,34 +19,13 @@ import { loadSalon, saveSalon, generateRoomCode } from "../data/salons.js";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 
 export function PotCard({ event, updateEvent, myName }) {
-  const [room, setRoom] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showContributions, setShowContributions] = useState(false);
   const [contribName, setContribName] = useState(myName || "");
   const [contribAmount, setContribAmount] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const salonCode = event.salonCode;
-
-  const refresh = async () => {
-    if (!salonCode) return;
-    try {
-      const r = await loadSalon(salonCode);
-      if (r) setRoom(r);
-    } catch (e) {
-      // silent fail on background refresh
-    }
-  };
-
-  React.useEffect(() => {
-    if (!salonCode) return;
-    refresh();
-    const interval = setInterval(refresh, 5000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [salonCode]);
-
-  const contributions = salonCode ? (room?.pot?.contributions || event.pot?.contributions || []) : event.pot?.contributions || [];
+  const contributions = event.pot?.contributions || [];
   const potTotal = contributions.reduce((sum, c) => sum + c.amount, 0);
   const spent = event.rounds.filter((r) => r.paidByPot).reduce((sum, r) => sum + (r.offeredBy ? 0 : r.total) + (r.tip || 0), 0);
   const balance = potTotal - spent - (event.tip || 0);
@@ -55,24 +34,13 @@ export function PotCard({ event, updateEvent, myName }) {
   event.rounds.forEach((r) => r.friends.forEach((f) => attendeeNames.add(f.name.toLowerCase())));
   const attendeesCount = attendeeNames.size;
 
-  const addContribution = async () => {
+  const addContribution = () => {
     const amount = parseFloat(contribAmount.replace(",", "."));
     const name = contribName.trim();
     if (!name || !amount || amount <= 0) return;
     setSaving(true);
     const contribution = { id: nextId(), name, amount, timestamp: Date.now() };
-    if (salonCode) {
-      try {
-        const fresh = (await loadSalon(salonCode)) || room;
-        const updatedRoom = { ...fresh, pot: { contributions: [...(fresh?.pot?.contributions || []), contribution] } };
-        await saveSalon(salonCode, updatedRoom);
-        setRoom(updatedRoom);
-      } catch (e) {
-        // best-effort: a salon sync hiccup shouldn't block the local flow
-      }
-    } else {
-      updateEvent(event.id, (e) => ({ ...e, pot: { contributions: [...(e.pot?.contributions || []), contribution] } }));
-    }
+    updateEvent(event.id, (e) => ({ ...e, pot: { contributions: [...(e.pot?.contributions || []), contribution] } }));
     setContribAmount("");
     setShowAddForm(false);
     setSaving(false);
