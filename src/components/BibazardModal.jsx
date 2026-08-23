@@ -13,6 +13,7 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
   const availableCategories = MENU_CATEGORIES.filter((cat) => menu.some((d) => categoryOf(d) === cat));
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [includeNonAlcoholic, setIncludeNonAlcoholic] = useState(true);
+  const [isBinding, setIsBinding] = useState(true);
   const [phase, setPhase] = useState("selecting"); // "selecting" | "spinning" | "result"
   const [resultDrink, setResultDrink] = useState(null);
   const [displayName, setDisplayName] = useState("");
@@ -127,6 +128,42 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
             <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, textAlign: "center", marginTop: "-8px", marginBottom: "16px" }}>
               {pool.length} produit{pool.length !== 1 ? "s" : ""} en jeu
             </p>
+
+            <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
+              <button
+                onClick={() => setIsBinding(true)}
+                style={{
+                  flex: 1,
+                  padding: "10px 8px",
+                  borderRadius: "10px",
+                  border: `2px solid ${isBinding ? COLORS.amber : COLORS.paperAlt}`,
+                  background: isBinding ? COLORS.amber : COLORS.surface,
+                  color: isBinding ? COLORS.paper : COLORS.ink,
+                  cursor: "pointer",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontWeight: 700, fontSize: "12.5px" }}>Résultat définitif</div>
+                <div style={{ fontSize: "10.5px", opacity: 0.8, marginTop: "2px" }}>Ce sera ça, sans retour en arrière</div>
+              </button>
+              <button
+                onClick={() => setIsBinding(false)}
+                style={{
+                  flex: 1,
+                  padding: "10px 8px",
+                  borderRadius: "10px",
+                  border: `2px solid ${!isBinding ? COLORS.amber : COLORS.paperAlt}`,
+                  background: !isBinding ? COLORS.amber : COLORS.surface,
+                  color: !isBinding ? COLORS.paper : COLORS.ink,
+                  cursor: "pointer",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontWeight: 700, fontSize: "12.5px" }}>Juste une idée</div>
+                <div style={{ fontSize: "10.5px", opacity: 0.8, marginTop: "2px" }}>Possibilité de choisir autre chose ensuite</div>
+              </button>
+            </div>
+
             <PrimaryButton onClick={spin} disabled={pool.length === 0} style={{ width: "100%" }}>
               Lancer
             </PrimaryButton>
@@ -192,6 +229,14 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
                     Je prends !
                   </PrimaryButton>
                 </div>
+                {!isBinding && (
+                  <button
+                    onClick={onClose}
+                    style={{ display: "block", width: "100%", marginTop: "10px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12.5px", cursor: "pointer", textDecoration: "underline" }}
+                  >
+                    Finalement, je choisis autre chose moi-même
+                  </button>
+                )}
               </>
             )}
           </>

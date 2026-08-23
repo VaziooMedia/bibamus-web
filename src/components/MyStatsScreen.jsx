@@ -9,8 +9,23 @@ import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { ProfileHeader, WeekTracker, StatResetControl } from "./ProfileParts.jsx";
 import { formatMoney, kcalForDrink, isAlcoholicDrink, realMoneySpentFor, realMoneySpentSince, buildAlcoholDaysMap } from "../utils.js";
 
-export function MyStatsScreen({ venues, events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, drinksDirectory, onResetStatField, onResetMoney, onBack, openVenue, openBibro }) {
+export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, drinksDirectory, onResetStatField, onResetMoney, onBack, openVenue, openBibro }) {
   const [confirmingReset, setConfirmingReset] = useState(null); // which field is pending confirmation
+
+  // Un établissement fraîchement créé (ou jamais visité) peut avoir des statistiques
+  // incomplètes ou absentes — on garantit ici une forme complète avant tout calcul, pour
+  // éviter le même plantage que sur la fiche détaillée d'un établissement.
+  const venues = (rawVenues || []).map((v) => ({
+    ...v,
+    stats: {
+      visits: 0,
+      drinksOrdered: 0,
+      caloriesTotal: 0,
+      personalDrinksByType: {},
+      ...(v.stats || {}),
+      moneySpent: { euro: 0, jeton: 0, ...((v.stats && v.stats.moneySpent) || {}) },
+    },
+  }));
 
   // "counts as" resolution mirrors the app-level tallyNameFor — a mix (e.g. Mazout) tallies under
   // its linked base drink's name if one is set, otherwise under its own.

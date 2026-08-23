@@ -360,7 +360,8 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             style={{
               position: "absolute",
               top: "100%",
-              right: 0,
+              left: "50%",
+              transform: "translateX(-50%)",
               marginTop: "6px",
               zIndex: 10,
               background: COLORS.surfaceAlt,
