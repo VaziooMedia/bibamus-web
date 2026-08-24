@@ -335,6 +335,11 @@ export default function App() {
     setDrinksDirectory((prev) => prev.map((d) => (d.id === drinkId ? { ...d, photoUrl: url } : d)));
   };
 
+  const deletePhotoForDrink = (drinkId) => {
+    updateDrink(drinkId, { photoUrl: null });
+    setDrinksDirectory((prev) => prev.map((d) => (d.id === drinkId ? { ...d, photoUrl: null } : d)));
+  };
+
   const submitDrink = async (drinkData) => {
     const created = await createDrink({ id: `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`, ...drinkData, status: "pending" });
     if (created) setDrinksDirectory((prev) => [...prev, created]);
@@ -1129,6 +1134,7 @@ export default function App() {
                 onRejectEdit={() => rejectDrinkEdit(viewedDrinkId)}
                 onOpenTagFilter={openTagFilter}
                 onUploadPhoto={(file) => uploadPhotoForDrink(viewedDrinkId, file)}
+                onDeletePhoto={() => deletePhotoForDrink(viewedDrinkId)}
               />
             )}
             {screen === "profile" && (

@@ -8,6 +8,7 @@ import { COLORS, COUNTRY_FLAGS, DRINK_TYPES, RATABLE_DRINK_TYPES } from "../cons
 import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, useInfiniteScroll, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
+import { StarsDisplay } from "./StarsDisplay.jsx";
 import { normalizeForSearch, drinkTypeLabel, drinkSummaryLine } from "../utils.js";
 
 export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, onOpenDrink, goToSubmit, onRefresh, initialCategory, initialTagFilter, onSeedConsumed }) {
@@ -157,7 +158,11 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
           (() => {
             const values = Object.values(d.ratings);
             const avg = values.reduce((s, v) => s + v, 0) / values.length;
-            return <span style={{ fontSize: "12.5px", color: COLORS.amberDark, fontWeight: 700, whiteSpace: "nowrap" }}>⭐ {avg.toFixed(1)}</span>;
+            return (
+              <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12.5px", color: COLORS.amber, fontWeight: 700, whiteSpace: "nowrap" }}>
+                <StarsDisplay value={1} max={1} size={13} /> {avg.toFixed(2).replace(".", ",")}
+              </span>
+            );
           })()}
       </div>
     </button>

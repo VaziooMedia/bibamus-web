@@ -11,7 +11,7 @@ import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { StarRating } from "./StarRating.jsx";
 import { drinkTypeLabel, formatDrinkFieldValue } from "../utils.js";
 
-export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, onAcceptEdit, onRejectEdit, onOpenTagFilter, onUploadPhoto }) {
+export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, onAcceptEdit, onRejectEdit, onOpenTagFilter, onUploadPhoto, onDeletePhoto }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const isBeer = BEER_TYPES.includes(drink.type);
@@ -28,7 +28,7 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
 
-      <PhotoUploadField photoUrl={drink.photoUrl} onUpload={handlePhotoUpload} uploading={uploadingPhoto} label="" />
+      <PhotoUploadField photoUrl={drink.photoUrl} onUpload={handlePhotoUpload} onDelete={onDeletePhoto} uploading={uploadingPhoto} label="" />
 
       {drink.status === "pending" && (
         <div style={{ background: COLORS.paperAlt, borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: COLORS.inkSoft }}>

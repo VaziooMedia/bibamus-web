@@ -8,6 +8,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
+import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
 
@@ -404,7 +405,9 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
                   <strong>{p.name}</strong>
                   <span style={{ color: COLORS.inkSoft, fontSize: "12px" }}> · {drinkTypeLabel(p.type)}</span>
                 </span>
-                <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px", flexShrink: 0, marginLeft: "10px" }}>⭐ {p.rating}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: "4px", fontFamily: "'Urbanist', sans-serif", color: COLORS.amber, fontWeight: 700, fontSize: "13px", flexShrink: 0, marginLeft: "10px" }}>
+                  <StarsDisplay value={1} max={1} size={12} /> {Number(p.rating).toFixed(2).replace(".", ",")}
+                </span>
               </div>
             ))}
           </div>

@@ -1,10 +1,11 @@
 // ============================================================
-// Bloc de notation (étoiles + modes goûtés) d'une boisson —
-// copié tel quel depuis le prototype Claude.
+// Bloc de notation (étoiles + modes goûtés) d'une boisson.
 // ============================================================
 import React from "react";
 import { COLORS, BEER_RATING_MODES, SERVING_MODE_LABELS } from "../constants.js";
 import { formatDDMMYYYY } from "../utils.js";
+import { StarsDisplay } from "./StarsDisplay.jsx";
+import { RatingSlider } from "./RatingSlider.jsx";
 
 export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCode, onRate, onUnrate, onToggleMode, isBeer }) {
   const values = Object.values(ratings || {});
@@ -16,26 +17,30 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
       <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Note des Bibax</div>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "36px", color: COLORS.amberDark, lineHeight: 1 }}>{average != null ? average.toFixed(1) : "—"}</span>
-        <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>
-          {values.length > 0 ? `sur 5 · ${values.length} avis` : "Pas encore d'avis — soyez le premier"}
-        </span>
-      </div>
+      {average != null ? (
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
+          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "36px", color: COLORS.amber, lineHeight: 1 }}>{average.toFixed(2).replace(".", ",")}</span>
+          <div>
+            <StarsDisplay value={average} size={18} />
+            <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>
+              sur 5 · {values.length} avis
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Pas encore d'avis — sois le premier !</p>
+      )}
 
-      <div style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px" }}>Ta note</div>
-      <div style={{ display: "flex", gap: "6px" }}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            onClick={() => (myRating === n ? onUnrate() : onRate(n))}
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "30px", lineHeight: 1, filter: myRating >= n ? "none" : "grayscale(1) opacity(0.35)" }}
-          >
-            ⭐
+      <div style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Ta note</div>
+      <RatingSlider value={myRating} onChange={(v) => onRate(v)} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px" }}>
+        {myRatingDate ? <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: 0 }}>Notée le {formatDDMMYYYY(myRatingDate)}</p> : <span />}
+        {myRating != null && (
+          <button onClick={onUnrate} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0 }}>
+            Retirer ma note
           </button>
-        ))}
+        )}
       </div>
-      {myRatingDate && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "8px", marginBottom: 0 }}>Bière goûtée le {formatDDMMYYYY(myRatingDate)}</p>}
 
       {isBeer && (
         <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
