@@ -3,25 +3,22 @@ import { COLORS } from "../constants.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 
 // Barre de notation horizontale, réglable au quart d'étoile (0,25 à 5) — la valeur choisie se
-// reflète immédiatement au-dessus, sous forme d'étoiles vert fluo, plutôt que de ne pouvoir
-// choisir qu'une note entière comme avant.
-//
-// Le déplacement met à jour l'affichage localement en instantané ; l'enregistrement réel
-// (via onChange, qui déclenche une écriture réseau côté parent) n'a lieu qu'au relâchement —
-// sinon chaque minuscule mouvement déclencherait sa propre écriture, ce qui sature et donne
-// l'impression que le curseur reste bloqué.
-export function RatingSlider({ value, onChange }) {
+// reflète immédiatement au-dessus, sous forme d'étoiles vert fluo. Le déplacement ne fait que
+// mettre à jour l'affichage local ; c'est un bouton "Valider" séparé, dans le composant parent,
+// qui déclenche l'enregistrement réel — jamais automatiquement au relâchement.
+export function RatingSlider({ value, onLocalChange }) {
   const [localValue, setLocalValue] = useState(value || 0.25);
 
   useEffect(() => {
     setLocalValue(value || 0.25);
   }, [value]);
 
-  const percent = ((localValue - 0.25) / (5 - 0.25)) * 100;
+  useEffect(() => {
+    onLocalChange(localValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localValue]);
 
-  const commit = () => {
-    if (!isNaN(localValue)) onChange(localValue);
-  };
+  const percent = ((localValue - 0.25) / (5 - 0.25)) * 100;
 
   return (
     <div>
@@ -41,9 +38,6 @@ export function RatingSlider({ value, onChange }) {
           const v = parseFloat(e.target.value);
           if (!isNaN(v)) setLocalValue(v);
         }}
-        onMouseUp={commit}
-        onTouchEnd={commit}
-        onKeyUp={commit}
         style={{
           width: "100%",
           height: "8px",

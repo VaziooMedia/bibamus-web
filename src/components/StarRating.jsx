@@ -6,22 +6,25 @@ import { COLORS, BEER_RATING_MODES, SERVING_MODE_LABELS } from "../constants.js"
 import { formatDDMMYYYY } from "../utils.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
+import { NavIcon } from "./icons.jsx";
 
 export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCode, onRate, onUnrate, onToggleMode, isBeer }) {
   const values = Object.values(ratings || {}).filter((v) => typeof v === "number" && isFinite(v));
   const average = values.length > 0 ? values.reduce((s, v) => s + v, 0) / values.length : null;
-  const myRating = ratings && ratings[myBibroCode];
+  const rawMyRating = ratings && ratings[myBibroCode];
+  const myRating = typeof rawMyRating === "number" && isFinite(rawMyRating) ? rawMyRating : null;
   const myRatingDate = ratingDates && ratingDates[myBibroCode];
   const myTastedModes = (ratedServingModes && ratedServingModes[myBibroCode]) || [];
-  const hasRating = typeof myRating === "number" && isFinite(myRating);
+  const hasRating = myRating != null;
 
   // La barre ne s'affiche que pour donner une première note, ou pendant une modification
   // volontaire — une fois notée, l'affichage se fige pour éviter de la changer par accident
   // en effleurant la barre par mégarde.
   const [isEditing, setIsEditing] = useState(!hasRating);
+  const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
 
-  const confirmRating = (v) => {
-    onRate(v);
+  const confirmRating = () => {
+    onRate(pendingValue);
     setIsEditing(false);
   };
 
@@ -46,15 +49,38 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
 
       {isEditing ? (
         <>
-          <RatingSlider value={hasRating ? myRating : 0} onChange={confirmRating} />
-          {hasRating && (
+          <RatingSlider value={hasRating ? myRating : 0} onLocalChange={setPendingValue} />
+          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+            {hasRating && (
+              <button
+                onClick={() => setIsEditing(false)}
+                style={{ flex: 1, background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "10px", color: COLORS.ink, fontSize: "13px", fontWeight: 600, cursor: "pointer" }}
+              >
+                Annuler
+              </button>
+            )}
             <button
-              onClick={() => setIsEditing(false)}
-              style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0, marginTop: "10px" }}
+              onClick={confirmRating}
+              style={{
+                flex: hasRating ? 1 : "none",
+                width: hasRating ? "auto" : "100%",
+                background: COLORS.amber,
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px",
+                color: COLORS.paper,
+                fontSize: "13px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+              }}
             >
-              Annuler
+              ✓ Valider
             </button>
-          )}
+          </div>
         </>
       ) : (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -62,8 +88,15 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
             <StarsDisplay value={myRating} size={22} />
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{String(myRating).replace(".", ",")}</span>
           </div>
-          <button onClick={() => setIsEditing(true)} style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "6px 12px", color: COLORS.ink, fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-            Modifier
+          <button
+            onClick={() => {
+              setPendingValue(myRating);
+              setIsEditing(true);
+            }}
+            title="Modifier ma note"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex" }}
+          >
+            <NavIcon name="pencil" size={19} color={COLORS.amber} />
           </button>
         </div>
       )}
