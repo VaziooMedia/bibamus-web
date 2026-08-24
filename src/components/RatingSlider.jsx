@@ -1,20 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 
 // Barre de notation horizontale, réglable au quart d'étoile (0,25 à 5) — la valeur choisie se
 // reflète immédiatement au-dessus, sous forme d'étoiles vert fluo, plutôt que de ne pouvoir
 // choisir qu'une note entière comme avant.
+//
+// Le déplacement met à jour l'affichage localement en instantané ; l'enregistrement réel
+// (via onChange, qui déclenche une écriture réseau côté parent) n'a lieu qu'au relâchement —
+// sinon chaque minuscule mouvement déclencherait sa propre écriture, ce qui sature et donne
+// l'impression que le curseur reste bloqué.
 export function RatingSlider({ value, onChange }) {
-  const display = value || 0;
-  const percent = ((display - 0.25) / (5 - 0.25)) * 100;
+  const [localValue, setLocalValue] = useState(value || 0.25);
+
+  useEffect(() => {
+    setLocalValue(value || 0.25);
+  }, [value]);
+
+  const percent = ((localValue - 0.25) / (5 - 0.25)) * 100;
+
+  const commit = () => {
+    if (!isNaN(localValue)) onChange(localValue);
+  };
 
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-        <StarsDisplay value={display} size={24} />
+        <StarsDisplay value={localValue} size={24} />
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.amber }}>
-          {display > 0 ? String(display).replace(".", ",") : "—"}
+          {localValue > 0 ? String(localValue).replace(".", ",") : "—"}
         </span>
       </div>
       <input
@@ -22,11 +36,14 @@ export function RatingSlider({ value, onChange }) {
         min="0.25"
         max="5"
         step="0.25"
-        value={display || 0.25}
-        onChange={(e) => {
+        value={localValue}
+        onInput={(e) => {
           const v = parseFloat(e.target.value);
-          if (!isNaN(v)) onChange(v);
+          if (!isNaN(v)) setLocalValue(v);
         }}
+        onMouseUp={commit}
+        onTouchEnd={commit}
+        onKeyUp={commit}
         style={{
           width: "100%",
           height: "8px",

@@ -586,4 +586,4 @@ export const WEEKDAY_SHORT_MON_FIRST = ["L", "M", "M", "J", "V", "S", "D"];
 
 // À incrémenter à chaque mise à jour envoyée — permet de vérifier d'un coup d'œil qu'un
 // déploiement a bien pris effet, plutôt que de deviner face à un souci de cache.
-export const APP_VERSION = "26.23";
+export const APP_VERSION = "26.24";
