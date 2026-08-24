@@ -6,19 +6,29 @@ import React, { useState } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS, RATABLE_DRINK_TYPES, SERVING_MODE_LABELS, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { NavIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { PhotoUploadField } from "./PhotoUploadField.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { StarRating } from "./StarRating.jsx";
 import { drinkTypeLabel, formatDrinkFieldValue } from "../utils.js";
 
-export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, onAcceptEdit, onRejectEdit, onOpenTagFilter }) {
+export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, onAcceptEdit, onRejectEdit, onOpenTagFilter, onUploadPhoto }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const isBeer = BEER_TYPES.includes(drink.type);
   const isLockedForMe = !isAdmin && drink.status === "certified";
   const pendingEdit = drink.pendingEdit;
 
+  const handlePhotoUpload = async (file) => {
+    setUploadingPhoto(true);
+    await onUploadPhoto(file);
+    setUploadingPhoto(false);
+  };
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
+
+      <PhotoUploadField photoUrl={drink.photoUrl} onUpload={handlePhotoUpload} uploading={uploadingPhoto} label="" />
 
       {drink.status === "pending" && (
         <div style={{ background: COLORS.paperAlt, borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: COLORS.inkSoft }}>
@@ -56,10 +66,7 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "4px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
-          <EntityAvatar photoEmoji={drink.avatarEmoji} size={48} fallbackIcon="bottle" />
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: 0, lineHeight: 1, flex: 1, minWidth: 0 }}>{drink.name}</h1>
-        </div>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: 0, lineHeight: 1, flex: 1, minWidth: 0 }}>{drink.name}</h1>
         {drink.status === "certified" && <VerifiedBadge size={22} />}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>

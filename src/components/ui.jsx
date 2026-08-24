@@ -84,13 +84,13 @@ export function ScrollToTopButton() {
   );
 }
 
-export function EntityAvatar({ photoEmoji, size = 40, onClick, fallbackIcon = "bibamus-monogram", fallbackColor = COLORS.amber }) {
-  const content = photoEmoji ? photoEmoji : <NavIcon name={fallbackIcon} size={Math.round(size * 0.58)} color={fallbackColor} />;
+export function EntityAvatar({ photoUrl, photoEmoji, size = 40, onClick, fallbackIcon = "bibamus-monogram", fallbackColor = COLORS.amber }) {
+  const content = photoUrl ? null : photoEmoji ? photoEmoji : <NavIcon name={fallbackIcon} size={Math.round(size * 0.58)} color={fallbackColor} />;
   const style = {
     width: `${size}px`,
     height: `${size}px`,
     borderRadius: "50%",
-    background: COLORS.paperAlt,
+    background: photoUrl ? `${COLORS.paperAlt} url(${photoUrl}) center/cover no-repeat` : COLORS.paperAlt,
     border: `2px solid ${COLORS.paperAlt}`,
     display: "flex",
     alignItems: "center",

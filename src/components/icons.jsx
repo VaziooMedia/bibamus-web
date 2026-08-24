@@ -372,6 +372,13 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <rect x="514" y="69" width="226" height="92" rx="46" ry="46" fill={color} />
         </svg>
       );
+    case "camera":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+          <circle cx="12" cy="13" r="4" />
+        </svg>
+      );
     default:
       return null;
   }

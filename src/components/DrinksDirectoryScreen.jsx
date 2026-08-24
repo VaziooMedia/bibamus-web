@@ -135,7 +135,7 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flex: 1, minWidth: 0 }}>
-        <EntityAvatar photoEmoji={d.avatarEmoji} size={40} fallbackIcon="bottle" />
+        <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={40} fallbackIcon="bottle" />
         <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
           {d.name}

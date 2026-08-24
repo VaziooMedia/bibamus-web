@@ -168,6 +168,7 @@ function rowToDrink(row) {
     averagePrice: row.average_price,
     averageJetonValue: row.average_jeton_value,
     avatarEmoji: row.avatar_emoji,
+    photoUrl: row.photo_url,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
     description: row.description,
@@ -200,6 +201,7 @@ function drinkToRow(d, partial = false) {
     average_price: d.averagePrice,
     average_jeton_value: d.averageJetonValue,
     avatar_emoji: d.avatarEmoji,
+    photo_url: d.photoUrl,
     submitted_by: d.submittedBy,
     submitted_at: d.submittedAt ? new Date(d.submittedAt).toISOString() : undefined,
     description: d.description,
@@ -216,7 +218,34 @@ function drinkToRow(d, partial = false) {
   return row;
 }
 
-/* ---------------- BRASSERIES & PRODUCTEURS ---------------- */
+/* ---------------- PHOTOS DE PRODUITS ---------------- */
+
+// Compresse et redimensionne l'image côté appareil avant l'envoi — un smartphone produit
+// souvent des photos de plusieurs Mo, largement plus grandes que nécessaire pour un affichage
+// mobile, et ça évite de saturer inutilement le stockage et de ralentir le chargement des fiches.
+async function resizeImage(file, maxDim = 1000, quality = 0.82) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+}
+
+export async function uploadDrinkPhoto(drinkId, file) {
+  const blob = await resizeImage(file);
+  const path = `${drinkId}-${Date.now()}.jpg`;
+  const { error: uploadError } = await supabase.storage.from("drink-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) {
+    console.error("uploadDrinkPhoto:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("drink-photos").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 
 export async function loadBreweriesDirectory() {
   const { data, error } = await supabase.from("breweries_directory").select("*").order("name");

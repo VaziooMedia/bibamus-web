@@ -48,6 +48,7 @@ import {
   deleteBrand,
   deleteDrink,
   deletePublicVenue,
+  uploadDrinkPhoto,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, kcalForDrink } from "./utils.js";
@@ -325,6 +326,13 @@ export default function App() {
     });
     if (created) setVenues((prev) => [...prev, created]);
     setScreen("venueDirectory");
+  };
+
+  const uploadPhotoForDrink = async (drinkId, file) => {
+    const url = await uploadDrinkPhoto(drinkId, file);
+    if (!url) return;
+    updateDrink(drinkId, { photoUrl: url });
+    setDrinksDirectory((prev) => prev.map((d) => (d.id === drinkId ? { ...d, photoUrl: url } : d)));
   };
 
   const submitDrink = async (drinkData) => {
@@ -1120,6 +1128,7 @@ export default function App() {
                 onAcceptEdit={() => acceptDrinkEdit(viewedDrinkId)}
                 onRejectEdit={() => rejectDrinkEdit(viewedDrinkId)}
                 onOpenTagFilter={openTagFilter}
+                onUploadPhoto={(file) => uploadPhotoForDrink(viewedDrinkId, file)}
               />
             )}
             {screen === "profile" && (
