@@ -23,7 +23,10 @@ export function RatingSlider({ value, onChange }) {
         max="5"
         step="0.25"
         value={display || 0.25}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
+        onChange={(e) => {
+          const v = parseFloat(e.target.value);
+          if (!isNaN(v)) onChange(v);
+        }}
         style={{
           width: "100%",
           height: "8px",

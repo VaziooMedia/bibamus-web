@@ -8,7 +8,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 
 export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCode, onRate, onUnrate, onToggleMode, isBeer }) {
-  const values = Object.values(ratings || {});
+  const values = Object.values(ratings || {}).filter((v) => typeof v === "number" && isFinite(v));
   const average = values.length > 0 ? values.reduce((s, v) => s + v, 0) / values.length : null;
   const myRating = ratings && ratings[myBibroCode];
   const myRatingDate = ratingDates && ratingDates[myBibroCode];

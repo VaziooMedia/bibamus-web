@@ -156,7 +156,8 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
           d.ratings &&
           Object.keys(d.ratings).length > 0 &&
           (() => {
-            const values = Object.values(d.ratings);
+            const values = Object.values(d.ratings).filter((v) => typeof v === "number" && isFinite(v));
+            if (values.length === 0) return null;
             const avg = values.reduce((s, v) => s + v, 0) / values.length;
             return (
               <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12.5px", color: COLORS.amber, fontWeight: 700, whiteSpace: "nowrap" }}>
