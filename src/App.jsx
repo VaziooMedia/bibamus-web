@@ -372,6 +372,7 @@ export default function App() {
   // Note et modes goûtés : partagés sur la fiche du produit elle-même (comme dans le prototype
   // Claude) — chaque Bibax y ajoute sa propre entrée, indexée par son code personnel.
   const rateDrink = (drinkId, value) => {
+    console.log("[DIAGNOSTIC] rateDrink called — drinkId:", drinkId, "value:", value, "typeof value:", typeof value);
     setDrinksDirectory((prev) =>
       prev.map((d) =>
         d.id === drinkId
