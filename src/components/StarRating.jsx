@@ -1,7 +1,7 @@
 // ============================================================
 // Bloc de notation (étoiles + modes goûtés) d'une boisson.
 // ============================================================
-import React from "react";
+import React, { useState } from "react";
 import { COLORS, BEER_RATING_MODES, SERVING_MODE_LABELS } from "../constants.js";
 import { formatDDMMYYYY } from "../utils.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
@@ -13,6 +13,17 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
   const myRating = ratings && ratings[myBibroCode];
   const myRatingDate = ratingDates && ratingDates[myBibroCode];
   const myTastedModes = (ratedServingModes && ratedServingModes[myBibroCode]) || [];
+  const hasRating = typeof myRating === "number" && isFinite(myRating);
+
+  // La barre ne s'affiche que pour donner une première note, ou pendant une modification
+  // volontaire — une fois notée, l'affichage se fige pour éviter de la changer par accident
+  // en effleurant la barre par mégarde.
+  const [isEditing, setIsEditing] = useState(!hasRating);
+
+  const confirmRating = (v) => {
+    onRate(v);
+    setIsEditing(false);
+  };
 
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
@@ -32,11 +43,41 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
       )}
 
       <div style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Ta note</div>
-      <RatingSlider value={myRating} onChange={(v) => onRate(v)} />
+
+      {isEditing ? (
+        <>
+          <RatingSlider value={hasRating ? myRating : 0} onChange={confirmRating} />
+          {hasRating && (
+            <button
+              onClick={() => setIsEditing(false)}
+              style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0, marginTop: "10px" }}
+            >
+              Annuler
+            </button>
+          )}
+        </>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <StarsDisplay value={myRating} size={22} />
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{String(myRating).replace(".", ",")}</span>
+          </div>
+          <button onClick={() => setIsEditing(true)} style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "6px 12px", color: COLORS.ink, fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+            Modifier
+          </button>
+        </div>
+      )}
+
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px" }}>
         {myRatingDate ? <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: 0 }}>Notée le {formatDDMMYYYY(myRatingDate)}</p> : <span />}
-        {myRating != null && (
-          <button onClick={onUnrate} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0 }}>
+        {hasRating && (
+          <button
+            onClick={() => {
+              onUnrate();
+              setIsEditing(true);
+            }}
+            style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0 }}
+          >
             Retirer ma note
           </button>
         )}
