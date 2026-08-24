@@ -19,11 +19,17 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
 
   // La barre ne s'affiche que pour donner une première note, ou pendant une modification
   // volontaire — une fois notée, l'affichage se fige pour éviter de la changer par accident
-  // en effleurant la barre par mégarde. Recalculé à chaque rendu (pas seulement à l'initial)
-  // pour ne jamais rester bloqué sur l'affichage figé si la note s'avère finalement invalide.
+  // en effleurant la barre par mégarde.
   const [isEditing, setIsEditing] = useState(!hasRating);
-  const showEditor = isEditing || !hasRating;
   const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
+
+  // Si la note stockée s'avère invalide (ex. une donnée corrompue), on repasse en mode édition
+  // — mais uniquement dans ce sens : ça ne doit jamais empêcher de sortir du mode édition une
+  // fois qu'on vient de valider une toute première note.
+  React.useEffect(() => {
+    if (!hasRating) setIsEditing(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasRating]);
 
   const confirmRating = () => {
     onRate(pendingValue);
@@ -49,7 +55,7 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
 
       <div style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Ta note</div>
 
-      {showEditor ? (
+      {isEditing ? (
         <>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
             <div style={{ flex: 1 }}>
@@ -90,7 +96,10 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <StarsDisplay value={myRating} size={22} />
-            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{String(myRating).replace(".", ",")}</span>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }}>
+              <span style={{ color: COLORS.amber }}>{String(myRating).replace(".", ",")}</span>
+              <span style={{ color: COLORS.ink }}>/5</span>
+            </span>
           </div>
           <button
             onClick={() => {
