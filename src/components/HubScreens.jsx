@@ -100,7 +100,7 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToNewS
   );
 }
 
-export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToManageBreweries, goToManageBrands }) {
+export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToManageBreweries, goToManageBrands, goToScanBarcode }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -113,6 +113,12 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <ActionCard
+          icon={<NavIcon name="camera" size={18} color={COLORS.amber} />}
+          title="Scanner un code-barres"
+          subtitle="Retrouve un produit directement depuis sa bouteille ou sa canette"
+          onClick={goToScanBarcode}
+        />
         <ActionCard
           icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
           title="Établissements & lieux"

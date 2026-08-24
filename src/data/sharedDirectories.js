@@ -301,6 +301,41 @@ function breweryToRow(b, partial = false) {
   return row;
 }
 
+/* ---------------- CODES-BARRES ---------------- */
+
+// Un code-barres n'est jamais l'identité d'une boisson — plusieurs conditionnements (bouteille,
+// canette, différents volumes) d'une même bière ont chacun leur propre code, tous rattachés à
+// la même fiche. Le scan sert uniquement de raccourci vers une fiche existante, jamais à créer
+// automatiquement un nouveau produit.
+
+export async function lookupBarcode(barcode) {
+  const { data, error } = await supabase.from("drink_barcodes").select("*").eq("barcode", barcode).maybeSingle();
+  if (error) {
+    console.error("lookupBarcode:", error);
+    return null;
+  }
+  if (!data) return null;
+  return { productId: data.product_id, container: data.container, volumeMl: data.volume_ml, verified: data.verified };
+}
+
+export async function associateBarcode({ barcode, productId, format, container, volumeMl, addedBy }) {
+  const { error } = await supabase.from("drink_barcodes").insert({
+    id: `barcode-${Date.now()}`,
+    barcode,
+    product_id: productId,
+    format: format || null,
+    container: container || null,
+    volume_ml: volumeMl || null,
+    added_by: addedBy || null,
+    verified: false,
+  });
+  if (error) {
+    console.error("associateBarcode:", error);
+    return false;
+  }
+  return true;
+}
+
 /* ---------------- MARQUES ---------------- */
 
 export async function loadBrandsDirectory() {

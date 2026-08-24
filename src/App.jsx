@@ -8,6 +8,7 @@ import React, { useState, useEffect } from "react";
 import { NavigationContext, ProfileNavContext } from "./contexts.js";
 import { BottomNav } from "./components/ui.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
+import { BarcodeScannerModal } from "./components/BarcodeScannerModal.jsx";
 import { BibamusLogoFull } from "./components/icons.jsx";
 import { SessionHubScreen, RepertoireHubScreen, ComingSoonScreen } from "./components/HubScreens.jsx";
 import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
@@ -348,6 +349,7 @@ export default function App() {
   const [viewedVenueId, setViewedVenueId] = useState(null);
   const [viewedDrinkId, setViewedDrinkId] = useState(null);
   const [viewedHistoryEventId, setViewedHistoryEventId] = useState(null);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [onboardingName, setOnboardingName] = useState("");
   const [checkIns] = useState([]);
   const [checkedInVenueId, setCheckedInVenueId] = useState(null);
@@ -902,6 +904,7 @@ export default function App() {
                 goToDrinks={() => setScreen("drinksDirectory")}
                 goToManageBreweries={() => setScreen("breweries")}
                 goToManageBrands={() => setScreen("brands")}
+                goToScanBarcode={() => setShowBarcodeScanner(true)}
               />
             )}
             {(screen === "newEvent" || screen === "newSalonEvent") && (
@@ -1445,6 +1448,18 @@ export default function App() {
           />
         </div>
       </ProfileNavContext.Provider>
+      {showBarcodeScanner && (
+        <BarcodeScannerModal
+          drinksDirectory={drinksDirectory}
+          myBibroCode={profile.myBibroCode}
+          onClose={() => setShowBarcodeScanner(false)}
+          onFoundDrink={(drinkId) => {
+            setShowBarcodeScanner(false);
+            setViewedDrinkId(drinkId);
+            setScreen("drinkDetail");
+          }}
+        />
+      )}
     </NavigationContext.Provider>
   );
 }
