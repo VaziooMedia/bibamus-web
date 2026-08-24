@@ -19,8 +19,10 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
 
   // La barre ne s'affiche que pour donner une première note, ou pendant une modification
   // volontaire — une fois notée, l'affichage se fige pour éviter de la changer par accident
-  // en effleurant la barre par mégarde.
+  // en effleurant la barre par mégarde. Recalculé à chaque rendu (pas seulement à l'initial)
+  // pour ne jamais rester bloqué sur l'affichage figé si la note s'avère finalement invalide.
   const [isEditing, setIsEditing] = useState(!hasRating);
+  const showEditor = isEditing || !hasRating;
   const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
 
   const confirmRating = () => {
@@ -47,40 +49,42 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
 
       <div style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Ta note</div>
 
-      {isEditing ? (
+      {showEditor ? (
         <>
-          <RatingSlider value={hasRating ? myRating : 0} onLocalChange={setPendingValue} />
-          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-            {hasRating && (
-              <button
-                onClick={() => setIsEditing(false)}
-                style={{ flex: 1, background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "10px", color: COLORS.ink, fontSize: "13px", fontWeight: 600, cursor: "pointer" }}
-              >
-                Annuler
-              </button>
-            )}
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
+            <div style={{ flex: 1 }}>
+              <RatingSlider value={hasRating ? myRating : 0} onLocalChange={setPendingValue} />
+            </div>
             <button
               onClick={confirmRating}
+              title="Valider ma note"
               style={{
-                flex: hasRating ? 1 : "none",
-                width: hasRating ? "auto" : "100%",
                 background: COLORS.amber,
                 border: "none",
                 borderRadius: "8px",
-                padding: "10px",
+                width: "34px",
+                height: "34px",
+                flexShrink: 0,
                 color: COLORS.paper,
-                fontSize: "13px",
-                fontWeight: 700,
+                fontSize: "15px",
+                fontWeight: 800,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "6px",
               }}
             >
-              ✓ Valider
+              V
             </button>
           </div>
+          {hasRating && (
+            <button
+              onClick={() => setIsEditing(false)}
+              style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0, marginTop: "10px" }}
+            >
+              Annuler
+            </button>
+          )}
         </>
       ) : (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
