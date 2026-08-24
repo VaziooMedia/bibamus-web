@@ -10,10 +10,22 @@ import { lookupBarcode, associateBarcode } from "../data/sharedDirectories.js";
 export function BarcodeScannerModal({ drinksDirectory, myBibroCode, onClose, onFoundDrink }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
-  const [phase, setPhase] = useState("scanning"); // scanning | notFound | associating | error
+  const streamRef = useRef(null);
+  const pollRef = useRef(null);
+  const [phase, setPhase] = useState("scanning"); // scanning | notFound | associating | error | manualEntry
   const [scannedCode, setScannedCode] = useState(null);
+  const [manualCode, setManualCode] = useState("");
   const [query, setQuery] = useState("");
   const [associating, setAssociating] = useState(false);
+
+  const stopEverything = () => {
+    clearInterval(pollRef.current);
+    pollRef.current = null;
+    readerRef.current?.stopContinuousDecode?.();
+    readerRef.current?.reset?.();
+    streamRef.current?.getTracks()?.forEach((t) => t.stop());
+    streamRef.current = null;
+  };
 
   useEffect(() => {
     if (phase !== "scanning") return;
@@ -21,15 +33,44 @@ export function BarcodeScannerModal({ drinksDirectory, myBibroCode, onClose, onF
 
     (async () => {
       try {
-        const { BrowserMultiFormatReader } = await import("@zxing/browser");
-        const reader = new BrowserMultiFormatReader();
-        readerRef.current = reader;
-        await reader.decodeFromVideoDevice(undefined, videoRef.current, (result, err) => {
-          if (cancelled || !result) return;
-          const code = result.getText();
-          setScannedCode(code);
-          handleScan(code);
-        });
+        // Priorité à l'API native du navigateur (BarcodeDetector) — disponible sur Safari iOS
+        // et Chrome récents, sans dépendre d'une bibliothèque externe. Repli sur ZXing
+        // uniquement si cette API native n'existe pas sur l'appareil.
+        if ("BarcodeDetector" in window) {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+          if (cancelled) {
+            stream.getTracks().forEach((t) => t.stop());
+            return;
+          }
+          streamRef.current = stream;
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+
+          const detector = new window.BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"] });
+          pollRef.current = setInterval(async () => {
+            if (cancelled || !videoRef.current) return;
+            try {
+              const results = await detector.detect(videoRef.current);
+              if (results.length > 0) {
+                const code = results[0].rawValue;
+                setScannedCode(code);
+                handleScan(code);
+              }
+            } catch (e) {
+              // une image ponctuellement illisible n'est pas une erreur — on continue simplement
+            }
+          }, 400);
+        } else {
+          const { BrowserMultiFormatReader } = await import("@zxing/browser");
+          const reader = new BrowserMultiFormatReader();
+          readerRef.current = reader;
+          await reader.decodeFromConstraints({ video: { facingMode: { ideal: "environment" } } }, videoRef.current, (result) => {
+            if (cancelled || !result) return;
+            const code = result.getText();
+            setScannedCode(code);
+            handleScan(code);
+          });
+        }
       } catch (e) {
         console.error("Barcode scanner:", e);
         if (!cancelled) setPhase("error");
@@ -38,15 +79,13 @@ export function BarcodeScannerModal({ drinksDirectory, myBibroCode, onClose, onF
 
     return () => {
       cancelled = true;
-      readerRef.current?.stopContinuousDecode?.();
-      readerRef.current?.reset?.();
+      stopEverything();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
   const handleScan = async (code) => {
-    readerRef.current?.stopContinuousDecode?.();
-    readerRef.current?.reset?.();
+    stopEverything();
     const match = await lookupBarcode(code);
     if (match) {
       onFoundDrink(match.productId);
@@ -81,6 +120,33 @@ export function BarcodeScannerModal({ drinksDirectory, myBibroCode, onClose, onF
             <video ref={videoRef} style={{ width: "100%", display: "block", background: "#000" }} muted playsInline />
           </div>
           <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", marginTop: "16px", textAlign: "center" }}>Visez le code-barres sur la bouteille ou la canette</p>
+          <button
+            onClick={() => setPhase("manualEntry")}
+            style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "6px" }}
+          >
+            Entrer le code manuellement
+          </button>
+        </div>
+      )}
+
+      {phase === "manualEntry" && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 30px" }}>
+          <p style={{ color: COLORS.ink, fontSize: "14px", marginBottom: "14px", textAlign: "center" }}>Tapez les chiffres sous le code-barres</p>
+          <input
+            value={manualCode}
+            onChange={(e) => setManualCode(e.target.value.replace(/[^0-9]/g, ""))}
+            inputMode="numeric"
+            placeholder="Ex. 5410228128560"
+            autoFocus
+            style={{ padding: "14px 16px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "16px", textAlign: "center", width: "100%", maxWidth: "280px", marginBottom: "14px" }}
+          />
+          <button
+            onClick={() => manualCode.trim() && handleScan(manualCode.trim())}
+            disabled={!manualCode.trim()}
+            style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px 24px", fontWeight: 700, fontSize: "14px", color: COLORS.paper, cursor: "pointer", opacity: manualCode.trim() ? 1 : 0.5 }}
+          >
+            Valider
+          </button>
         </div>
       )}
 
