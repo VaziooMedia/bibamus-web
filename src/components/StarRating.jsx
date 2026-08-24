@@ -13,7 +13,6 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
   const average = values.length > 0 ? values.reduce((s, v) => s + v, 0) / values.length : null;
   const rawMyRating = ratings && ratings[myBibroCode];
   const myRating = typeof rawMyRating === "number" && isFinite(rawMyRating) ? rawMyRating : null;
-  console.log("[DIAGNOSTIC] StarRating render — rawMyRating:", rawMyRating, "typeof:", typeof rawMyRating, "myRating:", myRating, "full ratings object:", JSON.stringify(ratings));
   const myRatingDate = ratingDates && ratingDates[myBibroCode];
   const myTastedModes = (ratedServingModes && ratedServingModes[myBibroCode]) || [];
   const hasRating = myRating != null;
@@ -33,7 +32,6 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
   }, [hasRating]);
 
   const confirmRating = () => {
-    console.log("[DIAGNOSTIC] confirmRating — pendingValue:", pendingValue, "typeof:", typeof pendingValue, "rawMyRating before:", rawMyRating);
     onRate(pendingValue);
     setIsEditing(false);
   };

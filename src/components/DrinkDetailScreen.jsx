@@ -80,9 +80,9 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
           ratedServingModes={drink.ratedServingModes}
           myBibroCode={myBibroCode}
           isBeer={BEER_TYPES.includes(drink.type)}
-          onRate={(v) => onRate(drink.id, v)}
+          onRate={(v) => onRate(v)}
           onUnrate={() => onUnrate(drink.id)}
-          onToggleMode={(mode) => onToggleMode(drink.id, mode)}
+          onToggleMode={(mode) => onToggleMode(mode)}
         />
       )}
 
