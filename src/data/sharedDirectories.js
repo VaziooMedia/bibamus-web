@@ -70,6 +70,7 @@ function rowToVenue(row) {
     lng: row.lng,
     avatarEmoji: row.avatar_emoji,
     googlePlaceId: row.google_place_id,
+    noGooglePresence: !!row.no_google_presence,
     status: row.status,
     likes: row.likes || [],
     menu: row.menu || [],
