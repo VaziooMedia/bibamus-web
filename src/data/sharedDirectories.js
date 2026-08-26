@@ -69,6 +69,7 @@ function rowToVenue(row) {
     lat: row.lat,
     lng: row.lng,
     avatarEmoji: row.avatar_emoji,
+    googlePlaceId: row.google_place_id,
     status: row.status,
     likes: row.likes || [],
     menu: row.menu || [],
@@ -116,6 +117,26 @@ function venueToRow(v, partial = false) {
   // fields the caller didn't mean to touch.
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
+}
+
+/* ---------------- HORAIRES — GOOGLE PLACES (source unique) ---------------- */
+
+// Google est la source unique des horaires — jamais de saisie manuelle dans Bibamus.
+// L'appel réel à Google se fait côté serveur (Edge Function), la clé API n'est jamais
+// exposée ici.
+export async function loadEstablishmentOpeningHours(googlePlaceId) {
+  if (!googlePlaceId) return { status: "LINK_REQUIRED" };
+  try {
+    const { data, error } = await supabase.functions.invoke("google-place-hours", { body: { placeId: googlePlaceId } });
+    if (error) {
+      console.error("loadEstablishmentOpeningHours:", error);
+      return { status: "ERROR" };
+    }
+    return data;
+  } catch (e) {
+    console.error("loadEstablishmentOpeningHours:", e);
+    return { status: "ERROR" };
+  }
 }
 
 /* ---------------- PRODUITS (RÉPERTOIRE DES BOISSONS) ---------------- */

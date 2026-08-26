@@ -7,6 +7,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx";
 import { formatAddress, formatCompactCount, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
+import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 
 export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
   const [confirmReset, setConfirmReset] = useState(false);
@@ -125,6 +126,10 @@ export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn,
           ))}
         </div>
       )}
+
+      <div style={{ marginBottom: "20px" }}>
+        <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} />
+      </div>
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
         <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" title="Voir sur la carte" style={{ lineHeight: 0 }}>
