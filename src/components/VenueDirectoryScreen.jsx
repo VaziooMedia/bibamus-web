@@ -4,14 +4,41 @@
 // voit concrètement : `publicVenues` vient maintenant de la
 // vraie base de données, partagée entre tous les Bibax connectés.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton } from "./ui.jsx";
 import { normalizeForSearch, formatCompactCount, sameVenueByNameCity, formatAddress } from "../utils.js";
+import { useGeolocation } from "../hooks/useGeolocation.js";
+import { loadNearbyVenues } from "../data/sharedDirectories.js";
 
 export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAdmin, addIntent, onBack, onOpenVenue, goToSubmit, goToMap, onRefresh, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
   const [query, setQuery] = useState("");
+  const { status: geoStatus, position, requestPosition } = useGeolocation();
+  const [nearbyVenues, setNearbyVenues] = useState(null);
+  const [loadingNearby, setLoadingNearby] = useState(false);
+
+  const fetchNearby = async (pos) => {
+    setLoadingNearby(true);
+    const results = await loadNearbyVenues(pos.lat, pos.lng, 3000, 8);
+    setNearbyVenues(results);
+    setLoadingNearby(false);
+  };
+
+  useEffect(() => {
+    if (geoStatus === "granted" && position && nearbyVenues === null) {
+      fetchNearby(position);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoStatus, position]);
+
+  const handleNearbyClick = () => {
+    if (geoStatus === "granted" && position) {
+      fetchNearby(position);
+      return;
+    }
+    requestPosition();
+  };
 
   const visible = publicVenues;
   const q = normalizeForSearch(query.trim());
@@ -163,6 +190,55 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
           <span style={{ fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>🗺️ Voir sur une carte</span>
           <span style={{ fontSize: "13px", color: COLORS.chalkWhite, opacity: 0.7 }}>→</span>
         </button>
+      )}
+
+      {!addIntent && !activeCity && !activeCountry && !searching && (
+        <div style={{ marginBottom: "16px" }}>
+          {nearbyVenues === null ? (
+            <button
+              onClick={handleNearbyClick}
+              disabled={geoStatus === "loading" || loadingNearby}
+              style={{
+                background: "none",
+                border: `2px dashed ${COLORS.paperAlt}`,
+                borderRadius: "12px",
+                padding: "13px 16px",
+                cursor: "pointer",
+                width: "100%",
+                color: COLORS.amber,
+                fontWeight: 700,
+                fontSize: "14px",
+              }}
+            >
+              {geoStatus === "loading" || loadingNearby ? "Recherche..." : "📍 Établissements près de moi"}
+              {geoStatus === "denied" && (
+                <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
+                  Position refusée — activez-la dans les réglages de votre navigateur pour réessayer.
+                </span>
+              )}
+              {geoStatus === "unavailable" && (
+                <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
+                  Géolocalisation non disponible sur cet appareil.
+                </span>
+              )}
+            </button>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>📍 Près de vous</span>
+                <button onClick={() => setNearbyVenues(null)} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12px", textDecoration: "underline", cursor: "pointer" }}>
+                  Masquer
+                </button>
+              </div>
+              {nearbyVenues.length === 0 ? (
+                <p style={{ color: COLORS.inkSoft, fontSize: "13px", fontStyle: "italic" }}>Aucun établissement répertorié à proximité pour l'instant.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>{nearbyVenues.map(renderVenueRow)}</div>
+              )}
+              <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, margin: "18px 0" }} />
+            </>
+          )}
+        </div>
       )}
 
       <input
