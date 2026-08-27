@@ -1,5 +1,5 @@
 {
-  "name": "bibamus-web",
+  "name": "bibamus-admin",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -11,8 +11,7 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "@supabase/supabase-js": "^2.45.0",
-    "@zxing/browser": "^0.1.5"
+    "@supabase/supabase-js": "^2.45.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

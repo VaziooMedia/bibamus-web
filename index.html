@@ -2,21 +2,10 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Bibamus</title>
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Bibamus" />
-    <meta name="theme-color" content="#0D1B2A" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bibamus — Gestion</title>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800;900&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-
-      * {
-        box-sizing: border-box;
-      }
+      @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800;900&family=Work+Sans:wght@400;500;600;700&display=swap');
       html, body {
         background: #0D1B2A;
         color: #F2F2E8;
@@ -27,42 +16,16 @@
         color: inherit;
         font: inherit;
       }
-      button {
-        background: none;
-      }
-      a {
-        color: inherit;
-      }
-      @keyframes bibaBobBlink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.25; }
-      }
       input, select, textarea {
         background: #16273D;
         color: #F2F2E8;
       }
-      input[type="number"]::-webkit-outer-spin-button,
-      input[type="number"]::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
+      table {
+        border-collapse: collapse;
+        width: 100%;
       }
-      input[type="number"] {
-        -moz-appearance: textfield;
-      }
-      input::placeholder, textarea::placeholder {
-        color: #8792A6;
-        opacity: 1;
-      }
-      select option {
-        background: #16273D;
-        color: #F2F2E8;
-      }
-      /* Empêche iOS Safari de zoomer automatiquement à la mise au point d'un champ —
-         ça ne se déclenche que si la taille de police est inférieure à 16px. */
-      @media (max-width: 480px) {
-        input, select, textarea {
-          font-size: 16px !important;
-        }
+      * {
+        box-sizing: border-box;
       }
     </style>
   </head>
