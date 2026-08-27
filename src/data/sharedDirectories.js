@@ -120,6 +120,18 @@ function venueToRow(v, partial = false) {
   return row;
 }
 
+// Établissements proches — s'appuie sur PostGIS côté Supabase (fonction get_nearby_venues),
+// jamais sur Geoapify pour ce calcul. Réutilisable pour tous les usages "autour de moi"
+// (suggestions à la création d'un salon, écran Découvrir, BibaGo...).
+export async function loadNearbyVenues(lat, lng, radiusMeters = 2000, limit = 10) {
+  const { data, error } = await supabase.rpc("get_nearby_venues", { p_lat: lat, p_lng: lng, p_radius_meters: radiusMeters, p_limit: limit });
+  if (error) {
+    console.error("loadNearbyVenues:", error);
+    return [];
+  }
+  return data.map((row) => ({ ...rowToVenue(row), distanceMeters: row.distance_meters ?? row.distance }));
+}
+
 /* ---------------- HORAIRES — GOOGLE PLACES (source unique) ---------------- */
 
 // Google est la source unique des horaires — jamais de saisie manuelle dans Bibamus.

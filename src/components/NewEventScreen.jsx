@@ -7,6 +7,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { ParticipantsEditor, PublicVenueSearchPicker } from "./Pickers.jsx";
+import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { capitalizeFirst, todayISO } from "../utils.js";
 
 export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, venues = [], publicVenues = [], onResolvePublicVenue, bibros = [] }) {
@@ -169,6 +170,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>
           {venues.length > 0 ? "Autres lieux" : "Un lieu déjà répertorié ?"}
         </label>
+        <NearbyVenueSuggestions onPick={pickFromDirectory} />
         <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} />
       </div>
 
