@@ -27,18 +27,19 @@ export const COLORS = {
 };
 
 export const DRINK_TYPES = [
-  "Bières",
-  "Vins & bulles",
+  "Bières & Cidres",
+  "Vins & Bulles",
   "Spiritueux",
   "Cocktails / Mocktails",
-  "Softs & eaux",
+  "Softs & Eaux",
   "Boissons chaudes",
   "Snacks",
+  "Génériques",
 ];
 
-export const MENU_CATEGORIES = ["Bières", "Vins & bulles", "Spiritueux", "Shots", "Cocktails / Mocktails", "Softs & eaux", "Boissons chaudes", "Snacks"];
+export const MENU_CATEGORIES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Shots", "Cocktails / Mocktails", "Softs & Eaux", "Boissons chaudes", "Snacks"];
 
-export const RATABLE_DRINK_TYPES = ["Bières", "Vins & bulles", "Spiritueux", "Cocktails / Mocktails"];
+export const RATABLE_DRINK_TYPES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Cocktails / Mocktails"];
 
 export const BEER_RATING_MODES = ["bouteille", "canette", "fut"];
 
@@ -300,22 +301,25 @@ export const DRINK_CATEGORY_ICONS = {
 };
 
 export const DRINK_TYPE_MIGRATIONS = {
-  "Bière pils": "Bières",
-  "Bière spéciales": "Bières",
-  Bière: "Bières",
-  "Vin & bulles": "Vins & bulles",
+  "Bière pils": "Bières & Cidres",
+  "Bière spéciales": "Bières & Cidres",
+  Bière: "Bières & Cidres",
+  Bières: "Bières & Cidres",
+  "Vin & bulles": "Vins & Bulles",
+  "Vins & bulles": "Vins & Bulles",
   Alcools: "Spiritueux",
   Cocktails: "Cocktails / Mocktails",
   Shooters: "Spiritueux",
   Shots: "Spiritueux",
-  Eau: "Softs & eaux",
-  Soft: "Softs & eaux",
+  Eau: "Softs & Eaux",
+  Soft: "Softs & Eaux",
+  "Softs & eaux": "Softs & Eaux",
   "Boisson chaude": "Boissons chaudes",
   Snack: "Snacks",
 };
 
-export const NON_ALCOHOLIC_DRINK_TYPES = ["Softs & eaux", "Boissons chaudes", "Snacks"];
-export const GLUTEN_BIO_ELIGIBLE_TYPES = ["Bières"];
+export const NON_ALCOHOLIC_DRINK_TYPES = ["Softs & Eaux", "Boissons chaudes", "Snacks"];
+export const GLUTEN_BIO_ELIGIBLE_TYPES = ["Bières & Cidres"];
 
 export const NATIONALITY_ELIGIBLE_TYPES = ["Bières", "Vins & bulles", "Spiritueux", "Softs & eaux", "Boissons chaudes"];
 

@@ -54,7 +54,7 @@ function rowToVenue(row) {
     postalCode: row.postal_code,
     city: row.city,
     village: row.village,
-    country: row.country,
+    country: COUNTRY_CODE_TO_LABEL[row.country] || row.country,
     phone: row.phone,
     email: row.email,
     website: row.website,
@@ -285,11 +285,27 @@ export async function deleteDrink(id) {
   if (error) console.error("deleteDrink:", error);
 }
 
+// bibamus-admin stocke le type de produit sous forme de code technique stable (chantier
+// multilingue) — ex. "bieres_cidres" — alors que l'app grand public affiche et compare encore
+// sur le libellé français. Cette correspondance traduit à la frontière, dans les deux sens,
+// pour que les deux applications restent d'accord sur la valeur réellement stockée.
+const DRINK_TYPE_CODE_TO_LABEL = {
+  bieres_cidres: "Bières & Cidres",
+  vins_bulles: "Vins & Bulles",
+  spiritueux: "Spiritueux",
+  cocktails_mocktails: "Cocktails / Mocktails",
+  softs_eaux: "Softs & Eaux",
+  boissons_chaudes: "Boissons chaudes",
+  snacks: "Snacks",
+  generiques: "Génériques",
+};
+const DRINK_TYPE_LABEL_TO_CODE = Object.fromEntries(Object.entries(DRINK_TYPE_CODE_TO_LABEL).map(([code, label]) => [label, code]));
+
 function rowToDrink(row) {
   return {
     id: row.id,
     name: row.name,
-    type: row.type,
+    type: DRINK_TYPE_CODE_TO_LABEL[row.type] || row.type,
     brewery: row.brewery,
     brand: row.brand,
     nationality: row.nationality,
@@ -322,7 +338,7 @@ function rowToDrink(row) {
 function drinkToRow(d, partial = false) {
   const row = {
     name: d.name,
-    type: d.type,
+    type: DRINK_TYPE_LABEL_TO_CODE[d.type] || d.type,
     brewery: d.brewery,
     brand: d.brand,
     nationality: d.nationality,
@@ -411,11 +427,60 @@ export async function deleteBrewery(id) {
   if (error) console.error("deleteBrewery:", error);
 }
 
+// Même logique de frontière que pour le type de produit — bibamus-admin stocke le pays sous
+// forme de code technique (ex. "belgique"), l'app grand public affiche et compare encore sur
+// le libellé français.
+const COUNTRY_CODE_TO_LABEL = {
+  belgique: "Belgique",
+  france: "France",
+  pays_bas: "Pays-Bas",
+  allemagne: "Allemagne",
+  luxembourg: "Luxembourg",
+  algerie: "Algérie",
+  autriche: "Autriche",
+  bulgarie: "Bulgarie",
+  canada: "Canada",
+  chypre: "Chypre",
+  cote_d_ivoire: "Côte d'Ivoire",
+  croatie: "Croatie",
+  cuba: "Cuba",
+  danemark: "Danemark",
+  espagne: "Espagne",
+  estonie: "Estonie",
+  etats_unis: "États-Unis",
+  finlande: "Finlande",
+  grece: "Grèce",
+  hongrie: "Hongrie",
+  irlande: "Irlande",
+  islande: "Islande",
+  italie: "Italie",
+  lettonie: "Lettonie",
+  lituanie: "Lituanie",
+  malte: "Malte",
+  maroc: "Maroc",
+  mexique: "Mexique",
+  norvege: "Norvège",
+  pologne: "Pologne",
+  portugal: "Portugal",
+  republique_tcheque: "République tchèque",
+  roumanie: "Roumanie",
+  royaume_uni: "Royaume-Uni",
+  senegal: "Sénégal",
+  slovaquie: "Slovaquie",
+  slovenie: "Slovénie",
+  suede: "Suède",
+  suisse: "Suisse",
+  tunisie: "Tunisie",
+  venezuela: "Vénézuéla",
+  autre: "Autre",
+};
+const COUNTRY_LABEL_TO_CODE = Object.fromEntries(Object.entries(COUNTRY_CODE_TO_LABEL).map(([code, label]) => [label, code]));
+
 function rowToBrewery(row) {
   return {
     id: row.id,
     name: row.name,
-    country: row.country,
+    country: COUNTRY_CODE_TO_LABEL[row.country] || row.country,
     status: row.status,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
@@ -426,7 +491,7 @@ function rowToBrewery(row) {
 function breweryToRow(b, partial = false) {
   const row = {
     name: b.name,
-    country: b.country,
+    country: COUNTRY_LABEL_TO_CODE[b.country] || b.country,
     status: b.status,
     submitted_by: b.submittedBy,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
