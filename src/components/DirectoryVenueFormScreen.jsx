@@ -40,7 +40,7 @@ export function DirectoryVenueFormScreen({ venue, drinksDirectory, breweriesDire
     .map((d) => resolveMenuItem(d, drinksDirectory))
     .filter((d) => {
       const isBeerItem = BEER_TYPES.includes(d.type);
-      const isSoftItem = d.type === "Softs & eaux";
+      const isSoftItem = d.type === "Softs & Eaux";
       if ((isBeerItem || isSoftItem) && !d.volumeCl) return true;
       if (isBeerItem && !d.servingMode) return true;
       return false;
@@ -57,8 +57,8 @@ export function DirectoryVenueFormScreen({ venue, drinksDirectory, breweriesDire
       {
         id: nextId(),
         price: 0,
-        volumeCl: source.volumeCl || null,
-        servingMode: source.servingMode || "",
+        volumeCl: source.defaultVolumeCl || null,
+        servingMode: source.defaultServingMode || "",
         fromDirectory: true,
         sourceDrinkId: source.id,
         ...(menuCategory ? { menuCategory } : {}),

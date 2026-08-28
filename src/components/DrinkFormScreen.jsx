@@ -32,9 +32,9 @@ export function DrinkFormScreen({ drink, breweriesDirectory, onRegisterBrewery, 
   const [countsAsDrinkId, setCountsAsDrinkId] = useState(drink?.countsAsDrinkId || null);
 
   const isBeer = BEER_TYPES.includes(type);
-  const isSoft = type === "Softs & eaux";
+  const isSoft = type === "Softs & Eaux";
   const isSpirit = type === "Spiritueux";
-  const isWine = type === "Vins & bulles";
+  const isWine = type === "Vins & Bulles";
   const isSnack = type === "Snacks";
   React.useEffect(() => {
     if (isSnack && abv === "") setAbv("0");

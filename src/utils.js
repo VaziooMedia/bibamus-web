@@ -143,10 +143,10 @@ export function drinkSummaryLine(d, includeType = true) {
     parts = [abvText, "Produit générique"];
   } else {
     switch (d.type) {
-      case "Bières":
+      case "Bières & Cidres":
         parts = [abvText, producer];
         break;
-      case "Vins & bulles":
+      case "Vins & Bulles":
         parts = [abvText, producer];
         break;
       case "Spiritueux":
@@ -155,7 +155,7 @@ export function drinkSummaryLine(d, includeType = true) {
       case "Cocktails / Mocktails":
         parts = [abvText, producer];
         break;
-      case "Softs & eaux":
+      case "Softs & Eaux":
         parts = [producer];
         break;
       case "Boissons chaudes":

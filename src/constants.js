@@ -290,12 +290,12 @@ export const CITIES_BY_COUNTRY = {
 };
 
 export const DRINK_CATEGORY_ICONS = {
-  Bières: "🍺",
-  "Vins & bulles": "🍷",
+  "Bières & Cidres": "🍺",
+  "Vins & Bulles": "🍷",
   Spiritueux: "🥃",
   "Cocktails / Mocktails": "🍸",
   Shots: "🍶",
-  "Softs & eaux": "💧",
+  "Softs & Eaux": "💧",
   "Boissons chaudes": "☕",
   Snacks: "🥨",
 };
@@ -321,13 +321,13 @@ export const DRINK_TYPE_MIGRATIONS = {
 export const NON_ALCOHOLIC_DRINK_TYPES = ["Softs & Eaux", "Boissons chaudes", "Snacks"];
 export const GLUTEN_BIO_ELIGIBLE_TYPES = ["Bières & Cidres"];
 
-export const NATIONALITY_ELIGIBLE_TYPES = ["Bières", "Vins & bulles", "Spiritueux", "Softs & eaux", "Boissons chaudes"];
+export const NATIONALITY_ELIGIBLE_TYPES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Softs & Eaux", "Boissons chaudes"];
 
 export const DRINK_VOLUMES_CL = [2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 12, 12.5, 15, 17, 18, 20, 22, 25, 28, 30, 33, 35, 40, 50, 66, 70, 75, 100, 120, 150, 200, 300];
 
 export const SNACK_WEIGHTS_G = [25, 40, 45, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500];
 
-export const BEER_TYPES = ["Bières"];
+export const BEER_TYPES = ["Bières & Cidres"];
 
 export const SERVING_MODE_LABELS = { bouteille: "Bouteille", canette: "Canette", verre: "Au verre", fut: "On tap" };
 
@@ -554,7 +554,7 @@ export const EVENT_MODE_DESC = {
   openbar: "Open bar",
 };
 
-export const VOLUME_DISPLAY_TYPES = ["Bières", "Softs & eaux"];
+export const VOLUME_DISPLAY_TYPES = ["Bières & Cidres", "Softs & Eaux"];
 
 
 export const DRINK_FIELD_LABELS = {

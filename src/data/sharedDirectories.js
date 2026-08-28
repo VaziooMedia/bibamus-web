@@ -307,6 +307,8 @@ function rowToDrink(row) {
     id: row.id,
     name: row.name,
     type: DRINK_TYPE_CODE_TO_LABEL[row.type] || row.type,
+    defaultVolumeCl: row.default_volume_cl,
+    defaultServingMode: row.default_serving_mode,
     brewery: row.brewery,
     brand: row.brand,
     nationality: row.nationality,

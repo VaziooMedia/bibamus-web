@@ -113,7 +113,7 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
       )}
 
       {(() => {
-        const wishlistEligibleType = isBeer || drink.type === "Vins & bulles" || drink.type === "Spiritueux";
+        const wishlistEligibleType = isBeer || drink.type === "Vins & Bulles" || drink.type === "Spiritueux";
         if (!wishlistEligibleType || drink.isGeneric) return null;
         // Already tasted (beers) or already rated (wines/spirits) means "à goûter" no longer applies.
         const alreadyEngaged = isBeer ? isTasted : drink.ratings && drink.ratings[myBibroCode] != null;

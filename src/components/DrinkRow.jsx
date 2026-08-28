@@ -36,9 +36,9 @@ export function DrinkRow({
   const [abvInput, setAbvInput] = useState(() => (drink.abv != null ? String(drink.abv).replace(".", ",") : ""));
   const locked = !!drink.fromDirectory || !!forceLocked;
   const isBeer = BEER_TYPES.includes(drink.type);
-  const isSoft = drink.type === "Softs & eaux";
+  const isSoft = drink.type === "Softs & Eaux";
   const isSpirit = drink.type === "Spiritueux";
-  const isWine = drink.type === "Vins & bulles";
+  const isWine = drink.type === "Vins & Bulles";
   const hasStyleTags = isBeer || isSoft || isSpirit || isWine;
   const styleTagOptions = isBeer ? BEER_STYLE_TAGS : isSoft ? SOFT_DRINK_TAGS : isSpirit ? SPIRIT_TAGS : isWine ? WINE_TAGS : [];
   const beerTags = drink.beerTags || [];

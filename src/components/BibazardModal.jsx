@@ -26,7 +26,7 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
   // "Softs & eaux" is always alcohol-free — no toggle needed there. The other categories can mix
   // alcoholic and 0.0% versions of the same kind of drink, so the toggle only matters (and only
   // shows) once at least one selected category could actually contain both.
-  const mixedCategorySelected = selectedCategories.some((cat) => cat !== "Softs & eaux");
+  const mixedCategorySelected = selectedCategories.some((cat) => cat !== "Softs & Eaux");
   const pool = menu.filter((d) => selectedCategories.includes(categoryOf(d)) && (includeNonAlcoholic || isAlcoholicDrink(d)));
 
   const toggleCategory = (cat) => {

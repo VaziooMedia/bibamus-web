@@ -453,7 +453,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {genericDirectoryItems.map((g) => {
-                  if (g.type === "Bières" || g.type === "Vins & bulles") {
+                  if (g.type === "Bières & Cidres" || g.type === "Vins & Bulles") {
                     const count = event.menu.filter((eItem) => normalizeForSearch(eItem.name) === normalizeForSearch(g.name)).length;
                     return (
                       <div
