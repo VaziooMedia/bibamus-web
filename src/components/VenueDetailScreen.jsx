@@ -128,7 +128,7 @@ export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn,
       )}
 
       <div style={{ marginBottom: "20px" }}>
-        <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} />
+        <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} noFixedHours={venue.noFixedHours} />
       </div>
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>

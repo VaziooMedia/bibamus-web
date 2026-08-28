@@ -4,7 +4,7 @@ import { loadEstablishmentOpeningHours } from "../data/sharedDirectories.js";
 
 // Les horaires ne sont jamais saisis dans Bibamus — uniquement affichés depuis Google, avec
 // l'attribution requise. Aucun formulaire, aucun bouton d'édition ici.
-export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence }) {
+export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHours }) {
   const [hours, setHours] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +24,14 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence }) {
 
   if (loading) {
     return <p style={{ fontSize: "13px", color: COLORS.inkSoft }}>Chargement des horaires...</p>;
+  }
+
+  if (noFixedHours) {
+    return (
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Pas d'horaire fixe — fonctionne sur réservation ou événementiel.</p>
+      </div>
+    );
   }
 
   if (noGooglePresence) {

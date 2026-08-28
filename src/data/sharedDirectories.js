@@ -71,6 +71,7 @@ function rowToVenue(row) {
     avatarEmoji: row.avatar_emoji,
     googlePlaceId: row.google_place_id,
     noGooglePresence: !!row.no_google_presence,
+    noFixedHours: !!row.no_fixed_hours,
     status: row.status,
     likes: row.likes || [],
     menu: row.menu || [],
