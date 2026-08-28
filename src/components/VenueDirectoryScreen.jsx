@@ -114,7 +114,7 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
             <span style={{ fontSize: "10px", color: COLORS.redFluo, fontWeight: 700 }}>{formatCompactCount(v.likes.length)}</span>
           </span>
         )}
-        {v.pendingEdit && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
+        {v.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
       </div>
     </button>
   );

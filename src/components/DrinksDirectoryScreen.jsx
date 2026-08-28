@@ -141,7 +141,7 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
         <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
           {d.name}
           {d.status === "pending" && <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
-          {d.pendingEdit && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
+          {d.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
           <DrinkBadges drink={d} onTagClick={onTagClick} />

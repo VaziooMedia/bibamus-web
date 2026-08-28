@@ -44,7 +44,7 @@ export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn,
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      {venue.pendingEdit && (
+      {venue.pendingContributionsCount > 0 && (
         <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: "#F2C94C" }}>
           📝 Une modification de la fiche est proposée, en attente de validation.
         </div>

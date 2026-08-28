@@ -50,6 +50,10 @@ import {
   deleteDrink,
   deletePublicVenue,
   uploadDrinkPhoto,
+  proposeContribution,
+  loadContributionsForEntity,
+  approveContribution,
+  rejectContribution,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, kcalForDrink } from "./utils.js";
@@ -451,33 +455,59 @@ export default function App() {
   const [viewedBreweryId, setViewedBreweryId] = useState(null);
   const [viewedBrandId, setViewedBrandId] = useState(null);
 
-  const suggestDrinkEdit = (id, submittedData) => {
+  useEffect(() => {
+    if (viewedBreweryId && profile.isAdmin) {
+      loadContributionsForEntity("producer", viewedBreweryId).then(setViewedBreweryContributions);
+    } else {
+      setViewedBreweryContributions([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewedBreweryId, profile.isAdmin]);
+
+  useEffect(() => {
+    if (viewedBrandId && profile.isAdmin) {
+      loadContributionsForEntity("brand", viewedBrandId).then(setViewedBrandContributions);
+    } else {
+      setViewedBrandContributions([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewedBrandId, profile.isAdmin]);
+
+  const [viewedDrinkContributions, setViewedDrinkContributions] = useState([]);
+
+  useEffect(() => {
+    if (viewedDrinkId && profile.isAdmin) {
+      loadContributionsForEntity("drink", viewedDrinkId).then(setViewedDrinkContributions);
+    } else {
+      setViewedDrinkContributions([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewedDrinkId, profile.isAdmin]);
+
+  const suggestDrinkEdit = async (id, submittedData) => {
     const drink = drinksDirectory.find((d) => d.id === id);
     if (!drink) return;
     const fields = computeDrinkDiff(drink, submittedData);
     if (Object.keys(fields).length === 0) return;
-    const pendingEdit = { fields, submittedBy: profile.myBibroCode || null, submittedAt: Date.now() };
-    updateDrink(id, { pendingEdit });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, pendingEdit } : d)));
+    await proposeContribution("drink", id, fields, drink, profile.myBibroCode || null);
+    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, pendingContributionsCount: (d.pendingContributionsCount || 0) + Object.keys(fields).length } : d)));
   };
 
-  const acceptDrinkEdit = (id) => {
-    const drink = drinksDirectory.find((d) => d.id === id);
-    if (!drink || !drink.pendingEdit) return;
-    const { pendingEdit, ...rest } = { ...drink, ...drink.pendingEdit.fields };
-    updateDrink(id, { ...rest, pendingEdit: null });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? rest : d)));
+  const refreshViewedDrinkContributions = async (id) => {
+    const list = await loadContributionsForEntity("drink", id);
+    setViewedDrinkContributions(list);
   };
 
-  const rejectDrinkEdit = (id) => {
-    updateDrink(id, { pendingEdit: null });
-    setDrinksDirectory((prev) =>
-      prev.map((d) => {
-        if (d.id !== id) return d;
-        const { pendingEdit, ...rest } = d;
-        return rest;
-      })
-    );
+  const approveDrinkContribution = async (contribution) => {
+    await approveContribution(contribution, profile.myBibroCode || null);
+    setDrinksDirectory((prev) => prev.map((d) => (d.id === contribution.entityId ? { ...d, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (d.pendingContributionsCount || 0) - 1) } : d)));
+    await refreshViewedDrinkContributions(contribution.entityId);
+  };
+
+  const rejectDrinkContribution = async (contribution) => {
+    await rejectContribution(contribution, profile.myBibroCode || null);
+    setDrinksDirectory((prev) => prev.map((d) => (d.id === contribution.entityId ? { ...d, pendingContributionsCount: Math.max(0, (d.pendingContributionsCount || 0) - 1) } : d)));
+    await refreshViewedDrinkContributions(contribution.entityId);
   };
 
   const certifyDrink = (id) => {
@@ -571,7 +601,7 @@ export default function App() {
   const [initialDrinksCategory, setInitialDrinksCategory] = useState(null);
   const [initialDrinksTagFilter, setInitialDrinksTagFilter] = useState(null);
 
-  const suggestBreweryEdit = (id, name, country) => {
+  const suggestBreweryEdit = async (id, name, country) => {
     const b = breweriesDirectory.find((x) => x.id === id);
     if (!b) return;
     const fields = {};
@@ -580,19 +610,17 @@ export default function App() {
     if (trimmedName && trimmedName !== b.name) fields.name = trimmedName;
     if (trimmedCountry !== (b.country || "")) fields.country = trimmedCountry;
     if (Object.keys(fields).length === 0) return;
-    const pendingEdit = { fields, submittedBy: profile.myBibroCode || null, submittedAt: Date.now() };
-    updateBrewery(id, { pendingEdit });
-    setBreweriesDirectory((prev) => prev.map((x) => (x.id === id ? { ...x, pendingEdit } : x)));
+    await proposeContribution("producer", id, fields, b, profile.myBibroCode || null);
+    setBreweriesDirectory((prev) => prev.map((x) => (x.id === id ? { ...x, pendingContributionsCount: (x.pendingContributionsCount || 0) + Object.keys(fields).length } : x)));
   };
 
-  const suggestBrandEdit = (id, name) => {
+  const suggestBrandEdit = async (id, name) => {
     const b = brandsDirectory.find((x) => x.id === id);
     if (!b) return;
     const trimmedName = (name || "").trim();
     if (!trimmedName || trimmedName === b.name) return;
-    const pendingEdit = { fields: { name: trimmedName }, submittedBy: profile.myBibroCode || null, submittedAt: Date.now() };
-    updateBrand(id, { pendingEdit });
-    setBrandsDirectory((prev) => prev.map((x) => (x.id === id ? { ...x, pendingEdit } : x)));
+    await proposeContribution("brand", id, { name: trimmedName }, b, profile.myBibroCode || null);
+    setBrandsDirectory((prev) => prev.map((x) => (x.id === id ? { ...x, pendingContributionsCount: (x.pendingContributionsCount || 0) + 1 } : x)));
   };
 
   const adjustVenuePersonalDrink = (venueId, drinkNameLabel, delta, kcalPerServing) => {
@@ -610,42 +638,41 @@ export default function App() {
     setVenues((prev) => prev.map((v) => (v.id === venueId ? { ...v, stats: newStats } : v)));
   };
 
-  const acceptBreweryEdit = (id) => {
-    const b = breweriesDirectory.find((x) => x.id === id);
-    if (!b || !b.pendingEdit) return;
-    const { pendingEdit, ...rest } = { ...b, ...b.pendingEdit.fields };
-    updateBrewery(id, { ...rest, pendingEdit: null });
-    setBreweriesDirectory((prev) => prev.map((x) => (x.id === id ? rest : x)));
+  const [viewedBreweryContributions, setViewedBreweryContributions] = useState([]);
+  const [viewedBrandContributions, setViewedBrandContributions] = useState([]);
+
+  const refreshViewedBreweryContributions = async (id) => {
+    const list = await loadContributionsForEntity("producer", id);
+    setViewedBreweryContributions(list);
   };
 
-  const rejectBreweryEdit = (id) => {
-    updateBrewery(id, { pendingEdit: null });
-    setBreweriesDirectory((prev) =>
-      prev.map((x) => {
-        if (x.id !== id) return x;
-        const { pendingEdit, ...rest } = x;
-        return rest;
-      })
-    );
+  const approveBreweryContribution = async (contribution) => {
+    await approveContribution(contribution, profile.myBibroCode || null);
+    setBreweriesDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
+    await refreshViewedBreweryContributions(contribution.entityId);
   };
 
-  const acceptBrandEdit = (id) => {
-    const b = brandsDirectory.find((x) => x.id === id);
-    if (!b || !b.pendingEdit) return;
-    const { pendingEdit, ...rest } = { ...b, ...b.pendingEdit.fields };
-    updateBrand(id, { ...rest, pendingEdit: null });
-    setBrandsDirectory((prev) => prev.map((x) => (x.id === id ? rest : x)));
+  const rejectBreweryContribution = async (contribution) => {
+    await rejectContribution(contribution, profile.myBibroCode || null);
+    setBreweriesDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
+    await refreshViewedBreweryContributions(contribution.entityId);
   };
 
-  const rejectBrandEdit = (id) => {
-    updateBrand(id, { pendingEdit: null });
-    setBrandsDirectory((prev) =>
-      prev.map((x) => {
-        if (x.id !== id) return x;
-        const { pendingEdit, ...rest } = x;
-        return rest;
-      })
-    );
+  const refreshViewedBrandContributions = async (id) => {
+    const list = await loadContributionsForEntity("brand", id);
+    setViewedBrandContributions(list);
+  };
+
+  const approveBrandContribution = async (contribution) => {
+    await approveContribution(contribution, profile.myBibroCode || null);
+    setBrandsDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
+    await refreshViewedBrandContributions(contribution.entityId);
+  };
+
+  const rejectBrandContribution = async (contribution) => {
+    await rejectContribution(contribution, profile.myBibroCode || null);
+    setBrandsDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
+    await refreshViewedBrandContributions(contribution.entityId);
   };
 
   const resetStatField = (field) => {
@@ -1132,8 +1159,9 @@ export default function App() {
                 onCertify={() => certifyDrink(viewedDrinkId)}
                 onDecertify={() => decertifyDrink(viewedDrinkId)}
                 onDelete={() => removeDrinkFromDirectory(viewedDrinkId)}
-                onAcceptEdit={() => acceptDrinkEdit(viewedDrinkId)}
-                onRejectEdit={() => rejectDrinkEdit(viewedDrinkId)}
+                pendingContributions={viewedDrinkContributions}
+                onApproveContribution={approveDrinkContribution}
+                onRejectContribution={rejectDrinkContribution}
                 onOpenTagFilter={openTagFilter}
                 onUploadPhoto={(file) => uploadPhotoForDrink(viewedDrinkId, file)}
                 onDeletePhoto={() => deletePhotoForDrink(viewedDrinkId)}
@@ -1337,8 +1365,9 @@ export default function App() {
                   setBreweriesDirectory((prev) => prev.map((b) => (b.id === viewedBreweryId ? { ...b, country } : b)));
                 }}
                 onSuggestEdit={(name, country) => suggestBreweryEdit(viewedBreweryId, name, country)}
-                onAcceptEdit={() => acceptBreweryEdit(viewedBreweryId)}
-                onRejectEdit={() => rejectBreweryEdit(viewedBreweryId)}
+                pendingContributions={viewedBreweryContributions}
+                onApproveContribution={approveBreweryContribution}
+                onRejectContribution={rejectBreweryContribution}
                 onCertify={() => {
                   updateBrewery(viewedBreweryId, { status: "certified" });
                   setBreweriesDirectory((prev) => prev.map((b) => (b.id === viewedBreweryId ? { ...b, status: "certified" } : b)));
@@ -1365,8 +1394,9 @@ export default function App() {
                   setBrandsDirectory((prev) => prev.map((b) => (b.id === viewedBrandId ? { ...b, name } : b)));
                 }}
                 onSuggestEdit={(name) => suggestBrandEdit(viewedBrandId, name)}
-                onAcceptEdit={() => acceptBrandEdit(viewedBrandId)}
-                onRejectEdit={() => rejectBrandEdit(viewedBrandId)}
+                pendingContributions={viewedBrandContributions}
+                onApproveContribution={approveBrandContribution}
+                onRejectContribution={rejectBrandContribution}
                 onCertify={() => {
                   updateBrand(viewedBrandId, { status: "certified" });
                   setBrandsDirectory((prev) => prev.map((b) => (b.id === viewedBrandId ? { ...b, status: "certified" } : b)));

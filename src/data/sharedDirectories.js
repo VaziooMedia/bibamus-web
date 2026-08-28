@@ -75,7 +75,7 @@ function rowToVenue(row) {
     likes: row.likes || [],
     menu: row.menu || [],
     stats: row.stats || {},
-    pendingEdit: row.pending_edit || null,
+    pendingContributionsCount: row.pending_contributions_count || 0,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
   };
@@ -109,7 +109,6 @@ function venueToRow(v, partial = false) {
     likes: v.likes,
     menu: v.menu,
     stats: v.stats,
-    pending_edit: v.pendingEdit,
     submitted_by: v.submittedBy,
     submitted_at: v.submittedAt ? new Date(v.submittedAt).toISOString() : undefined,
   };
@@ -150,6 +149,110 @@ export async function loadEstablishmentOpeningHours(googlePlaceId) {
     console.error("loadEstablishmentOpeningHours:", e);
     return { status: "ERROR" };
   }
+}
+
+/* ---------------- GOUVERNANCE — CONTRIBUTIONS & TRAÇABILITÉ ---------------- */
+
+// Table générique partagée par les 4 piliers (venue/drink/brand/producer) — chaque champ
+// proposé est sa PROPRE ligne, jamais un bloc fourre-tout, pour permettre d'accepter ou
+// refuser champ par champ et garder l'historique complet (rien n'est jamais écrasé).
+
+function rowToContribution(row) {
+  return {
+    id: row.id,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    fieldPath: row.field_path,
+    proposedValue: row.proposed_value,
+    previousValue: row.previous_value,
+    sourceType: row.source_type,
+    sourceId: row.source_id,
+    status: row.status,
+    reviewedBy: row.reviewed_by,
+    reviewedAt: row.reviewed_at,
+    createdAt: row.created_at,
+    appliedAt: row.applied_at,
+  };
+}
+
+// entityType: 'venue' | 'drink' | 'brand' | 'producer'
+// fields: { champ: nouvelle_valeur } — un diff, comme avant. currentEntity sert à capturer la
+// valeur remplacée (previous_value), pour l'historique.
+export async function proposeContribution(entityType, entityId, fields, currentEntity, sourceId) {
+  const rows = Object.entries(fields).map(([fieldPath, proposedValue]) => ({
+    id: `contrib-${Date.now()}-${Math.floor(Math.random() * 100000)}-${fieldPath}`,
+    entity_type: entityType,
+    entity_id: entityId,
+    field_path: fieldPath,
+    proposed_value: proposedValue,
+    previous_value: currentEntity ? currentEntity[fieldPath] ?? null : null,
+    source_type: "bibax",
+    source_id: sourceId || null,
+    status: "pending_review",
+  }));
+  if (rows.length === 0) return;
+  const { error } = await supabase.from("data_contributions").insert(rows);
+  if (error) {
+    console.error("proposeContribution:", error);
+    return;
+  }
+  await incrementPendingCount(entityType, entityId, rows.length);
+}
+
+export async function loadContributionsForEntity(entityType, entityId, status = "pending_review") {
+  let query = supabase.from("data_contributions").select("*").eq("entity_type", entityType).eq("entity_id", entityId);
+  if (status) query = query.eq("status", status);
+  const { data, error } = await query.order("created_at");
+  if (error) {
+    console.error("loadContributionsForEntity:", error);
+    return [];
+  }
+  return data.map(rowToContribution);
+}
+
+const ENTITY_TABLES = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
+
+async function incrementPendingCount(entityType, entityId, delta) {
+  const table = ENTITY_TABLES[entityType];
+  if (!table) return;
+  const { data } = await supabase.from(table).select("pending_contributions_count").eq("id", entityId).single();
+  const current = data?.pending_contributions_count || 0;
+  await supabase.from(table).update({ pending_contributions_count: Math.max(0, current + delta) }).eq("id", entityId);
+}
+
+// Applique la valeur proposée sur la vraie fiche, marque la contribution "published", et
+// archive (sans supprimer) toute contribution précédemment publiée pour ce même champ.
+export async function approveContribution(contribution, reviewerId) {
+  const table = ENTITY_TABLES[contribution.entityType];
+  if (!table) return;
+
+  await supabase
+    .from("data_contributions")
+    .update({ status: "superseded" })
+    .eq("entity_type", contribution.entityType)
+    .eq("entity_id", contribution.entityId)
+    .eq("field_path", contribution.fieldPath)
+    .eq("status", "published");
+
+  await supabase
+    .from(table)
+    .update({ [contribution.fieldPath]: contribution.proposedValue })
+    .eq("id", contribution.entityId);
+
+  await supabase
+    .from("data_contributions")
+    .update({ status: "published", reviewed_by: reviewerId || null, reviewed_at: new Date().toISOString(), applied_at: new Date().toISOString() })
+    .eq("id", contribution.id);
+
+  await incrementPendingCount(contribution.entityType, contribution.entityId, -1);
+}
+
+export async function rejectContribution(contribution, reviewerId) {
+  await supabase
+    .from("data_contributions")
+    .update({ status: "rejected", reviewed_by: reviewerId || null, reviewed_at: new Date().toISOString() })
+    .eq("id", contribution.id);
+  await incrementPendingCount(contribution.entityType, contribution.entityId, -1);
 }
 
 /* ---------------- PRODUITS (RÉPERTOIRE DES BOISSONS) ---------------- */
@@ -212,7 +315,7 @@ function rowToDrink(row) {
     ratings: row.ratings || {},
     ratingDates: row.rating_dates || {},
     ratedServingModes: row.rated_serving_modes || {},
-    pendingEdit: row.pending_edit || null,
+    pendingContributionsCount: row.pending_contributions_count || 0,
   };
 }
 
@@ -245,7 +348,6 @@ function drinkToRow(d, partial = false) {
     ratings: d.ratings,
     rating_dates: d.ratingDates,
     rated_serving_modes: d.ratedServingModes,
-    pending_edit: d.pendingEdit,
   };
   if (!partial) row.id = d.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
@@ -317,7 +419,7 @@ function rowToBrewery(row) {
     status: row.status,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
-    pendingEdit: row.pending_edit || null,
+    pendingContributionsCount: row.pending_contributions_count || 0,
   };
 }
 
@@ -328,7 +430,6 @@ function breweryToRow(b, partial = false) {
     status: b.status,
     submitted_by: b.submittedBy,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
-    pending_edit: b.pendingEdit,
   };
   if (!partial) row.id = b.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
@@ -407,7 +508,7 @@ function rowToBrand(row) {
     status: row.status,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
-    pendingEdit: row.pending_edit || null,
+    pendingContributionsCount: row.pending_contributions_count || 0,
   };
 }
 
@@ -417,7 +518,6 @@ function brandToRow(b, partial = false) {
     status: b.status,
     submitted_by: b.submittedBy,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
-    pending_edit: b.pendingEdit,
   };
   if (!partial) row.id = b.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);

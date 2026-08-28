@@ -11,12 +11,11 @@ import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { StarRating } from "./StarRating.jsx";
 import { drinkTypeLabel, formatDrinkFieldValue } from "../utils.js";
 
-export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, onAcceptEdit, onRejectEdit, onOpenTagFilter, onUploadPhoto, onDeletePhoto }) {
+export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, pendingContributions = [], onApproveContribution, onRejectContribution, onOpenTagFilter, onUploadPhoto, onDeletePhoto }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const isBeer = BEER_TYPES.includes(drink.type);
   const isLockedForMe = !isAdmin && drink.status === "certified";
-  const pendingEdit = drink.pendingEdit;
 
   const handlePhotoUpload = async (file) => {
     setUploadingPhoto(true);
@@ -36,32 +35,34 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
         </div>
       )}
 
-      {pendingEdit && (
+      {pendingContributions.length > 0 && (
         <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "8px" }}>📝 Une modification est proposée</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: isAdmin ? "12px" : 0 }}>
-            {Object.entries(pendingEdit.fields).map(([field, value]) => (
-              <div key={field} style={{ fontSize: "12.5px", color: "#F2C94C" }}>
-                <strong>{DRINK_FIELD_LABELS[field]}</strong> : {formatDrinkFieldValue(field, drink[field])} → {formatDrinkFieldValue(field, value)}
+          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {pendingContributions.map((c) => (
+              <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
+                <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
+                  <strong>{DRINK_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {formatDrinkFieldValue(c.fieldPath, c.previousValue)} → {formatDrinkFieldValue(c.fieldPath, c.proposedValue)}
+                </div>
+                {isAdmin && (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={() => onApproveContribution(c)}
+                      style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
+                    >
+                      ✓ Accepter
+                    </button>
+                    <button
+                      onClick={() => onRejectContribution(c)}
+                      style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
+                    >
+                      ✕ Refuser
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
-          {isAdmin && (
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => onAcceptEdit(drink.id)}
-                style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "12.5px", color: "#fff", cursor: "pointer" }}
-              >
-                ✓ Accepter
-              </button>
-              <button
-                onClick={() => onRejectEdit(drink.id)}
-                style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "12.5px", color: "#F2C94C", cursor: "pointer" }}
-              >
-                ✕ Refuser
-              </button>
-            </div>
-          )}
         </div>
       )}
 

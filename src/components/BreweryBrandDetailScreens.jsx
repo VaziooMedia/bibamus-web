@@ -9,13 +9,12 @@ import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 
-export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, onAcceptEdit, onRejectEdit, onCertify, onDelete }) {
+export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isLocked = !isAdmin && brewery.status === "certified";
-  const pendingEdit = brewery.pendingEdit;
 
   const relatedDrinks = drinks.filter((d) => d.brewery && d.brewery.toLowerCase() === brewery.name.toLowerCase());
 
@@ -33,32 +32,34 @@ export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDr
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
 
-      {pendingEdit && (
+      {pendingContributions.length > 0 && (
         <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "8px" }}>📝 Une modification est proposée</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: isAdmin ? "12px" : 0 }}>
-            {Object.entries(pendingEdit.fields).map(([field, value]) => (
-              <div key={field} style={{ fontSize: "12.5px", color: "#F2C94C" }}>
-                <strong>{BREWERY_FIELD_LABELS[field]}</strong> : {brewery[field] || "—"} → {value || "—"}
+          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {pendingContributions.map((c) => (
+              <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
+                <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
+                  <strong>{BREWERY_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
+                </div>
+                {isAdmin && (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={() => onApproveContribution(c)}
+                      style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
+                    >
+                      ✓ Accepter
+                    </button>
+                    <button
+                      onClick={() => onRejectContribution(c)}
+                      style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
+                    >
+                      ✕ Refuser
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
-          {isAdmin && (
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={onAcceptEdit}
-                style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "12.5px", color: "#fff", cursor: "pointer" }}
-              >
-                ✓ Accepter
-              </button>
-              <button
-                onClick={onRejectEdit}
-                style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "12.5px", color: "#F2C94C", cursor: "pointer" }}
-              >
-                ✕ Refuser
-              </button>
-            </div>
-          )}
         </div>
       )}
 
@@ -154,12 +155,11 @@ export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDr
   );
 }
 
-export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink, onRename, onSuggestEdit, onAcceptEdit, onRejectEdit, onCertify, onDelete }) {
+export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brand.name || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isLocked = !isAdmin && brand.status === "certified";
-  const pendingEdit = brand.pendingEdit;
 
   const relatedDrinks = drinks.filter((d) => d.brand && d.brand.toLowerCase() === brand.name.toLowerCase());
 
@@ -176,32 +176,34 @@ export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink,
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
 
-      {pendingEdit && (
+      {pendingContributions.length > 0 && (
         <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "8px" }}>📝 Une modification est proposée</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: isAdmin ? "12px" : 0 }}>
-            {Object.entries(pendingEdit.fields).map(([field, value]) => (
-              <div key={field} style={{ fontSize: "12.5px", color: "#F2C94C" }}>
-                <strong>{BRAND_FIELD_LABELS[field]}</strong> : {brand[field] || "—"} → {value || "—"}
+          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {pendingContributions.map((c) => (
+              <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
+                <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
+                  <strong>{BRAND_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
+                </div>
+                {isAdmin && (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={() => onApproveContribution(c)}
+                      style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
+                    >
+                      ✓ Accepter
+                    </button>
+                    <button
+                      onClick={() => onRejectContribution(c)}
+                      style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
+                    >
+                      ✕ Refuser
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
-          {isAdmin && (
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={onAcceptEdit}
-                style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "12.5px", color: "#fff", cursor: "pointer" }}
-              >
-                ✓ Accepter
-              </button>
-              <button
-                onClick={onRejectEdit}
-                style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "12.5px", color: "#F2C94C", cursor: "pointer" }}
-              >
-                ✕ Refuser
-              </button>
-            </div>
-          )}
         </div>
       )}
 
