@@ -15,8 +15,11 @@ import { supabase } from "../supabaseClient.js";
 
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
 
+// Statuts visibles dans l'app grand public — jamais brouillon, rejeté, archivé ou doublon.
+const APP_VISIBLE_STATUSES = ["to_process", "to_fix", "complete"];
+
 export async function loadPublicVenues() {
-  const { data, error } = await supabase.from("public_venues").select("*").order("name");
+  const { data, error } = await supabase.from("public_venues").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
   if (error) {
     console.error("loadPublicVenues:", error);
     return [];
@@ -259,7 +262,7 @@ export async function rejectContribution(contribution, reviewerId) {
 /* ---------------- PRODUITS (RÉPERTOIRE DES BOISSONS) ---------------- */
 
 export async function loadDrinksDirectory() {
-  const { data, error } = await supabase.from("drinks_directory").select("*").order("name");
+  const { data, error } = await supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
   if (error) {
     console.error("loadDrinksDirectory:", error);
     return [];
@@ -403,7 +406,7 @@ export async function uploadDrinkPhoto(drinkId, file) {
 
 
 export async function loadBreweriesDirectory() {
-  const { data, error } = await supabase.from("breweries_directory").select("*").order("name");
+  const { data, error } = await supabase.from("breweries_directory").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
   if (error) {
     console.error("loadBreweriesDirectory:", error);
     return [];
@@ -542,7 +545,7 @@ export async function associateBarcode({ barcode, productId, format, container, 
 /* ---------------- MARQUES ---------------- */
 
 export async function loadBrandsDirectory() {
-  const { data, error } = await supabase.from("brands_directory").select("*").order("name");
+  const { data, error } = await supabase.from("brands_directory").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
   if (error) {
     console.error("loadBrandsDirectory:", error);
     return [];

@@ -14,7 +14,7 @@ export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDr
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const isLocked = !isAdmin && brewery.status === "certified";
+  const isLocked = !isAdmin && brewery.status === "complete";
 
   const relatedDrinks = drinks.filter((d) => d.brewery && d.brewery.toLowerCase() === brewery.name.toLowerCase());
 
@@ -66,7 +66,7 @@ export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDr
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: 0, lineHeight: 1 }}>{brewery.name}</h1>
         {brewery.country && <span style={{ fontSize: "16px", fontWeight: 500, color: COLORS.inkSoft }}>{brewery.country}</span>}
-        {brewery.status === "certified" && <VerifiedBadge size={22} />}
+        {brewery.status === "complete" && <VerifiedBadge size={22} />}
       </div>
 
       {editing ? (
@@ -118,7 +118,7 @@ export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDr
             >
               <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                 {d.name}
-                {d.status === "certified" && <VerifiedBadge size={13} />}
+                {d.status === "complete" && <VerifiedBadge size={13} />}
                 {d.status === "pending" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
@@ -133,7 +133,7 @@ export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDr
       {isAdmin && (
         <div style={{ marginTop: "auto", paddingTop: "20px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {brewery.status !== "certified" && (
+            {brewery.status !== "complete" && (
               <button
                 onClick={onCertify}
                 style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}
@@ -159,7 +159,7 @@ export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink,
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brand.name || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const isLocked = !isAdmin && brand.status === "certified";
+  const isLocked = !isAdmin && brand.status === "complete";
 
   const relatedDrinks = drinks.filter((d) => d.brand && d.brand.toLowerCase() === brand.name.toLowerCase());
 
@@ -209,7 +209,7 @@ export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink,
 
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: 0, lineHeight: 1 }}>{brand.name}</h1>
-        {brand.status === "certified" && <VerifiedBadge size={22} />}
+        {brand.status === "complete" && <VerifiedBadge size={22} />}
       </div>
 
       {editing ? (
@@ -253,7 +253,7 @@ export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink,
             >
               <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                 {d.name}
-                {d.status === "certified" && <VerifiedBadge size={13} />}
+                {d.status === "complete" && <VerifiedBadge size={13} />}
                 {d.status === "pending" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
@@ -268,7 +268,7 @@ export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink,
       {isAdmin && (
         <div style={{ marginTop: "auto", paddingTop: "20px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {brand.status !== "certified" && (
+            {brand.status !== "complete" && (
               <button
                 onClick={onCertify}
                 style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}

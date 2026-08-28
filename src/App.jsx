@@ -511,8 +511,8 @@ export default function App() {
   };
 
   const certifyDrink = (id) => {
-    updateDrink(id, { status: "certified" });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, status: "certified" } : d)));
+    updateDrink(id, { status: "complete" });
+    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, status: "complete" } : d)));
   };
   const decertifyDrink = (id) => {
     updateDrink(id, { status: "pending" });
@@ -1067,7 +1067,7 @@ export default function App() {
                 breweriesDirectory={breweriesDirectory}
                 onRegisterBrewery={registerBrewery}
                 addIntent={false}
-                suggestMode={!profile.isAdmin && venues.find((v) => v.id === viewedVenueId)?.status === "certified"}
+                suggestMode={!profile.isAdmin && venues.find((v) => v.id === viewedVenueId)?.status === "complete"}
                 onSave={(patch) => {
                   updatePublicVenue(viewedVenueId, patch);
                   setVenues((prev) => prev.map((v) => (v.id === viewedVenueId ? { ...v, ...patch } : v)));
@@ -1095,9 +1095,9 @@ export default function App() {
                 brandsDirectory={brandsDirectory}
                 onRegisterBrand={registerBrand}
                 drinksDirectory={drinksDirectory}
-                suggestMode={!profile.isAdmin && drinksDirectory.find((d) => d.id === viewedDrinkId)?.status === "certified"}
+                suggestMode={!profile.isAdmin && drinksDirectory.find((d) => d.id === viewedDrinkId)?.status === "complete"}
                 onSave={(patch) => {
-                  if (!profile.isAdmin && drinksDirectory.find((d) => d.id === viewedDrinkId)?.status === "certified") {
+                  if (!profile.isAdmin && drinksDirectory.find((d) => d.id === viewedDrinkId)?.status === "complete") {
                     suggestDrinkEdit(viewedDrinkId, patch);
                   } else {
                     updateDrink(viewedDrinkId, patch);
@@ -1309,8 +1309,8 @@ export default function App() {
                 onSuggestEdit={suggestBreweryEdit}
                 onCreate={registerBrewery}
                 onCertify={(id) => {
-                  updateBrewery(id, { status: "certified" });
-                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === id ? { ...b, status: "certified" } : b)));
+                  updateBrewery(id, { status: "complete" });
+                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === id ? { ...b, status: "complete" } : b)));
                 }}
                 onDelete={(id) => {
                   deleteBrewery(id);
@@ -1336,8 +1336,8 @@ export default function App() {
                 onSuggestEdit={suggestBrandEdit}
                 onCreate={registerBrand}
                 onCertify={(id) => {
-                  updateBrand(id, { status: "certified" });
-                  setBrandsDirectory((prev) => prev.map((b) => (b.id === id ? { ...b, status: "certified" } : b)));
+                  updateBrand(id, { status: "complete" });
+                  setBrandsDirectory((prev) => prev.map((b) => (b.id === id ? { ...b, status: "complete" } : b)));
                 }}
                 onDelete={(id) => {
                   deleteBrand(id);
@@ -1369,8 +1369,8 @@ export default function App() {
                 onApproveContribution={approveBreweryContribution}
                 onRejectContribution={rejectBreweryContribution}
                 onCertify={() => {
-                  updateBrewery(viewedBreweryId, { status: "certified" });
-                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === viewedBreweryId ? { ...b, status: "certified" } : b)));
+                  updateBrewery(viewedBreweryId, { status: "complete" });
+                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === viewedBreweryId ? { ...b, status: "complete" } : b)));
                 }}
                 onDelete={() => {
                   deleteBrewery(viewedBreweryId);
@@ -1398,8 +1398,8 @@ export default function App() {
                 onApproveContribution={approveBrandContribution}
                 onRejectContribution={rejectBrandContribution}
                 onCertify={() => {
-                  updateBrand(viewedBrandId, { status: "certified" });
-                  setBrandsDirectory((prev) => prev.map((b) => (b.id === viewedBrandId ? { ...b, status: "certified" } : b)));
+                  updateBrand(viewedBrandId, { status: "complete" });
+                  setBrandsDirectory((prev) => prev.map((b) => (b.id === viewedBrandId ? { ...b, status: "complete" } : b)));
                 }}
                 onDelete={() => {
                   deleteBrand(viewedBrandId);

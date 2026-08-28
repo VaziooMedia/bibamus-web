@@ -230,7 +230,7 @@ export function BrandSearchSelect({ value, onChange, brands, onRegister, placeho
                 }}
               >
                 {b.name}
-                {b.status === "certified" && <VerifiedBadge size={13} />}
+                {b.status === "complete" && <VerifiedBadge size={13} />}
               </button>
             ))}
             {query.trim() && !exactMatch && (

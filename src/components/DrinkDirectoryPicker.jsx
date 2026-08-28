@@ -92,7 +92,7 @@ export function DrinkDirectoryPicker({ drinks, onPick }) {
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink, flexWrap: "wrap" }}>
                   {d.name}
-                  {d.status === "certified" && <VerifiedBadge size={13} />}
+                  {d.status === "complete" && <VerifiedBadge size={13} />}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "1px" }}>
                   <DrinkBadges drink={d} />

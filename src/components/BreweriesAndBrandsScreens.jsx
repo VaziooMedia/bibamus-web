@@ -84,7 +84,7 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
   };
 
   const renderBreweryRow = (b) => {
-    const isLocked = !isAdmin && b.status === "certified";
+    const isLocked = !isAdmin && b.status === "complete";
     return (
       <div key={b.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px" }}>
         {editingId === b.id ? (
@@ -119,7 +119,7 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
             <button onClick={() => onOpenBrewery(b.id)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontWeight: 700, fontSize: "14.5px", color: COLORS.ink }}>{b.name}</span>
-                {b.status === "certified" && <VerifiedBadge size={14} />}
+                {b.status === "complete" && <VerifiedBadge size={14} />}
                 {b.status === "pending" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
                 {b.pendingContributionsCount > 0 && <span style={{ fontSize: "12px" }} title="Une modification est proposée">📝</span>}
               </div>
@@ -128,7 +128,7 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
               <button onClick={() => startEdit(b)} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0 }} title={isLocked ? "Suggérer une modification" : "Éditer"} aria-label={isLocked ? "Suggérer une modification" : "Éditer"}>
                 <NavIcon name="pencil" size={15} color={COLORS.redFluo} />
               </button>
-              {isAdmin && b.status !== "certified" && (
+              {isAdmin && b.status !== "complete" && (
                 <button onClick={() => onCertify(b.id)} style={{ background: "none", border: "none", color: COLORS.sage, fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                   Certifier
                 </button>
@@ -390,7 +390,7 @@ export function BrandsAdminScreen({ brands, drinks, isAdmin, onBack, onOpenBrand
   };
 
   const renderBrandRow = (b) => {
-    const isLocked = !isAdmin && b.status === "certified";
+    const isLocked = !isAdmin && b.status === "complete";
     return (
       <div key={b.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px" }}>
         {editingId === b.id ? (
@@ -415,7 +415,7 @@ export function BrandsAdminScreen({ brands, drinks, isAdmin, onBack, onOpenBrand
             <button onClick={() => onOpenBrand(b.id)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontWeight: 700, fontSize: "14.5px", color: COLORS.ink }}>{b.name}</span>
-                {b.status === "certified" && <VerifiedBadge size={14} />}
+                {b.status === "complete" && <VerifiedBadge size={14} />}
                 {b.status === "pending" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
                 {b.pendingContributionsCount > 0 && <span style={{ fontSize: "12px" }} title="Une modification est proposée">📝</span>}
               </div>
@@ -424,7 +424,7 @@ export function BrandsAdminScreen({ brands, drinks, isAdmin, onBack, onOpenBrand
               <button onClick={() => startEdit(b)} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0 }} title={isLocked ? "Suggérer une modification" : "Éditer"} aria-label={isLocked ? "Suggérer une modification" : "Éditer"}>
                 <NavIcon name="pencil" size={15} color={COLORS.redFluo} />
               </button>
-              {isAdmin && b.status !== "certified" && (
+              {isAdmin && b.status !== "complete" && (
                 <button onClick={() => onCertify(b.id)} style={{ background: "none", border: "none", color: COLORS.sage, fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                   Certifier
                 </button>

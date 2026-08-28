@@ -150,7 +150,7 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", flexShrink: 0, marginLeft: "10px" }}>
-        {d.status === "certified" && <VerifiedBadge size={15} />}
+        {d.status === "complete" && <VerifiedBadge size={15} />}
         {RATABLE_DRINK_TYPES.includes(d.type) &&
           !d.isGeneric &&
           d.ratings &&

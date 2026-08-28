@@ -170,7 +170,7 @@ export function BrewerySearchSelect({ value, onChange, breweries, onRegister, pl
                   >
                     {b.name}
                     {b.country && <span style={{ fontSize: "12px", fontWeight: 500, color: COLORS.inkSoft }}>{b.country}</span>}
-                    {b.status === "certified" && <VerifiedBadge size={13} />}
+                    {b.status === "complete" && <VerifiedBadge size={13} />}
                   </button>
                 ))}
                 {query.trim() && !exactMatch && (

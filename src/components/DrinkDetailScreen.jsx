@@ -15,7 +15,7 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const isBeer = BEER_TYPES.includes(drink.type);
-  const isLockedForMe = !isAdmin && drink.status === "certified";
+  const isLockedForMe = !isAdmin && drink.status === "complete";
 
   const handlePhotoUpload = async (file) => {
     setUploadingPhoto(true);
@@ -68,7 +68,7 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "4px" }}>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: 0, lineHeight: 1, flex: 1, minWidth: 0 }}>{drink.name}</h1>
-        {drink.status === "certified" && <VerifiedBadge size={22} />}
+        {drink.status === "complete" && <VerifiedBadge size={22} />}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
         <DrinkBadges drink={drink} onTagClick={onOpenTagFilter} size={12} />
@@ -263,7 +263,7 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
         <div style={{ marginTop: "auto", paddingTop: "20px" }}>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>ADMINISTRATION</div>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {drink.status !== "certified" ? (
+            {drink.status !== "complete" ? (
               <button
                 onClick={onCertify}
                 style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}

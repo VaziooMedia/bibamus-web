@@ -349,7 +349,7 @@ export function PublicVenueSearchPicker({ publicVenues, myVenues, onPick }) {
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
                       {v.name}
-                      {v.status === "certified" && <VerifiedBadge size={13} />}
+                      {v.status === "complete" && <VerifiedBadge size={13} />}
                     </div>
                     <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>
                       {[v.city, alreadyTracked(v) ? "✓ déjà utilisé" : null].filter(Boolean).join(" · ")}

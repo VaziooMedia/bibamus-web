@@ -98,7 +98,7 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
       <div>
         <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}>
           {v.name}
-          {v.status === "certified" && <VerifiedBadge size={15} />}
+          {v.status === "complete" && <VerifiedBadge size={15} />}
           {v.status === "pending" && (
             <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700, verticalAlign: "middle" }}>EN ATTENTE</span>
           )}
