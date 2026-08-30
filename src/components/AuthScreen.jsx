@@ -171,7 +171,7 @@ export function AuthScreen({ onAuthenticated }) {
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
                 required
-                style={{ ...inputStyle, background: "#fff", color: "#0D1B2A", colorScheme: "light", maxWidth: "100%", minWidth: 0 }}
+                style={{ ...inputStyle, WebkitAppearance: "none", appearance: "none", maxWidth: "100%", minWidth: 0 }}
               />
             </div>
             <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "-4px 0 0" }}>
