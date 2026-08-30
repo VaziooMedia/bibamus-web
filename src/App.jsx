@@ -140,9 +140,19 @@ export default function App() {
   useEffect(() => saveLocal("bibamus-profile", profile), [profile]);
   useEffect(() => {
     if (!session) return;
-    updateMyProfile(session.user.id, { name: profile.name, avatarEmoji: profile.avatarEmoji });
+    updateMyProfile(session.user.id, {
+      name: profile.name,
+      lastName: profile.lastName,
+      nickname: profile.nickname,
+      username: profile.username,
+      displayNameField: profile.displayNameField,
+      sharePrenom: profile.sharePrenom,
+      shareNom: profile.shareNom,
+      shareSurnom: profile.shareSurnom,
+      avatarEmoji: profile.avatarEmoji,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile.name, profile.avatarEmoji]);
+  }, [profile.name, profile.lastName, profile.nickname, profile.username, profile.displayNameField, profile.sharePrenom, profile.shareNom, profile.shareSurnom, profile.avatarEmoji]);
   useEffect(() => saveLocal("bibamus-events", events), [events]);
   useEffect(() => saveLocal("bibamus-bibros", bibros), [bibros]);
 

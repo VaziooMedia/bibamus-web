@@ -19,7 +19,16 @@ import { supabase } from "../supabaseClient.js";
 // (avec le code Bibax) est désormais stocké côté serveur, lié au compte, récupérable en cas de
 // changement d'appareil.
 
-export async function signUp(email, password) {
+export async function isUsernameAvailable(username) {
+  const { data, error } = await supabase.from("profiles").select("id").ilike("username", username.trim()).maybeSingle();
+  if (error) {
+    console.error("isUsernameAvailable:", error);
+    return true; // ne bloque pas l'inscription sur une erreur réseau ponctuelle
+  }
+  return !data;
+}
+
+export async function signUp(email, password, { firstName, lastName, nickname, username, birthDate }) {
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) return { error: error.message };
 
@@ -27,7 +36,15 @@ export async function signUp(email, password) {
   const { data: codeData, error: codeError } = await supabase.rpc("generate_bibro_code");
   if (codeError) return { error: codeError.message };
 
-  const { error: profileError } = await supabase.from("profiles").insert({ id: data.user.id, bibro_code: codeData });
+  const { error: profileError } = await supabase.from("profiles").insert({
+    id: data.user.id,
+    bibro_code: codeData,
+    name: firstName,
+    last_name: lastName,
+    nickname: nickname || null,
+    username,
+    birth_date: birthDate,
+  });
   if (profileError) return { error: profileError.message };
 
   return { user: data.user, session: data.session };
@@ -73,11 +90,36 @@ export async function loadMyProfile(userId) {
     console.error("loadMyProfile:", error);
     return null;
   }
-  return { myBibroCode: data.bibro_code, name: data.name || "", avatarEmoji: data.avatar_emoji || null };
+  return {
+    myBibroCode: data.bibro_code,
+    name: data.name || "",
+    lastName: data.last_name || "",
+    nickname: data.nickname || "",
+    username: data.username || "",
+    birthDate: data.birth_date || null,
+    displayNameField: data.display_name_field || "username",
+    sharePrenom: data.share_prenom,
+    shareNom: data.share_nom,
+    shareSurnom: data.share_surnom,
+    avatarEmoji: data.avatar_emoji || null,
+  };
 }
 
-export async function updateMyProfile(userId, { name, avatarEmoji }) {
-  const { error } = await supabase.from("profiles").update({ name, avatar_emoji: avatarEmoji }).eq("id", userId);
+export async function updateMyProfile(userId, { name, lastName, nickname, username, displayNameField, sharePrenom, shareNom, shareSurnom, avatarEmoji }) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      name,
+      last_name: lastName,
+      nickname,
+      username,
+      display_name_field: displayNameField,
+      share_prenom: sharePrenom,
+      share_nom: shareNom,
+      share_surnom: shareSurnom,
+      avatar_emoji: avatarEmoji,
+    })
+    .eq("id", userId);
   if (error) console.error("updateMyProfile:", error);
 }
 
