@@ -29,24 +29,23 @@ export async function isUsernameAvailable(username) {
 }
 
 export async function signUp(email, password, { firstName, lastName, nickname, username, birthDate }) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) return { error: error.message };
-
-  // Génère le code Bibax et crée la ligne de profil correspondante.
-  const { data: codeData, error: codeError } = await supabase.rpc("generate_bibro_code");
-  if (codeError) return { error: codeError.message };
-
-  const { error: profileError } = await supabase.from("profiles").insert({
-    id: data.user.id,
-    bibro_code: codeData,
-    name: firstName,
-    last_name: lastName,
-    nickname: nickname || null,
-    username,
-    birth_date: birthDate,
+  // Les informations passent en métadonnées Supabase Auth — c'est le déclencheur côté base de
+  // données (handle_new_user) qui crée ensuite la ligne de profil, jamais ce code client
+  // directement (une session active n'existe pas encore tant que l'email n'est pas confirmé).
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        first_name: firstName,
+        last_name: lastName,
+        nickname: nickname || null,
+        username,
+        birth_date: birthDate,
+      },
+    },
   });
-  if (profileError) return { error: profileError.message };
-
+  if (error) return { error: error.message };
   return { user: data.user, session: data.session };
 }
 
