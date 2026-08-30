@@ -56,10 +56,12 @@ export function AuthScreen({ onAuthenticated }) {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "36px", textAlign: "center", marginBottom: "8px" }}>Bibamus</h1>
-      <p style={{ textAlign: "center", color: COLORS.inkSoft, fontSize: "14px", marginBottom: "28px" }}>
-        {mode === "signup" ? "Créez votre compte" : mode === "forgot" ? "Mot de passe oublié" : "Connectez-vous"}
-      </p>
+      <img src="/bibamus-logo.svg" alt="Bibamus" style={{ width: "180px", margin: "0 auto 28px", display: "block" }} />
+      {mode !== "signin" && (
+        <p style={{ textAlign: "center", color: COLORS.inkSoft, fontSize: "14px", marginBottom: "28px" }}>
+          {mode === "signup" ? "Créez votre compte" : "Mot de passe oublié"}
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Adresse email" required style={inputStyle} autoComplete="email" />
@@ -103,7 +105,7 @@ export function AuthScreen({ onAuthenticated }) {
               Mot de passe oublié ?
             </button>
             <button onClick={() => setMode("signup")} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
-              Pas encore de compte ? Inscrivez-vous
+              Pas encore de compte ?<br />Inscrivez-vous
             </button>
           </>
         )}
