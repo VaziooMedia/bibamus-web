@@ -63,7 +63,7 @@ import {
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, kcalForDrink } from "./utils.js";
-import { ADMIN_PASSPHRASE, BEER_TYPES } from "./constants.js";
+import { BEER_TYPES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
 function loadLocal(key, fallback) {
@@ -756,13 +756,10 @@ export default function App() {
     setProfile({ name: "", avatarEmoji: null, myBibroCode: null });
   };
 
-  const unlockAdmin = (passphrase) => {
-    if (passphrase === ADMIN_PASSPHRASE) {
-      setProfile((p) => ({ ...p, isAdmin: true }));
-      return true;
-    }
-    return false;
-  };
+  // Le statut admin vient désormais exclusivement du rôle vérifié côté serveur (chargé avec le
+  // profil) — cette fonction ne peut plus l'accorder elle-même, une passphrase locale ne
+  // suffit plus à contourner la vérification faite par la base de données.
+  const unlockAdmin = () => false;
 
   const addBibro = (code, name, alias, socials) => {
     const newBibro = { code, name, alias: alias || "", ...socials, addedAt: Date.now() };
@@ -1506,7 +1503,6 @@ export default function App() {
             )}
             {screen === "adminUnlock" && (
               <AdminUnlockScreen
-                onUnlock={unlockAdmin}
                 onCancel={() => setScreen("myInfo")}
               />
             )}

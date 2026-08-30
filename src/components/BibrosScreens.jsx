@@ -595,35 +595,15 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
   );
 }
 
-export function AdminUnlockScreen({ onUnlock, onCancel }) {
-  const [passphrase, setPassphrase] = useState("");
-  const [error, setError] = useState("");
-
-  const handleSubmit = () => {
-    if (onUnlock(passphrase)) {
-      onCancel();
-    } else {
-      setError("Passphrase incorrecte.");
-    }
-  };
-
+export function AdminUnlockScreen({ onCancel }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onCancel} />
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "0 0 18px 0" }}>Accès administrateur</h1>
-      <input
-        type="password"
-        value={passphrase}
-        onChange={(e) => setPassphrase(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-        placeholder="Passphrase"
-        autoFocus
-        style={{ padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "15px", outline: "none", marginBottom: "12px" }}
-      />
-      {error && <p style={{ fontSize: "13px", color: COLORS.wine, marginBottom: "12px" }}>{error}</p>}
-      <PrimaryButton onClick={handleSubmit} style={{ width: "100%" }}>
-        Valider
-      </PrimaryButton>
+      <p style={{ fontSize: "14px", color: COLORS.inkSoft, marginBottom: "12px" }}>
+        Le statut administrateur est désormais automatique, lié à votre compte — il n'y a plus de passphrase à saisir. Si vous pensez devoir y avoir accès, contactez un administrateur existant
+        pour qu'il vous l'attribue.
+      </p>
       <PageFooterNav onBack={onCancel} />
     </div>
   );

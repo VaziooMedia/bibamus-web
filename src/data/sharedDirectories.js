@@ -101,6 +101,9 @@ export async function loadMyProfile(userId) {
     shareNom: data.share_nom,
     shareSurnom: data.share_surnom,
     avatarEmoji: data.avatar_emoji || null,
+    // isAdmin vient désormais du vrai rôle vérifié côté base de données, plus d'une passphrase
+    // locale — cohérent avec les règles RLS qui vérifient ce même rôle.
+    isAdmin: data.role === "admin" || data.role === "super_admin",
   };
 }
 
