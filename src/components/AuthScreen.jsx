@@ -19,6 +19,16 @@ function ageFromBirthDate(dateStr) {
   return age;
 }
 
+function EyeIcon({ crossed }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="#8792A6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3" stroke="#8792A6" strokeWidth="1.8" />
+      {crossed && <line x1="2" y1="2" x2="22" y2="22" stroke="#8792A6" strokeWidth="1.8" strokeLinecap="round" />}
+    </svg>
+  );
+}
+
 function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -35,9 +45,10 @@ function PasswordField({ value, onChange, placeholder, autoComplete }) {
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12px", cursor: "pointer", padding: "4px" }}
+        aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+        style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}
       >
-        {visible ? "Masquer" : "Afficher"}
+        <EyeIcon crossed={visible} />
       </button>
     </div>
   );
@@ -137,27 +148,31 @@ export function AuthScreen({ onAuthenticated }) {
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         {mode === "signup" && (
           <>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Prénom *</label>
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required style={inputStyle} autoComplete="given-name" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Nom *</label>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} required style={inputStyle} autoComplete="family-name" />
-              </div>
+            <div>
+              <label style={labelStyle}>Prénom *</label>
+              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required style={inputStyle} autoComplete="given-name" />
+            </div>
+            <div>
+              <label style={labelStyle}>Nom *</label>
+              <input value={lastName} onChange={(e) => setLastName(e.target.value)} required style={inputStyle} autoComplete="family-name" />
             </div>
             <div>
               <label style={labelStyle}>Surnom (optionnel)</label>
-              <input value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="Ex. Ju" style={inputStyle} />
+              <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={inputStyle} />
             </div>
             <div>
               <label style={labelStyle}>Nom d'utilisateur *</label>
-              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Ex. julien_74" required style={inputStyle} autoComplete="username" />
+              <input value={username} onChange={(e) => setUsername(e.target.value)} required style={inputStyle} autoComplete="username" />
             </div>
             <div>
               <label style={labelStyle}>Date de naissance *</label>
-              <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required style={inputStyle} />
+              <input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                required
+                style={{ ...inputStyle, background: "#fff", color: "#0D1B2A", colorScheme: "light", maxWidth: "100%", minWidth: 0 }}
+              />
             </div>
             <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "-4px 0 0" }}>
               Le prénom, nom, surnom et nom d'utilisateur pourront être affichés aux autres Bibax — vous choisirez ce qui est visible dans vos paramètres. La date de naissance sert uniquement à
@@ -206,7 +221,7 @@ export function AuthScreen({ onAuthenticated }) {
         )}
         {mode === "signup" && (
           <button onClick={() => setMode("signin")} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
-            Déjà un compte ? Connectez-vous
+            Déjà un compte ?<br />Connectez-vous
           </button>
         )}
         {mode === "forgot" && (
