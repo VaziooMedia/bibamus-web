@@ -8,7 +8,7 @@ import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.j
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
 
-export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onGoToAdminUnlock, onBack }) {
+export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onGoToAdminUnlock, onLogout, onBack }) {
   const [firstName, setFirstName] = useState(myName || "");
   const [lastName, setLastName] = useState(profile.lastName || "");
   const [nickname, setNickname] = useState(profile.nickname || "");
@@ -345,6 +345,12 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
           🔐 Accès administrateur
         </button>
       )}
+      <button
+        onClick={onLogout}
+        style={{ background: "none", border: "none", color: "#D64545", fontSize: "12px", fontWeight: 700, cursor: "pointer", marginTop: "14px", textAlign: "center", width: "100%" }}
+      >
+        Se déconnecter
+      </button>
       <BackFooterLink onClick={onBack} />
     </div>
   );

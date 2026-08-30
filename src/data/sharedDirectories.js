@@ -13,6 +13,74 @@
 
 import { supabase } from "../supabaseClient.js";
 
+/* ---------------- AUTHENTIFICATION ---------------- */
+
+// Vrais comptes (Supabase Auth) — remplace la génération locale du code Bibax. Le profil
+// (avec le code Bibax) est désormais stocké côté serveur, lié au compte, récupérable en cas de
+// changement d'appareil.
+
+export async function signUp(email, password) {
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) return { error: error.message };
+
+  // Génère le code Bibax et crée la ligne de profil correspondante.
+  const { data: codeData, error: codeError } = await supabase.rpc("generate_bibro_code");
+  if (codeError) return { error: codeError.message };
+
+  const { error: profileError } = await supabase.from("profiles").insert({ id: data.user.id, bibro_code: codeData });
+  if (profileError) return { error: profileError.message };
+
+  return { user: data.user, session: data.session };
+}
+
+export async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return { error: error.message };
+  return { user: data.user, session: data.session };
+}
+
+export async function signOut() {
+  await supabase.auth.signOut();
+}
+
+export async function resetPassword(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function updatePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function getSession() {
+  const { data } = await supabase.auth.getSession();
+  return data.session;
+}
+
+export function onAuthStateChange(callback) {
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => callback(session));
+  return data.subscription;
+}
+
+export async function loadMyProfile(userId) {
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
+  if (error) {
+    console.error("loadMyProfile:", error);
+    return null;
+  }
+  return { myBibroCode: data.bibro_code, name: data.name || "", avatarEmoji: data.avatar_emoji || null };
+}
+
+export async function updateMyProfile(userId, { name, avatarEmoji }) {
+  const { error } = await supabase.from("profiles").update({ name, avatar_emoji: avatarEmoji }).eq("id", userId);
+  if (error) console.error("updateMyProfile:", error);
+}
+
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
 
 // Statuts visibles dans l'app grand public — jamais brouillon, rejeté, archivé ou doublon.

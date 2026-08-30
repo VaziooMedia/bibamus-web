@@ -10,6 +10,7 @@ import { BottomNav } from "./components/ui.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
 import { BarcodeScannerModal } from "./components/BarcodeScannerModal.jsx";
 import { BibamusLogoFull } from "./components/icons.jsx";
+import { AuthScreen } from "./components/AuthScreen.jsx";
 import { SessionHubScreen, RepertoireHubScreen, ComingSoonScreen } from "./components/HubScreens.jsx";
 import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
 import { EventDashboardScreen } from "./components/EventDashboardScreen.jsx";
@@ -51,6 +52,11 @@ import {
   deletePublicVenue,
   uploadDrinkPhoto,
   proposeContribution,
+  getSession,
+  onAuthStateChange,
+  loadMyProfile,
+  updateMyProfile,
+  signOut,
   loadContributionsForEntity,
   approveContribution,
   rejectContribution,
@@ -86,17 +92,36 @@ export default function App() {
   const [brandsDirectory, setBrandsDirectory] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Données personnelles (localStorage)
-  const [profile, setProfile] = useState(() => {
-    const loaded = loadLocal("bibamus-profile", { name: "", avatarEmoji: null });
-    if (!loaded.myBibroCode) loaded.myBibroCode = randomCode(5);
-    return loaded;
-  });
+  // Session (Supabase Auth) — l'app entière reste bloquée tant qu'aucun compte réel n'est
+  // connecté. authChecked distingue "en cours de vérification" de "vérifié, pas connecté".
+  const [session, setSession] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Données personnelles — le profil (avec le code Bibax) vient désormais du serveur, lié au
+  // compte, plutôt que d'être généré localement à chaque appareil.
+  const [profile, setProfile] = useState({ name: "", avatarEmoji: null, myBibroCode: null });
   const [events, setEvents] = useState(() => loadLocal("bibamus-events", []).map(normalizeEvent));
   const [bibros, setBibros] = useState(() => loadLocal("bibamus-bibros", []));
   const [bibroStatuses] = useState({});
 
   useEffect(() => {
+    getSession().then((s) => {
+      setSession(s);
+      setAuthChecked(true);
+    });
+    const subscription = onAuthStateChange((s) => setSession(s));
+    return () => subscription?.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    loadMyProfile(session.user.id).then((serverProfile) => {
+      if (serverProfile) setProfile((p) => ({ ...p, ...serverProfile }));
+    });
+  }, [session]);
+
+  useEffect(() => {
+    if (!session) return;
     (async () => {
       const [v, d, b, m] = await Promise.all([
         loadPublicVenues(),
@@ -110,9 +135,14 @@ export default function App() {
       setBrandsDirectory(m);
       setLoading(false);
     })();
-  }, []);
+  }, [session]);
 
   useEffect(() => saveLocal("bibamus-profile", profile), [profile]);
+  useEffect(() => {
+    if (!session) return;
+    updateMyProfile(session.user.id, { name: profile.name, avatarEmoji: profile.avatarEmoji });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.name, profile.avatarEmoji]);
   useEffect(() => saveLocal("bibamus-events", events), [events]);
   useEffect(() => saveLocal("bibamus-bibros", bibros), [bibros]);
 
@@ -710,6 +740,12 @@ export default function App() {
     setCheckedInVenueId(venueId);
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    setSession(null);
+    setProfile({ name: "", avatarEmoji: null, myBibroCode: null });
+  };
+
   const unlockAdmin = (passphrase) => {
     if (passphrase === ADMIN_PASSPHRASE) {
       setProfile((p) => ({ ...p, isAdmin: true }));
@@ -799,6 +835,18 @@ export default function App() {
     });
     return trimmed;
   };
+
+  if (!authChecked) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#F2F2E8", fontFamily: "sans-serif" }}>
+        Chargement...
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AuthScreen onAuthenticated={setSession} />;
+  }
 
   if (loading) {
     return (
@@ -1190,6 +1238,7 @@ export default function App() {
                 profile={profile}
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
                 onGoToAdminUnlock={() => setScreen("adminUnlock")}
+                onLogout={handleLogout}
                 onBack={() => setScreen("profile")}
               />
             )}
