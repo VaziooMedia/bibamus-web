@@ -206,6 +206,8 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
   // Filet de sécurité : en plus de la synchronisation en temps réel (gérée au niveau de
   // App.jsx), on revérifie ici périodiquement auprès du serveur — et on fusionne par union
   // plutôt que d'écraser, pour ne jamais faire "disparaître" quelqu'un par erreur de timing.
+  // Vérifie aussi si l'événement a été clôturé par un autre participant — sans ça, seule la
+  // personne ayant elle-même cliqué "Fin" le voyait disparaître, jamais les autres.
   React.useEffect(() => {
     if (!salonCode) return;
     const refresh = async () => {
@@ -218,8 +220,14 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
           if (p && p.code) byCode.set(p.code, { ...byCode.get(p.code), ...p });
         });
         const merged = Array.from(byCode.values());
-        if (merged.length !== participants.length) {
-          updateEvent(event.id, (e) => ({ ...e, participants: merged }));
+        const participantsChanged = merged.length !== participants.length;
+        const closedRemotely = latest.closed && !event.closed;
+        if (participantsChanged || closedRemotely) {
+          updateEvent(event.id, (e) => ({
+            ...e,
+            participants: merged,
+            ...(closedRemotely ? { closed: true, closedAt: latest.closedAt } : {}),
+          }));
         }
       } catch (e) {
         // silent fail on background refresh
@@ -228,7 +236,7 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
     const interval = setInterval(refresh, 5000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [salonCode, participants.length]);
+  }, [salonCode, participants.length, event.closed]);
 
   const createSalon = async () => {
     setLoading(true);

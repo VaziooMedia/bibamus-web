@@ -6,6 +6,7 @@ import React from "react";
 import { COLORS, APP_VERSION } from "../constants.js";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile } from "./ui.jsx";
+import { loadSalon } from "../data/salons.js";
 
 const CHECKIN_MAX_AGE_MS = 4 * 60 * 60 * 1000;
 
@@ -70,6 +71,7 @@ export function HomeScreen({
   events,
   eventTotal,
   openEvent,
+  updateEvent,
   goToSessionHub,
   goToProfile,
   goToRepertoireHub,
@@ -89,6 +91,22 @@ export function HomeScreen({
   lastName,
   venues,
 }) {
+  // Filet de sécurité supplémentaire — vérifie, au retour sur l'accueil, si un événement
+  // partagé encore actif de son côté n'a pas déjà été clôturé par un autre participant
+  // pendant ce temps (le tableau de bord fait cette même vérification en continu, mais
+  // seulement tant qu'il reste ouvert).
+  React.useEffect(() => {
+    const activeSalonEvents = events.filter((e) => e.salonCode && !e.closed);
+    if (activeSalonEvents.length === 0) return;
+    activeSalonEvents.forEach((e) => {
+      loadSalon(e.salonCode)
+        .then((latest) => {
+          if (latest?.closed) updateEvent(e.id, (ev) => ({ ...ev, closed: true, closedAt: latest.closedAt }));
+        })
+        .catch(() => {});
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div style={{ padding: "20px 20px 28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>

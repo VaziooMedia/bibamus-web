@@ -1050,6 +1050,7 @@ export default function App() {
             {screen === "home" && (
               <HomeScreen
                 events={events}
+                updateEvent={updateEvent}
                 eventTotal={() => 0}
                 openEvent={(id) => {
                   setActiveEventId(id);
