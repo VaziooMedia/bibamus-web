@@ -12,7 +12,7 @@ export function NearbyVenueSuggestions({ onPick }) {
 
   const fetchNearby = async (pos) => {
     setLoadingVenues(true);
-    const results = await loadNearbyVenues(pos.lat, pos.lng, 2000, 3);
+    const results = await loadNearbyVenues(pos.lat, pos.lng, 300, 8);
     setVenues(results);
     setLoadingVenues(false);
   };
