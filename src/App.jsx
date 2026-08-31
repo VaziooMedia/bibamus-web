@@ -897,6 +897,42 @@ export default function App() {
     );
   }
 
+  if (profile.active === false) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "32px 24px",
+          background: "#0D1B2A",
+          color: "#F2F2E8",
+          textAlign: "center",
+        }}
+      >
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "28px", marginBottom: "12px" }}>Compte bloqué</h1>
+        <p style={{ fontSize: "14px", color: "#8792A6", marginBottom: "20px", maxWidth: "320px" }}>
+          Votre accès à Bibamus a été suspendu par un administrateur.
+          {profile.blockedReason && (
+            <>
+              <br />
+              <br />
+              Raison : {profile.blockedReason}
+            </>
+          )}
+        </p>
+        <button
+          onClick={handleLogout}
+          style={{ background: "#FF3B4E", border: "none", borderRadius: "10px", padding: "13px 24px", fontWeight: 700, color: "#fff", cursor: "pointer" }}
+        >
+          Se déconnecter
+        </button>
+      </div>
+    );
+  }
+
   return (
     <NavigationContext.Provider value={() => setScreen("home")}>
       <ProfileNavContext.Provider value={{ avatarEmoji: profile.avatarEmoji, goToProfile: () => setScreen("profile") }}>

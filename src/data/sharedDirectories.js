@@ -126,6 +126,8 @@ export async function loadMyProfile(userId) {
     // isAdmin vient désormais du vrai rôle vérifié côté base de données, plus d'une passphrase
     // locale — cohérent avec les règles RLS qui vérifient ce même rôle.
     isAdmin: data.role === "admin" || data.role === "super_admin",
+    active: data.active !== false,
+    blockedReason: data.blocked_reason || null,
   };
 }
 
