@@ -87,7 +87,7 @@ export async function lookupBibroCode(code) {
   if (!row || !row.display_name) return null;
   return {
     displayName: row.display_name,
-    avatarEmoji: row.avatar_emoji,
+    avatarUrl: row.avatar_url,
     firstName: row.first_name,
     lastName: row.last_name,
     nickname: row.nickname,
@@ -148,7 +148,7 @@ export async function loadMyProfile(userId) {
     sharePrenom: data.share_prenom,
     shareNom: data.share_nom,
     shareSurnom: data.share_surnom,
-    avatarEmoji: data.avatar_emoji || null,
+    avatarUrl: data.avatar_url || null,
     // isAdmin vient désormais du vrai rôle vérifié côté base de données, plus d'une passphrase
     // locale — cohérent avec les règles RLS qui vérifient ce même rôle.
     isAdmin: data.role === "admin" || data.role === "super_admin",
@@ -158,7 +158,7 @@ export async function loadMyProfile(userId) {
   };
 }
 
-export async function updateMyProfile(userId, { name, lastName, nickname, username, displayNameField, sharePrenom, shareNom, shareSurnom, avatarEmoji }) {
+export async function updateMyProfile(userId, { name, lastName, nickname, username, displayNameField, sharePrenom, shareNom, shareSurnom, avatarUrl }) {
   const { error } = await supabase
     .from("profiles")
     .update({
@@ -170,10 +170,24 @@ export async function updateMyProfile(userId, { name, lastName, nickname, userna
       share_prenom: sharePrenom,
       share_nom: shareNom,
       share_surnom: shareSurnom,
-      avatar_emoji: avatarEmoji,
+      avatar_url: avatarUrl,
     })
     .eq("id", userId);
   if (error) console.error("updateMyProfile:", error);
+}
+
+// Photo de profil réelle — remplace l'ancien sélecteur d'emoji. Recadrage carré centré, comme
+// pour les photos d'administrateurs.
+export async function uploadMyAvatarPhoto(userId, file) {
+  const blob = await resizeImageSquare(file, 400, 400);
+  const path = `${userId}-${Date.now()}.jpg`;
+  const { error: uploadError } = await supabase.storage.from("bibax-avatars").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) {
+    console.error("uploadMyAvatarPhoto:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("bibax-avatars").getPublicUrl(path);
+  return data.publicUrl;
 }
 
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
@@ -565,6 +579,28 @@ function drinkToRow(d, partial = false) {
 // Compresse et redimensionne l'image côté appareil avant l'envoi — un smartphone produit
 // souvent des photos de plusieurs Mo, largement plus grandes que nécessaire pour un affichage
 // mobile, et ça évite de saturer inutilement le stockage et de ralentir le chargement des fiches.
+// Recadrage carré centré — pour une photo de profil, contrairement à resizeImage() qui garde
+// le ratio d'origine (adapté aux photos de produits/lieux, pas à un avatar rond).
+async function resizeImageSquare(file, targetW, targetH, quality = 0.85) {
+  const bitmap = await createImageBitmap(file);
+  const srcRatio = bitmap.width / bitmap.height;
+  const targetRatio = targetW / targetH;
+  let sx = 0, sy = 0, sw = bitmap.width, sh = bitmap.height;
+  if (srcRatio > targetRatio) {
+    sw = bitmap.height * targetRatio;
+    sx = (bitmap.width - sw) / 2;
+  } else {
+    sh = bitmap.width / targetRatio;
+    sy = (bitmap.height - sh) / 2;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, targetW, targetH);
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+}
+
 async function resizeImage(file, maxDim = 1000, quality = 0.82) {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));

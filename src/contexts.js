@@ -7,4 +7,4 @@
 import React from "react";
 
 export const NavigationContext = React.createContext(() => {});
-export const ProfileNavContext = React.createContext({ avatarEmoji: null, goToProfile: () => {} });
+export const ProfileNavContext = React.createContext({ avatarUrl: null, goToProfile: () => {} });

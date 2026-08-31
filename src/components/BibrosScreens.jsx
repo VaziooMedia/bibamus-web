@@ -120,9 +120,10 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                       fontSize: "19px",
                       flexShrink: 0,
                       marginTop: "1px",
+                      overflow: "hidden",
                     }}
                   >
-                    {b.avatarEmoji ? b.avatarEmoji : <NavIcon name="default-avatar" size={19} color={COLORS.amber} />}
+                    {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={19} color={COLORS.amber} />}
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "15px" }}>{fullName}</div>
@@ -211,7 +212,21 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
         </div>
       )}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-        <span style={{ fontSize: "34px", lineHeight: 1, display: "inline-flex" }}>{bibro.avatarEmoji ? bibro.avatarEmoji : <NavIcon name="default-avatar" size={32} color={COLORS.amber} />}</span>
+        <span
+          style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: "50%",
+            background: COLORS.surfaceAlt,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+            flexShrink: 0,
+          }}
+        >
+          {bibro.avatarUrl ? <img src={bibro.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={26} color={COLORS.amber} />}
+        </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", lineHeight: 1, margin: 0 }}>{heading}</h1>
         {onToggleFavorite && (
           <button
@@ -443,7 +458,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
     if (identity && identity.displayName) {
       setFoundName(identity.displayName);
       setFoundSocials({
-        avatarEmoji: identity.avatarEmoji || null,
+        avatarUrl: identity.avatarUrl || null,
         firstName: identity.firstName || "",
         lastName: identity.lastName || "",
         nickname: identity.nickname || "",
@@ -528,9 +543,10 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
                 justifyContent: "center",
                 fontSize: "24px",
                 flexShrink: 0,
+                overflow: "hidden",
               }}
             >
-              {foundSocials.avatarEmoji ? foundSocials.avatarEmoji : <NavIcon name="default-avatar" size={26} color={COLORS.amber} />}
+              {foundSocials.avatarUrl ? <img src={foundSocials.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={26} color={COLORS.amber} />}
             </div>
             <div>
               <div style={{ fontSize: "17px", fontWeight: 700 }}>

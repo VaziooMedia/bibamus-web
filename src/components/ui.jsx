@@ -109,7 +109,7 @@ export function EntityAvatar({ photoUrl, photoEmoji, size = 40, onClick, fallbac
 }
 
 export function HeaderAvatarButton({ size = 40 }) {
-  const { goToProfile } = React.useContext(ProfileNavContext);
+  const { avatarUrl, goToProfile } = React.useContext(ProfileNavContext);
   return (
     <button
       onClick={goToProfile}
@@ -126,11 +126,16 @@ export function HeaderAvatarButton({ size = 40 }) {
         cursor: "pointer",
         padding: 0,
         fontSize: `${Math.round(size * 0.42)}px`,
+        overflow: "hidden",
       }}
       title="Mon profil"
       aria-label="Mon profil"
     >
-      <NavIcon name="default-avatar" size={Math.round(size * 0.58)} color={COLORS.amber} />
+      {avatarUrl ? (
+        <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      ) : (
+        <NavIcon name="default-avatar" size={Math.round(size * 0.58)} color={COLORS.amber} />
+      )}
     </button>
   );
 }

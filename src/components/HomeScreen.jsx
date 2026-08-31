@@ -82,7 +82,7 @@ export function HomeScreen({
   onQuickJoinSalon,
   myName,
   myBibroCode,
-  avatarEmoji,
+  avatarUrl,
   lastName,
   venues,
 }) {
@@ -140,11 +140,11 @@ export function HomeScreen({
                   <span style={{ fontSize: "14px" }}>
                     {status.activeSalonName ? (
                       <>
-                        🎉 <strong>{b.avatarEmoji || "👤"} {b.alias || b.name}</strong> — {status.activeSalonName}
+                        🎉 <strong>{b.alias || b.name}</strong> — {status.activeSalonName}
                       </>
                     ) : (
                       <>
-                        📍 <strong>{b.avatarEmoji || "👤"} {b.alias || b.name}</strong> est chez {status.checkedInVenueName}
+                        📍 <strong>{b.alias || b.name}</strong> est chez {status.checkedInVenueName}
                       </>
                     )}
                   </span>

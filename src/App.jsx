@@ -57,6 +57,7 @@ import {
   onAuthStateChange,
   loadMyProfile,
   lookupBibroCode,
+  uploadMyAvatarPhoto,
   updateMyProfile,
   signOut,
   loadContributionsForEntity,
@@ -114,7 +115,7 @@ export default function App() {
   // compte, plutôt que d'être généré localement à chaque appareil. profileLoaded distingue "en
   // cours de récupération" de "récupéré" — évite d'afficher un instant l'écran d'onboarding
   // (nom vide) pendant le bref délai où le profil n'est pas encore arrivé du serveur.
-  const [profile, setProfile] = useState({ name: "", avatarEmoji: null, myBibroCode: null });
+  const [profile, setProfile] = useState({ name: "", avatarUrl: null, myBibroCode: null });
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [events, setEvents] = useState(() => loadLocal("bibamus-events", []).map(normalizeEvent));
   const [bibros, setBibros] = useState(() => loadLocal("bibamus-bibros", []));
@@ -166,10 +167,10 @@ export default function App() {
       sharePrenom: profile.sharePrenom,
       shareNom: profile.shareNom,
       shareSurnom: profile.shareSurnom,
-      avatarEmoji: profile.avatarEmoji,
+      avatarUrl: profile.avatarUrl,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile.name, profile.lastName, profile.nickname, profile.username, profile.displayNameField, profile.sharePrenom, profile.shareNom, profile.shareSurnom, profile.avatarEmoji]);
+  }, [profile.name, profile.lastName, profile.nickname, profile.username, profile.displayNameField, profile.sharePrenom, profile.shareNom, profile.shareSurnom, profile.avatarUrl]);
   useEffect(() => saveLocal("bibamus-events", events), [events]);
   useEffect(() => saveLocal("bibamus-bibros", bibros), [bibros]);
 
@@ -779,7 +780,7 @@ export default function App() {
   const handleLogout = async () => {
     await signOut();
     setSession(null);
-    setProfile({ name: "", avatarEmoji: null, myBibroCode: null });
+    setProfile({ name: "", avatarUrl: null, myBibroCode: null });
     setProfileLoaded(false);
   };
 
@@ -787,7 +788,7 @@ export default function App() {
     // Le compte n'existe plus côté serveur — on nettoie simplement l'état local et on retourne
     // à l'écran de connexion, comme une déconnexion classique.
     setSession(null);
-    setProfile({ name: "", avatarEmoji: null, myBibroCode: null });
+    setProfile({ name: "", avatarUrl: null, myBibroCode: null });
     setProfileLoaded(false);
   };
 
@@ -950,7 +951,7 @@ export default function App() {
 
   return (
     <NavigationContext.Provider value={() => setScreen("home")}>
-      <ProfileNavContext.Provider value={{ avatarEmoji: profile.avatarEmoji, goToProfile: () => setScreen("profile") }}>
+      <ProfileNavContext.Provider value={{ avatarUrl: profile.avatarUrl, goToProfile: () => setScreen("profile") }}>
         <div
           style={{
             fontFamily: "'Work Sans', sans-serif",
@@ -992,7 +993,7 @@ export default function App() {
                 onQuickJoinSalon={(code) => console.log("TODO: rejoindre salon", code)}
                 myName={profile.name}
                 myBibroCode={profile.myBibroCode}
-                avatarEmoji={profile.avatarEmoji}
+                avatarUrl={profile.avatarUrl}
                 lastName={profile.lastName}
                 venues={venues}
               />
@@ -1273,6 +1274,7 @@ export default function App() {
                 onRenameMe={(name) => setProfile((p) => ({ ...p, name }))}
                 profile={profile}
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
+                onUploadPhoto={(file) => uploadMyAvatarPhoto(session.user.id, file)}
                 onGoToAdminUnlock={() => setScreen("adminUnlock")}
                 onLogout={handleLogout}
                 onBack={() => setScreen("profile")}

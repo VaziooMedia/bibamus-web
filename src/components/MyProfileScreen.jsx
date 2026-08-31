@@ -2,13 +2,13 @@
 // Écran "Mes infos" — édition du profil personnel — copié tel
 // quel depuis le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
-import { COLORS, AVATAR_EMOJIS, COUNTRIES, LANGUAGES, CITIES_BY_COUNTRY } from "../constants.js";
-import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
+import React, { useState, useRef } from "react";
+import { COLORS, COUNTRIES, LANGUAGES, CITIES_BY_COUNTRY } from "../constants.js";
+import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
 
-export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onGoToAdminUnlock, onLogout, onBack }) {
+export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onUploadPhoto, onGoToAdminUnlock, onLogout, onBack }) {
   const [firstName, setFirstName] = useState(myName || "");
   const [lastName, setLastName] = useState(profile.lastName || "");
   const [nickname, setNickname] = useState(profile.nickname || "");
@@ -18,7 +18,9 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [country, setCountry] = useState(profile.country || "");
   const [region, setRegion] = useState(profile.region || "");
   const [city, setCity] = useState(profile.city || "");
-  const [avatarEmoji, setAvatarEmoji] = useState(profile.avatarEmoji || null);
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
   const [bio, setBio] = useState(profile.bio || "");
   const [shareBio, setShareBio] = useState(profile.shareBio !== false);
   const [displayNameField, setDisplayNameField] = useState(profile.displayNameField || "username");
@@ -78,7 +80,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       country: country.trim(),
       region: region.trim(),
       city: city.trim(),
-      avatarEmoji,
+      avatarUrl,
       bio: bio.trim(),
       displayNameField,
       facebookUrl: facebookUrl.trim(),
@@ -135,25 +137,58 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
         </p>
       </div>
 
-      <label style={labelStyle}>Icône de profil</label>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "18px" }}>
-        {AVATAR_EMOJIS.map((e) => (
+      <label style={labelStyle}>Photo de profil</label>
+      <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "18px" }}>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadingPhoto}
+          style={{
+            width: "84px",
+            height: "84px",
+            borderRadius: "50%",
+            border: `2px solid ${COLORS.paperAlt}`,
+            background: avatarUrl ? `${COLORS.surface} url(${avatarUrl}) center/cover no-repeat` : COLORS.surface,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: uploadingPhoto ? "default" : "pointer",
+            padding: 0,
+            flexShrink: 0,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {!avatarUrl && !uploadingPhoto && <NavIcon name="default-avatar" size={38} color={COLORS.amber} />}
+          {uploadingPhoto && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(13,27,42,0.6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#fff" }}>...</div>
+          )}
+        </button>
+        <div>
           <button
-            key={e}
-            onClick={() => setAvatarEmoji(e)}
-            style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "10px",
-              border: `2px solid ${avatarEmoji === e ? COLORS.amber : COLORS.paperAlt}`,
-              background: avatarEmoji === e ? COLORS.paperAlt : "#fff",
-              fontSize: "20px",
-              cursor: "pointer",
-            }}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingPhoto}
+            style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "8px 14px", fontWeight: 600, fontSize: "13px", color: COLORS.ink, cursor: "pointer" }}
           >
-            {e}
+            {avatarUrl ? "Changer la photo" : "Ajouter une photo"}
           </button>
-        ))}
+          <p style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "6px" }}>Sinon, l'icône par défaut est utilisée.</p>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: "none" }}
+          onChange={async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            e.target.value = "";
+            setUploadingPhoto(true);
+            const url = await onUploadPhoto(file);
+            setUploadingPhoto(false);
+            if (url) setAvatarUrl(url);
+          }}
+        />
       </div>
 
       <label style={labelStyle}>Bio / citation (facultatif)</label>
