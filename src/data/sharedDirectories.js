@@ -54,6 +54,25 @@ export async function loadFeatureFlags() {
   return Object.fromEntries(data.map((f) => [f.flag_key, f.enabled]));
 }
 
+// Crash reporting — envoie une erreur technique pour consultation côté plateforme de gestion.
+// N'échoue jamais bruyamment : un souci réseau ici ne doit pas empêcher le reste de l'app de
+// continuer à fonctionner.
+export async function reportCrash({ message, stack, source, screen, bibroCode }) {
+  try {
+    await supabase.from("crash_reports").insert({
+      id: `crash-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+      message: message || null,
+      stack: stack || null,
+      source: source || null,
+      screen: screen || null,
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      bibro_code: bibroCode || null,
+    });
+  } catch (e) {
+    console.error("reportCrash:", e);
+  }
+}
+
 export async function signUp(email, password, { firstName, lastName, nickname, username, birthDate, country }) {
   // Les informations passent en métadonnées Supabase Auth — c'est le déclencheur côté base de
   // données (handle_new_user) qui crée ensuite la ligne de profil, jamais ce code client

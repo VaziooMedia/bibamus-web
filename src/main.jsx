@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
+import { ErrorBoundary } from "./components/ErrorBoundary.jsx";
 
 // Désactive la correction automatique / les suggestions de mots (la barre "Je / Tu /
 // C'est" au-dessus du clavier iPhone) sur tous les champs de saisie, présents et futurs —
@@ -22,6 +23,8 @@ new MutationObserver((mutations) => {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );

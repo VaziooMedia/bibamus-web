@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { NavigationContext, ProfileNavContext } from "./contexts.js";
 import { BottomNav } from "./components/ui.jsx";
+import { ErrorBoundary, installGlobalCrashReporting } from "./components/ErrorBoundary.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
 import { BarcodeScannerModal } from "./components/BarcodeScannerModal.jsx";
 import { BibamusLogoFull } from "./components/icons.jsx";
@@ -117,11 +118,26 @@ export default function App() {
     loadFeatureFlags().then(setFeatureFlags);
   }, []);
 
+  // Références toujours à jour (contrairement à des variables normales, qui resteraient
+  // figées à leur valeur du montage dans les gestionnaires installés une seule fois ci-dessous).
+  const screenRef = React.useRef(screen);
+  const bibroCodeRef = React.useRef(null);
+  useEffect(() => {
+    screenRef.current = screen;
+  });
+  useEffect(() => {
+    installGlobalCrashReporting(() => ({ screen: screenRef.current, bibroCode: bibroCodeRef.current }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Données personnelles — le profil (avec le code Bibax) vient désormais du serveur, lié au
   // compte, plutôt que d'être généré localement à chaque appareil. profileLoaded distingue "en
   // cours de récupération" de "récupéré" — évite d'afficher un instant l'écran d'onboarding
   // (nom vide) pendant le bref délai où le profil n'est pas encore arrivé du serveur.
   const [profile, setProfile] = useState({ name: "", avatarUrl: null, myBibroCode: null });
+  useEffect(() => {
+    bibroCodeRef.current = profile.myBibroCode;
+  }, [profile.myBibroCode]);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [events, setEvents] = useState(() => loadLocal("bibamus-events", []).map(normalizeEvent));
   const [bibros, setBibros] = useState(() => loadLocal("bibamus-bibros", []));
