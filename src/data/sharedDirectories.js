@@ -43,7 +43,7 @@ export async function isUsernameAvailable(username) {
   return !data;
 }
 
-export async function signUp(email, password, { firstName, lastName, nickname, username, birthDate }) {
+export async function signUp(email, password, { firstName, lastName, nickname, username, birthDate, country }) {
   // Les informations passent en métadonnées Supabase Auth — c'est le déclencheur côté base de
   // données (handle_new_user) qui crée ensuite la ligne de profil, jamais ce code client
   // directement (une session active n'existe pas encore tant que l'email n'est pas confirmé).
@@ -57,11 +57,20 @@ export async function signUp(email, password, { firstName, lastName, nickname, u
         nickname: nickname || null,
         username,
         birth_date: birthDate,
+        country,
       },
     },
   });
   if (error) return { error: error.message };
   return { user: data.user, session: data.session };
+}
+
+// Seuil d'âge minimum pour un pays donné — piloté depuis la plateforme de gestion, plus besoin
+// de déploiement de code pour ajuster un seuil ou ajouter un pays.
+export async function getMinimumAge(countryCode) {
+  const { data, error } = await supabase.from("country_rules").select("minimum_age").eq("country_code", countryCode).maybeSingle();
+  if (error || !data) return 18;
+  return data.minimum_age;
 }
 
 export async function signIn(email, password) {

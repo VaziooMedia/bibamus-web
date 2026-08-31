@@ -1,14 +1,10 @@
 import React, { useState } from "react";
-import { COLORS } from "../constants.js";
-import { signUp, signIn, resetPassword, isUsernameAvailable } from "../data/sharedDirectories.js";
+import { COLORS, PROFILE_COUNTRIES } from "../constants.js";
+import { signUp, signIn, resetPassword, isUsernameAvailable, getMinimumAge } from "../data/sharedDirectories.js";
 
 const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "4px", display: "block" };
 const buttonStyle = { width: "100%", padding: "14px", borderRadius: "10px", border: "none", background: COLORS.amber, color: COLORS.paper, fontWeight: 700, fontSize: "15px", cursor: "pointer" };
-
-// Âge minimum provisoire (16 ans, seuil belge bière/vin) — le moteur de règles par pays
-// (country_rules) n'existe pas encore ; à revoir une fois ce chantier construit.
-const PROVISIONAL_MINIMUM_AGE = 16;
 
 function ageFromBirthDate(dateStr) {
   const birth = new Date(dateStr);
@@ -66,6 +62,7 @@ export function AuthScreen({ onAuthenticated }) {
   const [nickname, setNickname] = useState("");
   const [username, setUsername] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [country, setCountry] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -93,7 +90,7 @@ export function AuthScreen({ onAuthenticated }) {
         setError("Le mot de passe doit contenir au moins 6 caractères.");
         return;
       }
-      if (!firstName.trim() || !lastName.trim() || !username.trim() || !birthDate) {
+      if (!firstName.trim() || !lastName.trim() || !username.trim() || !birthDate || !country) {
         setError("Merci de compléter tous les champs obligatoires.");
         return;
       }
@@ -101,18 +98,20 @@ export function AuthScreen({ onAuthenticated }) {
         setError("Date de naissance invalide.");
         return;
       }
-      if (ageFromBirthDate(birthDate) < PROVISIONAL_MINIMUM_AGE) {
-        setError(`Bibamus concerne des boissons alcoolisées — un âge minimum de ${PROVISIONAL_MINIMUM_AGE} ans est requis pour s'inscrire.`);
+      setLoading(true);
+      const minimumAge = await getMinimumAge(country);
+      if (ageFromBirthDate(birthDate) < minimumAge) {
+        setLoading(false);
+        setError(`Bibamus concerne des boissons alcoolisées — un âge minimum de ${minimumAge} ans est requis pour ce pays.`);
         return;
       }
-      setLoading(true);
       const available = await isUsernameAvailable(username.trim());
       if (!available) {
         setLoading(false);
         setError("Ce nom d'utilisateur est déjà pris — essayez-en un autre.");
         return;
       }
-      const result = await signUp(email, password, { firstName: firstName.trim(), lastName: lastName.trim(), nickname: nickname.trim(), username: username.trim(), birthDate });
+      const result = await signUp(email, password, { firstName: firstName.trim(), lastName: lastName.trim(), nickname: nickname.trim(), username: username.trim(), birthDate, country });
       setLoading(false);
       if (result.error) {
         setError(result.error);
@@ -174,9 +173,20 @@ export function AuthScreen({ onAuthenticated }) {
                 style={{ ...inputStyle, WebkitAppearance: "none", appearance: "none", maxWidth: "100%", minWidth: 0 }}
               />
             </div>
+            <div>
+              <label style={labelStyle}>Pays *</label>
+              <select value={country} onChange={(e) => setCountry(e.target.value)} required style={inputStyle}>
+                <option value="">—</option>
+                {PROFILE_COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.fr}
+                  </option>
+                ))}
+              </select>
+            </div>
             <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "-4px 0 0" }}>
-              Le prénom, nom, surnom et nom d'utilisateur pourront être affichés aux autres Bibax — vous choisirez ce qui est visible dans vos paramètres. La date de naissance sert uniquement à
-              vérifier l'âge minimum requis (contenus liés à l'alcool).
+              Le prénom, nom, surnom et nom d'utilisateur pourront être affichés aux autres Bibax — vous choisirez ce qui est visible dans vos paramètres. La date de naissance et le pays servent
+              uniquement à vérifier l'âge minimum requis (contenus liés à l'alcool).
             </p>
           </>
         )}
