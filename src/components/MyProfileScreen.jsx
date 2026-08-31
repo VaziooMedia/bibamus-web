@@ -118,29 +118,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "4px 0 18px 0", lineHeight: 1 }}>Mon profil</h1>
 
       <label style={labelStyle}>Photo de profil</label>
-      <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "18px" }}>
-        <div
-          style={{
-            width: "72px",
-            height: "72px",
-            borderRadius: "50%",
-            background: COLORS.paperAlt,
-            border: `2px dashed ${COLORS.inkSoft}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "26px",
-            flexShrink: 0,
-          }}
-        >
-          📷
-        </div>
-        <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: 0 }}>
-          Pas encore disponible dans cette version — l'emplacement est prêt pour quand ce sera possible. En attendant, ton icône ci-dessous fait office d'avatar.
-        </p>
-      </div>
-
-      <label style={labelStyle}>Photo de profil</label>
       <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "18px" }}>
         <button
           onClick={() => fileInputRef.current?.click()}

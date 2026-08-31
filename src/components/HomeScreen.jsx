@@ -118,9 +118,10 @@ export function HomeScreen({
               fontSize: "26px",
               flexShrink: 0,
               border: `2px solid ${COLORS.paperAlt}`, // will become a colored ring when a story is available
+              overflow: "hidden",
             }}
           >
-            <NavIcon name="default-avatar" size={44} color={COLORS.amber} />
+            {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={44} color={COLORS.amber} />}
           </span>
         </button>
       </div>

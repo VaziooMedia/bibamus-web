@@ -23,9 +23,10 @@ export function ProfileHeader({ myName, profile, bibros, checkIns }) {
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
+              overflow: "hidden",
             }}
           >
-            <NavIcon name="user" size={28} color={COLORS.amber} />
+            {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={28} color={COLORS.amber} />}
           </div>
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", lineHeight: 1, margin: 0 }}>{myName}</h1>
         </div>
