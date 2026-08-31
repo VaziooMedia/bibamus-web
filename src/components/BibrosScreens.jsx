@@ -448,10 +448,12 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
     if (identity && identity.displayName) {
       setFoundName(identity.displayName);
       setFoundSocials({
-        avatarEmoji: identity.avatarEmoji || "👤",
+        avatarEmoji: identity.avatarEmoji || null,
         firstName: identity.firstName || "",
         lastName: identity.lastName || "",
         nickname: identity.nickname || "",
+        city: identity.city || "",
+        country: identity.country || "",
         facebookUrl: identity.facebookUrl || "",
         instagramUrl: identity.instagramUrl || "",
         tiktokUrl: identity.tiktokUrl || "",
