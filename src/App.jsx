@@ -88,6 +88,20 @@ function saveLocal(key, value) {
   }
 }
 
+// Résout une fiche par identifiant, en suivant automatiquement un éventuel tombstone (fiche
+// fusionnée dans une autre) vers la fiche réellement conservée — pour qu'un ancien favori, un
+// check-in resté en local, ou tout simple lien vers l'ancien identifiant continue d'aboutir à
+// la bonne fiche plutôt qu'à un écran vide ou obsolète.
+function resolveEntity(directory, id) {
+  let current = directory.find((e) => e.id === id);
+  let hops = 0;
+  while (current && current.status === "duplicate" && current.duplicateOfId && hops < 5) {
+    current = directory.find((e) => e.id === current.duplicateOfId);
+    hops++;
+  }
+  return current;
+}
+
 export default function App() {
   // Permet d'accéder directement à la suppression de compte via l'URL bibamus.app/delete-account
   // (exigence Google : accessible même sans ouvrir l'app normalement) — la connexion reste
@@ -1186,12 +1200,12 @@ export default function App() {
             )}
             {screen === "editVenue" && (
               <DirectoryVenueFormScreen
-                venue={venues.find((v) => v.id === viewedVenueId)}
+                venue={resolveEntity(venues, viewedVenueId)}
                 drinksDirectory={drinksDirectory}
                 breweriesDirectory={breweriesDirectory}
                 onRegisterBrewery={registerBrewery}
                 addIntent={false}
-                suggestMode={!profile.isAdmin && venues.find((v) => v.id === viewedVenueId)?.status === "complete"}
+                suggestMode={!profile.isAdmin && resolveEntity(venues, viewedVenueId)?.status === "complete"}
                 onSave={(patch) => {
                   updatePublicVenue(viewedVenueId, patch);
                   setVenues((prev) => prev.map((v) => (v.id === viewedVenueId ? { ...v, ...patch } : v)));
@@ -1213,15 +1227,15 @@ export default function App() {
             )}
             {screen === "editDrink" && (
               <DrinkFormScreen
-                drink={drinksDirectory.find((d) => d.id === viewedDrinkId)}
+                drink={resolveEntity(drinksDirectory, viewedDrinkId)}
                 breweriesDirectory={breweriesDirectory}
                 onRegisterBrewery={registerBrewery}
                 brandsDirectory={brandsDirectory}
                 onRegisterBrand={registerBrand}
                 drinksDirectory={drinksDirectory}
-                suggestMode={!profile.isAdmin && drinksDirectory.find((d) => d.id === viewedDrinkId)?.status === "complete"}
+                suggestMode={!profile.isAdmin && resolveEntity(drinksDirectory, viewedDrinkId)?.status === "complete"}
                 onSave={(patch) => {
-                  if (!profile.isAdmin && drinksDirectory.find((d) => d.id === viewedDrinkId)?.status === "complete") {
+                  if (!profile.isAdmin && resolveEntity(drinksDirectory, viewedDrinkId)?.status === "complete") {
                     suggestDrinkEdit(viewedDrinkId, patch);
                   } else {
                     updateDrink(viewedDrinkId, patch);
@@ -1247,7 +1261,7 @@ export default function App() {
             {screen === "venueDetail" && (
               <VenueDetailScreen
                 venue={(() => {
-                  const v = venues.find((v) => v.id === viewedVenueId);
+                  const v = resolveEntity(venues, viewedVenueId);
                   return v ? { ...v, isFavorite: favoriteVenueIds.includes(v.id) } : v;
                 })()}
                 venues={venues}
@@ -1270,7 +1284,7 @@ export default function App() {
             )}
             {screen === "drinkDetail" && (
               <DrinkDetailScreen
-                drink={drinksDirectory.find((d) => d.id === viewedDrinkId)}
+                drink={resolveEntity(drinksDirectory, viewedDrinkId)}
                 drinksDirectory={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
@@ -1479,7 +1493,7 @@ export default function App() {
             )}
             {screen === "breweryDetail" && (
               <BreweryDetailScreen
-                brewery={breweriesDirectory.find((b) => b.id === viewedBreweryId)}
+                brewery={resolveEntity(breweriesDirectory, viewedBreweryId)}
                 breweriesDirectory={breweriesDirectory}
                 drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
@@ -1515,7 +1529,7 @@ export default function App() {
             )}
             {screen === "brandDetail" && (
               <BrandDetailScreen
-                brand={brandsDirectory.find((b) => b.id === viewedBrandId)}
+                brand={resolveEntity(brandsDirectory, viewedBrandId)}
                 brandsDirectory={brandsDirectory}
                 drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
