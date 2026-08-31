@@ -55,6 +55,13 @@ export async function signIn(email, password) {
   return { user: data.user, session: data.session };
 }
 
+export async function deleteMyAccount(confirmPassword) {
+  const { data, error } = await supabase.functions.invoke("delete-my-account", { body: { confirmPassword } });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
+
 export async function signOut() {
   await supabase.auth.signOut();
 }

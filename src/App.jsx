@@ -33,6 +33,7 @@ import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesA
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
 import { ImportDataScreen } from "./components/ImportDataScreen.jsx";
 import { BibrosListScreen, BibroDetailScreen, AddBibroScreen, AdminUnlockScreen } from "./components/BibrosScreens.jsx";
+import { DeleteAccountScreen } from "./components/DeleteAccountScreen.jsx";
 import {
   loadPublicVenues,
   loadDrinksDirectory,
@@ -83,7 +84,10 @@ function saveLocal(key, value) {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState("home");
+  // Permet d'accéder directement à la suppression de compte via l'URL bibamus.app/delete-account
+  // (exigence Google : accessible même sans ouvrir l'app normalement) — la connexion reste
+  // requise, mais on atterrit directement sur cet écran plutôt que sur l'accueil.
+  const [screen, setScreen] = useState(() => (window.location.pathname === "/delete-account" ? "deleteAccount" : "home"));
 
   // Répertoires partagés (Supabase)
   const [venues, setVenues] = useState([]);
@@ -756,6 +760,13 @@ export default function App() {
     setProfile({ name: "", avatarEmoji: null, myBibroCode: null });
   };
 
+  const handleAccountDeleted = async () => {
+    // Le compte n'existe plus côté serveur — on nettoie simplement l'état local et on retourne
+    // à l'écran de connexion, comme une déconnexion classique.
+    setSession(null);
+    setProfile({ name: "", avatarEmoji: null, myBibroCode: null });
+  };
+
   // Le statut admin vient désormais exclusivement du rôle vérifié côté serveur (chargé avec le
   // profil) — cette fonction ne peut plus l'accorder elle-même, une passphrase locale ne
   // suffit plus à contourner la vérification faite par la base de données.
@@ -1274,8 +1285,9 @@ export default function App() {
               />
             )}
             {screen === "settings" && (
-              <SettingsScreen onBack={() => setScreen("home")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} />
+              <SettingsScreen onBack={() => setScreen("home")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} goToDeleteAccount={() => setScreen("deleteAccount")} />
             )}
+            {screen === "deleteAccount" && <DeleteAccountScreen onBack={() => setScreen("settings")} onAccountDeleted={handleAccountDeleted} />}
             {screen === "importData" && (
               <ImportDataScreen
                 onBack={async () => {
@@ -1514,7 +1526,7 @@ export default function App() {
                 description="Cette fonctionnalité arrive dans un prochain bloc de la migration."
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newEvent", "newSalonEvent", "joinSalon", "eventDashboard", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newEvent", "newSalonEvent", "joinSalon", "eventDashboard", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
