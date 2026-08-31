@@ -468,7 +468,6 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
   const handleCodeChange = (value) => {
     setCode(value.toUpperCase().replace(/[^23456789ABCDEFGHJKMNPQRSTUVWXYZ]/g, "").slice(0, 5));
     setStatus("idle");
-    setAlias("");
   };
 
   return (
@@ -521,7 +520,6 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
 
       {status === "found" && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>Trouvé :</div>
           <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: (foundSocials.facebookUrl || foundSocials.instagramUrl || foundSocials.tiktokUrl || foundSocials.snapchatUrl) ? "12px" : 0 }}>
             <div
               style={{
