@@ -69,7 +69,9 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
               </button>
             </div>
             <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-              Vous représentez officiellement <strong>{entityName}</strong> ? Ces informations nous permettent de vérifier votre demande.
+              Vous représentez officiellement <strong>{entityName}</strong> ?
+              <br />
+              Ces informations nous permettent de vérifier votre demande.
             </p>
 
             <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Nom de la société (ou votre nom, si personne physique) *</p>
@@ -79,28 +81,26 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
               style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", color: COLORS.ink, background: "none", boxSizing: "border-box", marginBottom: "14px" }}
             />
 
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Numéro d'entreprise / TVA (ex. BCE en Belgique) — si disponible</p>
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Numéro d'entreprise - Si disponible</p>
             <input
               value={vatNumber}
               onChange={(e) => setVatNumber(e.target.value)}
-              placeholder="Ex. BE 0123.456.789"
               style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", color: COLORS.ink, background: "none", boxSizing: "border-box", marginBottom: "14px" }}
             />
 
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Administrateurs officiels connus — si disponible</p>
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Administrateur de l'entreprise (1) - Si disponible</p>
             <input
               value={officers}
               onChange={(e) => setOfficers(e.target.value)}
-              placeholder="Ex. Jean Dupont, Marie Martin"
               style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", color: COLORS.ink, background: "none", boxSizing: "border-box", marginBottom: "14px" }}
             />
 
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Qui êtes-vous, et quel est votre lien avec cette fiche ? *</p>
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Quel est votre lien avec cette fiche ? *</p>
             <textarea
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
               rows={4}
-              placeholder="Ex. Je suis le gérant de cet établissement. Vous pouvez me contacter au..."
+              placeholder="Texte libre ..."
               style={{
                 width: "100%",
                 padding: "12px 14px",
