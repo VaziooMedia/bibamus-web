@@ -351,8 +351,19 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
   const order = [...participants].sort((a, b) => a.joinedAt - b.joinedAt);
   const activeOrder = order.filter((p) => !p.paused);
   const rounds = event.rounds || [];
-  const currentIndex = activeOrder.length ? rounds.length % activeOrder.length : 0;
-  const currentParticipant = activeOrder.length ? activeOrder[currentIndex] : null;
+  // Se base sur qui a réellement acheté la dernière tournée, puis suggère la personne suivante
+  // dans l'ordre actuel — un simple calcul par comptage de tournées (rounds.length % N) casse
+  // dès que quelqu'un rejoint, se met en pause, ou que l'ordre change entre deux tournées.
+  const lastRound = rounds.length > 0 ? rounds[rounds.length - 1] : null;
+  let currentParticipant = null;
+  if (activeOrder.length > 0) {
+    if (lastRound && lastRound.buyerName) {
+      const lastBuyerIndex = activeOrder.findIndex((p) => (p.name || "").trim().toLowerCase() === (lastRound.buyerName || "").trim().toLowerCase());
+      currentParticipant = lastBuyerIndex === -1 ? activeOrder[0] : activeOrder[(lastBuyerIndex + 1) % activeOrder.length];
+    } else {
+      currentParticipant = activeOrder[0];
+    }
+  }
   const myEntry = participants.find((p) => p.code === myBibroCode);
   const roundsBought = (p) => rounds.filter((r) => r.buyerName === p.name).length;
 
