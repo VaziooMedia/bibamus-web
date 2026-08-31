@@ -1242,6 +1242,7 @@ export default function App() {
                 })()}
                 venues={venues}
                 myBibroCode={profile.myBibroCode}
+                myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
                 onCheckIn={() => checkInVenue(viewedVenueId)}
                 onBack={() => setScreen("venueDirectory")}
@@ -1263,6 +1264,7 @@ export default function App() {
                 drinksDirectory={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
+                myUserId={session.user.id}
                 isTasted={tastedDrinkIds.includes(viewedDrinkId)}
                 onToggleTasted={() => toggleTastedDrink(viewedDrinkId)}
                 isOnWishlist={wishlistDrinkIds.includes(viewedDrinkId)}
@@ -1472,6 +1474,7 @@ export default function App() {
                 drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
+                myUserId={session.user.id}
                 onBack={() => setScreen("breweries")}
                 onOpenDrink={(id) => {
                   setViewedDrinkId(id);
@@ -1507,6 +1510,7 @@ export default function App() {
                 drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
+                myUserId={session.user.id}
                 onBack={() => setScreen("brands")}
                 onOpenDrink={(id) => {
                   setViewedDrinkId(id);

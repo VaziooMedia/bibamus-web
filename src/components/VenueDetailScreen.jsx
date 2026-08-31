@@ -9,10 +9,12 @@ import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx"
 import { formatAddress, formatCompactCount, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
+import { ClaimModal } from "./ClaimModal.jsx";
 
-export function VenueDetailScreen({ venue, venues = [], myBibroCode, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
+export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [cleanupMessage, setCleanupMessage] = useState(null);
+  const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [reporting, setReporting] = useState(false);
   const stats = venue.stats || {};
@@ -302,6 +304,13 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, onToggleLik
         <ReportIcon /> Signaler cette fiche
       </button>
       {reporting && <ReportModal entityType="venue" entityId={venue.id} myBibroCode={myBibroCode} directory={venues} onClose={() => setReporting(false)} />}
+      <button
+        onClick={() => setClaiming(true)}
+        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "10px 0 0 0", textAlign: "left" }}
+      >
+        Cet établissement vous appartient ? Revendiquez cette fiche
+      </button>
+      {claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );

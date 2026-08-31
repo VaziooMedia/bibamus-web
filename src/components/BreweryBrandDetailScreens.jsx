@@ -9,12 +9,14 @@ import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
+import { ClaimModal } from "./ClaimModal.jsx";
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], drinks, isAdmin, myBibroCode, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], drinks, isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
   const [reporting, setReporting] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isLocked = !isAdmin && brewery.status === "complete";
 
@@ -159,16 +161,24 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], drinks, 
         <ReportIcon /> Signaler cette fiche
       </button>
       {reporting && <ReportModal entityType="producer" entityId={brewery.id} myBibroCode={myBibroCode} directory={breweriesDirectory} onClose={() => setReporting(false)} />}
+      <button
+        onClick={() => setClaiming(true)}
+        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "10px 0 0 0", textAlign: "left" }}
+      >
+        Ce producteur vous appartient ? Revendiquez cette fiche
+      </button>
+      {claiming && <ClaimModal entityType="producer" entityId={brewery.id} entityName={brewery.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], drinks, isAdmin, myBibroCode, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BrandDetailScreen({ brand, brandsDirectory = [], drinks, isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brand.name || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const isLocked = !isAdmin && brand.status === "complete";
 
   const relatedDrinks = drinks.filter((d) => d.brand && d.brand.toLowerCase() === brand.name.toLowerCase());
@@ -302,6 +312,13 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], drinks, isAdmin
         <ReportIcon /> Signaler cette fiche
       </button>
       {reporting && <ReportModal entityType="brand" entityId={brand.id} myBibroCode={myBibroCode} directory={brandsDirectory} onClose={() => setReporting(false)} />}
+      <button
+        onClick={() => setClaiming(true)}
+        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "10px 0 0 0", textAlign: "left" }}
+      >
+        Cette marque vous appartient ? Revendiquez cette fiche
+      </button>
+      {claiming && <ClaimModal entityType="brand" entityId={brand.id} entityName={brand.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );

@@ -11,11 +11,13 @@ import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { StarRating } from "./StarRating.jsx";
 import { drinkTypeLabel, formatDrinkFieldValue } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
+import { ClaimModal } from "./ClaimModal.jsx";
 
-export function DrinkDetailScreen({ drink, drinksDirectory = [], isAdmin, myBibroCode, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, pendingContributions = [], onApproveContribution, onRejectContribution, onOpenTagFilter, onUploadPhoto, onDeletePhoto }) {
+export function DrinkDetailScreen({ drink, drinksDirectory = [], isAdmin, myBibroCode, myUserId, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, pendingContributions = [], onApproveContribution, onRejectContribution, onOpenTagFilter, onUploadPhoto, onDeletePhoto }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const isBeer = BEER_TYPES.includes(drink.type);
   const isLockedForMe = !isAdmin && drink.status === "complete";
 
@@ -296,6 +298,13 @@ export function DrinkDetailScreen({ drink, drinksDirectory = [], isAdmin, myBibr
         <ReportIcon /> Signaler cette fiche
       </button>
       {reporting && <ReportModal entityType="drink" entityId={drink.id} myBibroCode={myBibroCode} directory={drinksDirectory} onClose={() => setReporting(false)} />}
+      <button
+        onClick={() => setClaiming(true)}
+        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "10px 0 0 0", textAlign: "left" }}
+      >
+        Ce produit vous appartient ? Revendiquez cette fiche
+      </button>
+      {claiming && <ClaimModal entityType="drink" entityId={drink.id} entityName={drink.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );
