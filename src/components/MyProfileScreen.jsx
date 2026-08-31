@@ -18,7 +18,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [country, setCountry] = useState(profile.country || "");
   const [region, setRegion] = useState(profile.region || "");
   const [city, setCity] = useState(profile.city || "");
-  const [avatarEmoji, setAvatarEmoji] = useState(profile.avatarEmoji || "👤");
+  const [avatarEmoji, setAvatarEmoji] = useState(profile.avatarEmoji || null);
   const [bio, setBio] = useState(profile.bio || "");
   const [shareBio, setShareBio] = useState(profile.shareBio !== false);
   const [displayNameField, setDisplayNameField] = useState(profile.displayNameField || "username");
