@@ -1384,6 +1384,7 @@ export default function App() {
                 brewery={breweriesDirectory.find((b) => b.id === viewedBreweryId)}
                 drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
+                myBibroCode={profile.myBibroCode}
                 onBack={() => setScreen("breweries")}
                 onOpenDrink={(id) => {
                   setViewedDrinkId(id);
@@ -1417,6 +1418,7 @@ export default function App() {
                 brand={brandsDirectory.find((b) => b.id === viewedBrandId)}
                 drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
+                myBibroCode={profile.myBibroCode}
                 onBack={() => setScreen("brands")}
                 onOpenDrink={(id) => {
                   setViewedDrinkId(id);

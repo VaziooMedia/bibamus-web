@@ -316,6 +316,25 @@ function rowToContribution(row) {
 // entityType: 'venue' | 'drink' | 'brand' | 'producer'
 // fields: { champ: nouvelle_valeur } — un diff, comme avant. currentEntity sert à capturer la
 // valeur remplacée (previous_value), pour l'historique.
+/* ---------------- SIGNALEMENTS ---------------- */
+
+export async function submitReport(entityType, entityId, reason, comment, reportedBy) {
+  const { error } = await supabase.from("entity_reports").insert({
+    id: `report-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+    entity_type: entityType,
+    entity_id: entityId,
+    reason,
+    comment: comment || null,
+    reported_by: reportedBy || null,
+    status: "pending",
+  });
+  if (error) {
+    console.error("submitReport:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
 export async function proposeContribution(entityType, entityId, fields, currentEntity, sourceId) {
   const rows = Object.entries(fields).map(([fieldPath, proposedValue]) => ({
     id: `contrib-${Date.now()}-${Math.floor(Math.random() * 100000)}-${fieldPath}`,

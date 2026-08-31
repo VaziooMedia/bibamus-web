@@ -8,11 +8,13 @@ import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIc
 import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx";
 import { formatAddress, formatCompactCount, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
+import { ReportModal } from "./ReportModal.jsx";
 
 export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [cleanupMessage, setCleanupMessage] = useState(null);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const stats = venue.stats || {};
   const moneySpent = stats.moneySpent || {};
   const moneyEuro = moneySpent.euro || 0;
@@ -293,6 +295,13 @@ export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn,
           Supprimer
         </button>
       </div>
+      <button
+        onClick={() => setReporting(true)}
+        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
+      >
+        🚩 Signaler cette fiche
+      </button>
+      {reporting && <ReportModal entityType="venue" entityId={venue.id} myBibroCode={myBibroCode} onClose={() => setReporting(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );

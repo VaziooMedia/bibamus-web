@@ -8,11 +8,13 @@ import { VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
+import { ReportModal } from "./ReportModal.jsx";
 
-export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BreweryDetailScreen({ brewery, drinks, isAdmin, myBibroCode, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
+  const [reporting, setReporting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isLocked = !isAdmin && brewery.status === "complete";
 
@@ -150,15 +152,23 @@ export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDr
           </div>
         </div>
       )}
+      <button
+        onClick={() => setReporting(true)}
+        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
+      >
+        🚩 Signaler cette fiche
+      </button>
+      {reporting && <ReportModal entityType="producer" entityId={brewery.id} myBibroCode={myBibroCode} onClose={() => setReporting(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );
 }
 
-export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BrandDetailScreen({ brand, drinks, isAdmin, myBibroCode, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brand.name || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const isLocked = !isAdmin && brand.status === "complete";
 
   const relatedDrinks = drinks.filter((d) => d.brand && d.brand.toLowerCase() === brand.name.toLowerCase());
@@ -285,6 +295,13 @@ export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink,
           </div>
         </div>
       )}
+      <button
+        onClick={() => setReporting(true)}
+        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
+      >
+        🚩 Signaler cette fiche
+      </button>
+      {reporting && <ReportModal entityType="brand" entityId={brand.id} myBibroCode={myBibroCode} onClose={() => setReporting(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );
