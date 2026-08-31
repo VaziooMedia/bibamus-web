@@ -60,6 +60,7 @@ import {
   lookupBibroCode,
   uploadMyAvatarPhoto,
   loadFeatureFlags,
+  trackEvent,
   updateMyProfile,
   signOut,
   loadContributionsForEntity,
@@ -125,6 +126,10 @@ export default function App() {
   useEffect(() => {
     screenRef.current = screen;
   });
+  useEffect(() => {
+    trackEvent("screen_view", screen, bibroCodeRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
   useEffect(() => {
     installGlobalCrashReporting(() => ({ screen: screenRef.current, bibroCode: bibroCodeRef.current }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -822,6 +827,7 @@ export default function App() {
   const addBibro = (code, name, alias, socials) => {
     const newBibro = { code, name, alias: alias || "", ...socials, addedAt: Date.now() };
     setBibros((prev) => [...prev, newBibro]);
+    trackEvent("bibax_added", "addBibro", profile.myBibroCode);
   };
   const removeBibro = (code) => setBibros((prev) => prev.filter((b) => b.code !== code));
   const setBibroAlias = (code, alias) => setBibros((prev) => prev.map((b) => (b.code === code ? { ...b, alias } : b)));

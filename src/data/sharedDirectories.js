@@ -57,6 +57,22 @@ export async function loadFeatureFlags() {
 // Crash reporting — envoie une erreur technique pour consultation côté plateforme de gestion.
 // N'échoue jamais bruyamment : un souci réseau ici ne doit pas empêcher le reste de l'app de
 // continuer à fonctionner.
+// Analytics — suivi simple d'usage (vues d'écran, actions clés), consultable côté plateforme
+// de gestion. N'échoue jamais bruyamment : un souci ici ne doit pas gêner le reste de l'app.
+export async function trackEvent(eventType, screen, bibroCode, metadata) {
+  try {
+    await supabase.from("analytics_events").insert({
+      id: `evt-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+      event_type: eventType,
+      screen: screen || null,
+      bibro_code: bibroCode || null,
+      metadata: metadata || null,
+    });
+  } catch (e) {
+    console.error("trackEvent:", e);
+  }
+}
+
 export async function reportCrash({ message, stack, source, screen, bibroCode }) {
   try {
     await supabase.from("crash_reports").insert({

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { submitReport } from "../data/sharedDirectories.js";
+import { submitReport, trackEvent } from "../data/sharedDirectories.js";
 
 // Icône moderne (cercle + point d'exclamation), remplace l'ancien drapeau — cohérente avec le
 // style trait fin utilisé ailleurs dans l'app.
@@ -58,6 +58,7 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
       setError("Une erreur est survenue — merci de réessayer.");
       return;
     }
+    trackEvent("report_submitted", entityType, myBibroCode, { reason });
     setDone(true);
   };
 
