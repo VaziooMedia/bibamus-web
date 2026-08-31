@@ -20,6 +20,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [city, setCity] = useState(profile.city || "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState(null);
   const fileInputRef = useRef(null);
   const [bio, setBio] = useState(profile.bio || "");
   const [shareBio, setShareBio] = useState(profile.shareBio !== false);
@@ -184,12 +185,19 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
             if (!file) return;
             e.target.value = "";
             setUploadingPhoto(true);
-            const url = await onUploadPhoto(file);
+            setPhotoError(null);
+            const result = await onUploadPhoto(file);
             setUploadingPhoto(false);
-            if (url) setAvatarUrl(url);
+            if (result.error) {
+              setPhotoError(result.error);
+              return;
+            }
+            setAvatarUrl(result.url);
+            onSaveProfile({ avatarUrl: result.url });
           }}
         />
       </div>
+      {photoError && <p style={{ fontSize: "12.5px", color: COLORS.wine, marginTop: "-10px", marginBottom: "18px" }}>{photoError}</p>}
 
       <label style={labelStyle}>Bio / citation (facultatif)</label>
       <textarea

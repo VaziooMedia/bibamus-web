@@ -256,18 +256,30 @@ export async function updateMyProfile(userId, { name, lastName, nickname, userna
   if (error) console.error("updateMyProfile:", error);
 }
 
+// Convertit un blob en base64 — nécessaire pour l'envoyer à la fonction serveur de
+// vérification de contenu, qui reçoit du JSON plutôt qu'un fichier binaire direct.
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 // Photo de profil réelle — remplace l'ancien sélecteur d'emoji. Recadrage carré centré, comme
-// pour les photos d'administrateurs.
+// pour les photos d'administrateurs. Passe par la vérification de contenu (Google Cloud
+// Vision) avant tout envoi — bloque les cas jugés "très probables" (nudité, violence...).
 export async function uploadMyAvatarPhoto(userId, file) {
   const blob = await resizeImageSquare(file, 400, 400);
+  const imageBase64 = await blobToBase64(blob);
   const path = `${userId}-${Date.now()}.jpg`;
-  const { error: uploadError } = await supabase.storage.from("bibax-avatars").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-  if (uploadError) {
-    console.error("uploadMyAvatarPhoto:", uploadError);
-    return null;
-  }
-  const { data } = supabase.storage.from("bibax-avatars").getPublicUrl(path);
-  return data.publicUrl;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "bibax-avatars", path, imageBase64, contentType: "image/jpeg" },
+  });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { url: data.url };
 }
 
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
@@ -694,14 +706,14 @@ async function resizeImage(file, maxDim = 1000, quality = 0.82) {
 
 export async function uploadDrinkPhoto(drinkId, file) {
   const blob = await resizeImage(file);
+  const imageBase64 = await blobToBase64(blob);
   const path = `${drinkId}-${Date.now()}.jpg`;
-  const { error: uploadError } = await supabase.storage.from("drink-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-  if (uploadError) {
-    console.error("uploadDrinkPhoto:", uploadError);
-    return null;
-  }
-  const { data } = supabase.storage.from("drink-photos").getPublicUrl(path);
-  return data.publicUrl;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg" },
+  });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { url: data.url };
 }
 
 

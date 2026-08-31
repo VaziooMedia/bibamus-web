@@ -423,10 +423,13 @@ export default function App() {
   };
 
   const uploadPhotoForDrink = async (drinkId, file) => {
-    const url = await uploadDrinkPhoto(drinkId, file);
-    if (!url) return;
-    updateDrink(drinkId, { photoUrl: url });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === drinkId ? { ...d, photoUrl: url } : d)));
+    const result = await uploadDrinkPhoto(drinkId, file);
+    if (result.error) {
+      alert(result.error);
+      return;
+    }
+    updateDrink(drinkId, { photoUrl: result.url });
+    setDrinksDirectory((prev) => prev.map((d) => (d.id === drinkId ? { ...d, photoUrl: result.url } : d)));
   };
 
   const deletePhotoForDrink = (drinkId) => {
