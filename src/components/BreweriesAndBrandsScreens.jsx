@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { COLORS, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton } from "./ui.jsx";
-import { normalizeForSearch } from "../utils.js";
+import { normalizeForSearch, searchEntities } from "../utils.js";
 
 export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery, onRename, onSetCountry, onSuggestEdit, onCreate, onCertify, onDelete, onRefresh }) {
   const [editingId, setEditingId] = useState(null);
@@ -30,8 +30,8 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
 
   const q = normalizeForSearch(query.trim());
   const searching = q.length > 0;
-  const searchResultsAll = searching ? breweries.filter((b) => normalizeForSearch(b.name).includes(q)).sort((a, b) => a.name.localeCompare(b.name)) : [];
-  const searchResultsInCountry = searching && effectiveCountry ? sortedIn(effectiveCountry).filter((b) => normalizeForSearch(b.name).includes(q)) : [];
+  const searchResultsAll = searching ? searchEntities(breweries, query).sort((a, b) => a.name.localeCompare(b.name)) : [];
+  const searchResultsInCountry = searching && effectiveCountry ? searchEntities(sortedIn(effectiveCountry), query) : [];
 
   const goToCountry = (country) => {
     setQuery("");
@@ -345,8 +345,8 @@ export function BrandsAdminScreen({ brands, drinks, isAdmin, onBack, onOpenBrand
 
   const q = normalizeForSearch(query.trim());
   const searching = q.length > 0;
-  const searchResultsAll = searching ? brands.filter((b) => normalizeForSearch(b.name).includes(q)).sort((a, b) => a.name.localeCompare(b.name)) : [];
-  const searchResultsInCountry = searching && effectiveCountry ? sortedIn(effectiveCountry).filter((b) => normalizeForSearch(b.name).includes(q)) : [];
+  const searchResultsAll = searching ? searchEntities(brands, query, ["alternateName"]).sort((a, b) => a.name.localeCompare(b.name)) : [];
+  const searchResultsInCountry = searching && effectiveCountry ? searchEntities(sortedIn(effectiveCountry), query, ["alternateName"]) : [];
 
   const goToCountry = (country) => {
     setQuery("");

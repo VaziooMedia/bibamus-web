@@ -14,6 +14,20 @@ export const normalizeForSearch = (text) =>
     .replace(/\s+/g, " ")
     .trim();
 
+// Recherche centralisée — utilisée par tous les écrans de la Database plutôt que chacun son
+// propre filtre dispersé. Une entité est trouvée par son nom canonique OU l'un de ses alias
+// (traductions, anciens noms...), sans jamais dupliquer la fiche elle-même. extraFields permet
+// d'inclure d'autres champs texte pertinents (ex. le nom de la brasserie pour un produit).
+export function searchEntities(entities, query, extraFields = []) {
+  const q = normalizeForSearch(query);
+  if (!q) return entities;
+  return entities.filter((e) => {
+    if (normalizeForSearch(e.name).includes(q)) return true;
+    if (Array.isArray(e.aliases) && e.aliases.some((a) => normalizeForSearch(a).includes(q))) return true;
+    return extraFields.some((field) => normalizeForSearch(e[field]).includes(q));
+  });
+}
+
 export const formatCompactCount = (n) => {
   if (n < 1000) return String(n);
   if (n < 1000000) return `${(n / 1000).toFixed(n % 1000 >= 100 ? 1 : 0).replace(".", ",")}k`;

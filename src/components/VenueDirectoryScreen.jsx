@@ -8,7 +8,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton } from "./ui.jsx";
-import { normalizeForSearch, formatCompactCount, sameVenueByNameCity, formatAddress } from "../utils.js";
+import { normalizeForSearch, searchEntities, formatCompactCount, sameVenueByNameCity, formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { loadNearbyVenues } from "../data/sharedDirectories.js";
 
@@ -55,17 +55,7 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
   const countFor = (country, city) =>
     visible.filter((v) => (v.country || "Non précisé") === country && (city ? (v.city || "Non précisée") === city : true)).length;
 
-  const searchResults = searching
-    ? visible
-        .filter(
-          (v) =>
-            normalizeForSearch(v.name).includes(q) ||
-            normalizeForSearch(v.city).includes(q) ||
-            normalizeForSearch(v.streetName).includes(q) ||
-            normalizeForSearch(v.postalCode).includes(q)
-        )
-        .sort((a, b) => a.name.localeCompare(b.name))
-    : [];
+  const searchResults = searching ? searchEntities(visible, query, ["city", "streetName", "postalCode"]).sort((a, b) => a.name.localeCompare(b.name)) : [];
 
   const effectiveCountry = skipCountryLevel ? countries[0] : activeCountry;
   const cityResults =

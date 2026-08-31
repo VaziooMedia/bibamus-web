@@ -352,10 +352,8 @@ function rowToVenue(row) {
     lat: row.lat,
     lng: row.lng,
     avatarEmoji: row.avatar_emoji,
-    googlePlaceId: row.google_place_id,
-    noGooglePresence: !!row.no_google_presence,
-    noFixedHours: !!row.no_fixed_hours,
     status: row.status,
+    aliases: row.aliases || [],
     likes: row.likes || [],
     menu: row.menu || [],
     stats: row.stats || {},
@@ -391,6 +389,7 @@ function venueToRow(v, partial = false) {
     avatar_emoji: v.avatarEmoji,
     status: v.status,
     likes: v.likes,
+    aliases: v.aliases,
     menu: v.menu,
     stats: v.stats,
     submitted_by: v.submittedBy,
@@ -623,6 +622,7 @@ function rowToDrink(row) {
     bio: row.bio,
     servingMode: row.serving_mode,
     beerTags: row.beer_tags || [],
+    aliases: row.aliases || [],
     status: row.status,
     isGeneric: row.is_generic,
     averagePrice: row.average_price,
@@ -658,6 +658,7 @@ function drinkToRow(d, partial = false) {
     beer_tags: d.beerTags,
     status: d.status,
     is_generic: d.isGeneric,
+    aliases: d.aliases,
     average_price: d.averagePrice,
     average_jeton_value: d.averageJetonValue,
     avatar_emoji: d.avatarEmoji,
@@ -809,6 +810,7 @@ function rowToBrewery(row) {
   return {
     id: row.id,
     name: row.name,
+    aliases: row.aliases || [],
     country: COUNTRY_CODE_TO_LABEL[row.country] || row.country,
     status: row.status,
     submittedBy: row.submitted_by,
@@ -823,6 +825,7 @@ function breweryToRow(b, partial = false) {
     country: COUNTRY_LABEL_TO_CODE[b.country] || b.country,
     status: b.status,
     submitted_by: b.submittedBy,
+    aliases: b.aliases,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
   };
   if (!partial) row.id = b.id;
@@ -897,6 +900,7 @@ export async function deleteBrand(id) {
 
 function rowToBrand(row) {
   return {
+    aliases: row.aliases || [],
     id: row.id,
     name: row.name,
     status: row.status,
@@ -911,6 +915,7 @@ function brandToRow(b, partial = false) {
     name: b.name,
     status: b.status,
     submitted_by: b.submittedBy,
+    aliases: b.aliases,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
   };
   if (!partial) row.id = b.id;

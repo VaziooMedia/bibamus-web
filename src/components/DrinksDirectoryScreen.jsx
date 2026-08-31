@@ -9,7 +9,7 @@ import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, useInfiniteScroll, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
-import { normalizeForSearch, drinkTypeLabel, drinkSummaryLine } from "../utils.js";
+import { normalizeForSearch, searchEntities, drinkTypeLabel, drinkSummaryLine } from "../utils.js";
 
 export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, onOpenDrink, goToSubmit, onRefresh, initialCategory, initialTagFilter, onSeedConsumed }) {
   const [query, setQuery] = useState("");
@@ -85,11 +85,7 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
   const filtered = React.useMemo(
     () =>
       (searching
-        ? visible.filter(
-            (d) =>
-              (!activeCategory || d.type === activeCategory) &&
-              (normalizeForSearch(d.name).includes(q) || normalizeForSearch(d.brewery).includes(q) || normalizeForSearch(d.type).includes(q))
-          )
+        ? searchEntities(visible, debouncedQuery, ["brewery", "type"]).filter((d) => !activeCategory || d.type === activeCategory)
         : visible.filter(
             (d) => d.type === activeCategory && matchesTagFilter(d) && (!useLetterTier || !activeLetter || letterOf(d.name) === activeLetter)
           )
