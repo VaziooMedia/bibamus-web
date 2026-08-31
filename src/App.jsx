@@ -87,7 +87,15 @@ export default function App() {
   // Permet d'accéder directement à la suppression de compte via l'URL bibamus.app/delete-account
   // (exigence Google : accessible même sans ouvrir l'app normalement) — la connexion reste
   // requise, mais on atterrit directement sur cet écran plutôt que sur l'accueil.
-  const [screen, setScreen] = useState(() => (window.location.pathname === "/delete-account" ? "deleteAccount" : "home"));
+  const [screen, setScreen] = useState(() => {
+    if (window.location.pathname === "/delete-account") {
+      // Nettoie immédiatement l'URL — sinon un simple rechargement de page renverrait sans
+      // fin vers cet écran, l'app ne changeant jamais l'URL du navigateur par elle-même.
+      window.history.replaceState(null, "", "/");
+      return "deleteAccount";
+    }
+    return "home";
+  });
 
   // Répertoires partagés (Supabase)
   const [venues, setVenues] = useState([]);
@@ -102,8 +110,11 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
 
   // Données personnelles — le profil (avec le code Bibax) vient désormais du serveur, lié au
-  // compte, plutôt que d'être généré localement à chaque appareil.
+  // compte, plutôt que d'être généré localement à chaque appareil. profileLoaded distingue "en
+  // cours de récupération" de "récupéré" — évite d'afficher un instant l'écran d'onboarding
+  // (nom vide) pendant le bref délai où le profil n'est pas encore arrivé du serveur.
   const [profile, setProfile] = useState({ name: "", avatarEmoji: null, myBibroCode: null });
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [events, setEvents] = useState(() => loadLocal("bibamus-events", []).map(normalizeEvent));
   const [bibros, setBibros] = useState(() => loadLocal("bibamus-bibros", []));
   const [bibroStatuses] = useState({});
@@ -121,6 +132,7 @@ export default function App() {
     if (!session) return;
     loadMyProfile(session.user.id).then((serverProfile) => {
       if (serverProfile) setProfile((p) => ({ ...p, ...serverProfile }));
+      setProfileLoaded(true);
     });
   }, [session]);
 
@@ -768,6 +780,7 @@ export default function App() {
     await signOut();
     setSession(null);
     setProfile({ name: "", avatarEmoji: null, myBibroCode: null });
+    setProfileLoaded(false);
   };
 
   const handleAccountDeleted = async () => {
@@ -775,6 +788,7 @@ export default function App() {
     // à l'écran de connexion, comme une déconnexion classique.
     setSession(null);
     setProfile({ name: "", avatarEmoji: null, myBibroCode: null });
+    setProfileLoaded(false);
   };
 
   // Le statut admin vient désormais exclusivement du rôle vérifié côté serveur (chargé avec le
@@ -876,7 +890,7 @@ export default function App() {
     return <AuthScreen onAuthenticated={setSession} />;
   }
 
-  if (loading) {
+  if (loading || !profileLoaded) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#F2F2E8", fontFamily: "sans-serif" }}>
         Chargement...
