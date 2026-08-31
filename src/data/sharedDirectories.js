@@ -306,7 +306,7 @@ export async function uploadMyAvatarPhoto(userId, blob) {
   const imageBase64 = await blobToBase64(blob);
   const path = `${userId}-${Date.now()}.jpg`;
   const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
-    body: { bucket: "bibax-avatars", path, imageBase64, contentType: "image/jpeg" },
+    body: { bucket: "bibax-avatars", path, imageBase64, contentType: "image/jpeg", entityType: "profile", entityId: userId, kind: "avatar" },
   });
   if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
@@ -439,9 +439,27 @@ export async function loadNearbyVenues(lat, lng, radiusMeters = 2000, limit = 10
 // Google est la source unique des horaires — jamais de saisie manuelle dans Bibamus.
 // L'appel réel à Google se fait côté serveur (Edge Function), la clé API n'est jamais
 // exposée ici.
+const GOOGLE_HOURS_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 heures — court, jamais traité comme un fait Bibamus.
+
 export async function loadEstablishmentOpeningHours(googlePlaceId) {
   if (!googlePlaceId) return { status: "LINK_REQUIRED" };
   try {
+    // Vérifie d'abord si un résultat récent est déjà en cache — évite d'appeler Google à
+    // chaque simple affichage de la fiche, réduit le coût et la dépendance à la disponibilité
+    // de Google en temps réel.
+    const { data: cached } = await supabase
+      .from("public_venues")
+      .select("google_hours_cache, google_hours_last_fetch_at")
+      .eq("google_place_id", googlePlaceId)
+      .maybeSingle();
+
+    if (cached?.google_hours_cache && cached?.google_hours_last_fetch_at) {
+      const age = Date.now() - new Date(cached.google_hours_last_fetch_at).getTime();
+      if (age < GOOGLE_HOURS_CACHE_DURATION_MS) {
+        return { status: "OK", ...cached.google_hours_cache };
+      }
+    }
+
     const { data, error } = await supabase.functions.invoke("google-place-hours", { body: { placeId: googlePlaceId } });
     if (error) {
       console.error("loadEstablishmentOpeningHours:", error);
@@ -741,7 +759,7 @@ export async function uploadDrinkPhoto(drinkId, file) {
   const imageBase64 = await blobToBase64(blob);
   const path = `${drinkId}-${Date.now()}.jpg`;
   const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
-    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg" },
+    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg", entityType: "drink", entityId: drinkId, kind: "gallery" },
   });
   if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };

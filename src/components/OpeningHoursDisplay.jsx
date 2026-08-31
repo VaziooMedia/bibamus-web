@@ -58,6 +58,22 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
     );
   }
 
+  if (hours?.closedPermanently) {
+    return (
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+        <p style={{ fontSize: "13px", color: "#FF3B4E", fontWeight: 700, margin: 0 }}>Cet établissement est indiqué comme fermé définitivement sur Google.</p>
+      </div>
+    );
+  }
+
+  if (hours?.closedTemporarily) {
+    return (
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 700, margin: 0 }}>Cet établissement est indiqué comme fermé temporairement sur Google.</p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
       {hours?.isOpenNow != null && (
