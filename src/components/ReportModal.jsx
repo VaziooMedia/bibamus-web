@@ -31,7 +31,7 @@ export function ReportModal({ entityType, entityId, myBibroCode, onClose }) {
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 60 }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 110 }}>
       <div style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "24px 20px", width: "100%", maxWidth: "480px", maxHeight: "85vh", overflowY: "auto", boxSizing: "border-box" }}>
         {done ? (
           <>
