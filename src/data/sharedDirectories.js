@@ -362,6 +362,7 @@ function rowToVenue(row) {
     email: row.email,
     website: row.website,
     googleUrl: row.google_url,
+    googlePlaceId: row.google_place_id,
     facebookUrl: row.facebook_url,
     instagramUrl: row.instagram_url,
     tiktokUrl: row.tiktok_url,
