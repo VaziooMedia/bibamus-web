@@ -270,8 +270,7 @@ function blobToBase64(blob) {
 // Photo de profil réelle — remplace l'ancien sélecteur d'emoji. Recadrage carré centré, comme
 // pour les photos d'administrateurs. Passe par la vérification de contenu (Google Cloud
 // Vision) avant tout envoi — bloque les cas jugés "très probables" (nudité, violence...).
-export async function uploadMyAvatarPhoto(userId, file) {
-  const blob = await resizeImageSquare(file, 400, 400);
+export async function uploadMyAvatarPhoto(userId, blob) {
   const imageBase64 = await blobToBase64(blob);
   const path = `${userId}-${Date.now()}.jpg`;
   const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {

@@ -7,6 +7,7 @@ import { COLORS, COUNTRIES, LANGUAGES, CITIES_BY_COUNTRY } from "../constants.js
 import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
+import { PhotoCropModal } from "./PhotoCropModal.jsx";
 
 export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onUploadPhoto, onGoToAdminUnlock, onLogout, onBack }) {
   const [firstName, setFirstName] = useState(myName || "");
@@ -21,6 +22,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState(null);
+  const [croppingFile, setCroppingFile] = useState(null);
   const fileInputRef = useRef(null);
   const [bio, setBio] = useState(profile.bio || "");
   const [shareBio, setShareBio] = useState(profile.shareBio !== false);
@@ -180,13 +182,25 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
           accept="image/*"
           capture="environment"
           style={{ display: "none" }}
-          onChange={async (e) => {
+          onChange={(e) => {
             const file = e.target.files[0];
             if (!file) return;
             e.target.value = "";
-            setUploadingPhoto(true);
             setPhotoError(null);
-            const result = await onUploadPhoto(file);
+            setCroppingFile(file);
+          }}
+        />
+      </div>
+      {photoError && <p style={{ fontSize: "12.5px", color: COLORS.wine, marginTop: "-10px", marginBottom: "18px" }}>{photoError}</p>}
+
+      {croppingFile && (
+        <PhotoCropModal
+          file={croppingFile}
+          onCancel={() => setCroppingFile(null)}
+          onConfirm={async (blob) => {
+            setCroppingFile(null);
+            setUploadingPhoto(true);
+            const result = await onUploadPhoto(blob);
             setUploadingPhoto(false);
             if (result.error) {
               setPhotoError(result.error);
@@ -196,8 +210,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
             onSaveProfile({ avatarUrl: result.url });
           }}
         />
-      </div>
-      {photoError && <p style={{ fontSize: "12.5px", color: COLORS.wine, marginTop: "-10px", marginBottom: "18px" }}>{photoError}</p>}
+      )}
 
       <label style={labelStyle}>Bio / citation (facultatif)</label>
       <textarea
