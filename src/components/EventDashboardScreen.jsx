@@ -556,27 +556,41 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
       </PrimaryButton>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", marginBottom: "16px" }}>
-        <button
-          onClick={() => setParticipantsEditorOpen((o) => !o)}
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
-        >
-          <span style={{ fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, display: "flex", alignItems: "center", gap: "10px" }}>
-            Participants ({event.knownFriends.length + 1})
-          </span>
-          <span style={{ display: "inline-flex", transform: `rotate(${participantsEditorOpen ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
-            <NavIcon name="back-triangle" size={18} color={COLORS.amber} />
-          </span>
-        </button>
-        {participantsEditorOpen && (
-          <div style={{ marginTop: "12px" }}>
-            <ParticipantsEditor
-              names={event.knownFriends}
-              onChange={(names) => updateEvent(event.id, (e) => ({ ...e, knownFriends: names }))}
-              selfName={myName}
-              bibros={bibros}
-            />
-          </div>
-        )}
+        {(() => {
+          // Rejoindre un salon via code ajoute à event.participants, pas à knownFriends — sans
+          // cette fusion, la personne resterait invisible ici tout en apparaissant correctement
+          // dans la suggestion de tournée et "+ Nouvelle tournée", qui lisent participants.
+          const salonParticipantNames = (event.participants || [])
+            .filter((p) => p.code !== myBibroCode)
+            .map((p) => p.name)
+            .filter(Boolean);
+          const mergedNames = Array.from(new Set([...(event.knownFriends || []), ...salonParticipantNames]));
+          return (
+            <>
+              <button
+                onClick={() => setParticipantsEditorOpen((o) => !o)}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+              >
+                <span style={{ fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, display: "flex", alignItems: "center", gap: "10px" }}>
+                  Participants ({mergedNames.length + 1})
+                </span>
+                <span style={{ display: "inline-flex", transform: `rotate(${participantsEditorOpen ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+                  <NavIcon name="back-triangle" size={18} color={COLORS.amber} />
+                </span>
+              </button>
+              {participantsEditorOpen && (
+                <div style={{ marginTop: "12px" }}>
+                  <ParticipantsEditor
+                    names={mergedNames}
+                    onChange={(names) => updateEvent(event.id, (e) => ({ ...e, knownFriends: names.filter((n) => !salonParticipantNames.includes(n)) }))}
+                    selfName={myName}
+                    bibros={bibros}
+                  />
+                </div>
+              )}
+            </>
+          );
+        })()}
         <button
           disabled
           style={{
