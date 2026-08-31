@@ -434,7 +434,7 @@ export async function loadNearbyVenues(lat, lng, radiusMeters = 2000, limit = 10
     console.error("loadNearbyVenues:", error);
     return [];
   }
-  return data.map((row) => ({ ...rowToVenue(row), distanceMeters: row.distance_meters ?? row.distance }));
+  return data.map((row) => ({ ...rowToVenue(row.venue), distanceMeters: row.distance_meters }));
 }
 
 /* ---------------- HORAIRES — GOOGLE PLACES (source unique) ---------------- */
