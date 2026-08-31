@@ -76,6 +76,9 @@ export function HomeScreen({
   goToGames,
   goToBibaMeet,
   goToBibaPulse,
+  bibaMeetVisible = true,
+  bibaPulseVisible = true,
+  gamesVisible = true,
   goToSettings,
   bibros,
   bibroStatuses,
@@ -240,45 +243,50 @@ export function HomeScreen({
         </>
       )}
 
-      {(() => {
-        const pulseEntries = computePulseEntries(bibros, bibroStatuses).slice(0, 3);
-        return (
-          <button
-            onClick={goToBibaPulse}
-            style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", marginBottom: "18px", display: "block", width: "100%" }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-              <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-              <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>
-                <span style={{ color: COLORS.ink }}>Biba</span>
-                <span style={{ color: COLORS.amber }}>Pulse</span>
-              </span>
-              <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", color: COLORS.redFluo, background: COLORS.paperAlt, borderRadius: "999px", padding: "3px 8px" }}>Soon</span>
-            </div>
-            {pulseEntries.length === 0 ? (
-              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
-                <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>En attente des premières activités.</p>
+      {bibaPulseVisible &&
+        (() => {
+          const pulseEntries = computePulseEntries(bibros, bibroStatuses).slice(0, 3);
+          return (
+            <button
+              onClick={goToBibaPulse}
+              style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", marginBottom: "18px", display: "block", width: "100%" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+                <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>
+                  <span style={{ color: COLORS.ink }}>Biba</span>
+                  <span style={{ color: COLORS.amber }}>Pulse</span>
+                </span>
+                <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", color: COLORS.redFluo, background: COLORS.paperAlt, borderRadius: "999px", padding: "3px 8px" }}>Soon</span>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {pulseEntries.map((entry) => (
-                  <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    <span style={{ fontSize: "15px", flexShrink: 0 }}>{entry.icon}</span>
-                    <span style={{ fontSize: "13.5px", color: COLORS.ink }}>{entry.text}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </button>
-        );
-      })()}
+              {pulseEntries.length === 0 ? (
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+                  <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>En attente des premières activités.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {pulseEntries.map((entry) => (
+                    <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                      <span style={{ fontSize: "15px", flexShrink: 0 }}>{entry.icon}</span>
+                      <span style={{ fontSize: "13.5px", color: COLORS.ink }}>{entry.text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </button>
+          );
+        })()}
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
         <CategoryTile icon="ti-door-enter" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Go</span></>} subtitle="Créer et rejoindre" onClick={goToSessionHub} />
-        <CategoryTile icon="ti-device-gamepad" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Play</span></>} subtitle="Jeux et défis autour d'un verre" onClick={goToGames} badge="Soon" disabled />
-        <CategoryTile icon="ti-users" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
+        {gamesVisible && (
+          <CategoryTile icon="ti-device-gamepad" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Play</span></>} subtitle="Jeux et défis autour d'un verre" onClick={goToGames} badge="Soon" disabled />
+        )}
+        {bibaMeetVisible && (
+          <CategoryTile icon="ti-users" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
+        )}
         <CategoryTile icon="ti-map" title={<><span style={{ color: COLORS.ink }}>Bib</span><span style={{ color: COLORS.amber }}>Atlas</span></>} subtitle="Lieux, produits, marques et producteurs" onClick={goToRepertoireHub} />
       </div>
     </div>

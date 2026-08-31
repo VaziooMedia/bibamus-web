@@ -137,7 +137,7 @@ function ConfirmEmailScreen({ email, onBackToSignIn }) {
 
 // Un seul écran, trois modes — inscription, connexion, mot de passe oublié. Bloque l'accès au
 // reste de l'app tant qu'aucune session n'est active (compte réel désormais requis).
-export function AuthScreen({ onAuthenticated }) {
+export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
   const [mode, setMode] = useState("signin"); // "signin" | "signup" | "forgot"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -167,6 +167,10 @@ export function AuthScreen({ onAuthenticated }) {
     }
 
     if (mode === "signup") {
+      if (!signupsEnabled) {
+        setError("Les nouvelles inscriptions sont temporairement suspendues.");
+        return;
+      }
       if (password !== confirmPassword) {
         setError("Les deux mots de passe ne correspondent pas.");
         return;
@@ -316,9 +320,13 @@ export function AuthScreen({ onAuthenticated }) {
             <button onClick={() => setMode("forgot")} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", cursor: "pointer" }}>
               Mot de passe oublié ?
             </button>
-            <button onClick={() => setMode("signup")} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
-              Pas encore de compte ?<br />Inscrivez-vous
-            </button>
+            {signupsEnabled ? (
+              <button onClick={() => setMode("signup")} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
+                Pas encore de compte ?<br />Inscrivez-vous
+              </button>
+            ) : (
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "4px" }}>Les nouvelles inscriptions sont temporairement suspendues.</p>
+            )}
           </>
         )}
         {mode === "signup" && (

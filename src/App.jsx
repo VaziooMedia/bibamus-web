@@ -58,6 +58,7 @@ import {
   loadMyProfile,
   lookupBibroCode,
   uploadMyAvatarPhoto,
+  loadFeatureFlags,
   updateMyProfile,
   signOut,
   loadContributionsForEntity,
@@ -110,6 +111,11 @@ export default function App() {
   // connecté. authChecked distingue "en cours de vérification" de "vérifié, pas connecté".
   const [session, setSession] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [featureFlags, setFeatureFlags] = useState({});
+
+  useEffect(() => {
+    loadFeatureFlags().then(setFeatureFlags);
+  }, []);
 
   // Données personnelles — le profil (avec le code Bibax) vient désormais du serveur, lié au
   // compte, plutôt que d'être généré localement à chaque appareil. profileLoaded distingue "en
@@ -888,7 +894,7 @@ export default function App() {
   }
 
   if (!session) {
-    return <AuthScreen onAuthenticated={setSession} />;
+    return <AuthScreen onAuthenticated={setSession} signupsEnabled={featureFlags.signups_enabled !== false} />;
   }
 
   if (loading || !profileLoaded) {
@@ -986,6 +992,9 @@ export default function App() {
                 goToRepertoireHub={() => setScreen("repertoireHub")}
                 goToGames={() => setScreen("games")}
                 goToBibaMeet={() => setScreen("bibaMeet")}
+                bibaMeetVisible={featureFlags.nav_bibameet_visible !== false}
+                bibaPulseVisible={featureFlags.nav_bibapulse_visible !== false}
+                gamesVisible={featureFlags.nav_games_visible !== false}
                 goToBibaPulse={() => setScreen("bibaPulse")}
                 goToSettings={() => setScreen("settings")}
                 bibros={bibros}

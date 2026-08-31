@@ -43,6 +43,17 @@ export async function isUsernameAvailable(username) {
   return !data;
 }
 
+// Feature flags — pilotés depuis la plateforme de gestion, sans déploiement de code. Renvoie
+// un objet { flag_key: true/false } pour une lecture simple côté app.
+export async function loadFeatureFlags() {
+  const { data, error } = await supabase.from("feature_flags").select("flag_key, enabled");
+  if (error) {
+    console.error("loadFeatureFlags:", error);
+    return {};
+  }
+  return Object.fromEntries(data.map((f) => [f.flag_key, f.enabled]));
+}
+
 export async function signUp(email, password, { firstName, lastName, nickname, username, birthDate, country }) {
   // Les informations passent en métadonnées Supabase Auth — c'est le déclencheur côté base de
   // données (handle_new_user) qui crée ensuite la ligne de profil, jamais ce code client
