@@ -91,6 +91,7 @@ export async function lookupBibroCode(code) {
     firstName: row.first_name,
     lastName: row.last_name,
     nickname: row.nickname,
+    username: row.username,
     city: row.city,
     // Les codes pays sont stockés en minuscules avec underscores (ex. "pays_bas") — converti
     // ici en libellé lisible ("Pays-Bas") pour l'affichage.

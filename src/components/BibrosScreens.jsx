@@ -12,20 +12,8 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
 
-export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onRemoveBibro, onSetAlias, onToggleFavorite, onJoinSalon, onViewBibro, onBack, onAddTestBibros }) {
-  const [editingCode, setEditingCode] = useState(null);
-  const [aliasInput, setAliasInput] = useState("");
+export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onRemoveBibro, onToggleFavorite, onJoinSalon, onViewBibro, onBack, onAddTestBibros }) {
   const [query, setQuery] = useState("");
-
-  const startEditAlias = (b) => {
-    setEditingCode(b.code);
-    setAliasInput(b.alias || "");
-  };
-
-  const submitAlias = (code) => {
-    onSetAlias(code, aliasInput.trim());
-    setEditingCode(null);
-  };
 
   const q = normalizeForSearch(query.trim());
   const matchesQuery = (b) =>
@@ -111,28 +99,42 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
         )}
         {sortedBibros.map((b) => {
           const status = bibroStatuses[b.code];
-          const isEditing = editingCode === b.code;
+          const fullName = [b.firstName, b.lastName].filter(Boolean).join(" ") || b.name;
           return (
-            <div key={b.code} style={{ background: COLORS.surface, border: `2px solid ${status ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                  <button
-                    onClick={() => onToggleFavorite(b.code)}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 0 0 0", fontSize: "17px", color: b.isFavorite ? COLORS.amberDark : COLORS.paperAlt, lineHeight: 1 }}
+            <div
+              key={b.code}
+              onClick={() => onViewBibro(b.code)}
+              style={{ background: COLORS.surface, border: `2px solid ${status ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", cursor: "pointer" }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                  <div
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "50%",
+                      background: COLORS.surfaceAlt,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "19px",
+                      flexShrink: 0,
+                      marginTop: "1px",
+                    }}
                   >
-                    {b.isFavorite ? "⭐" : "☆"}
-                  </button>
+                    {b.avatarEmoji ? b.avatarEmoji : <NavIcon name="default-avatar" size={19} color={COLORS.amber} />}
+                  </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: "15px" }}>
-                      {b.avatarEmoji || "👤"} {b.alias || b.name}
-                    </div>
-                    {b.alias && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>alias de {b.name}</div>}
-                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", color: COLORS.inkSoft }}>{b.code}</div>
+                    <div style={{ fontWeight: 700, fontSize: "15px" }}>{fullName}</div>
+                    {b.username && <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", color: COLORS.inkSoft }}>{b.username}</div>}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                  <button onClick={() => startEditAlias(b)} style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-                    Étiquette
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => onToggleFavorite(b.code)}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "17px", color: b.isFavorite ? COLORS.amberDark : COLORS.paperAlt, lineHeight: 1 }}
+                  >
+                    {b.isFavorite ? "⭐" : "☆"}
                   </button>
                   <button
                     onClick={() => onRemoveBibro(b.code)}
@@ -147,53 +149,30 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
               {(b.facebookUrl || b.instagramUrl || b.tiktokUrl || b.snapchatUrl) && (
                 <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
                   {b.facebookUrl && (
-                    <a href={normalizeUrl(b.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                    <a href={normalizeUrl(b.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
                       <FacebookIcon size={19} />
                     </a>
                   )}
                   {b.instagramUrl && (
-                    <a href={normalizeUrl(b.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                    <a href={normalizeUrl(b.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
                       <InstagramIcon size={19} />
                     </a>
                   )}
                   {b.tiktokUrl && (
-                    <a href={normalizeUrl(b.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                    <a href={normalizeUrl(b.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
                       <TiktokIcon size={19} />
                     </a>
                   )}
                   {b.snapchatUrl && (
-                    <a href={normalizeUrl(b.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                    <a href={normalizeUrl(b.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
                       <SnapchatIcon size={19} />
                     </a>
                   )}
                 </div>
               )}
 
-              <button
-                onClick={() => onViewBibro(b.code)}
-                style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: "8px 0 0 0" }}
-              >
-                Voir le profil →
-              </button>
-
-              {isEditing && (
-                <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, display: "flex", gap: "8px" }}>
-                  <input
-                    value={aliasInput}
-                    onChange={(e) => setAliasInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && submitAlias(b.code)}
-                    placeholder={`Ex. ${b.name} (voisin)`}
-                    autoFocus
-                    style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13px", outline: "none" }}
-                  />
-                  <button onClick={() => submitAlias(b.code)} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "8px 14px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper }}>
-                    OK
-                  </button>
-                </div>
-              )}
-
               {status && (
-                <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, display: "flex", justifyContent: "space-between", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
                   <span style={{ fontSize: "13px" }}>
                     🎉 En soirée : <strong>{status.activeSalonName}</strong>
                   </span>
@@ -452,6 +431,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
         firstName: identity.firstName || "",
         lastName: identity.lastName || "",
         nickname: identity.nickname || "",
+        username: identity.username || "",
         city: identity.city || "",
         country: identity.country || "",
         facebookUrl: identity.facebookUrl || "",
