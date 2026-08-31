@@ -210,7 +210,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 2px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-          <EntityAvatar photoEmoji={venue ? venue.avatarEmoji : null} size={48} />
+          <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={48} />
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1.1 }}>{event.name}</h1>
           {event.paused && (
             <span

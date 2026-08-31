@@ -55,7 +55,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       )}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-          <EntityAvatar photoEmoji={venue.avatarEmoji} size={48} />
+          <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={48} />
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "0 0 2px 0", lineHeight: 1 }}>{venue.name}</h1>
         </div>
         <button

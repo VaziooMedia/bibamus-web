@@ -373,6 +373,8 @@ function rowToVenue(row) {
     lat: row.lat,
     lng: row.lng,
     avatarEmoji: row.avatar_emoji,
+    profilePhotoUrl: row.profile_photo_url,
+    coverPhotoUrl: row.cover_photo_url,
     status: row.status,
     aliases: row.aliases || [],
     likes: row.likes || [],
