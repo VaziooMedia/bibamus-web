@@ -1080,7 +1080,6 @@ export default function App() {
                 onBack={() => setScreen("home")}
                 goToNewSalon={() => setScreen("newSalonEvent")}
                 goToJoinSalon={() => setScreen("joinSalon")}
-                goToNewSoloEvent={() => setScreen("newEvent")}
                 goToBibArena={() => {}}
               />
             )}
@@ -1094,7 +1093,7 @@ export default function App() {
                 goToScanBarcode={() => setShowBarcodeScanner(true)}
               />
             )}
-            {(screen === "newEvent" || screen === "newSalonEvent") && (
+            {screen === "newSalonEvent" && (
               <NewEventScreen
                 mode={screen === "newSalonEvent" ? "salon" : "solo"}
                 onCreate={createEvent}
@@ -1634,7 +1633,7 @@ export default function App() {
                 description="Cette fonctionnalité arrive dans un prochain bloc de la migration."
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newEvent", "newSalonEvent", "joinSalon", "eventDashboard", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

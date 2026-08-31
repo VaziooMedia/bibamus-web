@@ -8,7 +8,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard } from "./ui.jsx";
 
-export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToNewSoloEvent, goToBibArena }) {
+export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibArena }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -79,20 +79,6 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToNewS
               Rejoindre
             </button>
           </div>
-        </div>
-
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-            <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-            <span style={{ fontWeight: 700, fontSize: "16px" }}>
-              <span style={{ color: COLORS.ink }}>Biba</span>
-              <span style={{ color: COLORS.amber }}>Free</span>
-            </span>
-          </div>
-          <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 12px 0" }}>Suivi perso, sans BibaRoom partagé</p>
-          <button onClick={goToNewSoloEvent} style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}>
-            Créer
-          </button>
         </div>
       </div>
       <PageFooterNav onBack={onBack} />
