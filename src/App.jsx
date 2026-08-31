@@ -915,7 +915,7 @@ export default function App() {
         }}
       >
         <BibamusLogoFull height={38} />
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "28px", margin: "18px 0 12px" }}>Compte bloqué</h1>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "28px", margin: "32px 0 12px" }}>Compte bloqué</h1>
         <p style={{ fontSize: "14px", color: "#8792A6", marginBottom: "20px", maxWidth: "320px", lineHeight: 1.6 }}>
           {profile.blockedUntil ? (
             <>
@@ -931,7 +931,9 @@ export default function App() {
             <>
               <br />
               <br />
-              Raison : {profile.blockedReason}
+              Raison :
+              <br />
+              {profile.blockedReason}
             </>
           )}
         </p>
