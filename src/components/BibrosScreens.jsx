@@ -440,7 +440,6 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
   const [status, setStatus] = useState("idle"); // idle | loading | found | notFound
   const [foundName, setFoundName] = useState("");
   const [foundSocials, setFoundSocials] = useState({});
-  const [alias, setAlias] = useState("");
 
   const handleLookup = async () => {
     if (code.trim().length !== 5) return;
@@ -520,18 +519,37 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
 
       {status === "found" && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "2px" }}>Trouvé :</div>
-          <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "2px" }}>
-            {foundSocials.avatarEmoji || "👤"} {foundName}
-          </div>
-          {(foundSocials.firstName || foundSocials.lastName || foundSocials.nickname) && (
-            <div style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-              {[foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ")}
-              {foundSocials.nickname && ` (${foundSocials.nickname})`}
+          <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>Trouvé :</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: (foundSocials.facebookUrl || foundSocials.instagramUrl || foundSocials.tiktokUrl || foundSocials.snapchatUrl) ? "12px" : 0 }}>
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: COLORS.surfaceAlt,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "24px",
+                flexShrink: 0,
+              }}
+            >
+              {foundSocials.avatarEmoji ? foundSocials.avatarEmoji : <NavIcon name="default-avatar" size={26} color={COLORS.amber} />}
             </div>
-          )}
+            <div>
+              <div style={{ fontSize: "17px", fontWeight: 700 }}>
+                {foundSocials.firstName || foundSocials.lastName ? [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") : foundName}
+              </div>
+              {(foundName !== [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") || foundSocials.nickname) && (
+                <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>
+                  {foundName}
+                  {foundSocials.nickname && ` · ${foundSocials.nickname}`}
+                </div>
+              )}
+            </div>
+          </div>
           {(foundSocials.facebookUrl || foundSocials.instagramUrl || foundSocials.tiktokUrl || foundSocials.snapchatUrl) && (
-            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            <div style={{ display: "flex", gap: "8px" }}>
               {foundSocials.facebookUrl && (
                 <a href={normalizeUrl(foundSocials.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                   <FacebookIcon size={20} />
@@ -554,18 +572,6 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
               )}
             </div>
           )}
-          <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>
-            Ton étiquette perso (facultatif)
-          </label>
-          <input
-            value={alias}
-            onChange={(e) => setAlias(e.target.value)}
-            placeholder={`Ex. ${foundName} (voisin)`}
-            style={{ padding: "10px 12px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", width: "100%", outline: "none" }}
-          />
-          <p style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "6px" }}>
-            Utile en cas d'homonyme (deux "Greg" par exemple) — visible par toi seul, jamais partagé.
-          </p>
         </div>
       )}
 
@@ -581,7 +587,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
       <PrimaryButton
         onClick={() => {
           if (status === "found") {
-            onAdd(code.trim(), foundName, alias.trim(), foundSocials);
+            onAdd(code.trim(), foundName, "", foundSocials);
             onCancel();
           }
         }}
