@@ -119,7 +119,7 @@ export function BreweryDetailScreen({ brewery, drinks, isAdmin, onBack, onOpenDr
               <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                 {d.name}
                 {d.status === "complete" && <VerifiedBadge size={13} />}
-                {d.status === "pending" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
+                {d.status === "to_process" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
                 <DrinkBadges drink={d} />
@@ -254,7 +254,7 @@ export function BrandDetailScreen({ brand, drinks, isAdmin, onBack, onOpenDrink,
               <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                 {d.name}
                 {d.status === "complete" && <VerifiedBadge size={13} />}
-                {d.status === "pending" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
+                {d.status === "to_process" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
                 <DrinkBadges drink={d} />

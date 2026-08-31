@@ -29,7 +29,7 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
 
       <PhotoUploadField photoUrl={drink.photoUrl} onUpload={handlePhotoUpload} onDelete={onDeletePhoto} uploading={uploadingPhoto} label="" />
 
-      {drink.status === "pending" && (
+      {drink.status === "to_process" && (
         <div style={{ background: COLORS.paperAlt, borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: COLORS.inkSoft }}>
           En attente de validation par un administrateur — les informations n'ont pas encore été vérifiées.
         </div>

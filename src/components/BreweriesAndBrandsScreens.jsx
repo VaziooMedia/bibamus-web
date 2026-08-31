@@ -120,7 +120,7 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontWeight: 700, fontSize: "14.5px", color: COLORS.ink }}>{b.name}</span>
                 {b.status === "complete" && <VerifiedBadge size={14} />}
-                {b.status === "pending" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
+                {b.status === "to_process" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
                 {b.pendingContributionsCount > 0 && <span style={{ fontSize: "12px" }} title="Une modification est proposée">📝</span>}
               </div>
             </button>
@@ -416,7 +416,7 @@ export function BrandsAdminScreen({ brands, drinks, isAdmin, onBack, onOpenBrand
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontWeight: 700, fontSize: "14.5px", color: COLORS.ink }}>{b.name}</span>
                 {b.status === "complete" && <VerifiedBadge size={14} />}
-                {b.status === "pending" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
+                {b.status === "to_process" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
                 {b.pendingContributionsCount > 0 && <span style={{ fontSize: "12px" }} title="Une modification est proposée">📝</span>}
               </div>
             </button>

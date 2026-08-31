@@ -356,7 +356,7 @@ export default function App() {
       (b) => (b.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "") === normalized
     );
     if (existing) return existing.name;
-    const newBrand = { id: `local-${Date.now()}`, name: trimmed, status: "pending" };
+    const newBrand = { id: `local-${Date.now()}`, name: trimmed, status: "to_process" };
     setBrandsDirectory((prev) => [...prev, newBrand]);
     createBrand(newBrand).then((created) => {
       if (created) setBrandsDirectory((prev) => prev.map((b) => (b.id === newBrand.id ? created : b)));
@@ -368,11 +368,16 @@ export default function App() {
     const created = await createPublicVenue({
       id: `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
       ...venueData,
-      status: "pending",
+      status: "to_process",
       menu: venueData.menu || [],
       likes: [],
     });
-    if (created) setVenues((prev) => [...prev, created]);
+    if (created) {
+      setVenues((prev) => [...prev, created]);
+    } else {
+      alert("La création de l'établissement a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
+      return;
+    }
     setScreen("venueDirectory");
   };
 
@@ -389,8 +394,13 @@ export default function App() {
   };
 
   const submitDrink = async (drinkData) => {
-    const created = await createDrink({ id: `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`, ...drinkData, status: "pending" });
-    if (created) setDrinksDirectory((prev) => [...prev, created]);
+    const created = await createDrink({ id: `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`, ...drinkData, status: "to_process" });
+    if (created) {
+      setDrinksDirectory((prev) => [...prev, created]);
+    } else {
+      alert("La création du produit a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
+      return;
+    }
     setScreen("drinksDirectory");
   };
 
@@ -559,8 +569,8 @@ export default function App() {
     setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, status: "complete" } : d)));
   };
   const decertifyDrink = (id) => {
-    updateDrink(id, { status: "pending" });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, status: "pending" } : d)));
+    updateDrink(id, { status: "to_process" });
+    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, status: "to_process" } : d)));
   };
   const removeDrinkFromDirectory = (id) => {
     deleteDrink(id);
@@ -846,7 +856,7 @@ export default function App() {
       (b) => (b.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "") === normalized
     );
     if (existing) return existing.name;
-    const newBrewery = { id: `local-${Date.now()}`, name: trimmed, country: (country || "").trim(), status: "pending" };
+    const newBrewery = { id: `local-${Date.now()}`, name: trimmed, country: (country || "").trim(), status: "to_process" };
     setBreweriesDirectory((prev) => [...prev, newBrewery]);
     createBrewery(newBrewery).then((created) => {
       if (created) setBreweriesDirectory((prev) => prev.map((b) => (b.id === newBrewery.id ? created : b)));
