@@ -56,6 +56,7 @@ import {
   getSession,
   onAuthStateChange,
   loadMyProfile,
+  lookupBibroCode,
   updateMyProfile,
   signOut,
   loadContributionsForEntity,
@@ -1530,7 +1531,7 @@ export default function App() {
             {screen === "addBibro" && (
               <AddBibroScreen
                 onAdd={addBibro}
-                onLookup={() => null}
+                onLookup={lookupBibroCode}
                 onCancel={() => setScreen("bibrosList")}
               />
             )}

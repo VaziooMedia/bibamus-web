@@ -77,6 +77,27 @@ export async function deleteMyAccount(confirmPassword) {
   return { ok: true };
 }
 
+export async function lookupBibroCode(code) {
+  const { data, error } = await supabase.rpc("lookup_bibro_code", { p_code: code });
+  if (error) {
+    console.error("lookupBibroCode:", error);
+    return null;
+  }
+  const row = data?.[0];
+  if (!row || !row.display_name) return null;
+  return {
+    displayName: row.display_name,
+    avatarEmoji: row.avatar_emoji,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    nickname: row.nickname,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+  };
+}
+
 export async function signOut() {
   await supabase.auth.signOut();
 }
