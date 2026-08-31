@@ -12,7 +12,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
 
-export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onRemoveBibro, onToggleFavorite, onJoinSalon, onViewBibro, onBack, onAddTestBibros }) {
+export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onToggleFavorite, onJoinSalon, onViewBibro, onBack }) {
   const [query, setQuery] = useState("");
 
   const q = normalizeForSearch(query.trim());
@@ -126,7 +126,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "15px" }}>{fullName}</div>
-                    {b.username && <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", color: COLORS.inkSoft }}>{b.username}</div>}
+                    {b.username && <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", color: COLORS.inkSoft, marginTop: "4px" }}>ID : {b.username}</div>}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
@@ -135,13 +135,6 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                     style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "17px", color: b.isFavorite ? COLORS.amberDark : COLORS.paperAlt, lineHeight: 1 }}
                   >
                     {b.isFavorite ? "⭐" : "☆"}
-                  </button>
-                  <button
-                    onClick={() => onRemoveBibro(b.code)}
-                    style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "16px", cursor: "pointer", padding: "0 2px" }}
-                    aria-label={`Retirer ${b.name}`}
-                  >
-                    ×
                   </button>
                 </div>
               </div>
@@ -189,18 +182,13 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
         })}
       </div>
 
-      <button
-        onClick={onAddTestBibros}
-        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12px", cursor: "pointer", padding: "0 0 10px 0", textAlign: "center", width: "100%", marginTop: "auto" }}
-      >
-        🧪 Ajouter 2 Bibax de test (Julburn & Cox)
-      </button>
       <BackFooterLink onClick={onBack} />
     </div>
   );
 }
 
-export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onToggleFavorite }) {
+export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onToggleFavorite, onRemove }) {
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const displayName = bibro.alias || bibro.name;
   const fullName = [bibro.firstName, bibro.lastName].filter(Boolean).join(" ");
   const heading = fullName || displayName;
@@ -409,6 +397,34 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
               : `${bibro.name} n'a encore rendu aucune information visible à ses Bibax.`}
           </p>
         )}
+
+      {onRemove && !previewNotice && (
+        <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
+          {!confirmRemove ? (
+            <button
+              onClick={() => setConfirmRemove(true)}
+              style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.wine, cursor: "pointer", width: "100%" }}
+            >
+              Retirer ce Bibax
+            </button>
+          ) : (
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => setConfirmRemove(false)}
+                style={{ flex: 1, background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.ink, cursor: "pointer" }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={onRemove}
+                style={{ flex: 1, background: COLORS.wine, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: "#fff", cursor: "pointer" }}
+              >
+                Confirmer le retrait
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       <PageFooterNav onBack={onBack} />
     </div>
   );

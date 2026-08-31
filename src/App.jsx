@@ -1516,7 +1516,6 @@ export default function App() {
                   setScreen("bibroDetail");
                 }}
                 onBack={() => setScreen("profile")}
-                onAddTestBibros={() => {}}
               />
             )}
             {screen === "bibroDetail" && (
@@ -1526,6 +1525,10 @@ export default function App() {
                 onBack={() => setScreen("bibrosList")}
                 previewNotice={false}
                 onToggleFavorite={() => toggleBibroFavorite(viewedBibroId)}
+                onRemove={() => {
+                  removeBibro(viewedBibroId);
+                  setScreen("bibrosList");
+                }}
               />
             )}
             {screen === "addBibro" && (
