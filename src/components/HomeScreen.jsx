@@ -212,7 +212,11 @@ export function HomeScreen({
                     gap: "12px",
                   }}
                 >
-                  <EntityAvatar photoEmoji={ev.venueId ? venues.find((v) => v.id === ev.venueId)?.avatarEmoji : null} size={56} />
+                  <EntityAvatar
+                    photoUrl={ev.venueId ? venues.find((v) => v.id === ev.venueId)?.profilePhotoUrl : null}
+                    photoEmoji={ev.venueId ? venues.find((v) => v.id === ev.venueId)?.avatarEmoji : null}
+                    size={56}
+                  />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: "16px" }}>
                       {ev.name}
