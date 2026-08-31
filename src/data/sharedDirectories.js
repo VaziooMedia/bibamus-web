@@ -44,14 +44,25 @@ export async function isUsernameAvailable(username) {
 }
 
 // Feature flags — pilotés depuis la plateforme de gestion, sans déploiement de code. Renvoie
-// un objet { flag_key: true/false } pour une lecture simple côté app.
-export async function loadFeatureFlags() {
-  const { data, error } = await supabase.from("feature_flags").select("flag_key, enabled");
+// un objet { flag_key: true/false } pour une lecture simple côté app. Si un pays est fourni,
+// une éventuelle surcharge par pays l'emporte sur la valeur globale (héritage) — jamais
+// mélangé aux permissions utilisateur (rôle, Business...), qui restent un système séparé.
+export async function loadFeatureFlags(countryCode) {
+  const { data: globalFlags, error } = await supabase.from("feature_flags").select("flag_key, enabled");
   if (error) {
     console.error("loadFeatureFlags:", error);
     return {};
   }
-  return Object.fromEntries(data.map((f) => [f.flag_key, f.enabled]));
+  const result = Object.fromEntries(globalFlags.map((f) => [f.flag_key, f.enabled]));
+
+  if (countryCode) {
+    const { data: overrides } = await supabase.from("feature_flag_overrides").select("flag_key, enabled").eq("country_code", countryCode);
+    (overrides || []).forEach((o) => {
+      result[o.flag_key] = o.enabled;
+    });
+  }
+
+  return result;
 }
 
 // Crash reporting — envoie une erreur technique pour consultation côté plateforme de gestion.
@@ -139,9 +150,9 @@ export async function signUp(email, password, { firstName, lastName, nickname, u
 // Seuil d'âge minimum pour un pays donné — piloté depuis la plateforme de gestion, plus besoin
 // de déploiement de code pour ajuster un seuil ou ajouter un pays.
 export async function getMinimumAge(countryCode) {
-  const { data, error } = await supabase.from("country_rules").select("minimum_age").eq("country_code", countryCode).maybeSingle();
+  const { data, error } = await supabase.from("market_config").select("config_value").eq("country_code", countryCode).eq("config_key", "minimum_age").maybeSingle();
   if (error || !data) return 18;
-  return data.minimum_age;
+  return data.config_value;
 }
 
 export async function signIn(email, password) {
@@ -224,6 +235,7 @@ export async function loadMyProfile(userId) {
     nickname: data.nickname || "",
     username: data.username || "",
     birthDate: data.birth_date || null,
+    country: data.country || null,
     displayNameField: data.display_name_field || "username",
     sharePrenom: data.share_prenom,
     shareNom: data.share_nom,

@@ -140,6 +140,13 @@ export default function App() {
   // cours de récupération" de "récupéré" — évite d'afficher un instant l'écran d'onboarding
   // (nom vide) pendant le bref délai où le profil n'est pas encore arrivé du serveur.
   const [profile, setProfile] = useState({ name: "", avatarUrl: null, myBibroCode: null });
+
+  // Recharge les feature flags une fois le pays connu — une éventuelle surcharge par pays ne
+  // peut s'appliquer qu'à partir de ce moment.
+  useEffect(() => {
+    if (profile.country) loadFeatureFlags(profile.country).then(setFeatureFlags);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.country]);
   useEffect(() => {
     bibroCodeRef.current = profile.myBibroCode;
   }, [profile.myBibroCode]);
