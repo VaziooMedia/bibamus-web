@@ -564,7 +564,9 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             .filter((p) => p.code !== myBibroCode)
             .map((p) => p.name)
             .filter(Boolean);
-          const mergedNames = Array.from(new Set([...(event.knownFriends || []), ...salonParticipantNames]));
+          const mergedNames = Array.from(
+            new Set([...(event.knownFriends || []).filter((n) => n !== myName), ...salonParticipantNames])
+          );
           return (
             <>
               <button
@@ -582,7 +584,12 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                 <div style={{ marginTop: "12px" }}>
                   <ParticipantsEditor
                     names={mergedNames}
-                    onChange={(names) => updateEvent(event.id, (e) => ({ ...e, knownFriends: names.filter((n) => !salonParticipantNames.includes(n)) }))}
+                    onChange={(names) =>
+                      updateEvent(event.id, (e) => ({
+                        ...e,
+                        knownFriends: names.filter((n) => !salonParticipantNames.includes(n) && n !== myName),
+                      }))
+                    }
                     selfName={myName}
                     bibros={bibros}
                   />

@@ -263,21 +263,29 @@ export default function App() {
     const selfEntry = { id: "self", name: profile.name, isSelf: true, code: profile.myBibroCode };
     const rounds = currentEvent?.rounds || [];
     const lastRound = rounds.length > 0 ? rounds[rounds.length - 1] : null;
-    const lastOthers = lastRound ? lastRound.friends.filter((f) => !f.isSelf).map((f) => ({ id: nextId(), name: f.name, code: f.code || null })) : [];
+    const myNameLower = (profile.name || "").trim().toLowerCase();
+    // Filet supplémentaire : exclut toute entrée correspondant à mon propre nom ou code, même
+    // si elle n'était pas correctement marquée "isSelf" dans une tournée passée (corruption
+    // historique désormais corrigée à la source, mais qui pouvait déjà s'être propagée ici).
+    const lastOthers = lastRound
+      ? lastRound.friends
+          .filter((f) => !f.isSelf && (f.name || "").trim().toLowerCase() !== myNameLower && f.code !== profile.myBibroCode)
+          .map((f) => ({ id: nextId(), name: f.name, code: f.code || null }))
+      : [];
 
     // Also pre-fill with any known participants not already covered by self/last round — easier
     // to remove someone skipping this particular round than to re-add everyone who's actually there.
     // Two sources of "known people": friends typed in manually at creation (knownFriends, names
     // only) and Bibax who joined the shared salon via its code (event.participants, with codes).
-    const alreadyNamed = new Set([(profile.name || "").toLowerCase(), ...lastOthers.map((f) => f.name.toLowerCase())]);
+    const alreadyNamed = new Set([myNameLower, ...lastOthers.map((f) => (f.name || "").trim().toLowerCase())]);
     const alreadyCoded = new Set([profile.myBibroCode, ...lastOthers.map((f) => f.code).filter(Boolean)]);
 
     const knownExtras = (currentEvent?.knownFriends || [])
-      .filter((n) => !alreadyNamed.has((n || "").toLowerCase()))
+      .filter((n) => !alreadyNamed.has((n || "").trim().toLowerCase()))
       .map((n) => ({ id: nextId(), name: n, code: null }));
 
     const salonExtras = (currentEvent?.participants || [])
-      .filter((p) => !alreadyCoded.has(p.code) && !alreadyNamed.has((p.name || "").toLowerCase()))
+      .filter((p) => !alreadyCoded.has(p.code) && !alreadyNamed.has((p.name || "").trim().toLowerCase()))
       .map((p) => ({ id: nextId(), name: p.name, code: p.code || null }));
 
     setDraftFriends([selfEntry, ...lastOthers, ...knownExtras, ...salonExtras]);
@@ -298,7 +306,7 @@ export default function App() {
       offeredBy,
       createdAt: Date.now(),
     };
-    const otherFriends = draftFriends.filter((f) => !f.isSelf);
+    const otherFriends = draftFriends.filter((f) => !f.isSelf && (f.name || "").trim().toLowerCase() !== (profile.name || "").trim().toLowerCase());
     const selfOrders = draftOrders
       .filter((o) => o.friendId === "self")
       .map((o) => ({ id: nextId(), drinkId: o.drinkId, timestamp: Date.now(), roundId: round.id }));
