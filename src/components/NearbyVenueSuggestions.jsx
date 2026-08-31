@@ -3,6 +3,12 @@ import { COLORS } from "../constants.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { loadNearbyVenues } from "../data/sharedDirectories.js";
 
+// Élargit progressivement le rayon de recherche seulement si nécessaire — serré d'abord (idéal
+// en zone dense, ex. plusieurs bars à quelques centaines de mètres), élargi automatiquement si
+// trop peu de résultats, pour ne pas revenir bredouille en zone plus rurale.
+const RADIUS_STEPS_METERS = [300, 1000, 3000, 10000];
+const MIN_RESULTS_TARGET = 3;
+
 // Ne déclenche jamais la géolocalisation toute seule — seulement au clic, pour ne jamais
 // demander la position sans un geste explicite de la personne.
 export function NearbyVenueSuggestions({ onPick }) {
@@ -12,7 +18,11 @@ export function NearbyVenueSuggestions({ onPick }) {
 
   const fetchNearby = async (pos) => {
     setLoadingVenues(true);
-    const results = await loadNearbyVenues(pos.lat, pos.lng, 300, 8);
+    let results = [];
+    for (const radius of RADIUS_STEPS_METERS) {
+      results = await loadNearbyVenues(pos.lat, pos.lng, radius, 8);
+      if (results.length >= MIN_RESULTS_TARGET) break;
+    }
     setVenues(results);
     setLoadingVenues(false);
   };
