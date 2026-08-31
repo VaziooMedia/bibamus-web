@@ -8,9 +8,9 @@ import { VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
-import { ReportModal } from "./ReportModal.jsx";
+import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 
-export function BreweryDetailScreen({ brewery, drinks, isAdmin, myBibroCode, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], drinks, isAdmin, myBibroCode, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
@@ -154,17 +154,17 @@ export function BreweryDetailScreen({ brewery, drinks, isAdmin, myBibroCode, onB
       )}
       <button
         onClick={() => setReporting(true)}
-        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
+        style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
       >
-        🚩 Signaler cette fiche
+        <ReportIcon /> Signaler cette fiche
       </button>
-      {reporting && <ReportModal entityType="producer" entityId={brewery.id} myBibroCode={myBibroCode} onClose={() => setReporting(false)} />}
+      {reporting && <ReportModal entityType="producer" entityId={brewery.id} myBibroCode={myBibroCode} directory={breweriesDirectory} onClose={() => setReporting(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );
 }
 
-export function BrandDetailScreen({ brand, drinks, isAdmin, myBibroCode, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BrandDetailScreen({ brand, brandsDirectory = [], drinks, isAdmin, myBibroCode, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brand.name || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -297,11 +297,11 @@ export function BrandDetailScreen({ brand, drinks, isAdmin, myBibroCode, onBack,
       )}
       <button
         onClick={() => setReporting(true)}
-        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
+        style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
       >
-        🚩 Signaler cette fiche
+        <ReportIcon /> Signaler cette fiche
       </button>
-      {reporting && <ReportModal entityType="brand" entityId={brand.id} myBibroCode={myBibroCode} onClose={() => setReporting(false)} />}
+      {reporting && <ReportModal entityType="brand" entityId={brand.id} myBibroCode={myBibroCode} directory={brandsDirectory} onClose={() => setReporting(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );

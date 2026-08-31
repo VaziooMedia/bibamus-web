@@ -8,9 +8,9 @@ import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIc
 import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx";
 import { formatAddress, formatCompactCount, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
-import { ReportModal } from "./ReportModal.jsx";
+import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 
-export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
+export function VenueDetailScreen({ venue, venues = [], myBibroCode, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [cleanupMessage, setCleanupMessage] = useState(null);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
@@ -297,11 +297,11 @@ export function VenueDetailScreen({ venue, myBibroCode, onToggleLike, onCheckIn,
       </div>
       <button
         onClick={() => setReporting(true)}
-        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
+        style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
       >
-        🚩 Signaler cette fiche
+        <ReportIcon /> Signaler cette fiche
       </button>
-      {reporting && <ReportModal entityType="venue" entityId={venue.id} myBibroCode={myBibroCode} onClose={() => setReporting(false)} />}
+      {reporting && <ReportModal entityType="venue" entityId={venue.id} myBibroCode={myBibroCode} directory={venues} onClose={() => setReporting(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );

@@ -2,26 +2,57 @@ import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { submitReport } from "../data/sharedDirectories.js";
 
-const REASONS = [
-  { key: "closed_permanently", label: "Établissement fermé définitivement" },
-  { key: "wrong_info", label: "Information incorrecte" },
-  { key: "duplicate", label: "Fiche en double" },
-  { key: "inappropriate", label: "Contenu inapproprié" },
-  { key: "other", label: "Autre raison" },
-];
+// Icône moderne (cercle + point d'exclamation), remplace l'ancien drapeau — cohérente avec le
+// style trait fin utilisé ailleurs dans l'app.
+function ReportIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <line x1="12" y1="7.5" x2="12" y2="13" />
+      <circle cx="12" cy="16.5" r="0.5" fill="currentColor" />
+    </svg>
+  );
+}
 
-// entityType: "venue" | "drink" | "brand" | "producer"
-export function ReportModal({ entityType, entityId, myBibroCode, onClose }) {
+// Raisons disponibles selon le type de fiche — "Établissement fermé définitivement" n'a de
+// sens que pour un établissement.
+function reasonsFor(entityType) {
+  const base = [
+    { key: "wrong_info", label: "Information(s) incorrecte(s)", commentRequired: true },
+    { key: "duplicate", label: "Fiche en double", commentRequired: false },
+    { key: "inappropriate", label: "Contenu inapproprié", commentRequired: true },
+    { key: "other", label: "Autre raison", commentRequired: true },
+  ];
+  if (entityType === "venue") {
+    return [{ key: "closed_permanently", label: "Établissement fermé définitivement", commentRequired: false }, ...base];
+  }
+  return base;
+}
+
+// entityType: "venue" | "drink" | "brand" | "producer". directory: liste des fiches du même
+// type ({id, name}[]), pour identifier précisément quelle fiche est dupliquée.
+export function ReportModal({ entityType, entityId, myBibroCode, directory = [], onClose }) {
   const [reason, setReason] = useState(null);
   const [comment, setComment] = useState("");
+  const [duplicateQuery, setDuplicateQuery] = useState("");
+  const [duplicateTarget, setDuplicateTarget] = useState(null);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState(null);
 
+  const REASONS = reasonsFor(entityType);
+  const selectedReason = REASONS.find((r) => r.key === reason);
+  const commentRequired = selectedReason?.commentRequired;
+  const isDuplicate = reason === "duplicate";
+
+  const duplicateMatches = isDuplicate && duplicateQuery.trim().length >= 2 ? directory.filter((d) => d.id !== entityId && d.name?.toLowerCase().includes(duplicateQuery.trim().toLowerCase())).slice(0, 5) : [];
+
+  const canSubmit = reason && (!commentRequired || comment.trim().length > 0) && (!isDuplicate || duplicateTarget);
+
   const handleSubmit = async () => {
     setSending(true);
     setError(null);
-    const result = await submitReport(entityType, entityId, reason, comment, myBibroCode);
+    const result = await submitReport(entityType, entityId, reason, comment, myBibroCode, isDuplicate ? duplicateTarget : null);
     setSending(false);
     if (result.error) {
       setError("Une erreur est survenue — merci de réessayer.");
@@ -69,7 +100,11 @@ export function ReportModal({ entityType, entityId, myBibroCode, onClose }) {
               {REASONS.map((r) => (
                 <button
                   key={r.key}
-                  onClick={() => setReason(r.key)}
+                  onClick={() => {
+                    setReason(r.key);
+                    setDuplicateTarget(null);
+                    setDuplicateQuery("");
+                  }}
                   style={{
                     textAlign: "left",
                     padding: "12px 14px",
@@ -86,11 +121,69 @@ export function ReportModal({ entityType, entityId, myBibroCode, onClose }) {
               ))}
             </div>
 
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "8px" }}>Commentaire (optionnel)</p>
+            {isDuplicate && (
+              <div style={{ marginBottom: "16px" }}>
+                <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "8px" }}>De quelle fiche s'agit-il ? *</p>
+                {duplicateTarget ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      border: `2px solid ${COLORS.amber}`,
+                      background: COLORS.surfaceAlt,
+                    }}
+                  >
+                    <span style={{ fontSize: "14px", color: COLORS.ink }}>{duplicateTarget.name}</span>
+                    <button onClick={() => setDuplicateTarget(null)} style={{ background: "none", border: "none", color: COLORS.inkSoft, cursor: "pointer" }}>
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      value={duplicateQuery}
+                      onChange={(e) => setDuplicateQuery(e.target.value)}
+                      placeholder="Rechercher par nom..."
+                      style={{
+                        width: "100%",
+                        padding: "12px 14px",
+                        borderRadius: "10px",
+                        border: `2px solid ${COLORS.paperAlt}`,
+                        fontSize: "14px",
+                        color: COLORS.ink,
+                        background: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    {duplicateMatches.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "8px" }}>
+                        {duplicateMatches.map((m) => (
+                          <button
+                            key={m.id}
+                            onClick={() => setDuplicateTarget(m)}
+                            style={{ textAlign: "left", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontSize: "13.5px", cursor: "pointer" }}
+                          >
+                            {m.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "8px" }}>
+              Commentaire {commentRequired ? "*" : "(optionnel)"}
+            </p>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
+              placeholder={commentRequired ? "Merci de préciser le problème rencontré." : ""}
               style={{
                 width: "100%",
                 padding: "12px 14px",
@@ -110,7 +203,7 @@ export function ReportModal({ entityType, entityId, myBibroCode, onClose }) {
 
             <button
               onClick={handleSubmit}
-              disabled={!reason || sending}
+              disabled={!canSubmit || sending}
               style={{
                 width: "100%",
                 background: COLORS.amber,
@@ -120,7 +213,7 @@ export function ReportModal({ entityType, entityId, myBibroCode, onClose }) {
                 fontWeight: 700,
                 color: COLORS.paper,
                 cursor: "pointer",
-                opacity: !reason || sending ? 0.5 : 1,
+                opacity: !canSubmit || sending ? 0.5 : 1,
               }}
             >
               {sending ? "Envoi..." : "Envoyer le signalement"}
@@ -131,3 +224,5 @@ export function ReportModal({ entityType, entityId, myBibroCode, onClose }) {
     </div>
   );
 }
+
+export { ReportIcon };

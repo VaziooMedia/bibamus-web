@@ -1207,6 +1207,7 @@ export default function App() {
                   const v = venues.find((v) => v.id === viewedVenueId);
                   return v ? { ...v, isFavorite: favoriteVenueIds.includes(v.id) } : v;
                 })()}
+                venues={venues}
                 myBibroCode={profile.myBibroCode}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
                 onCheckIn={() => checkInVenue(viewedVenueId)}
@@ -1226,6 +1227,7 @@ export default function App() {
             {screen === "drinkDetail" && (
               <DrinkDetailScreen
                 drink={drinksDirectory.find((d) => d.id === viewedDrinkId)}
+                drinksDirectory={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 isTasted={tastedDrinkIds.includes(viewedDrinkId)}
@@ -1432,6 +1434,7 @@ export default function App() {
             {screen === "breweryDetail" && (
               <BreweryDetailScreen
                 brewery={breweriesDirectory.find((b) => b.id === viewedBreweryId)}
+                breweriesDirectory={breweriesDirectory}
                 drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
@@ -1466,6 +1469,7 @@ export default function App() {
             {screen === "brandDetail" && (
               <BrandDetailScreen
                 brand={brandsDirectory.find((b) => b.id === viewedBrandId)}
+                brandsDirectory={brandsDirectory}
                 drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}

@@ -321,7 +321,7 @@ function rowToContribution(row) {
 // valeur remplacée (previous_value), pour l'historique.
 /* ---------------- SIGNALEMENTS ---------------- */
 
-export async function submitReport(entityType, entityId, reason, comment, reportedBy) {
+export async function submitReport(entityType, entityId, reason, comment, reportedBy, duplicateOf) {
   const { error } = await supabase.from("entity_reports").insert({
     id: `report-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     entity_type: entityType,
@@ -330,6 +330,8 @@ export async function submitReport(entityType, entityId, reason, comment, report
     comment: comment || null,
     reported_by: reportedBy || null,
     status: "pending",
+    duplicate_of_id: duplicateOf?.id || null,
+    duplicate_of_name: duplicateOf?.name || null,
   });
   if (error) {
     console.error("submitReport:", error);

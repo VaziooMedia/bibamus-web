@@ -10,9 +10,9 @@ import { PhotoUploadField } from "./PhotoUploadField.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { StarRating } from "./StarRating.jsx";
 import { drinkTypeLabel, formatDrinkFieldValue } from "../utils.js";
-import { ReportModal } from "./ReportModal.jsx";
+import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 
-export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, pendingContributions = [], onApproveContribution, onRejectContribution, onOpenTagFilter, onUploadPhoto, onDeletePhoto }) {
+export function DrinkDetailScreen({ drink, drinksDirectory = [], isAdmin, myBibroCode, isTasted, onToggleTasted, isOnWishlist, onToggleWishlist, onRate, onUnrate, onToggleMode, onBack, onEdit, onCertify, onDecertify, onDelete, pendingContributions = [], onApproveContribution, onRejectContribution, onOpenTagFilter, onUploadPhoto, onDeletePhoto }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -291,11 +291,11 @@ export function DrinkDetailScreen({ drink, isAdmin, myBibroCode, isTasted, onTog
       )}
       <button
         onClick={() => setReporting(true)}
-        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
+        style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
       >
-        🚩 Signaler cette fiche
+        <ReportIcon /> Signaler cette fiche
       </button>
-      {reporting && <ReportModal entityType="drink" entityId={drink.id} myBibroCode={myBibroCode} onClose={() => setReporting(false)} />}
+      {reporting && <ReportModal entityType="drink" entityId={drink.id} myBibroCode={myBibroCode} directory={drinksDirectory} onClose={() => setReporting(false)} />}
       <BackFooterLink onClick={onBack} />
     </div>
   );
