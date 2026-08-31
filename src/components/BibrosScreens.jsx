@@ -211,7 +211,7 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
         </div>
       )}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-        <span style={{ fontSize: "34px", lineHeight: 1 }}>{bibro.avatarEmoji || "👤"}</span>
+        <span style={{ fontSize: "34px", lineHeight: 1, display: "inline-flex" }}>{bibro.avatarEmoji ? bibro.avatarEmoji : <NavIcon name="default-avatar" size={32} color={COLORS.amber} />}</span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", lineHeight: 1, margin: 0 }}>{heading}</h1>
         {onToggleFavorite && (
           <button
@@ -536,9 +536,9 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
               <div style={{ fontSize: "17px", fontWeight: 700 }}>
                 {foundSocials.firstName || foundSocials.lastName ? [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") : foundName}
               </div>
-              {(foundName !== [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") || foundSocials.nickname || foundSocials.city || foundSocials.country) && (
+              {(foundSocials.username || foundSocials.nickname || foundSocials.city || foundSocials.country) && (
                 <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "6px", lineHeight: 1.6 }}>
-                  {foundName !== [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") && <div>- {foundName}</div>}
+                  {foundSocials.username && <div>- ID : {foundSocials.username}</div>}
                   {foundSocials.nickname && <div>- {foundSocials.nickname}</div>}
                   {foundSocials.city && <div>- {foundSocials.city}</div>}
                   {foundSocials.country && <div>- {foundSocials.country}</div>}
