@@ -12,7 +12,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
 
-export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onToggleFavorite, onJoinSalon, onViewBibro, onBack }) {
+export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack }) {
   const [query, setQuery] = useState("");
 
   const q = normalizeForSearch(query.trim());
@@ -130,14 +130,6 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                     {b.username && <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", color: COLORS.inkSoft, marginTop: "4px" }}>ID : {b.username}</div>}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={() => onToggleFavorite(b.code)}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "17px", color: b.isFavorite ? COLORS.amberDark : COLORS.paperAlt, lineHeight: 1 }}
-                  >
-                    {b.isFavorite ? "⭐" : "☆"}
-                  </button>
-                </div>
               </div>
 
               {(b.facebookUrl || b.instagramUrl || b.tiktokUrl || b.snapchatUrl) && (
@@ -228,15 +220,6 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
           {bibro.avatarUrl ? <img src={bibro.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={26} color={COLORS.amber} />}
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", lineHeight: 1, margin: 0 }}>{heading}</h1>
-        {onToggleFavorite && (
-          <button
-            onClick={() => onToggleFavorite(bibro.code)}
-            title={bibro.isFavorite ? "Retirer des favoris" : "Marquer comme favori"}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "26px", lineHeight: 1, padding: 0, marginLeft: "2px" }}
-          >
-            {bibro.isFavorite ? "⭐" : "☆"}
-          </button>
-        )}
         {hasSocials && (
           <div style={{ display: "flex", gap: "10px", alignItems: "center", marginLeft: "22px" }}>
             {bibro.facebookUrl && (
@@ -260,6 +243,16 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
               </a>
             )}
           </div>
+        )}
+        <div style={{ flex: 1 }} />
+        {onToggleFavorite && (
+          <button
+            onClick={() => onToggleFavorite(bibro.code)}
+            title={bibro.isFavorite ? "Retirer des favoris" : "Marquer comme favori"}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 0, flexShrink: 0 }}
+          >
+            <NavIcon name="star" size={28} color={COLORS.amber} filled={bibro.isFavorite} />
+          </button>
         )}
       </div>
 
