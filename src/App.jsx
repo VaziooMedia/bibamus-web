@@ -6,6 +6,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { NavigationContext, ProfileNavContext } from "./contexts.js";
+import { EVENT_TYPES } from "./events.js";
 import { BottomNav } from "./components/ui.jsx";
 import { ErrorBoundary, installGlobalCrashReporting } from "./components/ErrorBoundary.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
@@ -61,6 +62,7 @@ import {
   uploadMyAvatarPhoto,
   loadFeatureFlags,
   trackEvent,
+  emitEvent,
   updateMyProfile,
   signOut,
   loadContributionsForEntity,
@@ -367,6 +369,7 @@ export default function App() {
       newEvent.salonCode = code;
       newEvent.participants = [{ code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }];
       await createSalon(code, newEvent);
+      emitEvent(EVENT_TYPES.BIBAROOM_CREATED, { actorBibroCode: profile.myBibroCode, entityType: "salon", entityId: newEvent.id, payload: { salonCode: code } });
     }
 
     if (venue) {
@@ -391,7 +394,10 @@ export default function App() {
     const withMe = alreadyIn
       ? normalized
       : { ...normalized, participants: [...participants, { code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }] };
-    if (!alreadyIn) await saveSalon(code, withMe);
+    if (!alreadyIn) {
+      await saveSalon(code, withMe);
+      emitEvent(EVENT_TYPES.BIBAROOM_JOINED, { actorBibroCode: profile.myBibroCode, entityType: "salon", entityId: withMe.id, payload: { salonCode: code } });
+    }
     setEvents((prev) => (prev.some((e) => e.salonCode === code) ? prev : [...prev, withMe]));
     setActiveEventId(withMe.id);
     setScreen("eventDashboard");
@@ -420,6 +426,7 @@ export default function App() {
     if (existing) return existing.name;
     const newBrand = { id: `local-${Date.now()}`, name: trimmed, status: "to_process" };
     setBrandsDirectory((prev) => [...prev, newBrand]);
+    emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "brand", entityId: newBrand.id });
     createBrand(newBrand).then((created) => {
       if (created) setBrandsDirectory((prev) => prev.map((b) => (b.id === newBrand.id ? created : b)));
     });
@@ -436,6 +443,7 @@ export default function App() {
     });
     if (created) {
       setVenues((prev) => [...prev, created]);
+      emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: created.id });
     } else {
       alert("La création de l'établissement a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
       return;
@@ -462,6 +470,7 @@ export default function App() {
     const created = await createDrink({ id: `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`, ...drinkData, status: "to_process" });
     if (created) {
       setDrinksDirectory((prev) => [...prev, created]);
+      emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: created.id });
     } else {
       alert("La création du produit a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
       return;
@@ -489,7 +498,13 @@ export default function App() {
   useEffect(() => saveLocal("bibamus-tasted-drinks", tastedDrinkIds), [tastedDrinkIds]);
   useEffect(() => saveLocal("bibamus-wishlist-drinks", wishlistDrinkIds), [wishlistDrinkIds]);
 
-  const toggleTastedDrink = (id) => setTastedDrinkIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const toggleTastedDrink = (id) => {
+    setTastedDrinkIds((prev) => {
+      const alreadyTasted = prev.includes(id);
+      if (!alreadyTasted) emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: id });
+      return alreadyTasted ? prev.filter((x) => x !== id) : [...prev, id];
+    });
+  };
   const toggleWishlistDrink = (id) => setWishlistDrinkIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   // Note et modes goûtés : partagés sur la fiche du produit elle-même (comme dans le prototype
@@ -564,7 +579,9 @@ export default function App() {
     const venue = venues.find((v) => v.id === venueId);
     if (!venue) return;
     const likes = venue.likes || [];
-    const nextLikes = likes.includes(profile.myBibroCode) ? likes.filter((c) => c !== profile.myBibroCode) : [...likes, profile.myBibroCode];
+    const alreadyLiked = likes.includes(profile.myBibroCode);
+    const nextLikes = alreadyLiked ? likes.filter((c) => c !== profile.myBibroCode) : [...likes, profile.myBibroCode];
+    if (!alreadyLiked) emitEvent(EVENT_TYPES.PRODUCT_LIKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId });
     setVenues((prev) => prev.map((v) => (v.id === venueId ? { ...v, likes: nextLikes } : v)));
     updatePublicVenue(venueId, { likes: nextLikes });
   };
@@ -618,6 +635,7 @@ export default function App() {
 
   const approveDrinkContribution = async (contribution) => {
     await approveContribution(contribution, profile.myBibroCode || null);
+    emitEvent(EVENT_TYPES.CONTRIBUTION_APPROVED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: contribution.entityId, payload: { fieldPath: contribution.fieldPath } });
     setDrinksDirectory((prev) => prev.map((d) => (d.id === contribution.entityId ? { ...d, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (d.pendingContributionsCount || 0) - 1) } : d)));
     await refreshViewedDrinkContributions(contribution.entityId);
   };
@@ -766,6 +784,7 @@ export default function App() {
 
   const approveBreweryContribution = async (contribution) => {
     await approveContribution(contribution, profile.myBibroCode || null);
+    emitEvent(EVENT_TYPES.CONTRIBUTION_APPROVED, { actorBibroCode: profile.myBibroCode, entityType: "producer", entityId: contribution.entityId, payload: { fieldPath: contribution.fieldPath } });
     setBreweriesDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
     await refreshViewedBreweryContributions(contribution.entityId);
   };
@@ -783,6 +802,7 @@ export default function App() {
 
   const approveBrandContribution = async (contribution) => {
     await approveContribution(contribution, profile.myBibroCode || null);
+    emitEvent(EVENT_TYPES.CONTRIBUTION_APPROVED, { actorBibroCode: profile.myBibroCode, entityType: "brand", entityId: contribution.entityId, payload: { fieldPath: contribution.fieldPath } });
     setBrandsDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
     await refreshViewedBrandContributions(contribution.entityId);
   };
@@ -826,6 +846,7 @@ export default function App() {
   const checkInVenue = (venueId) => {
     // Personnel, pour l'instant : marque simplement où vous êtes en ce moment, sur cet appareil.
     setCheckedInVenueId(venueId);
+    emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId });
   };
 
   const handleLogout = async () => {
@@ -925,6 +946,7 @@ export default function App() {
     if (existing) return existing.name;
     const newBrewery = { id: `local-${Date.now()}`, name: trimmed, country: (country || "").trim(), status: "to_process" };
     setBreweriesDirectory((prev) => [...prev, newBrewery]);
+    emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "producer", entityId: newBrewery.id });
     createBrewery(newBrewery).then((created) => {
       if (created) setBreweriesDirectory((prev) => prev.map((b) => (b.id === newBrewery.id ? created : b)));
     });

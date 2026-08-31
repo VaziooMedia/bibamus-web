@@ -88,6 +88,26 @@ export async function submitClaim(entityType, entityId, entityName, { companyNam
   return { ok: true };
 }
 
+// EventPublisher — émission centralisée d'un événement métier (Chantier n°9). Le domaine émet
+// l'événement sans jamais connaître ses futurs consommateurs (Stats, Pulse, Badges,
+// Notifications) — ceux-ci s'y abonneront plus tard sans qu'aucune ligne de ce fichier n'ait
+// besoin de changer. N'échoue jamais bruyamment, comme trackEvent et reportCrash.
+export async function emitEvent(type, { actorBibroCode, entityType, entityId, payload, version = 1 } = {}) {
+  try {
+    await supabase.from("analytics_events").insert({
+      id: `evt-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+      event_type: type,
+      bibro_code: actorBibroCode || null,
+      entity_type: entityType || null,
+      entity_id: entityId || null,
+      version,
+      metadata: payload || null,
+    });
+  } catch (e) {
+    console.error("emitEvent:", e);
+  }
+}
+
 export async function trackEvent(eventType, screen, bibroCode, metadata) {
   try {
     await supabase.from("analytics_events").insert({
