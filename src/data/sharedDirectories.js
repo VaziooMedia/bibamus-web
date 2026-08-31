@@ -62,6 +62,13 @@ export async function signUp(email, password, { firstName, lastName, nickname, u
     },
   });
   if (error) return { error: error.message };
+  // Supabase renvoie un succès apparent même si l'email existe déjà (pour ne pas révéler quels
+  // emails sont enregistrés) — mais le tableau "identities" reste vide dans ce cas précis,
+  // contrairement à une vraie nouvelle inscription. C'est le seul signal fiable pour distinguer
+  // les deux cas côté client.
+  if (data.user && data.user.identities && data.user.identities.length === 0) {
+    return { error: "Un compte existe déjà avec cet email — connectez-vous plutôt, ou réinitialisez votre mot de passe." };
+  }
   return { user: data.user, session: data.session };
 }
 

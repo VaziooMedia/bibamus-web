@@ -50,6 +50,91 @@ function PasswordField({ value, onChange, placeholder, autoComplete }) {
   );
 }
 
+// Écran affiché après inscription — spécifique à la version "web app" (PWA). À retirer
+// entièrement une fois les vraies apps App Store / Google Play disponibles.
+function ConfirmEmailScreen({ email, onBackToSignIn }) {
+  const [platform, setPlatform] = useState("ios");
+
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
+      <img src="/bibamus-logo.svg" alt="Bibamus" style={{ width: "140px", margin: "0 auto 24px", display: "block" }} />
+      <div style={{ fontSize: "44px", textAlign: "center", marginBottom: "12px" }}>📩</div>
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 10px", textAlign: "center" }}>Vérifiez votre boîte mail</h1>
+      <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, lineHeight: 1.6, marginBottom: "22px", textAlign: "center" }}>
+        Un email de confirmation vient de vous être envoyé à <strong>{email}</strong>. Cette étape confirme que votre adresse est correcte et bien la vôtre.
+      </p>
+
+      <div style={{ background: COLORS.paperAlt, borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
+        <p style={{ fontSize: "12.5px", color: COLORS.ink, fontWeight: 700, margin: "0 0 10px" }}>Marche à suivre :</p>
+        <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: COLORS.inkSoft, lineHeight: 1.8 }}>
+          <li>Ouvrez l'email reçu et appuyez sur le lien de confirmation.</li>
+          <li>Il s'ouvrira dans votre navigateur (Safari/Chrome) — c'est normal, fermez-le une fois le message de confirmation affiché.</li>
+          <li>
+            Retournez sur Bibamus depuis l'icône sur votre écran d'accueil <em>(voir ci-dessous si vous ne l'avez pas encore ajoutée)</em>, puis connectez-vous avec votre mot de passe.
+          </li>
+        </ol>
+      </div>
+
+      <div style={{ background: COLORS.paperAlt, borderRadius: "12px", padding: "16px", marginBottom: "24px" }}>
+        <p style={{ fontSize: "12.5px", color: COLORS.ink, fontWeight: 700, margin: "0 0 10px" }}>Ajouter Bibamus à votre écran d'accueil</p>
+        <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
+          <button
+            onClick={() => setPlatform("ios")}
+            style={{
+              flex: 1,
+              padding: "7px",
+              borderRadius: "8px",
+              border: `2px solid ${platform === "ios" ? COLORS.amber : COLORS.paper}`,
+              background: platform === "ios" ? COLORS.amber : "none",
+              color: platform === "ios" ? COLORS.paper : COLORS.ink,
+              fontWeight: 700,
+              fontSize: "12.5px",
+              cursor: "pointer",
+            }}
+          >
+            iPhone (Safari)
+          </button>
+          <button
+            onClick={() => setPlatform("android")}
+            style={{
+              flex: 1,
+              padding: "7px",
+              borderRadius: "8px",
+              border: `2px solid ${platform === "android" ? COLORS.amber : COLORS.paper}`,
+              background: platform === "android" ? COLORS.amber : "none",
+              color: platform === "android" ? COLORS.paper : COLORS.ink,
+              fontWeight: 700,
+              fontSize: "12.5px",
+              cursor: "pointer",
+            }}
+          >
+            Android (Chrome)
+          </button>
+        </div>
+        {platform === "ios" ? (
+          <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: COLORS.inkSoft, lineHeight: 1.8 }}>
+            <li>
+              Appuyez sur le bouton de partage <span style={{ fontWeight: 700 }}>􀈂</span> (un carré avec une flèche vers le haut), en bas de l'écran.
+            </li>
+            <li>Faites défiler et appuyez sur "Sur l'écran d'accueil".</li>
+            <li>Appuyez sur "Ajouter" en haut à droite.</li>
+          </ol>
+        ) : (
+          <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: COLORS.inkSoft, lineHeight: 1.8 }}>
+            <li>Appuyez sur le menu (les trois points) en haut à droite de Chrome.</li>
+            <li>Appuyez sur "Ajouter à l'écran d'accueil" ou "Installer l'application".</li>
+            <li>Confirmez.</li>
+          </ol>
+        )}
+      </div>
+
+      <button onClick={onBackToSignIn} style={buttonStyle}>
+        Retour à la connexion
+      </button>
+    </div>
+  );
+}
+
 // Un seul écran, trois modes — inscription, connexion, mot de passe oublié. Bloque l'accès au
 // reste de l'app tant qu'aucune session n'est active (compte réel désormais requis).
 export function AuthScreen({ onAuthenticated }) {
@@ -118,7 +203,7 @@ export function AuthScreen({ onAuthenticated }) {
         return;
       }
       if (!result.session) {
-        setMessage("Compte créé — vérifiez votre email pour confirmer votre adresse avant de vous connecter.");
+        setMode("confirmEmail");
         return;
       }
       onAuthenticated(result.session);
@@ -134,6 +219,13 @@ export function AuthScreen({ onAuthenticated }) {
     }
     onAuthenticated(result.session);
   };
+
+  if (mode === "confirmEmail") {
+    // Écran spécifique à la version "web app" (PWA) — à retirer entièrement une fois les
+    // vraies apps App Store / Google Play disponibles, la confirmation par email restera mais
+    // n'aura alors plus besoin de ces instructions de retour manuel vers l'écran d'accueil.
+    return <ConfirmEmailScreen email={email} onBackToSignIn={() => setMode("signin")} />;
+  }
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
