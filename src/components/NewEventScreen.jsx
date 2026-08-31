@@ -10,6 +10,17 @@ import { ParticipantsEditor, PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { capitalizeFirst, todayISO } from "../utils.js";
 
+// Style de titre de section standard — barre verticale verte fluo + texte blanc. Utilisé pour
+// "Lieu", "Titre de la session", "Participants", "Choix du mode", "Type de paiement".
+function SectionTitle({ children }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+      <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+      <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>{children}</span>
+    </div>
+  );
+}
+
 export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, venues = [], publicVenues = [], onResolvePublicVenue, bibros = [] }) {
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("euro");
@@ -92,21 +103,23 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onCancel} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "0 0 6px 0" }}>{isSalon ? "Nouveau BibaRoom" : "Nouvel événement"}</h1>
+      {/* Taille standard pour ce type de grand titre — à répliquer sur tous les titres équivalents de l'app. */}
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "0 0 6px 0" }}>{isSalon ? "Nouveau BibaRoom" : "Nouvel événement"}</h1>
       {isSalon && (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>
           Tu seras l'hôte. Un code à 4 caractères sera généré pour que tes amis rejoignent depuis leur téléphone.
         </p>
       )}
 
+      <SectionTitle>Lieu</SectionTitle>
       <div style={{ marginBottom: "16px" }}>
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
           <button
             onClick={pickHome}
             style={{
-              background: selectedVenueId === "@home" ? COLORS.amber : COLORS.surfaceAlt,
-              color: selectedVenueId === "@home" ? COLORS.paper : COLORS.amber,
+              background: COLORS.surfaceAlt,
+              color: COLORS.amber,
               border: `2px solid ${COLORS.amber}`,
               borderRadius: "999px",
               padding: "8px 14px",
@@ -115,16 +128,13 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
               cursor: "pointer",
             }}
           >
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-              <NavIcon name="home" size={15} color={selectedVenueId === "@home" ? COLORS.paper : COLORS.amber} />
-              @Home
-            </span>
+            {selectedVenueId === "@home" ? "✓ " : ""}@Home
           </button>
           <button
             onClick={pickEventPlace}
             style={{
-              background: selectedVenueId === "@event" ? COLORS.amber : COLORS.surfaceAlt,
-              color: selectedVenueId === "@event" ? COLORS.paper : COLORS.amber,
+              background: COLORS.surfaceAlt,
+              color: COLORS.amber,
               border: `2px solid ${COLORS.amber}`,
               borderRadius: "999px",
               padding: "8px 14px",
@@ -133,7 +143,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
               cursor: "pointer",
             }}
           >
-            @Event
+            {selectedVenueId === "@event" ? "✓ " : ""}@Event
           </button>
           {venues.map((v) => (
             <button
@@ -174,9 +184,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} />
       </div>
 
-      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", marginTop: isSalon ? 0 : "4px" }}>
-        Titre de la session
-      </label>
+      <SectionTitle>Titre de la session</SectionTitle>
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         <input
           value={name}
@@ -205,9 +213,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
       </div>
 
 
-      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>
-        Participants
-      </label>
+      <SectionTitle>Participants</SectionTitle>
       <div style={{ marginBottom: "20px" }}>
         <ParticipantsEditor names={participants} onChange={setParticipants} bibros={bibros} />
       </div>
@@ -215,7 +221,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         Tu pourras toujours en ajouter plus tard.
       </p>
 
-      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Choix du mode</label>
+      <SectionTitle>Choix du mode</SectionTitle>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
         {[
           { key: "tournees", label: "Mode ORBIS", desc: "Tournées" },
@@ -233,7 +239,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
               textAlign: "left",
               background: eventMode === m.key ? COLORS.amber : COLORS.surface,
               color: eventMode === m.key ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${eventMode === m.key ? COLORS.ink : COLORS.paperAlt}`,
+              border: `2px solid ${eventMode === m.key ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "12px",
               padding: "12px 14px",
               cursor: "pointer",
@@ -249,7 +255,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         <>
           {eventMode === "tournees" || eventMode === "cagnotte" ? (
             <>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px" }}>Type de paiement</label>
+              <SectionTitle>Type de paiement</SectionTitle>
               <div style={{ display: "flex", gap: "10px", marginBottom: currency === "jeton" ? "16px" : "auto" }}>
                 <button
                   onClick={() => setCurrency("euro")}
@@ -257,7 +263,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
                     flex: 1,
                     padding: "18px 10px",
                     borderRadius: "12px",
-                    border: `2px solid ${currency === "euro" ? COLORS.ink : COLORS.paperAlt}`,
+                    border: `2px solid ${currency === "euro" ? COLORS.amber : COLORS.paperAlt}`,
                     background: currency === "euro" ? COLORS.amber : COLORS.surface,
                     color: currency === "euro" ? COLORS.paper : COLORS.ink,
                     fontWeight: 700,
@@ -273,7 +279,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
                     flex: 1,
                     padding: "18px 10px",
                     borderRadius: "12px",
-                    border: `2px solid ${currency === "jeton" ? COLORS.ink : COLORS.paperAlt}`,
+                    border: `2px solid ${currency === "jeton" ? COLORS.amber : COLORS.paperAlt}`,
                     background: currency === "jeton" ? COLORS.amber : COLORS.surface,
                     color: currency === "jeton" ? COLORS.paper : COLORS.ink,
                     fontWeight: 700,

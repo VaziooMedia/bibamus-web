@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
+import { NavIcon } from "./icons.jsx";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { loadNearbyVenues } from "../data/sharedDirectories.js";
 
@@ -87,7 +88,7 @@ export function NearbyVenueSuggestions({ onPick }) {
       disabled={status === "loading" || loadingVenues}
       style={{
         background: "none",
-        border: `2px dashed ${COLORS.paperAlt}`,
+        border: `2px solid ${COLORS.paperAlt}`,
         borderRadius: "10px",
         padding: "10px 14px",
         color: COLORS.amber,
@@ -98,7 +99,14 @@ export function NearbyVenueSuggestions({ onPick }) {
         width: "100%",
       }}
     >
-      {status === "loading" || loadingVenues ? "Recherche..." : "📍 Suggérer des lieux près de moi"}
+      {status === "loading" || loadingVenues ? (
+        "Recherche..."
+      ) : (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <NavIcon name="plus" size={14} color={COLORS.amber} />
+          Suggérer des lieux près de moi
+        </span>
+      )}
       {status === "denied" && <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>Position refusée — activez-la dans les réglages de votre navigateur pour réessayer.</span>}
       {status === "unavailable" && <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>Géolocalisation non disponible sur cet appareil.</span>}
     </button>

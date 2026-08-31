@@ -252,7 +252,7 @@ export function PublicVenueSearchPicker({ publicVenues, myVenues, onPick }) {
           textAlign: "center",
           padding: "11px",
           borderRadius: "9px",
-          border: `2px dashed ${COLORS.amber}`,
+          border: `2px solid ${COLORS.paperAlt}`,
           background: COLORS.surface,
           color: COLORS.amber,
           fontWeight: 700,
