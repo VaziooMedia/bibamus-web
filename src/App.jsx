@@ -420,7 +420,6 @@ export default function App() {
   const [viewedDrinkId, setViewedDrinkId] = useState(null);
   const [viewedHistoryEventId, setViewedHistoryEventId] = useState(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-  const [onboardingName, setOnboardingName] = useState("");
   const [checkIns] = useState([]);
   const [checkedInVenueId, setCheckedInVenueId] = useState(null);
   const [alcoholFreeDays, setAlcoholFreeDays] = useState(() => loadLocal("bibamus-alcohol-free-days", []));
@@ -894,64 +893,6 @@ export default function App() {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#F2F2E8", fontFamily: "sans-serif" }}>
         Chargement...
-      </div>
-    );
-  }
-
-  if (!profile.name) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "28px 24px",
-          fontFamily: "'Work Sans', sans-serif",
-          color: "#F2F2E8",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-          <BibamusLogoFull height={38} />
-          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: "#FF3B4E", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "2px 7px", letterSpacing: "0.5px" }}>
-            Test
-          </span>
-        </div>
-        <p style={{ fontSize: "14px", color: "#8792A6", marginBottom: "24px", textAlign: "center" }}>Comment veux-tu que tes Bibax te voient ?</p>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const trimmed = onboardingName.trim();
-            if (trimmed) setProfile((p) => ({ ...p, name: trimmed }));
-          }}
-          style={{ width: "100%", maxWidth: "320px", display: "flex", flexDirection: "column", gap: "12px" }}
-        >
-          <input
-            value={onboardingName}
-            onChange={(e) => setOnboardingName(e.target.value)}
-            placeholder="Ton prénom ou surnom"
-            autoFocus
-            style={{ padding: "14px 16px", borderRadius: "10px", border: "2px solid #28405C", fontSize: "16px", textAlign: "center" }}
-          />
-          <button
-            type="submit"
-            disabled={!onboardingName.trim()}
-            style={{
-              background: "#39FF66",
-              border: "none",
-              borderRadius: "10px",
-              padding: "14px",
-              fontWeight: 700,
-              fontSize: "15px",
-              color: "#0D1B2A",
-              cursor: onboardingName.trim() ? "pointer" : "default",
-              opacity: onboardingName.trim() ? 1 : 0.5,
-            }}
-          >
-            C'est parti
-          </button>
-        </form>
       </div>
     );
   }
