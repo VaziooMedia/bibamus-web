@@ -91,6 +91,10 @@ export async function lookupBibroCode(code) {
     firstName: row.first_name,
     lastName: row.last_name,
     nickname: row.nickname,
+    city: row.city,
+    // Les codes pays sont stockés en minuscules avec underscores (ex. "pays_bas") — converti
+    // ici en libellé lisible ("Pays-Bas") pour l'affichage.
+    country: row.country ? row.country.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("-") : null,
     facebookUrl: row.facebook_url,
     instagramUrl: row.instagram_url,
     tiktokUrl: row.tiktok_url,

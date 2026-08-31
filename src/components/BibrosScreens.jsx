@@ -540,10 +540,12 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
               <div style={{ fontSize: "17px", fontWeight: 700 }}>
                 {foundSocials.firstName || foundSocials.lastName ? [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") : foundName}
               </div>
-              {(foundName !== [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") || foundSocials.nickname) && (
-                <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>
-                  {foundName}
-                  {foundSocials.nickname && ` · ${foundSocials.nickname}`}
+              {(foundName !== [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") || foundSocials.nickname || foundSocials.city || foundSocials.country) && (
+                <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "6px", lineHeight: 1.6 }}>
+                  {foundName !== [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") && <div>- {foundName}</div>}
+                  {foundSocials.nickname && <div>- {foundSocials.nickname}</div>}
+                  {foundSocials.city && <div>- {foundSocials.city}</div>}
+                  {foundSocials.country && <div>- {foundSocials.country}</div>}
                 </div>
               )}
             </div>
