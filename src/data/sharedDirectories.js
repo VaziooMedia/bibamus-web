@@ -13,6 +13,21 @@
 
 import { supabase } from "../supabaseClient.js";
 
+// supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
+// générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
+// vrai contenu de la réponse pour afficher le message utile à la place.
+async function extractFunctionError(error) {
+  if (error?.context) {
+    try {
+      const body = await error.context.json();
+      if (body?.error) return body.error;
+    } catch {
+      // le corps n'était pas du JSON exploitable — on retombe sur le message générique
+    }
+  }
+  return error?.message || "Une erreur est survenue.";
+}
+
 /* ---------------- AUTHENTIFICATION ---------------- */
 
 // Vrais comptes (Supabase Auth) — remplace la génération locale du code Bibax. Le profil
@@ -57,7 +72,7 @@ export async function signIn(email, password) {
 
 export async function deleteMyAccount(confirmPassword) {
   const { data, error } = await supabase.functions.invoke("delete-my-account", { body: { confirmPassword } });
-  if (error) return { error: error.message };
+  if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
   return { ok: true };
 }
