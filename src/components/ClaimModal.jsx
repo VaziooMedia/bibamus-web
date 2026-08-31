@@ -49,9 +49,9 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
       >
         {done ? (
           <>
-            <p style={{ fontSize: "15px", color: COLORS.ink, fontWeight: 700, marginBottom: "8px" }}>Votre demande a bien été transmise.</p>
+            <p style={{ fontSize: "15px", color: COLORS.ink, fontWeight: 700, marginBottom: "8px" }}>Votre demande a bien été transmise à nos équipes.</p>
             <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "20px" }}>
-              Notre équipe va l'examiner. Si elle est approuvée, nous vous recontacterons pour créer votre compte Business, avec une adresse email professionnelle dédiée.
+              Après examen et si elle est approuvée, nous vous recontacterons pour créer votre compte Business.
             </p>
             <button
               onClick={onClose}
