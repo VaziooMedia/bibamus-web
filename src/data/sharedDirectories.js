@@ -128,6 +128,7 @@ export async function loadMyProfile(userId) {
     isAdmin: data.role === "admin" || data.role === "super_admin",
     active: data.active !== false,
     blockedReason: data.blocked_reason || null,
+    blockedUntil: data.blocked_until || null,
   };
 }
 

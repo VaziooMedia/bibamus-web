@@ -897,7 +897,9 @@ export default function App() {
     );
   }
 
-  if (profile.active === false) {
+  const stillBlocked = profile.active === false && (!profile.blockedUntil || new Date(profile.blockedUntil) > new Date());
+
+  if (stillBlocked) {
     return (
       <div
         style={{
@@ -912,9 +914,19 @@ export default function App() {
           textAlign: "center",
         }}
       >
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "28px", marginBottom: "12px" }}>Compte bloqué</h1>
-        <p style={{ fontSize: "14px", color: "#8792A6", marginBottom: "20px", maxWidth: "320px" }}>
-          Votre accès à Bibamus a été suspendu par un administrateur.
+        <BibamusLogoFull height={38} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "28px", margin: "18px 0 12px" }}>Compte bloqué</h1>
+        <p style={{ fontSize: "14px", color: "#8792A6", marginBottom: "20px", maxWidth: "320px", lineHeight: 1.6 }}>
+          {profile.blockedUntil ? (
+            <>
+              Votre compte a été suspendu par Bibamus jusqu'au{" "}
+              <strong style={{ color: "#F2F2E8" }}>{new Date(profile.blockedUntil).toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" })}</strong>.
+              <br />
+              Il redeviendra actif automatiquement à cette date.
+            </>
+          ) : (
+            "Votre accès à Bibamus a été suspendu définitivement par un administrateur."
+          )}
           {profile.blockedReason && (
             <>
               <br />
