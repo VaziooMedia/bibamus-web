@@ -1201,7 +1201,6 @@ export default function App() {
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
                 onDeactivateBibaBob={(code) => deactivateBibaBob(activeEventId, code)}
-                goToBibaMusic={() => {}}
               />
             )}
             {screen === "roundCompose" && currentEvent && (

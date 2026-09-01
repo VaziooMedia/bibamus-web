@@ -14,7 +14,7 @@ import { BibaMusicSection } from "./BibaMusicSection.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 
-export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, goToBibaMusic }) {
+export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");
