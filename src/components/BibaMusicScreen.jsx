@@ -533,6 +533,8 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                   transform: isDragging ? "scale(1.02)" : "none",
                   touchAction: isDragging ? "none" : "auto",
                   userSelect: "none",
+                  WebkitUserSelect: "none",
+                  WebkitTouchCallout: "none",
                 }}
               >
                 {(isNowPlaying || wasPlayed) && (
