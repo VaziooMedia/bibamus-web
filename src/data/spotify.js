@@ -213,14 +213,20 @@ export async function createSpotifyPlaylist(accessToken, playlistName) {
 
 // Ajoute un morceau (par son URI Spotify) à la playlist déjà créée pour ce BibaRoom.
 export async function addTrackToSpotifyPlaylist(accessToken, playlistId, spotifyUri) {
+  if (!spotifyUri) return { error: "Ce morceau n'a pas d'identifiant Spotify — impossible à ajouter." };
   try {
     const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ uris: [spotifyUri] }),
     });
-    return response.ok;
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("addTrackToSpotifyPlaylist:", response.status, errText);
+      return { error: "L'ajout à la playlist a échoué — réessayez." };
+    }
+    return { ok: true };
   } catch (e) {
-    return false;
+    return { error: "L'ajout à la playlist a échoué — réessayez." };
   }
 }

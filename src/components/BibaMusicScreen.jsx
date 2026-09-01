@@ -109,8 +109,18 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     if (!event.spotifyPlaylistId) return;
     setAddingId(song.id);
     const token = await ensureFreshSpotifyToken(myUserId);
-    if (token) await addTrackToSpotifyPlaylist(token, event.spotifyPlaylistId, song.spotifyUri);
+    if (!token) {
+      setAddingId(null);
+      alert("Connexion Spotify indisponible — reconnectez votre compte depuis Mes infos.");
+      return;
+    }
+    const result = await addTrackToSpotifyPlaylist(token, event.spotifyPlaylistId, song.spotifyUri);
     setAddingId(null);
+    if (result.error) {
+      alert(result.error);
+      return;
+    }
+    updateEvent(event.id, (e) => ({ ...e, playlist: (e.playlist || []).map((s) => (s.id === song.id ? { ...s, addedToPlaylist: true } : s)) }));
   };
 
   return (
@@ -233,9 +243,13 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                     {event.spotifyPlaylistId && s.spotifyUri && (
                       <>
                         {" · "}
-                        <button onClick={() => addToPlaylist(s)} disabled={addingId === s.id} style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "11.5px", cursor: "pointer", padding: 0 }}>
-                          {addingId === s.id ? "Ajout..." : "+ Playlist"}
-                        </button>
+                        {s.addedToPlaylist ? (
+                          <span style={{ color: COLORS.amber }}>Ajouté ✓</span>
+                        ) : (
+                          <button onClick={() => addToPlaylist(s)} disabled={addingId === s.id} style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "11.5px", cursor: "pointer", padding: 0 }}>
+                            {addingId === s.id ? "Ajout..." : "+ Playlist"}
+                          </button>
+                        )}
                       </>
                     )}
                   </p>
