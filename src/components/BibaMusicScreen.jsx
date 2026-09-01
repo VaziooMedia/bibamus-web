@@ -72,7 +72,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       });
     };
     poll();
-    const interval = setInterval(poll, 15000);
+    const interval = setInterval(poll, 6000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spotifyConnected, myUserId, event.id]);
@@ -327,6 +327,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
               <div
                 key={s.id}
                 style={{
+                  position: "relative",
                   background: isNowPlaying ? COLORS.surfaceAlt : COLORS.surface,
                   border: `2px solid ${isNowPlaying ? COLORS.amber : COLORS.paperAlt}`,
                   borderRadius: "12px",
@@ -337,21 +338,27 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                   opacity: wasPlayed ? 0.6 : 1,
                 }}
               >
+                {(isNowPlaying || wasPlayed) && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-8px",
+                      right: "10px",
+                      fontSize: "9px",
+                      fontWeight: 700,
+                      letterSpacing: "0.3px",
+                      color: isNowPlaying ? COLORS.paper : COLORS.inkSoft,
+                      background: isNowPlaying ? COLORS.amber : COLORS.paperAlt,
+                      borderRadius: "999px",
+                      padding: "2px 8px",
+                    }}
+                  >
+                    {isNowPlaying ? "EN COURS" : "DÉJÀ JOUÉ"}
+                  </span>
+                )}
                 {s.albumArt && <img src={s.albumArt} alt="" style={{ width: "40px", height: "40px", borderRadius: "6px", flexShrink: 0 }} />}
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>
-                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.title}</span>
-                    {isNowPlaying && (
-                      <span style={{ flexShrink: 0, fontSize: "9.5px", fontWeight: 700, letterSpacing: "0.3px", color: COLORS.paper, background: COLORS.amber, borderRadius: "999px", padding: "2px 7px" }}>
-                        EN COURS
-                      </span>
-                    )}
-                    {wasPlayed && (
-                      <span style={{ flexShrink: 0, fontSize: "9.5px", fontWeight: 700, letterSpacing: "0.3px", color: COLORS.inkSoft, background: COLORS.paperAlt, borderRadius: "999px", padding: "2px 7px" }}>
-                        DÉJÀ JOUÉ
-                      </span>
-                    )}
-                  </p>
+                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.title}</p>
                   {s.artist && <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.artist}</p>}
                   <p style={{ margin: "3px 0 0", fontSize: "11.5px", color: COLORS.inkSoft }}>
                     Proposé par {s.proposedByName || "quelqu'un"}
@@ -412,7 +419,8 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                     flexShrink: 0,
                   }}
                 >
-                  ♥ {bixCount}
+                  <NavIcon name="heart" size={13} color={iBixed ? COLORS.paper : COLORS.amber} filled={iBixed} />
+                  {bixCount}
                 </button>
                 {isMine && (
                   <button onClick={() => removeSong(s.id)} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "17px", cursor: "pointer", padding: "0 2px", flexShrink: 0 }}>
