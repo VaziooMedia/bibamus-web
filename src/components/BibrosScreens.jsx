@@ -20,6 +20,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
   const [sent, setSent] = useState(null);
   const [suggestions, setSuggestions] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(true);
   const prevSentIds = useRef(null);
 
   const refresh = () => {
@@ -36,7 +37,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
       prevSentIds.current = data.map((r) => r.relationshipId);
       setSent(data);
     });
-    loadBibaxSuggestions().then(setSuggestions);
+    loadBibaxSuggestions(3).then(setSuggestions);
   };
 
   useEffect(() => {
@@ -166,42 +167,56 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
 
       {hasSuggestions && (
         <div style={{ marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+          <button
+            onClick={() => setSuggestionsExpanded((e) => !e)}
+            style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: suggestionsExpanded ? "8px" : 0, background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer" }}
+          >
             <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-            <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Suggestions</span>
+            <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Suggestions rapides</span>
             {onSeeAllSuggestions && (
-              <button onClick={onSeeAllSuggestions} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber, cursor: "pointer" }}>
-                Voir tout
-              </button>
-            )}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {suggestions.map((s) => (
-              <div
-                key={s.userId}
-                onClick={() => onOpenProfile(s.bibroCode)}
-                style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSeeAllSuggestions();
+                }}
+                style={{ marginLeft: "auto", marginRight: "8px", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber }}
               >
-                <EntityAvatar photoUrl={s.avatarUrl} size={36} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} style={{ fontSize: "13.5px", color: COLORS.ink }} />
-                  <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
-                    {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addSuggestion(s.bibroCode);
-                  }}
-                  disabled={busyId === s.bibroCode}
-                  style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "7px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}
+                Voir tout
+              </span>
+            )}
+            <span style={{ display: "inline-flex", transform: `rotate(${suggestionsExpanded ? 90 : 0}deg)`, transition: "transform 0.15s ease" }}>
+              <NavIcon name="chevron-right" size={14} color={COLORS.amber} />
+            </span>
+          </button>
+          {suggestionsExpanded && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {suggestions.map((s) => (
+                <div
+                  key={s.userId}
+                  onClick={() => onOpenProfile(s.bibroCode)}
+                  style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
                 >
-                  Ajouter
-                </button>
-              </div>
-            ))}
-          </div>
+                  <EntityAvatar photoUrl={s.avatarUrl} size={36} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                    <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
+                      {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addSuggestion(s.bibroCode);
+                    }}
+                    disabled={busyId === s.bibroCode}
+                    style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "7px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </>
