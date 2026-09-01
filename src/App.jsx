@@ -279,9 +279,25 @@ export default function App() {
     const syncBibax = () => {
       loadMyBibax().then((confirmed) => {
         setBibros((prev) => {
-          const knownCodes = new Set(prev.map((b) => b.code));
-          const missing = confirmed.filter((c) => c.bibroCode && !knownCodes.has(c.bibroCode)).map((c) => ({ code: c.bibroCode, name: c.name, firstName: c.name, lastName: c.lastName || "", nickname: c.nickname || "", avatarUrl: c.avatarUrl || null, city: c.city || "", locality: c.locality || "", alias: "", addedAt: Date.now() }));
-          return missing.length > 0 ? [...prev, ...missing] : prev;
+          const byCode = new Map(prev.map((b) => [b.code, b]));
+          confirmed.forEach((c) => {
+            if (!c.bibroCode) return;
+            const existing = byCode.get(c.bibroCode);
+            byCode.set(c.bibroCode, {
+              ...existing,
+              code: c.bibroCode,
+              name: c.name,
+              firstName: c.name,
+              lastName: c.lastName || "",
+              nickname: c.nickname || "",
+              avatarUrl: c.avatarUrl || null,
+              city: c.city || "",
+              locality: c.locality || "",
+              alias: existing?.alias || "",
+              addedAt: existing?.addedAt || Date.now(),
+            });
+          });
+          return Array.from(byCode.values());
         });
       });
     };
@@ -1814,9 +1830,25 @@ export default function App() {
                 onBibaxAdded={() => {
                   loadMyBibax().then((confirmed) => {
                     setBibros((prev) => {
-                      const knownCodes = new Set(prev.map((b) => b.code));
-                      const missing = confirmed.filter((c) => c.bibroCode && !knownCodes.has(c.bibroCode)).map((c) => ({ code: c.bibroCode, name: c.name, firstName: c.name, lastName: c.lastName || "", nickname: c.nickname || "", avatarUrl: c.avatarUrl || null, city: c.city || "", locality: c.locality || "", alias: "", addedAt: Date.now() }));
-                      return missing.length > 0 ? [...prev, ...missing] : prev;
+                      const byCode = new Map(prev.map((b) => [b.code, b]));
+                      confirmed.forEach((c) => {
+                        if (!c.bibroCode) return;
+                        const existing = byCode.get(c.bibroCode);
+                        byCode.set(c.bibroCode, {
+                          ...existing,
+                          code: c.bibroCode,
+                          name: c.name,
+                          firstName: c.name,
+                          lastName: c.lastName || "",
+                          nickname: c.nickname || "",
+                          avatarUrl: c.avatarUrl || null,
+                          city: c.city || "",
+                          locality: c.locality || "",
+                          alias: existing?.alias || "",
+                          addedAt: existing?.addedAt || Date.now(),
+                        });
+                      });
+                      return Array.from(byCode.values());
                     });
                   });
                 }}

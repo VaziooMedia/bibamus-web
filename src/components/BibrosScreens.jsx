@@ -110,9 +110,9 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
                     respond(r.relationshipId, true);
                   }}
                   disabled={busyId === r.relationshipId}
-                  style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "7px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.paper, cursor: "pointer" }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "8px", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
                 >
-                  Confirmer
+                  <NavIcon name="check" size={17} color={COLORS.paper} />
                 </button>
                 <button
                   onClick={(e) => {
@@ -120,9 +120,9 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
                     respond(r.relationshipId, false);
                   }}
                   disabled={busyId === r.relationshipId}
-                  style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px 10px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
                 >
-                  Refuser
+                  <NavIcon name="x" size={17} color={COLORS.inkSoft} />
                 </button>
               </div>
             ))}
