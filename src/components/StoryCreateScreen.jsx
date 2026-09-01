@@ -90,7 +90,7 @@ export function StoryCreateScreen({ contextType, contextId, myUserId, onBack, on
         </div>
       )}
 
-      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={handlePick} />
+      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePick} />
 
       {previewUrl && contextType === "room" && (
         <div style={{ marginBottom: "16px" }}>

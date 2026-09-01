@@ -34,7 +34,7 @@ export function StoriesBar({ stories, onAddStory, onOpenStory }) {
           onClick={() => onOpenStory(a)}
           style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", background: "none", border: "none", cursor: "pointer", flexShrink: 0, maxWidth: "64px" }}
         >
-          <div style={{ padding: "2px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
+          <div style={{ padding: "2px", borderRadius: "50%", border: "2px solid #FF2C8F" }}>
             <EntityAvatar photoUrl={a.authorAvatarUrl} size={52} />
           </div>
           <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "64px" }}>{a.authorName}</span>
