@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
-import { setStoryPulseSharing, deleteStory } from "../data/sharedDirectories.js";
+import { setStoryPulseSharing, deleteStory, toggleStoryBix } from "../data/sharedDirectories.js";
 
 const STORY_DURATION_MS = 5000;
 
@@ -13,10 +13,13 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
   const [index, setIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+  const [localBix, setLocalBix] = useState({});
   const timerRef = useRef(null);
 
   const story = author.stories[index];
   const isMine = story.authorId === myUserId;
+  const iBixed = localBix[story.id]?.iBixed ?? story.iBixed;
+  const bixCount = localBix[story.id]?.bixCount ?? story.bixCount ?? 0;
 
   const goNext = () => {
     if (index < author.stories.length - 1) {
@@ -53,6 +56,11 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
     goNext();
   };
 
+  const handleBix = () => {
+    setLocalBix((prev) => ({ ...prev, [story.id]: { iBixed: !iBixed, bixCount: iBixed ? bixCount - 1 : bixCount + 1 } }));
+    toggleStoryBix(story.id, iBixed);
+  };
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "#000", zIndex: 200, display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", gap: "4px", padding: "10px 12px 0" }}>
@@ -82,11 +90,39 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
         </button>
       </div>
 
-      <div style={{ position: "relative", flex: 1 }} onClick={(e) => { const x = e.clientX; if (x < window.innerWidth / 2) goPrev(); else goNext(); }}>
-        <img src={story.mediaUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-        {story.caption && (
-          <p style={{ position: "absolute", bottom: "20px", left: "16px", right: "16px", color: "#fff", fontSize: "14px", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{story.caption}</p>
-        )}
+      <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div
+          style={{ flex: 1, position: "relative", minHeight: 0 }}
+          onClick={(e) => {
+            const x = e.clientX;
+            if (x < window.innerWidth / 2) goPrev();
+            else goNext();
+          }}
+        >
+          <img src={story.mediaUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "top" }} />
+          {story.caption && (
+            <p style={{ position: "absolute", bottom: "10px", left: "16px", right: "16px", color: "#fff", fontSize: "14px", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{story.caption}</p>
+          )}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", padding: "14px 16px", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={handleBix}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: iBixed ? "#FF2C8F" : "none",
+              border: "2px solid #FF2C8F",
+              borderRadius: "999px",
+              padding: "8px 16px",
+              cursor: "pointer",
+            }}
+          >
+            <NavIcon name="heart" size={17} color={iBixed ? "#fff" : "#FF2C8F"} filled={iBixed} />
+            {bixCount > 0 && <span style={{ fontSize: "13px", fontWeight: 700, color: iBixed ? "#fff" : "#FF2C8F" }}>{bixCount}</span>}
+          </button>
+        </div>
       </div>
 
       {showMenu && (
@@ -106,3 +142,4 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
     </div>
   );
 }
+

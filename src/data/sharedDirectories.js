@@ -499,6 +499,8 @@ export async function loadRoomStories(salonCode) {
     createdAt: s.created_at,
     contextType: "room",
     sharedToPulse: s.shared_to_pulse,
+    bixCount: s.bix_count,
+    iBixed: s.i_bixed,
   }));
 }
 
@@ -520,6 +522,8 @@ export async function loadPulseStories() {
     contextType: s.context_type,
     contextId: s.context_id,
     sharedToPulse: s.shared_to_pulse,
+    bixCount: s.bix_count,
+    iBixed: s.i_bixed,
   }));
 }
 
@@ -546,6 +550,21 @@ export async function loadMyStories() {
     expiresAt: s.expires_at,
     sharedToPulse: s.shared_to_pulse,
   }));
+}
+
+export async function toggleStoryBix(storyId, alreadyBixed) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié." };
+  if (alreadyBixed) {
+    const { error } = await supabase.from("story_bix").delete().eq("story_id", storyId).eq("user_id", user.id);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase.from("story_bix").insert({ story_id: storyId, user_id: user.id });
+    if (error) return { error: error.message };
+  }
+  return { ok: true };
 }
 
 export async function deleteStory(storyId) {
