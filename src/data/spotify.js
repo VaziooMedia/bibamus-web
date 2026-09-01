@@ -223,7 +223,7 @@ export async function addTrackToSpotifyPlaylist(accessToken, playlistId, spotify
     if (!response.ok) {
       const errText = await response.text();
       console.error("addTrackToSpotifyPlaylist:", response.status, errText);
-      return { error: "L'ajout à la playlist a échoué — réessayez." };
+      return { error: `L'ajout à la playlist a échoué (${response.status}) : ${errText.slice(0, 200)}` };
     }
     return { ok: true };
   } catch (e) {
