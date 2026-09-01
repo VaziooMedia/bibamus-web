@@ -222,6 +222,18 @@ export function HomeScreen({
                       {ev.name}
                       {ev.salonCode ? " 🎉" : ""}
                     </div>
+                    {(() => {
+                      const linkedVenue = ev.venueId ? venues.find((v) => v.id === ev.venueId) : null;
+                      // N'affiche le nom du lieu que si le titre personnalisé de la session
+                      // s'en écarte — sinon, le titre suffit déjà, pas besoin de le répéter.
+                      if (!linkedVenue || linkedVenue.name === ev.name) return null;
+                      return (
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "2px" }}>
+                          <NavIcon name="map-pin" size={11} color={COLORS.inkSoft} />
+                          {linkedVenue.name}
+                        </div>
+                      );
+                    })()}
                     <div style={{ fontSize: "12.5px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
                       <span
                         style={{
