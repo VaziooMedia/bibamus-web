@@ -16,6 +16,7 @@ import { AuthScreen } from "./components/AuthScreen.jsx";
 import { SessionHubScreen, RepertoireHubScreen, ComingSoonScreen } from "./components/HubScreens.jsx";
 import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
 import { EventDashboardScreen } from "./components/EventDashboardScreen.jsx";
+import { BibaMusicScreen } from "./components/BibaMusicScreen.jsx";
 import { RoundComposeScreen } from "./components/RoundComposeScreen.jsx";
 import { RoundTicketScreen } from "./components/RoundTicketScreen.jsx";
 import { NewEventScreen } from "./components/NewEventScreen.jsx";
@@ -1204,6 +1205,17 @@ export default function App() {
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
                 onDeactivateBibaBob={(code) => deactivateBibaBob(activeEventId, code)}
+                onGoToBibaMusic={() => setScreen("bibaMusic")}
+              />
+            )}
+            {screen === "bibaMusic" && currentEvent && (
+              <BibaMusicScreen
+                event={currentEvent}
+                updateEvent={updateEvent}
+                myBibroCode={profile.myBibroCode}
+                myName={profile.name}
+                myUserId={session.user.id}
+                onBack={() => setScreen("eventDashboard")}
               />
             )}
             {screen === "roundCompose" && currentEvent && (
@@ -1678,7 +1690,7 @@ export default function App() {
                 description="Cette fonctionnalité arrive dans un prochain bloc de la migration."
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

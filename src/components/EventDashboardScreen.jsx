@@ -4,17 +4,16 @@
 // l'app (Jetons, Participants, Notes intermédiaires, cagnotte,
 // note finale, section BibaRoom...).
 // ============================================================
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal } from "./DashboardParts.jsx";
-import { BibaMusicSection } from "./BibaMusicSection.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 
-export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob }) {
+export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");
@@ -60,12 +59,6 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const [editingRoundId, setEditingRoundId] = useState(null);
   const [confirmDeleteRoundId, setConfirmDeleteRoundId] = useState(null);
   const [participantsEditorOpen, setParticipantsEditorOpen] = useState(false);
-  const [bibaMusicOpen, setBibaMusicOpen] = useState(false);
-  const bibaMusicRef = useRef(null);
-  const goToBibaMusic = () => {
-    setBibaMusicOpen(true);
-    bibaMusicRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
   const [bibaBobModal, setBibaBobModal] = useState(null); // { code, name, mode: "activate"|"deactivate" }
   const newVenueItemsCount = computeMissingVenueItems(event, venue, drinksDirectory).length;
   const menuIsEmpty = event.menu.length === 0;
@@ -416,7 +409,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
         </div>
 
         <button
-          onClick={goToBibaMusic}
+          onClick={onGoToBibaMusic}
           style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
           title="BibaMusic"
         >
@@ -626,8 +619,6 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           </span>
         </button>
       </div>
-
-      <BibaMusicSection event={event} updateEvent={updateEvent} myBibroCode={myBibroCode} myName={myName} myUserId={myUserId} open={bibaMusicOpen} onOpenChange={setBibaMusicOpen} sectionRef={bibaMusicRef} />
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques</div>
