@@ -2,14 +2,19 @@
 // Écran "Mes infos" — édition du profil personnel — copié tel
 // quel depuis le prototype Claude.
 // ============================================================
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { COLORS, COUNTRIES, LANGUAGES, CITIES_BY_COUNTRY } from "../constants.js";
 import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
+import { redirectToSpotifyAuth, getMySpotifyStatus, disconnectSpotify } from "../data/spotify.js";
 
-export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onUploadPhoto, onGoToAdminUnlock, onLogout, onBack }) {
+export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onUploadPhoto, onGoToAdminUnlock, onLogout, onBack, myUserId }) {
+  const [spotifyStatus, setSpotifyStatus] = useState(null);
+  useEffect(() => {
+    getMySpotifyStatus().then(setSpotifyStatus);
+  }, []);
   const [firstName, setFirstName] = useState(myName || "");
   const [lastName, setLastName] = useState(profile.lastName || "");
   const [nickname, setNickname] = useState(profile.nickname || "");
@@ -367,6 +372,36 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       <PrimaryButton onClick={handleSave} disabled={!canSave} style={{ width: "100%" }}>
         Enregistrer
       </PrimaryButton>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px 16px", marginTop: "18px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+          <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>BibaMusic</span>
+        </div>
+        {spotifyStatus?.connected ? (
+          <>
+            <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "10px" }}>
+              Spotify connecté{spotifyStatus.displayName ? ` : ${spotifyStatus.displayName}` : ""}
+            </p>
+            <button
+              onClick={async () => {
+                await disconnectSpotify(myUserId);
+                setSpotifyStatus({ connected: false });
+              }}
+              style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "9px 14px", fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer", width: "100%" }}
+            >
+              Déconnecter Spotify
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={redirectToSpotifyAuth}
+            style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 14px", fontSize: "13px", fontWeight: 700, color: COLORS.paper, cursor: "pointer", width: "100%" }}
+          >
+            Connecter Spotify
+          </button>
+        )}
+      </div>
 
       {profile.isAdmin ? (
         <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "18px", textAlign: "center" }}>🛡️ Mode administrateur actif</p>

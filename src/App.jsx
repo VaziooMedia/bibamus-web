@@ -70,6 +70,7 @@ import {
   rejectContribution,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
+import { completeSpotifyAuth } from "./data/spotify.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, kcalForDrink } from "./utils.js";
 import { BEER_TYPES } from "./constants.js";
 
@@ -116,6 +117,18 @@ export default function App() {
       return "deleteAccount";
     }
     return "home";
+  });
+
+  // BibaMusic — retour de la connexion Spotify (OAuth PKCE). Le code d'autorisation arrive en
+  // paramètre d'URL sur bibamus.app/spotify-callback ; on le conserve ici jusqu'à ce que la
+  // session soit chargée, seul moment où on peut réellement finaliser l'échange.
+  const [spotifyAuthCode, setSpotifyAuthCode] = useState(() => {
+    if (window.location.pathname === "/spotify-callback") {
+      const code = new URLSearchParams(window.location.search).get("code");
+      window.history.replaceState(null, "", "/");
+      return code;
+    }
+    return null;
   });
 
   // Répertoires partagés (Supabase)
@@ -167,6 +180,25 @@ export default function App() {
     bibroCodeRef.current = profile.myBibroCode;
   }, [profile.myBibroCode]);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
+
+  // Finalise la connexion Spotify dès que la session est prête — ne peut pas se faire plus tôt,
+  // l'échange du code nécessite de savoir à quel compte Bibamus l'associer.
+  useEffect(() => {
+    if (!spotifyAuthCode || !profileLoaded || !session?.user?.id) return;
+    const code = spotifyAuthCode;
+    setSpotifyAuthCode(null);
+    completeSpotifyAuth(code, session.user.id).then((result) => {
+      setSpotifyConnectResult(result);
+      if (result.ok) {
+        alert(`Compte Spotify connecté${result.displayName ? ` : ${result.displayName}` : ""} !`);
+      } else if (result.error) {
+        alert(result.error);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spotifyAuthCode, profileLoaded, session?.user?.id]);
+
   const [events, setEvents] = useState(() => loadLocal("bibamus-events", []).map(normalizeEvent));
   const [bibros, setBibros] = useState(() => loadLocal("bibamus-bibros", []));
   const [bibroStatuses] = useState({});
@@ -1359,6 +1391,7 @@ export default function App() {
             {screen === "myInfo" && (
               <MyProfileScreen
                 myName={profile.name}
+                myUserId={session.user.id}
                 onRenameMe={(name) => setProfile((p) => ({ ...p, name }))}
                 profile={profile}
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}

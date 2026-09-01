@@ -639,3 +639,10 @@ export const WEEKDAY_SHORT_MON_FIRST = ["L", "M", "M", "J", "V", "S", "D"];
 // À incrémenter à chaque mise à jour envoyée — permet de vérifier d'un coup d'œil qu'un
 // déploiement a bien pris effet, plutôt que de deviner face à un souci de cache.
 export const APP_VERSION = "26.32";
+
+// BibaMusic — connexion Spotify (Phase 2). Le Client ID n'est pas secret, contrairement au
+// Client Secret — jamais utilisé côté client, jamais transmis ici (la méthode PKCE n'en a
+// pas besoin).
+export const SPOTIFY_CLIENT_ID = "fdb0749493684fd2aabf588362cd20a8";
+export const SPOTIFY_REDIRECT_URI = "https://bibamus.app/spotify-callback";
+export const SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private user-read-private";

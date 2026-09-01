@@ -1,0 +1,159 @@
+// ============================================================
+// BIBAMUS — BibaMusic Phase 2 : connexion Spotify (OAuth PKCE).
+// Méthode recommandée par Spotify pour une app cliente (ne
+// nécessite jamais d'exposer de Client Secret). Le jeton d'accès
+// est ensuite stocké côté Supabase, propre à chaque compte,
+// protégé par les règles de sécurité déjà en place sur "profiles"
+// (chacun ne lit jamais que son propre profil).
+// ============================================================
+import { SPOTIFY_CLIENT_ID, SPOTIFY_REDIRECT_URI, SPOTIFY_SCOPES } from "../constants.js";
+import { supabase } from "../supabaseClient.js";
+
+function generateCodeVerifier(length = 64) {
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let text = "";
+  const randomValues = crypto.getRandomValues(new Uint8Array(length));
+  randomValues.forEach((val) => (text += possible[val % possible.length]));
+  return text;
+}
+
+async function generateCodeChallenge(codeVerifier) {
+  const data = new TextEncoder().encode(codeVerifier);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+// Lance la connexion — redirige vers la page d'autorisation Spotify. Le vérificateur est
+// conservé en local (nécessaire pour l'échange final), jamais transmis à Spotify lui-même.
+export async function redirectToSpotifyAuth() {
+  const verifier = generateCodeVerifier();
+  const challenge = await generateCodeChallenge(verifier);
+  localStorage.setItem("bibamus-spotify-verifier", verifier);
+
+  const params = new URLSearchParams({
+    client_id: SPOTIFY_CLIENT_ID,
+    response_type: "code",
+    redirect_uri: SPOTIFY_REDIRECT_URI,
+    scope: SPOTIFY_SCOPES,
+    code_challenge_method: "S256",
+    code_challenge: challenge,
+  });
+  window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
+}
+
+// Appelée sur la page de retour (/spotify-callback) — échange le code reçu contre un vrai
+// jeton d'accès, puis enregistre tout sur le profil du compte connecté.
+export async function completeSpotifyAuth(code, userId) {
+  const verifier = localStorage.getItem("bibamus-spotify-verifier");
+  if (!verifier) return { error: "Session de connexion expirée — réessayez." };
+
+  try {
+    const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: SPOTIFY_CLIENT_ID,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: SPOTIFY_REDIRECT_URI,
+        code_verifier: verifier,
+      }),
+    });
+    localStorage.removeItem("bibamus-spotify-verifier");
+
+    if (!tokenResponse.ok) return { error: "La connexion Spotify a échoué — réessayez." };
+    const tokenData = await tokenResponse.json();
+
+    const profileResponse = await fetch("https://api.spotify.com/v1/me", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const spotifyProfile = profileResponse.ok ? await profileResponse.json() : null;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        spotify_access_token: tokenData.access_token,
+        spotify_refresh_token: tokenData.refresh_token,
+        spotify_token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+        spotify_user_id: spotifyProfile?.id || null,
+        spotify_display_name: spotifyProfile?.display_name || null,
+      })
+      .eq("id", userId);
+
+    if (error) return { error: error.message };
+    return { ok: true, displayName: spotifyProfile?.display_name };
+  } catch (e) {
+    return { error: "La connexion Spotify a échoué — réessayez." };
+  }
+}
+
+export async function getMySpotifyStatus() {
+  const { data, error } = await supabase.rpc("get_my_spotify_status");
+  if (error) {
+    console.error("getMySpotifyStatus:", error);
+    return { connected: false };
+  }
+  return data;
+}
+
+export async function disconnectSpotify(userId) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      spotify_access_token: null,
+      spotify_refresh_token: null,
+      spotify_token_expires_at: null,
+      spotify_user_id: null,
+      spotify_display_name: null,
+    })
+    .eq("id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+// Rafraîchit le jeton d'accès si besoin (expiration ~1h) — la méthode PKCE permet de le faire
+// directement depuis le client, sans exposer de Secret, exactement comme pour la connexion.
+export async function ensureFreshSpotifyToken(userId) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("spotify_access_token, spotify_refresh_token, spotify_token_expires_at")
+    .eq("id", userId)
+    .single();
+
+  if (!profile?.spotify_refresh_token) return null;
+
+  const stillValid = profile.spotify_token_expires_at && new Date(profile.spotify_token_expires_at).getTime() - Date.now() > 60000;
+  if (stillValid) return profile.spotify_access_token;
+
+  try {
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: SPOTIFY_CLIENT_ID,
+        grant_type: "refresh_token",
+        refresh_token: profile.spotify_refresh_token,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    await supabase
+      .from("profiles")
+      .update({
+        spotify_access_token: data.access_token,
+        spotify_token_expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
+        // Spotify ne renvoie pas toujours un nouveau refresh_token — on garde l'ancien si absent.
+        ...(data.refresh_token ? { spotify_refresh_token: data.refresh_token } : {}),
+      })
+      .eq("id", userId);
+
+    return data.access_token;
+  } catch (e) {
+    console.error("ensureFreshSpotifyToken:", e);
+    return null;
+  }
+}
