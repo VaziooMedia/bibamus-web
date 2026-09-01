@@ -2,11 +2,12 @@
 // Écran d'accueil (Home) — copié tel quel depuis le prototype
 // Claude, avec juste le nom renommé en HomeScreen pour plus de clarté.
 // ============================================================
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, APP_VERSION } from "../constants.js";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
+import { loadPulseFeed } from "../data/sharedDirectories.js";
 
 const CHECKIN_MAX_AGE_MS = 4 * 60 * 60 * 1000;
 
@@ -32,41 +33,6 @@ const formatTime = (timestamp) => {
 };
 
 
-function computePulseEntries(bibros, bibroStatuses) {
-  const entries = [];
-  bibros.forEach((b) => {
-    const status = bibroStatuses[b.code];
-    if (!status) return;
-    const label = b.alias || b.name;
-    if (isFreshCheckIn(status)) {
-      entries.push({
-        id: `checkin-${b.code}`,
-        timestamp: status.checkedInAt,
-        icon: "📍",
-        text: (
-          <>
-            <strong>{label}</strong> vient de se checker à {status.checkedInVenueName}
-          </>
-        ),
-      });
-    }
-    if (status.activeSalonName) {
-      entries.push({
-        id: `salon-${b.code}`,
-        timestamp: status.updatedAt || status.checkedInAt || 0,
-        icon: "🎉",
-        text: (
-          <>
-            <strong>{label}</strong> est en soirée : {status.activeSalonName}
-          </>
-        ),
-      });
-    }
-  });
-  entries.sort((a, b) => b.timestamp - a.timestamp);
-  return entries;
-}
-
 export function HomeScreen({
   events,
   eventTotal,
@@ -91,6 +57,11 @@ export function HomeScreen({
   lastName,
   venues,
 }) {
+  const [pulseEntries, setPulseEntries] = useState(null);
+  useEffect(() => {
+    loadPulseFeed(null, 3).then(setPulseEntries);
+  }, []);
+
   // Filet de sécurité supplémentaire — vérifie, au retour sur l'accueil, si un événement
   // partagé encore actif de son côté n'a pas déjà été clôturé par un autre participant
   // pendant ce temps (le tableau de bord fait cette même vérification en continu, mais
@@ -303,7 +274,37 @@ export function HomeScreen({
 
       {bibaPulseVisible &&
         (() => {
-          const pulseEntries = computePulseEntries(bibros, bibroStatuses).slice(0, 3);
+          const entries = pulseEntries || [];
+          const textFor = (entry) => {
+            const name = entry.actorName || "Quelqu'un";
+            const venue = entry.venueId ? venues.find((v) => v.id === entry.venueId) : entry.objectType === "venue" ? venues.find((v) => v.id === entry.objectId) : null;
+            switch (entry.eventType) {
+              case "venue_visit":
+                return (
+                  <>
+                    <strong>{name}</strong> est passé·e chez {venue?.name || "un établissement"}
+                  </>
+                );
+              case "product_discovered":
+                return (
+                  <>
+                    <strong>{name}</strong> vient de découvrir un produit
+                  </>
+                );
+              case "database_contribution":
+                return (
+                  <>
+                    <strong>{name}</strong> a enrichi la Database
+                  </>
+                );
+              default:
+                return (
+                  <>
+                    <strong>{name}</strong> a une nouvelle activité
+                  </>
+                );
+            }
+          };
           return (
             <button
               onClick={goToBibaPulse}
@@ -315,18 +316,17 @@ export function HomeScreen({
                   <span style={{ color: COLORS.ink }}>Biba</span>
                   <span style={{ color: COLORS.amber }}>Pulse</span>
                 </span>
-                <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.5px", color: COLORS.redFluo, background: COLORS.paperAlt, borderRadius: "999px", padding: "3px 8px" }}>Soon</span>
               </div>
-              {pulseEntries.length === 0 ? (
+              {entries.length === 0 ? (
                 <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
                   <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>En attente des premières activités.</p>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {pulseEntries.map((entry) => (
+                  {entries.map((entry) => (
                     <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                      <span style={{ fontSize: "15px", flexShrink: 0 }}>{entry.icon}</span>
-                      <span style={{ fontSize: "13.5px", color: COLORS.ink }}>{entry.text}</span>
+                      <NavIcon name="heart" size={15} color={COLORS.amber} filled />
+                      <span style={{ fontSize: "13.5px", color: COLORS.ink }}>{textFor(entry)}</span>
                     </div>
                   ))}
                 </div>

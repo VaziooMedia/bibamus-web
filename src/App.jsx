@@ -17,6 +17,7 @@ import { SessionHubScreen, RepertoireHubScreen, ComingSoonScreen } from "./compo
 import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
 import { EventDashboardScreen } from "./components/EventDashboardScreen.jsx";
 import { BibaMusicScreen } from "./components/BibaMusicScreen.jsx";
+import { BibaPulseScreen } from "./components/BibaPulseScreen.jsx";
 import { RoundComposeScreen } from "./components/RoundComposeScreen.jsx";
 import { RoundTicketScreen } from "./components/RoundTicketScreen.jsx";
 import { NewEventScreen } from "./components/NewEventScreen.jsx";
@@ -1686,12 +1687,29 @@ export default function App() {
                 onCancel={() => setScreen("myInfo")}
               />
             )}
-            {["bibaPulse", "games", "bibaMeet"].includes(screen) && (
+            {["games", "bibaMeet"].includes(screen) && (
               <ComingSoonScreen
                 onBack={() => setScreen("home")}
                 title={screen}
                 icon="bibamusic"
                 description="Cette fonctionnalité arrive dans un prochain bloc de la migration."
+              />
+            )}
+            {screen === "bibaPulse" && (
+              <BibaPulseScreen
+                onBack={() => setScreen("home")}
+                venues={venues}
+                drinksDirectory={drinksDirectory}
+                breweriesDirectory={breweriesDirectory}
+                brandsDirectory={brandsDirectory}
+                onOpenVenue={(id) => {
+                  setViewedVenueId(id);
+                  setScreen("venueDetail");
+                }}
+                onOpenDrink={(id) => {
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
               />
             )}
             {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (

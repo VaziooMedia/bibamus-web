@@ -1001,3 +1001,52 @@ function brandToRow(b, partial = false) {
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
 }
+
+/* ---------------- BIBAPULSE ---------------- */
+
+export async function loadPulseFeed(before = null, limit = 20) {
+  const { data, error } = await supabase.rpc("get_pulse_feed", { p_limit: limit, p_before: before });
+  if (error) {
+    console.error("loadPulseFeed:", error);
+    return [];
+  }
+  return data.map((row) => ({
+    id: row.id,
+    eventType: row.event_type,
+    actorId: row.actor_id,
+    actorName: row.actor_name,
+    actorAvatarUrl: row.actor_avatar_url,
+    objectType: row.object_type,
+    objectId: row.object_id,
+    venueId: row.venue_id,
+    roomSalonCode: row.room_salon_code,
+    visibility: row.visibility,
+    metadata: row.metadata,
+    bixCount: row.bix_count,
+    commentsCount: row.comments_count,
+    createdAt: row.created_at,
+    iBixed: row.i_bixed,
+  }));
+}
+
+export async function togglePulseBix(pulseEventId, alreadyBixed) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié." };
+  if (alreadyBixed) {
+    const { error } = await supabase.from("pulse_bix").delete().eq("pulse_event_id", pulseEventId).eq("user_id", user.id);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase.from("pulse_bix").insert({ pulse_event_id: pulseEventId, user_id: user.id });
+    if (error) return { error: error.message };
+  }
+  return { ok: true };
+}
+
+export async function toggleFollow(targetBibroCode) {
+  const { data, error } = await supabase.rpc("toggle_follow", { p_target_code: targetBibroCode });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return data;
+}
