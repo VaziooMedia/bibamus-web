@@ -123,9 +123,9 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
           <button
             onClick={pickHome}
             style={{
-              background: COLORS.surfaceAlt,
-              color: COLORS.amber,
-              border: `2px solid ${COLORS.amber}`,
+              background: selectedVenueId === "@home" ? COLORS.amber : COLORS.surface,
+              color: selectedVenueId === "@home" ? COLORS.paper : COLORS.ink,
+              border: `2px solid ${selectedVenueId === "@home" ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "8px 14px",
               fontSize: "13.5px",
@@ -133,14 +133,14 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
               cursor: "pointer",
             }}
           >
-            {selectedVenueId === "@home" ? "✓ " : ""}@Home
+            @Home
           </button>
           <button
             onClick={pickEventPlace}
             style={{
-              background: COLORS.surfaceAlt,
-              color: COLORS.amber,
-              border: `2px solid ${COLORS.amber}`,
+              background: selectedVenueId === "@event" ? COLORS.amber : COLORS.surface,
+              color: selectedVenueId === "@event" ? COLORS.paper : COLORS.ink,
+              border: `2px solid ${selectedVenueId === "@event" ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "8px 14px",
               fontSize: "13.5px",
@@ -148,7 +148,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
               cursor: "pointer",
             }}
           >
-            {selectedVenueId === "@event" ? "✓ " : ""}@Event
+            @Event
           </button>
           {venues.map((v) => (
             <button
@@ -157,7 +157,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
               style={{
                 background: selectedVenueId === v.id ? COLORS.amber : COLORS.surface,
                 color: selectedVenueId === v.id ? COLORS.paper : COLORS.ink,
-                border: `2px solid ${selectedVenueId === v.id ? COLORS.ink : COLORS.paperAlt}`,
+                border: `2px solid ${selectedVenueId === v.id ? COLORS.amber : COLORS.paperAlt}`,
                 borderRadius: "999px",
                 padding: "8px 14px",
                 fontSize: "13.5px",
