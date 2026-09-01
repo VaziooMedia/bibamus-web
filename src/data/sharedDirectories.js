@@ -92,6 +92,39 @@ export async function submitClaim(entityType, entityId, entityName, { companyNam
 // l'événement sans jamais connaître ses futurs consommateurs (Stats, Pulse, Badges,
 // Notifications) — ceux-ci s'y abonneront plus tard sans qu'aucune ligne de ce fichier n'ait
 // besoin de changer. N'échoue jamais bruyamment, comme trackEvent et reportCrash.
+// BibaPulse — types d'événements déjà câblés côté domaine (chantier "architecture des
+// événements métier") qui doivent aussi produire une activité sociale. Un type absent de
+// cette liste ne produit jamais de PulseEvent — c'est le comportement par défaut voulu.
+const PULSE_EVENT_MAP = {
+  DRINK_CHECKED: "product_discovered",
+  VENUE_CHECKED: "venue_visit",
+  PRODUCT_ADDED: "database_contribution",
+};
+
+// Émission centralisée d'un PulseEvent — jamais d'écriture directe en base depuis le client
+// (voir la fonction serveur create-pulse-event), qui applique le dédoublonnage et la
+// confidentialité par défaut.
+export async function createPulseEvent(eventType, objectType, objectId, options = {}) {
+  try {
+    const { error } = await supabase.functions.invoke("create-pulse-event", {
+      body: {
+        eventType,
+        objectType,
+        objectId,
+        sourceType: objectType,
+        sourceId: objectId,
+        venueId: options.venueId || null,
+        roomSalonCode: options.roomSalonCode || null,
+        visibility: options.visibility || null,
+        metadata: options.metadata || null,
+      },
+    });
+    if (error) console.error("createPulseEvent:", error);
+  } catch (e) {
+    console.error("createPulseEvent:", e);
+  }
+}
+
 export async function emitEvent(type, { actorBibroCode, entityType, entityId, payload, version = 1 } = {}) {
   try {
     await supabase.from("analytics_events").insert({
@@ -105,6 +138,11 @@ export async function emitEvent(type, { actorBibroCode, entityType, entityId, pa
     });
   } catch (e) {
     console.error("emitEvent:", e);
+  }
+
+  const pulseType = PULSE_EVENT_MAP[type];
+  if (pulseType && entityType && entityId) {
+    createPulseEvent(pulseType, entityType, entityId, { roomSalonCode: payload?.salonCode });
   }
 }
 
