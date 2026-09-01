@@ -128,35 +128,55 @@ export function HomeScreen({
           </div>
           <span style={{ fontSize: "10px", color: COLORS.inkSoft, marginTop: "-8px" }}>Version {APP_VERSION}</span>
         </div>
-        <button
-          onClick={goToProfile}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, margin: 0, display: "flex", alignItems: "center", height: "76px" }}
-        >
-          <span
+        <div style={{ position: "relative", width: "76px", height: "76px", flexShrink: 0 }}>
+          <button
+            onClick={goToProfile}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, margin: 0, display: "flex", alignItems: "center", height: "76px" }}
+          >
+            <span
+              style={{
+                width: "76px",
+                height: "76px",
+                borderRadius: "50%",
+                background: COLORS.paperAlt,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "26px",
+                flexShrink: 0,
+                border: `2px solid ${COLORS.paperAlt}`,
+                overflow: "hidden",
+              }}
+            >
+              {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={44} color={COLORS.amber} />}
+            </span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddStory("global", null);
+            }}
             style={{
-              width: "76px",
-              height: "76px",
+              position: "absolute",
+              bottom: 0,
+              right: 0,
+              width: "26px",
+              height: "26px",
               borderRadius: "50%",
-              background: COLORS.paperAlt,
+              background: "#FF2C8F",
+              border: `2px solid ${COLORS.paper}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "26px",
-              flexShrink: 0,
-              border: `2px solid ${COLORS.paperAlt}`, // will become a colored ring when a story is available
-              overflow: "hidden",
+              cursor: "pointer",
             }}
           >
-            {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={44} color={COLORS.amber} />}
-          </span>
-        </button>
+            <NavIcon name="plus" size={14} color="#fff" />
+          </button>
+        </div>
       </div>
 
-      <StoriesBar
-        stories={stories}
-        onAddStory={() => onAddStory("global", null)}
-        onOpenStory={onOpenStoryAuthor}
-      />
+      <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} />
 
       {bibros.some((b) => bibroStatuses[b.code] && (bibroStatuses[b.code].activeSalonName || isFreshCheckIn(bibroStatuses[b.code]))) && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>

@@ -62,50 +62,50 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#000", zIndex: 200, display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", gap: "4px", padding: "10px 12px 0" }}>
-        {author.stories.map((_, i) => (
-          <div key={i} style={{ flex: 1, height: "2.5px", background: "rgba(255,255,255,0.35)", borderRadius: "2px", overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${i < index ? 100 : i === index ? progress * 100 : 0}%`, background: "#fff" }} />
-          </div>
-        ))}
-      </div>
+    <div style={{ position: "fixed", inset: 0, background: "#000", zIndex: 200, overflow: "hidden" }}>
+      <img src={story.mediaUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
 
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px" }}>
-        <EntityAvatar photoUrl={author.authorAvatarUrl} size={32} />
-        <span style={{ color: "#fff", fontWeight: 700, fontSize: "13.5px", flex: 1 }}>{author.authorName}</span>
-        {story.contextType === "room" && (
-          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: "4px" }}>
-            <NavIcon name="ti-door-enter" size={12} color="rgba(255,255,255,0.7)" />
-            via BibaRoom
-          </span>
-        )}
-        {isMine && (
-          <button onClick={() => setShowMenu((m) => !m)} style={{ background: "none", border: "none", color: "#fff", fontSize: "20px", cursor: "pointer", padding: "4px" }}>
-            •••
-          </button>
-        )}
-        <button onClick={onClose} style={{ background: "none", border: "none", color: "#fff", fontSize: "22px", cursor: "pointer", padding: "4px" }}>
-          ✕
-        </button>
-      </div>
+      <div
+        style={{ position: "absolute", inset: 0 }}
+        onClick={(e) => {
+          const x = e.clientX;
+          if (x < window.innerWidth / 2) goPrev();
+          else goNext();
+        }}
+      />
 
-      <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div
-          style={{ flex: 1, position: "relative", minHeight: 0 }}
-          onClick={(e) => {
-            const x = e.clientX;
-            if (x < window.innerWidth / 2) goPrev();
-            else goNext();
-          }}
-        >
-          <img src={story.mediaUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "top" }} />
-          {story.caption && (
-            <p style={{ position: "absolute", bottom: "10px", left: "16px", right: "16px", color: "#fff", fontSize: "14px", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{story.caption}</p>
-          )}
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, background: "linear-gradient(rgba(0,0,0,0.55), transparent)", paddingBottom: "16px" }}>
+        <div style={{ display: "flex", gap: "4px", padding: "10px 12px 0" }}>
+          {author.stories.map((_, i) => (
+            <div key={i} style={{ flex: 1, height: "2.5px", background: "rgba(255,255,255,0.35)", borderRadius: "2px", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${i < index ? 100 : i === index ? progress * 100 : 0}%`, background: "#fff" }} />
+            </div>
+          ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", padding: "14px 16px", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px" }} onClick={(e) => e.stopPropagation()}>
+          <EntityAvatar photoUrl={author.authorAvatarUrl} size={32} />
+          <span style={{ color: "#fff", fontWeight: 700, fontSize: "13.5px", flex: 1 }}>{author.authorName}</span>
+          {story.contextType === "room" && (
+            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: "4px" }}>
+              <NavIcon name="ti-door-enter" size={12} color="rgba(255,255,255,0.7)" />
+              via BibaRoom
+            </span>
+          )}
+          {isMine && (
+            <button onClick={() => setShowMenu((m) => !m)} style={{ background: "none", border: "none", color: "#fff", fontSize: "20px", cursor: "pointer", padding: "4px" }}>
+              •••
+            </button>
+          )}
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#fff", fontSize: "22px", cursor: "pointer", padding: "4px" }}>
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.6))", paddingTop: "30px" }} onClick={(e) => e.stopPropagation()}>
+        {story.caption && <p style={{ margin: "0 16px 10px", color: "#fff", fontSize: "14px", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{story.caption}</p>}
+        <div style={{ display: "flex", alignItems: "center", padding: "0 16px 16px" }}>
           <button
             onClick={handleBix}
             style={{
