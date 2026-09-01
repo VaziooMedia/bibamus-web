@@ -8,8 +8,14 @@ import { normalizeUrl } from "../utils.js";
 // propose un morceau (titre + lien facultatif, collé à la main), Bix les propositions des
 // autres, la liste s'ordonne par popularité. Une vraie connexion Spotify (recherche dans le
 // catalogue, création automatique de playlist) viendra dans une phase séparée.
-export function BibaMusicSection({ event, updateEvent, myBibroCode, myName }) {
-  const [open, setOpen] = useState(false);
+export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, open: openProp, onOpenChange, sectionRef }) {
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp != null ? openProp : openInternal;
+  const setOpen = (value) => {
+    const next = typeof value === "function" ? value(open) : value;
+    if (onOpenChange) onOpenChange(next);
+    else setOpenInternal(next);
+  };
   const [titleInput, setTitleInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
 
@@ -50,7 +56,7 @@ export function BibaMusicSection({ event, updateEvent, myBibroCode, myName }) {
   };
 
   return (
-    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", marginBottom: "16px" }}>
+    <div ref={sectionRef} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", marginBottom: "16px" }}>
       <button
         onClick={() => setOpen((o) => !o)}
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}

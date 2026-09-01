@@ -4,7 +4,7 @@
 // l'app (Jetons, Participants, Notes intermédiaires, cagnotte,
 // note finale, section BibaRoom...).
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
@@ -60,6 +60,12 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const [editingRoundId, setEditingRoundId] = useState(null);
   const [confirmDeleteRoundId, setConfirmDeleteRoundId] = useState(null);
   const [participantsEditorOpen, setParticipantsEditorOpen] = useState(false);
+  const [bibaMusicOpen, setBibaMusicOpen] = useState(false);
+  const bibaMusicRef = useRef(null);
+  const goToBibaMusic = () => {
+    setBibaMusicOpen(true);
+    bibaMusicRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const [bibaBobModal, setBibaBobModal] = useState(null); // { code, name, mode: "activate"|"deactivate" }
   const newVenueItemsCount = computeMissingVenueItems(event, venue, drinksDirectory).length;
   const menuIsEmpty = event.menu.length === 0;
@@ -410,30 +416,14 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
         </div>
 
         <button
-          disabled
-          style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "not-allowed", opacity: 0.55 }}
+          onClick={goToBibaMusic}
+          style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
           title="BibaMusic"
         >
           <NavIcon name="bibamusic" size={22} color={COLORS.amber} />
           <span style={{ fontSize: "11px", fontWeight: 700 }}>
             <span style={{ color: COLORS.ink }}>Biba</span>
             <span style={{ color: COLORS.amber }}>Music</span>
-          </span>
-          <span
-            style={{
-              position: "absolute",
-              top: "-8px",
-              right: "-8px",
-              fontSize: "8px",
-              fontWeight: 700,
-              letterSpacing: "0.3px",
-              color: COLORS.redFluo,
-              background: COLORS.paperAlt,
-              borderRadius: "999px",
-              padding: "2px 6px",
-            }}
-          >
-            Soon
           </span>
         </button>
 
@@ -637,7 +627,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
         </button>
       </div>
 
-      <BibaMusicSection event={event} updateEvent={updateEvent} myBibroCode={myBibroCode} myName={myName} />
+      <BibaMusicSection event={event} updateEvent={updateEvent} myBibroCode={myBibroCode} myName={myName} open={bibaMusicOpen} onOpenChange={setBibaMusicOpen} sectionRef={bibaMusicRef} />
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques</div>
