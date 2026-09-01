@@ -1702,6 +1702,7 @@ export default function App() {
                 drinksDirectory={drinksDirectory}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
+                myUserId={session.user.id}
                 onOpenVenue={(id) => {
                   setViewedVenueId(id);
                   setScreen("venueDetail");

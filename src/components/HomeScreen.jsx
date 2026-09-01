@@ -278,32 +278,13 @@ export function HomeScreen({
           const textFor = (entry) => {
             const name = entry.actorName || "Quelqu'un";
             const venue = entry.venueId ? venues.find((v) => v.id === entry.venueId) : entry.objectType === "venue" ? venues.find((v) => v.id === entry.objectId) : null;
-            switch (entry.eventType) {
-              case "venue_visit":
-                return (
-                  <>
-                    <strong>{name}</strong> est passé·e chez {venue?.name || "un établissement"}
-                  </>
-                );
-              case "product_discovered":
-                return (
-                  <>
-                    <strong>{name}</strong> vient de découvrir un produit
-                  </>
-                );
-              case "database_contribution":
-                return (
-                  <>
-                    <strong>{name}</strong> a enrichi la Database
-                  </>
-                );
-              default:
-                return (
-                  <>
-                    <strong>{name}</strong> a une nouvelle activité
-                  </>
-                );
-            }
+            const action = { product_discovered: "Découverte", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
+            const objName = entry.eventType === "venue_visit" ? venue?.name || "un établissement" : entry.eventType === "database_contribution" ? "Bibamus" : "un produit";
+            return (
+              <>
+                <strong>{name}</strong> · {action} @ <strong style={{ color: COLORS.amber }}>{objName}</strong>
+              </>
+            );
           };
           return (
             <button
@@ -324,7 +305,7 @@ export function HomeScreen({
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {entries.map((entry) => (
-                    <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
                       <EntityAvatar photoUrl={entry.actorAvatarUrl} size={28} />
                       <span style={{ fontSize: "13.5px", color: COLORS.ink }}>{textFor(entry)}</span>
                     </div>

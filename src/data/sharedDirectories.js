@@ -1024,8 +1024,10 @@ export async function loadPulseFeed(before = null, limit = 20) {
     metadata: row.metadata,
     bixCount: row.bix_count,
     commentsCount: row.comments_count,
+    incomingCount: row.incoming_count,
     createdAt: row.created_at,
     iBixed: row.i_bixed,
+    iAmIncoming: row.i_am_incoming,
   }));
 }
 
@@ -1049,4 +1051,50 @@ export async function toggleFollow(targetBibroCode) {
   if (error) return { error: error.message };
   if (data?.error) return { error: data.error };
   return data;
+}
+
+export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié." };
+  if (alreadyIncoming) {
+    const { error } = await supabase.from("pulse_incoming").delete().eq("pulse_event_id", pulseEventId).eq("user_id", user.id);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase.from("pulse_incoming").insert({ pulse_event_id: pulseEventId, user_id: user.id });
+    if (error) return { error: error.message };
+  }
+  return { ok: true };
+}
+
+export async function loadPulseReactors(pulseEventId) {
+  const { data, error } = await supabase.rpc("get_pulse_reactors", { p_pulse_event_id: pulseEventId });
+  if (error) {
+    console.error("loadPulseReactors:", error);
+    return { bix: [], incoming: [] };
+  }
+  return {
+    bix: data.filter((r) => r.kind === "bix").map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url })),
+    incoming: data.filter((r) => r.kind === "incoming").map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url })),
+  };
+}
+
+export async function loadPulseComments(pulseEventId) {
+  const { data, error } = await supabase.rpc("get_pulse_comments", { p_pulse_event_id: pulseEventId });
+  if (error) {
+    console.error("loadPulseComments:", error);
+    return [];
+  }
+  return data.map((c) => ({ id: c.id, userId: c.user_id, userName: c.user_name, userAvatarUrl: c.user_avatar_url, body: c.body, createdAt: c.created_at }));
+}
+
+export async function postPulseComment(pulseEventId, body) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié." };
+  const { error } = await supabase.from("pulse_comments").insert({ pulse_event_id: pulseEventId, user_id: user.id, body: body.trim() });
+  if (error) return { error: error.message };
+  return { ok: true };
 }
