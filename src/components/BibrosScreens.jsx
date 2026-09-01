@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
@@ -66,7 +66,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded }) {
             {pending.map((r) => (
               <div key={r.relationshipId} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
                 <EntityAvatar photoUrl={r.avatarUrl} size={36} />
-                <span style={{ flex: 1, minWidth: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</span>
+                <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
                 <button
                   onClick={() => respond(r.relationshipId, true)}
                   disabled={busyId === r.relationshipId}
@@ -98,7 +98,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded }) {
               <div key={s.userId} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
                 <EntityAvatar photoUrl={s.avatarUrl} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.name}</p>
+                  <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
                     {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.sameLocation ? "Même ville" : ""}
                   </p>

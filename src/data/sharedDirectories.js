@@ -1230,7 +1230,7 @@ export async function loadMyBibax() {
     console.error("loadMyBibax:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, avatarUrl: r.avatar_url, bibroCode: r.bibro_code }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code }));
 }
 
 export async function loadPendingBibaxRequests() {
@@ -1239,7 +1239,7 @@ export async function loadPendingBibaxRequests() {
     console.error("loadPendingBibaxRequests:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, avatarUrl: r.avatar_url, createdAt: r.created_at }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, createdAt: r.created_at }));
 }
 
 export async function loadSentBibaxRequests() {
@@ -1248,7 +1248,7 @@ export async function loadSentBibaxRequests() {
     console.error("loadSentBibaxRequests:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, avatarUrl: r.avatar_url, createdAt: r.created_at }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, createdAt: r.created_at }));
 }
 
 export async function loadBibaxSuggestions(limit = 10) {
@@ -1257,5 +1257,5 @@ export async function loadBibaxSuggestions(limit = 10) {
     console.error("loadBibaxSuggestions:", error);
     return [];
   }
-  return data.map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, mutualCount: r.mutual_count, sameLocation: r.same_location }));
+  return data.map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, mutualCount: r.mutual_count, sameLocation: r.same_location }));
 }

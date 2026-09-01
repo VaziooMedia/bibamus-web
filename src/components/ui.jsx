@@ -95,6 +95,20 @@ export function SectionTitle({ children }) {
   );
 }
 
+// Affichage standard du nom d'un Bibax — prénom + nom obligatoires, surnom éventuel en plus
+// petit à côté. Utilisé partout où un Bibax est listé (relations, demandes, suggestions),
+// pour ne jamais se retrouver avec un simple prénom qui ne permet pas de reconnaître qui est
+// qui.
+export function BibaxName({ name, lastName, nickname, style }) {
+  const fullName = [name, lastName].filter(Boolean).join(" ") || "Bibax";
+  return (
+    <span style={{ display: "inline-flex", alignItems: "baseline", gap: "6px", minWidth: 0, ...style }}>
+      <span style={{ fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName}</span>
+      {nickname && <span style={{ fontSize: "0.85em", fontWeight: 400, color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>« {nickname} »</span>}
+    </span>
+  );
+}
+
 export function EntityAvatar({ photoUrl, photoEmoji, size = 40, onClick, fallbackIcon = "bibamus-monogram", fallbackColor = COLORS.amber }) {
   const content = photoUrl ? null : photoEmoji ? photoEmoji : <NavIcon name={fallbackIcon} size={Math.round(size * 0.58)} color={fallbackColor} />;
   const style = {

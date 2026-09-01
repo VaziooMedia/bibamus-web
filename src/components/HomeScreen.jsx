@@ -5,9 +5,9 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, APP_VERSION } from "../constants.js";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
-import { EntityAvatar, CategoryTile } from "./ui.jsx";
+import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
-import { loadPulseFeed } from "../data/sharedDirectories.js";
+import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest } from "../data/sharedDirectories.js";
 
 function pulseTimeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -72,6 +72,18 @@ export function HomeScreen({
   useEffect(() => {
     loadPulseFeed(null, 3).then(setPulseEntries);
   }, []);
+
+  const [bibaxSuggestions, setBibaxSuggestions] = useState(null);
+  const [addingBibaxCode, setAddingBibaxCode] = useState(null);
+  useEffect(() => {
+    loadBibaxSuggestions(3).then(setBibaxSuggestions);
+  }, []);
+  const addSuggestedBibax = async (bibroCode) => {
+    setAddingBibaxCode(bibroCode);
+    await sendBibaxRequest(bibroCode);
+    setAddingBibaxCode(null);
+    setBibaxSuggestions((prev) => (prev || []).filter((s) => s.bibroCode !== bibroCode));
+  };
 
   // Filet de sécurité supplémentaire — vérifie, au retour sur l'accueil, si un événement
   // partagé encore actif de son côté n'a pas déjà été clôturé par un autre participant
@@ -327,6 +339,33 @@ export function HomeScreen({
             </button>
           );
         })()}
+
+      {bibaxSuggestions && bibaxSuggestions.length > 0 && (
+        <div style={{ marginBottom: "18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+            <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>Suggestions de Bibax</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {bibaxSuggestions.map((s) => (
+              <div key={s.userId} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
+                <EntityAvatar photoUrl={s.avatarUrl} size={32} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} style={{ fontSize: "13px", color: COLORS.ink }} />
+                  <p style={{ margin: "1px 0 0", fontSize: "10.5px", color: COLORS.inkSoft }}>{s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.sameLocation ? "Même ville" : ""}</p>
+                </div>
+                <button
+                  onClick={() => addSuggestedBibax(s.bibroCode)}
+                  disabled={addingBibaxCode === s.bibroCode}
+                  style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "6px 11px", fontSize: "11.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer", flexShrink: 0 }}
+                >
+                  Ajouter
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
