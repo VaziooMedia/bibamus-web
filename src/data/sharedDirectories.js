@@ -303,8 +303,8 @@ export async function loadMyProfile(userId) {
     email: data.email || "",
     birthDate: data.birth_date || null,
     country: data.country || null,
-    region: data.region || null,
     city: data.city || null,
+    locality: data.locality || "",
     latitude: data.latitude || null,
     longitude: data.longitude || null,
     bio: data.bio || "",
@@ -320,7 +320,6 @@ export async function loadMyProfile(userId) {
     shareBirthDate: data.share_birth_date,
     birthDateSharePrecision: data.birth_date_share_precision || "full",
     shareCountry: data.share_country,
-    shareRegion: data.share_region,
     shareCity: data.share_city,
     shareBio: data.share_bio,
     shareFacebook: data.share_facebook,
@@ -348,8 +347,8 @@ export async function updateMyProfile(
     email,
     birthDate,
     country,
-    region,
     city,
+    locality,
     latitude,
     longitude,
     bio,
@@ -365,7 +364,6 @@ export async function updateMyProfile(
     shareBirthDate,
     birthDateSharePrecision,
     shareCountry,
-    shareRegion,
     shareCity,
     shareBio,
     shareFacebook,
@@ -384,8 +382,8 @@ export async function updateMyProfile(
     email,
     birth_date: birthDate || null,
     country,
-    region,
     city,
+    locality,
     latitude,
     longitude,
     bio,
@@ -401,7 +399,6 @@ export async function updateMyProfile(
     share_birth_date: shareBirthDate,
     birth_date_share_precision: birthDateSharePrecision,
     share_country: shareCountry,
-    share_region: shareRegion,
     share_city: shareCity,
     share_bio: shareBio,
     share_facebook: shareFacebook,
@@ -1245,7 +1242,7 @@ export async function loadMyBibax() {
     console.error("loadMyBibax:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality }));
 }
 
 export async function loadPendingBibaxRequests() {
@@ -1254,7 +1251,7 @@ export async function loadPendingBibaxRequests() {
     console.error("loadPendingBibaxRequests:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, createdAt: r.created_at }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, createdAt: r.created_at }));
 }
 
 export async function loadSentBibaxRequests() {
@@ -1263,7 +1260,7 @@ export async function loadSentBibaxRequests() {
     console.error("loadSentBibaxRequests:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, createdAt: r.created_at }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, createdAt: r.created_at }));
 }
 
 export async function cancelBibaxRequest(relationshipId) {
@@ -1278,5 +1275,5 @@ export async function loadBibaxSuggestions(limit = 10) {
     console.error("loadBibaxSuggestions:", error);
     return [];
   }
-  return data.map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, mutualCount: r.mutual_count, distanceKm: r.distance_km }));
+  return data.map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, mutualCount: r.mutual_count, distanceKm: r.distance_km }));
 }

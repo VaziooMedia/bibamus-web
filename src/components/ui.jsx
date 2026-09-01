@@ -99,15 +99,16 @@ export function SectionTitle({ children }) {
 // petit à côté. Utilisé partout où un Bibax est listé (relations, demandes, suggestions),
 // pour ne jamais se retrouver avec un simple prénom qui ne permet pas de reconnaître qui est
 // qui.
-export function BibaxName({ name, lastName, nickname, city, style }) {
+export function BibaxName({ name, lastName, nickname, city, locality, style }) {
   const fullName = [name, lastName].filter(Boolean).join(" ") || "Bibax";
+  const location = city ? (locality ? `${city} (${locality})` : city) : null;
   return (
     <span style={{ display: "inline-flex", flexDirection: "column", minWidth: 0, ...style }}>
       <span style={{ display: "inline-flex", alignItems: "baseline", gap: "6px", minWidth: 0 }}>
         <span style={{ fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName}</span>
         {nickname && <span style={{ fontSize: "0.85em", fontWeight: 400, fontStyle: "italic", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nickname}</span>}
       </span>
-      {city && <span style={{ fontSize: "0.8em", fontWeight: 400, color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{city}</span>}
+      {location && <span style={{ fontSize: "0.8em", fontWeight: 400, color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{location}</span>}
     </span>
   );
 }

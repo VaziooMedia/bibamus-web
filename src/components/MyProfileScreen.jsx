@@ -21,8 +21,8 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [email, setEmail] = useState(profile.email || "");
   const [birthDate, setBirthDate] = useState(profile.birthDate || "");
   const [country, setCountry] = useState(profile.country || "");
-  const [region, setRegion] = useState(profile.region || "");
   const [city, setCity] = useState(profile.city || "");
+  const [locality, setLocality] = useState(profile.locality || "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState(null);
@@ -42,7 +42,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [shareBirthDate, setShareBirthDate] = useState(profile.shareBirthDate !== false);
   const [birthDateSharePrecision, setBirthDateSharePrecision] = useState(profile.birthDateSharePrecision || "full");
   const [shareCountry, setShareCountry] = useState(profile.shareCountry !== false);
-  const [shareRegion, setShareRegion] = useState(profile.shareRegion !== false);
   const [shareCity, setShareCity] = useState(profile.shareCity !== false);
   const [shareFacebook, setShareFacebook] = useState(profile.shareFacebook !== false);
   const [shareInstagram, setShareInstagram] = useState(profile.shareInstagram !== false);
@@ -73,7 +72,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
     </label>
   );
 
-  const canSave = firstName.trim().length > 0;
+  const canSave = firstName.trim().length > 0 && country.trim().length > 0 && city.trim().length > 0;
 
   const handleSave = () => {
     if (!canSave) return;
@@ -84,8 +83,8 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       email: email.trim(),
       birthDate,
       country: country.trim(),
-      region: region.trim(),
       city: city.trim(),
+      locality: locality.trim(),
       avatarUrl,
       bio: bio.trim(),
       displayNameField,
@@ -100,7 +99,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       shareBirthDate,
       birthDateSharePrecision,
       shareCountry,
-      shareRegion,
       shareCity,
       shareBio,
       shareFacebook,
@@ -301,8 +299,17 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
         </div>
       )}
 
-      <label style={labelStyle}>Pays</label>
-      <select value={country} onChange={(e) => setCountry(e.target.value)} style={fieldStyle}>
+      <label style={labelStyle}>Pays *</label>
+      <select
+        value={country}
+        onChange={(e) => {
+          setCountry(e.target.value);
+          // La commune dépend du pays choisi — si le pays est retiré ou change, une commune
+          // déjà saisie n'aurait plus de sens (elle appartient à la liste de l'ancien pays).
+          setCity("");
+        }}
+        style={fieldStyle}
+      >
         <option value="">Sélectionner...</option>
         {COUNTRIES.map((c) => (
           <option key={c} value={c}>
@@ -312,13 +319,23 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       </select>
       <ShareToggle checked={shareCountry} onChange={setShareCountry} />
 
-      <label style={labelStyle}>Région</label>
-      <input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="Ex. Wallonie" style={fieldStyle} />
-      <ShareToggle checked={shareRegion} onChange={setShareRegion} />
-
-      <label style={labelStyle}>Ville de résidence</label>
-      <CityAutocomplete value={city} onChange={setCity} country={country} placeholder={country ? `Ex. ${(CITIES_BY_COUNTRY[country] || [])[0] || "..."}` : "Choisissez d'abord un pays"} style={fieldStyle} />
+      <label style={labelStyle}>Commune de résidence *</label>
+      <CityAutocomplete
+        value={city}
+        onChange={setCity}
+        country={country}
+        placeholder={country ? `Ex. ${(CITIES_BY_COUNTRY[country] || [])[0] || "..."}` : "Choisissez d'abord un pays"}
+        style={fieldStyle}
+      />
       <ShareToggle checked={shareCity} onChange={setShareCity} />
+
+      <label style={labelStyle}>Ville / Village (optionnel)</label>
+      <input
+        value={locality}
+        onChange={(e) => setLocality(e.target.value)}
+        placeholder="Ex. un hameau ou un village de la commune"
+        style={{ ...fieldStyle, marginBottom: "18px" }}
+      />
 
       <label style={labelStyle}>Réseaux sociaux</label>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>

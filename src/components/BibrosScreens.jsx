@@ -82,7 +82,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
                 style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
               >
                 <EntityAvatar photoUrl={r.avatarUrl} size={36} />
-                <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
+                <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} locality={r.locality} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -124,7 +124,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
               >
                 <EntityAvatar photoUrl={r.avatarUrl} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                  <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} locality={r.locality} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>En attente de confirmation</p>
                 </div>
                 <button
@@ -163,7 +163,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
               >
                 <EntityAvatar photoUrl={s.avatarUrl} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                  <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
                     {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}
                   </p>
@@ -365,7 +365,7 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
   const etiquetteParts = [];
   if (bibro.nickname) etiquetteParts.push(bibro.nickname);
   if (bibro.birthDate) etiquetteParts.push(age != null ? `${formatSharedBirthDate(bibro.birthDate)} (${age} ans)` : formatSharedBirthDate(bibro.birthDate));
-  const hasContactInfo = bibro.email || bibro.country || bibro.region || bibro.city;
+  const hasContactInfo = bibro.email || bibro.country || bibro.city || bibro.locality;
   const hasSocials = bibro.facebookUrl || bibro.instagramUrl || bibro.tiktokUrl || bibro.snapchatUrl;
   const records = bibro.records;
   const ranking = bibro.visitRanking;
@@ -454,16 +454,16 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
                 <span style={{ fontWeight: 600 }}>{bibro.country}</span>
               </div>
             )}
-            {bibro.region && (
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span style={{ color: COLORS.inkSoft }}>Région</span>
-                <span style={{ fontWeight: 600 }}>{bibro.region}</span>
-              </div>
-            )}
             {bibro.city && (
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span style={{ color: COLORS.inkSoft }}>Ville</span>
+                <span style={{ color: COLORS.inkSoft }}>Commune</span>
                 <span style={{ fontWeight: 600 }}>{bibro.city}</span>
+              </div>
+            )}
+            {bibro.locality && (
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                <span style={{ color: COLORS.inkSoft }}>Ville / Village</span>
+                <span style={{ fontWeight: 600 }}>{bibro.locality}</span>
               </div>
             )}
           </div>
