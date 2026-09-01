@@ -15,30 +15,39 @@ import {
 } from "../data/spotify.js";
 
 // Ne fait défiler le texte que s'il dépasse réellement la largeur disponible — sinon, reste
-// simplement affiché tel quel, sans animation inutile.
+// simplement affiché tel quel, sans animation inutile. La vitesse est calculée à partir de la
+// largeur du texte, pour rester lente et lisible quelle que soit sa longueur.
 function ScrollingText({ children, style }) {
   const containerRef = useRef(null);
   const textRef = useRef(null);
   const [overflowing, setOverflowing] = useState(false);
+  const [duration, setDuration] = useState(10);
 
   useEffect(() => {
     if (containerRef.current && textRef.current) {
-      setOverflowing(textRef.current.scrollWidth > containerRef.current.clientWidth);
+      const isOverflowing = textRef.current.scrollWidth > containerRef.current.clientWidth;
+      setOverflowing(isOverflowing);
+      if (isOverflowing) setDuration(Math.max(8, textRef.current.scrollWidth / 25)); // ~25px/s — lent et lisible
     }
   }, [children]);
 
   return (
-    <div ref={containerRef} style={{ overflow: "hidden", whiteSpace: "nowrap", position: "relative" }}>
+    <div ref={containerRef} style={{ overflow: "hidden", whiteSpace: "nowrap", width: "100%" }}>
       <span
         ref={textRef}
         style={{
-          ...style,
+          fontSize: style?.fontSize,
+          fontWeight: style?.fontWeight,
+          color: style?.color,
+          margin: style?.margin,
           display: "inline-block",
-          ...(overflowing ? { animation: "bibamusic-scroll 7s linear infinite" } : { textOverflow: "ellipsis", overflow: "hidden", maxWidth: "100%" }),
+          ...(overflowing
+            ? { animation: `bibamusic-scroll ${duration}s linear infinite` }
+            : { textOverflow: "ellipsis", overflow: "hidden", maxWidth: "100%", verticalAlign: "top" }),
         }}
       >
-        {children}
-        {overflowing && <span style={{ paddingLeft: "40px" }}>{children}</span>}
+        <span>{children}</span>
+        {overflowing && <span style={{ paddingLeft: "48px" }}>{children}</span>}
       </span>
       {overflowing && (
         <style>{`
@@ -302,14 +311,14 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       </div>
 
       {/* Mode DJ — un participant peut modérer la playlist (supprimer n'importe quel morceau,
-      réordonner manuellement) ; sans DJ, tout le monde ne gère que ses propres propositions. */}
+      réordonner manuellement) ; sans MC, tout le monde ne gère que ses propres propositions. */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
         <p style={{ margin: 0, fontSize: "12px", color: COLORS.inkSoft }}>
           {event.djCode
             ? isDJ
-              ? "Vous êtes DJ de ce Bibroom."
-              : `DJ : ${(event.participants || []).find((p) => p.code === event.djCode)?.name || "quelqu'un"}`
-            : "Aucun DJ pour l'instant."}
+              ? "Vous êtes le MC de ce BibaRoom."
+              : `MC : ${(event.participants || []).find((p) => p.code === event.djCode)?.name || "quelqu'un"}`
+            : "Aucun MC pour l'instant."}
         </p>
         {isDJ ? (
           <button onClick={relinquishDJ} style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "6px 12px", fontSize: "11.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}>
@@ -317,7 +326,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           </button>
         ) : !event.djCode ? (
           <button onClick={becomeDJ} style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "6px 12px", fontSize: "11.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
-            Devenir DJ
+            Devenir MC
           </button>
         ) : null}
       </div>
@@ -388,7 +397,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
               En cours
             </p>
             <ScrollingText style={{ margin: "3px 0 0", fontSize: "15px", fontWeight: 800, color: COLORS.ink }}>{event.nowPlayingTrack.title}</ScrollingText>
-            {event.nowPlayingTrack.artist && <ScrollingText style={{ margin: "2px 0 0", fontSize: "13px", color: COLORS.inkSoft }}>{event.nowPlayingTrack.artist}</ScrollingText>}
+            {event.nowPlayingTrack.artist && <ScrollingText style={{ margin: "2px 0 0", fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>{event.nowPlayingTrack.artist}</ScrollingText>}
           </div>
         </div>
       ) : (
@@ -472,7 +481,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                   background: isNowPlaying ? COLORS.surfaceAlt : COLORS.surface,
                   border: `2px solid ${isNowPlaying ? COLORS.amber : COLORS.paperAlt}`,
                   borderRadius: "12px",
-                  padding: "11px 14px",
+                  padding: "11px 14px 18px 14px",
                   display: "flex",
                   alignItems: "center",
                   gap: "10px",
@@ -500,7 +509,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                 {s.albumArt && <img src={s.albumArt} alt="" style={{ width: "40px", height: "40px", borderRadius: "6px", flexShrink: 0 }} />}
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <ScrollingText style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>{s.title}</ScrollingText>
-                  {s.artist && <ScrollingText style={{ margin: "2px 0 0", fontSize: "12.5px", color: COLORS.inkSoft }}>{s.artist}</ScrollingText>}
+                  {s.artist && <ScrollingText style={{ margin: "2px 0 0", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft }}>{s.artist}</ScrollingText>}
                   <p style={{ margin: "3px 0 0", fontSize: "11.5px", color: COLORS.inkSoft }}>
                     Proposé par {s.proposedByName || "quelqu'un"}
                     {s.link && !s.spotifyUri && (
@@ -563,24 +572,22 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                   <NavIcon name="heart" size={13} color={iBixed ? COLORS.paper : COLORS.amber} filled={iBixed} />
                   {bixCount}
                 </button>
-                {isDJ && !isNowPlaying && !wasPlayed && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "1px", flexShrink: 0 }}>
-                    <button
-                      onClick={() => moveSong(s, -1)}
-                      style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", cursor: "pointer", padding: "0 2px", lineHeight: "13px" }}
-                    >
-                      ▲
-                    </button>
-                    <button
-                      onClick={() => moveSong(s, 1)}
-                      style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", cursor: "pointer", padding: "0 2px", lineHeight: "13px" }}
-                    >
-                      ▼
-                    </button>
-                  </div>
-                )}
                 {(isMine || isDJ) && (
-                  <button onClick={() => removeSong(s.id)} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "17px", cursor: "pointer", padding: "0 2px", flexShrink: 0 }}>
+                  <button
+                    onClick={() => removeSong(s.id)}
+                    style={{
+                      position: "absolute",
+                      bottom: "6px",
+                      right: "8px",
+                      background: "none",
+                      border: "none",
+                      color: COLORS.inkSoft,
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      padding: "2px",
+                      opacity: 0.6,
+                    }}
+                  >
                     ✕
                   </button>
                 )}
