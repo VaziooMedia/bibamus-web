@@ -194,9 +194,11 @@ export async function searchSpotifyTracks(accessToken, query) {
 }
 
 // Crée la playlist Spotify de la soirée pour ce BibaRoom, avec le compte actuellement connecté.
-export async function createSpotifyPlaylist(accessToken, spotifyUserId, playlistName) {
+// Utilise /me/playlists — l'ancien point d'entrée /users/{id}/playlists a été retiré par
+// Spotify pour les apps en Development Mode (migration de février 2026).
+export async function createSpotifyPlaylist(accessToken, playlistName) {
   try {
-    const response = await fetch(`https://api.spotify.com/v1/users/${spotifyUserId}/playlists`, {
+    const response = await fetch("https://api.spotify.com/v1/me/playlists", {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ name: playlistName, description: "Playlist de soirée créée avec Bibamus", public: false }),

@@ -4,7 +4,6 @@ import { NavIcon } from "./icons.jsx";
 import { normalizeUrl } from "../utils.js";
 import {
   getMySpotifyStatus,
-  getMySpotifyConnection,
   ensureFreshSpotifyToken,
   searchSpotifyTracks,
   createSpotifyPlaylist,
@@ -98,13 +97,12 @@ export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, myUs
   const createPlaylist = async () => {
     setCreatingPlaylist(true);
     const token = await ensureFreshSpotifyToken(myUserId);
-    const connection = await getMySpotifyConnection(myUserId);
-    if (!token || !connection?.spotify_user_id) {
+    if (!token) {
       setCreatingPlaylist(false);
       alert("Connexion Spotify indisponible — reconnectez votre compte depuis Mes infos.");
       return;
     }
-    const result = await createSpotifyPlaylist(token, connection.spotify_user_id, `Bibamus — ${event.name}`);
+    const result = await createSpotifyPlaylist(token, `Bibamus — ${event.name}`);
     setCreatingPlaylist(false);
     if (result.error) {
       alert(result.error);
