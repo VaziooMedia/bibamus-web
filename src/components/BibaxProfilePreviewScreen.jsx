@@ -27,7 +27,7 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "12px" }}>
           <EntityAvatar photoUrl={identity.avatarUrl} size={96} />
           <div style={{ marginTop: "14px" }}>
-            <BibaxName name={identity.firstName} lastName={identity.lastName} nickname={identity.nickname} style={{ fontSize: "20px" }} />
+            <BibaxName name={identity.firstName} lastName={identity.lastName} nickname={identity.nickname} city={identity.city} style={{ fontSize: "20px" }} />
           </div>
           {(identity.city || identity.country) && (
             <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "4px" }}>{[identity.city, identity.country].filter(Boolean).join(", ")}</p>

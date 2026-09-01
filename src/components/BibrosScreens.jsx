@@ -82,7 +82,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
                 style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
               >
                 <EntityAvatar photoUrl={r.avatarUrl} size={36} />
-                <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
+                <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -124,7 +124,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
               >
                 <EntityAvatar photoUrl={r.avatarUrl} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                  <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>En attente de confirmation</p>
                 </div>
                 <button
@@ -163,7 +163,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
               >
                 <EntityAvatar photoUrl={s.avatarUrl} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                  <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
                     {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.sameLocation ? "Même ville" : ""}
                   </p>

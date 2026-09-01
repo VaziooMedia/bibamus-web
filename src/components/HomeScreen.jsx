@@ -404,7 +404,7 @@ export function HomeScreen({
                 >
                   <EntityAvatar photoUrl={s.avatarUrl} size={32} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} style={{ fontSize: "13px", color: COLORS.ink }} />
+                    <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} style={{ fontSize: "13px", color: COLORS.ink }} />
                     <p style={{ margin: "1px 0 0", fontSize: "10.5px", color: COLORS.inkSoft }}>{s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.sameLocation ? "Même ville" : ""}</p>
                   </div>
                   <span
