@@ -396,6 +396,7 @@ export const normalizeEvent = (e) => ({
   personalOrders: e.personalOrders || [],
   ticketPurchases: e.ticketPurchases || [],
   participants: e.participants || [],
+  playlist: e.playlist || [],
   bibaBob: e.bibaBob || {},
   pot: e.pot || null,
   splitParticipants: e.splitParticipants || null,

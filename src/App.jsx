@@ -370,6 +370,7 @@ export default function App() {
       bibaBob: {},
       paused: false,
       participants: [],
+      playlist: [],
     };
 
     if (isSalon) {

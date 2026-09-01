@@ -5,21 +5,10 @@
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
+import { PageHeader, PageFooterNav, PrimaryButton, SectionTitle } from "./ui.jsx";
 import { ParticipantsEditor, PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { capitalizeFirst, todayISO } from "../utils.js";
-
-// Style de titre de section standard — barre verticale verte fluo + texte blanc. Utilisé pour
-// "Lieu", "Titre de la session", "Participants", "Choix du mode", "Type de paiement".
-function SectionTitle({ children }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-      <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-      <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>{children}</span>
-    </div>
-  );
-}
 
 export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, venues = [], publicVenues = [], onResolvePublicVenue, bibros = [] }) {
   const [name, setName] = useState("");

@@ -84,6 +84,17 @@ export function ScrollToTopButton() {
   );
 }
 
+// Style de titre de section standard dans toute l'app — barre verticale verte fluo + texte
+// blanc. Utilisé pour tout titre de sous-section (ex. "Lieu", "Participants", "BibaMusic"...).
+export function SectionTitle({ children }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+      <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+      <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>{children}</span>
+    </div>
+  );
+}
+
 export function EntityAvatar({ photoUrl, photoEmoji, size = 40, onClick, fallbackIcon = "bibamus-monogram", fallbackColor = COLORS.amber }) {
   const content = photoUrl ? null : photoEmoji ? photoEmoji : <NavIcon name={fallbackIcon} size={Math.round(size * 0.58)} color={fallbackColor} />;
   const style = {

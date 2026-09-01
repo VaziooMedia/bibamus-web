@@ -10,6 +10,7 @@ import { NavIcon } from "./icons.jsx";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal } from "./DashboardParts.jsx";
+import { BibaMusicSection } from "./BibaMusicSection.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 
@@ -635,6 +636,8 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           </span>
         </button>
       </div>
+
+      <BibaMusicSection event={event} updateEvent={updateEvent} myBibroCode={myBibroCode} myName={myName} />
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques</div>
