@@ -243,11 +243,17 @@ export async function getCurrentlyPlaying(accessToken) {
     const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (response.status === 204 || !response.ok) return null;
+    if (response.status === 204) return { error: "NOTHING_PLAYING" };
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("getCurrentlyPlaying:", response.status, errText);
+      return { error: `HTTP_${response.status}: ${errText.slice(0, 200)}` };
+    }
     const data = await response.json();
-    if (!data?.item) return null;
+    if (!data?.item) return { error: "NO_ITEM" };
     return { uri: data.item.uri, isPlaying: !!data.is_playing };
   } catch (e) {
-    return null;
+    console.error("getCurrentlyPlaying:", e);
+    return { error: String(e) };
   }
 }

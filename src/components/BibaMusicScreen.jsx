@@ -25,6 +25,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
   const [searching, setSearching] = useState(false);
   const [creatingPlaylist, setCreatingPlaylist] = useState(false);
   const [addingId, setAddingId] = useState(null);
+  const [nowPlayingDebug, setNowPlayingDebug] = useState(null);
   const searchDebounce = useRef(null);
 
   useEffect(() => {
@@ -39,11 +40,25 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     if (!spotifyConnected) return;
     const poll = async () => {
       const token = await ensureFreshSpotifyToken(myUserId);
-      if (!token) return;
+      if (!token) {
+        setNowPlayingDebug("Pas de jeton Spotify valide.");
+        return;
+      }
       const current = await getCurrentlyPlaying(token);
-      if (!current?.uri) return;
+      if (current?.error) {
+        setNowPlayingDebug(current.error);
+        return;
+      }
+      if (!current?.uri) {
+        setNowPlayingDebug("Aucun morceau détecté.");
+        return;
+      }
       const matchingSong = (event.playlist || []).find((s) => s.spotifyUri === current.uri);
-      if (!matchingSong) return;
+      if (!matchingSong) {
+        setNowPlayingDebug(`Morceau en cours (${current.uri}) ne correspond à aucune proposition Bibamus.`);
+        return;
+      }
+      setNowPlayingDebug(null);
       updateEvent(event.id, (e) => {
         if (e.nowPlayingUri === current.uri) return e;
         const playedUris = new Set(e.playedUris || []);
@@ -159,7 +174,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
-        <NavIcon name="bibamusic" size={28} color={COLORS.amber} />
+        <NavIcon name="bibamusic" size={36} color={COLORS.amber} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Music</span>
@@ -188,8 +203,13 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
             marginBottom: "18px",
           }}
         >
-          <NavIcon name="bibamusic" size={20} color={COLORS.paper} />
-          Ouvrir la playlist dans Spotify
+          <NavIcon name="bibamusic" size={26} color={COLORS.paper} />
+          Ouvrir dans Spotify
+          {playlist.filter((s) => s.addedToPlaylist).length > 0 && (
+            <span style={{ fontSize: "12px", fontWeight: 700, opacity: 0.85 }}>
+              ({playlist.filter((s) => s.addedToPlaylist).length} titre{playlist.filter((s) => s.addedToPlaylist).length > 1 ? "s" : ""})
+            </span>
+          )}
         </a>
       ) : spotifyConnected ? (
         <button
@@ -231,9 +251,14 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           </div>
         </div>
       ) : (
-        <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "18px" }}>
-          Personne ne diffuse la playlist pour l'instant.
-        </p>
+        <>
+          <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: nowPlayingDebug ? "4px" : "18px" }}>
+            Personne ne diffuse la playlist pour l'instant.
+          </p>
+          {nowPlayingDebug && spotifyConnected && (
+            <p style={{ fontSize: "10.5px", color: COLORS.inkSoft, opacity: 0.6, marginBottom: "18px" }}>Diagnostic : {nowPlayingDebug}</p>
+          )}
+        </>
       ))}
 
       {/* Proposition d'un morceau */}
@@ -245,7 +270,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
             if (spotifyConnected) runSearch(e.target.value);
           }}
           onKeyDown={(e) => e.key === "Enter" && !spotifyConnected && proposeManual()}
-          placeholder={spotifyConnected ? "Chercher un titre sur Spotify..." : "Titre — Artiste"}
+          placeholder={spotifyConnected ? "Chercher un titre sur Spotify ..." : "Titre — Artiste"}
           style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", background: COLORS.surface, color: COLORS.ink, outline: "none" }}
         />
 
@@ -315,10 +340,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                 {s.albumArt && <img src={s.albumArt} alt="" style={{ width: "40px", height: "40px", borderRadius: "6px", flexShrink: 0 }} />}
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>
-                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {s.title}
-                      {s.artist ? ` — ${s.artist}` : ""}
-                    </span>
+                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.title}</span>
                     {isNowPlaying && (
                       <span style={{ flexShrink: 0, fontSize: "9.5px", fontWeight: 700, letterSpacing: "0.3px", color: COLORS.paper, background: COLORS.amber, borderRadius: "999px", padding: "2px 7px" }}>
                         EN COURS
@@ -330,9 +352,10 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                       </span>
                     )}
                   </p>
+                  {s.artist && <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.artist}</p>}
                   <p style={{ margin: "3px 0 0", fontSize: "11.5px", color: COLORS.inkSoft }}>
                     Proposé par {s.proposedByName || "quelqu'un"}
-                    {s.link && (
+                    {s.link && !s.spotifyUri && (
                       <>
                         {" · "}
                         <a href={normalizeUrl(s.link)} target="_blank" rel="noreferrer" style={{ color: COLORS.amber }}>
@@ -340,20 +363,38 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                         </a>
                       </>
                     )}
-                    {event.spotifyPlaylistId && s.spotifyUri && (
-                      <>
-                        {" · "}
-                        {s.addedToPlaylist ? (
-                          <span style={{ color: COLORS.amber }}>Ajouté ✓</span>
-                        ) : (
-                          <button onClick={() => addToPlaylist(s)} disabled={addingId === s.id} style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "11.5px", cursor: "pointer", padding: 0 }}>
-                            {addingId === s.id ? "Ajout..." : "+ Playlist"}
-                          </button>
-                        )}
-                      </>
-                    )}
                   </p>
                 </div>
+                {event.spotifyPlaylistId && s.spotifyUri && (
+                  <>
+                    {s.addedToPlaylist ? (
+                      <span style={{ flexShrink: 0, fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>✓</span>
+                    ) : (
+                      <button
+                        onClick={() => addToPlaylist(s)}
+                        disabled={addingId === s.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "28px",
+                          height: "28px",
+                          background: "none",
+                          border: `2px solid ${COLORS.amber}`,
+                          borderRadius: "999px",
+                          color: COLORS.amber,
+                          fontSize: "15px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          flexShrink: 0,
+                          padding: 0,
+                        }}
+                      >
+                        {addingId === s.id ? "…" : "+"}
+                      </button>
+                    )}
+                  </>
+                )}
                 <button
                   onClick={() => toggleBix(s.id)}
                   style={{
