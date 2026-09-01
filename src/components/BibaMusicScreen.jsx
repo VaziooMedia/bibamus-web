@@ -32,7 +32,7 @@ function ScrollingText({ children, style }) {
   }, [children]);
 
   return (
-    <div ref={containerRef} style={{ overflow: "hidden", whiteSpace: "nowrap", width: "100%" }}>
+    <div ref={containerRef} style={{ overflow: "hidden", whiteSpace: "nowrap", width: "100%", WebkitTextSizeAdjust: "100%", textSizeAdjust: "100%" }}>
       <span
         ref={textRef}
         style={{
@@ -41,6 +41,8 @@ function ScrollingText({ children, style }) {
           color: style?.color,
           margin: style?.margin,
           display: "inline-block",
+          WebkitTextSizeAdjust: "100%",
+          textSizeAdjust: "100%",
           ...(overflowing
             ? { animation: `bibamusic-scroll ${duration}s linear infinite` }
             : { textOverflow: "ellipsis", overflow: "hidden", maxWidth: "100%", verticalAlign: "top" }),
@@ -233,15 +235,16 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
   const becomeDJ = () => updateEvent(event.id, (e) => ({ ...e, djCode: myBibroCode }));
   const relinquishDJ = () => updateEvent(event.id, (e) => ({ ...e, djCode: null }));
 
-  // Déplace un morceau dans le classement — fige l'ordre actuel en rangs manuels explicites,
-  // pour que la modération du DJ ne soit pas aussitôt écrasée par un nouveau Bix. Synchronise
-  // aussi vers la vraie playlist Spotify, comme pour le classement automatique.
-  const moveSong = async (song, direction) => {
+  // Déplace un morceau à une position précise dans la file d'attente — fige l'ordre actuel en
+  // rangs manuels explicites, pour que la modération du MC ne soit pas aussitôt écrasée par un
+  // nouveau Bix. La synchronisation vers la vraie playlist Spotify se fait ensuite pour le
+  // morceau qui se retrouve en tête (voir l'effet de synchronisation automatique plus haut).
+  const moveSongToIndex = (song, targetIndex) => {
     const idx = upcomingSongs.findIndex((s) => s.id === song.id);
-    const swapIdx = idx + direction;
-    if (swapIdx < 0 || swapIdx >= upcomingSongs.length) return;
+    if (idx === -1 || targetIndex === idx) return;
     const newOrder = [...upcomingSongs];
-    [newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]];
+    const [moved] = newOrder.splice(idx, 1);
+    newOrder.splice(targetIndex, 0, moved);
 
     updateEvent(event.id, (e) => ({
       ...e,
@@ -250,18 +253,51 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
         return rank === -1 ? s : { ...s, manualRank: rank };
       }),
     }));
+  };
 
-    if (event.spotifyPlaylistId && song.spotifyUri) {
-      const token = await ensureFreshSpotifyToken(myUserId);
-      if (!token) return;
-      const realOrder = await getSpotifyPlaylistOrder(token, event.spotifyPlaylistId);
-      if (!realOrder) return;
-      const fromIndex = realOrder.indexOf(song.spotifyUri);
-      const otherUri = upcomingSongs[swapIdx].spotifyUri;
-      const toIndex = otherUri ? realOrder.indexOf(otherUri) : -1;
-      if (fromIndex === -1 || toIndex === -1) return;
-      await reorderSpotifyPlaylistItem(token, event.spotifyPlaylistId, fromIndex, direction < 0 ? toIndex : toIndex + 1);
+  // Appui long puis glissement pour réordonner — seul le MC peut le faire, et seulement parmi
+  // les morceaux pas encore joués.
+  const [draggingId, setDraggingId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
+  const longPressTimer = useRef(null);
+  const dragStartPos = useRef(null);
+
+  const handlePointerDown = (song) => (e) => {
+    if (!isDJ) return;
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    longPressTimer.current = setTimeout(() => {
+      setDraggingId(song.id);
+      if (navigator.vibrate) navigator.vibrate(15);
+    }, 350);
+  };
+
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
     }
+  };
+
+  const handlePointerMove = (e) => {
+    if (longPressTimer.current && dragStartPos.current) {
+      const dx = Math.abs(e.clientX - dragStartPos.current.x);
+      const dy = Math.abs(e.clientY - dragStartPos.current.y);
+      if (dx > 8 || dy > 8) cancelLongPress(); // un simple scroll/défilement, pas une intention de glisser
+    }
+    if (!draggingId) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-song-row]");
+    setDragOverId(el?.getAttribute("data-song-row") || null);
+  };
+
+  const handlePointerUp = () => {
+    cancelLongPress();
+    if (draggingId && dragOverId && draggingId !== dragOverId) {
+      const song = upcomingSongs.find((s) => s.id === draggingId);
+      const targetIndex = upcomingSongs.findIndex((s) => s.id === dragOverId);
+      if (song && targetIndex !== -1) moveSongToIndex(song, targetIndex);
+    }
+    setDraggingId(null);
+    setDragOverId(null);
   };
 
   const createPlaylist = async () => {
@@ -473,19 +509,30 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
             const isMine = s.proposedByCode === myBibroCode;
             const isNowPlaying = s.spotifyUri && s.spotifyUri === event.nowPlayingUri;
             const wasPlayed = !isNowPlaying && s.spotifyUri && (event.playedUris || []).includes(s.spotifyUri);
+            const isReorderable = isDJ && !isNowPlaying && !wasPlayed;
+            const isDragging = draggingId === s.id;
+            const isDragOver = dragOverId === s.id && draggingId !== s.id;
             return (
               <div
                 key={s.id}
+                data-song-row={s.id}
+                onPointerDown={isReorderable ? handlePointerDown(s) : undefined}
+                onPointerMove={isReorderable || draggingId ? handlePointerMove : undefined}
+                onPointerUp={isReorderable || draggingId ? handlePointerUp : undefined}
+                onPointerCancel={isReorderable || draggingId ? handlePointerUp : undefined}
                 style={{
                   position: "relative",
-                  background: isNowPlaying ? COLORS.surfaceAlt : COLORS.surface,
+                  background: isDragOver ? COLORS.paperAlt : isNowPlaying ? COLORS.surfaceAlt : COLORS.surface,
                   border: `2px solid ${isNowPlaying ? COLORS.amber : COLORS.paperAlt}`,
                   borderRadius: "12px",
                   padding: "11px 14px 18px 14px",
                   display: "flex",
                   alignItems: "center",
                   gap: "10px",
-                  opacity: wasPlayed ? 0.6 : 1,
+                  opacity: isDragging ? 0.5 : wasPlayed ? 0.6 : 1,
+                  transform: isDragging ? "scale(1.02)" : "none",
+                  touchAction: isDragging ? "none" : "auto",
+                  userSelect: "none",
                 }}
               >
                 {(isNowPlaying || wasPlayed) && (
