@@ -201,6 +201,7 @@ export function HomeScreen({
                   key={ev.id}
                   onClick={() => openEvent(ev.id)}
                   style={{
+                    position: "relative",
                     textAlign: "left",
                     background: COLORS.surface,
                     border: `2px solid ${COLORS.paperAlt}`,
@@ -212,13 +213,37 @@ export function HomeScreen({
                     gap: "12px",
                   }}
                 >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "12px",
+                      right: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "12.5px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "50%",
+                        background: ev.paused ? "#FF9E2C" : "#22c55e",
+                        boxShadow: ev.paused ? "0 0 0 3px rgba(255, 158, 44, 0.28)" : "0 0 0 3px rgba(34, 197, 94, 0.28)",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ color: ev.paused ? "#FF9E2C" : COLORS.amber }}>{ev.paused ? "En pause" : "En cours"}</span>
+                  </span>
                   <EntityAvatar
                     photoUrl={ev.venueId ? venues.find((v) => v.id === ev.venueId)?.profilePhotoUrl : null}
                     photoEmoji={ev.venueId ? venues.find((v) => v.id === ev.venueId)?.avatarEmoji : null}
                     size={56}
                   />
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: "16px" }}>
+                    <div style={{ fontWeight: 700, fontSize: "16px", paddingRight: "70px" }}>
                       {ev.name}
                       {ev.salonCode ? " 🎉" : ""}
                     </div>
@@ -228,25 +253,12 @@ export function HomeScreen({
                       // s'en écarte — sinon, le titre suffit déjà, pas besoin de le répéter.
                       if (!linkedVenue || linkedVenue.name === ev.name) return null;
                       return (
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "2px" }}>
-                          <NavIcon name="map-pin" size={11} color={COLORS.inkSoft} />
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginTop: "2px" }}>
+                          <NavIcon name="map-pin" size={11} color={COLORS.amber} />
                           {linkedVenue.name}
                         </div>
                       );
                     })()}
-                    <div style={{ fontSize: "12.5px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
-                      <span
-                        style={{
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          background: ev.paused ? "#FF9E2C" : "#22c55e",
-                          boxShadow: ev.paused ? "0 0 0 3px rgba(255, 158, 44, 0.28)" : "0 0 0 3px rgba(34, 197, 94, 0.28)",
-                          flexShrink: 0,
-                        }}
-                      />
-                      <span style={{ color: ev.paused ? "#FF9E2C" : COLORS.amber }}>{ev.paused ? "En pause" : "En cours"}</span>
-                    </div>
                     {(ev.date || ev.createdAt) && (
                       <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "3px" }}>
                         {ev.date && <div>{formatDate(ev.date)}</div>}
@@ -264,6 +276,7 @@ export function HomeScreen({
                       borderRadius: "50%",
                       border: `2px solid ${COLORS.amber}40`,
                       flexShrink: 0,
+                      alignSelf: "flex-end",
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 14 14">
