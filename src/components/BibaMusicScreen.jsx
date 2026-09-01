@@ -544,7 +544,6 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           {sorted.map((s) => {
             const bixCount = (s.bix || []).length;
             const iBixed = (s.bix || []).includes(myBibroCode);
-            const isMine = s.proposedByCode === myBibroCode;
             const isNowPlaying = s.spotifyUri && s.spotifyUri === event.nowPlayingUri;
             const wasPlayed = !isNowPlaying && s.spotifyUri && (event.playedUris || []).includes(s.spotifyUri);
             const isReorderable = isDJ && !isNowPlaying && !wasPlayed;
@@ -634,6 +633,26 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                     )}
                   </>
                 )}
+                <button
+                  onClick={() => toggleBix(s.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    background: iBixed ? COLORS.amber : "none",
+                    border: `2px solid ${COLORS.amber}`,
+                    borderRadius: "999px",
+                    padding: "6px 11px",
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    color: iBixed ? COLORS.paper : COLORS.amber,
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  <NavIcon name="heart" size={13} color={iBixed ? COLORS.paper : COLORS.amber} filled={iBixed} />
+                  {bixCount}
+                </button>
                 {isReorderable && (
                   <div
                     onPointerDown={handlePointerDown(s)}
@@ -655,27 +674,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                     ))}
                   </div>
                 )}
-                <button
-                  onClick={() => toggleBix(s.id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    background: iBixed ? COLORS.amber : "none",
-                    border: `2px solid ${COLORS.amber}`,
-                    borderRadius: "999px",
-                    padding: "6px 11px",
-                    fontSize: "12.5px",
-                    fontWeight: 700,
-                    color: iBixed ? COLORS.paper : COLORS.amber,
-                    cursor: "pointer",
-                    flexShrink: 0,
-                  }}
-                >
-                  <NavIcon name="heart" size={13} color={iBixed ? COLORS.paper : COLORS.amber} filled={iBixed} />
-                  {bixCount}
-                </button>
-                {(isMine || isDJ) && (
+                {isDJ && (
                   <button
                     onClick={() => removeSong(s.id)}
                     style={{
