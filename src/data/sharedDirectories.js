@@ -106,13 +106,19 @@ const PULSE_EVENT_MAP = {
 // confidentialité par défaut.
 export async function createPulseEvent(eventType, objectType, objectId, options = {}) {
   try {
-    // Force la vérification (et le rafraîchissement si besoin) du jeton de session avant
-    // d'appeler la fonction serveur — sur iOS, une PWA restée un moment en arrière-plan peut
-    // reprendre avec un jeton expiré sans que le rafraîchissement automatique ait eu
-    // l'occasion de tourner, provoquant un "Session invalide" côté serveur.
-    await supabase.auth.getSession();
+    // Récupère explicitement le jeton actuel (rafraîchi si besoin) et le transmet lui-même —
+    // plutôt que de compter sur le mécanisme automatique de la librairie, qui peut garder une
+    // référence obsolète dans certains cas sur PWA iOS.
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      console.error("createPulseEvent: aucune session active.");
+      return;
+    }
 
     const { error } = await supabase.functions.invoke("create-pulse-event", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
       body: {
         eventType,
         objectType,
