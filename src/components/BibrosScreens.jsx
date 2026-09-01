@@ -297,7 +297,6 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
         )}
         {sortedBibros.map((b) => {
           const status = bibroStatuses[b.code];
-          const fullName = [b.firstName, b.lastName].filter(Boolean).join(" ") || b.name;
           return (
             <div
               key={b.code}
@@ -324,7 +323,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                     {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={19} color={COLORS.amber} />}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: "15px" }}>{fullName}</div>
+                    <BibaxName name={b.firstName || b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} style={{ fontSize: "15px" }} />
                   </div>
                 </div>
               </div>
