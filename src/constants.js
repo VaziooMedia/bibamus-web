@@ -645,4 +645,4 @@ export const APP_VERSION = "26.32";
 // pas besoin).
 export const SPOTIFY_CLIENT_ID = "fdb0749493684fd2aabf588362cd20a8";
 export const SPOTIFY_REDIRECT_URI = "https://bibamus.app/spotify-callback";
-export const SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private playlist-read-private user-read-private";
+export const SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private playlist-read-private user-read-private user-read-currently-playing";

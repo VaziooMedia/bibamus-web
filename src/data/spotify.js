@@ -232,3 +232,22 @@ export async function addTrackToSpotifyPlaylist(accessToken, playlistId, spotify
     return { error: "L'ajout à la playlist a échoué — réessayez." };
   }
 }
+
+// Lecture seule — ce que la personne connectée écoute actuellement sur son propre appareil.
+// Ne donne jamais accès à ce que quelqu'un d'autre écoute ; c'est justement pour ça que
+// seule la personne qui contrôle réellement la musique (enceinte connectée à son téléphone)
+// peut faire remonter une info utile — les autres participants la reçoivent ensuite via la
+// synchronisation déjà en place sur l'événement partagé.
+export async function getCurrentlyPlaying(accessToken) {
+  try {
+    const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (response.status === 204 || !response.ok) return null;
+    const data = await response.json();
+    if (!data?.item) return null;
+    return { uri: data.item.uri, isPlaying: !!data.is_playing };
+  } catch (e) {
+    return null;
+  }
+}

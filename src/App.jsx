@@ -406,6 +406,9 @@ export default function App() {
       playlist: [],
       spotifyPlaylistId: null,
       spotifyPlaylistUrl: null,
+      nowPlayingUri: null,
+      nowPlayingTrack: null,
+      playedUris: [],
     };
 
     if (isSalon) {

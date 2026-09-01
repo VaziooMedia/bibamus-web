@@ -9,6 +9,7 @@ import {
   searchSpotifyTracks,
   createSpotifyPlaylist,
   addTrackToSpotifyPlaylist,
+  getCurrentlyPlaying,
 } from "../data/spotify.js";
 
 // BibaMusic — page à part entière du BibaRoom, dédiée à la playlist collaborative de soirée.
@@ -29,6 +30,37 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
   useEffect(() => {
     getMySpotifyStatus().then((s) => setSpotifyConnected(!!s.connected));
   }, []);
+
+  // Vérifie périodiquement ce qui joue sur MON appareil — ne remonte l'info que si ce morceau
+  // fait partie de la playlist proposée par le groupe (sinon, ce serait juste ma propre écoute
+  // personnelle, sans rapport avec le Bibroom). Marque aussi le morceau précédent comme "déjà
+  // joué" dès que la lecture passe au suivant.
+  useEffect(() => {
+    if (!spotifyConnected) return;
+    const poll = async () => {
+      const token = await ensureFreshSpotifyToken(myUserId);
+      if (!token) return;
+      const current = await getCurrentlyPlaying(token);
+      if (!current?.uri) return;
+      const matchingSong = (event.playlist || []).find((s) => s.spotifyUri === current.uri);
+      if (!matchingSong) return;
+      updateEvent(event.id, (e) => {
+        if (e.nowPlayingUri === current.uri) return e;
+        const playedUris = new Set(e.playedUris || []);
+        if (e.nowPlayingUri) playedUris.add(e.nowPlayingUri);
+        return {
+          ...e,
+          nowPlayingUri: current.uri,
+          nowPlayingTrack: { title: matchingSong.title, artist: matchingSong.artist, albumArt: matchingSong.albumArt },
+          playedUris: Array.from(playedUris),
+        };
+      });
+    };
+    poll();
+    const interval = setInterval(poll, 15000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spotifyConnected, myUserId, event.id]);
 
   const playlist = event.playlist || [];
   const sorted = [...playlist].sort((a, b) => (b.bix || []).length - (a.bix || []).length || a.createdAt - b.createdAt);
@@ -173,6 +205,37 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
         </p>
       )}
 
+      {/* Faux lecteur — purement visuel, aucune lecture réelle depuis Bibamus. Affiche ce qui
+      joue actuellement, tel que remonté par la personne qui contrôle la musique. */}
+      {event.spotifyPlaylistId && (event.nowPlayingTrack ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            background: COLORS.surfaceAlt,
+            border: `2px solid ${COLORS.amber}`,
+            borderRadius: "14px",
+            padding: "14px",
+            marginBottom: "18px",
+          }}
+        >
+          {event.nowPlayingTrack.albumArt && <img src={event.nowPlayingTrack.albumArt} alt="" style={{ width: "64px", height: "64px", borderRadius: "8px", flexShrink: 0 }} />}
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.5px", color: COLORS.amber, textTransform: "uppercase" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
+              En cours
+            </p>
+            <p style={{ margin: "3px 0 0", fontSize: "15px", fontWeight: 800, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{event.nowPlayingTrack.title}</p>
+            {event.nowPlayingTrack.artist && <p style={{ margin: "2px 0 0", fontSize: "13px", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{event.nowPlayingTrack.artist}</p>}
+          </div>
+        </div>
+      ) : (
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "18px" }}>
+          Personne ne diffuse la playlist pour l'instant.
+        </p>
+      ))}
+
       {/* Proposition d'un morceau */}
       <div style={{ marginBottom: "18px", position: "relative" }}>
         <input
@@ -233,13 +296,39 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
             const bixCount = (s.bix || []).length;
             const iBixed = (s.bix || []).includes(myBibroCode);
             const isMine = s.proposedByCode === myBibroCode;
+            const isNowPlaying = s.spotifyUri && s.spotifyUri === event.nowPlayingUri;
+            const wasPlayed = !isNowPlaying && s.spotifyUri && (event.playedUris || []).includes(s.spotifyUri);
             return (
-              <div key={s.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "11px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <div
+                key={s.id}
+                style={{
+                  background: isNowPlaying ? COLORS.surfaceAlt : COLORS.surface,
+                  border: `2px solid ${isNowPlaying ? COLORS.amber : COLORS.paperAlt}`,
+                  borderRadius: "12px",
+                  padding: "11px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  opacity: wasPlayed ? 0.6 : 1,
+                }}
+              >
                 {s.albumArt && <img src={s.albumArt} alt="" style={{ width: "40px", height: "40px", borderRadius: "6px", flexShrink: 0 }} />}
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {s.title}
-                    {s.artist ? ` — ${s.artist}` : ""}
+                  <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>
+                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {s.title}
+                      {s.artist ? ` — ${s.artist}` : ""}
+                    </span>
+                    {isNowPlaying && (
+                      <span style={{ flexShrink: 0, fontSize: "9.5px", fontWeight: 700, letterSpacing: "0.3px", color: COLORS.paper, background: COLORS.amber, borderRadius: "999px", padding: "2px 7px" }}>
+                        EN COURS
+                      </span>
+                    )}
+                    {wasPlayed && (
+                      <span style={{ flexShrink: 0, fontSize: "9.5px", fontWeight: 700, letterSpacing: "0.3px", color: COLORS.inkSoft, background: COLORS.paperAlt, borderRadius: "999px", padding: "2px 7px" }}>
+                        DÉJÀ JOUÉ
+                      </span>
+                    )}
                   </p>
                   <p style={{ margin: "3px 0 0", fontSize: "11.5px", color: COLORS.inkSoft }}>
                     Proposé par {s.proposedByName || "quelqu'un"}
