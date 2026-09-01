@@ -146,7 +146,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       }
       return (b.bix || []).length - (a.bix || []).length || a.createdAt - b.createdAt;
     });
-  const sorted = [...(nowPlayingSong ? [nowPlayingSong] : []), ...upcomingSongs, ...playedSongs];
+  const sorted = [...upcomingSongs, ...playedSongs];
 
   // Synchronise le classement Bibamus vers la vraie playlist Spotify — dès que le morceau le
   // plus Bix parmi ceux pas encore joués change, on le déplace juste après le morceau en
@@ -412,10 +412,13 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       )}
 
       {/* Faux lecteur — purement visuel, aucune lecture réelle depuis Bibamus. Affiche ce qui
-      joue actuellement, tel que remonté par la personne qui contrôle la musique. */}
+      joue actuellement, tel que remonté par la personne qui contrôle la musique. Reprend le
+      même visuel que la liste ci-dessous (le morceau en cours n'y apparaît plus, pour éviter
+      le doublon). */}
       {event.spotifyPlaylistId && (event.nowPlayingTrack ? (
         <div
           style={{
+            position: "relative",
             display: "flex",
             alignItems: "center",
             gap: "14px",
@@ -426,15 +429,50 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
             marginBottom: "18px",
           }}
         >
+          <span
+            style={{
+              position: "absolute",
+              top: "-8px",
+              right: "10px",
+              fontSize: "9px",
+              fontWeight: 700,
+              letterSpacing: "0.3px",
+              color: COLORS.paper,
+              background: COLORS.amber,
+              borderRadius: "999px",
+              padding: "2px 8px",
+            }}
+          >
+            EN COURS
+          </span>
           {event.nowPlayingTrack.albumArt && <img src={event.nowPlayingTrack.albumArt} alt="" style={{ width: "64px", height: "64px", borderRadius: "8px", flexShrink: 0 }} />}
-          <div style={{ minWidth: 0 }}>
-            <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.5px", color: COLORS.amber, textTransform: "uppercase" }}>
-              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
-              En cours
-            </p>
-            <ScrollingText style={{ margin: "3px 0 0", fontSize: "15px", fontWeight: 800, color: COLORS.ink }}>{event.nowPlayingTrack.title}</ScrollingText>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <ScrollingText style={{ margin: 0, fontSize: "15px", fontWeight: 800, color: COLORS.ink }}>{event.nowPlayingTrack.title}</ScrollingText>
             {event.nowPlayingTrack.artist && <ScrollingText style={{ margin: "2px 0 0", fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>{event.nowPlayingTrack.artist}</ScrollingText>}
+            {nowPlayingSong && <p style={{ margin: "3px 0 0", fontSize: "11.5px", color: COLORS.inkSoft }}>Proposé par {nowPlayingSong.proposedByName || "quelqu'un"}</p>}
           </div>
+          {nowPlayingSong && (
+            <button
+              onClick={() => toggleBix(nowPlayingSong.id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                background: (nowPlayingSong.bix || []).includes(myBibroCode) ? COLORS.amber : "none",
+                border: `2px solid ${COLORS.amber}`,
+                borderRadius: "999px",
+                padding: "6px 11px",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                color: (nowPlayingSong.bix || []).includes(myBibroCode) ? COLORS.paper : COLORS.amber,
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              <NavIcon name="heart" size={13} color={(nowPlayingSong.bix || []).includes(myBibroCode) ? COLORS.paper : COLORS.amber} filled={(nowPlayingSong.bix || []).includes(myBibroCode)} />
+              {(nowPlayingSong.bix || []).length}
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -516,10 +554,9 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
               <div
                 key={s.id}
                 data-song-row={s.id}
-                onPointerDown={isReorderable ? handlePointerDown(s) : undefined}
-                onPointerMove={isReorderable || draggingId ? handlePointerMove : undefined}
-                onPointerUp={isReorderable || draggingId ? handlePointerUp : undefined}
-                onPointerCancel={isReorderable || draggingId ? handlePointerUp : undefined}
+                onPointerMove={draggingId ? handlePointerMove : undefined}
+                onPointerUp={draggingId ? handlePointerUp : undefined}
+                onPointerCancel={draggingId ? handlePointerUp : undefined}
                 style={{
                   position: "relative",
                   background: isDragOver ? COLORS.paperAlt : isNowPlaying ? COLORS.surfaceAlt : COLORS.surface,
@@ -531,10 +568,6 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                   gap: "10px",
                   opacity: isDragging ? 0.5 : wasPlayed ? 0.6 : 1,
                   transform: isDragging ? "scale(1.02)" : "none",
-                  touchAction: isDragging ? "none" : "auto",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
-                  WebkitTouchCallout: "none",
                 }}
               >
                 {(isNowPlaying || wasPlayed) && (
@@ -600,6 +633,27 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                       </button>
                     )}
                   </>
+                )}
+                {isReorderable && (
+                  <div
+                    onPointerDown={handlePointerDown(s)}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: "3px",
+                      padding: "10px 8px",
+                      flexShrink: 0,
+                      cursor: "grab",
+                      touchAction: "none",
+                      userSelect: "none",
+                      WebkitUserSelect: "none",
+                      WebkitTouchCallout: "none",
+                    }}
+                  >
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <span key={i} style={{ width: "3px", height: "3px", borderRadius: "50%", background: COLORS.inkSoft }} />
+                    ))}
+                  </div>
                 )}
                 <button
                   onClick={() => toggleBix(s.id)}
