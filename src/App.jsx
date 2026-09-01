@@ -195,6 +195,7 @@ export default function App() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
   const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
+  const [screenBeforeBibaxSuggestions, setScreenBeforeBibaxSuggestions] = useState("home");
 
   // Finalise la connexion Spotify dès que la session est prête — ne peut pas se faire plus tôt,
   // l'échange du code nécessite de savoir à quel compte Bibamus l'associer.
@@ -1272,7 +1273,10 @@ export default function App() {
                 events={events}
                 updateEvent={updateEvent}
                 eventTotal={() => 0}
-                goToBibaxAllSuggestions={() => setScreen("bibaxAllSuggestions")}
+                goToBibaxAllSuggestions={() => {
+                  setScreenBeforeBibaxSuggestions("home");
+                  setScreen("bibaxAllSuggestions");
+                }}
                 onOpenBibaxProfile={(code) => {
                   setViewedBibaxProfileCode(code);
                   setScreen("bibaxProfilePreview");
@@ -1856,7 +1860,10 @@ export default function App() {
                   setViewedBibaxProfileCode(code);
                   setScreen("bibaxProfilePreview");
                 }}
-                onSeeAllSuggestions={() => setScreen("bibaxAllSuggestions")}
+                onSeeAllSuggestions={() => {
+                  setScreenBeforeBibaxSuggestions("bibrosList");
+                  setScreen("bibaxAllSuggestions");
+                }}
                 onRemoveBibro={removeBibro}
                 onSetAlias={setBibroAlias}
                 onToggleFavorite={toggleBibroFavorite}
@@ -1921,7 +1928,7 @@ export default function App() {
             )}
             {screen === "bibaxAllSuggestions" && (
               <BibaxAllSuggestionsScreen
-                onBack={() => setScreen("home")}
+                onBack={() => setScreen(screenBeforeBibaxSuggestions)}
                 onOpenProfile={(code) => {
                   setViewedBibaxProfileCode(code);
                   setScreen("bibaxProfilePreview");
