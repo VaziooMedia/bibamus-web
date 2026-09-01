@@ -35,6 +35,11 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
   const isSalon = screenKind === "salon";
   const canCreate = name.trim().length > 0;
 
+  // Le titre de la session est librement modifiable — sans ce repère, personnaliser le titre
+  // faisait perdre toute trace visible du lieu réellement lié.
+  const linkedVenueLabel =
+    selectedVenueId === "@home" ? "@Home" : selectedVenueId === "@event" ? "@Event" : selectedVenueId ? venues.find((v) => v.id === selectedVenueId)?.name : null;
+
   const pickVenue = (venue) => {
     if (selectedVenueId === venue.id) {
       setSelectedVenueId(null);
@@ -211,7 +216,12 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
           </button>
         )}
       </div>
-
+      {linkedVenueLabel && (
+        <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginTop: "-10px", marginBottom: "16px" }}>
+          <NavIcon name="map-pin" size={13} color={COLORS.amber} />
+          Lieu lié : {linkedVenueLabel}
+        </p>
+      )}
 
       <SectionTitle>Participants</SectionTitle>
       <div style={{ marginBottom: "20px" }}>
