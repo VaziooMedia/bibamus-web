@@ -64,6 +64,13 @@ import {
   uploadMyAvatarPhoto,
   loadFeatureFlags,
   trackEvent,
+  sendBibaxRequest,
+  respondBibaxRequest,
+  removeBibax,
+  loadMyBibax,
+  loadPendingBibaxRequests,
+  loadSentBibaxRequests,
+  loadBibaxSuggestions,
   emitEvent,
   updateMyProfile,
   signOut,
@@ -243,6 +250,42 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileLoaded, profile.myBibroCode]);
 
+  // Migration unique — les Bibax déjà ajoutés localement avant l'introduction du système
+  // mutuel deviennent de vraies demandes envoyées à l'autre, qui n'a plus qu'à confirmer.
+  // Ne tourne qu'une seule fois par compte (drapeau local), pour ne jamais renvoyer en boucle.
+  useEffect(() => {
+    if (!profileLoaded || !profile.myBibroCode) return;
+    const migrationKey = `bibamus-bibax-migration-${profile.myBibroCode}`;
+    if (loadLocal(migrationKey, false)) return;
+    (async () => {
+      for (const b of bibros) {
+        await sendBibaxRequest(b.code);
+      }
+      saveLocal(migrationKey, true);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileLoaded, profile.myBibroCode]);
+
+  // Synchronise les demandes mutuelles déjà confirmées (envoyées par vous, ou reçues et
+  // acceptées) vers la liste locale — sans ça, un Bibax accepté par l'autre personne
+  // n'apparaîtrait jamais tant qu'on ne l'aurait pas re-ajouté soi-même.
+  useEffect(() => {
+    if (!profileLoaded || !profile.myBibroCode) return;
+    const syncBibax = () => {
+      loadMyBibax().then((confirmed) => {
+        setBibros((prev) => {
+          const knownCodes = new Set(prev.map((b) => b.code));
+          const missing = confirmed.filter((c) => c.bibroCode && !knownCodes.has(c.bibroCode)).map((c) => ({ code: c.bibroCode, name: c.name, alias: "", addedAt: Date.now() }));
+          return missing.length > 0 ? [...prev, ...missing] : prev;
+        });
+      });
+    };
+    syncBibax();
+    const interval = setInterval(syncBibax, 30000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileLoaded, profile.myBibroCode]);
+
   useEffect(() => {
     if (!session) return;
     (async () => {
@@ -268,14 +311,70 @@ export default function App() {
       lastName: profile.lastName,
       nickname: profile.nickname,
       username: profile.username,
+      email: profile.email,
+      birthDate: profile.birthDate,
+      country: profile.country,
+      region: profile.region,
+      city: profile.city,
+      bio: profile.bio,
+      facebookUrl: profile.facebookUrl,
+      instagramUrl: profile.instagramUrl,
+      tiktokUrl: profile.tiktokUrl,
+      snapchatUrl: profile.snapchatUrl,
       displayNameField: profile.displayNameField,
       sharePrenom: profile.sharePrenom,
       shareNom: profile.shareNom,
       shareSurnom: profile.shareSurnom,
+      shareEmail: profile.shareEmail,
+      shareBirthDate: profile.shareBirthDate,
+      birthDateSharePrecision: profile.birthDateSharePrecision,
+      shareCountry: profile.shareCountry,
+      shareRegion: profile.shareRegion,
+      shareCity: profile.shareCity,
+      shareBio: profile.shareBio,
+      shareFacebook: profile.shareFacebook,
+      shareInstagram: profile.shareInstagram,
+      shareTiktok: profile.shareTiktok,
+      shareSnapchat: profile.shareSnapchat,
+      shareRecords: profile.shareRecords,
+      shareVisitRanking: profile.shareVisitRanking,
       avatarUrl: profile.avatarUrl,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile.name, profile.lastName, profile.nickname, profile.username, profile.displayNameField, profile.sharePrenom, profile.shareNom, profile.shareSurnom, profile.avatarUrl]);
+  }, [
+    profile.name,
+    profile.lastName,
+    profile.nickname,
+    profile.username,
+    profile.email,
+    profile.birthDate,
+    profile.country,
+    profile.region,
+    profile.city,
+    profile.bio,
+    profile.facebookUrl,
+    profile.instagramUrl,
+    profile.tiktokUrl,
+    profile.snapchatUrl,
+    profile.displayNameField,
+    profile.sharePrenom,
+    profile.shareNom,
+    profile.shareSurnom,
+    profile.shareEmail,
+    profile.shareBirthDate,
+    profile.birthDateSharePrecision,
+    profile.shareCountry,
+    profile.shareRegion,
+    profile.shareCity,
+    profile.shareBio,
+    profile.shareFacebook,
+    profile.shareInstagram,
+    profile.shareTiktok,
+    profile.shareSnapchat,
+    profile.shareRecords,
+    profile.shareVisitRanking,
+    profile.avatarUrl,
+  ]);
   useEffect(() => saveLocal("bibamus-events", events), [events]);
   useEffect(() => saveLocal("bibamus-bibros", bibros), [bibros]);
 
@@ -939,10 +1038,22 @@ export default function App() {
   // suffit plus à contourner la vérification faite par la base de données.
   const unlockAdmin = () => false;
 
-  const addBibro = (code, name, alias, socials) => {
-    const newBibro = { code, name, alias: alias || "", ...socials, addedAt: Date.now() };
-    setBibros((prev) => [...prev, newBibro]);
+  // "Ajouter un Bibax" envoie désormais une vraie demande mutuelle (façon Facebook) — l'ajout
+  // local ne se fait que si la relation est immédiatement mutuelle (l'autre avait déjà envoyé
+  // sa propre demande, ou vous êtes déjà Bibax) ; sinon, ça reste "en attente" jusqu'à ce que
+  // l'autre confirme, et se synchronise automatiquement une fois accepté (voir plus bas).
+  const addBibro = async (code, name, alias, socials) => {
+    const result = await sendBibaxRequest(code);
+    if (result.error) {
+      alert(result.error);
+      return { error: result.error };
+    }
+    if (result.status === "accepted" || result.status === "already_bibax") {
+      const newBibro = { code, name, alias: alias || "", ...socials, addedAt: Date.now() };
+      setBibros((prev) => (prev.some((b) => b.code === code) ? prev : [...prev, newBibro]));
+    }
     trackEvent("bibax_added", "addBibro", profile.myBibroCode);
+    return result;
   };
   const removeBibro = (code) => setBibros((prev) => prev.filter((b) => b.code !== code));
   const setBibroAlias = (code, alias) => setBibros((prev) => prev.map((b) => (b.code === code ? { ...b, alias } : b)));
@@ -1672,6 +1783,15 @@ export default function App() {
                 bibros={bibros}
                 bibroStatuses={{}}
                 goToAddBibro={() => setScreen("addBibro")}
+                onBibaxAdded={() => {
+                  loadMyBibax().then((confirmed) => {
+                    setBibros((prev) => {
+                      const knownCodes = new Set(prev.map((b) => b.code));
+                      const missing = confirmed.filter((c) => c.bibroCode && !knownCodes.has(c.bibroCode)).map((c) => ({ code: c.bibroCode, name: c.name, alias: "", addedAt: Date.now() }));
+                      return missing.length > 0 ? [...prev, ...missing] : prev;
+                    });
+                  });
+                }}
                 onRemoveBibro={removeBibro}
                 onSetAlias={setBibroAlias}
                 onToggleFavorite={toggleBibroFavorite}

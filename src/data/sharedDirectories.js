@@ -312,12 +312,33 @@ export async function loadMyProfile(userId) {
     lastName: data.last_name || "",
     nickname: data.nickname || "",
     username: data.username || "",
+    email: data.email || "",
     birthDate: data.birth_date || null,
     country: data.country || null,
+    region: data.region || null,
+    city: data.city || null,
+    bio: data.bio || "",
+    facebookUrl: data.facebook_url || "",
+    instagramUrl: data.instagram_url || "",
+    tiktokUrl: data.tiktok_url || "",
+    snapchatUrl: data.snapchat_url || "",
     displayNameField: data.display_name_field || "username",
     sharePrenom: data.share_prenom,
     shareNom: data.share_nom,
     shareSurnom: data.share_surnom,
+    shareEmail: data.share_email,
+    shareBirthDate: data.share_birth_date,
+    birthDateSharePrecision: data.birth_date_share_precision || "full",
+    shareCountry: data.share_country,
+    shareRegion: data.share_region,
+    shareCity: data.share_city,
+    shareBio: data.share_bio,
+    shareFacebook: data.share_facebook,
+    shareInstagram: data.share_instagram,
+    shareTiktok: data.share_tiktok,
+    shareSnapchat: data.share_snapchat,
+    shareRecords: data.share_records,
+    shareVisitRanking: data.share_visit_ranking,
     avatarUrl: data.avatar_url || null,
     // isAdmin vient désormais du vrai rôle vérifié côté base de données, plus d'une passphrase
     // locale — cohérent avec les règles RLS qui vérifient ce même rôle.
@@ -328,21 +349,82 @@ export async function loadMyProfile(userId) {
   };
 }
 
-export async function updateMyProfile(userId, { name, lastName, nickname, username, displayNameField, sharePrenom, shareNom, shareSurnom, avatarUrl }) {
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      name,
-      last_name: lastName,
-      nickname,
-      username,
-      display_name_field: displayNameField,
-      share_prenom: sharePrenom,
-      share_nom: shareNom,
-      share_surnom: shareSurnom,
-      avatar_url: avatarUrl,
-    })
-    .eq("id", userId);
+export async function updateMyProfile(
+  userId,
+  {
+    name,
+    lastName,
+    nickname,
+    username,
+    email,
+    birthDate,
+    country,
+    region,
+    city,
+    bio,
+    facebookUrl,
+    instagramUrl,
+    tiktokUrl,
+    snapchatUrl,
+    displayNameField,
+    sharePrenom,
+    shareNom,
+    shareSurnom,
+    shareEmail,
+    shareBirthDate,
+    birthDateSharePrecision,
+    shareCountry,
+    shareRegion,
+    shareCity,
+    shareBio,
+    shareFacebook,
+    shareInstagram,
+    shareTiktok,
+    shareSnapchat,
+    shareRecords,
+    shareVisitRanking,
+    avatarUrl,
+  }
+) {
+  const patch = {
+    name,
+    last_name: lastName,
+    nickname,
+    username,
+    email,
+    birth_date: birthDate || null,
+    country,
+    region,
+    city,
+    bio,
+    facebook_url: facebookUrl,
+    instagram_url: instagramUrl,
+    tiktok_url: tiktokUrl,
+    snapchat_url: snapchatUrl,
+    display_name_field: displayNameField,
+    share_prenom: sharePrenom,
+    share_nom: shareNom,
+    share_surnom: shareSurnom,
+    share_email: shareEmail,
+    share_birth_date: shareBirthDate,
+    birth_date_share_precision: birthDateSharePrecision,
+    share_country: shareCountry,
+    share_region: shareRegion,
+    share_city: shareCity,
+    share_bio: shareBio,
+    share_facebook: shareFacebook,
+    share_instagram: shareInstagram,
+    share_tiktok: shareTiktok,
+    share_snapchat: shareSnapchat,
+    share_records: shareRecords,
+    share_visit_ranking: shareVisitRanking,
+    avatar_url: avatarUrl,
+  };
+  // Ne transmet que les champs réellement fournis — un appel partiel (ex. juste avatarUrl
+  // après un envoi de photo) n'écrase jamais les autres champs avec des valeurs vides.
+  Object.keys(patch).forEach((k) => patch[k] === undefined && delete patch[k]);
+
+  const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
   if (error) console.error("updateMyProfile:", error);
 }
 
@@ -1118,4 +1200,62 @@ export async function postPulseComment(pulseEventId, body) {
   const { error } = await supabase.from("pulse_comments").insert({ pulse_event_id: pulseEventId, user_id: user.id, body: body.trim() });
   if (error) return { error: error.message };
   return { ok: true };
+}
+
+/* ---------------- RELATIONS BIBAX (mutuelles, façon Facebook) ---------------- */
+
+export async function sendBibaxRequest(targetBibroCode) {
+  const { data, error } = await supabase.rpc("send_bibax_request", { p_target_code: targetBibroCode });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return data;
+}
+
+export async function respondBibaxRequest(relationshipId, accept) {
+  const { data, error } = await supabase.rpc("respond_bibax_request", { p_relationship_id: relationshipId, p_accept: accept });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return data;
+}
+
+export async function removeBibax(relationshipId) {
+  const { data, error } = await supabase.rpc("remove_bibax", { p_relationship_id: relationshipId });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function loadMyBibax() {
+  const { data, error } = await supabase.rpc("get_my_bibax");
+  if (error) {
+    console.error("loadMyBibax:", error);
+    return [];
+  }
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, avatarUrl: r.avatar_url, bibroCode: r.bibro_code }));
+}
+
+export async function loadPendingBibaxRequests() {
+  const { data, error } = await supabase.rpc("get_pending_bibax_requests");
+  if (error) {
+    console.error("loadPendingBibaxRequests:", error);
+    return [];
+  }
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, avatarUrl: r.avatar_url, createdAt: r.created_at }));
+}
+
+export async function loadSentBibaxRequests() {
+  const { data, error } = await supabase.rpc("get_sent_bibax_requests");
+  if (error) {
+    console.error("loadSentBibaxRequests:", error);
+    return [];
+  }
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, avatarUrl: r.avatar_url, createdAt: r.created_at }));
+}
+
+export async function loadBibaxSuggestions(limit = 10) {
+  const { data, error } = await supabase.rpc("get_bibax_suggestions", { p_limit: limit });
+  if (error) {
+    console.error("loadBibaxSuggestions:", error);
+    return [];
+  }
+  return data.map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, mutualCount: r.mutual_count, sameLocation: r.same_location }));
 }

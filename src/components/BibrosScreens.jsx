@@ -3,16 +3,123 @@
 // contact, et déverrouillage admin. Copiés tels quels depuis
 // le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
+import { loadPendingBibaxRequests, loadSentBibaxRequests, loadBibaxSuggestions, respondBibaxRequest, sendBibaxRequest } from "../data/sharedDirectories.js";
 
-export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack }) {
+// Demandes reçues (à confirmer/refuser) et suggestions (Bibax en commun, localisation
+// partagée) — façon Facebook : un simple "Confirmer" ou "Ajouter" suffit.
+function BibaxRequestsAndSuggestions({ onBibaxAdded }) {
+  const [pending, setPending] = useState(null);
+  const [sent, setSent] = useState(null);
+  const [suggestions, setSuggestions] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+
+  const refresh = () => {
+    loadPendingBibaxRequests().then(setPending);
+    loadSentBibaxRequests().then(setSent);
+    loadBibaxSuggestions().then(setSuggestions);
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const respond = async (relationshipId, accept) => {
+    setBusyId(relationshipId);
+    const result = await respondBibaxRequest(relationshipId, accept);
+    setBusyId(null);
+    if (result.error) {
+      alert(result.error);
+      return;
+    }
+    if (accept) onBibaxAdded();
+    refresh();
+  };
+
+  const addSuggestion = async (bibroCode) => {
+    setBusyId(bibroCode);
+    await sendBibaxRequest(bibroCode);
+    setBusyId(null);
+    refresh();
+  };
+
+  const hasPending = pending && pending.length > 0;
+  const hasSuggestions = suggestions && suggestions.length > 0;
+  if (!hasPending && !hasSuggestions) return null;
+
+  return (
+    <>
+      {hasPending && (
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+            <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+            <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Demandes reçues ({pending.length})</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {pending.map((r) => (
+              <div key={r.relationshipId} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                <EntityAvatar photoUrl={r.avatarUrl} size={36} />
+                <span style={{ flex: 1, minWidth: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</span>
+                <button
+                  onClick={() => respond(r.relationshipId, true)}
+                  disabled={busyId === r.relationshipId}
+                  style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "7px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.paper, cursor: "pointer" }}
+                >
+                  Confirmer
+                </button>
+                <button
+                  onClick={() => respond(r.relationshipId, false)}
+                  disabled={busyId === r.relationshipId}
+                  style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px 10px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
+                >
+                  Refuser
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasSuggestions && (
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+            <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+            <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Suggestions</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {suggestions.map((s) => (
+              <div key={s.userId} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                <EntityAvatar photoUrl={s.avatarUrl} size={36} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.name}</p>
+                  <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
+                    {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.sameLocation ? "Même ville" : ""}
+                  </p>
+                </div>
+                <button
+                  onClick={() => addSuggestion(s.bibroCode)}
+                  disabled={busyId === s.bibroCode}
+                  style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "7px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}
+                >
+                  Ajouter
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack, onBibaxAdded }) {
   const [query, setQuery] = useState("");
 
   const q = normalizeForSearch(query.trim());
@@ -82,6 +189,8 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
       <PrimaryButton onClick={goToAddBibro} style={{ width: "100%", marginBottom: "14px" }}>
         + Ajouter un Bibax
       </PrimaryButton>
+
+      <BibaxRequestsAndSuggestions onBibaxAdded={onBibaxAdded || (() => {})} />
 
       <input
         value={query}
@@ -592,11 +701,18 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
       {status === "found" && <div style={{ marginBottom: "auto" }} />}
 
       <PrimaryButton
-        onClick={() => {
-          if (status === "found") {
-            onAdd(code.trim(), foundName, "", foundSocials);
-            onCancel();
+        onClick={async () => {
+          if (status !== "found") return;
+          const result = await onAdd(code.trim(), foundName, "", foundSocials);
+          if (result?.error) return;
+          if (result?.status === "pending") {
+            alert(`Demande envoyée à ${foundName} — en attente de sa confirmation.`);
+          } else if (result?.status === "already_bibax") {
+            alert(`Vous êtes déjà Bibax avec ${foundName}.`);
+          } else if (result?.status === "accepted") {
+            alert(`${foundName} avait déjà envoyé une demande — vous êtes maintenant Bibax !`);
           }
+          onCancel();
         }}
         disabled={status !== "found"}
         style={{ width: "100%", marginTop: "20px" }}
