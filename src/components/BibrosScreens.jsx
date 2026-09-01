@@ -3,7 +3,7 @@
 // contact, et déverrouillage admin. Copiés tels quels depuis
 // le prototype Claude.
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName } from "./ui.jsx";
@@ -20,15 +20,32 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
   const [sent, setSent] = useState(null);
   const [suggestions, setSuggestions] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const prevSentIds = useRef(null);
 
   const refresh = () => {
     loadPendingBibaxRequests().then(setPending);
-    loadSentBibaxRequests().then(setSent);
+    loadSentBibaxRequests().then((data) => {
+      // Une demande envoyée qui disparaît (sans qu'on l'ait nous-même annulée) veut dire que
+      // l'autre vient de la confirmer — il faut alors synchroniser ce nouveau Bibax localement,
+      // pas seulement rafraîchir l'affichage des demandes.
+      if (prevSentIds.current) {
+        const newIds = new Set(data.map((r) => r.relationshipId));
+        const disappeared = prevSentIds.current.some((id) => !newIds.has(id));
+        if (disappeared) onBibaxAdded();
+      }
+      prevSentIds.current = data.map((r) => r.relationshipId);
+      setSent(data);
+    });
     loadBibaxSuggestions().then(setSuggestions);
   };
 
   useEffect(() => {
     refresh();
+    // Rafraîchit périodiquement — sans ça, "Demandes envoyées" ne se met à jour que si on
+    // quitte puis revient sur cet écran, laissant croire qu'une demande est encore en attente
+    // alors qu'elle vient d'être confirmée par l'autre personne.
+    const interval = setInterval(refresh, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const respond = async (relationshipId, accept) => {
@@ -57,6 +74,10 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
     if (result.error) {
       alert(result.error);
       return;
+    }
+    if (result.alreadyAccepted) {
+      alert("Trop tard — cette demande vient d'être confirmée par l'autre personne. Vous êtes déjà Bibax.");
+      onBibaxAdded();
     }
     refresh();
   };

@@ -280,7 +280,7 @@ export default function App() {
       loadMyBibax().then((confirmed) => {
         setBibros((prev) => {
           const knownCodes = new Set(prev.map((b) => b.code));
-          const missing = confirmed.filter((c) => c.bibroCode && !knownCodes.has(c.bibroCode)).map((c) => ({ code: c.bibroCode, name: c.name, alias: "", addedAt: Date.now() }));
+          const missing = confirmed.filter((c) => c.bibroCode && !knownCodes.has(c.bibroCode)).map((c) => ({ code: c.bibroCode, name: c.name, firstName: c.name, lastName: c.lastName || "", nickname: c.nickname || "", avatarUrl: c.avatarUrl || null, city: c.city || "", locality: c.locality || "", alias: "", addedAt: Date.now() }));
           return missing.length > 0 ? [...prev, ...missing] : prev;
         });
       });
@@ -1815,7 +1815,7 @@ export default function App() {
                   loadMyBibax().then((confirmed) => {
                     setBibros((prev) => {
                       const knownCodes = new Set(prev.map((b) => b.code));
-                      const missing = confirmed.filter((c) => c.bibroCode && !knownCodes.has(c.bibroCode)).map((c) => ({ code: c.bibroCode, name: c.name, alias: "", addedAt: Date.now() }));
+                      const missing = confirmed.filter((c) => c.bibroCode && !knownCodes.has(c.bibroCode)).map((c) => ({ code: c.bibroCode, name: c.name, firstName: c.name, lastName: c.lastName || "", nickname: c.nickname || "", avatarUrl: c.avatarUrl || null, city: c.city || "", locality: c.locality || "", alias: "", addedAt: Date.now() }));
                       return missing.length > 0 ? [...prev, ...missing] : prev;
                     });
                   });
