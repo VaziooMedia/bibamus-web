@@ -104,11 +104,41 @@ const PULSE_EVENT_MAP = {
 // Émission centralisée d'un PulseEvent — jamais d'écriture directe en base depuis le client
 // (voir la fonction serveur create-pulse-event), qui applique le dédoublonnage et la
 // confidentialité par défaut.
+async function attemptCreatePulseEvent(eventType, objectType, objectId, options, accessToken) {
+  const { error } = await supabase.functions.invoke("create-pulse-event", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: {
+      eventType,
+      objectType,
+      objectId,
+      sourceType: objectType,
+      sourceId: objectId,
+      venueId: options.venueId || null,
+      roomSalonCode: options.roomSalonCode || null,
+      visibility: options.visibility || null,
+      metadata: options.metadata || null,
+    },
+  });
+  if (!error) return { ok: true };
+
+  // FunctionsHttpError cache le vrai message de la fonction dans error.context (la réponse
+  // HTTP elle-même) — sans ça, la console n'affiche qu'un message générique.
+  let detail = error.message;
+  if (error.context?.json) {
+    try {
+      const body = await error.context.json();
+      detail = body?.error || JSON.stringify(body);
+    } catch (_) {
+      try {
+        detail = await error.context.text();
+      } catch (_) {}
+    }
+  }
+  return { ok: false, status: error.context?.status, detail };
+}
+
 export async function createPulseEvent(eventType, objectType, objectId, options = {}) {
   try {
-    // Récupère explicitement le jeton actuel (rafraîchi si besoin) et le transmet lui-même —
-    // plutôt que de compter sur le mécanisme automatique de la librairie, qui peut garder une
-    // référence obsolète dans certains cas sur PWA iOS.
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -117,35 +147,21 @@ export async function createPulseEvent(eventType, objectType, objectId, options 
       return;
     }
 
-    const { error } = await supabase.functions.invoke("create-pulse-event", {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-      body: {
-        eventType,
-        objectType,
-        objectId,
-        sourceType: objectType,
-        sourceId: objectId,
-        venueId: options.venueId || null,
-        roomSalonCode: options.roomSalonCode || null,
-        visibility: options.visibility || null,
-        metadata: options.metadata || null,
-      },
-    });
-    if (error) {
-      // FunctionsHttpError cache le vrai message de la fonction dans error.context (la
-      // réponse HTTP elle-même) — sans ça, la console n'affiche qu'un message générique.
-      let detail = error.message;
-      if (error.context?.json) {
-        try {
-          const body = await error.context.json();
-          detail = body?.error || JSON.stringify(body);
-        } catch (_) {
-          try {
-            detail = await error.context.text();
-          } catch (_) {}
-        }
+    let result = await attemptCreatePulseEvent(eventType, objectType, objectId, options, session.access_token);
+
+    // Filet de sécurité — se rattrape tout seul plutôt que d'obliger à se déconnecter/
+    // reconnecter : un jeton présenté comme valide côté client peut être refusé côté serveur
+    // (PWA iOS restée en arrière-plan). Un seul essai de rattrapage, avec un vrai
+    // rafraîchissement forcé (pas juste une relecture du jeton déjà en mémoire).
+    if (!result.ok && result.status === 401) {
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      if (!refreshError && refreshed?.session) {
+        result = await attemptCreatePulseEvent(eventType, objectType, objectId, options, refreshed.session.access_token);
       }
-      console.error("createPulseEvent:", detail);
+    }
+
+    if (!result.ok) {
+      console.error("createPulseEvent:", result.detail);
     }
   } catch (e) {
     console.error("createPulseEvent:", e);
