@@ -24,11 +24,21 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
   const [searching, setSearching] = useState(false);
   const [creatingPlaylist, setCreatingPlaylist] = useState(false);
   const [addingId, setAddingId] = useState(null);
+  const [playerRefreshKey, setPlayerRefreshKey] = useState(0);
   const searchDebounce = useRef(null);
 
   useEffect(() => {
     getMySpotifyStatus().then((s) => setSpotifyConnected(!!s.connected));
   }, []);
+
+  // Rafraîchit le lecteur intégré toutes les 20 secondes — sans ça, seule la personne qui vient
+  // d'ajouter un morceau verrait la playlist se mettre à jour ; les autres participants du
+  // salon ne le sauraient jamais, l'iframe ne se rechargeant jamais toute seule.
+  useEffect(() => {
+    if (!event.spotifyPlaylistId) return;
+    const interval = setInterval(() => setPlayerRefreshKey((k) => k + 1), 20000);
+    return () => clearInterval(interval);
+  }, [event.spotifyPlaylistId]);
 
   const playlist = event.playlist || [];
   const sorted = [...playlist].sort((a, b) => (b.bix || []).length - (a.bix || []).length || a.createdAt - b.createdAt);
@@ -121,6 +131,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       return;
     }
     updateEvent(event.id, (e) => ({ ...e, playlist: (e.playlist || []).map((s) => (s.id === song.id ? { ...s, addedToPlaylist: true } : s)) }));
+    setPlayerRefreshKey((k) => k + 1);
   };
 
   return (
@@ -138,8 +149,9 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       {event.spotifyPlaylistId ? (
         <div style={{ marginBottom: "18px", borderRadius: "12px", overflow: "hidden" }}>
           <iframe
+            key={playerRefreshKey}
             title="Playlist Spotify du Bibroom"
-            src={`https://open.spotify.com/embed/playlist/${event.spotifyPlaylistId}?utm_source=generator&theme=0`}
+            src={`https://open.spotify.com/embed/playlist/${event.spotifyPlaylistId}?utm_source=generator&theme=0&_r=${playerRefreshKey}`}
             width="100%"
             height="352"
             frameBorder="0"
