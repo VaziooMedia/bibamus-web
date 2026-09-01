@@ -4,7 +4,7 @@
 // l'app (Jetons, Participants, Notes intermédiaires, cagnotte,
 // note finale, section BibaRoom...).
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
@@ -12,13 +12,23 @@ import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
+import { loadRoomStories } from "../data/sharedDirectories.js";
+import { StoriesBar } from "./StoriesBar.jsx";
 
-export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic }) {
+export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");
   const [expandedRoundIds, setExpandedRoundIds] = useState(() => new Set());
   const [showRoundsList, setShowRoundsList] = useState(true);
+  const [roomStories, setRoomStories] = useState([]);
+  useEffect(() => {
+    if (!event.salonCode) return;
+    const load = () => loadRoomStories(event.salonCode).then(setRoomStories);
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, [event.salonCode]);
   const [amIPaused, setAmIPaused] = useState(false);
   const [pausedCodes, setPausedCodes] = useState(new Set());
 
@@ -210,7 +220,30 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 2px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-          <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={48} />
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={48} />
+            {event.salonCode && onAddStory && (
+              <button
+                onClick={() => onAddStory("room", event.salonCode)}
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  background: "#FF2C8F",
+                  border: `2px solid ${COLORS.paper}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <NavIcon name="plus" size={11} color="#000" />
+              </button>
+            )}
+          </div>
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1.1 }}>{event.name}</h1>
           {event.paused && (
             <span
@@ -237,6 +270,9 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           {event.createdAt && `Start : ${formatTime(event.createdAt)}`}
         </span>
       </div>
+      {event.salonCode && roomStories.length > 0 && (
+        <StoriesBar stories={roomStories} onOpenStory={onOpenStoryAuthor} />
+      )}
       <div style={{ marginTop: "8px", marginBottom: "18px" }}>
         <button
           onClick={onOpenSettings}

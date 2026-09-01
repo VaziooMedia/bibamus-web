@@ -1405,6 +1405,11 @@ export default function App() {
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
                 onDeactivateBibaBob={(code) => deactivateBibaBob(activeEventId, code)}
                 onGoToBibaMusic={() => setScreen("bibaMusic")}
+                onAddStory={(contextType, contextId) => {
+                  setStoryCreateContext({ contextType, contextId, returnScreen: "eventDashboard" });
+                  setScreen("storyCreate");
+                }}
+                onOpenStoryAuthor={setViewedStoryAuthor}
               />
             )}
             {screen === "bibaMusic" && currentEvent && (
