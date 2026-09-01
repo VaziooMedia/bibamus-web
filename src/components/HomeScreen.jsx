@@ -9,6 +9,17 @@ import { EntityAvatar, CategoryTile } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed } from "../data/sharedDirectories.js";
 
+function pulseTimeAgo(iso) {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "à l'instant";
+  if (mins < 60) return `${mins} min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} h`;
+  const days = Math.floor(hours / 24);
+  return `${days} j`;
+}
+
 const CHECKIN_MAX_AGE_MS = 4 * 60 * 60 * 1000;
 
 const isFreshCheckIn = (status) => !!(status && status.checkedInAt && Date.now() - status.checkedInAt < CHECKIN_MAX_AGE_MS);
@@ -307,7 +318,8 @@ export function HomeScreen({
                   {entries.map((entry) => (
                     <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
                       <EntityAvatar photoUrl={entry.actorAvatarUrl} size={28} />
-                      <span style={{ fontSize: "13.5px", color: COLORS.ink }}>{textFor(entry)}</span>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: "13.5px", color: COLORS.ink }}>{textFor(entry)}</span>
+                      <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{pulseTimeAgo(entry.createdAt)}</span>
                     </div>
                   ))}
                 </div>

@@ -1025,6 +1025,7 @@ export async function loadPulseFeed(before = null, limit = 20) {
     bixCount: row.bix_count,
     commentsCount: row.comments_count,
     incomingCount: row.incoming_count,
+    lastBixerName: row.last_bixer_name,
     createdAt: row.created_at,
     iBixed: row.i_bixed,
     iAmIncoming: row.i_am_incoming,

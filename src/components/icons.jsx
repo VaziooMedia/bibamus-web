@@ -84,6 +84,12 @@ export function NavIcon({ name, size = 20, color = "currentColor", filled = fals
           <path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9" />
         </svg>
       );
+    case "comment":
+      return (
+        <svg {...common}>
+          <path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4.5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+        </svg>
+      );
     case "chevron-right":
       return (
         <svg {...common}>

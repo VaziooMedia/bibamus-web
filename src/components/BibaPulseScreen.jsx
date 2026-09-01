@@ -142,7 +142,7 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
         </button>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <button
           onClick={handleBix}
           style={{
@@ -161,53 +161,58 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
         >
           <NavIcon name="heart" size={16} color={entry.iBixed ? COLORS.paper : COLORS.amber} filled={entry.iBixed} />
         </button>
-        {entry.bixCount > 0 && (
-          <button
-            onClick={() => openReactors("bix")}
-            style={{ background: "none", border: "none", fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer", padding: "6px 2px" }}
-          >
-            {entry.bixCount}
-          </button>
-        )}
 
         <button
           onClick={toggleComments}
-          style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "999px", padding: "6px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "999px", padding: "6px 12px", cursor: "pointer" }}
         >
-          Commenter{entry.commentsCount > 0 ? ` (${entry.commentsCount})` : ""}
+          <NavIcon name="comment" size={16} color={COLORS.inkSoft} />
         </button>
 
         {entry.eventType === "venue_visit" && entry.actorId !== myUserId && (
-          <>
-            <button
-              onClick={handleIncoming}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                background: entry.iAmIncoming ? COLORS.amber : "none",
-                border: `2px solid ${COLORS.amber}`,
-                borderRadius: "999px",
-                padding: "6px 12px",
-                fontSize: "12.5px",
-                fontWeight: 700,
-                color: entry.iAmIncoming ? COLORS.paper : COLORS.amber,
-                cursor: "pointer",
-              }}
-            >
-              J'arrive
-            </button>
-            {entry.incomingCount > 0 && (
-              <button
-                onClick={() => openReactors("incoming")}
-                style={{ background: "none", border: "none", fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer", padding: "6px 2px" }}
-              >
-                {entry.incomingCount}
-              </button>
-            )}
-          </>
+          <button
+            onClick={handleIncoming}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              background: entry.iAmIncoming ? COLORS.amber : "none",
+              border: `2px solid ${COLORS.amber}`,
+              borderRadius: "999px",
+              padding: "6px 12px",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              color: entry.iAmIncoming ? COLORS.paper : COLORS.amber,
+              cursor: "pointer",
+            }}
+          >
+            J'arrive
+          </button>
         )}
       </div>
+
+      {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
+      liste complète des personnes concernées. */}
+      {entry.bixCount > 0 && (
+        <button onClick={() => openReactors("bix")} style={{ display: "block", background: "none", border: "none", padding: "6px 0 0", textAlign: "left", cursor: "pointer" }}>
+          <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+            Bixé par <strong style={{ color: COLORS.ink }}>{entry.lastBixerName || "quelqu'un"}</strong>
+            {entry.bixCount > 1 && (
+              <>
+                {" "}
+                et <strong style={{ color: COLORS.ink }}>{entry.bixCount - 1} autre{entry.bixCount > 2 ? "s Bibax" : " Bibax"}</strong>
+              </>
+            )}
+          </span>
+        </button>
+      )}
+      {entry.incomingCount > 0 && (
+        <button onClick={() => openReactors("incoming")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
+          <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+            <strong style={{ color: COLORS.ink }}>{entry.incomingCount}</strong> Bibax {entry.incomingCount > 1 ? "arrivent" : "arrive"}
+          </span>
+        </button>
+      )}
 
       {showComments && (
         <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
