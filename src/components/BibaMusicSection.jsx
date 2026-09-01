@@ -1,14 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { SectionTitle } from "./ui.jsx";
 import { normalizeUrl } from "../utils.js";
+import {
+  getMySpotifyStatus,
+  getMySpotifyConnection,
+  ensureFreshSpotifyToken,
+  searchSpotifyTracks,
+  createSpotifyPlaylist,
+  addTrackToSpotifyPlaylist,
+} from "../data/spotify.js";
 
-// BibaMusic (Phase 1) — playlist collaborative de soirée, sans intégration Spotify. Chacun
-// propose un morceau (titre + lien facultatif, collé à la main), Bix les propositions des
-// autres, la liste s'ordonne par popularité. Une vraie connexion Spotify (recherche dans le
-// catalogue, création automatique de playlist) viendra dans une phase séparée.
-export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, open: openProp, onOpenChange, sectionRef }) {
+// BibaMusic (Phase 2) — playlist collaborative de soirée. Chacun propose un morceau, soit en
+// le cherchant directement dans le catalogue Spotify (si son compte est connecté), soit à la
+// main (titre + lien facultatif). Le Bibroom peut créer sa propre playlist Spotify partagée,
+// dans laquelle n'importe quel morceau proposé avec un identifiant Spotify peut être ajouté.
+export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, myUserId, open: openProp, onOpenChange, sectionRef }) {
   const [openInternal, setOpenInternal] = useState(false);
   const open = openProp != null ? openProp : openInternal;
   const setOpen = (value) => {
@@ -16,27 +23,60 @@ export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, open
     if (onOpenChange) onOpenChange(next);
     else setOpenInternal(next);
   };
+
   const [titleInput, setTitleInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
+  const [spotifyConnected, setSpotifyConnected] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [creatingPlaylist, setCreatingPlaylist] = useState(false);
+  const [addingId, setAddingId] = useState(null);
+  const searchDebounce = useRef(null);
+
+  useEffect(() => {
+    getMySpotifyStatus().then((s) => setSpotifyConnected(!!s.connected));
+  }, []);
 
   const playlist = event.playlist || [];
   const sorted = [...playlist].sort((a, b) => (b.bix || []).length - (a.bix || []).length || a.createdAt - b.createdAt);
 
-  const proposeSong = () => {
+  const runSearch = (query) => {
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    searchDebounce.current = setTimeout(async () => {
+      setSearching(true);
+      const token = await ensureFreshSpotifyToken(myUserId);
+      if (token) setSearchResults(await searchSpotifyTracks(token, query));
+      setSearching(false);
+    }, 400);
+  };
+
+  const addSong = (song) => {
+    updateEvent(event.id, (e) => ({
+      ...e,
+      playlist: [
+        ...(e.playlist || []),
+        { id: `song-${Date.now()}-${Math.floor(Math.random() * 10000)}`, proposedByCode: myBibroCode, proposedByName: myName, bix: [], createdAt: Date.now(), ...song },
+      ],
+    }));
+  };
+
+  const proposeFromSearch = (track) => {
+    addSong({ title: track.title, artist: track.artist, link: track.link, spotifyUri: track.spotifyUri, albumArt: track.albumArt });
+    setTitleInput("");
+    setSearchResults([]);
+  };
+
+  const proposeManual = () => {
     const title = titleInput.trim();
     if (!title) return;
-    const song = {
-      id: `song-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-      title,
-      link: linkInput.trim() || null,
-      proposedByCode: myBibroCode,
-      proposedByName: myName,
-      bix: [],
-      createdAt: Date.now(),
-    };
-    updateEvent(event.id, (e) => ({ ...e, playlist: [...(e.playlist || []), song] }));
+    addSong({ title, link: linkInput.trim() || null });
     setTitleInput("");
     setLinkInput("");
+    setSearchResults([]);
   };
 
   const toggleBix = (songId) => {
@@ -53,6 +93,32 @@ export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, open
 
   const removeSong = (songId) => {
     updateEvent(event.id, (e) => ({ ...e, playlist: (e.playlist || []).filter((s) => s.id !== songId) }));
+  };
+
+  const createPlaylist = async () => {
+    setCreatingPlaylist(true);
+    const token = await ensureFreshSpotifyToken(myUserId);
+    const connection = await getMySpotifyConnection(myUserId);
+    if (!token || !connection?.spotify_user_id) {
+      setCreatingPlaylist(false);
+      alert("Connexion Spotify indisponible — reconnectez votre compte depuis Mes infos.");
+      return;
+    }
+    const result = await createSpotifyPlaylist(token, connection.spotify_user_id, `Bibamus — ${event.name}`);
+    setCreatingPlaylist(false);
+    if (result.error) {
+      alert(result.error);
+      return;
+    }
+    updateEvent(event.id, (e) => ({ ...e, spotifyPlaylistId: result.playlistId, spotifyPlaylistUrl: result.playlistUrl }));
+  };
+
+  const addToPlaylist = async (song) => {
+    if (!event.spotifyPlaylistId) return;
+    setAddingId(song.id);
+    const token = await ensureFreshSpotifyToken(myUserId);
+    if (token) await addTrackToSpotifyPlaylist(token, event.spotifyPlaylistId, song.spotifyUri);
+    setAddingId(null);
   };
 
   return (
@@ -74,40 +140,92 @@ export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, open
 
       {open && (
         <div style={{ marginTop: "14px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "14px" }}>
-            <input
-              value={titleInput}
-              onChange={(e) => setTitleInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && proposeSong()}
-              placeholder="Titre — Artiste"
-              style={{ padding: "10px 12px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", background: COLORS.surfaceAlt, color: COLORS.ink, outline: "none" }}
-            />
-            <div style={{ display: "flex", gap: "8px" }}>
-              <input
-                value={linkInput}
-                onChange={(e) => setLinkInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && proposeSong()}
-                placeholder="Lien Spotify/YouTube (facultatif)"
-                style={{ flex: 1, padding: "10px 12px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13px", background: COLORS.surfaceAlt, color: COLORS.ink, outline: "none" }}
-              />
-              <button
-                onClick={proposeSong}
-                disabled={!titleInput.trim()}
+          {/* Playlist Spotify du Bibroom */}
+          <div style={{ marginBottom: "14px" }}>
+            {event.spotifyPlaylistUrl ? (
+              <a
+                href={event.spotifyPlaylistUrl}
+                target="_blank"
+                rel="noreferrer"
                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
                   background: COLORS.amber,
-                  border: "none",
                   borderRadius: "8px",
-                  padding: "0 16px",
-                  fontWeight: 700,
+                  padding: "9px 14px",
                   fontSize: "13px",
+                  fontWeight: 700,
                   color: COLORS.paper,
-                  cursor: "pointer",
-                  opacity: titleInput.trim() ? 1 : 0.5,
+                  textDecoration: "none",
                 }}
               >
-                Proposer
+                Ouvrir la playlist dans Spotify
+              </a>
+            ) : spotifyConnected ? (
+              <button
+                onClick={createPlaylist}
+                disabled={creatingPlaylist}
+                style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "9px 14px", fontSize: "13px", fontWeight: 700, color: COLORS.amber, cursor: "pointer", width: "100%" }}
+              >
+                {creatingPlaylist ? "Création..." : "Créer la playlist Spotify du Bibroom"}
               </button>
-            </div>
+            ) : (
+              <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic" }}>Connectez Spotify depuis "Mes infos" pour créer une vraie playlist partagée.</p>
+            )}
+          </div>
+
+          {/* Proposition d'un morceau */}
+          <div style={{ marginBottom: "14px", position: "relative" }}>
+            <input
+              value={titleInput}
+              onChange={(e) => {
+                setTitleInput(e.target.value);
+                if (spotifyConnected) runSearch(e.target.value);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && !spotifyConnected && proposeManual()}
+              placeholder={spotifyConnected ? "Chercher un titre sur Spotify..." : "Titre — Artiste"}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", background: COLORS.surfaceAlt, color: COLORS.ink, outline: "none" }}
+            />
+
+            {spotifyConnected && searchResults.length > 0 && (
+              <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                {searchResults.map((track) => (
+                  <button
+                    key={track.spotifyTrackId}
+                    onClick={() => proposeFromSearch(track)}
+                    style={{ display: "flex", alignItems: "center", gap: "8px", background: COLORS.surfaceAlt, border: "none", borderRadius: "8px", padding: "8px", cursor: "pointer", textAlign: "left" }}
+                  >
+                    {track.albumArt && <img src={track.albumArt} alt="" style={{ width: "32px", height: "32px", borderRadius: "4px", flexShrink: 0 }} />}
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{track.title}</p>
+                      <p style={{ margin: 0, fontSize: "11px", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{track.artist}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {spotifyConnected && searching && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "6px" }}>Recherche...</p>}
+
+            {!spotifyConnected && (
+              <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                <input
+                  value={linkInput}
+                  onChange={(e) => setLinkInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && proposeManual()}
+                  placeholder="Lien Spotify/YouTube (facultatif)"
+                  style={{ flex: 1, padding: "10px 12px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13px", background: COLORS.surfaceAlt, color: COLORS.ink, outline: "none" }}
+                />
+                <button
+                  onClick={proposeManual}
+                  disabled={!titleInput.trim()}
+                  style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "0 16px", fontWeight: 700, fontSize: "13px", color: COLORS.paper, cursor: "pointer", opacity: titleInput.trim() ? 1 : 0.5 }}
+                >
+                  Proposer
+                </button>
+              </div>
+            )}
           </div>
 
           {sorted.length === 0 ? (
@@ -120,8 +238,12 @@ export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, open
                 const isMine = s.proposedByCode === myBibroCode;
                 return (
                   <div key={s.id} style={{ background: COLORS.surfaceAlt, borderRadius: "10px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                    {s.albumArt && <img src={s.albumArt} alt="" style={{ width: "36px", height: "36px", borderRadius: "5px", flexShrink: 0 }} />}
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.title}</p>
+                      <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {s.title}
+                        {s.artist ? ` — ${s.artist}` : ""}
+                      </p>
                       <p style={{ margin: "2px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
                         Proposé par {s.proposedByName || "quelqu'un"}
                         {s.link && (
@@ -130,6 +252,14 @@ export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, open
                             <a href={normalizeUrl(s.link)} target="_blank" rel="noreferrer" style={{ color: COLORS.amber }}>
                               Ouvrir
                             </a>
+                          </>
+                        )}
+                        {event.spotifyPlaylistId && s.spotifyUri && (
+                          <>
+                            {" · "}
+                            <button onClick={() => addToPlaylist(s)} disabled={addingId === s.id} style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "11px", cursor: "pointer", padding: 0 }}>
+                              {addingId === s.id ? "Ajout..." : "+ Playlist"}
+                            </button>
                           </>
                         )}
                       </p>

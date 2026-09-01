@@ -99,6 +99,18 @@ export async function getMySpotifyStatus() {
   return data;
 }
 
+// Complète getMySpotifyStatus avec l'identifiant Spotify réel, nécessaire pour créer une
+// playlist en son nom — les deux colonnes lues ici ne sont accessibles qu'au compte lui-même
+// (RLS déjà en place sur profiles : auth.uid() = id).
+export async function getMySpotifyConnection(userId) {
+  const { data, error } = await supabase.from("profiles").select("spotify_user_id, spotify_display_name").eq("id", userId).single();
+  if (error) {
+    console.error("getMySpotifyConnection:", error);
+    return null;
+  }
+  return data;
+}
+
 export async function disconnectSpotify(userId) {
   const { error } = await supabase
     .from("profiles")
@@ -155,5 +167,58 @@ export async function ensureFreshSpotifyToken(userId) {
   } catch (e) {
     console.error("ensureFreshSpotifyToken:", e);
     return null;
+  }
+}
+
+// Recherche dans le catalogue Spotify — utilise le jeton du compte actuellement connecté.
+export async function searchSpotifyTracks(accessToken, query) {
+  if (!query.trim()) return [];
+  try {
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=6`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return (data.tracks?.items || []).map((t) => ({
+      spotifyTrackId: t.id,
+      spotifyUri: t.uri,
+      title: t.name,
+      artist: (t.artists || []).map((a) => a.name).join(", "),
+      albumArt: t.album?.images?.[t.album.images.length - 1]?.url || t.album?.images?.[0]?.url || null,
+      link: t.external_urls?.spotify || null,
+    }));
+  } catch (e) {
+    console.error("searchSpotifyTracks:", e);
+    return [];
+  }
+}
+
+// Crée la playlist Spotify de la soirée pour ce BibaRoom, avec le compte actuellement connecté.
+export async function createSpotifyPlaylist(accessToken, spotifyUserId, playlistName) {
+  try {
+    const response = await fetch(`https://api.spotify.com/v1/users/${spotifyUserId}/playlists`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ name: playlistName, description: "Playlist de soirée créée avec Bibamus", public: false }),
+    });
+    if (!response.ok) return { error: "La création de la playlist Spotify a échoué." };
+    const data = await response.json();
+    return { ok: true, playlistId: data.id, playlistUrl: data.external_urls?.spotify };
+  } catch (e) {
+    return { error: "La création de la playlist Spotify a échoué." };
+  }
+}
+
+// Ajoute un morceau (par son URI Spotify) à la playlist déjà créée pour ce BibaRoom.
+export async function addTrackToSpotifyPlaylist(accessToken, playlistId, spotifyUri) {
+  try {
+    const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ uris: [spotifyUri] }),
+    });
+    return response.ok;
+  } catch (e) {
+    return false;
   }
 }

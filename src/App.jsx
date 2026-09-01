@@ -403,6 +403,8 @@ export default function App() {
       paused: false,
       participants: [],
       playlist: [],
+      spotifyPlaylistId: null,
+      spotifyPlaylistUrl: null,
     };
 
     if (isSalon) {
@@ -1189,6 +1191,7 @@ export default function App() {
                 onBack={() => setScreen("home")}
                 updateEvent={updateEvent}
                 myName={profile.name}
+                myUserId={session.user.id}
                 myBibroCode={profile.myBibroCode}
                 bibros={bibros}
                 onAdjustVenuePersonalDrink={adjustVenuePersonalDrink}

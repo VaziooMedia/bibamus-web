@@ -14,7 +14,7 @@ import { BibaMusicSection } from "./BibaMusicSection.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 
-export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob }) {
+export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");
@@ -627,7 +627,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
         </button>
       </div>
 
-      <BibaMusicSection event={event} updateEvent={updateEvent} myBibroCode={myBibroCode} myName={myName} open={bibaMusicOpen} onOpenChange={setBibaMusicOpen} sectionRef={bibaMusicRef} />
+      <BibaMusicSection event={event} updateEvent={updateEvent} myBibroCode={myBibroCode} myName={myName} myUserId={myUserId} open={bibaMusicOpen} onOpenChange={setBibaMusicOpen} sectionRef={bibaMusicRef} />
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques</div>
