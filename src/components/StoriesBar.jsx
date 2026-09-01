@@ -12,7 +12,7 @@ export function StoriesBar({ stories, onAddStory, onOpenStory }) {
   const seen = new Map();
   stories.forEach((s) => {
     if (!seen.has(s.authorId)) {
-      seen.set(s.authorId, { authorId: s.authorId, authorName: s.authorName, authorAvatarUrl: s.authorAvatarUrl, stories: [] });
+      seen.set(s.authorId, { authorId: s.authorId, authorName: s.authorName, authorLastName: s.authorLastName, authorAvatarUrl: s.authorAvatarUrl, stories: [] });
       byAuthor.push(seen.get(s.authorId));
     }
     seen.get(s.authorId).stories.push(s);
@@ -37,7 +37,9 @@ export function StoriesBar({ stories, onAddStory, onOpenStory }) {
           <div style={{ padding: "2px", borderRadius: "50%", border: "2px solid #FF2C8F" }}>
             <EntityAvatar photoUrl={a.authorAvatarUrl} size={58} />
           </div>
-          <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "64px" }}>{a.authorName}</span>
+          <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, textAlign: "center", lineHeight: 1.25, maxWidth: "64px" }}>
+            {[a.authorName, a.authorLastName].filter(Boolean).join(" ")}
+          </span>
         </button>
       ))}
     </div>

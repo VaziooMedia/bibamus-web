@@ -159,7 +159,7 @@ export function HomeScreen({
             style={{
               position: "absolute",
               bottom: 0,
-              right: 0,
+              left: 0,
               width: "26px",
               height: "26px",
               borderRadius: "50%",
@@ -171,7 +171,7 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <NavIcon name="plus" size={14} color="#fff" />
+            <NavIcon name="plus" size={14} color="#000" />
           </button>
         </div>
       </div>

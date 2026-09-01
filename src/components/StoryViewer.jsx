@@ -17,6 +17,19 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
   const timerRef = useRef(null);
 
   const story = author.stories[index];
+  const [imgFit, setImgFit] = useState("cover");
+  useEffect(() => {
+    setImgFit("cover");
+  }, [story.id]);
+  const handleImgLoad = (e) => {
+    const img = e.target;
+    const imgRatio = img.naturalWidth / img.naturalHeight;
+    const screenRatio = window.innerWidth / window.innerHeight;
+    // Proche du ratio de l'écran → remplit sans trop rogner (cover). Très différent (ex. une
+    // photo panoramique sur un écran de téléphone) → contain, pour éviter une découpe excessive.
+    const diff = Math.abs(imgRatio - screenRatio) / screenRatio;
+    setImgFit(diff > 0.35 ? "contain" : "cover");
+  };
   const isMine = story.authorId === myUserId;
   const iBixed = localBix[story.id]?.iBixed ?? story.iBixed;
   const bixCount = localBix[story.id]?.bixCount ?? story.bixCount ?? 0;
@@ -63,7 +76,7 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#000", zIndex: 200, overflow: "hidden" }}>
-      <img src={story.mediaUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+      <img src={story.mediaUrl} alt="" onLoad={handleImgLoad} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: imgFit }} />
 
       <div
         style={{ position: "absolute", inset: 0 }}
