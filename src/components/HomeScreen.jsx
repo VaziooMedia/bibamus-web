@@ -325,7 +325,7 @@ export function HomeScreen({
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {entries.map((entry) => (
                     <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                      <NavIcon name="heart" size={15} color={COLORS.amber} filled />
+                      <EntityAvatar photoUrl={entry.actorAvatarUrl} size={28} />
                       <span style={{ fontSize: "13.5px", color: COLORS.ink }}>{textFor(entry)}</span>
                     </div>
                   ))}

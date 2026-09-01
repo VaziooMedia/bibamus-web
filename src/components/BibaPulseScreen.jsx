@@ -80,7 +80,7 @@ export function BibaPulseScreen({ onBack, venues = [], drinksDirectory = [], bre
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
-        <NavIcon name="heart" size={32} color={COLORS.amber} filled />
+        <span style={{ width: "5px", height: "32px", background: COLORS.amber, borderRadius: "3px", flexShrink: 0 }} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Pulse</span>
