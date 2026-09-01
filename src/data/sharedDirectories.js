@@ -1224,6 +1224,13 @@ export async function removeBibax(relationshipId) {
   return data;
 }
 
+export async function removeBibaxByCode(bibroCode) {
+  const { data, error } = await supabase.rpc("remove_bibax_by_code", { p_target_code: bibroCode });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return data;
+}
+
 export async function loadMyBibax() {
   const { data, error } = await supabase.rpc("get_my_bibax");
   if (error) {

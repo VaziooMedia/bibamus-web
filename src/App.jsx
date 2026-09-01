@@ -67,6 +67,7 @@ import {
   sendBibaxRequest,
   respondBibaxRequest,
   removeBibax,
+  removeBibaxByCode,
   loadMyBibax,
   loadPendingBibaxRequests,
   loadSentBibaxRequests,
@@ -1055,7 +1056,12 @@ export default function App() {
     trackEvent("bibax_added", "addBibro", profile.myBibroCode);
     return result;
   };
-  const removeBibro = (code) => setBibros((prev) => prev.filter((b) => b.code !== code));
+  // Retirer un Bibax doit aussi supprimer la vraie relation mutuelle côté serveur — sinon, la
+  // synchronisation périodique des demandes acceptées le ferait automatiquement réapparaître.
+  const removeBibro = (code) => {
+    setBibros((prev) => prev.filter((b) => b.code !== code));
+    removeBibaxByCode(code);
+  };
   const setBibroAlias = (code, alias) => setBibros((prev) => prev.map((b) => (b.code === code ? { ...b, alias } : b)));
   const toggleBibroFavorite = (code) =>
     setBibros((prev) => prev.map((b) => (b.code === code ? { ...b, isFavorite: !b.isFavorite } : b)));
