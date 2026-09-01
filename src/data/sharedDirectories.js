@@ -106,6 +106,12 @@ const PULSE_EVENT_MAP = {
 // confidentialité par défaut.
 export async function createPulseEvent(eventType, objectType, objectId, options = {}) {
   try {
+    // Force la vérification (et le rafraîchissement si besoin) du jeton de session avant
+    // d'appeler la fonction serveur — sur iOS, une PWA restée un moment en arrière-plan peut
+    // reprendre avec un jeton expiré sans que le rafraîchissement automatique ait eu
+    // l'occasion de tourner, provoquant un "Session invalide" côté serveur.
+    await supabase.auth.getSession();
+
     const { error } = await supabase.functions.invoke("create-pulse-event", {
       body: {
         eventType,
@@ -119,7 +125,22 @@ export async function createPulseEvent(eventType, objectType, objectId, options 
         metadata: options.metadata || null,
       },
     });
-    if (error) console.error("createPulseEvent:", error);
+    if (error) {
+      // FunctionsHttpError cache le vrai message de la fonction dans error.context (la
+      // réponse HTTP elle-même) — sans ça, la console n'affiche qu'un message générique.
+      let detail = error.message;
+      if (error.context?.json) {
+        try {
+          const body = await error.context.json();
+          detail = body?.error || JSON.stringify(body);
+        } catch (_) {
+          try {
+            detail = await error.context.text();
+          } catch (_) {}
+        }
+      }
+      console.error("createPulseEvent:", detail);
+    }
   } catch (e) {
     console.error("createPulseEvent:", e);
   }
