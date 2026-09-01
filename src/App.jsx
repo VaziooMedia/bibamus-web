@@ -19,6 +19,9 @@ import { EventDashboardScreen } from "./components/EventDashboardScreen.jsx";
 import { BibaMusicScreen } from "./components/BibaMusicScreen.jsx";
 import { BibaPulseScreen } from "./components/BibaPulseScreen.jsx";
 import { BibaxAllSuggestionsScreen } from "./components/BibaxAllSuggestionsScreen.jsx";
+import { StoryCreateScreen } from "./components/StoryCreateScreen.jsx";
+import { StoriesBar } from "./components/StoriesBar.jsx";
+import { StoryViewer } from "./components/StoryViewer.jsx";
 import { BibaxProfilePreviewScreen } from "./components/BibaxProfilePreviewScreen.jsx";
 import { RoundComposeScreen } from "./components/RoundComposeScreen.jsx";
 import { RoundTicketScreen } from "./components/RoundTicketScreen.jsx";
@@ -75,6 +78,8 @@ import {
   loadSentBibaxRequests,
   loadBibaxSuggestions,
   geocodeCityForProfile,
+  loadRoomStories,
+  loadPulseStories,
   emitEvent,
   updateMyProfile,
   signOut,
@@ -196,6 +201,9 @@ export default function App() {
   const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
   const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
   const [screenBeforeBibaxSuggestions, setScreenBeforeBibaxSuggestions] = useState("home");
+  const [storyCreateContext, setStoryCreateContext] = useState(null); // {contextType, contextId, returnScreen}
+  const [viewedStoryAuthor, setViewedStoryAuthor] = useState(null); // {authorId, authorName, authorAvatarUrl, stories}
+  const [pulseStoriesRefreshKey, setPulseStoriesRefreshKey] = useState(0);
 
   // Finalise la connexion Spotify dès que la session est prête — ne peut pas se faire plus tôt,
   // l'échange du code nécessite de savoir à quel compte Bibamus l'associer.
@@ -1273,6 +1281,12 @@ export default function App() {
                 events={events}
                 updateEvent={updateEvent}
                 eventTotal={() => 0}
+                pulseStoriesRefreshKey={pulseStoriesRefreshKey}
+                onAddStory={(contextType, contextId) => {
+                  setStoryCreateContext({ contextType, contextId, returnScreen: "home" });
+                  setScreen("storyCreate");
+                }}
+                onOpenStoryAuthor={setViewedStoryAuthor}
                 goToBibaxAllSuggestions={() => {
                   setScreenBeforeBibaxSuggestions("home");
                   setScreen("bibaxAllSuggestions");
@@ -1938,7 +1952,19 @@ export default function App() {
             {screen === "bibaxProfilePreview" && viewedBibaxProfileCode && (
               <BibaxProfilePreviewScreen bibroCode={viewedBibaxProfileCode} onBack={() => setScreen("home")} />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {screen === "storyCreate" && storyCreateContext && (
+              <StoryCreateScreen
+                contextType={storyCreateContext.contextType}
+                contextId={storyCreateContext.contextId}
+                myUserId={session.user.id}
+                onBack={() => setScreen(storyCreateContext.returnScreen)}
+                onPublished={() => {
+                  setPulseStoriesRefreshKey((k) => k + 1);
+                  setScreen(storyCreateContext.returnScreen);
+                }}
+              />
+            )}
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
@@ -1967,6 +1993,14 @@ export default function App() {
             setViewedDrinkId(drinkId);
             setScreen("drinkDetail");
           }}
+        />
+      )}
+      {viewedStoryAuthor && (
+        <StoryViewer
+          author={viewedStoryAuthor}
+          myUserId={session.user.id}
+          onClose={() => setViewedStoryAuthor(null)}
+          onChanged={() => setPulseStoriesRefreshKey((k) => k + 1)}
         />
       )}
     </NavigationContext.Provider>

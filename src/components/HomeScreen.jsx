@@ -7,7 +7,8 @@ import { COLORS, APP_VERSION } from "../constants.js";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
-import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest } from "../data/sharedDirectories.js";
+import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories } from "../data/sharedDirectories.js";
+import { StoriesBar } from "./StoriesBar.jsx";
 
 function pulseTimeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -51,6 +52,9 @@ export function HomeScreen({
   updateEvent,
   goToBibaxAllSuggestions,
   onOpenBibaxProfile,
+  pulseStoriesRefreshKey,
+  onAddStory,
+  onOpenStoryAuthor,
   goToSessionHub,
   goToProfile,
   goToRepertoireHub,
@@ -71,6 +75,10 @@ export function HomeScreen({
   venues,
 }) {
   const [pulseEntries, setPulseEntries] = useState(null);
+  const [stories, setStories] = useState([]);
+  useEffect(() => {
+    loadPulseStories().then(setStories);
+  }, [pulseStoriesRefreshKey]);
   useEffect(() => {
     loadPulseFeed(null, 3).then(setPulseEntries);
   }, []);
@@ -143,6 +151,12 @@ export function HomeScreen({
           </span>
         </button>
       </div>
+
+      <StoriesBar
+        stories={stories}
+        onAddStory={() => onAddStory("global", null)}
+        onOpenStory={onOpenStoryAuthor}
+      />
 
       {bibros.some((b) => bibroStatuses[b.code] && (bibroStatuses[b.code].activeSalonName || isFreshCheckIn(bibroStatuses[b.code]))) && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>

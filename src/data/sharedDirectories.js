@@ -442,6 +442,118 @@ export async function uploadMyAvatarPhoto(userId, blob) {
   return { url: data.url };
 }
 
+/* ---------------- STORIES ---------------- */
+
+// Envoie le média d'une Story (photo, pour l'instant — vidéo prévue plus tard) via le même
+// pipeline de modération que le reste de l'app.
+export async function uploadStoryMedia(userId, blob) {
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${userId}-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "stories", path, imageBase64, contentType: "image/jpeg", entityType: "story", entityId: userId, kind: "story" },
+  });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { url: data.url };
+}
+
+// Crée la Story elle-même — insertion directe protégée par RLS (chacun ne peut créer que ses
+// propres Stories), pas besoin de fonction serveur pour ça.
+export async function createStory({ contextType, contextId, mediaUrl, caption, sharedToPulse, pulseVisibility }) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié." };
+  const { data, error } = await supabase
+    .from("stories")
+    .insert({
+      author_id: user.id,
+      context_type: contextType,
+      context_id: contextId || null,
+      media_type: "image",
+      media_url: mediaUrl,
+      caption: caption || null,
+      shared_to_pulse: contextType === "global" ? false : !!sharedToPulse,
+      pulse_visibility: pulseVisibility || "relations",
+    })
+    .select("id")
+    .single();
+  if (error) return { error: error.message };
+  return { ok: true, id: data.id };
+}
+
+export async function loadRoomStories(salonCode) {
+  const { data, error } = await supabase.rpc("get_room_stories", { p_salon_code: salonCode });
+  if (error) {
+    console.error("loadRoomStories:", error);
+    return [];
+  }
+  return data.map((s) => ({
+    id: s.id,
+    authorId: s.author_id,
+    authorName: s.author_name,
+    authorAvatarUrl: s.author_avatar_url,
+    mediaType: s.media_type,
+    mediaUrl: s.media_url,
+    caption: s.caption,
+    createdAt: s.created_at,
+    contextType: "room",
+    sharedToPulse: s.shared_to_pulse,
+  }));
+}
+
+export async function loadPulseStories() {
+  const { data, error } = await supabase.rpc("get_pulse_stories");
+  if (error) {
+    console.error("loadPulseStories:", error);
+    return [];
+  }
+  return data.map((s) => ({
+    id: s.id,
+    authorId: s.author_id,
+    authorName: s.author_name,
+    authorAvatarUrl: s.author_avatar_url,
+    mediaType: s.media_type,
+    mediaUrl: s.media_url,
+    caption: s.caption,
+    createdAt: s.created_at,
+    contextType: s.context_type,
+    contextId: s.context_id,
+    sharedToPulse: s.shared_to_pulse,
+  }));
+}
+
+export async function setStoryPulseSharing(storyId, shared) {
+  const { data, error } = await supabase.rpc("set_story_pulse_sharing", { p_story_id: storyId, p_shared: shared });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function loadMyStories() {
+  const { data, error } = await supabase.rpc("get_my_stories");
+  if (error) {
+    console.error("loadMyStories:", error);
+    return [];
+  }
+  return data.map((s) => ({
+    id: s.id,
+    contextType: s.context_type,
+    contextId: s.context_id,
+    mediaType: s.media_type,
+    mediaUrl: s.media_url,
+    caption: s.caption,
+    createdAt: s.created_at,
+    expiresAt: s.expires_at,
+    sharedToPulse: s.shared_to_pulse,
+  }));
+}
+
+export async function deleteStory(storyId) {
+  const { error } = await supabase.from("stories").delete().eq("id", storyId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
 
 // Statuts visibles dans l'app grand public — jamais brouillon, rejeté, archivé ou doublon.
