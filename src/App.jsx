@@ -409,6 +409,7 @@ export default function App() {
       nowPlayingUri: null,
       nowPlayingTrack: null,
       playedUris: [],
+      djCode: null,
     };
 
     if (isSalon) {

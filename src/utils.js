@@ -402,6 +402,7 @@ export const normalizeEvent = (e) => ({
   nowPlayingUri: e.nowPlayingUri || null,
   nowPlayingTrack: e.nowPlayingTrack || null,
   playedUris: e.playedUris || [],
+  djCode: e.djCode || null,
   bibaBob: e.bibaBob || {},
   pot: e.pot || null,
   splitParticipants: e.splitParticipants || null,

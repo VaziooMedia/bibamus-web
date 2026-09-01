@@ -10,7 +10,47 @@ import {
   createSpotifyPlaylist,
   addTrackToSpotifyPlaylist,
   getCurrentlyPlaying,
+  getSpotifyPlaylistOrder,
+  reorderSpotifyPlaylistItem,
 } from "../data/spotify.js";
+
+// Ne fait défiler le texte que s'il dépasse réellement la largeur disponible — sinon, reste
+// simplement affiché tel quel, sans animation inutile.
+function ScrollingText({ children, style }) {
+  const containerRef = useRef(null);
+  const textRef = useRef(null);
+  const [overflowing, setOverflowing] = useState(false);
+
+  useEffect(() => {
+    if (containerRef.current && textRef.current) {
+      setOverflowing(textRef.current.scrollWidth > containerRef.current.clientWidth);
+    }
+  }, [children]);
+
+  return (
+    <div ref={containerRef} style={{ overflow: "hidden", whiteSpace: "nowrap", position: "relative" }}>
+      <span
+        ref={textRef}
+        style={{
+          ...style,
+          display: "inline-block",
+          ...(overflowing ? { animation: "bibamusic-scroll 7s linear infinite" } : { textOverflow: "ellipsis", overflow: "hidden", maxWidth: "100%" }),
+        }}
+      >
+        {children}
+        {overflowing && <span style={{ paddingLeft: "40px" }}>{children}</span>}
+      </span>
+      {overflowing && (
+        <style>{`
+          @keyframes bibamusic-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
+      )}
+    </div>
+  );
+}
 
 // BibaMusic — page à part entière du BibaRoom, dédiée à la playlist collaborative de soirée.
 // Chacun propose un morceau (recherche directe dans Spotify si connecté, sinon à la main),
@@ -78,7 +118,52 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
   }, [spotifyConnected, myUserId, event.id]);
 
   const playlist = event.playlist || [];
-  const sorted = [...playlist].sort((a, b) => (b.bix || []).length - (a.bix || []).length || a.createdAt - b.createdAt);
+  // Le classement par Bix ne doit influencer que les morceaux pas encore joués — sinon, un Bix
+  // sur un nouveau morceau le fait sauter au-dessus du morceau en cours ou déjà joués, ce qui
+  // n'a pas de sens (ça ne les fait pas non plus rejouer).
+  const nowPlayingSong = playlist.find((s) => s.spotifyUri && s.spotifyUri === event.nowPlayingUri);
+  const playedSongs = playlist.filter((s) => s !== nowPlayingSong && s.spotifyUri && (event.playedUris || []).includes(s.spotifyUri));
+  const upcomingSongs = playlist
+    .filter((s) => s !== nowPlayingSong && !playedSongs.includes(s))
+    .sort((a, b) => {
+      // Un classement manuel posé par le DJ prend le dessus sur le classement automatique par
+      // Bix — sinon la modération manuelle serait immédiatement écrasée par un nouveau vote.
+      if (a.manualRank != null || b.manualRank != null) {
+        const ra = a.manualRank ?? Infinity;
+        const rb = b.manualRank ?? Infinity;
+        if (ra !== rb) return ra - rb;
+      }
+      return (b.bix || []).length - (a.bix || []).length || a.createdAt - b.createdAt;
+    });
+  const sorted = [...(nowPlayingSong ? [nowPlayingSong] : []), ...upcomingSongs, ...playedSongs];
+
+  // Synchronise le classement Bibamus vers la vraie playlist Spotify — dès que le morceau le
+  // plus Bix parmi ceux pas encore joués change, on le déplace juste après le morceau en
+  // cours dans la VRAIE playlist. Sans ça, les Bix n'auraient d'effet que dans l'app, jamais
+  // sur ce qui est réellement joué — tout l'intérêt collaboratif de BibaMusic.
+  const topUpcomingUri = upcomingSongs[0]?.spotifyUri || null;
+  const lastSyncedTopUri = useRef(null);
+  useEffect(() => {
+    if (!event.spotifyPlaylistId || !topUpcomingUri || !spotifyConnected) return;
+    if (lastSyncedTopUri.current === topUpcomingUri) return;
+    lastSyncedTopUri.current = topUpcomingUri;
+
+    (async () => {
+      const token = await ensureFreshSpotifyToken(myUserId);
+      if (!token) return;
+      const realOrder = await getSpotifyPlaylistOrder(token, event.spotifyPlaylistId);
+      if (!realOrder) return;
+
+      const topIndex = realOrder.indexOf(topUpcomingUri);
+      if (topIndex === -1) return; // pas encore ajouté à la vraie playlist
+
+      const currentIndex = event.nowPlayingUri ? realOrder.indexOf(event.nowPlayingUri) : -1;
+      const targetPosition = currentIndex === -1 ? 0 : currentIndex + 1;
+      if (topIndex <= targetPosition) return; // déjà à la bonne place ou avant
+
+      await reorderSpotifyPlaylistItem(token, event.spotifyPlaylistId, topIndex, targetPosition);
+    })();
+  }, [topUpcomingUri, event.spotifyPlaylistId, event.nowPlayingUri, spotifyConnected, myUserId]);
 
   const runSearch = (query) => {
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
@@ -135,6 +220,41 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     updateEvent(event.id, (e) => ({ ...e, playlist: (e.playlist || []).filter((s) => s.id !== songId) }));
   };
 
+  const isDJ = event.djCode === myBibroCode;
+  const becomeDJ = () => updateEvent(event.id, (e) => ({ ...e, djCode: myBibroCode }));
+  const relinquishDJ = () => updateEvent(event.id, (e) => ({ ...e, djCode: null }));
+
+  // Déplace un morceau dans le classement — fige l'ordre actuel en rangs manuels explicites,
+  // pour que la modération du DJ ne soit pas aussitôt écrasée par un nouveau Bix. Synchronise
+  // aussi vers la vraie playlist Spotify, comme pour le classement automatique.
+  const moveSong = async (song, direction) => {
+    const idx = upcomingSongs.findIndex((s) => s.id === song.id);
+    const swapIdx = idx + direction;
+    if (swapIdx < 0 || swapIdx >= upcomingSongs.length) return;
+    const newOrder = [...upcomingSongs];
+    [newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]];
+
+    updateEvent(event.id, (e) => ({
+      ...e,
+      playlist: (e.playlist || []).map((s) => {
+        const rank = newOrder.findIndex((n) => n.id === s.id);
+        return rank === -1 ? s : { ...s, manualRank: rank };
+      }),
+    }));
+
+    if (event.spotifyPlaylistId && song.spotifyUri) {
+      const token = await ensureFreshSpotifyToken(myUserId);
+      if (!token) return;
+      const realOrder = await getSpotifyPlaylistOrder(token, event.spotifyPlaylistId);
+      if (!realOrder) return;
+      const fromIndex = realOrder.indexOf(song.spotifyUri);
+      const otherUri = upcomingSongs[swapIdx].spotifyUri;
+      const toIndex = otherUri ? realOrder.indexOf(otherUri) : -1;
+      if (fromIndex === -1 || toIndex === -1) return;
+      await reorderSpotifyPlaylistItem(token, event.spotifyPlaylistId, fromIndex, direction < 0 ? toIndex : toIndex + 1);
+    }
+  };
+
   const createPlaylist = async () => {
     setCreatingPlaylist(true);
     const token = await ensureFreshSpotifyToken(myUserId);
@@ -179,6 +299,27 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Music</span>
         </h1>
+      </div>
+
+      {/* Mode DJ — un participant peut modérer la playlist (supprimer n'importe quel morceau,
+      réordonner manuellement) ; sans DJ, tout le monde ne gère que ses propres propositions. */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+        <p style={{ margin: 0, fontSize: "12px", color: COLORS.inkSoft }}>
+          {event.djCode
+            ? isDJ
+              ? "Vous êtes DJ de ce Bibroom."
+              : `DJ : ${(event.participants || []).find((p) => p.code === event.djCode)?.name || "quelqu'un"}`
+            : "Aucun DJ pour l'instant."}
+        </p>
+        {isDJ ? (
+          <button onClick={relinquishDJ} style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "6px 12px", fontSize: "11.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}>
+            Céder le rôle
+          </button>
+        ) : !event.djCode ? (
+          <button onClick={becomeDJ} style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "6px 12px", fontSize: "11.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+            Devenir DJ
+          </button>
+        ) : null}
       </div>
 
       {/* Écoute réelle — se fait dans la vraie app Spotify, pas dans un lecteur limité aux
@@ -246,8 +387,8 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
               <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
               En cours
             </p>
-            <p style={{ margin: "3px 0 0", fontSize: "15px", fontWeight: 800, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{event.nowPlayingTrack.title}</p>
-            {event.nowPlayingTrack.artist && <p style={{ margin: "2px 0 0", fontSize: "13px", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{event.nowPlayingTrack.artist}</p>}
+            <ScrollingText style={{ margin: "3px 0 0", fontSize: "15px", fontWeight: 800, color: COLORS.ink }}>{event.nowPlayingTrack.title}</ScrollingText>
+            {event.nowPlayingTrack.artist && <ScrollingText style={{ margin: "2px 0 0", fontSize: "13px", color: COLORS.inkSoft }}>{event.nowPlayingTrack.artist}</ScrollingText>}
           </div>
         </div>
       ) : (
@@ -358,8 +499,8 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                 )}
                 {s.albumArt && <img src={s.albumArt} alt="" style={{ width: "40px", height: "40px", borderRadius: "6px", flexShrink: 0 }} />}
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.title}</p>
-                  {s.artist && <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.artist}</p>}
+                  <ScrollingText style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>{s.title}</ScrollingText>
+                  {s.artist && <ScrollingText style={{ margin: "2px 0 0", fontSize: "12.5px", color: COLORS.inkSoft }}>{s.artist}</ScrollingText>}
                   <p style={{ margin: "3px 0 0", fontSize: "11.5px", color: COLORS.inkSoft }}>
                     Proposé par {s.proposedByName || "quelqu'un"}
                     {s.link && !s.spotifyUri && (
@@ -422,7 +563,23 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
                   <NavIcon name="heart" size={13} color={iBixed ? COLORS.paper : COLORS.amber} filled={iBixed} />
                   {bixCount}
                 </button>
-                {isMine && (
+                {isDJ && !isNowPlaying && !wasPlayed && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1px", flexShrink: 0 }}>
+                    <button
+                      onClick={() => moveSong(s, -1)}
+                      style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", cursor: "pointer", padding: "0 2px", lineHeight: "13px" }}
+                    >
+                      ▲
+                    </button>
+                    <button
+                      onClick={() => moveSong(s, 1)}
+                      style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", cursor: "pointer", padding: "0 2px", lineHeight: "13px" }}
+                    >
+                      ▼
+                    </button>
+                  </div>
+                )}
+                {(isMine || isDJ) && (
                   <button onClick={() => removeSong(s.id)} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "17px", cursor: "pointer", padding: "0 2px", flexShrink: 0 }}>
                     ✕
                   </button>

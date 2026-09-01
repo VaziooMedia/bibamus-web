@@ -257,3 +257,40 @@ export async function getCurrentlyPlaying(accessToken) {
     return { error: String(e) };
   }
 }
+
+// Récupère l'ordre réel des morceaux dans la playlist Spotify — nécessaire pour savoir où
+// déplacer un morceau (Spotify raisonne en positions, pas en identifiants).
+export async function getSpotifyPlaylistOrder(accessToken, playlistId) {
+  let uris = [];
+  let url = `https://api.spotify.com/v1/playlists/${playlistId}/items?fields=items(track(uri)),next&limit=100`;
+  try {
+    while (url) {
+      const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+      if (!response.ok) return null;
+      const data = await response.json();
+      uris = uris.concat((data.items || []).map((i) => i.track?.uri).filter(Boolean));
+      url = data.next;
+    }
+    return uris;
+  } catch (e) {
+    console.error("getSpotifyPlaylistOrder:", e);
+    return null;
+  }
+}
+
+// Déplace un morceau à une nouvelle position dans la vraie playlist Spotify — c'est ce qui
+// fait que le classement par Bix dans Bibamus a un vrai effet sur ce qui va réellement être
+// joué, pas seulement sur l'affichage dans l'app.
+export async function reorderSpotifyPlaylistItem(accessToken, playlistId, rangeStart, insertBefore) {
+  try {
+    const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/items`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range_start: rangeStart, insert_before: insertBefore, range_length: 1 }),
+    });
+    return response.ok;
+  } catch (e) {
+    console.error("reorderSpotifyPlaylistItem:", e);
+    return false;
+  }
+}
