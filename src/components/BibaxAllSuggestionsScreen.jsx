@@ -54,7 +54,7 @@ export function BibaxAllSuggestionsScreen({ onBack, onOpenProfile }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                 <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
-                  {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.sameLocation ? "Même ville" : ""}
+                  {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}
                 </p>
               </div>
               <span

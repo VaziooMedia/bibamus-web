@@ -305,6 +305,8 @@ export async function loadMyProfile(userId) {
     country: data.country || null,
     region: data.region || null,
     city: data.city || null,
+    latitude: data.latitude || null,
+    longitude: data.longitude || null,
     bio: data.bio || "",
     facebookUrl: data.facebook_url || "",
     instagramUrl: data.instagram_url || "",
@@ -348,6 +350,8 @@ export async function updateMyProfile(
     country,
     region,
     city,
+    latitude,
+    longitude,
     bio,
     facebookUrl,
     instagramUrl,
@@ -382,6 +386,8 @@ export async function updateMyProfile(
     country,
     region,
     city,
+    latitude,
+    longitude,
     bio,
     facebook_url: facebookUrl,
     instagram_url: instagramUrl,
@@ -561,6 +567,22 @@ export async function loadNearbyVenues(lat, lng, radiusMeters = 2000, limit = 10
     return [];
   }
   return data.map((row) => ({ ...rowToVenue(row.venue), distanceMeters: row.distance_meters }));
+}
+
+// Géocode la ville déclarée d'un profil (pas d'adresse précise, juste le centre-ville) — pour
+// alimenter les suggestions Bibax par vraie proximité géographique plutôt qu'une correspondance
+// exacte sur le nom de ville. Réutilise la même fonction serveur que le géocodage d'adresse
+// d'établissement.
+export async function geocodeCityForProfile(city, countryIsoCode) {
+  if (!city || !countryIsoCode) return null;
+  try {
+    const { data, error } = await supabase.functions.invoke("geoapify-geocode", { body: { city, countryIsoCode } });
+    if (error || data?.error || data?.notFound) return null;
+    return { lat: data.lat, lng: data.lng };
+  } catch (e) {
+    console.error("geocodeCityForProfile:", e);
+    return null;
+  }
 }
 
 /* ---------------- HORAIRES — GOOGLE PLACES (source unique) ---------------- */
@@ -1256,5 +1278,5 @@ export async function loadBibaxSuggestions(limit = 10) {
     console.error("loadBibaxSuggestions:", error);
     return [];
   }
-  return data.map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, mutualCount: r.mutual_count, sameLocation: r.same_location }));
+  return data.map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, mutualCount: r.mutual_count, distanceKm: r.distance_km }));
 }

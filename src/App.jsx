@@ -74,6 +74,7 @@ import {
   loadPendingBibaxRequests,
   loadSentBibaxRequests,
   loadBibaxSuggestions,
+  geocodeCityForProfile,
   emitEvent,
   updateMyProfile,
   signOut,
@@ -84,7 +85,7 @@ import {
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, kcalForDrink } from "./utils.js";
-import { BEER_TYPES } from "./constants.js";
+import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
 function loadLocal(key, fallback) {
@@ -377,6 +378,21 @@ export default function App() {
     profile.shareVisitRanking,
     profile.avatarUrl,
   ]);
+
+  // Géocode la ville déclarée pour permettre de vraies suggestions Bibax par proximité
+  // géographique (ex. Waimes/Malmedy, deux villes voisines mais distinctes) plutôt qu'une
+  // correspondance exacte sur le nom de ville. Ne regéocode pas si des coordonnées existent
+  // déjà — seulement quand ville/pays changent réellement.
+  useEffect(() => {
+    if (!session || !profile.city || !profile.country) return;
+    const isoCode = COUNTRY_ISO_CODES[profile.country];
+    if (!isoCode) return;
+    geocodeCityForProfile(profile.city, isoCode).then((coords) => {
+      if (coords) setProfile((p) => ({ ...p, latitude: coords.lat, longitude: coords.lng }));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, profile.city, profile.country]);
+
   useEffect(() => saveLocal("bibamus-events", events), [events]);
   useEffect(() => saveLocal("bibamus-bibros", bibros), [bibros]);
 
