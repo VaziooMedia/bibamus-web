@@ -49,6 +49,8 @@ export function HomeScreen({
   eventTotal,
   openEvent,
   updateEvent,
+  goToBibaxAllSuggestions,
+  onOpenBibaxProfile,
   goToSessionHub,
   goToProfile,
   goToRepertoireHub,
@@ -344,24 +346,59 @@ export function HomeScreen({
         <div style={{ marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
             <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>Suggestions de Bibax</span>
+            <span style={{ fontSize: "13px", fontWeight: 700 }}>
+              <span style={{ color: COLORS.ink }}>Biba</span>
+              <span style={{ color: COLORS.amber }}>x</span>
+              <span style={{ color: COLORS.inkSoft }}> - Suggestions</span>
+            </span>
+            <button onClick={goToBibaxAllSuggestions} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber, cursor: "pointer" }}>
+              Voir tout
+            </button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {bibaxSuggestions.map((s) => (
-              <div key={s.userId} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <button
+                key={s.userId}
+                onClick={() => onOpenBibaxProfile(s.bibroCode)}
+                style={{
+                  background: COLORS.surface,
+                  border: `2px solid ${COLORS.paperAlt}`,
+                  borderRadius: "12px",
+                  padding: "10px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  width: "100%",
+                }}
+              >
                 <EntityAvatar photoUrl={s.avatarUrl} size={32} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} style={{ fontSize: "13px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "10.5px", color: COLORS.inkSoft }}>{s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.sameLocation ? "Même ville" : ""}</p>
                 </div>
-                <button
-                  onClick={() => addSuggestedBibax(s.bibroCode)}
-                  disabled={addingBibaxCode === s.bibroCode}
-                  style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "6px 11px", fontSize: "11.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer", flexShrink: 0 }}
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addSuggestedBibax(s.bibroCode);
+                  }}
+                  style={{
+                    background: "none",
+                    border: `2px solid ${COLORS.amber}`,
+                    borderRadius: "8px",
+                    padding: "6px 11px",
+                    fontSize: "11.5px",
+                    fontWeight: 700,
+                    color: COLORS.amber,
+                    cursor: "pointer",
+                    opacity: addingBibaxCode === s.bibroCode ? 0.5 : 1,
+                    flexShrink: 0,
+                  }}
                 >
                   Ajouter
-                </button>
-              </div>
+                </span>
+              </button>
             ))}
           </div>
         </div>

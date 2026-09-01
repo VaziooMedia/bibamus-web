@@ -1246,7 +1246,7 @@ export async function loadPendingBibaxRequests() {
     console.error("loadPendingBibaxRequests:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, createdAt: r.created_at }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, createdAt: r.created_at }));
 }
 
 export async function loadSentBibaxRequests() {

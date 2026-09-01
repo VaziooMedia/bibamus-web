@@ -18,6 +18,8 @@ import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
 import { EventDashboardScreen } from "./components/EventDashboardScreen.jsx";
 import { BibaMusicScreen } from "./components/BibaMusicScreen.jsx";
 import { BibaPulseScreen } from "./components/BibaPulseScreen.jsx";
+import { BibaxAllSuggestionsScreen } from "./components/BibaxAllSuggestionsScreen.jsx";
+import { BibaxProfilePreviewScreen } from "./components/BibaxProfilePreviewScreen.jsx";
 import { RoundComposeScreen } from "./components/RoundComposeScreen.jsx";
 import { RoundTicketScreen } from "./components/RoundTicketScreen.jsx";
 import { NewEventScreen } from "./components/NewEventScreen.jsx";
@@ -191,6 +193,7 @@ export default function App() {
   }, [profile.myBibroCode]);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
+  const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
 
   // Finalise la connexion Spotify dès que la session est prête — ne peut pas se faire plus tôt,
   // l'échange du code nécessite de savoir à quel compte Bibamus l'associer.
@@ -1239,6 +1242,11 @@ export default function App() {
                 events={events}
                 updateEvent={updateEvent}
                 eventTotal={() => 0}
+                goToBibaxAllSuggestions={() => setScreen("bibaxAllSuggestions")}
+                onOpenBibaxProfile={(code) => {
+                  setViewedBibaxProfileCode(code);
+                  setScreen("bibaxProfilePreview");
+                }}
                 openEvent={(id) => {
                   setActiveEventId(id);
                   setScreen("eventDashboard");
@@ -1798,6 +1806,10 @@ export default function App() {
                     });
                   });
                 }}
+                onOpenBibaxProfile={(code) => {
+                  setViewedBibaxProfileCode(code);
+                  setScreen("bibaxProfilePreview");
+                }}
                 onRemoveBibro={removeBibro}
                 onSetAlias={setBibroAlias}
                 onToggleFavorite={toggleBibroFavorite}
@@ -1860,7 +1872,19 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {screen === "bibaxAllSuggestions" && (
+              <BibaxAllSuggestionsScreen
+                onBack={() => setScreen("home")}
+                onOpenProfile={(code) => {
+                  setViewedBibaxProfileCode(code);
+                  setScreen("bibaxProfilePreview");
+                }}
+              />
+            )}
+            {screen === "bibaxProfilePreview" && viewedBibaxProfileCode && (
+              <BibaxProfilePreviewScreen bibroCode={viewedBibaxProfileCode} onBack={() => setScreen("home")} />
+            )}
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
