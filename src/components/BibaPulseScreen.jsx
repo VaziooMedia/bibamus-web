@@ -160,8 +160,15 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
           }}
         >
           <NavIcon name="heart" size={16} color={entry.iBixed ? COLORS.paper : COLORS.amber} filled={entry.iBixed} />
-          {entry.bixCount > 0 && <span onClick={(e) => { e.stopPropagation(); openReactors("bix"); }}>{entry.bixCount}</span>}
         </button>
+        {entry.bixCount > 0 && (
+          <button
+            onClick={() => openReactors("bix")}
+            style={{ background: "none", border: "none", fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer", padding: "6px 2px" }}
+          >
+            {entry.bixCount}
+          </button>
+        )}
 
         <button
           onClick={toggleComments}
@@ -171,24 +178,34 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
         </button>
 
         {entry.eventType === "venue_visit" && entry.actorId !== myUserId && (
-          <button
-            onClick={handleIncoming}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "5px",
-              background: entry.iAmIncoming ? COLORS.amber : "none",
-              border: `2px solid ${COLORS.amber}`,
-              borderRadius: "999px",
-              padding: "6px 12px",
-              fontSize: "12.5px",
-              fontWeight: 700,
-              color: entry.iAmIncoming ? COLORS.paper : COLORS.amber,
-              cursor: "pointer",
-            }}
-          >
-            J'arrive{entry.incomingCount > 0 && <span onClick={(e) => { e.stopPropagation(); openReactors("incoming"); }}>{` (${entry.incomingCount})`}</span>}
-          </button>
+          <>
+            <button
+              onClick={handleIncoming}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                background: entry.iAmIncoming ? COLORS.amber : "none",
+                border: `2px solid ${COLORS.amber}`,
+                borderRadius: "999px",
+                padding: "6px 12px",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                color: entry.iAmIncoming ? COLORS.paper : COLORS.amber,
+                cursor: "pointer",
+              }}
+            >
+              J'arrive
+            </button>
+            {entry.incomingCount > 0 && (
+              <button
+                onClick={() => openReactors("incoming")}
+                style={{ background: "none", border: "none", fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer", padding: "6px 2px" }}
+              >
+                {entry.incomingCount}
+              </button>
+            )}
+          </>
         )}
       </div>
 
