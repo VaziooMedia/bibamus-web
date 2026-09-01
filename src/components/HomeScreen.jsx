@@ -83,7 +83,7 @@ export function HomeScreen({
     // du lot prend directement sa place, sans nouvel aller-retour serveur.
     loadBibaxSuggestions(20).then(setBibaxSuggestionsPool);
   }, []);
-  const bibaxSuggestions = (bibaxSuggestionsPool || []).slice(0, 5);
+  const bibaxSuggestions = (bibaxSuggestionsPool || []).slice(0, 3);
   const addSuggestedBibax = async (bibroCode) => {
     setAddingBibaxCode(bibroCode);
     await sendBibaxRequest(bibroCode);
@@ -375,7 +375,7 @@ export function HomeScreen({
                 e.stopPropagation();
                 goToBibaxAllSuggestions();
               }}
-              style={{ marginLeft: "auto", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber }}
+              style={{ marginLeft: "auto", marginRight: "8px", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber }}
             >
               Voir tout
             </span>

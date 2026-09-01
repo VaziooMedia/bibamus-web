@@ -104,10 +104,8 @@ export function BibaxName({ name, lastName, nickname, city, locality, style }) {
   const location = city ? (locality ? `${city} (${locality})` : city) : null;
   return (
     <span style={{ display: "inline-flex", flexDirection: "column", minWidth: 0, ...style }}>
-      <span style={{ display: "inline-flex", alignItems: "baseline", gap: "6px", minWidth: 0 }}>
-        <span style={{ fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName}</span>
-        {nickname && <span style={{ fontSize: "0.85em", fontWeight: 400, fontStyle: "italic", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nickname}</span>}
-      </span>
+      <span style={{ fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName}</span>
+      {nickname && <span style={{ fontSize: "0.85em", fontWeight: 400, fontStyle: "italic", color: COLORS.amber, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nickname}</span>}
       {location && <span style={{ fontSize: "0.8em", fontWeight: 400, color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{location}</span>}
     </span>
   );

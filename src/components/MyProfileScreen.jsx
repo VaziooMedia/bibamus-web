@@ -333,7 +333,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       <input
         value={locality}
         onChange={(e) => setLocality(e.target.value)}
-        placeholder="Ex. un hameau ou un village de la commune"
+        placeholder=""
         style={{ ...fieldStyle, marginBottom: "18px" }}
       />
 
