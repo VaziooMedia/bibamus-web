@@ -71,7 +71,7 @@ import {
   approveContribution,
   rejectContribution,
 } from "./data/sharedDirectories.js";
-import { loadSalon, createSalon, saveSalon, subscribeToSalon } from "./data/salons.js";
+import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, kcalForDrink } from "./utils.js";
 import { BEER_TYPES } from "./constants.js";
@@ -221,6 +221,27 @@ export default function App() {
       setProfileLoaded(true);
     });
   }, [session]);
+
+  // Rapatrie les BibaRoom actifs créés ou rejoints depuis un AUTRE appareil connecté au même
+  // compte — sans ça, un salon créé sur le téléphone n'apparaîtrait jamais dans BibaLive sur
+  // l'ordinateur, chaque appareil ne connaissant jusqu'ici que sa propre liste locale.
+  useEffect(() => {
+    if (!profileLoaded || !profile.myBibroCode) return;
+    const fetchActiveSalons = () => {
+      loadMyActiveSalons(profile.myBibroCode).then((salons) => {
+        if (!salons || salons.length === 0) return;
+        setEvents((prev) => {
+          const knownSalonCodes = new Set(prev.filter((e) => e.salonCode).map((e) => e.salonCode));
+          const missing = salons.filter((s) => s.salonCode && !knownSalonCodes.has(s.salonCode)).map(normalizeEvent);
+          return missing.length > 0 ? [...prev, ...missing] : prev;
+        });
+      });
+    };
+    fetchActiveSalons();
+    const interval = setInterval(fetchActiveSalons, 30000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileLoaded, profile.myBibroCode]);
 
   useEffect(() => {
     if (!session) return;

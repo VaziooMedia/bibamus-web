@@ -12,6 +12,19 @@
 
 import { supabase } from "../supabaseClient.js";
 
+// Retrouve tous les BibaRoom actifs où ce compte est déjà participant — peu importe l'appareil
+// qui les a créés ou rejoints. Sans ça, un BibaRoom créé sur un téléphone n'apparaîtrait jamais
+// dans BibaLive sur un autre appareil connecté au même compte.
+export async function loadMyActiveSalons(bibroCode) {
+  if (!bibroCode) return [];
+  const { data, error } = await supabase.rpc("get_my_active_salons", { p_bibro_code: bibroCode });
+  if (error) {
+    console.error("loadMyActiveSalons:", error);
+    return [];
+  }
+  return data.map((row) => row.data);
+}
+
 export async function loadSalon(code) {
   const { data, error } = await supabase.from("salons").select("data").eq("code", code).maybeSingle();
   if (error) {
