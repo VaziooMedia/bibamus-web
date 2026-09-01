@@ -11,7 +11,7 @@ import { ProfileHeader } from "./ProfileParts.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
-import { loadPendingBibaxRequests, loadSentBibaxRequests, loadBibaxSuggestions, respondBibaxRequest, sendBibaxRequest } from "../data/sharedDirectories.js";
+import { loadPendingBibaxRequests, loadSentBibaxRequests, loadBibaxSuggestions, respondBibaxRequest, sendBibaxRequest, cancelBibaxRequest } from "../data/sharedDirectories.js";
 
 // Demandes reçues (à confirmer/refuser) et suggestions (Bibax en commun, localisation
 // partagée) — façon Facebook : un simple "Confirmer" ou "Ajouter" suffit.
@@ -50,9 +50,21 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
     refresh();
   };
 
+  const cancelRequest = async (relationshipId) => {
+    setBusyId(relationshipId);
+    const result = await cancelBibaxRequest(relationshipId);
+    setBusyId(null);
+    if (result.error) {
+      alert(result.error);
+      return;
+    }
+    refresh();
+  };
+
   const hasPending = pending && pending.length > 0;
+  const hasSent = sent && sent.length > 0;
   const hasSuggestions = suggestions && suggestions.length > 0;
-  if (!hasPending && !hasSuggestions) return null;
+  if (!hasPending && !hasSent && !hasSuggestions) return null;
 
   return (
     <>
@@ -90,6 +102,40 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
                   style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px 10px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
                 >
                   Refuser
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasSent && (
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+            <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+            <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Demandes envoyées ({sent.length})</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {sent.map((r) => (
+              <div
+                key={r.relationshipId}
+                onClick={() => onOpenProfile(r.bibroCode)}
+                style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+              >
+                <EntityAvatar photoUrl={r.avatarUrl} size={36} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                  <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>En attente de confirmation</p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    cancelRequest(r.relationshipId);
+                  }}
+                  disabled={busyId === r.relationshipId}
+                  style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
+                >
+                  Annuler
                 </button>
               </div>
             ))}

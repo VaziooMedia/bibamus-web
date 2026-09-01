@@ -1241,7 +1241,13 @@ export async function loadSentBibaxRequests() {
     console.error("loadSentBibaxRequests:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, createdAt: r.created_at }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, createdAt: r.created_at }));
+}
+
+export async function cancelBibaxRequest(relationshipId) {
+  const { data, error } = await supabase.rpc("cancel_bibax_request", { p_relationship_id: relationshipId });
+  if (error) return { error: error.message };
+  return data;
 }
 
 export async function loadBibaxSuggestions(limit = 10) {
