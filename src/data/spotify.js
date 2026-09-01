@@ -211,11 +211,13 @@ export async function createSpotifyPlaylist(accessToken, playlistName) {
   }
 }
 
-// Ajoute un morceau (par son URI Spotify) à la playlist déjà créée pour ce BibaRoom.
+// Ajoute un morceau (par son URI Spotify) à la playlist déjà créée pour ce BibaRoom. Utilise
+// /items — l'ancien /tracks a été renommé lors de la même migration de février 2026 qui a
+// aussi retiré /users/{id}/playlists pour la création.
 export async function addTrackToSpotifyPlaylist(accessToken, playlistId, spotifyUri) {
   if (!spotifyUri) return { error: "Ce morceau n'a pas d'identifiant Spotify — impossible à ajouter." };
   try {
-    const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+    const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/items`, {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ uris: [spotifyUri] }),
