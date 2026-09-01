@@ -15,7 +15,7 @@ import { loadPendingBibaxRequests, loadSentBibaxRequests, loadBibaxSuggestions, 
 
 // Demandes reçues (à confirmer/refuser) et suggestions (Bibax en commun, localisation
 // partagée) — façon Facebook : un simple "Confirmer" ou "Ajouter" suffit.
-function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile }) {
+function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSuggestions }) {
   const [pending, setPending] = useState(null);
   const [sent, setSent] = useState(null);
   const [suggestions, setSuggestions] = useState(null);
@@ -102,6 +102,11 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile }) {
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
             <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
             <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Suggestions</span>
+            {onSeeAllSuggestions && (
+              <button onClick={onSeeAllSuggestions} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber, cursor: "pointer" }}>
+                Voir tout
+              </button>
+            )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {suggestions.map((s) => (
@@ -136,13 +141,13 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile }) {
   );
 }
 
-export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack, onBibaxAdded, onOpenBibaxProfile }) {
+export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack, onBibaxAdded, onOpenBibaxProfile, onSeeAllSuggestions }) {
   const [query, setQuery] = useState("");
 
   const q = normalizeForSearch(query.trim());
   const matchesQuery = (b) =>
     !q ||
-    [b.firstName, b.lastName, b.nickname, b.alias, b.username, b.city, b.country].some((field) => normalizeForSearch(field).includes(q));
+    [b.firstName, b.lastName, b.nickname, b.alias, b.city, b.country].some((field) => normalizeForSearch(field).includes(q));
 
   const sortedBibros = [...bibros].filter(matchesQuery).sort((a, b) => {
     if (!!a.isFavorite !== !!b.isFavorite) return a.isFavorite ? -1 : 1;
@@ -207,7 +212,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
         + Ajouter un Bibax
       </PrimaryButton>
 
-      <BibaxRequestsAndSuggestions onBibaxAdded={onBibaxAdded || (() => {})} onOpenProfile={onOpenBibaxProfile || (() => {})} />
+      <BibaxRequestsAndSuggestions onBibaxAdded={onBibaxAdded || (() => {})} onOpenProfile={onOpenBibaxProfile || (() => {})} onSeeAllSuggestions={onSeeAllSuggestions} />
 
       <input
         value={query}
@@ -253,7 +258,6 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "15px" }}>{fullName}</div>
-                    {b.username && <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", color: COLORS.inkSoft, marginTop: "4px" }}>ID : {b.username}</div>}
                   </div>
                 </div>
               </div>
@@ -314,7 +318,6 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
   const age = computeAgeFromBirthDate(bibro.birthDate);
   const etiquetteParts = [];
   if (bibro.nickname) etiquetteParts.push(bibro.nickname);
-  if (bibro.username) etiquetteParts.push(`@${bibro.username}`);
   if (bibro.birthDate) etiquetteParts.push(age != null ? `${formatSharedBirthDate(bibro.birthDate)} (${age} ans)` : formatSharedBirthDate(bibro.birthDate));
   const hasContactInfo = bibro.email || bibro.country || bibro.region || bibro.city;
   const hasSocials = bibro.facebookUrl || bibro.instagramUrl || bibro.tiktokUrl || bibro.snapchatUrl;
@@ -581,7 +584,6 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
         firstName: identity.firstName || "",
         lastName: identity.lastName || "",
         nickname: identity.nickname || "",
-        username: identity.username || "",
         city: identity.city || "",
         country: identity.country || "",
         facebookUrl: identity.facebookUrl || "",
@@ -671,9 +673,8 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
               <div style={{ fontSize: "17px", fontWeight: 700 }}>
                 {foundSocials.firstName || foundSocials.lastName ? [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") : foundName}
               </div>
-              {(foundSocials.username || foundSocials.nickname || foundSocials.city || foundSocials.country) && (
+              {(foundSocials.nickname || foundSocials.city || foundSocials.country) && (
                 <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "6px", lineHeight: 1.6 }}>
-                  {foundSocials.username && <div>- ID : {foundSocials.username}</div>}
                   {foundSocials.nickname && <div>- {foundSocials.nickname}</div>}
                   {foundSocials.city && <div>- {foundSocials.city}</div>}
                   {foundSocials.country && <div>- {foundSocials.country}</div>}

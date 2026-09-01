@@ -104,7 +104,7 @@ export function BibaxName({ name, lastName, nickname, style }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline", gap: "6px", minWidth: 0, ...style }}>
       <span style={{ fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName}</span>
-      {nickname && <span style={{ fontSize: "0.85em", fontWeight: 400, color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>« {nickname} »</span>}
+      {nickname && <span style={{ fontSize: "0.85em", fontWeight: 400, fontStyle: "italic", color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nickname}</span>}
     </span>
   );
 }

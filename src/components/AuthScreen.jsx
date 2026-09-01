@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { COLORS, PROFILE_COUNTRIES } from "../constants.js";
-import { signUp, signIn, resetPassword, isUsernameAvailable, getMinimumAge } from "../data/sharedDirectories.js";
+import { signUp, signIn, resetPassword, getMinimumAge } from "../data/sharedDirectories.js";
 
 const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "4px", display: "block" };
@@ -145,7 +145,6 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [nickname, setNickname] = useState("");
-  const [username, setUsername] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [country, setCountry] = useState("");
   const [loading, setLoading] = useState(false);
@@ -179,7 +178,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
         setError("Le mot de passe doit contenir au moins 6 caractères.");
         return;
       }
-      if (!firstName.trim() || !lastName.trim() || !username.trim() || !birthDate || !country) {
+      if (!firstName.trim() || !lastName.trim() || !birthDate || !country) {
         setError("Merci de compléter tous les champs obligatoires.");
         return;
       }
@@ -194,13 +193,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
         setError(`Bibamus concerne des boissons alcoolisées — un âge minimum de ${minimumAge} ans est requis pour ce pays.`);
         return;
       }
-      const available = await isUsernameAvailable(username.trim());
-      if (!available) {
-        setLoading(false);
-        setError("Ce nom d'utilisateur est déjà pris — essayez-en un autre.");
-        return;
-      }
-      const result = await signUp(email, password, { firstName: firstName.trim(), lastName: lastName.trim(), nickname: nickname.trim(), username: username.trim(), birthDate, country });
+      const result = await signUp(email, password, { firstName: firstName.trim(), lastName: lastName.trim(), nickname: nickname.trim(), birthDate, country });
       setLoading(false);
       if (result.error) {
         setError(result.error);
@@ -254,10 +247,6 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
             <div>
               <label style={labelStyle}>Surnom (optionnel)</label>
               <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Nom d'utilisateur *</label>
-              <input value={username} onChange={(e) => setUsername(e.target.value)} required style={inputStyle} autoComplete="username" />
             </div>
             <div>
               <label style={labelStyle}>Date de naissance *</label>

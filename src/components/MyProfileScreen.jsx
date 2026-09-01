@@ -18,7 +18,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [firstName, setFirstName] = useState(myName || "");
   const [lastName, setLastName] = useState(profile.lastName || "");
   const [nickname, setNickname] = useState(profile.nickname || "");
-  const [username, setUsername] = useState(profile.username || "");
   const [email, setEmail] = useState(profile.email || "");
   const [birthDate, setBirthDate] = useState(profile.birthDate || "");
   const [country, setCountry] = useState(profile.country || "");
@@ -31,7 +30,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const fileInputRef = useRef(null);
   const [bio, setBio] = useState(profile.bio || "");
   const [shareBio, setShareBio] = useState(profile.shareBio !== false);
-  const [displayNameField, setDisplayNameField] = useState(profile.displayNameField || "username");
+  const [displayNameField, setDisplayNameField] = useState(profile.displayNameField || "firstName");
   const [facebookUrl, setFacebookUrl] = useState(profile.facebookUrl || "");
   const [instagramUrl, setInstagramUrl] = useState(profile.instagramUrl || "");
   const [tiktokUrl, setTiktokUrl] = useState(profile.tiktokUrl || "");
@@ -74,7 +73,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
     </label>
   );
 
-  const canSave = firstName.trim().length > 0 && username.trim().length > 0;
+  const canSave = firstName.trim().length > 0;
 
   const handleSave = () => {
     if (!canSave) return;
@@ -82,7 +81,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
     onSaveProfile({
       lastName: lastName.trim(),
       nickname: nickname.trim(),
-      username: username.trim(),
       email: email.trim(),
       birthDate,
       country: country.trim(),
@@ -204,12 +202,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       />
       <ShareToggle checked={shareBio} onChange={setShareBio} />
 
-      <label style={labelStyle}>Nom d'utilisateur *</label>
-      <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Ex. julien_74" style={fieldStyle} />
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-2px", marginBottom: "18px" }}>
-        Obligatoire — c'est ce nom qui t'identifie dans les salons et les Bibrooms, toujours visible.
-      </p>
-
       <div style={{ display: "flex", gap: "8px" }}>
         <div style={{ flex: 1 }}>
           <label style={labelStyle}>Prénom *</label>
@@ -232,16 +224,16 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
 
       <label style={labelStyle}>Nom affiché dans les BibaRooms et ailleurs</label>
       <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-2px", marginBottom: "10px" }}>
-        Une option n'est activable que si l'information correspondante est cochée "visible" ci-dessus. Sinon, ton nom d'utilisateur est utilisé par défaut.
+        Une option n'est activable que si l'information correspondante est cochée "visible" ci-dessus. Sinon, ton prénom est utilisé par défaut.
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "18px" }}>
         {(() => {
           const canFullName = sharePrenom && shareNom && lastName.trim().length > 0;
           const canNickname = shareSurnom && nickname.trim().length > 0;
           const effective = (() => {
-            if (displayNameField === "fullName" || displayNameField === "firstNameInitial") return canFullName ? displayNameField : "username";
-            if (displayNameField === "nickname") return canNickname ? "nickname" : "username";
-            return "username";
+            if (displayNameField === "fullName" || displayNameField === "firstNameInitial") return canFullName ? displayNameField : "firstName";
+            if (displayNameField === "nickname") return canNickname ? "nickname" : "firstName";
+            return "firstName";
           })();
           const options = [
             { key: "fullName", label: lastName.trim() ? `${firstName} ${lastName}` : "Prénom + Nom", enabled: canFullName },
@@ -251,7 +243,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
               enabled: canFullName,
             },
             { key: "nickname", label: nickname.trim() || "Surnom", enabled: canNickname },
-            { key: "username", label: username.trim() || "Nom d'utilisateur", enabled: true },
+            { key: "firstName", label: firstName.trim() || "Prénom", enabled: true },
           ];
           return options.map((opt) => (
             <button

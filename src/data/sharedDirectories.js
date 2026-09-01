@@ -34,15 +34,6 @@ async function extractFunctionError(error) {
 // (avec le code Bibax) est désormais stocké côté serveur, lié au compte, récupérable en cas de
 // changement d'appareil.
 
-export async function isUsernameAvailable(username) {
-  const { data, error } = await supabase.from("profiles").select("id").ilike("username", username.trim()).maybeSingle();
-  if (error) {
-    console.error("isUsernameAvailable:", error);
-    return true; // ne bloque pas l'inscription sur une erreur réseau ponctuelle
-  }
-  return !data;
-}
-
 // Feature flags — pilotés depuis la plateforme de gestion, sans déploiement de code. Renvoie
 // un objet { flag_key: true/false } pour une lecture simple côté app. Si un pays est fourni,
 // une éventuelle surcharge par pays l'emporte sur la valeur globale (héritage) — jamais
@@ -196,7 +187,7 @@ export async function reportCrash({ message, stack, source, screen, bibroCode })
   }
 }
 
-export async function signUp(email, password, { firstName, lastName, nickname, username, birthDate, country }) {
+export async function signUp(email, password, { firstName, lastName, nickname, birthDate, country }) {
   // Les informations passent en métadonnées Supabase Auth — c'est le déclencheur côté base de
   // données (handle_new_user) qui crée ensuite la ligne de profil, jamais ce code client
   // directement (une session active n'existe pas encore tant que l'email n'est pas confirmé).
@@ -208,7 +199,6 @@ export async function signUp(email, password, { firstName, lastName, nickname, u
         first_name: firstName,
         last_name: lastName,
         nickname: nickname || null,
-        username,
         birth_date: birthDate,
         country,
       },
@@ -260,7 +250,6 @@ export async function lookupBibroCode(code) {
     firstName: row.first_name,
     lastName: row.last_name,
     nickname: row.nickname,
-    username: row.username,
     city: row.city,
     // Les codes pays sont stockés en minuscules avec underscores (ex. "pays_bas") — converti
     // ici en libellé lisible ("Pays-Bas") pour l'affichage.
@@ -311,7 +300,6 @@ export async function loadMyProfile(userId) {
     name: data.name || "",
     lastName: data.last_name || "",
     nickname: data.nickname || "",
-    username: data.username || "",
     email: data.email || "",
     birthDate: data.birth_date || null,
     country: data.country || null,
@@ -322,7 +310,7 @@ export async function loadMyProfile(userId) {
     instagramUrl: data.instagram_url || "",
     tiktokUrl: data.tiktok_url || "",
     snapchatUrl: data.snapchat_url || "",
-    displayNameField: data.display_name_field || "username",
+    displayNameField: data.display_name_field || "firstName",
     sharePrenom: data.share_prenom,
     shareNom: data.share_nom,
     shareSurnom: data.share_surnom,
@@ -355,7 +343,6 @@ export async function updateMyProfile(
     name,
     lastName,
     nickname,
-    username,
     email,
     birthDate,
     country,
@@ -390,7 +377,6 @@ export async function updateMyProfile(
     name,
     last_name: lastName,
     nickname,
-    username,
     email,
     birth_date: birthDate || null,
     country,

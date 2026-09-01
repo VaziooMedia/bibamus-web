@@ -314,7 +314,6 @@ export default function App() {
       name: profile.name,
       lastName: profile.lastName,
       nickname: profile.nickname,
-      username: profile.username,
       email: profile.email,
       birthDate: profile.birthDate,
       country: profile.country,
@@ -349,7 +348,6 @@ export default function App() {
     profile.name,
     profile.lastName,
     profile.nickname,
-    profile.username,
     profile.email,
     profile.birthDate,
     profile.country,
@@ -1810,6 +1808,7 @@ export default function App() {
                   setViewedBibaxProfileCode(code);
                   setScreen("bibaxProfilePreview");
                 }}
+                onSeeAllSuggestions={() => setScreen("bibaxAllSuggestions")}
                 onRemoveBibro={removeBibro}
                 onSetAlias={setBibroAlias}
                 onToggleFavorite={toggleBibroFavorite}

@@ -75,16 +75,20 @@ export function HomeScreen({
     loadPulseFeed(null, 3).then(setPulseEntries);
   }, []);
 
-  const [bibaxSuggestions, setBibaxSuggestions] = useState(null);
+  const [bibaxSuggestionsPool, setBibaxSuggestionsPool] = useState(null);
   const [addingBibaxCode, setAddingBibaxCode] = useState(null);
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(true);
   useEffect(() => {
-    loadBibaxSuggestions(3).then(setBibaxSuggestions);
+    // Charge un peu plus que nécessaire (5 affichées) — dès qu'on en ajoute une, la suivante
+    // du lot prend directement sa place, sans nouvel aller-retour serveur.
+    loadBibaxSuggestions(20).then(setBibaxSuggestionsPool);
   }, []);
+  const bibaxSuggestions = (bibaxSuggestionsPool || []).slice(0, 5);
   const addSuggestedBibax = async (bibroCode) => {
     setAddingBibaxCode(bibroCode);
     await sendBibaxRequest(bibroCode);
     setAddingBibaxCode(null);
-    setBibaxSuggestions((prev) => (prev || []).filter((s) => s.bibroCode !== bibroCode));
+    setBibaxSuggestionsPool((prev) => (prev || []).filter((s) => s.bibroCode !== bibroCode));
   };
 
   // Filet de sécurité supplémentaire — vérifie, au retour sur l'accueil, si un événement
@@ -342,68 +346,6 @@ export function HomeScreen({
           );
         })()}
 
-      {bibaxSuggestions && bibaxSuggestions.length > 0 && (
-        <div style={{ marginBottom: "18px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-            <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 700 }}>
-              <span style={{ color: COLORS.ink }}>Biba</span>
-              <span style={{ color: COLORS.amber }}>x</span>
-              <span style={{ color: COLORS.inkSoft }}> - Suggestions</span>
-            </span>
-            <button onClick={goToBibaxAllSuggestions} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber, cursor: "pointer" }}>
-              Voir tout
-            </button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {bibaxSuggestions.map((s) => (
-              <button
-                key={s.userId}
-                onClick={() => onOpenBibaxProfile(s.bibroCode)}
-                style={{
-                  background: COLORS.surface,
-                  border: `2px solid ${COLORS.paperAlt}`,
-                  borderRadius: "12px",
-                  padding: "10px 14px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  width: "100%",
-                }}
-              >
-                <EntityAvatar photoUrl={s.avatarUrl} size={32} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} style={{ fontSize: "13px", color: COLORS.ink }} />
-                  <p style={{ margin: "1px 0 0", fontSize: "10.5px", color: COLORS.inkSoft }}>{s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.sameLocation ? "Même ville" : ""}</p>
-                </div>
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addSuggestedBibax(s.bibroCode);
-                  }}
-                  style={{
-                    background: "none",
-                    border: `2px solid ${COLORS.amber}`,
-                    borderRadius: "8px",
-                    padding: "6px 11px",
-                    fontSize: "11.5px",
-                    fontWeight: 700,
-                    color: COLORS.amber,
-                    cursor: "pointer",
-                    opacity: addingBibaxCode === s.bibroCode ? 0.5 : 1,
-                    flexShrink: 0,
-                  }}
-                >
-                  Ajouter
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
@@ -416,6 +358,81 @@ export function HomeScreen({
         )}
         <CategoryTile icon="ti-map" title={<><span style={{ color: COLORS.ink }}>Bib</span><span style={{ color: COLORS.amber }}>Atlas</span></>} subtitle="Lieux, produits, marques et producteurs" onClick={goToRepertoireHub} />
       </div>
+      {bibaxSuggestions && bibaxSuggestions.length > 0 && (
+        <div style={{ marginBottom: "18px" }}>
+          <button
+            onClick={() => setSuggestionsExpanded((e) => !e)}
+            style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: suggestionsExpanded ? "8px" : 0, background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer" }}
+          >
+            <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 700 }}>
+              <span style={{ color: COLORS.ink }}>Biba</span>
+              <span style={{ color: COLORS.amber }}>x</span>
+              <span style={{ color: COLORS.inkSoft }}> - Suggestions rapides</span>
+            </span>
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                goToBibaxAllSuggestions();
+              }}
+              style={{ marginLeft: "auto", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber }}
+            >
+              Voir tout
+            </span>
+            <span style={{ display: "inline-flex", transform: `rotate(${suggestionsExpanded ? 90 : 0}deg)`, transition: "transform 0.15s ease" }}>
+              <NavIcon name="chevron-right" size={14} color={COLORS.amber} />
+            </span>
+          </button>
+          {suggestionsExpanded && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {bibaxSuggestions.map((s) => (
+                <button
+                  key={s.userId}
+                  onClick={() => onOpenBibaxProfile(s.bibroCode)}
+                  style={{
+                    background: COLORS.surface,
+                    border: `2px solid ${COLORS.paperAlt}`,
+                    borderRadius: "12px",
+                    padding: "10px 14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  <EntityAvatar photoUrl={s.avatarUrl} size={32} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} style={{ fontSize: "13px", color: COLORS.ink }} />
+                    <p style={{ margin: "1px 0 0", fontSize: "10.5px", color: COLORS.inkSoft }}>{s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.sameLocation ? "Même ville" : ""}</p>
+                  </div>
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addSuggestedBibax(s.bibroCode);
+                    }}
+                    style={{
+                      background: "none",
+                      border: `2px solid ${COLORS.amber}`,
+                      borderRadius: "8px",
+                      padding: "6px 11px",
+                      fontSize: "11.5px",
+                      fontWeight: 700,
+                      color: COLORS.amber,
+                      cursor: "pointer",
+                      opacity: addingBibaxCode === s.bibroCode ? 0.5 : 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    Ajouter
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
