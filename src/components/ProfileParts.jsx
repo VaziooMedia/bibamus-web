@@ -49,7 +49,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
   return (
     <>
       <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "14px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
             <div
               style={{
@@ -74,7 +74,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
             </div>
           </div>
           {(profile.facebookUrl || profile.instagramUrl || profile.tiktokUrl || profile.snapchatUrl) && (
-            <div style={{ display: "flex", flexDirection: "row", gap: "12px", alignItems: "center", flexShrink: 0 }}>
+            <div style={{ position: "absolute", bottom: "0", right: "0", display: "flex", flexDirection: "row", gap: "12px", alignItems: "center" }}>
               {profile.facebookUrl && (
                 <a href={normalizeUrl(profile.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                   <FacebookIcon size={20} />
