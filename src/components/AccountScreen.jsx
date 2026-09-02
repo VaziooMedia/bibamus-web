@@ -4,7 +4,7 @@
 // (au lieu du grand formulaire d'un seul tenant de MyProfileScreen).
 // ============================================================
 import React, { useState, useRef } from "react";
-import { COLORS, COUNTRIES, PHONE_PREFIXES } from "../constants.js";
+import { COLORS, COUNTRIES, PHONE_PREFIXES, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
@@ -46,6 +46,7 @@ function AccountRow({ icon, title, value, onClick, titleColor }) {
         color: COLORS.ink,
       }}
     >
+      <span style={{ width: "3px", height: "22px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0 }}>{icon}</span>
       <span style={{ fontWeight: 600, fontSize: "14px", flexShrink: 0, color: titleColor || COLORS.ink }}>{title}</span>
       <span style={{ flex: 1, minWidth: 0, textAlign: "right", fontSize: "13px", color: COLORS.inkSoft, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
@@ -106,7 +107,17 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
       </AccountGroup>
 
       <AccountGroup title="Gestion du compte">
-        <AccountRow icon={<NavIcon name="pause" size={17} color={FLUO_BLUE} />} title="Désactiver temporairement mon compte" value="" onClick={goToDeactivate} titleColor={FLUO_BLUE} />
+        <AccountRow
+          icon={
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "22px", height: "22px", borderRadius: "50%", border: `2px solid ${FLUO_BLUE}` }}>
+              <NavIcon name="pause" size={11} color={FLUO_BLUE} />
+            </span>
+          }
+          title="Désactiver temporairement mon compte"
+          value=""
+          onClick={goToDeactivate}
+          titleColor={FLUO_BLUE}
+        />
         <div style={{ borderBottom: "none" }}>
           <AccountRow icon={<NavIcon name="trash" size={17} color={FLUO_RED} />} title="Supprimer mon compte" value="" onClick={goToDeleteAccount} titleColor={FLUO_RED} />
         </div>
@@ -162,12 +173,14 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
           <p style={{ fontSize: "12px", color: COLORS.inkSoft, textAlign: "right", margin: "6px 2px 0" }}>{value.length}/40</p>
         </>
       ) : config.type === "date" ? (
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => handleChange(e.target.value)}
-          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "15px" }}
-        />
+        <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface }}>
+          <input
+            type="date"
+            value={value}
+            onChange={(e) => handleChange(e.target.value)}
+            style={{ display: "block", width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box", padding: "12px", border: "none", background: "none", color: COLORS.ink, fontSize: "15px" }}
+          />
+        </div>
       ) : (
         <input
           type={config.type}
@@ -235,7 +248,7 @@ export function PhoneEditScreen({ profile, onSaveProfile, onBack }) {
           <option value="">—</option>
           {PHONE_PREFIXES.map((p) => (
             <option key={p.value + p.label} value={p.value}>
-              {p.value}
+              {COUNTRY_FLAGS[p.country] || ""} {p.value}
             </option>
           ))}
         </select>
