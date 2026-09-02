@@ -392,6 +392,37 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M9 9.3l2 2 3.3-3.6" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
+    case "tag":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M11.5 4H5a1 1 0 0 0-1 1v6.5a1 1 0 0 0 .29.7l9 9a1 1 0 0 0 1.42 0l6.5-6.5a1 1 0 0 0 0-1.42l-9-9A1 1 0 0 0 11.5 4Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <circle cx="8.5" cy="8.5" r="1.3" fill={color} />
+        </svg>
+      );
+    case "align-left":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M4 6h16M4 11h11M4 16h16M4 21h11" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "mail":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke={color} strokeWidth="1.7" />
+          <path d="M4.5 7l7.5 6 7.5-6" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "phone":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path
+            d="M6.6 10.8c1.3 2.6 3.5 4.7 6 6l2-2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6a1 1 0 0 1 1 1V19.5a1 1 0 0 1-1 1C10.5 20.5 3.5 13.5 3.5 4.5a1 1 0 0 1 1-1H8a1 1 0 0 1 1 1c0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2 2Z"
+            stroke={color}
+            strokeWidth="1.7"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
     case "lock":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

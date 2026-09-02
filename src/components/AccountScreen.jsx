@@ -4,20 +4,38 @@
 // (au lieu du grand formulaire d'un seul tenant de MyProfileScreen).
 // ============================================================
 import React, { useState, useRef } from "react";
-import { COLORS, COUNTRIES } from "../constants.js";
+import { COLORS, COUNTRIES, PHONE_PREFIXES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
+import { CityAutocomplete } from "./CityAutocomplete.jsx";
 import { formatDDMMYYYY } from "../utils.js";
 
-function AccountRow({ title, value, onClick }) {
+const FLUO_BLUE = "#2E9EFF";
+const FLUO_RED = "#FF3B3B";
+
+// Sépare un numéro déjà stocké ("+352 691 234 567") en indicatif + reste, pour pré-remplir
+// les deux champs de l'éditeur téléphone.
+function splitPhone(stored) {
+  if (!stored) return { prefix: "", number: "" };
+  const match = PHONE_PREFIXES.find((p) => stored.startsWith(p.value));
+  if (match) return { prefix: match.value, number: stored.slice(match.value.length).trim() };
+  return { prefix: "", number: stored };
+}
+
+function capitalizeFirst(str) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function AccountRow({ icon, title, value, onClick, titleColor }) {
   return (
     <button
       onClick={onClick}
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "10px",
+        gap: "12px",
         background: "none",
         border: "none",
         borderBottom: `1px solid ${COLORS.paperAlt}`,
@@ -28,7 +46,8 @@ function AccountRow({ title, value, onClick }) {
         color: COLORS.ink,
       }}
     >
-      <span style={{ fontWeight: 600, fontSize: "14px", flexShrink: 0 }}>{title}</span>
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0 }}>{icon}</span>
+      <span style={{ fontWeight: 600, fontSize: "14px", flexShrink: 0, color: titleColor || COLORS.ink }}>{title}</span>
       <span style={{ flex: 1, minWidth: 0, textAlign: "right", fontSize: "13px", color: COLORS.inkSoft, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
       <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
     </button>
@@ -38,7 +57,10 @@ function AccountRow({ title, value, onClick }) {
 function AccountGroup({ title, children }) {
   return (
     <div style={{ marginBottom: "22px" }}>
-      <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "16px", margin: "0 0 8px 2px" }}>{title}</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
+      </div>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
     </div>
   );
@@ -65,28 +87,28 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
       </div>
 
       <AccountGroup title="Profil">
-        <AccountRow title="Photo de profil" value="" onClick={() => goToField("photo")} />
-        <AccountRow title="Prénom" value={profile.name || "—"} onClick={() => goToField("name")} />
-        <AccountRow title="Nom" value={profile.lastName || "—"} onClick={() => goToField("lastName")} />
-        <AccountRow title="Surnom" value={profile.nickname || "—"} onClick={() => goToField("nickname")} />
+        <AccountRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Photo de profil" value="" onClick={() => goToField("photo")} />
+        <AccountRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Prénom" value={profile.name || "—"} onClick={() => goToField("name")} />
+        <AccountRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Nom" value={profile.lastName || "—"} onClick={() => goToField("lastName")} />
+        <AccountRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Surnom" value={profile.nickname || "—"} onClick={() => goToField("nickname")} />
         <div style={{ borderBottom: "none" }}>
-          <AccountRow title="Bio" value={profile.bio || "—"} onClick={() => goToField("bio")} />
+          <AccountRow icon={<NavIcon name="align-left" size={17} color={COLORS.amber} />} title="Bio" value={profile.bio || "—"} onClick={() => goToField("bio")} />
         </div>
       </AccountGroup>
 
       <AccountGroup title="Informations personnelles">
-        <AccountRow title="Date de naissance" value={profile.birthDate ? formatDDMMYYYY(profile.birthDate) : "—"} onClick={() => goToField("birthDate")} />
-        <AccountRow title="Pays & Commune" value={[profile.country, profile.city].filter(Boolean).join(", ") || "—"} onClick={() => goToField("location")} />
-        <AccountRow title="E-mail" value={profile.email || "—"} onClick={() => goToField("email")} />
+        <AccountRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Date de naissance" value={profile.birthDate ? formatDDMMYYYY(profile.birthDate) : "—"} onClick={() => goToField("birthDate")} />
+        <AccountRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Pays & Commune" value={[profile.country, profile.city].filter(Boolean).join(", ") || "—"} onClick={() => goToField("location")} />
+        <AccountRow icon={<NavIcon name="mail" size={17} color={COLORS.amber} />} title="E-mail" value={profile.email || "—"} onClick={() => goToField("email")} />
         <div style={{ borderBottom: "none" }}>
-          <AccountRow title="Téléphone" value={profile.phone || "—"} onClick={() => goToField("phone")} />
+          <AccountRow icon={<NavIcon name="phone" size={17} color={COLORS.amber} />} title="Téléphone" value={profile.phone || "—"} onClick={() => goToField("phone")} />
         </div>
       </AccountGroup>
 
       <AccountGroup title="Gestion du compte">
-        <AccountRow title="Désactiver temporairement mon compte" value="" onClick={goToDeactivate} />
+        <AccountRow icon={<NavIcon name="pause" size={17} color={FLUO_BLUE} />} title="Désactiver temporairement mon compte" value="" onClick={goToDeactivate} titleColor={FLUO_BLUE} />
         <div style={{ borderBottom: "none" }}>
-          <AccountRow title="Supprimer mon compte" value="" onClick={goToDeleteAccount} />
+          <AccountRow icon={<NavIcon name="trash" size={17} color={FLUO_RED} />} title="Supprimer mon compte" value="" onClick={goToDeleteAccount} titleColor={FLUO_RED} />
         </div>
       </AccountGroup>
 
@@ -95,21 +117,27 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
   );
 }
 
-// Éditeur générique pour un champ texte / e-mail / téléphone / bio (textarea) — enregistre
-// uniquement ce champ, sans toucher au reste du profil.
+// Éditeur générique pour un champ texte / bio (textarea) — enregistre uniquement ce champ,
+// sans toucher au reste du profil. Prénom/Nom/Surnom forcent une majuscule initiale ; la Bio
+// est limitée à 40 caractères (espaces compris).
 export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
   const config = {
-    name: { label: "Prénom", key: "name", type: "text" },
-    lastName: { label: "Nom", key: "lastName", type: "text" },
-    nickname: { label: "Surnom", key: "nickname", type: "text" },
-    bio: { label: "Bio", key: "bio", type: "textarea" },
-    email: { label: "E-mail", key: "email", type: "email" },
-    phone: { label: "Téléphone", key: "phone", type: "tel" },
+    name: { label: "Prénom", key: "name", type: "text", capitalize: true },
+    lastName: { label: "Nom", key: "lastName", type: "text", capitalize: true },
+    nickname: { label: "Surnom", key: "nickname", type: "text", capitalize: true },
+    bio: { label: "Bio", key: "bio", type: "textarea", maxLength: 40 },
     birthDate: { label: "Date de naissance", key: "birthDate", type: "date" },
   }[field];
 
   const [value, setValue] = useState(profile[config.key] || "");
   const [saving, setSaving] = useState(false);
+
+  const handleChange = (raw) => {
+    let next = raw;
+    if (config.maxLength) next = next.slice(0, config.maxLength);
+    if (config.capitalize) next = capitalizeFirst(next);
+    setValue(next);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -124,18 +152,28 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 20px 0" }}>{config.label}</h1>
 
       {config.type === "textarea" ? (
-        <textarea
+        <>
+          <textarea
+            value={value}
+            onChange={(e) => handleChange(e.target.value)}
+            rows={5}
+            style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", fontFamily: "inherit", resize: "vertical" }}
+          />
+          <p style={{ fontSize: "12px", color: COLORS.inkSoft, textAlign: "right", margin: "6px 2px 0" }}>{value.length}/40</p>
+        </>
+      ) : config.type === "date" ? (
+        <input
+          type="date"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
-          rows={5}
-          style={{ width: "100%", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", fontFamily: "inherit", resize: "vertical" }}
+          onChange={(e) => handleChange(e.target.value)}
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "15px" }}
         />
       ) : (
         <input
           type={config.type}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
-          style={{ width: "100%", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
+          onChange={(e) => handleChange(e.target.value)}
+          style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
         />
       )}
 
@@ -147,8 +185,79 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
   );
 }
 
-// Éditeur combiné pays + commune — les deux se modifient ensemble, comme dans le grand
-// formulaire d'origine.
+// E-mail — c'est l'identifiant de connexion, figé pour l'instant. Un système de changement
+// d'adresse de connexion est prévu séparément plus tard (implique de reconfirmer l'accès au
+// compte), pas un simple champ texte.
+export function EmailViewScreen({ profile, onBack }) {
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 20px 0" }}>E-mail</h1>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px" }}>
+        <p style={{ fontSize: "16px", fontWeight: 700, margin: 0 }}>{profile.email || "—"}</p>
+      </div>
+      <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "12px" }}>
+        C'est l'e-mail utilisé pour se connecter à Bibamus — il ne peut pas être modifié ici pour l'instant. Un système de changement d'e-mail de connexion est prévu séparément.
+      </p>
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Téléphone — indicatif choisi librement dans une liste (jamais pré-sélectionné ni forcé à
+// partir du pays de résidence : on peut très bien vivre en Belgique avec un numéro
+// luxembourgeois).
+export function PhoneEditScreen({ profile, onSaveProfile, onBack }) {
+  const initial = splitPhone(profile.phone);
+  const [prefix, setPrefix] = useState(initial.prefix);
+  const [number, setNumber] = useState(initial.number);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const combined = number.trim() ? `${prefix} ${number.trim()}`.trim() : "";
+    await onSaveProfile({ phone: combined });
+    setSaving(false);
+    onBack();
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 20px 0" }}>Téléphone</h1>
+
+      <div style={{ display: "flex", gap: "8px" }}>
+        <select
+          value={prefix}
+          onChange={(e) => setPrefix(e.target.value)}
+          style={{ width: "128px", flexShrink: 0, boxSizing: "border-box", padding: "14px 8px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
+        >
+          <option value="">—</option>
+          {PHONE_PREFIXES.map((p) => (
+            <option key={p.value + p.label} value={p.value}>
+              {p.value}
+            </option>
+          ))}
+        </select>
+        <input
+          type="tel"
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+          placeholder="Numéro"
+          style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
+        />
+      </div>
+
+      <PrimaryButton onClick={handleSave} disabled={saving} style={{ width: "100%", marginTop: "20px" }}>
+        {saving ? "Enregistrement..." : "Enregistrer"}
+      </PrimaryButton>
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Éditeur combiné pays + commune — le pays doit être choisi avant de pouvoir renseigner la
+// commune, pour permettre le pré-remplissage (CityAutocomplete).
 export function LocationEditScreen({ profile, onSaveProfile, onBack }) {
   const [country, setCountry] = useState(profile.country || "");
   const [city, setCity] = useState(profile.city || "");
@@ -169,10 +278,13 @@ export function LocationEditScreen({ profile, onSaveProfile, onBack }) {
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Pays</label>
       <select
         value={country}
-        onChange={(e) => setCountry(e.target.value)}
-        style={{ width: "100%", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "15px", marginBottom: "18px" }}
+        onChange={(e) => {
+          setCountry(e.target.value);
+          setCity("");
+        }}
+        style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "15px", marginBottom: "18px" }}
       >
-        <option value="">—</option>
+        <option value="">Sélectionner...</option>
         {COUNTRIES.map((c) => (
           <option key={c} value={c}>
             {c}
@@ -181,11 +293,14 @@ export function LocationEditScreen({ profile, onSaveProfile, onBack }) {
       </select>
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Commune de résidence</label>
-      <input
+      <CityAutocomplete
         value={city}
-        onChange={(e) => setCity(e.target.value)}
-        style={{ width: "100%", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
+        onChange={setCity}
+        country={country}
+        placeholder={country ? "Rechercher une commune..." : "Choisissez d'abord un pays"}
+        style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
       />
+      {!country && <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px" }}>Le pays doit être renseigné avant la commune.</p>}
 
       <PrimaryButton onClick={handleSave} disabled={saving} style={{ width: "100%", marginTop: "20px" }}>
         {saving ? "Enregistrement..." : "Enregistrer"}

@@ -587,6 +587,53 @@ export const COUNTRIES = [
   "Autre",
 ];
 
+// Indicatifs téléphoniques — liste indépendante du pays de résidence choisi ailleurs dans le
+// profil (on peut très bien habiter un pays et avoir un numéro d'un autre), donc jamais
+// pré-sélectionnée ni forcée à partir de COUNTRIES.
+export const PHONE_PREFIXES = [
+  { label: "Belgique (+32)", value: "+32" },
+  { label: "France (+33)", value: "+33" },
+  { label: "Luxembourg (+352)", value: "+352" },
+  { label: "Allemagne (+49)", value: "+49" },
+  { label: "Pays-Bas (+31)", value: "+31" },
+  { label: "Algérie (+213)", value: "+213" },
+  { label: "Autriche (+43)", value: "+43" },
+  { label: "Bulgarie (+359)", value: "+359" },
+  { label: "Canada (+1)", value: "+1" },
+  { label: "Chypre (+357)", value: "+357" },
+  { label: "Côte d'Ivoire (+225)", value: "+225" },
+  { label: "Croatie (+385)", value: "+385" },
+  { label: "Cuba (+53)", value: "+53" },
+  { label: "Danemark (+45)", value: "+45" },
+  { label: "Espagne (+34)", value: "+34" },
+  { label: "Estonie (+372)", value: "+372" },
+  { label: "États-Unis (+1)", value: "+1" },
+  { label: "Finlande (+358)", value: "+358" },
+  { label: "Grèce (+30)", value: "+30" },
+  { label: "Hongrie (+36)", value: "+36" },
+  { label: "Irlande (+353)", value: "+353" },
+  { label: "Islande (+354)", value: "+354" },
+  { label: "Italie (+39)", value: "+39" },
+  { label: "Lettonie (+371)", value: "+371" },
+  { label: "Lituanie (+370)", value: "+370" },
+  { label: "Malte (+356)", value: "+356" },
+  { label: "Maroc (+212)", value: "+212" },
+  { label: "Mexique (+52)", value: "+52" },
+  { label: "Norvège (+47)", value: "+47" },
+  { label: "Pologne (+48)", value: "+48" },
+  { label: "Portugal (+351)", value: "+351" },
+  { label: "République tchèque (+420)", value: "+420" },
+  { label: "Roumanie (+40)", value: "+40" },
+  { label: "Royaume-Uni (+44)", value: "+44" },
+  { label: "Sénégal (+221)", value: "+221" },
+  { label: "Slovaquie (+421)", value: "+421" },
+  { label: "Slovénie (+386)", value: "+386" },
+  { label: "Suède (+46)", value: "+46" },
+  { label: "Suisse (+41)", value: "+41" },
+  { label: "Tunisie (+216)", value: "+216" },
+  { label: "Vénézuéla (+58)", value: "+58" },
+];
+
 
 export const GENERIC_BRAND_LABEL = "Autre marque";
 
