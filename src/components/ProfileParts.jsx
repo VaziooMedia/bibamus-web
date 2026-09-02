@@ -34,7 +34,11 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         {icon}
-        {onClick && <NavIcon name="chevron-right" size={13} color={COLORS.inkSoft} />}
+        {onClick && (
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
+            <NavIcon name="chevron-right" size={10} color={COLORS.amber} />
+          </span>
+        )}
       </div>
       <span style={{ fontSize: "11px", color: COLORS.inkSoft, lineHeight: 1.2 }}>{label}</span>
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
@@ -44,56 +48,57 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
   return (
     <>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "14px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <div
-            style={{
-              width: "72px",
-              height: "72px",
-              borderRadius: "50%",
-              border: `2px solid ${COLORS.amber}`,
-              padding: "2px",
-              flexShrink: 0,
-            }}
-          >
-            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-              {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={32} color={COLORS.amber} />}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+            <div
+              style={{
+                width: "72px",
+                height: "72px",
+                borderRadius: "50%",
+                border: `2px solid ${COLORS.amber}`,
+                padding: "2px",
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={32} color={COLORS.amber} />}
+              </div>
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.15, margin: 0 }}>
+                {myName} {profile.lastName || ""}
+              </h1>
+              {profile.nickname && <p style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13.5px", color: COLORS.amber, margin: "3px 0 0" }}>{profile.nickname}</p>}
+              {profile.registeredAt && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "4px 0 0" }}>Membre Bibamus depuis {formatMemberSince(profile.registeredAt)}</p>}
             </div>
           </div>
-          <div style={{ minWidth: 0 }}>
-            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", lineHeight: 1.15, margin: 0 }}>{myName}</h1>
-            {profile.nickname && (
-              <p style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13.5px", color: COLORS.amber, margin: "3px 0 0" }}>@{profile.nickname}</p>
-            )}
-            {profile.registeredAt && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "4px 0 0" }}>Membre Bibamus depuis {formatMemberSince(profile.registeredAt)}</p>}
-          </div>
+          {(profile.facebookUrl || profile.instagramUrl || profile.tiktokUrl || profile.snapchatUrl) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", flexShrink: 0 }}>
+              {profile.facebookUrl && (
+                <a href={normalizeUrl(profile.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <FacebookIcon size={20} />
+                </a>
+              )}
+              {profile.instagramUrl && (
+                <a href={normalizeUrl(profile.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <InstagramIcon size={20} />
+                </a>
+              )}
+              {profile.tiktokUrl && (
+                <a href={normalizeUrl(profile.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <TiktokIcon size={20} />
+                </a>
+              )}
+              {profile.snapchatUrl && (
+                <a href={normalizeUrl(profile.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <SnapchatIcon size={20} />
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: "14px 0 0" }}>"{profile.bio}"</p>}
-
-        {(profile.facebookUrl || profile.instagramUrl || profile.tiktokUrl || profile.snapchatUrl) && (
-          <div style={{ display: "flex", gap: "14px", alignItems: "center", marginTop: "14px" }}>
-            {profile.facebookUrl && (
-              <a href={normalizeUrl(profile.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <FacebookIcon size={22} />
-              </a>
-            )}
-            {profile.instagramUrl && (
-              <a href={normalizeUrl(profile.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <InstagramIcon size={22} />
-              </a>
-            )}
-            {profile.tiktokUrl && (
-              <a href={normalizeUrl(profile.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <TiktokIcon size={22} />
-              </a>
-            )}
-            {profile.snapchatUrl && (
-              <a href={normalizeUrl(profile.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <SnapchatIcon size={22} />
-              </a>
-            )}
-          </div>
-        )}
       </div>
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>

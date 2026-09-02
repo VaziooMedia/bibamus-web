@@ -336,11 +336,11 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
     case "settings":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="3.2" stroke={color} strokeWidth="1.8" />
+          <circle cx="12" cy="12" r="2.6" stroke={color} strokeWidth="1.5" />
           <path
-            d="M12 3.5v1.8M12 18.7v1.8M20.5 12h-1.8M5.3 12H3.5M17.6 6.4l-1.3 1.3M7.7 16.3l-1.3 1.3M17.6 17.6l-1.3-1.3M7.7 7.7 6.4 6.4"
+            d="M12 4.2v2.1M12 17.7v2.1M19.8 12h-2.1M6.3 12H4.2M17.4 6.6l-1.5 1.5M8.1 15.9l-1.5 1.5M17.4 17.4l-1.5-1.5M8.1 8.1 6.6 6.6"
             stroke={color}
-            strokeWidth="1.8"
+            strokeWidth="1.5"
             strokeLinecap="round"
           />
         </svg>

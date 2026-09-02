@@ -1639,6 +1639,7 @@ export default function App() {
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
                 onUploadPhoto={(file) => uploadMyAvatarPhoto(session.user.id, file)}
                 onGoToAdminUnlock={() => setScreen("adminUnlock")}
+                onGoToSettings={() => setScreen("settings")}
                 onLogout={handleLogout}
                 onBack={() => setScreen("profile")}
               />
@@ -1668,7 +1669,7 @@ export default function App() {
               />
             )}
             {screen === "settings" && (
-              <SettingsScreen onBack={() => setScreen("home")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} goToDeleteAccount={() => setScreen("deleteAccount")} />
+              <SettingsScreen onBack={() => setScreen("myInfo")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} goToDeleteAccount={() => setScreen("deleteAccount")} />
             )}
             {screen === "deleteAccount" && <DeleteAccountScreen onBack={() => setScreen("settings")} onAccountDeleted={handleAccountDeleted} />}
             {screen === "importData" && (
