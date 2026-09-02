@@ -132,24 +132,24 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
         <button
           onClick={handleBix}
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "5px",
-            background: "none",
+            gap: "4px",
+            background: entry.bixCount > 0 ? COLORS.amber : "none",
             border: `2px solid ${entry.bixCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
             borderRadius: "999px",
-            padding: "6px 12px",
-            fontSize: "12.5px",
+            padding: "4px 10px",
+            fontSize: "11.5px",
             fontWeight: 700,
-            color: entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft,
+            color: "#fff",
             cursor: "pointer",
           }}
         >
-          <NavIcon name="heart" size={18} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
+          <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? "#fff" : COLORS.inkSoft} filled={entry.bixCount > 0} />
           {entry.bixCount > 0 && entry.bixCount}
         </button>
 
@@ -158,18 +158,18 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "5px",
-            background: "none",
+            gap: "4px",
+            background: entry.commentsCount > 0 ? COLORS.amber : "none",
             border: `2px solid ${entry.commentsCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
             borderRadius: "999px",
-            padding: "6px 12px",
-            fontSize: "12.5px",
+            padding: "4px 10px",
+            fontSize: "11.5px",
             fontWeight: 700,
-            color: entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft,
+            color: "#fff",
             cursor: "pointer",
           }}
         >
-          <NavIcon name="comment" size={16} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
+          <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? "#fff" : COLORS.inkSoft} />
           {entry.commentsCount > 0 && entry.commentsCount}
         </button>
 
@@ -180,14 +180,14 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "5px",
-              background: entry.iAmIncoming ? COLORS.amber : "none",
+              gap: "4px",
+              background: entry.iAmIncoming || entry.incomingCount > 0 ? COLORS.amber : "none",
               border: `2px solid ${entry.incomingCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
-              padding: "6px 12px",
-              fontSize: "12.5px",
+              padding: "4px 10px",
+              fontSize: "11.5px",
               fontWeight: 700,
-              color: entry.iAmIncoming ? COLORS.paper : entry.incomingCount > 0 ? COLORS.amber : COLORS.inkSoft,
+              color: entry.incomingCount > 0 ? "#fff" : COLORS.inkSoft,
               cursor: entry.actorId === myUserId ? "default" : "pointer",
               opacity: entry.actorId === myUserId ? 0.45 : 1,
             }}
@@ -202,14 +202,14 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "5px",
-              background: entry.iSaidSante ? COLORS.amber : "none",
+              gap: "4px",
+              background: entry.iSaidSante || entry.santeCount > 0 ? COLORS.amber : "none",
               border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
-              padding: "6px 12px",
-              fontSize: "12.5px",
+              padding: "4px 10px",
+              fontSize: "11.5px",
               fontWeight: 700,
-              color: entry.iSaidSante ? COLORS.paper : entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
+              color: entry.santeCount > 0 ? "#fff" : COLORS.inkSoft,
               cursor: "pointer",
             }}
           >
