@@ -38,6 +38,7 @@ import { MyProfileScreen } from "./components/MyProfileScreen.jsx";
 import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
+import { AccountScreen, FieldEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen } from "./components/AccountScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
@@ -360,6 +361,7 @@ export default function App() {
       lastName: profile.lastName,
       nickname: profile.nickname,
       email: profile.email,
+      phone: profile.phone,
       birthDate: profile.birthDate,
       country: profile.country,
       city: profile.city,
@@ -369,6 +371,10 @@ export default function App() {
       instagramUrl: profile.instagramUrl,
       tiktokUrl: profile.tiktokUrl,
       snapchatUrl: profile.snapchatUrl,
+      whatsappUrl: profile.whatsappUrl,
+      xUrl: profile.xUrl,
+      threadsUrl: profile.threadsUrl,
+      linkedinUrl: profile.linkedinUrl,
       displayNameField: profile.displayNameField,
       sharePrenom: profile.sharePrenom,
       shareNom: profile.shareNom,
@@ -376,6 +382,7 @@ export default function App() {
       shareEmail: profile.shareEmail,
       shareBirthDate: profile.shareBirthDate,
       birthDateSharePrecision: profile.birthDateSharePrecision,
+      shareAge: profile.shareAge,
       shareCountry: profile.shareCountry,
       shareRegion: profile.shareRegion,
       shareCity: profile.shareCity,
@@ -384,6 +391,10 @@ export default function App() {
       shareInstagram: profile.shareInstagram,
       shareTiktok: profile.shareTiktok,
       shareSnapchat: profile.shareSnapchat,
+      shareWhatsapp: profile.shareWhatsapp,
+      shareX: profile.shareX,
+      shareThreads: profile.shareThreads,
+      shareLinkedin: profile.shareLinkedin,
       shareRecords: profile.shareRecords,
       shareVisitRanking: profile.shareVisitRanking,
       avatarUrl: profile.avatarUrl,
@@ -394,6 +405,7 @@ export default function App() {
     profile.lastName,
     profile.nickname,
     profile.email,
+    profile.phone,
     profile.birthDate,
     profile.country,
     profile.city,
@@ -403,6 +415,10 @@ export default function App() {
     profile.instagramUrl,
     profile.tiktokUrl,
     profile.snapchatUrl,
+    profile.whatsappUrl,
+    profile.xUrl,
+    profile.threadsUrl,
+    profile.linkedinUrl,
     profile.displayNameField,
     profile.sharePrenom,
     profile.shareNom,
@@ -410,6 +426,7 @@ export default function App() {
     profile.shareEmail,
     profile.shareBirthDate,
     profile.birthDateSharePrecision,
+    profile.shareAge,
     profile.shareCountry,
     profile.shareRegion,
     profile.shareCity,
@@ -418,6 +435,10 @@ export default function App() {
     profile.shareInstagram,
     profile.shareTiktok,
     profile.shareSnapchat,
+    profile.shareWhatsapp,
+    profile.shareX,
+    profile.shareThreads,
+    profile.shareLinkedin,
     profile.shareRecords,
     profile.shareVisitRanking,
     profile.avatarUrl,
@@ -824,6 +845,7 @@ export default function App() {
   const [viewedBibroId, setViewedBibroId] = useState(null);
   const [viewedBibaxPhotos, setViewedBibaxPhotos] = useState(null);
   const [viewedSettingsCategory, setViewedSettingsCategory] = useState(null);
+  const [viewedAccountField, setViewedAccountField] = useState(null);
   const [viewedBreweryId, setViewedBreweryId] = useState(null);
   const [viewedBrandId, setViewedBrandId] = useState(null);
 
@@ -1699,7 +1721,7 @@ export default function App() {
                 onLogout={handleLogout}
                 goToCategory={(key) => {
                   if (key === "account") {
-                    setScreen("myInfo");
+                    setScreen("account");
                     return;
                   }
                   setViewedSettingsCategory(key);
@@ -1725,6 +1747,39 @@ export default function App() {
                 onBack={() => setScreen("settings")}
               />
             )}
+            {screen === "account" && (
+              <AccountScreen
+                myName={profile.name}
+                profile={profile}
+                onBack={() => setScreen("settings")}
+                goToField={(field) => {
+                  setViewedAccountField(field);
+                  setScreen(field === "location" ? "accountLocation" : field === "photo" ? "accountPhoto" : "accountField");
+                }}
+                goToDeactivate={() => setScreen("accountDeactivate")}
+                goToDeleteAccount={() => setScreen("deleteAccount")}
+              />
+            )}
+            {screen === "accountField" && (
+              <FieldEditScreen
+                field={viewedAccountField}
+                profile={profile}
+                onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
+                onBack={() => setScreen("account")}
+              />
+            )}
+            {screen === "accountLocation" && (
+              <LocationEditScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("account")} />
+            )}
+            {screen === "accountPhoto" && (
+              <PhotoEditScreen
+                profile={profile}
+                onUploadPhoto={(file) => uploadMyAvatarPhoto(session.user.id, file)}
+                onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
+                onBack={() => setScreen("account")}
+              />
+            )}
+            {screen === "accountDeactivate" && <DeactivateAccountScreen onBack={() => setScreen("account")} />}
             {screen === "deleteAccount" && <DeleteAccountScreen onBack={() => setScreen("settings")} onAccountDeleted={handleAccountDeleted} />}
             {screen === "importData" && (
               <ImportDataScreen
@@ -2061,7 +2116,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "account", "accountField", "accountLocation", "accountPhoto", "accountDeactivate", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

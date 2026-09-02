@@ -9,7 +9,7 @@ import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, Pri
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { formatDate } from "../utils.js";
 
-export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, goToDeleteAccount, onLogout, goToCategory }) {
+export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, onLogout, goToCategory }) {
   const SettingsRow = ({ icon, title, subtitle, onClick, danger }) => (
     <button
       onClick={onClick}
@@ -65,8 +65,8 @@ export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, g
         <SettingsRow icon={<NavIcon name="user" size={18} color={COLORS.amber} />} title="Compte" subtitle="Informations personnelles" onClick={() => goToCategory("account")} />
         <SettingsRow icon={<NavIcon name="lock" size={18} color={COLORS.amber} />} title="Sécurité & confidentialité" subtitle="Mot de passe, confidentialité, données" onClick={() => goToCategory("security")} />
         <SettingsRow icon={<NavIcon name="bell" size={18} color={COLORS.amber} />} title="Notifications" subtitle="Alertes, mentions, rappels" onClick={() => goToCategory("notifications")} />
-        <SettingsRow icon={<NavIcon name="settings" size={18} color={COLORS.amber} />} title="Préférences" subtitle="Langue, unités, affichage" onClick={() => goToCategory("preferences")} />
-        <SettingsRow icon={<NavIcon name="palette" size={18} color={COLORS.amber} />} title="Apparence" subtitle="Thème, couleurs, icônes" onClick={() => goToCategory("appearance")} />
+        <SettingsRow icon={<NavIcon name="sliders" size={18} color={COLORS.amber} />} title="Préférences" subtitle="Langue, unités, affichage" onClick={() => goToCategory("preferences")} />
+        <SettingsRow icon={<NavIcon name="brush" size={18} color={COLORS.amber} />} title="Apparence" subtitle="Thème, couleurs, icônes" onClick={() => goToCategory("appearance")} />
         <div style={{ borderBottom: "none" }}>
           <SettingsRow icon={<NavIcon name="link" size={18} color={COLORS.amber} />} title="Connecter" subtitle="Services extérieurs" onClick={() => goToCategory("connect")} />
         </div>
@@ -94,13 +94,6 @@ export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, g
           <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Charger un export JSON depuis l'artefact Claude (admin uniquement)</div>
         </button>
       )}
-      <button
-        onClick={goToDeleteAccount}
-        style={{ background: COLORS.surface, border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "14px 16px", textAlign: "left", cursor: "pointer", color: COLORS.ink }}
-      >
-        <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px", color: COLORS.wine }}>🗑️ Supprimer mon compte</div>
-        <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Suppression définitive, sans retour en arrière possible</div>
-      </button>
 
       <PageFooterNav onBack={onBack} />
     </div>

@@ -333,6 +333,27 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M20 5.5V11H14.5" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       );
+    case "sliders":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M4 6h16M4 12h16M4 18h16" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <circle cx="9" cy="6" r="2.2" fill={color} />
+          <circle cx="16" cy="12" r="2.2" fill={color} />
+          <circle cx="7" cy="18" r="2.2" fill={color} />
+        </svg>
+      );
+    case "brush":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path
+            d="M15.5 4.5c1.4-1.4 3.6-1.4 5 0 1.4 1.4 1.4 3.6 0 5L12 18l-5 1 1-5 7.5-9.5Z"
+            stroke={color}
+            strokeWidth="1.7"
+            strokeLinejoin="round"
+          />
+          <path d="M7 19c0 1.1-.9 2-2 2H3c1.1-1.5 0-2.5 0-3.5A2 2 0 0 1 5 15.5 2 2 0 0 1 7 19Z" fill={color} />
+        </svg>
+      );
     case "settings":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
