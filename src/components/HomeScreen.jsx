@@ -53,6 +53,10 @@ export function HomeScreen({
   goToBibaxAllSuggestions,
   onOpenBibaxProfile,
   onOpenVenue,
+  onOpenDrink,
+  drinksDirectory = [],
+  breweriesDirectory = [],
+  brandsDirectory = [],
   pulseStoriesRefreshKey,
   onAddStory,
   onOpenStoryAuthor,
@@ -342,11 +346,12 @@ export function HomeScreen({
       {bibaPulseVisible &&
         (() => {
           const entries = pulseEntries || [];
-          const resolveVenue = (entry) =>
-            entry.venueId ? venues.find((v) => v.id === entry.venueId) : entry.objectType === "venue" ? venues.find((v) => v.id === entry.objectId) : null;
+          const resolveObject = (entry) => {
+            const map = { venue: venues, drink: drinksDirectory, producer: breweriesDirectory, brand: brandsDirectory };
+            const objType = entry.eventType === "venue_visit" ? "venue" : entry.objectType;
+            return (map[objType] || []).find((x) => x.id === (entry.venueId || entry.objectId)) || null;
+          };
           const actionFor = (entry) => ({ product_discovered: "Découverte", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité");
-          const objNameFor = (entry, venue) =>
-            entry.eventType === "venue_visit" ? venue?.name || "un établissement" : entry.eventType === "database_contribution" ? "Bibamus" : "un produit";
 
           return (
             <div style={{ marginBottom: "18px" }}>
@@ -359,8 +364,19 @@ export function HomeScreen({
                   <span style={{ color: COLORS.ink }}>Biba</span>
                   <span style={{ color: COLORS.amber }}>Pulse</span>
                 </span>
-                <span style={{ display: "inline-flex", marginLeft: "auto" }}>
-                  <NavIcon name="chevron-right" size={14} color={COLORS.amber} />
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginLeft: "auto",
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "50%",
+                    border: `2px solid ${COLORS.amber}`,
+                  }}
+                >
+                  <NavIcon name="chevron-right" size={12} color={COLORS.amber} />
                 </span>
               </button>
 
@@ -371,9 +387,11 @@ export function HomeScreen({
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {entries.map((entry) => {
-                    const venue = resolveVenue(entry);
-                    const objName = objNameFor(entry, venue);
-                    const objClickable = entry.eventType === "venue_visit" && venue;
+                    const obj = resolveObject(entry);
+                    const objName = obj?.name || (entry.eventType === "venue_visit" ? "un établissement" : entry.eventType === "database_contribution" ? "une fiche" : "un produit");
+                    const objType = entry.eventType === "venue_visit" ? "venue" : entry.objectType;
+                    const openHandler = objType === "venue" ? onOpenVenue : objType === "drink" ? onOpenDrink : null;
+                    const objClickable = obj && openHandler;
                     return (
                       <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
                         <button
@@ -389,7 +407,7 @@ export function HomeScreen({
                           <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
                             {actionFor(entry)} @{" "}
                             {objClickable ? (
-                              <button onClick={() => onOpenVenue(venue.id)} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                              <button onClick={() => openHandler(obj.id)} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
                                 {objName}
                               </button>
                             ) : (

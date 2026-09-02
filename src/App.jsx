@@ -204,6 +204,8 @@ export default function App() {
   const [storyCreateContext, setStoryCreateContext] = useState(null); // {contextType, contextId, returnScreen}
   const [viewedStoryAuthor, setViewedStoryAuthor] = useState(null); // {authorId, authorName, authorAvatarUrl, stories}
   const [pulseStoriesRefreshKey, setPulseStoriesRefreshKey] = useState(0);
+  const [screenBeforeVenueDetail, setScreenBeforeVenueDetail] = useState("venueDirectory");
+  const [screenBeforeDrinkDetail, setScreenBeforeDrinkDetail] = useState("drinksDirectory");
 
   // Finalise la connexion Spotify dès que la session est prête — ne peut pas se faire plus tôt,
   // l'échange du code nécessite de savoir à quel compte Bibamus l'associer.
@@ -1297,9 +1299,18 @@ export default function App() {
                   setScreen("bibaxProfilePreview");
                 }}
                 onOpenVenue={(id) => {
+                  setScreenBeforeVenueDetail("home");
                   setViewedVenueId(id);
                   setScreen("venueDetail");
                 }}
+                onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("home");
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
+                drinksDirectory={drinksDirectory}
+                breweriesDirectory={breweriesDirectory}
+                brandsDirectory={brandsDirectory}
                 openEvent={(id) => {
                   setActiveEventId(id);
                   setScreen("eventDashboard");
@@ -1555,7 +1566,7 @@ export default function App() {
                 myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
                 onCheckIn={() => checkInVenue(viewedVenueId)}
-                onBack={() => setScreen("venueDirectory")}
+                onBack={() => setScreen(screenBeforeVenueDetail)}
                 onEdit={() => setScreen("editVenue")}
                 onDelete={() => {
                   deletePublicVenue(viewedVenueId);
@@ -1582,7 +1593,7 @@ export default function App() {
                 onRate={(value) => rateDrink(viewedDrinkId, value)}
                 onUnrate={() => unrateDrink(viewedDrinkId)}
                 onToggleMode={(mode) => toggleTastedServingMode(viewedDrinkId, mode)}
-                onBack={() => setScreen("drinksDirectory")}
+                onBack={() => setScreen(screenBeforeDrinkDetail)}
                 onEdit={() => setScreen("editDrink")}
                 onCertify={() => certifyDrink(viewedDrinkId)}
                 onDecertify={() => decertifyDrink(viewedDrinkId)}
@@ -1941,10 +1952,12 @@ export default function App() {
                 brandsDirectory={brandsDirectory}
                 myUserId={session.user.id}
                 onOpenVenue={(id) => {
+                  setScreenBeforeVenueDetail("bibaPulse");
                   setViewedVenueId(id);
                   setScreen("venueDetail");
                 }}
                 onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("bibaPulse");
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
