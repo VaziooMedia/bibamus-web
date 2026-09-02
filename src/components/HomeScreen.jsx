@@ -322,6 +322,9 @@ export function HomeScreen({
                   </div>
                   <span
                     style={{
+                      position: "absolute",
+                      bottom: "12px",
+                      right: "14px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -329,8 +332,6 @@ export function HomeScreen({
                       height: "34px",
                       borderRadius: "50%",
                       border: `2px solid ${COLORS.amber}40`,
-                      flexShrink: 0,
-                      alignSelf: "flex-end",
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 14 14">
