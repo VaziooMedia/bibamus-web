@@ -23,6 +23,15 @@ function splitPhone(stored) {
   return { prefix: "", number: stored };
 }
 
+function PageTitleWithBar({ children, size = "26px" }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 20px 0" }}>
+      <span style={{ width: "5px", height: "24px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: size, margin: 0 }}>{children}</h1>
+    </div>
+  );
+}
+
 function capitalizeFirst(str) {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -58,10 +67,7 @@ function AccountRow({ icon, title, value, onClick, titleColor }) {
 function AccountGroup({ title, children }) {
   return (
     <div style={{ marginBottom: "22px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
-        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
-      </div>
+      <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: "0 0 8px 2px" }}>{title}</h2>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
     </div>
   );
@@ -71,6 +77,7 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", margin: "4px 0 18px 0" }}>Compte</h1>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "18px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
@@ -109,7 +116,18 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
       <AccountGroup title="Gestion du compte">
         <AccountRow
           icon={
-            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "22px", height: "22px", borderRadius: "50%", border: `2px solid ${FLUO_BLUE}` }}>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                border: `2px solid ${FLUO_BLUE}`,
+                lineHeight: 0,
+              }}
+            >
               <NavIcon name="pause" size={11} color={FLUO_BLUE} />
             </span>
           }
@@ -160,7 +178,7 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 20px 0" }}>{config.label}</h1>
+      <PageTitleWithBar>{config.label}</PageTitleWithBar>
 
       {config.type === "textarea" ? (
         <>
@@ -173,12 +191,12 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
           <p style={{ fontSize: "12px", color: COLORS.inkSoft, textAlign: "right", margin: "6px 2px 0" }}>{value.length}/40</p>
         </>
       ) : config.type === "date" ? (
-        <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface }}>
+        <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, display: "flex", alignItems: "center", height: "48px" }}>
           <input
             type="date"
             value={value}
             onChange={(e) => handleChange(e.target.value)}
-            style={{ display: "block", width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box", padding: "12px", border: "none", background: "none", color: COLORS.ink, fontSize: "15px" }}
+            style={{ display: "block", width: "100%", height: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box", padding: "0 12px", border: "none", background: "none", color: COLORS.ink, fontSize: "15px" }}
           />
         </div>
       ) : (
@@ -205,7 +223,7 @@ export function EmailViewScreen({ profile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 20px 0" }}>E-mail</h1>
+      <PageTitleWithBar>E-mail</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px" }}>
         <p style={{ fontSize: "16px", fontWeight: 700, margin: 0 }}>{profile.email || "—"}</p>
       </div>
@@ -237,7 +255,7 @@ export function PhoneEditScreen({ profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 20px 0" }}>Téléphone</h1>
+      <PageTitleWithBar>Téléphone</PageTitleWithBar>
 
       <div style={{ display: "flex", gap: "8px" }}>
         <select
@@ -286,7 +304,7 @@ export function LocationEditScreen({ profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 20px 0" }}>Pays & Commune</h1>
+      <PageTitleWithBar>Pays & Commune</PageTitleWithBar>
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Pays</label>
       <select
@@ -335,7 +353,7 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 20px 0" }}>Photo de profil</h1>
+      <PageTitleWithBar>Photo de profil</PageTitleWithBar>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
         <button
@@ -413,7 +431,7 @@ export function DeactivateAccountScreen({ onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 18px 0" }}>Désactiver temporairement mon compte</h1>
+      <PageTitleWithBar size="22px">Désactiver temporairement mon compte</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
         <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>
           Cette fonctionnalité n'existe pas encore — seule la suppression définitive du compte est disponible pour l'instant.
