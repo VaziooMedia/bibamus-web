@@ -35,7 +35,6 @@ import { VenueDetailScreen } from "./components/VenueDetailScreen.jsx";
 import { DrinkDetailScreen } from "./components/DrinkDetailScreen.jsx";
 import { ProfileHubScreen } from "./components/ProfileHubScreen.jsx";
 import { MyProfileScreen } from "./components/MyProfileScreen.jsx";
-import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
@@ -47,8 +46,6 @@ import { DeleteAccountScreen } from "./components/DeleteAccountScreen.jsx";
 import {
   loadPublicVenues,
   loadDrinksDirectory,
-  loadMyTastedDrinkIds,
-  setDrinkTastedServer,
   loadBreweriesDirectory,
   loadBrandsDirectory,
   createBrewery,
@@ -709,19 +706,15 @@ export default function App() {
     setAlcoholFreeDays((prev) => (prev.includes(dateKey) ? prev.filter((d) => d !== dateKey) : [...prev, dateKey]));
   };
 
-  const [tastedDrinkIds, setTastedDrinkIds] = useState([]);
+  const [tastedDrinkIds, setTastedDrinkIds] = useState(() => loadLocal("bibamus-tasted-drinks", []));
   const [wishlistDrinkIds, setWishlistDrinkIds] = useState(() => loadLocal("bibamus-wishlist-drinks", []));
 
-  useEffect(() => {
-    if (!session) return;
-    loadMyTastedDrinkIds().then(setTastedDrinkIds);
-  }, [session]);
+  useEffect(() => saveLocal("bibamus-tasted-drinks", tastedDrinkIds), [tastedDrinkIds]);
   useEffect(() => saveLocal("bibamus-wishlist-drinks", wishlistDrinkIds), [wishlistDrinkIds]);
 
   const toggleTastedDrink = (id) => {
     setTastedDrinkIds((prev) => {
       const alreadyTasted = prev.includes(id);
-      setDrinkTastedServer(id, !alreadyTasted);
       if (!alreadyTasted) emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: id });
       return alreadyTasted ? prev.filter((x) => x !== id) : [...prev, id];
     });
@@ -1075,7 +1068,6 @@ export default function App() {
     setSession(null);
     setProfile({ name: "", avatarUrl: null, myBibroCode: null });
     setProfileLoaded(false);
-    setTastedDrinkIds([]);
   };
 
   const handleAccountDeleted = async () => {
@@ -1620,7 +1612,6 @@ export default function App() {
                 profile={profile}
                 bibros={bibros}
                 checkIns={checkIns}
-                myUserId={session.user.id}
                 onBack={() => setScreen("home")}
                 goToMyInfo={() => setScreen("myInfo")}
                 goToMyStats={() => setScreen("myStats")}
@@ -1628,12 +1619,9 @@ export default function App() {
                 goToProducts={() => setScreen("myProducts")}
                 goToVenues={() => setScreen("venueDirectory")}
                 goToHistory={() => setScreen("eventHistory")}
-                goToPhotos={() => setScreen("myPhotos")}
                 goToSettings={() => setScreen("settings")}
-                onOpenMyStory={setViewedStoryAuthor}
               />
             )}
-            {screen === "myPhotos" && <MyPhotosScreen onBack={() => setScreen("profile")} />}
             {screen === "myInfo" && (
               <MyProfileScreen
                 myName={profile.name}
@@ -1643,7 +1631,6 @@ export default function App() {
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
                 onUploadPhoto={(file) => uploadMyAvatarPhoto(session.user.id, file)}
                 onGoToAdminUnlock={() => setScreen("adminUnlock")}
-                onGoToSettings={() => setScreen("settings")}
                 onLogout={handleLogout}
                 onBack={() => setScreen("profile")}
               />
@@ -1673,7 +1660,7 @@ export default function App() {
               />
             )}
             {screen === "settings" && (
-              <SettingsScreen onBack={() => setScreen("myInfo")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} goToDeleteAccount={() => setScreen("deleteAccount")} />
+              <SettingsScreen onBack={() => setScreen("home")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} goToDeleteAccount={() => setScreen("deleteAccount")} />
             )}
             {screen === "deleteAccount" && <DeleteAccountScreen onBack={() => setScreen("settings")} onAccountDeleted={handleAccountDeleted} />}
             {screen === "importData" && (
@@ -2005,7 +1992,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
