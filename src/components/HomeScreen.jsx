@@ -52,6 +52,7 @@ export function HomeScreen({
   updateEvent,
   goToBibaxAllSuggestions,
   onOpenBibaxProfile,
+  onOpenVenue,
   pulseStoriesRefreshKey,
   onAddStory,
   onOpenStoryAuthor,
@@ -341,45 +342,68 @@ export function HomeScreen({
       {bibaPulseVisible &&
         (() => {
           const entries = pulseEntries || [];
-          const textFor = (entry) => {
-            const name = entry.actorName || "Quelqu'un";
-            const venue = entry.venueId ? venues.find((v) => v.id === entry.venueId) : entry.objectType === "venue" ? venues.find((v) => v.id === entry.objectId) : null;
-            const action = { product_discovered: "Découverte", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
-            const objName = entry.eventType === "venue_visit" ? venue?.name || "un établissement" : entry.eventType === "database_contribution" ? "Bibamus" : "un produit";
-            return (
-              <>
-                <strong>{name}</strong> · {action} @ <strong style={{ color: COLORS.amber }}>{objName}</strong>
-              </>
-            );
-          };
+          const resolveVenue = (entry) =>
+            entry.venueId ? venues.find((v) => v.id === entry.venueId) : entry.objectType === "venue" ? venues.find((v) => v.id === entry.objectId) : null;
+          const actionFor = (entry) => ({ product_discovered: "Découverte", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité");
+          const objNameFor = (entry, venue) =>
+            entry.eventType === "venue_visit" ? venue?.name || "un établissement" : entry.eventType === "database_contribution" ? "Bibamus" : "un produit";
+
           return (
-            <button
-              onClick={goToBibaPulse}
-              style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", marginBottom: "18px", display: "block", width: "100%" }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+            <div style={{ marginBottom: "18px" }}>
+              <button
+                onClick={goToBibaPulse}
+                style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer", marginBottom: "8px" }}
+              >
                 <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
                 <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>
                   <span style={{ color: COLORS.ink }}>Biba</span>
                   <span style={{ color: COLORS.amber }}>Pulse</span>
                 </span>
-              </div>
+                <span style={{ display: "inline-flex", marginLeft: "auto" }}>
+                  <NavIcon name="chevron-right" size={14} color={COLORS.amber} />
+                </span>
+              </button>
+
               {entries.length === 0 ? (
                 <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
                   <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>En attente des premières activités.</p>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {entries.map((entry) => (
-                    <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
-                      <EntityAvatar photoUrl={entry.actorAvatarUrl} size={28} />
-                      <span style={{ flex: 1, minWidth: 0, fontSize: "13.5px", color: COLORS.ink }}>{textFor(entry)}</span>
-                      <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{pulseTimeAgo(entry.createdAt)}</span>
-                    </div>
-                  ))}
+                  {entries.map((entry) => {
+                    const venue = resolveVenue(entry);
+                    const objName = objNameFor(entry, venue);
+                    const objClickable = entry.eventType === "venue_visit" && venue;
+                    return (
+                      <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                        <button
+                          onClick={() => (entry.actorId === myUserId ? goToProfile() : onOpenBibaxProfile(entry.actorBibroCode))}
+                          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0 }}
+                        >
+                          <EntityAvatar photoUrl={entry.actorAvatarUrl} size={28} />
+                        </button>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {entry.actorName || "Quelqu'un"}
+                          </p>
+                          <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
+                            {actionFor(entry)} @{" "}
+                            {objClickable ? (
+                              <button onClick={() => onOpenVenue(venue.id)} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                                {objName}
+                              </button>
+                            ) : (
+                              <strong style={{ color: COLORS.amber }}>{objName}</strong>
+                            )}
+                          </p>
+                        </div>
+                        <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{pulseTimeAgo(entry.createdAt)}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
-            </button>
+            </div>
           );
         })()}
 

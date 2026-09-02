@@ -1259,6 +1259,7 @@ export async function loadPulseFeed(before = null, limit = 20) {
     actorId: row.actor_id,
     actorName: row.actor_name,
     actorAvatarUrl: row.actor_avatar_url,
+    actorBibroCode: row.actor_bibro_code,
     objectType: row.object_type,
     objectId: row.object_id,
     venueId: row.venue_id,

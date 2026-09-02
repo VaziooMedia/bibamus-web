@@ -1296,6 +1296,10 @@ export default function App() {
                   setViewedBibaxProfileCode(code);
                   setScreen("bibaxProfilePreview");
                 }}
+                onOpenVenue={(id) => {
+                  setViewedVenueId(id);
+                  setScreen("venueDetail");
+                }}
                 openEvent={(id) => {
                   setActiveEventId(id);
                   setScreen("eventDashboard");
