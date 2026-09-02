@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1024" height="1024" viewBox="0 0 1024 1024">
+  <g fill="none"
+     stroke="#39FF66"
+     stroke-width="60"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+
+    <!-- Amis arrière-plan -->
+    <circle cx="176" cy="410" r="92"/>
+    <path d="M 36 786
+             C 36 666, 122 596, 222 596
+             C 258 596, 291 605, 318 622"/>
+
+    <circle cx="848" cy="410" r="92"/>
+    <path d="M 706 622
+             C 733 605, 766 596, 802 596
+             C 902 596, 988 666, 988 786"/>
+
+    <!-- Bibax principal, directement dérivé du langage BibaMe -->
+    <circle cx="512" cy="286" r="194"/>
+
+    <path d="M 235 926
+             C 183 926, 153 894, 162 842
+             C 188 690, 320 579, 512 579
+             C 704 579, 836 690, 862 842
+             C 871 894, 841 926, 789 926
+             Z"/>
+  </g>
+</svg>
