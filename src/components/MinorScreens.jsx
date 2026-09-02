@@ -4,59 +4,104 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
+import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { formatDate } from "../utils.js";
 
-export function SettingsScreen({ onBack, isAdmin, goToImport, goToDeleteAccount }) {
+export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, goToDeleteAccount, onLogout, goToCategory }) {
+  const SettingsRow = ({ icon, title, subtitle, onClick, danger }) => (
+    <button
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "14px",
+        background: "none",
+        border: "none",
+        borderBottom: `1px solid ${COLORS.paperAlt}`,
+        padding: "14px 4px",
+        textAlign: "left",
+        cursor: "pointer",
+        width: "100%",
+        color: COLORS.ink,
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+        {icon}
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: "14.5px", color: danger ? COLORS.wine : COLORS.ink }}>{title}</div>
+        <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{subtitle}</div>
+      </span>
+      {!danger && <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />}
+    </button>
+  );
+
+  const SettingsGroup = ({ children }) => (
+    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "16px" }}>{children}</div>
+  );
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>PARAMÈTRES</span>
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", margin: "4px 0 18px 0", lineHeight: 1 }}>Réglages</h1>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px 16px" }}>
-          <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px" }}>🍻 Bibamus</div>
-          <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>App de suivi de tournées entre Bibax</div>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "18px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ width: "72px", height: "72px", borderRadius: "50%", border: `2px solid ${COLORS.amber}`, padding: "2px", flexShrink: 0 }}>
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={32} color={COLORS.amber} />}
+            </div>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", lineHeight: 1.25, margin: 0 }}>{myName}</h1>
+            {profile.lastName && <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", lineHeight: 1.25, margin: 0 }}>{profile.lastName}</h1>}
+            {profile.nickname && <p style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", color: COLORS.amber, margin: "3px 0 0" }}>{profile.nickname}</p>}
+          </div>
         </div>
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px 16px" }}>
-          <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px" }}>🔒 Politique de confidentialité</div>
-          <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>À rédiger.</div>
-        </div>
-        {isAdmin && (
-          <button
-            onClick={goToImport}
-            style={{
-              background: COLORS.surface,
-              border: `2px solid ${COLORS.amber}`,
-              borderRadius: "12px",
-              padding: "14px 16px",
-              textAlign: "left",
-              cursor: "pointer",
-              color: COLORS.ink,
-            }}
-          >
-            <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px" }}>⬆️ Importer des données</div>
-            <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Charger un export JSON depuis l'artefact Claude (admin uniquement)</div>
-          </button>
-        )}
-        <button
-          onClick={goToDeleteAccount}
-          style={{
-            background: COLORS.surface,
-            border: `2px solid ${COLORS.wine}`,
-            borderRadius: "12px",
-            padding: "14px 16px",
-            textAlign: "left",
-            cursor: "pointer",
-            color: COLORS.ink,
-          }}
-        >
-          <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px", color: COLORS.wine }}>🗑️ Supprimer mon compte</div>
-          <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Suppression définitive, sans retour en arrière possible</div>
-        </button>
       </div>
+
+      <SettingsGroup>
+        <SettingsRow icon={<NavIcon name="user" size={18} color={COLORS.amber} />} title="Compte" subtitle="Informations personnelles" onClick={() => goToCategory("account")} />
+        <SettingsRow icon={<NavIcon name="lock" size={18} color={COLORS.amber} />} title="Sécurité & confidentialité" subtitle="Mot de passe, confidentialité, données" onClick={() => goToCategory("security")} />
+        <SettingsRow icon={<NavIcon name="bell" size={18} color={COLORS.amber} />} title="Notifications" subtitle="Alertes, mentions, rappels" onClick={() => goToCategory("notifications")} />
+        <SettingsRow icon={<NavIcon name="settings" size={18} color={COLORS.amber} />} title="Préférences" subtitle="Langue, unités, affichage" onClick={() => goToCategory("preferences")} />
+        <SettingsRow icon={<NavIcon name="palette" size={18} color={COLORS.amber} />} title="Apparence" subtitle="Thème, couleurs, icônes" onClick={() => goToCategory("appearance")} />
+        <div style={{ borderBottom: "none" }}>
+          <SettingsRow icon={<NavIcon name="link" size={18} color={COLORS.amber} />} title="Connecter" subtitle="Services extérieurs" onClick={() => goToCategory("connect")} />
+        </div>
+      </SettingsGroup>
+
+      <SettingsGroup>
+        <SettingsRow icon={<NavIcon name="help-circle" size={18} color={COLORS.amber} />} title="Aide & support" subtitle="FAQ, assistance, contact" onClick={() => goToCategory("help")} />
+        <div style={{ borderBottom: "none" }}>
+          <SettingsRow icon={<NavIcon name="info" size={18} color={COLORS.amber} />} title="À propos" subtitle="Version, mentions légales" onClick={() => goToCategory("about")} />
+        </div>
+      </SettingsGroup>
+
+      <SettingsGroup>
+        <div style={{ borderBottom: "none" }}>
+          <SettingsRow icon={<NavIcon name="logout" size={18} color={COLORS.wine} />} title="Déconnexion" subtitle="Se déconnecter de Bibamus" onClick={onLogout} danger />
+        </div>
+      </SettingsGroup>
+
+      {isAdmin && (
+        <button
+          onClick={goToImport}
+          style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", textAlign: "left", cursor: "pointer", color: COLORS.ink, marginBottom: "10px" }}
+        >
+          <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px" }}>⬆️ Importer des données</div>
+          <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Charger un export JSON depuis l'artefact Claude (admin uniquement)</div>
+        </button>
+      )}
+      <button
+        onClick={goToDeleteAccount}
+        style={{ background: COLORS.surface, border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "14px 16px", textAlign: "left", cursor: "pointer", color: COLORS.ink }}
+      >
+        <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px", color: COLORS.wine }}>🗑️ Supprimer mon compte</div>
+        <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Suppression définitive, sans retour en arrière possible</div>
+      </button>
+
       <PageFooterNav onBack={onBack} />
     </div>
   );

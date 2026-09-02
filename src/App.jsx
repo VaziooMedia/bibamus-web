@@ -823,6 +823,7 @@ export default function App() {
 
   const [viewedBibroId, setViewedBibroId] = useState(null);
   const [viewedBibaxPhotos, setViewedBibaxPhotos] = useState(null);
+  const [viewedSettingsCategory, setViewedSettingsCategory] = useState(null);
   const [viewedBreweryId, setViewedBreweryId] = useState(null);
   const [viewedBrandId, setViewedBrandId] = useState(null);
 
@@ -1688,7 +1689,41 @@ export default function App() {
               />
             )}
             {screen === "settings" && (
-              <SettingsScreen onBack={() => setScreen("myInfo")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} goToDeleteAccount={() => setScreen("deleteAccount")} />
+              <SettingsScreen
+                myName={profile.name}
+                profile={profile}
+                onBack={() => setScreen("myInfo")}
+                isAdmin={!!profile.isAdmin}
+                goToImport={() => setScreen("importData")}
+                goToDeleteAccount={() => setScreen("deleteAccount")}
+                onLogout={handleLogout}
+                goToCategory={(key) => {
+                  if (key === "account") {
+                    setScreen("myInfo");
+                    return;
+                  }
+                  setViewedSettingsCategory(key);
+                  setScreen("settingsCategory");
+                }}
+              />
+            )}
+            {screen === "settingsCategory" && (
+              <ComingSoonScreen
+                eyebrow="PARAMÈTRES"
+                title={
+                  {
+                    account: "Compte",
+                    security: "Sécurité & confidentialité",
+                    notifications: "Notifications",
+                    preferences: "Préférences",
+                    appearance: "Apparence",
+                    connect: "Connecter",
+                    help: "Aide & support",
+                    about: "À propos",
+                  }[viewedSettingsCategory] || ""
+                }
+                onBack={() => setScreen("settings")}
+              />
             )}
             {screen === "deleteAccount" && <DeleteAccountScreen onBack={() => setScreen("settings")} onAccountDeleted={handleAccountDeleted} />}
             {screen === "importData" && (
@@ -2026,7 +2061,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

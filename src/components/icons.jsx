@@ -371,6 +371,66 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M9 9.3l2 2 3.3-3.6" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
+    case "lock":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="5" y="11" width="14" height="10" rx="2" stroke={color} strokeWidth="1.7" />
+          <path d="M8 11V7.5a4 4 0 0 1 8 0V11" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <circle cx="12" cy="16" r="1.6" fill={color} />
+        </svg>
+      );
+    case "bell":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "palette":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12 3C7 3 3 6.8 3 11.5 3 15.6 6 17 8.3 17H9c.8 0 1.3.9.8 1.6l-.4.6c-.6.9.1 2.1 1.2 2.1 6.4 0 10.4-4.6 10.4-9.8C21 6.8 17 3 12 3Z"
+            stroke={color}
+            strokeWidth="1.7"
+            strokeLinejoin="round"
+          />
+          <circle cx="7.7" cy="10.5" r="1.1" fill={color} />
+          <circle cx="11" cy="7.7" r="1.1" fill={color} />
+          <circle cx="15" cy="8.3" r="1.1" fill={color} />
+          <circle cx="16.8" cy="12" r="1.1" fill={color} />
+        </svg>
+      );
+    case "link":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M10 14a4 4 0 0 0 5.7.2l2-2a4 4 0 0 0-5.6-5.6l-1 1" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M14 10a4 4 0 0 0-5.7-.2l-2 2a4 4 0 0 0 5.6 5.6l1-1" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "help-circle":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
+          <path d="M9.3 9.3a2.7 2.7 0 1 1 3.9 2.4c-.8.4-1.2 1-1.2 1.9" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <circle cx="12" cy="17" r="1.1" fill={color} />
+        </svg>
+      );
+    case "info":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
+          <path d="M12 11v5.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <circle cx="12" cy="7.7" r="1.1" fill={color} />
+        </svg>
+      );
+    case "logout":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M15 4h2.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H15" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M4 12h11.5M12.5 8.5 16 12l-3.5 3.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     case "trash":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
