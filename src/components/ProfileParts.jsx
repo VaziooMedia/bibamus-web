@@ -3,75 +3,198 @@
 // hebdomadaire (jours sans alcool), contrôle de réinitialisation
 // de statistique. Copiés tels quels depuis le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
-import { COLORS, WEEKDAY_SHORT_MON_FIRST } from "../constants.js";
-import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
+import React, { useState, useEffect } from "react";
+import { COLORS, WEEKDAY_SHORT_MON_FIRST, COUNTRY_FLAGS } from "../constants.js";
+import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon } from "./icons.jsx";
+import bibaxIconUrl from "../assets/brand/bibax.svg";
+import birthdayIconUrl from "../assets/brand/birthday-icon.png";
+import residenceIconUrl from "../assets/brand/residence-icon.png";
+import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
+import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
+import { loadMyProfileStats, loadMyStories } from "../data/sharedDirectories.js";
 
-export function ProfileHeader({ myName, profile, bibros, checkIns }) {
+export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goToBibros, goToProducts, goToVenues, onOpenMyStory }) {
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    if (myUserId) loadMyProfileStats(myUserId).then(setStats);
+  }, [myUserId]);
+
+  const [activeStories, setActiveStories] = useState([]);
+  useEffect(() => {
+    loadMyStories().then((list) => setActiveStories(list.filter((s) => new Date(s.expiresAt) > new Date())));
+  }, [myUserId]);
+  const hasActiveStory = activeStories.length > 0;
+
+  const openMyStory = () => {
+    if (!hasActiveStory || !onOpenMyStory) return;
+    onOpenMyStory(
+      activeStories.map((s) => ({ ...s, authorId: myUserId, authorName: myName, authorLastName: profile.lastName, authorAvatarUrl: profile.avatarUrl }))
+    );
+  };
+
+  const StatCard = ({ icon, label, value, onClick }) => (
+    <button
+      onClick={onClick}
+      disabled={!onClick}
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "6px",
+        background: COLORS.surface,
+        border: `2px solid ${COLORS.paperAlt}`,
+        borderRadius: "14px",
+        padding: "12px",
+        textAlign: "center",
+        cursor: onClick ? "pointer" : "default",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+        {icon}
+        {onClick && (
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
+            <NavIcon name="chevron-right" size={10} color={COLORS.amber} />
+          </span>
+        )}
+      </div>
+      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2, height: "27px", display: "flex", alignItems: "center" }}>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
+    </button>
+  );
+
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginTop: "4px", marginBottom: "6px", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "50%",
-              background: COLORS.paperAlt,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              overflow: "hidden",
-            }}
-          >
-            {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={28} color={COLORS.amber} />}
+      <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "10px" }}>
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+            <button
+              onClick={hasActiveStory ? openMyStory : undefined}
+              style={{
+                width: "96px",
+                height: "96px",
+                borderRadius: "50%",
+                border: `2px solid ${hasActiveStory ? "#FF2C8F" : COLORS.amber}`,
+                padding: "2px",
+                flexShrink: 0,
+                background: "none",
+                cursor: hasActiveStory ? "pointer" : "default",
+              }}
+            >
+              <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={42} color={COLORS.amber} />}
+              </div>
+            </button>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.15, margin: 0 }}>
+                {myName} {profile.lastName || ""}
+              </h1>
+              {profile.nickname && <p style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13.5px", color: COLORS.amber, margin: "3px 0 0" }}>{profile.nickname}</p>}
+            </div>
           </div>
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", lineHeight: 1, margin: 0 }}>{myName}</h1>
         </div>
-        {(profile.facebookUrl || profile.instagramUrl || profile.tiktokUrl || profile.snapchatUrl) && (
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+
+        {(profile.facebookUrl ||
+          profile.instagramUrl ||
+          profile.tiktokUrl ||
+          profile.snapchatUrl ||
+          profile.whatsappUrl ||
+          profile.xUrl ||
+          profile.threadsUrl ||
+          profile.linkedinUrl) && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center", marginTop: "12px" }}>
             {profile.facebookUrl && (
               <a href={normalizeUrl(profile.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <FacebookIcon size={32} />
+                <FacebookIcon size={20} />
               </a>
             )}
             {profile.instagramUrl && (
               <a href={normalizeUrl(profile.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <InstagramIcon size={32} />
+                <InstagramIcon size={20} />
               </a>
             )}
             {profile.tiktokUrl && (
               <a href={normalizeUrl(profile.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <TiktokIcon size={32} />
+                <TiktokIcon size={20} />
               </a>
             )}
             {profile.snapchatUrl && (
               <a href={normalizeUrl(profile.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <SnapchatIcon size={32} />
+                <SnapchatIcon size={20} />
+              </a>
+            )}
+            {profile.whatsappUrl && (
+              <a href={normalizeUrl(profile.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <WhatsappIcon size={20} />
+              </a>
+            )}
+            {profile.xUrl && (
+              <a href={normalizeUrl(profile.xUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <XIcon size={20} />
+              </a>
+            )}
+            {profile.threadsUrl && (
+              <a href={normalizeUrl(profile.threadsUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <ThreadsIcon size={20} />
+              </a>
+            )}
+            {profile.linkedinUrl && (
+              <a href={normalizeUrl(profile.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <LinkedinIcon size={20} />
               </a>
             )}
           </div>
         )}
+
+        {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: "14px 0 0" }}>"{profile.bio}"</p>}
       </div>
 
-      {profile.registeredAt && (
-        <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "10px" }}>Sur Bibamus depuis {formatMemberSince(profile.registeredAt)}</p>
+      {(profile.birthDate || profile.city || profile.registeredAt) && (
+        <div
+          style={{
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "12px",
+            padding: "12px 14px",
+            marginBottom: "14px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            fontSize: "12.5px",
+            color: COLORS.inkSoft,
+          }}
+        >
+          {(profile.birthDate || profile.city) && (
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              {profile.birthDate && (
+                <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <img src={birthdayIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
+                  {formatDDMMYYYY(profile.birthDate)}
+                </span>
+              )}
+              {profile.birthDate && profile.city && <span style={{ fontSize: "18px", lineHeight: 1, color: COLORS.paperAlt }}>|</span>}
+              {profile.city && (
+                <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <img src={residenceIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
+                  {profile.city} {COUNTRY_FLAGS[profile.country] || ""}
+                </span>
+              )}
+            </div>
+          )}
+          {profile.registeredAt && <div>Sur Bibamus depuis {formatMemberSince(profile.registeredAt)}</div>}
+        </div>
       )}
 
-      {profile.bio && <p style={{ fontSize: "13.5px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, marginBottom: "14px" }}>"{profile.bio}"</p>}
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
-        <div style={{ flex: 1, background: COLORS.amber, borderRadius: "12px", padding: "12px", textAlign: "center" }}>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: COLORS.paper, lineHeight: 1 }}>{bibros.length}</div>
-          <div style={{ fontSize: "11.5px", color: COLORS.paper, fontWeight: 700 }}>Bibax</div>
-        </div>
-        <div style={{ flex: 1, background: COLORS.amber, borderRadius: "12px", padding: "12px", textAlign: "center" }}>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: COLORS.paper, lineHeight: 1 }}>{checkIns.length}</div>
-          <div style={{ fontSize: "11.5px", color: COLORS.paper, fontWeight: 700 }}>Check-in{checkIns.length !== 1 ? "s" : ""}</div>
-        </div>
+        <StatCard icon={<img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Bibax" value={bibros.length} onClick={goToBibros} />
+        <StatCard icon={<img src={drinkChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Drink Checks" value={stats ? stats.tastedDrinksCount : "…"} onClick={goToProducts} />
+        <StatCard icon={<img src={placeChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Place Checks" value={stats ? stats.venueCheckinsCount : "…"} onClick={goToVenues} />
       </div>
+
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
     </>
   );
 }

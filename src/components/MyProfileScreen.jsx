@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS, COUNTRIES, LANGUAGES, CITIES_BY_COUNTRY } from "../constants.js";
-import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, NavIcon } from "./icons.jsx";
+import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
@@ -35,6 +35,10 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [instagramUrl, setInstagramUrl] = useState(profile.instagramUrl || "");
   const [tiktokUrl, setTiktokUrl] = useState(profile.tiktokUrl || "");
   const [snapchatUrl, setSnapchatUrl] = useState(profile.snapchatUrl || "");
+  const [whatsappUrl, setWhatsappUrl] = useState(profile.whatsappUrl || "");
+  const [xUrl, setXUrl] = useState(profile.xUrl || "");
+  const [threadsUrl, setThreadsUrl] = useState(profile.threadsUrl || "");
+  const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedinUrl || "");
   const [sharePrenom, setSharePrenom] = useState(profile.sharePrenom !== false);
   const [shareNom, setShareNom] = useState(profile.shareNom !== false);
   const [shareSurnom, setShareSurnom] = useState(profile.shareSurnom !== false);
@@ -47,6 +51,10 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [shareInstagram, setShareInstagram] = useState(profile.shareInstagram !== false);
   const [shareTiktok, setShareTiktok] = useState(profile.shareTiktok !== false);
   const [shareSnapchat, setShareSnapchat] = useState(profile.shareSnapchat !== false);
+  const [shareWhatsapp, setShareWhatsapp] = useState(profile.shareWhatsapp !== false);
+  const [shareX, setShareX] = useState(profile.shareX !== false);
+  const [shareThreads, setShareThreads] = useState(profile.shareThreads !== false);
+  const [shareLinkedin, setShareLinkedin] = useState(profile.shareLinkedin !== false);
   const [shareRecords, setShareRecords] = useState(profile.shareRecords !== false);
   const [shareVisitRanking, setShareVisitRanking] = useState(profile.shareVisitRanking !== false);
   const [saved, setSaved] = useState(false);
@@ -92,6 +100,10 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       instagramUrl: instagramUrl.trim(),
       tiktokUrl: tiktokUrl.trim(),
       snapchatUrl: snapchatUrl.trim(),
+      whatsappUrl: whatsappUrl.trim(),
+      xUrl: xUrl.trim(),
+      threadsUrl: threadsUrl.trim(),
+      linkedinUrl: linkedinUrl.trim(),
       sharePrenom,
       shareNom,
       shareSurnom,
@@ -105,6 +117,10 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       shareInstagram,
       shareTiktok,
       shareSnapchat,
+      shareWhatsapp,
+      shareX,
+      shareThreads,
+      shareLinkedin,
       shareRecords,
       shareVisitRanking,
     });
@@ -358,6 +374,26 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
         <input value={snapchatUrl} onChange={(e) => setSnapchatUrl(e.target.value)} placeholder="Lien Snapchat" style={{ ...fieldStyle, marginBottom: 0, flex: 1 }} />
       </div>
       <ShareToggle checked={shareSnapchat} onChange={setShareSnapchat} />
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+        <WhatsappIcon size={20} />
+        <input value={whatsappUrl} onChange={(e) => setWhatsappUrl(e.target.value)} placeholder="Lien WhatsApp" style={{ ...fieldStyle, marginBottom: 0, flex: 1 }} />
+      </div>
+      <ShareToggle checked={shareWhatsapp} onChange={setShareWhatsapp} />
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+        <XIcon size={20} />
+        <input value={xUrl} onChange={(e) => setXUrl(e.target.value)} placeholder="Lien X" style={{ ...fieldStyle, marginBottom: 0, flex: 1 }} />
+      </div>
+      <ShareToggle checked={shareX} onChange={setShareX} />
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+        <ThreadsIcon size={20} />
+        <input value={threadsUrl} onChange={(e) => setThreadsUrl(e.target.value)} placeholder="Lien Threads" style={{ ...fieldStyle, marginBottom: 0, flex: 1 }} />
+      </div>
+      <ShareToggle checked={shareThreads} onChange={setShareThreads} />
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+        <LinkedinIcon size={20} />
+        <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="Lien LinkedIn" style={{ ...fieldStyle, marginBottom: 0, flex: 1 }} />
+      </div>
+      <ShareToggle checked={shareLinkedin} onChange={setShareLinkedin} />
 
       <label style={{ ...labelStyle, marginTop: "4px" }}>Statistiques visibles par tes Bibax</label>
       <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-2px", marginBottom: "10px" }}>

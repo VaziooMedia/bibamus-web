@@ -258,6 +258,10 @@ export async function lookupBibroCode(code) {
     instagramUrl: row.instagram_url,
     tiktokUrl: row.tiktok_url,
     snapchatUrl: row.snapchat_url,
+    whatsappUrl: row.whatsapp_url,
+    xUrl: row.x_url,
+    threadsUrl: row.threads_url,
+    linkedinUrl: row.linkedin_url,
   };
 }
 
@@ -297,6 +301,7 @@ export async function loadMyProfile(userId) {
   }
   return {
     myBibroCode: data.bibro_code,
+    registeredAt: data.created_at || null,
     name: data.name || "",
     lastName: data.last_name || "",
     nickname: data.nickname || "",
@@ -883,6 +888,68 @@ export async function rejectContribution(contribution, reviewerId) {
 
 /* ---------------- PRODUITS (RÉPERTOIRE DES BOISSONS) ---------------- */
 
+/* ---------------- DÉGUSTATIONS (serveur, remplace le localStorage) ---------------- */
+
+export async function loadMyTastedDrinkIds() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase.from("tasted_drinks").select("drink_id").eq("user_id", user.id);
+  if (error) {
+    console.error("loadMyTastedDrinkIds:", error);
+    return [];
+  }
+  return data.map((r) => r.drink_id);
+}
+
+export async function setDrinkTastedServer(drinkId, tasted) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié." };
+  if (tasted) {
+    const { error } = await supabase.from("tasted_drinks").insert({ user_id: user.id, drink_id: drinkId });
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase.from("tasted_drinks").delete().eq("user_id", user.id).eq("drink_id", drinkId);
+    if (error) return { error: error.message };
+  }
+  return { ok: true };
+}
+
+/* ---------------- MES PHOTOS ---------------- */
+
+export async function loadMyMediaAssets() {
+  const { data, error } = await supabase.rpc("get_my_media_assets");
+  if (error) {
+    console.error("loadMyMediaAssets:", error);
+    return [];
+  }
+  return data.map((r) => ({
+    id: r.id,
+    entityType: r.entity_type,
+    entityId: r.entity_id,
+    kind: r.kind,
+    url: r.url,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function deleteMyMediaAsset(id) {
+  const { error } = await supabase.rpc("delete_my_media_asset", { p_id: id });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function loadMyProfileStats(userId) {
+  const [{ data: tastedCount }, { data: venuesCount }] = await Promise.all([
+    supabase.rpc("get_tasted_drinks_count", { p_user_id: userId }),
+    supabase.rpc("get_venue_checkins_count", { p_user_id: userId }),
+  ]);
+  return { tastedDrinksCount: tastedCount ?? 0, venueCheckinsCount: venuesCount ?? 0 };
+}
+
 export async function loadDrinksDirectory() {
   const { data, error } = await supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
   if (error) {
@@ -1389,7 +1456,25 @@ export async function loadMyBibax() {
     console.error("loadMyBibax:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality }));
+  return data.map((r) => ({
+    relationshipId: r.relationship_id,
+    userId: r.user_id,
+    name: r.name,
+    lastName: r.last_name,
+    nickname: r.nickname,
+    avatarUrl: r.avatar_url,
+    bibroCode: r.bibro_code,
+    city: r.city,
+    locality: r.locality,
+    facebookUrl: r.facebook_url,
+    instagramUrl: r.instagram_url,
+    tiktokUrl: r.tiktok_url,
+    snapchatUrl: r.snapchat_url,
+    whatsappUrl: r.whatsapp_url,
+    xUrl: r.x_url,
+    threadsUrl: r.threads_url,
+    linkedinUrl: r.linkedin_url,
+  }));
 }
 
 export async function loadPendingBibaxRequests() {

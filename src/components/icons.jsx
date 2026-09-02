@@ -333,6 +333,51 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M20 5.5V11H14.5" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       );
+    case "settings":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M12 1a1 1 0 0 1 1 1v1.09a6.97 6.97 0 0 1 2.6 1.08l.77-.77a1 1 0 1 1 1.42 1.42l-.77.77c.5.75.87 1.61 1.08 2.6H19a1 1 0 1 1 0 2h-1.09a6.97 6.97 0 0 1-1.08 2.6l.77.77a1 1 0 1 1-1.42 1.42l-.77-.77a6.97 6.97 0 0 1-2.6 1.08V19a1 1 0 1 1-2 0v-1.09a6.97 6.97 0 0 1-2.6-1.08l-.77.77a1 1 0 1 1-1.42-1.42l.77-.77A6.97 6.97 0 0 1 5.09 13H4a1 1 0 1 1 0-2h1.09a6.97 6.97 0 0 1 1.08-2.6l-.77-.77a1 1 0 0 1 1.42-1.42l.77.77A6.97 6.97 0 0 1 11 3.09V2a1 1 0 0 1 1-1Zm0 7.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"
+          />
+        </svg>
+      );
+    case "crown":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M3 8.5l4 3 5-6 5 6 4-3-1.6 9.5H4.6L3 8.5Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" fill={filled ? color : "none"} />
+        </svg>
+      );
+    case "bar-chart":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="12" width="4" height="8" rx="1" fill={color} />
+          <rect x="10" y="7" width="4" height="13" rx="1" fill={color} />
+          <rect x="16" y="3" width="4" height="17" rx="1" fill={color} />
+        </svg>
+      );
+    case "calendar":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke={color} strokeWidth="1.7" />
+          <path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "map-pin-check":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M12 21s7-6.5 7-11.5A7 7 0 1 0 5 9.5C5 14.5 12 21 12 21Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M9 9.3l2 2 3.3-3.6" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "trash":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M4 7h16M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7M6.5 7l.7 12.2A2 2 0 0 0 9.2 21h5.6a2 2 0 0 0 2-1.8L17.5 7" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M10 11v6M14 11v6" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
     case "heart":
       return filled ? (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -395,7 +440,7 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
       );
     case "bottle":
       return (
-        <svg width={Math.round(size * (1254 / 1254))} height={size} viewBox="0 0 1254 1254" fill="none">
+        <svg width={Math.round(size * (405 / 1070))} height={size} viewBox="425 130 405 1070" fill="none">
           <path
             fillRule="evenodd"
             clipRule="evenodd"
@@ -439,18 +484,22 @@ export function WebsiteIcon({ size = 22 }) {
   );
 }
 
+import facebookLogoUrl from "../assets/brand/facebook.svg";
+import tiktokLogoUrl from "../assets/brand/tiktok.svg";
+import snapchatLogoUrl from "../assets/brand/snapchat.svg";
+import whatsappLogoUrl from "../assets/brand/whatsapp.svg";
+import xLogoUrl from "../assets/brand/X.svg";
+import threadsLogoUrl from "../assets/brand/threads.svg";
+import linkedinLogoUrl from "../assets/brand/linkedIn.svg";
+
 export function FacebookIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#1877F2" />
-      <path
-        d="M13.6 20v-6.6h2.2l.33-2.56h-2.53v-1.64c0-.74.2-1.25 1.27-1.25h1.36V5.66c-.24-.03-1.04-.1-1.98-.1-1.96 0-3.3 1.2-3.3 3.4v1.88H8.7v2.56h2.25V20h2.65z"
-        fill="#fff"
-      />
-    </svg>
-  );
+  return <img src={facebookLogoUrl} alt="Facebook" width={size} height={size} style={{ display: "block" }} />;
 }
 
+// Instagram reste dessiné à la main pour l'instant — le fichier officiel présent sur GitHub
+// pèse 10,8 Mo (anormal, les 7 autres font entre 400 octets et 176 Ko), inutilisable tel quel
+// sans plomber le temps de chargement de l'app. À remplacer dès qu'un fichier plus léger est
+// disponible.
 export function InstagramIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
@@ -469,17 +518,8 @@ export function InstagramIcon({ size = 22 }) {
 }
 
 export function TiktokIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#000" />
-      <path
-        d="M14.2 6h-2.1v8.3c0 1.15-.95 2.1-2.1 2.1s-2.1-.95-2.1-2.1.95-2.1 2.1-2.1c.16 0 .32.02.47.05v-2.15a4.3 4.3 0 00-.47-.03 4.25 4.25 0 100 8.5 4.25 4.25 0 004.25-4.25V9.9c.7.5 1.55.8 2.45.8V8.6a2.85 2.85 0 01-2.05-.87A2.9 2.9 0 0114 6.2V6z"
-        fill="#fff"
-      />
-    </svg>
-  );
+  return <img src={tiktokLogoUrl} alt="TikTok" width={size} height={size} style={{ display: "block" }} />;
 }
-
 
 export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé — jamais visible par tes Bibax" }) {
   return (
@@ -497,13 +537,21 @@ export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé 
 }
 
 export function SnapchatIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#FFFC00" />
-      <path
-        d="M12 6.2c1.9 0 3 1.4 3.05 3.2.02.75-.02 1.4-.06 1.95.5.28 1.05.1 1.35-.05.2-.1.45-.05.55.15.1.22 0 .45-.2.58-.35.22-.9.5-1.55.6-.05.35-.02.6.35.85.5.35 1.3.5 1.85.58.25.03.3.35.1.5-.25.18-.7.35-1.15.42-.05.15-.1.4-.2.6-.1.2-.3.22-.55.18-.4-.05-.85-.1-1.3.05-.5.15-1 .65-2.34.65s-1.84-.5-2.34-.65c-.45-.15-.9-.1-1.3-.05-.25.04-.45.02-.55-.18-.1-.2-.15-.45-.2-.6-.45-.07-.9-.24-1.15-.42-.2-.15-.15-.47.1-.5.55-.08 1.35-.23 1.85-.58.37-.25.4-.5.35-.85-.65-.1-1.2-.38-1.55-.6-.2-.13-.3-.36-.2-.58.1-.2.35-.25.55-.15.3.15.85.33 1.35.05-.04-.55-.08-1.2-.06-1.95C9 7.6 10.1 6.2 12 6.2z"
-        fill="#000"
-      />
-    </svg>
-  );
+  return <img src={snapchatLogoUrl} alt="Snapchat" width={size} height={size} style={{ display: "block" }} />;
+}
+
+export function WhatsappIcon({ size = 22 }) {
+  return <img src={whatsappLogoUrl} alt="WhatsApp" width={size} height={size} style={{ display: "block" }} />;
+}
+
+export function XIcon({ size = 22 }) {
+  return <img src={xLogoUrl} alt="X" width={size} height={size} style={{ display: "block" }} />;
+}
+
+export function ThreadsIcon({ size = 22 }) {
+  return <img src={threadsLogoUrl} alt="Threads" width={size} height={size} style={{ display: "block" }} />;
+}
+
+export function LinkedinIcon({ size = 22 }) {
+  return <img src={linkedinLogoUrl} alt="LinkedIn" width={size} height={size} style={{ display: "block" }} />;
 }

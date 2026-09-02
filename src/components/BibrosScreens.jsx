@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
+import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
@@ -343,8 +343,8 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                 </div>
               </div>
 
-              {(b.facebookUrl || b.instagramUrl || b.tiktokUrl || b.snapchatUrl) && (
-                <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+              {(b.facebookUrl || b.instagramUrl || b.tiktokUrl || b.snapchatUrl || b.whatsappUrl || b.xUrl || b.threadsUrl || b.linkedinUrl) && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
                   {b.facebookUrl && (
                     <a href={normalizeUrl(b.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
                       <FacebookIcon size={19} />
@@ -363,6 +363,26 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                   {b.snapchatUrl && (
                     <a href={normalizeUrl(b.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
                       <SnapchatIcon size={19} />
+                    </a>
+                  )}
+                  {b.whatsappUrl && (
+                    <a href={normalizeUrl(b.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <WhatsappIcon size={19} />
+                    </a>
+                  )}
+                  {b.xUrl && (
+                    <a href={normalizeUrl(b.xUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <XIcon size={19} />
+                    </a>
+                  )}
+                  {b.threadsUrl && (
+                    <a href={normalizeUrl(b.threadsUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <ThreadsIcon size={19} />
+                    </a>
+                  )}
+                  {b.linkedinUrl && (
+                    <a href={normalizeUrl(b.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <LinkedinIcon size={19} />
                     </a>
                   )}
                 </div>
@@ -401,7 +421,7 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
   if (bibro.nickname) etiquetteParts.push(bibro.nickname);
   if (bibro.birthDate) etiquetteParts.push(age != null ? `${formatSharedBirthDate(bibro.birthDate)} (${age} ans)` : formatSharedBirthDate(bibro.birthDate));
   const hasContactInfo = bibro.email || bibro.country || bibro.city || bibro.locality;
-  const hasSocials = bibro.facebookUrl || bibro.instagramUrl || bibro.tiktokUrl || bibro.snapchatUrl;
+  const hasSocials = bibro.facebookUrl || bibro.instagramUrl || bibro.tiktokUrl || bibro.snapchatUrl || bibro.whatsappUrl || bibro.xUrl || bibro.threadsUrl || bibro.linkedinUrl;
   const records = bibro.records;
   const ranking = bibro.visitRanking;
 
@@ -431,7 +451,7 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", lineHeight: 1, margin: 0 }}>{heading}</h1>
         {hasSocials && (
-          <div style={{ display: "flex", gap: "10px", alignItems: "center", marginLeft: "22px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginLeft: "22px" }}>
             {bibro.facebookUrl && (
               <a href={normalizeUrl(bibro.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                 <FacebookIcon size={26} />
@@ -450,6 +470,26 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
             {bibro.snapchatUrl && (
               <a href={normalizeUrl(bibro.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                 <SnapchatIcon size={26} />
+              </a>
+            )}
+            {bibro.whatsappUrl && (
+              <a href={normalizeUrl(bibro.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <WhatsappIcon size={26} />
+              </a>
+            )}
+            {bibro.xUrl && (
+              <a href={normalizeUrl(bibro.xUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <XIcon size={26} />
+              </a>
+            )}
+            {bibro.threadsUrl && (
+              <a href={normalizeUrl(bibro.threadsUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <ThreadsIcon size={26} />
+              </a>
+            )}
+            {bibro.linkedinUrl && (
+              <a href={normalizeUrl(bibro.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <LinkedinIcon size={26} />
               </a>
             )}
           </div>
@@ -733,7 +773,24 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
 
       {status === "found" && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: (foundSocials.facebookUrl || foundSocials.instagramUrl || foundSocials.tiktokUrl || foundSocials.snapchatUrl) ? "12px" : 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "12px",
+              marginBottom:
+                foundSocials.facebookUrl ||
+                foundSocials.instagramUrl ||
+                foundSocials.tiktokUrl ||
+                foundSocials.snapchatUrl ||
+                foundSocials.whatsappUrl ||
+                foundSocials.xUrl ||
+                foundSocials.threadsUrl ||
+                foundSocials.linkedinUrl
+                  ? "12px"
+                  : 0,
+            }}
+          >
             <div
               style={{
                 width: "48px",
@@ -763,8 +820,15 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
               )}
             </div>
           </div>
-          {(foundSocials.facebookUrl || foundSocials.instagramUrl || foundSocials.tiktokUrl || foundSocials.snapchatUrl) && (
-            <div style={{ display: "flex", gap: "8px" }}>
+          {(foundSocials.facebookUrl ||
+            foundSocials.instagramUrl ||
+            foundSocials.tiktokUrl ||
+            foundSocials.snapchatUrl ||
+            foundSocials.whatsappUrl ||
+            foundSocials.xUrl ||
+            foundSocials.threadsUrl ||
+            foundSocials.linkedinUrl) && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {foundSocials.facebookUrl && (
                 <a href={normalizeUrl(foundSocials.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                   <FacebookIcon size={20} />
@@ -783,6 +847,26 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
               {foundSocials.snapchatUrl && (
                 <a href={normalizeUrl(foundSocials.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                   <SnapchatIcon size={20} />
+                </a>
+              )}
+              {foundSocials.whatsappUrl && (
+                <a href={normalizeUrl(foundSocials.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <WhatsappIcon size={20} />
+                </a>
+              )}
+              {foundSocials.xUrl && (
+                <a href={normalizeUrl(foundSocials.xUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <XIcon size={20} />
+                </a>
+              )}
+              {foundSocials.threadsUrl && (
+                <a href={normalizeUrl(foundSocials.threadsUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <ThreadsIcon size={20} />
+                </a>
+              )}
+              {foundSocials.linkedinUrl && (
+                <a href={normalizeUrl(foundSocials.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <LinkedinIcon size={20} />
                 </a>
               )}
             </div>

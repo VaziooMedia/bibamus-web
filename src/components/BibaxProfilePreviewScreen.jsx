@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, EntityAvatar, BibaxName } from "./ui.jsx";
-import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
+import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon } from "./icons.jsx";
 import { normalizeUrl } from "../utils.js";
 import { lookupBibroCode } from "../data/sharedDirectories.js";
 
@@ -33,8 +33,15 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
             <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "4px" }}>{[identity.city, identity.country].filter(Boolean).join(", ")}</p>
           )}
 
-          {(identity.facebookUrl || identity.instagramUrl || identity.tiktokUrl || identity.snapchatUrl) && (
-            <div style={{ display: "flex", gap: "16px", marginTop: "18px" }}>
+          {(identity.facebookUrl ||
+            identity.instagramUrl ||
+            identity.tiktokUrl ||
+            identity.snapchatUrl ||
+            identity.whatsappUrl ||
+            identity.xUrl ||
+            identity.threadsUrl ||
+            identity.linkedinUrl) && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "18px" }}>
               {identity.facebookUrl && (
                 <a href={normalizeUrl(identity.facebookUrl)} target="_blank" rel="noreferrer">
                   <FacebookIcon size={26} color={COLORS.inkSoft} />
@@ -53,6 +60,26 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
               {identity.snapchatUrl && (
                 <a href={normalizeUrl(identity.snapchatUrl)} target="_blank" rel="noreferrer">
                   <SnapchatIcon size={26} color={COLORS.inkSoft} />
+                </a>
+              )}
+              {identity.whatsappUrl && (
+                <a href={normalizeUrl(identity.whatsappUrl)} target="_blank" rel="noreferrer">
+                  <WhatsappIcon size={26} color={COLORS.inkSoft} />
+                </a>
+              )}
+              {identity.xUrl && (
+                <a href={normalizeUrl(identity.xUrl)} target="_blank" rel="noreferrer">
+                  <XIcon size={26} color={COLORS.inkSoft} />
+                </a>
+              )}
+              {identity.threadsUrl && (
+                <a href={normalizeUrl(identity.threadsUrl)} target="_blank" rel="noreferrer">
+                  <ThreadsIcon size={26} color={COLORS.inkSoft} />
+                </a>
+              )}
+              {identity.linkedinUrl && (
+                <a href={normalizeUrl(identity.linkedinUrl)} target="_blank" rel="noreferrer">
+                  <LinkedinIcon size={26} color={COLORS.inkSoft} />
                 </a>
               )}
             </div>
