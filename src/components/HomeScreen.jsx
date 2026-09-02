@@ -186,6 +186,8 @@ export function HomeScreen({
 
       <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} />
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
+
       {bibros.some((b) => bibroStatuses[b.code] && (bibroStatuses[b.code].activeSalonName || isFreshCheckIn(bibroStatuses[b.code]))) && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -258,26 +260,30 @@ export function HomeScreen({
                   <span
                     style={{
                       position: "absolute",
-                      top: "12px",
-                      right: "14px",
+                      top: "-8px",
+                      right: "10px",
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
-                      fontSize: "12.5px",
+                      gap: "5px",
+                      fontSize: "10.5px",
                       fontWeight: 700,
+                      color: COLORS.paper,
+                      background: ev.paused ? "#FF9E2C" : COLORS.amber,
+                      borderRadius: "999px",
+                      padding: "3px 9px",
+                      letterSpacing: "0.3px",
                     }}
                   >
                     <span
                       style={{
-                        width: "8px",
-                        height: "8px",
+                        width: "6px",
+                        height: "6px",
                         borderRadius: "50%",
-                        background: ev.paused ? "#FF9E2C" : "#22c55e",
-                        boxShadow: ev.paused ? "0 0 0 3px rgba(255, 158, 44, 0.28)" : "0 0 0 3px rgba(34, 197, 94, 0.28)",
+                        background: COLORS.paper,
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ color: ev.paused ? "#FF9E2C" : COLORS.amber }}>{ev.paused ? "En pause" : "En cours"}</span>
+                    {ev.paused ? "EN PAUSE" : "EN COURS"}
                   </span>
                   <EntityAvatar
                     photoUrl={ev.venueId ? venues.find((v) => v.id === ev.venueId)?.profilePhotoUrl : null}
@@ -285,31 +291,26 @@ export function HomeScreen({
                     size={56}
                   />
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: "16px", paddingRight: "70px" }}>{ev.name}</div>
+                    <div style={{ fontWeight: 700, fontSize: "16px" }}>{ev.name}</div>
                     {(() => {
                       const linkedVenue = ev.venueId ? venues.find((v) => v.id === ev.venueId) : null;
-                      // N'affiche le nom du lieu que si le titre personnalisé de la session
-                      // s'en écarte — sinon, le titre suffit déjà, pas besoin de le répéter.
-                      // La ligne reste toujours réservée (invisible sinon), pour que la hauteur
-                      // du bloc ne varie pas selon qu'un lieu s'affiche ou non.
+                      // N'affiche le nom du lieu que si le titre personnalisé de la session s'en
+                      // écarte — sinon, le titre suffit déjà. Dans ce second cas, l'adresse
+                      // s'affiche à la place (en grisé), pour ne pas laisser un vide inutile.
                       const showVenue = linkedVenue && linkedVenue.name !== ev.name;
-                      return (
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            fontSize: "11.5px",
-                            color: COLORS.amber,
-                            fontWeight: 600,
-                            marginTop: "2px",
-                            visibility: showVenue ? "visible" : "hidden",
-                          }}
-                        >
-                          <NavIcon name="map-pin" size={11} color={COLORS.amber} />
-                          {showVenue ? linkedVenue.name : "—"}
-                        </div>
-                      );
+                      const address = linkedVenue ? [linkedVenue.streetName, linkedVenue.streetNumber].filter(Boolean).join(" ") : null;
+                      if (showVenue) {
+                        return (
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginTop: "2px" }}>
+                            <NavIcon name="map-pin" size={11} color={COLORS.amber} />
+                            {linkedVenue.name}
+                          </div>
+                        );
+                      }
+                      if (address) {
+                        return <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{address}</div>;
+                      }
+                      return null;
                     })()}
                     {(ev.date || ev.createdAt) && (
                       <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "3px" }}>
@@ -402,7 +403,7 @@ export function HomeScreen({
                         </button>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {entry.actorName || "Quelqu'un"}
+                            {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
                           </p>
                           <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
                             {actionFor(entry)} @{" "}
