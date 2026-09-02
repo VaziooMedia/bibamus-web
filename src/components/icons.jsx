@@ -345,6 +345,34 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           />
         </svg>
       );
+    case "crown":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M3 8.5l4 3 5-6 5 6 4-3-1.6 9.5H4.6L3 8.5Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" fill={filled ? color : "none"} />
+        </svg>
+      );
+    case "bar-chart":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="12" width="4" height="8" rx="1" fill={color} />
+          <rect x="10" y="7" width="4" height="13" rx="1" fill={color} />
+          <rect x="16" y="3" width="4" height="17" rx="1" fill={color} />
+        </svg>
+      );
+    case "calendar":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke={color} strokeWidth="1.7" />
+          <path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "map-pin-check":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M12 21s7-6.5 7-11.5A7 7 0 1 0 5 9.5C5 14.5 12 21 12 21Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M9 9.3l2 2 3.3-3.6" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     case "heart":
       return filled ? (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

@@ -18,22 +18,19 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
           </button>
         }
       />
-      <ProfileHeader myName={myName} profile={profile} bibros={bibros} checkIns={checkIns} myUserId={myUserId} />
+      <ProfileHeader myName={myName} profile={profile} bibros={bibros} checkIns={checkIns} myUserId={myUserId} goToBibros={goToBibros} goToProducts={goToProducts} goToVenues={goToVenues} />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <ActionCard
-          icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
-          title="BibaClub"
-          subtitle="Mes groupes de Bibax"
-          disabled
-          badge="Soon"
-        />
-        <ActionCard icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />} title="Mes Statistiques" subtitle="Verres, calories, dépenses, records et classements" onClick={goToMyStats} />
-        <ActionCard icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />} title="Mes Bibax" subtitle="Tes amis sur l'app, et qui est en soirée" onClick={goToBibros} />
-        <ActionCard icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />} title="Mes produits" subtitle="Bières, vins & spiritueux notés ou à goûter" onClick={goToProducts} />
-        <ActionCard icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />} title="Mes lieux favoris" subtitle="Tes habitués, avec adresse, carte boissons et stats" onClick={goToVenues} />
-        <ActionCard icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />} title="Mes Événements - Historique" subtitle="Combien tu as dépensé, et avec qui, soirée par soirée" onClick={goToHistory} />
-        <ActionCard icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />} title="Réglages" subtitle="Informations sur l'app, export des données" onClick={goToSettings} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+        <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title="BibaClub" subtitle="Mes groupes de Bibax" disabled badge="Soon" />
+        <ActionCard icon={<NavIcon name="bar-chart" size={20} color={COLORS.amber} />} title="Mes Statistiques" subtitle="Verres, calories, dépenses, records" onClick={goToMyStats} />
+        <ActionCard icon={<NavIcon name="users" size={20} color={COLORS.amber} />} title="Mes Bibax" subtitle="Tes amis, et qui est en soirée" onClick={goToBibros} />
+        <ActionCard icon={<NavIcon name="bottle" size={20} color={COLORS.amber} />} title="Mes produits" subtitle="Notés ou à goûter" onClick={goToProducts} />
+        <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title="Mes favoris" subtitle="Tes lieux habitués" onClick={goToVenues} />
+        <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title="Historique" subtitle="Tes soirées passées" onClick={goToHistory} />
+      </div>
+
+      <div style={{ marginTop: "10px" }}>
+        <ActionCard icon={<NavIcon name="settings" size={20} color={COLORS.inkSoft} />} title="Réglages" subtitle="Informations sur l'app, export des données" onClick={goToSettings} />
       </div>
       <PageFooterNav onBack={onBack} />
     </div>
