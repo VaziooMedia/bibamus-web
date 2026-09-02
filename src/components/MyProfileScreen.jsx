@@ -45,6 +45,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [shareEmail, setShareEmail] = useState(!!profile.shareEmail);
   const [shareBirthDate, setShareBirthDate] = useState(profile.shareBirthDate !== false);
   const [birthDateSharePrecision, setBirthDateSharePrecision] = useState(profile.birthDateSharePrecision || "full");
+  const [shareAge, setShareAge] = useState(profile.shareAge !== false);
   const [shareCountry, setShareCountry] = useState(profile.shareCountry !== false);
   const [shareCity, setShareCity] = useState(profile.shareCity !== false);
   const [shareFacebook, setShareFacebook] = useState(profile.shareFacebook !== false);
@@ -110,6 +111,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       shareEmail,
       shareBirthDate,
       birthDateSharePrecision,
+      shareAge,
       shareCountry,
       shareCity,
       shareBio,
@@ -312,6 +314,12 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
               {opt.label}
             </button>
           ))}
+        </div>
+      )}
+      {shareBirthDate && birthDateSharePrecision === "full" && (
+        <div style={{ marginTop: "-8px", marginBottom: "18px" }}>
+          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginRight: "8px" }}>Afficher mon âge calculé</span>
+          <ShareToggle checked={shareAge} onChange={setShareAge} />
         </div>
       )}
 

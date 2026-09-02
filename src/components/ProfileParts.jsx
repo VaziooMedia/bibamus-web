@@ -11,7 +11,7 @@ import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
 import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
 import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
-import { formatMemberSince, normalizeUrl, formatDDMMYYYY, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
+import { formatMemberSince, normalizeUrl, formatDDMMYYYY, formatSharedBirthDate, computeAgeFromBirthDate, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
 import { loadMyProfileStats, loadMyStories } from "../data/sharedDirectories.js";
 
 export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goToBibros, goToProducts, goToVenues, onOpenMyStory }) {
@@ -121,12 +121,14 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
             color: COLORS.inkSoft,
           }}
         >
+          {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: 0 }}>"{profile.bio}"</p>}
           {(profile.birthDate || profile.city) && (
             <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
               {profile.birthDate && (
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                   <img src={birthdayIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
-                  {formatDDMMYYYY(profile.birthDate)}
+                  {formatSharedBirthDate(profile.birthDate)}
+                  {profile.shareAge !== false && computeAgeFromBirthDate(profile.birthDate) != null && ` (${computeAgeFromBirthDate(profile.birthDate)} ans)`}
                 </span>
               )}
               {profile.birthDate && profile.city && <span style={{ fontSize: "18px", lineHeight: 1, color: COLORS.paperAlt }}>|</span>}
@@ -139,7 +141,6 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
             </div>
           )}
           {profile.registeredAt && <div>Sur Bibamus depuis {formatMemberSince(profile.registeredAt)}</div>}
-          {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: "6px 0 0" }}>"{profile.bio}"</p>}
           {(profile.facebookUrl ||
             profile.instagramUrl ||
             profile.tiktokUrl ||
