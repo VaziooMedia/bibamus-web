@@ -27,7 +27,15 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
         <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title={<>Mes<br />BibaClub</>} disabled badge="Soon" />
         <ActionCard icon={<NavIcon name="bar-chart" size={20} color={COLORS.amber} />} title={<>Mes<br />Statistiques</>} onClick={goToMyStats} />
-        <ActionCard icon={<NavIcon name="bottle" size={20} color={COLORS.amber} />} title={<>Mes<br />Produits</>} onClick={goToProducts} />
+        <ActionCard
+          icon={
+            <span style={{ display: "inline-flex", width: "20px", justifyContent: "center" }}>
+              <NavIcon name="bottle" size={20} color={COLORS.amber} />
+            </span>
+          }
+          title={<>Mes<br />Produits</>}
+          onClick={goToProducts}
+        />
         <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title={<>Mes<br />Favoris</>} onClick={goToVenues} />
         <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title={<>Mon<br />Historique</>} onClick={goToHistory} />
         <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title={<>Mes<br />Photos</>} onClick={goToPhotos} />
