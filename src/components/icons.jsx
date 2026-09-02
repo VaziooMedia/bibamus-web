@@ -333,6 +333,18 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M20 5.5V11H14.5" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       );
+    case "settings":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="3.2" stroke={color} strokeWidth="1.8" />
+          <path
+            d="M12 3.5v1.8M12 18.7v1.8M20.5 12h-1.8M5.3 12H3.5M17.6 6.4l-1.3 1.3M7.7 16.3l-1.3 1.3M17.6 17.6l-1.3-1.3M7.7 7.7 6.4 6.4"
+            stroke={color}
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
     case "heart":
       return filled ? (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
