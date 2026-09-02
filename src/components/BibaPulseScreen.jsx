@@ -139,25 +139,37 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             display: "flex",
             alignItems: "center",
             gap: "5px",
-            background: entry.bixCount > 0 ? COLORS.amber : "none",
+            background: "none",
             border: `2px solid ${entry.bixCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
             borderRadius: "999px",
             padding: "6px 12px",
             fontSize: "12.5px",
             fontWeight: 700,
-            color: entry.bixCount > 0 ? COLORS.paper : COLORS.inkSoft,
+            color: entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft,
             cursor: "pointer",
           }}
         >
-          <NavIcon name="heart" size={16} color={entry.bixCount > 0 ? COLORS.paper : COLORS.inkSoft} filled={entry.bixCount > 0} />
+          <NavIcon name="heart" size={18} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
           {entry.bixCount > 0 && entry.bixCount}
         </button>
 
         <button
           onClick={toggleComments}
-          style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "999px", padding: "6px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            background: "none",
+            border: `2px solid ${entry.commentsCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+            borderRadius: "999px",
+            padding: "6px 12px",
+            fontSize: "12.5px",
+            fontWeight: 700,
+            color: entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft,
+            cursor: "pointer",
+          }}
         >
-          <NavIcon name="comment" size={16} color={COLORS.inkSoft} />
+          <NavIcon name="comment" size={16} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
           {entry.commentsCount > 0 && entry.commentsCount}
         </button>
 
@@ -170,17 +182,17 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               alignItems: "center",
               gap: "5px",
               background: entry.iAmIncoming ? COLORS.amber : "none",
-              border: `2px solid ${COLORS.amber}`,
+              border: `2px solid ${entry.incomingCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "6px 12px",
               fontSize: "12.5px",
               fontWeight: 700,
-              color: entry.iAmIncoming ? COLORS.paper : COLORS.amber,
+              color: entry.iAmIncoming ? COLORS.paper : entry.incomingCount > 0 ? COLORS.amber : COLORS.inkSoft,
               cursor: entry.actorId === myUserId ? "default" : "pointer",
               opacity: entry.actorId === myUserId ? 0.45 : 1,
             }}
           >
-            J'arrive !
+            J'arrive !{entry.incomingCount > 0 ? ` ${entry.incomingCount}` : ""}
           </button>
         )}
 
@@ -192,16 +204,16 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               alignItems: "center",
               gap: "5px",
               background: entry.iSaidSante ? COLORS.amber : "none",
-              border: `2px solid ${COLORS.amber}`,
+              border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "6px 12px",
               fontSize: "12.5px",
               fontWeight: 700,
-              color: entry.iSaidSante ? COLORS.paper : COLORS.amber,
+              color: entry.iSaidSante ? COLORS.paper : entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
               cursor: "pointer",
             }}
           >
-            Santé !
+            Santé !{entry.santeCount > 0 ? ` ${entry.santeCount}` : ""}
           </button>
         )}
       </div>
@@ -330,6 +342,21 @@ export function BibaPulseScreen({ onBack, venues = [], drinksDirectory = [], bre
       setEntries(data);
       setHasMore(data.length >= 20);
     });
+    // Rafraîchit périodiquement le haut du fil — sans ça, un Bix ou un commentaire d'un ami ne
+    // se refléterait jamais tant qu'on ne recharge pas la page à la main. Fusionne les
+    // nouvelles données dans la liste déjà chargée, sans perdre les pages plus anciennes.
+    const interval = setInterval(() => {
+      loadPulseFeed().then((freshTop) => {
+        setEntries((prev) => {
+          if (!prev) return freshTop;
+          const freshMap = new Map(freshTop.map((e) => [e.id, e]));
+          const merged = prev.map((e) => freshMap.get(e.id) || e);
+          const newOnes = freshTop.filter((e) => !prev.some((p) => p.id === e.id));
+          return [...newOnes, ...merged];
+        });
+      });
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadMore = async () => {
