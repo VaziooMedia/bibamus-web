@@ -6,6 +6,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
+import settingsIconUrl from "../assets/brand/settings-icon.png";
 
 export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, onBack, goToMyInfo, goToMyStats, goToBibros, goToProducts, goToVenues, goToHistory, goToPhotos, goToSettings, onOpenMyStory }) {
   return (
@@ -21,7 +22,6 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
         goToProducts={goToProducts}
         goToVenues={goToVenues}
         onOpenMyStory={onOpenMyStory}
-        onGoToSettings={goToMyInfo}
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
@@ -31,6 +31,17 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
         <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title={<>Mes<br />Favoris</>} onClick={goToVenues} />
         <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title={<>Mon<br />Historique</>} onClick={goToHistory} />
         <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title={<>Mes<br />Photos</>} onClick={goToPhotos} />
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
+        <button
+          onClick={goToMyInfo}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}
+          title="Paramètres"
+          aria-label="Paramètres"
+        >
+          <img src={settingsIconUrl} alt="" style={{ width: "24px", height: "24px" }} />
+        </button>
       </div>
       <PageFooterNav onBack={onBack} />
     </div>

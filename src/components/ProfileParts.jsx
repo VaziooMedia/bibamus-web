@@ -7,11 +7,10 @@ import React, { useState, useEffect } from "react";
 import { COLORS, WEEKDAY_SHORT_MON_FIRST, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
-import settingsIconUrl from "../assets/brand/settings-icon.png";
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
 import { loadMyProfileStats, loadMyStories } from "../data/sharedDirectories.js";
 
-export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goToBibros, goToProducts, goToVenues, onOpenMyStory, onGoToSettings }) {
+export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goToBibros, goToProducts, goToVenues, onOpenMyStory }) {
   const [stats, setStats] = useState(null);
   useEffect(() => {
     if (myUserId) loadMyProfileStats(myUserId).then(setStats);
@@ -117,17 +116,6 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
         </div>
 
         {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: "14px 0 0" }}>"{profile.bio}"</p>}
-
-        {onGoToSettings && (
-          <button
-            onClick={onGoToSettings}
-            style={{ position: "absolute", bottom: "10px", right: "10px", background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}
-            title="Paramètres"
-            aria-label="Paramètres"
-          >
-            <img src={settingsIconUrl} alt="" style={{ width: "22px", height: "22px" }} />
-          </button>
-        )}
       </div>
 
       {(profile.birthDate || profile.city || profile.registeredAt) && (
