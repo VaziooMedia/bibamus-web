@@ -139,18 +139,17 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            background: entry.bixCount > 0 ? COLORS.amber : "none",
+            background: "none",
             border: `2px solid ${entry.bixCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
             borderRadius: "999px",
             padding: "4px 10px",
             fontSize: "11.5px",
             fontWeight: 700,
-            color: "#fff",
             cursor: "pointer",
           }}
         >
-          <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? "#fff" : COLORS.inkSoft} filled={entry.bixCount > 0} />
-          {entry.bixCount > 0 && entry.bixCount}
+          <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
+          {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
         </button>
 
         <button
@@ -159,18 +158,17 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            background: entry.commentsCount > 0 ? COLORS.amber : "none",
+            background: "none",
             border: `2px solid ${entry.commentsCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
             borderRadius: "999px",
             padding: "4px 10px",
             fontSize: "11.5px",
             fontWeight: 700,
-            color: "#fff",
             cursor: "pointer",
           }}
         >
-          <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? "#fff" : COLORS.inkSoft} />
-          {entry.commentsCount > 0 && entry.commentsCount}
+          <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
+          {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
         </button>
 
         {entry.eventType === "venue_visit" && (
@@ -181,18 +179,18 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               display: "flex",
               alignItems: "center",
               gap: "4px",
-              background: entry.iAmIncoming || entry.incomingCount > 0 ? COLORS.amber : "none",
+              background: entry.iAmIncoming ? COLORS.amber : "none",
               border: `2px solid ${entry.incomingCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "4px 10px",
               fontSize: "11.5px",
               fontWeight: 700,
-              color: entry.incomingCount > 0 ? "#fff" : COLORS.inkSoft,
+              color: entry.iAmIncoming ? COLORS.paper : entry.incomingCount > 0 ? COLORS.amber : COLORS.inkSoft,
               cursor: entry.actorId === myUserId ? "default" : "pointer",
               opacity: entry.actorId === myUserId ? 0.45 : 1,
             }}
           >
-            J'arrive !{entry.incomingCount > 0 ? ` ${entry.incomingCount}` : ""}
+            J'arrive !{entry.incomingCount > 0 && <span style={{ color: "#fff" }}>{` ${entry.incomingCount}`}</span>}
           </button>
         )}
 
@@ -203,17 +201,17 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               display: "flex",
               alignItems: "center",
               gap: "4px",
-              background: entry.iSaidSante || entry.santeCount > 0 ? COLORS.amber : "none",
+              background: entry.iSaidSante ? COLORS.amber : "none",
               border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "4px 10px",
               fontSize: "11.5px",
               fontWeight: 700,
-              color: entry.santeCount > 0 ? "#fff" : COLORS.inkSoft,
+              color: entry.iSaidSante ? COLORS.paper : entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
               cursor: "pointer",
             }}
           >
-            Cheers !{entry.santeCount > 0 ? ` ${entry.santeCount}` : ""}
+            Cheers !{entry.santeCount > 0 && <span style={{ color: "#fff" }}>{` ${entry.santeCount}`}</span>}
           </button>
         )}
       </div>
