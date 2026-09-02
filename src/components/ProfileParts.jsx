@@ -56,7 +56,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
         )}
       </div>
       <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2, height: "27px", display: "flex", alignItems: "center" }}>{label}</span>
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.ink, lineHeight: 1 }}>{value}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
     </button>
   );
 
@@ -119,16 +119,30 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
       </div>
 
       {(profile.birthDate || profile.city || profile.registeredAt) && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", marginBottom: "14px", display: "flex", flexDirection: "column", gap: "6px" }}>
-          {profile.birthDate && (
-            <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>🎂 {formatDDMMYYYY(profile.birthDate)}</span>
-          )}
+        <div
+          style={{
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "12px",
+            padding: "12px 14px",
+            marginBottom: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "12.5px",
+            color: COLORS.inkSoft,
+            flexWrap: "wrap",
+          }}
+        >
+          {profile.birthDate && <span>🎂 {formatDDMMYYYY(profile.birthDate)}</span>}
+          {profile.birthDate && (profile.city || profile.registeredAt) && <span>·</span>}
           {profile.city && (
-            <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>
+            <span>
               📍 {profile.city} {COUNTRY_FLAGS[profile.country] || ""}
             </span>
           )}
-          {profile.registeredAt && <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Sur Bibamus depuis {formatMemberSince(profile.registeredAt)}</span>}
+          {profile.city && profile.registeredAt && <span>·</span>}
+          {profile.registeredAt && <span>Sur Bibamus depuis {formatMemberSince(profile.registeredAt)}</span>}
         </div>
       )}
 

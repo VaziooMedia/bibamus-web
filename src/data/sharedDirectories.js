@@ -297,6 +297,7 @@ export async function loadMyProfile(userId) {
   }
   return {
     myBibroCode: data.bibro_code,
+    registeredAt: data.created_at || null,
     name: data.name || "",
     lastName: data.last_name || "",
     nickname: data.nickname || "",
