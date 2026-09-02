@@ -158,10 +158,10 @@ export function HomeScreen({
             }}
             style={{
               position: "absolute",
-              bottom: 0,
-              left: 0,
-              width: "26px",
-              height: "26px",
+              bottom: "-2px",
+              left: "-2px",
+              width: "28px",
+              height: "28px",
               borderRadius: "50%",
               background: "#FF2C8F",
               border: `2px solid ${COLORS.paper}`,
@@ -171,7 +171,9 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <NavIcon name="plus" size={14} color="#000" />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3.5" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
           </button>
         </div>
       </div>

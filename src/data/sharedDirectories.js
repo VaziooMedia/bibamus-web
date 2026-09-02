@@ -459,7 +459,7 @@ export async function uploadStoryMedia(userId, blob) {
 
 // Crée la Story elle-même — insertion directe protégée par RLS (chacun ne peut créer que ses
 // propres Stories), pas besoin de fonction serveur pour ça.
-export async function createStory({ contextType, contextId, mediaUrl, caption, sharedToPulse, pulseVisibility }) {
+export async function createStory({ contextType, contextId, mediaUrl, caption, sharedToPulse, pulseVisibility, locationName }) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -475,6 +475,7 @@ export async function createStory({ contextType, contextId, mediaUrl, caption, s
       caption: caption || null,
       shared_to_pulse: contextType === "global" ? false : !!sharedToPulse,
       pulse_visibility: pulseVisibility || "relations",
+      location_name: locationName || null,
     })
     .select("id")
     .single();
@@ -493,6 +494,7 @@ export async function loadRoomStories(salonCode) {
     authorId: s.author_id,
     authorName: s.author_name,
     authorLastName: s.author_last_name,
+    locationName: s.location_name,
     authorAvatarUrl: s.author_avatar_url,
     mediaType: s.media_type,
     mediaUrl: s.media_url,
@@ -516,6 +518,7 @@ export async function loadPulseStories() {
     authorId: s.author_id,
     authorName: s.author_name,
     authorLastName: s.author_last_name,
+    locationName: s.location_name,
     authorAvatarUrl: s.author_avatar_url,
     mediaType: s.media_type,
     mediaUrl: s.media_url,

@@ -6,17 +6,18 @@ import { setStoryPulseSharing, deleteStory, toggleStoryBix } from "../data/share
 
 const STORY_DURATION_MS = 5000;
 
-// Visionneuse plein écran — défile automatiquement entre les Stories d'un même auteur, appui
-// à gauche/droite pour naviguer manuellement. Affiche le contexte d'origine (BibaRoom) quand
-// la Story vient d'un salon partagé dans BibaPulse.
-export function StoryViewer({ author, myUserId, onClose, onChanged }) {
+// Visionneuse plein écran — reçoit un tableau plat de Stories (une seule personne pour un
+// cercle individuel sur l'accueil, ou toute la Story collective d'un BibaRoom mélangeant
+// plusieurs auteurs) — chaque diapositive affiche son PROPRE auteur, jamais un auteur figé
+// pour tout le lot.
+export function StoryViewer({ stories, myUserId, onClose, onChanged }) {
   const [index, setIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
   const [localBix, setLocalBix] = useState({});
   const timerRef = useRef(null);
 
-  const story = author.stories[index];
+  const story = stories[index];
   const [imgFit, setImgFit] = useState("cover");
   useEffect(() => {
     setImgFit("cover");
@@ -35,7 +36,7 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
   const bixCount = localBix[story.id]?.bixCount ?? story.bixCount ?? 0;
 
   const goNext = () => {
-    if (index < author.stories.length - 1) {
+    if (index < stories.length - 1) {
       setIndex((i) => i + 1);
     } else {
       onClose();
@@ -89,7 +90,7 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
 
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, background: "linear-gradient(rgba(0,0,0,0.55), transparent)", paddingBottom: "16px" }}>
         <div style={{ display: "flex", gap: "4px", padding: "10px 12px 0" }}>
-          {author.stories.map((_, i) => (
+          {stories.map((_, i) => (
             <div key={i} style={{ flex: 1, height: "2.5px", background: "rgba(255,255,255,0.35)", borderRadius: "2px", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${i < index ? 100 : i === index ? progress * 100 : 0}%`, background: "#fff" }} />
             </div>
@@ -97,8 +98,17 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px" }} onClick={(e) => e.stopPropagation()}>
-          <EntityAvatar photoUrl={author.authorAvatarUrl} size={32} />
-          <span style={{ color: "#fff", fontWeight: 700, fontSize: "13.5px", flex: 1 }}>{author.authorName}</span>
+          <EntityAvatar photoUrl={story.authorAvatarUrl} size={32} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", color: "#fff", fontWeight: 700, fontSize: "13.5px" }}>
+              {[story.authorName, story.authorLastName].filter(Boolean).join(" ")}
+            </span>
+            {story.locationName && (
+              <span style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", color: "rgba(255,255,255,0.75)" }}>
+                📍 {story.locationName}
+              </span>
+            )}
+          </div>
           {story.contextType === "room" && (
             <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: "4px" }}>
               <NavIcon name="ti-door-enter" size={12} color="rgba(255,255,255,0.7)" />
@@ -155,4 +165,3 @@ export function StoryViewer({ author, myUserId, onClose, onChanged }) {
     </div>
   );
 }
-

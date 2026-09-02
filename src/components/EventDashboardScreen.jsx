@@ -13,7 +13,6 @@ import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal } fr
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories } from "../data/sharedDirectories.js";
-import { StoriesBar } from "./StoriesBar.jsx";
 
 export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
@@ -221,16 +220,32 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 2px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
-            <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={48} />
+            <button
+              onClick={() =>
+                roomStories.length > 0 &&
+                onOpenStoryAuthor({ authorName: event.name, authorAvatarUrl: venue ? venue.profilePhotoUrl : null, stories: roomStories })
+              }
+              style={{
+                display: "block",
+                background: "none",
+                border: "none",
+                padding: roomStories.length > 0 ? "2px" : 0,
+                borderRadius: "50%",
+                cursor: roomStories.length > 0 ? "pointer" : "default",
+                ...(roomStories.length > 0 ? { border: "2px solid #FF2C8F" } : {}),
+              }}
+            >
+              <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={48} />
+            </button>
             {event.salonCode && onAddStory && (
               <button
                 onClick={() => onAddStory("room", event.salonCode)}
                 style={{
                   position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                  width: "20px",
-                  height: "20px",
+                  bottom: "-4px",
+                  right: "-4px",
+                  width: "24px",
+                  height: "24px",
                   borderRadius: "50%",
                   background: "#FF2C8F",
                   border: `2px solid ${COLORS.paper}`,
@@ -240,7 +255,9 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                   cursor: "pointer",
                 }}
               >
-                <NavIcon name="plus" size={11} color="#000" />
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3.5" strokeLinecap="round">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
               </button>
             )}
           </div>
@@ -270,9 +287,6 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           {event.createdAt && `Start : ${formatTime(event.createdAt)}`}
         </span>
       </div>
-      {event.salonCode && roomStories.length > 0 && (
-        <StoriesBar stories={roomStories} onOpenStory={onOpenStoryAuthor} />
-      )}
       <div style={{ marginTop: "8px", marginBottom: "18px" }}>
         <button
           onClick={onOpenSettings}

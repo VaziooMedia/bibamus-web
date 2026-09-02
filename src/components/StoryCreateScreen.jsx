@@ -7,12 +7,13 @@ import { uploadStoryMedia, createStory } from "../data/sharedDirectories.js";
 // Création d'une Story — depuis Home (contexte "global", destinée à BibaPulse) ou depuis un
 // BibaRoom (contexte "room", salon uniquement par défaut, avec choix explicite pour aussi la
 // diffuser dans BibaPulse). La confidentialité est toujours privilégiée par défaut.
-export function StoryCreateScreen({ contextType, contextId, myUserId, onBack, onPublished }) {
+export function StoryCreateScreen({ contextType, contextId, venueName, myUserId, onBack, onPublished }) {
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [caption, setCaption] = useState("");
   const [sharedToPulse, setSharedToPulse] = useState(false);
+  const [includeLocation, setIncludeLocation] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -42,6 +43,7 @@ export function StoryCreateScreen({ contextType, contextId, myUserId, onBack, on
       caption: caption.trim(),
       sharedToPulse: contextType === "room" ? sharedToPulse : false,
       pulseVisibility: "relations",
+      locationName: contextType === "room" && sharedToPulse && includeLocation ? venueName : null,
     });
     setUploading(false);
     if (result.error) {
@@ -131,6 +133,14 @@ export function StoryCreateScreen({ contextType, contextId, myUserId, onBack, on
               <span style={{ fontSize: "13.5px", fontWeight: 700, color: COLORS.ink }}>Ce salon + BibaPulse</span>
             </button>
           </div>
+          {sharedToPulse && venueName && (
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px", cursor: "pointer" }}>
+              <input type="checkbox" checked={includeLocation} onChange={(e) => setIncludeLocation(e.target.checked)} />
+              <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>
+                Indiquer le lieu (<strong style={{ color: COLORS.ink }}>{venueName}</strong>)
+              </span>
+            </label>
+          )}
         </div>
       )}
 

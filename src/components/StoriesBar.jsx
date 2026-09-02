@@ -31,7 +31,7 @@ export function StoriesBar({ stories, onAddStory, onOpenStory }) {
       {byAuthor.map((a) => (
         <button
           key={a.authorId}
-          onClick={() => onOpenStory(a)}
+          onClick={() => onOpenStory(a.stories)}
           style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", background: "none", border: "none", cursor: "pointer", flexShrink: 0, maxWidth: "64px" }}
         >
           <div style={{ padding: "2px", borderRadius: "50%", border: "2px solid #FF2C8F" }}>

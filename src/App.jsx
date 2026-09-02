@@ -1961,6 +1961,11 @@ export default function App() {
               <StoryCreateScreen
                 contextType={storyCreateContext.contextType}
                 contextId={storyCreateContext.contextId}
+                venueName={
+                  storyCreateContext.contextType === "room"
+                    ? venues.find((v) => v.id === events.find((e) => e.salonCode === storyCreateContext.contextId)?.venueId)?.name || null
+                    : null
+                }
                 myUserId={session.user.id}
                 onBack={() => setScreen(storyCreateContext.returnScreen)}
                 onPublished={() => {
@@ -2002,7 +2007,7 @@ export default function App() {
       )}
       {viewedStoryAuthor && (
         <StoryViewer
-          author={viewedStoryAuthor}
+          stories={viewedStoryAuthor}
           myUserId={session.user.id}
           onClose={() => setViewedStoryAuthor(null)}
           onChanged={() => setPulseStoriesRefreshKey((k) => k + 1)}
