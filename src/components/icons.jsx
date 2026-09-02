@@ -492,14 +492,17 @@ import xLogoUrl from "../assets/brand/X.svg";
 import threadsLogoUrl from "../assets/brand/threads.svg";
 import linkedinLogoUrl from "../assets/brand/linkedIn.svg";
 
+// Facebook est déjà un rond plein (fond bleu, "f" blanc) dans le fichier officiel — rien à
+// corriger.
 export function FacebookIcon({ size = 22 }) {
-  return <img src={facebookLogoUrl} alt="Facebook" width={size} height={size} style={{ display: "block" }} />;
+  return <img src={facebookLogoUrl} alt="Facebook" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
 }
 
 // Instagram reste dessiné à la main pour l'instant — le fichier officiel présent sur GitHub
 // pèse 10,8 Mo (anormal, les 7 autres font entre 400 octets et 176 Ko), inutilisable tel quel
 // sans plomber le temps de chargement de l'app. À remplacer dès qu'un fichier plus léger est
-// disponible.
+// disponible. Passé en rond plein (au lieu du carré arrondi) pour rester cohérent avec les
+// autres réseaux.
 export function InstagramIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
@@ -510,15 +513,21 @@ export function InstagramIcon({ size = 22 }) {
           <stop offset="100%" stopColor="#8134af" />
         </linearGradient>
       </defs>
-      <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#ig-gradient-badge)" />
+      <circle cx="12" cy="12" r="11" fill="url(#ig-gradient-badge)" />
       <circle cx="12" cy="12" r="5" fill="none" stroke="#fff" strokeWidth="1.8" />
       <circle cx="17.3" cy="6.7" r="1.1" fill="#fff" />
     </svg>
   );
 }
 
+// TikTok — le fichier officiel a un fond carré noir plein ; recadré en rond (les coins du
+// carré sont coupés, le logo lui-même reste bien centré et intact).
 export function TiktokIcon({ size = 22 }) {
-  return <img src={tiktokLogoUrl} alt="TikTok" width={size} height={size} style={{ display: "block" }} />;
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={tiktokLogoUrl} alt="TikTok" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
 }
 
 export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé — jamais visible par tes Bibax" }) {
@@ -536,22 +545,50 @@ export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé 
   );
 }
 
+// Snapchat — même souci que TikTok, fond carré jaune plein ; recadré en rond.
 export function SnapchatIcon({ size = 22 }) {
-  return <img src={snapchatLogoUrl} alt="Snapchat" width={size} height={size} style={{ display: "block" }} />;
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={snapchatLogoUrl} alt="Snapchat" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
 }
 
+// WhatsApp — le fichier officiel n'a aucun fond (juste le tracé vert sur transparent) ; ajout
+// d'un rond blanc derrière, convention habituelle pour ce logo.
 export function WhatsappIcon({ size = 22 }) {
-  return <img src={whatsappLogoUrl} alt="WhatsApp" width={size} height={size} style={{ display: "block" }} />;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#fff", overflow: "hidden" }}>
+      <img src={whatsappLogoUrl} alt="WhatsApp" width={Math.round(size * 0.82)} height={Math.round(size * 0.82)} style={{ display: "block" }} />
+    </span>
+  );
 }
 
+// X — le tracé officiel est blanc sur transparent ; ajout d'un rond noir derrière, couleur de
+// marque officielle.
 export function XIcon({ size = 22 }) {
-  return <img src={xLogoUrl} alt="X" width={size} height={size} style={{ display: "block" }} />;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
+      <img src={xLogoUrl} alt="X" width={Math.round(size * 0.55)} height={Math.round(size * 0.55)} style={{ display: "block" }} />
+    </span>
+  );
 }
 
+// Threads — le tracé officiel est noir sur transparent ; inversé en blanc et posé sur un rond
+// noir, comme l'icône d'app officielle de Threads.
 export function ThreadsIcon({ size = 22 }) {
-  return <img src={threadsLogoUrl} alt="Threads" width={size} height={size} style={{ display: "block" }} />;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
+      <img src={threadsLogoUrl} alt="Threads" width={Math.round(size * 0.6)} height={Math.round(size * 0.6)} style={{ display: "block", filter: "invert(1)" }} />
+    </span>
+  );
 }
 
+// LinkedIn — le fichier officiel a un fond carré arrondi bleu plein ; recadré en rond.
 export function LinkedinIcon({ size = 22 }) {
-  return <img src={linkedinLogoUrl} alt="LinkedIn" width={size} height={size} style={{ display: "block" }} />;
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={linkedinLogoUrl} alt="LinkedIn" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
 }
