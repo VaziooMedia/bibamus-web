@@ -3,17 +3,24 @@
 // ============================================================
 import React from "react";
 import { COLORS } from "../constants.js";
+import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 
-export function ProfileHubScreen({ myName, profile, bibros, checkIns, onBack, goToMyInfo, goToMyStats, goToBibros, goToProducts, goToVenues, goToHistory, goToSettings }) {
+export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, onBack, goToMyInfo, goToMyStats, goToBibros, goToProducts, goToVenues, goToHistory, goToSettings }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={onBack} />
-      <ProfileHeader myName={myName} profile={profile} bibros={bibros} checkIns={checkIns} />
+      <PageHeader
+        onBack={onBack}
+        right={
+          <button onClick={goToMyInfo} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }} title="Paramètres" aria-label="Paramètres">
+            <NavIcon name="settings" size={20} color={COLORS.inkSoft} />
+          </button>
+        }
+      />
+      <ProfileHeader myName={myName} profile={profile} bibros={bibros} checkIns={checkIns} myUserId={myUserId} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <ActionCard icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />} title="Mes infos" subtitle="Identité, coordonnées, réseaux sociaux" onClick={goToMyInfo} />
         <ActionCard
           icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
           title="BibaClub"

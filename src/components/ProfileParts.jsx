@@ -3,12 +3,17 @@
 // hebdomadaire (jours sans alcool), contrôle de réinitialisation
 // de statistique. Copiés tels quels depuis le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, WEEKDAY_SHORT_MON_FIRST } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
+import { loadMyProfileStats } from "../data/sharedDirectories.js";
 
-export function ProfileHeader({ myName, profile, bibros, checkIns }) {
+export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId }) {
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    if (myUserId) loadMyProfileStats(myUserId).then(setStats);
+  }, [myUserId]);
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginTop: "4px", marginBottom: "6px", flexWrap: "wrap" }}>
@@ -28,7 +33,12 @@ export function ProfileHeader({ myName, profile, bibros, checkIns }) {
           >
             {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={28} color={COLORS.amber} />}
           </div>
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", lineHeight: 1, margin: 0 }}>{myName}</h1>
+          <div>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", lineHeight: 1, margin: 0 }}>{myName}</h1>
+            {profile.nickname && (
+              <p style={{ fontFamily: "'Urbanist', sans-serif", fontStyle: "italic", fontSize: "14px", color: COLORS.amber, margin: "2px 0 0" }}>{profile.nickname}</p>
+            )}
+          </div>
         </div>
         {(profile.facebookUrl || profile.instagramUrl || profile.tiktokUrl || profile.snapchatUrl) && (
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -64,12 +74,16 @@ export function ProfileHeader({ myName, profile, bibros, checkIns }) {
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
         <div style={{ flex: 1, background: COLORS.amber, borderRadius: "12px", padding: "12px", textAlign: "center" }}>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: COLORS.paper, lineHeight: 1 }}>{bibros.length}</div>
-          <div style={{ fontSize: "11.5px", color: COLORS.paper, fontWeight: 700 }}>Bibax</div>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.paper, lineHeight: 1 }}>{bibros.length}</div>
+          <div style={{ fontSize: "11px", color: COLORS.paper, fontWeight: 700 }}>Bibax</div>
         </div>
         <div style={{ flex: 1, background: COLORS.amber, borderRadius: "12px", padding: "12px", textAlign: "center" }}>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: COLORS.paper, lineHeight: 1 }}>{checkIns.length}</div>
-          <div style={{ fontSize: "11.5px", color: COLORS.paper, fontWeight: 700 }}>Check-in{checkIns.length !== 1 ? "s" : ""}</div>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.paper, lineHeight: 1 }}>{stats ? stats.tastedDrinksCount : "…"}</div>
+          <div style={{ fontSize: "11px", color: COLORS.paper, fontWeight: 700 }}>Boissons</div>
+        </div>
+        <div style={{ flex: 1, background: COLORS.amber, borderRadius: "12px", padding: "12px", textAlign: "center" }}>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.paper, lineHeight: 1 }}>{stats ? stats.venueCheckinsCount : "…"}</div>
+          <div style={{ fontSize: "11px", color: COLORS.paper, fontWeight: 700 }}>Lieux</div>
         </div>
       </div>
     </>
