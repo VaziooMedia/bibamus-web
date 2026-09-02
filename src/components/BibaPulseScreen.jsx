@@ -41,7 +41,7 @@ function ReactorsList({ people, emptyLabel }) {
       {people.map((p) => (
         <div key={p.userId} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <EntityAvatar photoUrl={p.avatarUrl} size={26} />
-          <span style={{ fontSize: "13px", color: COLORS.ink }}>{p.name}</span>
+          <span style={{ fontSize: "13px", color: COLORS.ink }}>{[p.name, p.lastName].filter(Boolean).join(" ")}</span>
         </div>
       ))}
     </div>
@@ -213,7 +213,7 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               cursor: "pointer",
             }}
           >
-            Santé !{entry.santeCount > 0 ? ` ${entry.santeCount}` : ""}
+            Cheers !{entry.santeCount > 0 ? ` ${entry.santeCount}` : ""}
           </button>
         )}
       </div>
@@ -243,7 +243,7 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
       {entry.santeCount > 0 && (
         <button onClick={() => openReactors("sante")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
           <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-            <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Bibax {entry.santeCount > 1 ? "trinquent" : "trinque"}
+            <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Cheers
           </span>
         </button>
       )}
@@ -289,8 +289,8 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
       )}
 
       {showReactors && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", zIndex: 100 }} onClick={() => setShowReactors(false)}>
-          <div style={{ background: COLORS.surface, borderRadius: "16px 16px 0 0", padding: "16px 20px 28px", width: "100%", maxHeight: "60vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", zIndex: 300 }} onClick={() => setShowReactors(false)}>
+          <div style={{ background: COLORS.surface, borderRadius: "16px 16px 0 0", padding: "16px 20px 28px", width: "100%", maxHeight: "70vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", gap: "16px", marginBottom: "8px", borderBottom: `2px solid ${COLORS.paperAlt}` }}>
               <button
                 onClick={() => setReactorsTab("bix")}
@@ -311,7 +311,7 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
                   onClick={() => setReactorsTab("sante")}
                   style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "sante" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "sante" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
                 >
-                  Santé ! ({entry.santeCount})
+                  Cheers ! ({entry.santeCount})
                 </button>
               )}
             </div>

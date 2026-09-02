@@ -1329,9 +1329,9 @@ export async function loadPulseReactors(pulseEventId) {
     return { bix: [], incoming: [], sante: [] };
   }
   return {
-    bix: data.filter((r) => r.kind === "bix").map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url })),
-    incoming: data.filter((r) => r.kind === "incoming").map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url })),
-    sante: data.filter((r) => r.kind === "sante").map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url })),
+    bix: data.filter((r) => r.kind === "bix").map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url })),
+    incoming: data.filter((r) => r.kind === "incoming").map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url })),
+    sante: data.filter((r) => r.kind === "sante").map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url })),
   };
 }
 
