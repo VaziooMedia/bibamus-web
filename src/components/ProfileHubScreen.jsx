@@ -8,7 +8,7 @@ import { PageHeader, PageFooterNav, ActionCard } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import settingsIconUrl from "../assets/brand/settings-icon.png";
 
-export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, onBack, goToMyInfo, goToMyStats, goToBibros, goToProducts, goToVenues, goToHistory, goToSettings }) {
+export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, onBack, goToMyInfo, goToMyStats, goToBibros, goToProducts, goToVenues, goToHistory, goToSettings, onOpenMyStory }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -21,6 +21,7 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
         goToBibros={goToBibros}
         goToProducts={goToProducts}
         goToVenues={goToVenues}
+        onOpenMyStory={onOpenMyStory}
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>

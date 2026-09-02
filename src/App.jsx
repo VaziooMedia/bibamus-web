@@ -1628,6 +1628,7 @@ export default function App() {
                 goToVenues={() => setScreen("venueDirectory")}
                 goToHistory={() => setScreen("eventHistory")}
                 goToSettings={() => setScreen("settings")}
+                onOpenMyStory={setViewedStoryAuthor}
               />
             )}
             {screen === "myInfo" && (
