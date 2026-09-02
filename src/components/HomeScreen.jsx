@@ -55,6 +55,7 @@ export function HomeScreen({
   pulseStoriesRefreshKey,
   onAddStory,
   onOpenStoryAuthor,
+  myUserId,
   goToSessionHub,
   goToProfile,
   goToRepertoireHub,
@@ -178,7 +179,7 @@ export function HomeScreen({
         </div>
       </div>
 
-      <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} />
+      <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} />
 
       {bibros.some((b) => bibroStatuses[b.code] && (bibroStatuses[b.code].activeSalonName || isFreshCheckIn(bibroStatuses[b.code]))) && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>

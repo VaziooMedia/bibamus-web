@@ -5,7 +5,7 @@ import { EntityAvatar } from "./ui.jsx";
 
 // Barre de Stories — réutilisable pour un BibaRoom (chronologique, un cercle par auteur) et
 // pour BibaPulse (chronologique aussi). Le "+" permet d'ajouter une nouvelle Story.
-export function StoriesBar({ stories, onAddStory, onOpenStory }) {
+export function StoriesBar({ stories, onAddStory, onOpenStory, myUserId }) {
   // Groupe par auteur, en gardant l'ordre chronologique de leur PREMIÈRE Story — chaque
   // cercle ouvre la visionneuse sur l'ensemble des Stories de cet auteur, dans l'ordre.
   const byAuthor = [];
@@ -17,6 +17,16 @@ export function StoriesBar({ stories, onAddStory, onOpenStory }) {
     }
     seen.get(s.authorId).stories.push(s);
   });
+
+  // Le rond de l'utilisateur passe toujours en premier, peu importe l'ordre chronologique des
+  // Stories elles-mêmes.
+  if (myUserId) {
+    const myIndex = byAuthor.findIndex((a) => a.authorId === myUserId);
+    if (myIndex > 0) {
+      const [mine] = byAuthor.splice(myIndex, 1);
+      byAuthor.unshift(mine);
+    }
+  }
 
   return (
     <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "4px", marginBottom: "18px" }}>

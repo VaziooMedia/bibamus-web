@@ -1281,6 +1281,7 @@ export default function App() {
                 events={events}
                 updateEvent={updateEvent}
                 eventTotal={() => 0}
+                myUserId={session.user.id}
                 pulseStoriesRefreshKey={pulseStoriesRefreshKey}
                 onAddStory={(contextType, contextId) => {
                   setStoryCreateContext({ contextType, contextId, returnScreen: "home" });
