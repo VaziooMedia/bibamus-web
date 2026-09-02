@@ -247,6 +247,7 @@ export function HomeScreen({
                   style={{
                     position: "relative",
                     textAlign: "left",
+                    width: "100%",
                     background: COLORS.surface,
                     border: `2px solid ${COLORS.paperAlt}`,
                     borderRadius: "12px",
