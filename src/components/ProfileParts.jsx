@@ -131,28 +131,30 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
             padding: "12px 14px",
             marginBottom: "14px",
             display: "flex",
-            alignItems: "center",
+            flexDirection: "column",
             gap: "8px",
             fontSize: "12.5px",
             color: COLORS.inkSoft,
-            flexWrap: "wrap",
           }}
         >
-          {profile.birthDate && (
-            <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-              <img src={birthdayIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
-              {formatDDMMYYYY(profile.birthDate)}
-            </span>
+          {(profile.birthDate || profile.city) && (
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              {profile.birthDate && (
+                <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <img src={birthdayIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
+                  {formatDDMMYYYY(profile.birthDate)}
+                </span>
+              )}
+              {profile.birthDate && profile.city && <span style={{ fontSize: "18px", lineHeight: 1, color: COLORS.paperAlt }}>|</span>}
+              {profile.city && (
+                <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <img src={residenceIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
+                  {profile.city} {COUNTRY_FLAGS[profile.country] || ""}
+                </span>
+              )}
+            </div>
           )}
-          {profile.birthDate && (profile.city || profile.registeredAt) && <span>·</span>}
-          {profile.city && (
-            <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-              <img src={residenceIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
-              {profile.city} {COUNTRY_FLAGS[profile.country] || ""}
-            </span>
-          )}
-          {profile.city && profile.registeredAt && <span>·</span>}
-          {profile.registeredAt && <span>Sur Bibamus depuis {formatMemberSince(profile.registeredAt)}</span>}
+          {profile.registeredAt && <div>Sur Bibamus depuis {formatMemberSince(profile.registeredAt)}</div>}
         </div>
       )}
 
