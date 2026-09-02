@@ -12,13 +12,14 @@ import { StoriesBar } from "./StoriesBar.jsx";
 
 function pulseTimeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "à l'instant";
-  if (mins < 60) return `${mins} min`;
+  const secs = Math.floor(diffMs / 1000);
+  if (secs < 60) return `Il y a ${secs} sec.`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `Il y a ${mins} min.`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} h`;
+  if (hours < 24) return `Il y a ${hours} h`;
   const days = Math.floor(hours / 24);
-  return `${days} j`;
+  return `Il y a ${days} j`;
 }
 
 const CHECKIN_MAX_AGE_MS = 4 * 60 * 60 * 1000;

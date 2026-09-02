@@ -17,26 +17,20 @@ function resolveObject(entry, directories) {
 // reconstruite ici à partir des données structurées (prêt pour une traduction future).
 // Format neutre "Nom - Action @ Objet" — évite les problèmes d'accord (masculin/féminin,
 // préposition selon le nom du lieu) qu'une vraie phrase française poserait.
-function pulseEventText(entry, obj) {
-  const name = entry.actorName || "Quelqu'un";
-  const objName = obj?.name || "une fiche";
-  const action = { product_discovered: "Découverte", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
-  return (
-    <>
-      <strong>{name}</strong> · {action} @ <strong style={{ color: COLORS.amber }}>{objName}</strong>
-    </>
-  );
+function pulseActionFor(entry) {
+  return { product_discovered: "Découverte", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
 }
 
 function timeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "à l'instant";
-  if (mins < 60) return `${mins} min`;
+  const secs = Math.floor(diffMs / 1000);
+  if (secs < 60) return `Il y a ${secs} sec.`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `Il y a ${mins} min.`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} h`;
+  if (hours < 24) return `Il y a ${hours} h`;
   const days = Math.floor(hours / 24);
-  return `${days} j`;
+  return `Il y a ${days} j`;
 }
 
 // Petite liste de personnes (utilisée pour les Bix et les "J'arrive") — nom + avatar.
@@ -64,13 +58,14 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
   const [posting, setPosting] = useState(false);
 
   const obj = resolveObject(entry, directories);
-  const photo = obj?.profilePhotoUrl || obj?.photoUrl || obj?.albumArt || null;
 
-  const openObject = () => {
-    if (!obj) return;
-    if (entry.objectType === "venue" && onOpenVenue) onOpenVenue(obj.id);
-    if (entry.objectType === "drink" && onOpenDrink) onOpenDrink(obj.id);
-  };
+  const canOpenObject = obj && ((entry.objectType === "venue" && onOpenVenue) || (entry.objectType === "drink" && onOpenDrink));
+  const openObject = canOpenObject
+    ? () => {
+        if (entry.objectType === "venue") onOpenVenue(obj.id);
+        if (entry.objectType === "drink") onOpenDrink(obj.id);
+      }
+    : null;
 
   const handleBix = () => {
     onUpdate({ iBixed: !entry.iBixed, bixCount: entry.iBixed ? entry.bixCount - 1 : entry.bixCount + 1 });
@@ -110,37 +105,27 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
   };
 
   return (
-    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+    <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px" }}>
+      <span style={{ position: "absolute", top: "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
+
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
         <EntityAvatar photoUrl={entry.actorAvatarUrl} size={36} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: "13.5px", color: COLORS.ink, lineHeight: 1.3 }}>{pulseEventText(entry, obj)}</p>
-          <p style={{ margin: "2px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</p>
+        <div style={{ flex: 1, minWidth: 0, paddingRight: "60px" }}>
+          <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
+          </p>
+          <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
+            {pulseActionFor(entry)} @{" "}
+            {obj && openObject ? (
+              <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                {obj.name}
+              </button>
+            ) : (
+              <strong style={{ color: COLORS.amber }}>{obj?.name || "une fiche"}</strong>
+            )}
+          </p>
         </div>
       </div>
-
-      {obj && (
-        <button
-          onClick={openObject}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            width: "100%",
-            background: COLORS.surfaceAlt,
-            border: "none",
-            borderRadius: "10px",
-            padding: "10px",
-            cursor: "pointer",
-            textAlign: "left",
-            marginBottom: "10px",
-          }}
-        >
-          {photo && <img src={photo} alt="" style={{ width: "40px", height: "40px", borderRadius: "8px", flexShrink: 0, objectFit: "cover" }} />}
-          <span style={{ flex: 1, minWidth: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{obj.name}</span>
-          <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
-        </button>
-      )}
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <button
@@ -149,24 +134,26 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             display: "flex",
             alignItems: "center",
             gap: "5px",
-            background: entry.iBixed ? COLORS.amber : "none",
-            border: `2px solid ${COLORS.amber}`,
+            background: entry.bixCount > 0 ? COLORS.amber : "none",
+            border: `2px solid ${entry.bixCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
             borderRadius: "999px",
             padding: "6px 12px",
             fontSize: "12.5px",
             fontWeight: 700,
-            color: entry.iBixed ? COLORS.paper : COLORS.amber,
+            color: entry.bixCount > 0 ? COLORS.paper : COLORS.inkSoft,
             cursor: "pointer",
           }}
         >
-          <NavIcon name="heart" size={16} color={entry.iBixed ? COLORS.paper : COLORS.amber} filled={entry.iBixed} />
+          <NavIcon name="heart" size={16} color={entry.bixCount > 0 ? COLORS.paper : COLORS.inkSoft} filled={entry.bixCount > 0} />
+          {entry.bixCount > 0 && entry.bixCount}
         </button>
 
         <button
           onClick={toggleComments}
-          style={{ display: "flex", alignItems: "center", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "999px", padding: "6px 12px", cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "999px", padding: "6px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
         >
           <NavIcon name="comment" size={16} color={COLORS.inkSoft} />
+          {entry.commentsCount > 0 && entry.commentsCount}
         </button>
 
         {entry.eventType === "venue_visit" && entry.actorId !== myUserId && (
