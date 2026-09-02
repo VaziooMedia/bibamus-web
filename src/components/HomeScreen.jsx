@@ -291,14 +291,14 @@ export function HomeScreen({
                     size={56}
                   />
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: "16px" }}>{ev.name}</div>
+                    <div style={{ fontWeight: 700, fontSize: "16px", lineHeight: 1.25, whiteSpace: "normal", wordBreak: "break-word" }}>{ev.name}</div>
                     {(() => {
                       const linkedVenue = ev.venueId ? venues.find((v) => v.id === ev.venueId) : null;
                       // N'affiche le nom du lieu que si le titre personnalisé de la session s'en
                       // écarte — sinon, le titre suffit déjà. Dans ce second cas, l'adresse
                       // s'affiche à la place (en grisé), pour ne pas laisser un vide inutile.
                       const showVenue = linkedVenue && linkedVenue.name !== ev.name;
-                      const address = linkedVenue ? [linkedVenue.streetName, linkedVenue.streetNumber].filter(Boolean).join(" ") : null;
+                      const address = linkedVenue ? linkedVenue.city : null;
                       if (showVenue) {
                         return (
                           <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginTop: "2px" }}>
