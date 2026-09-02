@@ -945,6 +945,40 @@ export async function deleteMyMediaAsset(id) {
   return { ok: true };
 }
 
+export async function loadBibaxCount(otherUserId) {
+  const { data, error } = await supabase.rpc("get_bibax_count", { p_other_user_id: otherUserId });
+  if (error) {
+    console.error("loadBibaxCount:", error);
+    return 0;
+  }
+  return data ?? 0;
+}
+
+export async function loadMutualBibaxCount(otherUserId) {
+  const { data, error } = await supabase.rpc("get_mutual_bibax_count", { p_other_user_id: otherUserId });
+  if (error) {
+    console.error("loadMutualBibaxCount:", error);
+    return 0;
+  }
+  return data ?? 0;
+}
+
+export async function loadBibaxMediaAssets(otherUserId) {
+  const { data, error } = await supabase.rpc("get_bibax_media_assets", { p_other_user_id: otherUserId });
+  if (error) {
+    console.error("loadBibaxMediaAssets:", error);
+    return [];
+  }
+  return data.map((r) => ({
+    id: r.id,
+    entityType: r.entity_type,
+    entityId: r.entity_id,
+    kind: r.kind,
+    url: r.url,
+    createdAt: r.created_at,
+  }));
+}
+
 export async function loadMyProfileStats(userId) {
   const [{ data: tastedCount }, { data: venuesCount }] = await Promise.all([
     supabase.rpc("get_tasted_drinks_count", { p_user_id: userId }),
@@ -1469,6 +1503,11 @@ export async function loadMyBibax() {
     bibroCode: r.bibro_code,
     city: r.city,
     locality: r.locality,
+    country: r.country,
+    birthDate: r.birth_date,
+    shareAge: r.share_age,
+    bio: r.bio,
+    registeredAt: r.registered_at,
     facebookUrl: r.facebook_url,
     instagramUrl: r.instagram_url,
     tiktokUrl: r.tiktok_url,

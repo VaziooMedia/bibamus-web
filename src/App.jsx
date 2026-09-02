@@ -300,6 +300,7 @@ export default function App() {
             byCode.set(c.bibroCode, {
               ...existing,
               code: c.bibroCode,
+              userId: c.userId,
               name: c.name,
               firstName: c.name,
               lastName: c.lastName || "",
@@ -307,6 +308,19 @@ export default function App() {
               avatarUrl: c.avatarUrl || null,
               city: c.city || "",
               locality: c.locality || "",
+              country: c.country || "",
+              birthDate: c.birthDate || null,
+              shareAge: c.shareAge,
+              bio: c.bio || "",
+              registeredAt: c.registeredAt || null,
+              facebookUrl: c.facebookUrl || "",
+              instagramUrl: c.instagramUrl || "",
+              tiktokUrl: c.tiktokUrl || "",
+              snapchatUrl: c.snapchatUrl || "",
+              whatsappUrl: c.whatsappUrl || "",
+              xUrl: c.xUrl || "",
+              threadsUrl: c.threadsUrl || "",
+              linkedinUrl: c.linkedinUrl || "",
               alias: existing?.alias || "",
               addedAt: existing?.addedAt || Date.now(),
             });
@@ -808,6 +822,7 @@ export default function App() {
   };
 
   const [viewedBibroId, setViewedBibroId] = useState(null);
+  const [viewedBibaxPhotos, setViewedBibaxPhotos] = useState(null);
   const [viewedBreweryId, setViewedBreweryId] = useState(null);
   const [viewedBrandId, setViewedBrandId] = useState(null);
 
@@ -1926,15 +1941,21 @@ export default function App() {
             {screen === "bibroDetail" && (
               <BibroDetailScreen
                 bibro={bibros.find((b) => b.code === viewedBibroId)}
-                myBibros={bibros}
+                myUserId={session.user.id}
                 onBack={() => setScreen("bibrosList")}
                 previewNotice={false}
-                onToggleFavorite={() => toggleBibroFavorite(viewedBibroId)}
                 onRemove={() => {
                   removeBibro(viewedBibroId);
                   setScreen("bibrosList");
                 }}
+                goToBibaxPhotos={(userId, name) => {
+                  setViewedBibaxPhotos({ userId, name });
+                  setScreen("bibaxPhotos");
+                }}
               />
+            )}
+            {screen === "bibaxPhotos" && (
+              <MyPhotosScreen otherUserId={viewedBibaxPhotos?.userId} otherName={viewedBibaxPhotos?.name} onBack={() => setScreen("bibroDetail")} />
             )}
             {screen === "addBibro" && (
               <AddBibroScreen
@@ -2005,7 +2026,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

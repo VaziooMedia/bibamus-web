@@ -4,14 +4,29 @@
 // le prototype Claude.
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
-import { loadPendingBibaxRequests, loadSentBibaxRequests, loadBibaxSuggestions, respondBibaxRequest, sendBibaxRequest, cancelBibaxRequest } from "../data/sharedDirectories.js";
+import {
+  loadPendingBibaxRequests,
+  loadSentBibaxRequests,
+  loadBibaxSuggestions,
+  respondBibaxRequest,
+  sendBibaxRequest,
+  cancelBibaxRequest,
+  loadMutualBibaxCount,
+  loadBibaxCount,
+  loadMyProfileStats,
+} from "../data/sharedDirectories.js";
+import bibaxIconUrl from "../assets/brand/bibax.svg";
+import birthdayIconUrl from "../assets/brand/birthday-icon.png";
+import residenceIconUrl from "../assets/brand/residence-icon.png";
+import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
+import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
 
 // Demandes reçues (à confirmer/refuser) et suggestions (Bibax en commun, localisation
 // partagée) — façon Facebook : un simple "Confirmer" ou "Ajouter" suffit.
@@ -411,19 +426,52 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   );
 }
 
-export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onToggleFavorite, onRemove }) {
-  const [confirmRemove, setConfirmRemove] = useState(false);
-  const displayName = bibro.alias || bibro.name;
-  const fullName = [bibro.firstName, bibro.lastName].filter(Boolean).join(" ");
-  const heading = fullName || displayName;
-  const age = computeAgeFromBirthDate(bibro.birthDate);
-  const etiquetteParts = [];
-  if (bibro.nickname) etiquetteParts.push(bibro.nickname);
-  if (bibro.birthDate) etiquetteParts.push(age != null ? `${formatSharedBirthDate(bibro.birthDate)} (${age} ans)` : formatSharedBirthDate(bibro.birthDate));
-  const hasContactInfo = bibro.email || bibro.country || bibro.city || bibro.locality;
+export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRemove, goToBibaxPhotos }) {
+  const [mutualCount, setMutualCount] = useState(null);
+  const [bibaxCount, setBibaxCount] = useState(null);
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    if (!bibro?.userId) return;
+    loadMutualBibaxCount(bibro.userId).then(setMutualCount);
+    loadBibaxCount(bibro.userId).then(setBibaxCount);
+    loadMyProfileStats(bibro.userId).then(setStats);
+  }, [bibro?.userId]);
+
+  const age = bibro.shareAge !== false ? computeAgeFromBirthDate(bibro.birthDate) : null;
   const hasSocials = bibro.facebookUrl || bibro.instagramUrl || bibro.tiktokUrl || bibro.snapchatUrl || bibro.whatsappUrl || bibro.xUrl || bibro.threadsUrl || bibro.linkedinUrl;
-  const records = bibro.records;
-  const ranking = bibro.visitRanking;
+  const hasInfoBlock = bibro.bio || bibro.birthDate || bibro.city || bibro.registeredAt || hasSocials;
+
+  const StatCard = ({ icon, label, value, onClick }) => (
+    <button
+      onClick={onClick}
+      disabled={!onClick}
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "6px",
+        background: COLORS.surface,
+        border: `2px solid ${COLORS.paperAlt}`,
+        borderRadius: "14px",
+        padding: "12px",
+        textAlign: "center",
+        cursor: onClick ? "pointer" : "default",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+        {icon}
+        {onClick && (
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
+            <NavIcon name="chevron-right" size={10} color={COLORS.amber} />
+          </span>
+        )}
+      </div>
+      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2, height: "27px", display: "flex", alignItems: "center" }}>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value != null ? value : "…"}</span>
+    </button>
+  );
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -433,261 +481,179 @@ export function BibroDetailScreen({ bibro, myBibros, onBack, previewNotice, onTo
           {previewNotice}
         </div>
       )}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-        <span
-          style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "50%",
-            background: COLORS.surfaceAlt,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden",
-            flexShrink: 0,
-          }}
-        >
-          {bibro.avatarUrl ? <img src={bibro.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={26} color={COLORS.amber} />}
-        </span>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", lineHeight: 1, margin: 0 }}>{heading}</h1>
-        {hasSocials && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginLeft: "22px" }}>
-            {bibro.facebookUrl && (
-              <a href={normalizeUrl(bibro.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <FacebookIcon size={26} />
-              </a>
-            )}
-            {bibro.instagramUrl && (
-              <a href={normalizeUrl(bibro.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <InstagramIcon size={26} />
-              </a>
-            )}
-            {bibro.tiktokUrl && (
-              <a href={normalizeUrl(bibro.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <TiktokIcon size={26} />
-              </a>
-            )}
-            {bibro.snapchatUrl && (
-              <a href={normalizeUrl(bibro.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <SnapchatIcon size={26} />
-              </a>
-            )}
-            {bibro.whatsappUrl && (
-              <a href={normalizeUrl(bibro.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <WhatsappIcon size={26} />
-              </a>
-            )}
-            {bibro.xUrl && (
-              <a href={normalizeUrl(bibro.xUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <XIcon size={26} />
-              </a>
-            )}
-            {bibro.threadsUrl && (
-              <a href={normalizeUrl(bibro.threadsUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <ThreadsIcon size={26} />
-              </a>
-            )}
-            {bibro.linkedinUrl && (
-              <a href={normalizeUrl(bibro.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <LinkedinIcon size={26} />
-              </a>
-            )}
-          </div>
-        )}
-        <div style={{ flex: 1 }} />
-        {onToggleFavorite && (
-          <button
-            onClick={() => onToggleFavorite(bibro.code)}
-            title={bibro.isFavorite ? "Retirer des favoris" : "Marquer comme favori"}
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 0, flexShrink: 0 }}
+
+      <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+          <div
+            style={{
+              width: "112px",
+              height: "112px",
+              borderRadius: "50%",
+              border: `2px solid ${COLORS.amber}`,
+              padding: "2px",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <NavIcon name="star" size={28} color={COLORS.amber} filled={bibro.isFavorite} />
-          </button>
-        )}
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              {bibro.avatarUrl ? <img src={bibro.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={48} color={COLORS.amber} />}
+            </div>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0 }}>{bibro.name}</h1>
+            {bibro.lastName && <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0 }}>{bibro.lastName}</h1>}
+            {bibro.nickname && <p style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13.5px", color: COLORS.amber, margin: "3px 0 0" }}>{bibro.nickname}</p>}
+          </div>
+        </div>
       </div>
 
-      {!fullName && bibro.alias && <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "4px" }}>alias de {bibro.name}</p>}
-      {etiquetteParts.length > 0 && <p style={{ fontSize: "14px", color: COLORS.inkSoft, marginBottom: "16px" }}>{etiquetteParts.join(" · ")}</p>}
-      {bibro.registeredAt && (
-        <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Sur Bibamus depuis {formatMemberSince(bibro.registeredAt)}</p>
-      )}
-      {bibro.bio && <p style={{ fontSize: "13.5px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, marginBottom: "16px" }}>"{bibro.bio}"</p>}
-
-
-      {hasContactInfo && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {bibro.email && (
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span style={{ color: COLORS.inkSoft }}>E-mail</span>
-                <span style={{ fontWeight: 600 }}>{bibro.email}</span>
-              </div>
-            )}
-            {bibro.country && (
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span style={{ color: COLORS.inkSoft }}>Pays</span>
-                <span style={{ fontWeight: 600 }}>{bibro.country}</span>
-              </div>
-            )}
-            {bibro.city && (
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span style={{ color: COLORS.inkSoft }}>Commune</span>
-                <span style={{ fontWeight: 600 }}>{bibro.city}</span>
-              </div>
-            )}
-            {bibro.locality && (
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span style={{ color: COLORS.inkSoft }}>Ville / Village</span>
-                <span style={{ fontWeight: 600 }}>{bibro.locality}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {(bibro.bibrosCount != null || bibro.checkInsCount != null) && (
-        <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-          <div style={{ flex: 1, background: COLORS.amber, borderRadius: "12px", padding: "12px", textAlign: "center" }}>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: COLORS.paper, lineHeight: 1 }}>{bibro.bibrosCount ?? 0}</div>
-            <div style={{ fontSize: "11.5px", color: COLORS.paper, fontWeight: 700 }}>Bibax</div>
-          </div>
-          <div style={{ flex: 1, background: COLORS.amber, borderRadius: "12px", padding: "12px", textAlign: "center" }}>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: COLORS.paper, lineHeight: 1 }}>{bibro.checkInsCount ?? 0}</div>
-            <div style={{ fontSize: "11.5px", color: COLORS.paper, fontWeight: 700 }}>Check-in{(bibro.checkInsCount ?? 0) !== 1 ? "s" : ""}</div>
-          </div>
-        </div>
-      )}
-
-      {!previewNotice &&
-        myBibros &&
-        bibro.bibrosCodes != null &&
-        (() => {
-          const mutualCodes = new Set(bibro.bibrosCodes);
-          const mutual = myBibros.filter((b) => mutualCodes.has(b.code));
-          return (
-            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "20px" }}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: mutual.length > 0 ? "8px" : 0 }}>
-                {mutual.length > 0 ? `👥 ${mutual.length} Bibax en commun` : "👥 Aucun Bibax en commun"}
-              </div>
-              {mutual.length > 0 && <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: 0 }}>{mutual.map((b) => b.alias || b.name).join(", ")}</p>}
+      {hasInfoBlock && (
+        <div
+          style={{
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "12px",
+            padding: "12px 14px",
+            marginBottom: "14px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            fontSize: "12.5px",
+            color: COLORS.inkSoft,
+          }}
+        >
+          {bibro.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: 0 }}>"{bibro.bio}"</p>}
+          {(bibro.birthDate || bibro.city) && (
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              {bibro.birthDate && (
+                <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <img src={birthdayIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
+                  {formatSharedBirthDate(bibro.birthDate)}
+                  {age != null && ` (${age} ans)`}
+                </span>
+              )}
+              {bibro.birthDate && bibro.city && <span style={{ fontSize: "18px", lineHeight: 1, color: COLORS.paperAlt }}>|</span>}
+              {bibro.city && (
+                <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <img src={residenceIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
+                  {bibro.city} {COUNTRY_FLAGS[bibro.country] || ""}
+                </span>
+              )}
             </div>
-          );
-        })()}
-
-      {records && records.mostVisited && (
-        <>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>SES RECORDS</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "22px" }}>🏆</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, fontWeight: 600 }}>Le plus visité</div>
-                <div style={{ fontSize: "15px", fontWeight: 700 }}>{records.mostVisited.name}</div>
-              </div>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", color: COLORS.amberDark, fontWeight: 700 }}>
-                {records.mostVisited.visits} visite{records.mostVisited.visits !== 1 ? "s" : ""}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {ranking && ranking.length > 0 && (
-        <>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-            SON CLASSEMENT PAR VISITES
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {ranking.map((v, i) => (
-              <div
-                key={v.name}
-                style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
-              >
-                <span>
-                  <strong>{i + 1}.</strong> {v.name}
-                </span>
-                <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>
-                  {v.visits} visite{v.visits !== 1 ? "s" : ""}
-                </span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {bibro.ratedProducts && bibro.ratedProducts.length > 0 && (
-        <>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginTop: "20px", marginBottom: "8px" }}>
-            SES PRODUITS NOTÉS
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {bibro.ratedProducts.map((p) => (
-              <div
-                key={p.id}
-                style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
-              >
-                <span style={{ minWidth: 0 }}>
-                  <strong>{p.name}</strong>
-                  <span style={{ color: COLORS.inkSoft, fontSize: "12px" }}> · {drinkTypeLabel(p.type)}</span>
-                </span>
-                {typeof p.rating === "number" && isFinite(p.rating) && (
-                  <span style={{ display: "flex", alignItems: "center", gap: "4px", fontFamily: "'Urbanist', sans-serif", color: COLORS.amber, fontWeight: 700, fontSize: "13px", flexShrink: 0, marginLeft: "10px" }}>
-                    <StarsDisplay value={1} max={1} size={12} /> {Number(p.rating).toFixed(2).replace(".", ",")}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {etiquetteParts.length === 0 &&
-        !fullName &&
-        !bibro.bio &&
-        !hasContactInfo &&
-        !hasSocials &&
-        !records &&
-        !ranking &&
-        !(bibro.ratedProducts && bibro.ratedProducts.length > 0) && (
-          <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>
-            {previewNotice
-              ? "Tu n'as encore rien rendu visible à tes Bibax — tout est décoché dans ton profil."
-              : `${bibro.name} n'a encore rendu aucune information visible à ses Bibax.`}
-          </p>
-        )}
-
-      {onRemove && !previewNotice && (
-        <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
-          {!confirmRemove ? (
-            <button
-              onClick={() => setConfirmRemove(true)}
-              style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.wine, cursor: "pointer", width: "100%" }}
-            >
-              Retirer ce Bibax
-            </button>
-          ) : (
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => setConfirmRemove(false)}
-                style={{ flex: 1, background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.ink, cursor: "pointer" }}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={onRemove}
-                style={{ flex: 1, background: COLORS.wine, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: "#fff", cursor: "pointer" }}
-              >
-                Confirmer le retrait
-              </button>
+          )}
+          {bibro.registeredAt && <div>Sur Bibamus depuis {formatMemberSince(bibro.registeredAt)}</div>}
+          {hasSocials && (
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px", marginTop: "6px" }}>
+              {bibro.facebookUrl && (
+                <a href={normalizeUrl(bibro.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <FacebookIcon size={24} />
+                </a>
+              )}
+              {bibro.instagramUrl && (
+                <a href={normalizeUrl(bibro.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <InstagramIcon size={24} />
+                </a>
+              )}
+              {bibro.tiktokUrl && (
+                <a href={normalizeUrl(bibro.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <TiktokIcon size={24} />
+                </a>
+              )}
+              {bibro.snapchatUrl && (
+                <a href={normalizeUrl(bibro.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <SnapchatIcon size={24} />
+                </a>
+              )}
+              {bibro.whatsappUrl && (
+                <a href={normalizeUrl(bibro.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <WhatsappIcon size={24} />
+                </a>
+              )}
+              {bibro.xUrl && (
+                <a href={normalizeUrl(bibro.xUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <XIcon size={24} />
+                </a>
+              )}
+              {bibro.threadsUrl && (
+                <a href={normalizeUrl(bibro.threadsUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <ThreadsIcon size={24} />
+                </a>
+              )}
+              {bibro.linkedinUrl && (
+                <a href={normalizeUrl(bibro.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <LinkedinIcon size={24} />
+                </a>
+              )}
             </div>
           )}
         </div>
       )}
+
+      <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
+        <button
+          onClick={onRemove}
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.amber}`,
+            borderRadius: "14px",
+            padding: "12px 8px",
+            fontSize: "12.5px",
+            fontWeight: 700,
+            color: COLORS.amber,
+            cursor: "pointer",
+          }}
+        >
+          <NavIcon name="check" size={14} color={COLORS.amber} />
+          Bibax
+        </button>
+        <div
+          style={{
+            flex: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "14px",
+            padding: "12px 8px",
+            fontSize: "12.5px",
+            color: COLORS.inkSoft,
+            textAlign: "center",
+          }}
+        >
+          <img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
+          {mutualCount != null ? mutualCount : "…"} Bibax en commun
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
+        <StatCard icon={<img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Bibax" value={bibaxCount} />
+        <StatCard icon={<img src={drinkChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
+        <StatCard icon={<img src={placeChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+        <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title="BibaClub" disabled badge="Bientôt" />
+        <ActionCard icon={<NavIcon name="bar-chart" size={20} color={COLORS.amber} />} title="Statistiques" disabled badge="Bientôt" />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+        <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title="Historique" disabled badge="Bientôt" />
+        <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title="Photos" onClick={() => goToBibaxPhotos && goToBibaxPhotos(bibro.userId, bibro.name)} />
+      </div>
+
       <PageFooterNav onBack={onBack} />
     </div>
   );
 }
-
 export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | found | notFound
