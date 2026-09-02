@@ -46,8 +46,6 @@ import { DeleteAccountScreen } from "./components/DeleteAccountScreen.jsx";
 import {
   loadPublicVenues,
   loadDrinksDirectory,
-  loadMyTastedDrinkIds,
-  setDrinkTastedServer,
   loadBreweriesDirectory,
   loadBrandsDirectory,
   createBrewery,
@@ -708,19 +706,15 @@ export default function App() {
     setAlcoholFreeDays((prev) => (prev.includes(dateKey) ? prev.filter((d) => d !== dateKey) : [...prev, dateKey]));
   };
 
-  const [tastedDrinkIds, setTastedDrinkIds] = useState([]);
+  const [tastedDrinkIds, setTastedDrinkIds] = useState(() => loadLocal("bibamus-tasted-drinks", []));
   const [wishlistDrinkIds, setWishlistDrinkIds] = useState(() => loadLocal("bibamus-wishlist-drinks", []));
 
-  useEffect(() => {
-    if (!session) return;
-    loadMyTastedDrinkIds().then(setTastedDrinkIds);
-  }, [session]);
+  useEffect(() => saveLocal("bibamus-tasted-drinks", tastedDrinkIds), [tastedDrinkIds]);
   useEffect(() => saveLocal("bibamus-wishlist-drinks", wishlistDrinkIds), [wishlistDrinkIds]);
 
   const toggleTastedDrink = (id) => {
     setTastedDrinkIds((prev) => {
       const alreadyTasted = prev.includes(id);
-      setDrinkTastedServer(id, !alreadyTasted);
       if (!alreadyTasted) emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: id });
       return alreadyTasted ? prev.filter((x) => x !== id) : [...prev, id];
     });
@@ -1074,7 +1068,6 @@ export default function App() {
     setSession(null);
     setProfile({ name: "", avatarUrl: null, myBibroCode: null });
     setProfileLoaded(false);
-    setTastedDrinkIds([]);
   };
 
   const handleAccountDeleted = async () => {
@@ -1619,7 +1612,6 @@ export default function App() {
                 profile={profile}
                 bibros={bibros}
                 checkIns={checkIns}
-                myUserId={session.user.id}
                 onBack={() => setScreen("home")}
                 goToMyInfo={() => setScreen("myInfo")}
                 goToMyStats={() => setScreen("myStats")}
@@ -1628,7 +1620,6 @@ export default function App() {
                 goToVenues={() => setScreen("venueDirectory")}
                 goToHistory={() => setScreen("eventHistory")}
                 goToSettings={() => setScreen("settings")}
-                onOpenMyStory={setViewedStoryAuthor}
               />
             )}
             {screen === "myInfo" && (
@@ -1640,7 +1631,6 @@ export default function App() {
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
                 onUploadPhoto={(file) => uploadMyAvatarPhoto(session.user.id, file)}
                 onGoToAdminUnlock={() => setScreen("adminUnlock")}
-                onGoToSettings={() => setScreen("settings")}
                 onLogout={handleLogout}
                 onBack={() => setScreen("profile")}
               />
@@ -1670,7 +1660,7 @@ export default function App() {
               />
             )}
             {screen === "settings" && (
-              <SettingsScreen onBack={() => setScreen("myInfo")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} goToDeleteAccount={() => setScreen("deleteAccount")} />
+              <SettingsScreen onBack={() => setScreen("home")} isAdmin={!!profile.isAdmin} goToImport={() => setScreen("importData")} goToDeleteAccount={() => setScreen("deleteAccount")} />
             )}
             {screen === "deleteAccount" && <DeleteAccountScreen onBack={() => setScreen("settings")} onAccountDeleted={handleAccountDeleted} />}
             {screen === "importData" && (
