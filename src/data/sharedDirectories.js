@@ -1271,6 +1271,8 @@ export async function loadPulseFeed(before = null, limit = 20) {
     commentsCount: row.comments_count,
     incomingCount: row.incoming_count,
     lastBixerName: row.last_bixer_name,
+    santeCount: row.sante_count,
+    iSaidSante: row.i_said_sante,
     createdAt: row.created_at,
     iBixed: row.i_bixed,
     iAmIncoming: row.i_am_incoming,
@@ -1314,15 +1316,22 @@ export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
   return { ok: true };
 }
 
+export async function toggleSanteReaction(pulseEventId) {
+  const { error } = await supabase.rpc("toggle_pulse_sante", { p_pulse_event_id: pulseEventId });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function loadPulseReactors(pulseEventId) {
   const { data, error } = await supabase.rpc("get_pulse_reactors", { p_pulse_event_id: pulseEventId });
   if (error) {
     console.error("loadPulseReactors:", error);
-    return { bix: [], incoming: [] };
+    return { bix: [], incoming: [], sante: [] };
   }
   return {
     bix: data.filter((r) => r.kind === "bix").map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url })),
     incoming: data.filter((r) => r.kind === "incoming").map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url })),
+    sante: data.filter((r) => r.kind === "sante").map((r) => ({ userId: r.user_id, name: r.name, avatarUrl: r.avatar_url })),
   };
 }
 

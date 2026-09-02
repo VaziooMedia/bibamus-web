@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadPulseFeed, togglePulseBix, togglePulseIncoming, loadPulseReactors, loadPulseComments, postPulseComment } from "../data/sharedDirectories.js";
+import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment } from "../data/sharedDirectories.js";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -75,6 +75,11 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
   const handleIncoming = () => {
     onUpdate({ iAmIncoming: !entry.iAmIncoming, incomingCount: entry.iAmIncoming ? entry.incomingCount - 1 : entry.incomingCount + 1 });
     togglePulseIncoming(entry.id, entry.iAmIncoming);
+  };
+
+  const handleSante = () => {
+    onUpdate({ iSaidSante: !entry.iSaidSante, santeCount: entry.iSaidSante ? entry.santeCount - 1 : entry.santeCount + 1 });
+    toggleSanteReaction(entry.id);
   };
 
   const openReactors = async (tab) => {
@@ -156,9 +161,10 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
           {entry.commentsCount > 0 && entry.commentsCount}
         </button>
 
-        {entry.eventType === "venue_visit" && entry.actorId !== myUserId && (
+        {entry.eventType === "venue_visit" && (
           <button
-            onClick={handleIncoming}
+            onClick={entry.actorId !== myUserId ? handleIncoming : undefined}
+            disabled={entry.actorId === myUserId}
             style={{
               display: "flex",
               alignItems: "center",
@@ -170,10 +176,32 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               fontSize: "12.5px",
               fontWeight: 700,
               color: entry.iAmIncoming ? COLORS.paper : COLORS.amber,
+              cursor: entry.actorId === myUserId ? "default" : "pointer",
+              opacity: entry.actorId === myUserId ? 0.45 : 1,
+            }}
+          >
+            J'arrive !
+          </button>
+        )}
+
+        {entry.eventType === "product_discovered" && (
+          <button
+            onClick={handleSante}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              background: entry.iSaidSante ? COLORS.amber : "none",
+              border: `2px solid ${COLORS.amber}`,
+              borderRadius: "999px",
+              padding: "6px 12px",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              color: entry.iSaidSante ? COLORS.paper : COLORS.amber,
               cursor: "pointer",
             }}
           >
-            J'arrive
+            Santé !
           </button>
         )}
       </div>
@@ -197,6 +225,13 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
         <button onClick={() => openReactors("incoming")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
           <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
             <strong style={{ color: COLORS.ink }}>{entry.incomingCount}</strong> Bibax {entry.incomingCount > 1 ? "arrivent" : "arrive"}
+          </span>
+        </button>
+      )}
+      {entry.santeCount > 0 && (
+        <button onClick={() => openReactors("sante")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
+          <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+            <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Bibax {entry.santeCount > 1 ? "trinquent" : "trinque"}
           </span>
         </button>
       )}
@@ -227,7 +262,7 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               value={commentInput}
               onChange={(e) => setCommentInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitComment()}
-              placeholder="Un commentaire..."
+              placeholder="Commenter ..."
               style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "12.5px", background: COLORS.surfaceAlt, color: COLORS.ink, outline: "none" }}
             />
             <button
@@ -251,17 +286,30 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               >
                 Bix ({entry.bixCount})
               </button>
-              <button
-                onClick={() => setReactorsTab("incoming")}
-                style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "incoming" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "incoming" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
-              >
-                J'arrive ({entry.incomingCount})
-              </button>
+              {entry.eventType === "venue_visit" && (
+                <button
+                  onClick={() => setReactorsTab("incoming")}
+                  style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "incoming" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "incoming" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
+                >
+                  J'arrive ! ({entry.incomingCount})
+                </button>
+              )}
+              {entry.eventType === "product_discovered" && (
+                <button
+                  onClick={() => setReactorsTab("sante")}
+                  style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "sante" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "sante" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
+                >
+                  Santé ! ({entry.santeCount})
+                </button>
+              )}
             </div>
             {reactors === null ? (
               <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", padding: "10px 0" }}>Chargement...</p>
             ) : (
-              <ReactorsList people={reactorsTab === "bix" ? reactors.bix : reactors.incoming} emptyLabel={reactorsTab === "bix" ? "Personne n'a encore Bix." : "Personne n'a encore signalé son arrivée."} />
+              <ReactorsList
+                people={reactorsTab === "bix" ? reactors.bix : reactorsTab === "incoming" ? reactors.incoming : reactors.sante}
+                emptyLabel={reactorsTab === "bix" ? "Personne n'a encore Bix." : reactorsTab === "incoming" ? "Personne n'a encore signalé son arrivée." : "Personne n'a encore trinqué."}
+              />
             )}
           </div>
         </div>
