@@ -72,8 +72,8 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
             <button
               onClick={hasActiveStory ? openMyStory : undefined}
               style={{
-                width: "96px",
-                height: "96px",
+                width: "112px",
+                height: "112px",
                 borderRadius: "50%",
                 border: `2px solid ${hasActiveStory ? "#FF2C8F" : COLORS.amber}`,
                 padding: "2px",
@@ -83,19 +83,17 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
               }}
             >
               <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={42} color={COLORS.amber} />}
+                {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={48} color={COLORS.amber} />}
               </div>
             </button>
             <div style={{ minWidth: 0 }}>
-              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.15, margin: 0 }}>
-                {myName} {profile.lastName || ""}
-              </h1>
+              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0 }}>{myName}</h1>
+              {profile.lastName && <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0 }}>{profile.lastName}</h1>}
               {profile.nickname && <p style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13.5px", color: COLORS.amber, margin: "3px 0 0" }}>{profile.nickname}</p>}
+              {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: "10px 0 0" }}>"{profile.bio}"</p>}
             </div>
           </div>
         </div>
-
-        {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: "14px 0 0" }}>"{profile.bio}"</p>}
 
         {(profile.facebookUrl ||
           profile.instagramUrl ||
