@@ -221,10 +221,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
         <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
             <button
-              onClick={() =>
-                roomStories.length > 0 &&
-                onOpenStoryAuthor({ authorName: event.name, authorAvatarUrl: venue ? venue.profilePhotoUrl : null, stories: roomStories })
-              }
+              onClick={() => roomStories.length > 0 && onOpenStoryAuthor(roomStories)}
               style={{
                 display: "block",
                 background: "none",
