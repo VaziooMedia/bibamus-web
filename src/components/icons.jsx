@@ -440,7 +440,7 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
       );
     case "bottle":
       return (
-        <svg width={Math.round(size * (1254 / 1254))} height={size} viewBox="0 0 1254 1254" fill="none">
+        <svg width={Math.round(size * (405 / 1070))} height={size} viewBox="425 130 405 1070" fill="none">
           <path
             fillRule="evenodd"
             clipRule="evenodd"
