@@ -9,7 +9,7 @@ import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
 import { loadMyProfileStats } from "../data/sharedDirectories.js";
 
-export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goToBibros, goToProducts, goToVenues }) {
+export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goToBibros, goToProducts, goToVenues, onGoToSettings }) {
   const [stats, setStats] = useState(null);
   useEffect(() => {
     if (myUserId) loadMyProfileStats(myUserId).then(setStats);
@@ -23,37 +23,38 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
         flex: 1,
         display: "flex",
         flexDirection: "column",
+        alignItems: "center",
         gap: "6px",
         background: COLORS.surface,
         border: `2px solid ${COLORS.paperAlt}`,
         borderRadius: "14px",
         padding: "12px",
-        textAlign: "left",
+        textAlign: "center",
         cursor: onClick ? "pointer" : "default",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", position: "relative" }}>
         {icon}
         {onClick && (
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
+          <span style={{ position: "absolute", right: 0, display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
             <NavIcon name="chevron-right" size={10} color={COLORS.amber} />
           </span>
         )}
       </div>
-      <span style={{ fontSize: "11px", color: COLORS.inkSoft, lineHeight: 1.2 }}>{label}</span>
+      <span style={{ fontSize: "11px", color: COLORS.inkSoft, lineHeight: 1.2, height: "27px", display: "flex", alignItems: "center" }}>{label}</span>
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
     </button>
   );
 
   return (
     <>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "14px" }}>
+      <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "14px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
             <div
               style={{
-                width: "72px",
-                height: "72px",
+                width: "96px",
+                height: "96px",
                 borderRadius: "50%",
                 border: `2px solid ${COLORS.amber}`,
                 padding: "2px",
@@ -61,7 +62,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
               }}
             >
               <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={32} color={COLORS.amber} />}
+                {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={42} color={COLORS.amber} />}
               </div>
             </div>
             <div style={{ minWidth: 0 }}>
@@ -72,33 +73,45 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
               {profile.registeredAt && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "4px 0 0" }}>Membre Bibamus depuis {formatMemberSince(profile.registeredAt)}</p>}
             </div>
           </div>
-          {(profile.facebookUrl || profile.instagramUrl || profile.tiktokUrl || profile.snapchatUrl) && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", flexShrink: 0 }}>
-              {profile.facebookUrl && (
-                <a href={normalizeUrl(profile.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <FacebookIcon size={20} />
-                </a>
-              )}
-              {profile.instagramUrl && (
-                <a href={normalizeUrl(profile.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <InstagramIcon size={20} />
-                </a>
-              )}
-              {profile.tiktokUrl && (
-                <a href={normalizeUrl(profile.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <TiktokIcon size={20} />
-                </a>
-              )}
-              {profile.snapchatUrl && (
-                <a href={normalizeUrl(profile.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <SnapchatIcon size={20} />
-                </a>
-              )}
-            </div>
-          )}
         </div>
 
+        {(profile.facebookUrl || profile.instagramUrl || profile.tiktokUrl || profile.snapchatUrl) && (
+          <div style={{ display: "flex", flexDirection: "row", gap: "14px", alignItems: "center", justifyContent: "flex-end", marginTop: "12px" }}>
+            {profile.facebookUrl && (
+              <a href={normalizeUrl(profile.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <FacebookIcon size={20} />
+              </a>
+            )}
+            {profile.instagramUrl && (
+              <a href={normalizeUrl(profile.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <InstagramIcon size={20} />
+              </a>
+            )}
+            {profile.tiktokUrl && (
+              <a href={normalizeUrl(profile.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <TiktokIcon size={20} />
+              </a>
+            )}
+            {profile.snapchatUrl && (
+              <a href={normalizeUrl(profile.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                <SnapchatIcon size={20} />
+              </a>
+            )}
+          </div>
+        )}
+
         {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: "14px 0 0" }}>"{profile.bio}"</p>}
+
+        {onGoToSettings && (
+          <button
+            onClick={onGoToSettings}
+            style={{ position: "absolute", bottom: "10px", right: "10px", background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}
+            title="Paramètres"
+            aria-label="Paramètres"
+          >
+            <NavIcon name="settings" size={22} color={COLORS.amber} />
+          </button>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
