@@ -95,6 +95,8 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
           </div>
         </div>
 
+        {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: "14px 0 0" }}>"{profile.bio}"</p>}
+
         {(profile.facebookUrl ||
           profile.instagramUrl ||
           profile.tiktokUrl ||
@@ -103,51 +105,49 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
           profile.xUrl ||
           profile.threadsUrl ||
           profile.linkedinUrl) && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center", marginTop: "12px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px", marginTop: "14px" }}>
             {profile.facebookUrl && (
               <a href={normalizeUrl(profile.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <FacebookIcon size={20} />
+                <FacebookIcon size={24} />
               </a>
             )}
             {profile.instagramUrl && (
               <a href={normalizeUrl(profile.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <InstagramIcon size={20} />
+                <InstagramIcon size={24} />
               </a>
             )}
             {profile.tiktokUrl && (
               <a href={normalizeUrl(profile.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <TiktokIcon size={20} />
+                <TiktokIcon size={24} />
               </a>
             )}
             {profile.snapchatUrl && (
               <a href={normalizeUrl(profile.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <SnapchatIcon size={20} />
+                <SnapchatIcon size={24} />
               </a>
             )}
             {profile.whatsappUrl && (
               <a href={normalizeUrl(profile.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <WhatsappIcon size={20} />
+                <WhatsappIcon size={24} />
               </a>
             )}
             {profile.xUrl && (
               <a href={normalizeUrl(profile.xUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <XIcon size={20} />
+                <XIcon size={24} />
               </a>
             )}
             {profile.threadsUrl && (
               <a href={normalizeUrl(profile.threadsUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <ThreadsIcon size={20} />
+                <ThreadsIcon size={24} />
               </a>
             )}
             {profile.linkedinUrl && (
               <a href={normalizeUrl(profile.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                <LinkedinIcon size={20} />
+                <LinkedinIcon size={24} />
               </a>
             )}
           </div>
         )}
-
-        {profile.bio && <p style={{ fontSize: "13px", color: COLORS.ink, fontStyle: "italic", lineHeight: 1.5, margin: "14px 0 0" }}>"{profile.bio}"</p>}
       </div>
 
       {(profile.birthDate || profile.city || profile.registeredAt) && (
