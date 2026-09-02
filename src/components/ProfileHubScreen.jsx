@@ -43,7 +43,7 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
         <button
-          onClick={goToMyInfo}
+          onClick={goToSettings}
           style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}
           title="Paramètres"
           aria-label="Paramètres"
