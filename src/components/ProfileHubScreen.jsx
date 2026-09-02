@@ -20,7 +20,6 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
         goToBibros={goToBibros}
         goToProducts={goToProducts}
         goToVenues={goToVenues}
-        onGoToSettings={goToMyInfo}
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
@@ -29,6 +28,16 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
         <ActionCard icon={<NavIcon name="bottle" size={20} color={COLORS.amber} />} title={<>Mes<br />Produits</>} onClick={goToProducts} />
         <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title={<>Mes<br />Favoris</>} onClick={goToVenues} />
         <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title={<>Mon<br />Historique</>} onClick={goToHistory} />
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={goToMyInfo}
+            style={{ position: "absolute", bottom: "8px", right: "8px", background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}
+            title="Paramètres"
+            aria-label="Paramètres"
+          >
+            <NavIcon name="settings" size={24} color={COLORS.amber} />
+          </button>
+        </div>
       </div>
       <PageFooterNav onBack={onBack} />
     </div>
