@@ -6,6 +6,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
+import settingsIconUrl from "../assets/brand/settings-icon.png";
 
 export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, onBack, goToMyInfo, goToMyStats, goToBibros, goToProducts, goToVenues, goToHistory, goToSettings }) {
   return (
@@ -35,7 +36,7 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
             title="Paramètres"
             aria-label="Paramètres"
           >
-            <NavIcon name="settings" size={24} color={COLORS.amber} />
+            <img src={settingsIconUrl} alt="" style={{ width: "24px", height: "24px" }} />
           </button>
         </div>
       </div>

@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, WEEKDAY_SHORT_MON_FIRST } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
+import bibaxIconUrl from "../assets/brand/bibax.svg";
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
 import { loadMyProfileStats } from "../data/sharedDirectories.js";
 
@@ -103,7 +104,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
       </div>
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
-        <StatCard icon={<NavIcon name="users" size={18} color={COLORS.amber} />} label="Bibax" value={bibros.length} onClick={goToBibros} />
+        <StatCard icon={<img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Bibax" value={bibros.length} onClick={goToBibros} />
         <StatCard icon={<NavIcon name="bar-chart" size={18} color={COLORS.amber} />} label="Drink Checks" value={stats ? stats.tastedDrinksCount : "…"} onClick={goToProducts} />
         <StatCard icon={<NavIcon name="map-pin-check" size={18} color={COLORS.amber} />} label="Place Checks" value={stats ? stats.venueCheckinsCount : "…"} onClick={goToVenues} />
       </div>
