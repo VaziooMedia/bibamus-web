@@ -17,10 +17,11 @@ import { supabase } from "../supabaseClient.js";
 
 const FLUO_RED = "#FF3B3B";
 
-function SecurityRow({ icon, title, subtitle, onClick, titleColor }) {
+function SecurityRow({ icon, title, subtitle, onClick, titleColor, disabled, badge }) {
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       style={{
         display: "flex",
         alignItems: "center",
@@ -30,17 +31,23 @@ function SecurityRow({ icon, title, subtitle, onClick, titleColor }) {
         borderBottom: `1px solid ${COLORS.paperAlt}`,
         padding: "14px 4px",
         textAlign: "left",
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
         width: "100%",
         color: COLORS.ink,
+        opacity: disabled ? 0.55 : 1,
       }}
     >
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>{icon}</span>
       <span style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 700, fontSize: "14.5px", color: titleColor || COLORS.ink }}>{title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontWeight: 700, fontSize: "14.5px", color: titleColor || COLORS.ink }}>{title}</span>
+          {badge && (
+            <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.amber, border: `1px solid ${COLORS.amber}`, borderRadius: "999px", padding: "1px 7px" }}>{badge}</span>
+          )}
+        </div>
         {subtitle && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{subtitle}</div>}
       </span>
-      <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
+      {!disabled && <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />}
     </button>
   );
 }
@@ -67,7 +74,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
 
       <SecurityGroup title="Sécurité">
         <SecurityRow icon={<NavIcon name="lock" size={17} color={COLORS.amber} />} title="Mot de passe" subtitle="Modifier votre mot de passe" onClick={() => goToSubScreen("password")} />
-        <SecurityRow icon={<NavIcon name="faceid" size={17} color={COLORS.amber} />} title="Connexion biométrique" subtitle="Face ID / empreinte" onClick={() => goToSubScreen("biometric")} />
+        <SecurityRow icon={<NavIcon name="faceid" size={17} color={COLORS.amber} />} title="Connexion biométrique" subtitle="Face ID / empreinte — prévu sur l'app native" disabled badge="App native" />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow
             icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
