@@ -262,7 +262,7 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
         <NavRow icon={<NavIcon name="thermometer" size={17} color={COLORS.amber} />} title="Température" value="Celsius (°C)" disabled />
         <NavRow icon={<NavIcon name="ruler" size={17} color={COLORS.amber} />} title="Unités de mesure" onClick={goToVolumeWeight} />
         <NavRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Format date" value="JJ/MM/AAAA" disabled />
-        <ToggleRow icon={<NavIcon name="clock" size={17} color={COLORS.amber} />} title="Format horaire" disabled checked={true} onChange={() => {}} last />
+        <ToggleRow icon={<NavIcon name="clock" size={17} color={COLORS.amber} />} title="Format horaire" trailingLabel="24h" disabled checked={true} onChange={() => {}} last />
       </PrefGroup>
 
       <PrefGroup title="Expérience Bibamus">

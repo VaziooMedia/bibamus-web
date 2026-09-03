@@ -55,10 +55,11 @@ function capitalizeFirst(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function AccountRow({ icon, title, value, onClick, titleColor }) {
+function AccountRow({ icon, title, value, onClick, titleColor, disabled }) {
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       style={{
         display: "flex",
         alignItems: "center",
@@ -68,9 +69,10 @@ function AccountRow({ icon, title, value, onClick, titleColor }) {
         borderBottom: `1px solid ${COLORS.paperAlt}`,
         padding: "14px 4px",
         textAlign: "left",
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
         width: "100%",
         color: COLORS.ink,
+        opacity: disabled ? 0.55 : 1,
       }}
     >
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0 }}>{icon}</span>
@@ -176,7 +178,7 @@ export function AccountScreen({ myName, profile, myUserId, onOpenMyStory, onBack
           }
           title="Désactiver mon compte"
           value=""
-          onClick={goToDeactivate}
+          disabled
           titleColor={FLUO_BLUE}
         />
         <div style={{ borderBottom: "none" }}>
@@ -234,12 +236,12 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
           <p style={{ fontSize: "12px", color: COLORS.inkSoft, textAlign: "right", margin: "6px 2px 0" }}>{value.length}/40</p>
         </>
       ) : config.type === "date" ? (
-        <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface }}>
+        <div style={{ display: "inline-block", maxWidth: "100%", overflow: "hidden", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface }}>
           <input
             type="date"
             value={value}
             onChange={(e) => handleChange(e.target.value)}
-            style={{ display: "block", width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box", padding: "14px 12px", border: "none", background: "none", color: COLORS.ink, fontSize: "15px", lineHeight: "normal" }}
+            style={{ display: "block", width: "170px", maxWidth: "100%", boxSizing: "border-box", padding: "9px 12px", border: "none", background: "none", color: COLORS.ink, fontSize: "15px", lineHeight: "normal" }}
           />
         </div>
       ) : (
