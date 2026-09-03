@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, EntityAvatar, BibaxName } from "./ui.jsx";
-import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon } from "./icons.jsx";
+import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
 import { normalizeUrl } from "../utils.js";
 import { lookupBibroCode } from "../data/sharedDirectories.js";
 
@@ -40,7 +40,9 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
             identity.whatsappUrl ||
             identity.xUrl ||
             identity.threadsUrl ||
-            identity.linkedinUrl) && (
+            identity.linkedinUrl ||
+            identity.pinterestUrl ||
+            identity.twitchUrl) && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "18px" }}>
               {identity.facebookUrl && (
                 <a href={normalizeUrl(identity.facebookUrl)} target="_blank" rel="noreferrer">
@@ -80,6 +82,16 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
               {identity.linkedinUrl && (
                 <a href={normalizeUrl(identity.linkedinUrl)} target="_blank" rel="noreferrer">
                   <LinkedinIcon size={26} color={COLORS.inkSoft} />
+                </a>
+              )}
+              {identity.pinterestUrl && (
+                <a href={normalizeUrl(identity.pinterestUrl)} target="_blank" rel="noreferrer">
+                  <PinterestIcon size={26} color={COLORS.inkSoft} />
+                </a>
+              )}
+              {identity.twitchUrl && (
+                <a href={normalizeUrl(identity.twitchUrl)} target="_blank" rel="noreferrer">
+                  <TwitchIcon size={26} color={COLORS.inkSoft} />
                 </a>
               )}
             </div>

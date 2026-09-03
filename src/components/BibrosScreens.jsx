@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS, COUNTRY_FLAGS } from "../constants.js";
-import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon } from "./icons.jsx";
+import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
@@ -358,7 +358,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                 </div>
               </div>
 
-              {(b.facebookUrl || b.instagramUrl || b.tiktokUrl || b.snapchatUrl || b.whatsappUrl || b.xUrl || b.threadsUrl || b.linkedinUrl) && (
+              {(b.facebookUrl || b.instagramUrl || b.tiktokUrl || b.snapchatUrl || b.whatsappUrl || b.xUrl || b.threadsUrl || b.linkedinUrl || b.pinterestUrl || b.twitchUrl) && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
                   {b.facebookUrl && (
                     <a href={normalizeUrl(b.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
@@ -398,6 +398,16 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                   {b.linkedinUrl && (
                     <a href={normalizeUrl(b.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
                       <LinkedinIcon size={19} />
+                    </a>
+                  )}
+                  {b.pinterestUrl && (
+                    <a href={normalizeUrl(b.pinterestUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <PinterestIcon size={19} />
+                    </a>
+                  )}
+                  {b.twitchUrl && (
+                    <a href={normalizeUrl(b.twitchUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <TwitchIcon size={19} />
                     </a>
                   )}
                 </div>
@@ -441,7 +451,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   }, [bibro?.userId]);
 
   const age = bibro.shareAge !== false ? computeAgeFromBirthDate(bibro.birthDate) : null;
-  const hasSocials = bibro.facebookUrl || bibro.instagramUrl || bibro.tiktokUrl || bibro.snapchatUrl || bibro.whatsappUrl || bibro.xUrl || bibro.threadsUrl || bibro.linkedinUrl;
+  const hasSocials = bibro.facebookUrl || bibro.instagramUrl || bibro.tiktokUrl || bibro.snapchatUrl || bibro.whatsappUrl || bibro.xUrl || bibro.threadsUrl || bibro.linkedinUrl || bibro.pinterestUrl || bibro.twitchUrl;
   const hasInfoBlock = bibro.bio || bibro.birthDate || bibro.city || bibro.registeredAt || hasSocials;
 
   const StatCard = ({ icon, label, value, onClick }) => (
@@ -588,6 +598,16 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
                   <LinkedinIcon size={24} />
                 </a>
               )}
+              {bibro.pinterestUrl && (
+                <a href={normalizeUrl(bibro.pinterestUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <PinterestIcon size={24} />
+                </a>
+              )}
+              {bibro.twitchUrl && (
+                <a href={normalizeUrl(bibro.twitchUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <TwitchIcon size={24} />
+                </a>
+              )}
             </div>
           )}
         </div>
@@ -717,6 +737,12 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
         instagramUrl: identity.instagramUrl || "",
         tiktokUrl: identity.tiktokUrl || "",
         snapchatUrl: identity.snapchatUrl || "",
+        whatsappUrl: identity.whatsappUrl || "",
+        xUrl: identity.xUrl || "",
+        threadsUrl: identity.threadsUrl || "",
+        linkedinUrl: identity.linkedinUrl || "",
+        pinterestUrl: identity.pinterestUrl || "",
+        twitchUrl: identity.twitchUrl || "",
       });
       setStatus("found");
     } else {
@@ -792,7 +818,9 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
                 foundSocials.whatsappUrl ||
                 foundSocials.xUrl ||
                 foundSocials.threadsUrl ||
-                foundSocials.linkedinUrl
+                foundSocials.linkedinUrl ||
+                foundSocials.pinterestUrl ||
+                foundSocials.twitchUrl
                   ? "12px"
                   : 0,
             }}
@@ -833,7 +861,9 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
             foundSocials.whatsappUrl ||
             foundSocials.xUrl ||
             foundSocials.threadsUrl ||
-            foundSocials.linkedinUrl) && (
+            foundSocials.linkedinUrl ||
+            foundSocials.pinterestUrl ||
+            foundSocials.twitchUrl) && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {foundSocials.facebookUrl && (
                 <a href={normalizeUrl(foundSocials.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
@@ -873,6 +903,16 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
               {foundSocials.linkedinUrl && (
                 <a href={normalizeUrl(foundSocials.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                   <LinkedinIcon size={20} />
+                </a>
+              )}
+              {foundSocials.pinterestUrl && (
+                <a href={normalizeUrl(foundSocials.pinterestUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <PinterestIcon size={20} />
+                </a>
+              )}
+              {foundSocials.twitchUrl && (
+                <a href={normalizeUrl(foundSocials.twitchUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <TwitchIcon size={20} />
                 </a>
               )}
             </div>

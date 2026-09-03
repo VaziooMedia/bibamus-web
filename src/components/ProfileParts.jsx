@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, WEEKDAY_SHORT_MON_FIRST, COUNTRY_FLAGS } from "../constants.js";
-import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon } from "./icons.jsx";
+import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import belgiumFlagUrl from "../assets/flags/be.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -154,7 +154,9 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
             profile.whatsappUrl ||
             profile.xUrl ||
             profile.threadsUrl ||
-            profile.linkedinUrl) && (
+            profile.linkedinUrl ||
+            profile.pinterestUrl ||
+            profile.twitchUrl) && (
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px", marginTop: "6px" }}>
               {profile.facebookUrl && (
                 <a href={normalizeUrl(profile.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
@@ -194,6 +196,16 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
               {profile.linkedinUrl && (
                 <a href={normalizeUrl(profile.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                   <LinkedinIcon size={24} />
+                </a>
+              )}
+              {profile.pinterestUrl && (
+                <a href={normalizeUrl(profile.pinterestUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <PinterestIcon size={24} />
+                </a>
+              )}
+              {profile.twitchUrl && (
+                <a href={normalizeUrl(profile.twitchUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <TwitchIcon size={24} />
                 </a>
               )}
             </div>
