@@ -93,7 +93,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
       </SecurityGroup>
 
       <SecurityGroup title="Appareils & données">
-        <SecurityRow icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />} title="Appareils connectés" onClick={() => goToSubScreen("devices")} />
+        <SecurityRow icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />} title="Appareils connectés" subtitle="Prévu sur l'app native" disabled badge="App native" />
         <SecurityRow icon={<NavIcon name="download" size={17} color={COLORS.amber} />} title="Télécharger mes données" subtitle="Exporter mes données Bibamus" onClick={() => goToSubScreen("dataExport")} />
         <SecurityRow icon={<NavIcon name="check" size={17} color={COLORS.amber} />} title="Permissions & consentements" subtitle="Gérer les autorisations et préférences" onClick={() => goToSubScreen("permissions")} />
         <div style={{ borderBottom: "none" }}>
