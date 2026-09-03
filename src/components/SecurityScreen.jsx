@@ -11,6 +11,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PageTitleWithBar } from "./AccountScreen.jsx";
+import bibaxIconUrl from "../assets/brand/bibax.svg";
 import { updatePassword } from "../data/sharedDirectories.js";
 import { supabase } from "../supabaseClient.js";
 
@@ -63,7 +64,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
 
       <SecurityGroup title="Sécurité">
         <SecurityRow icon={<NavIcon name="lock" size={17} color={COLORS.amber} />} title="Mot de passe" subtitle="Modifier votre mot de passe" onClick={() => goToSubScreen("password")} />
-        <SecurityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Connexion biométrique" subtitle="Face ID / empreinte" onClick={() => goToSubScreen("biometric")} />
+        <SecurityRow icon={<NavIcon name="faceid" size={17} color={COLORS.amber} />} title="Connexion biométrique" subtitle="Face ID / empreinte" onClick={() => goToSubScreen("biometric")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow
             icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
@@ -78,20 +79,20 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
       <SecurityGroup title="Confidentialité">
         <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir qui peut voir votre profil" onClick={() => goToSubScreen("publicProfile")} />
         <SecurityRow icon={<NavIcon name="map-pin-check" size={17} color={COLORS.amber} />} title="Visibilité des check-ins" onClick={() => goToSubScreen("checkinVisibility")} />
-        <SecurityRow icon={<NavIcon name="users" size={17} color={COLORS.amber} />} title="Visibilité des Bibax" onClick={() => goToSubScreen("bibaxVisibility")} />
-        <SecurityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Invitations Bibax" onClick={() => goToSubScreen("bibaxInvites")} />
+        <SecurityRow icon={<img src={bibaxIconUrl} alt="" style={{ width: "17px", height: "17px" }} />} title="Visibilité des Bibax" onClick={() => goToSubScreen("bibaxVisibility")} />
+        <SecurityRow icon={<NavIcon name="user-plus" size={17} color={COLORS.amber} />} title="Invitations Bibax" onClick={() => goToSubScreen("bibaxInvites")} />
         <div style={{ borderBottom: "none" }}>
-          <SecurityRow icon={<NavIcon name="x" size={17} color={COLORS.amber} />} title="Utilisateurs bloqués" onClick={() => goToSubScreen("blockedUsers")} />
+          <SecurityRow icon={<NavIcon name="no-entry" size={17} color={COLORS.amber} />} title="Utilisateurs bloqués" onClick={() => goToSubScreen("blockedUsers")} />
         </div>
       </SecurityGroup>
 
       <SecurityGroup title="Appareils & données">
-        <SecurityRow icon={<NavIcon name="link" size={17} color={COLORS.amber} />} title="Appareils connectés" onClick={() => goToSubScreen("devices")} />
-        <SecurityRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Télécharger mes données" subtitle="Exporter mes données Bibamus" onClick={() => goToSubScreen("dataExport")} />
+        <SecurityRow icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />} title="Appareils connectés" onClick={() => goToSubScreen("devices")} />
+        <SecurityRow icon={<NavIcon name="download" size={17} color={COLORS.amber} />} title="Télécharger mes données" subtitle="Exporter mes données Bibamus" onClick={() => goToSubScreen("dataExport")} />
         <SecurityRow icon={<NavIcon name="check" size={17} color={COLORS.amber} />} title="Permissions & consentements" subtitle="Gérer les autorisations et préférences" onClick={() => goToSubScreen("permissions")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow
-            icon={<NavIcon name="logout" size={17} color={FLUO_RED} />}
+            icon={<NavIcon name="trash" size={17} color={FLUO_RED} />}
             title="Réinitialiser les sessions"
             subtitle="Déconnecter tous les appareils sauf celui-ci"
             titleColor={FLUO_RED}
@@ -137,7 +138,7 @@ export function PasswordChangeScreen({ onBack }) {
     return (
       <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
-        <PageTitleWithBar>Mot de passe</PageTitleWithBar>
+        <PageTitleWithBar icon={<NavIcon name="lock" size={22} color={COLORS.amber} />}>Mot de passe</PageTitleWithBar>
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
           <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: 0 }}>Mot de passe mis à jour.</p>
         </div>
@@ -149,7 +150,7 @@ export function PasswordChangeScreen({ onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>Mot de passe</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="lock" size={22} color={COLORS.amber} />}>Mot de passe</PageTitleWithBar>
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Nouveau mot de passe</label>
       <input
@@ -198,7 +199,7 @@ export function EmailVerifyScreen({ session, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>E-mail vérifié</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="mail" size={22} color={COLORS.amber} />}>E-mail vérifié</PageTitleWithBar>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
         <p style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: emailVerified ? COLORS.amber : FLUO_RED }}>{emailVerified ? "✓ Vérifié" : "✗ Non vérifié"}</p>
@@ -237,7 +238,7 @@ export function ResetSessionsScreen({ onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>Réinitialiser les sessions</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="trash" size={22} color={COLORS.amber} />}>Réinitialiser les sessions</PageTitleWithBar>
 
       <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
         Déconnecte tous les autres appareils actuellement connectés à votre compte — celui-ci reste connecté.
@@ -289,7 +290,7 @@ export function DataExportScreen({ profile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>Télécharger mes données</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="download" size={22} color={COLORS.amber} />}>Télécharger mes données</PageTitleWithBar>
       <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
         Exporte les informations de votre profil dans un fichier JSON téléchargeable. L'export de l'historique complet (check-ins, dégustations, Stories) arrivera dans une prochaine version.
       </p>

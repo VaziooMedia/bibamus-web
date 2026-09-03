@@ -483,6 +483,44 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M4 12h11.5M12.5 8.5 16 12l-3.5 3.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
+    case "faceid":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M4 8V6a2 2 0 0 1 2-2h2M18 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M6 20H4a2 2 0 0 1-2-2v-2" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="9" cy="10.5" r="1" fill={color} />
+          <circle cx="15" cy="10.5" r="1" fill={color} />
+          <path d="M9 15c.8.7 1.9 1 3 1s2.2-.3 3-1" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "user-plus":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="9.5" cy="8" r="3.3" stroke={color} strokeWidth="1.7" />
+          <path d="M3 20c.6-3.6 3.2-5.8 6.5-5.8s5.9 2.2 6.5 5.8" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M18.5 8v5.5M15.8 10.7h5.4" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "no-entry":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
+          <path d="M5.8 5.8l12.4 12.4" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "smartphone":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="6" y="2.5" width="12" height="19" rx="2.2" stroke={color} strokeWidth="1.7" />
+          <path d="M10.5 18.5h3" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "download":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M12 3.5v11M8 11l4 4 4-4" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4.5 17v2.5A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5V17" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
     case "trash":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

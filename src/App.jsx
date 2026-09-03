@@ -1758,13 +1758,13 @@ export default function App() {
               <ComingSoonScreen
                 icon={
                   {
-                    biometric: "user",
+                    biometric: "faceid",
                     publicProfile: "eye",
                     checkinVisibility: "map-pin-check",
                     bibaxVisibility: "users",
-                    bibaxInvites: "user",
-                    blockedUsers: "x",
-                    devices: "link",
+                    bibaxInvites: "user-plus",
+                    blockedUsers: "no-entry",
+                    devices: "smartphone",
                     permissions: "check",
                   }[viewedSecuritySub] || "lock"
                 }
