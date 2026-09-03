@@ -11,6 +11,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PageTitleWithBar } from "./AccountScreen.jsx";
+import bibaxIconUrl from "../assets/brand/bibax.svg";
 import { updatePassword, loadMyBlockedUsers, unblockUser } from "../data/sharedDirectories.js";
 import { supabase } from "../supabaseClient.js";
 
@@ -255,9 +256,9 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
           </p>
         )}
         <PermRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Appareil photo" subtitle="Scanner, ajouter des photos" disabled badge="App native" />
-        <PermRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Photos" subtitle="Ajouter ou enregistrer des visuels" disabled badge="App native" />
-        <PermRow icon={<NavIcon name="mail" size={17} color={COLORS.amber} />} title="Microphone" subtitle="Notes vocales ou contenu audio" disabled badge="App native" />
-        <PermRow icon={<NavIcon name="user-plus" size={17} color={COLORS.amber} />} title="Contacts" subtitle="Trouver des Bibax dans vos contacts" disabled badge="App native" />
+        <PermRow icon={<NavIcon name="images" size={17} color={COLORS.amber} />} title="Photos" subtitle="Ajouter ou enregistrer des visuels" disabled badge="App native" />
+        <PermRow icon={<NavIcon name="microphone" size={17} color={COLORS.amber} />} title="Microphone" subtitle="Notes vocales ou contenu audio" disabled badge="App native" />
+        <PermRow icon={<img src={bibaxIconUrl} alt="" style={{ width: "17px", height: "17px" }} />} title="Contacts" subtitle="Trouver des Bibax dans vos contacts" disabled badge="App native" />
         <div style={{ borderBottom: "none" }}>
           <PermRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Calendrier" subtitle="Ajouter vos évènements Bibamus" disabled badge="App native" />
         </div>
@@ -274,11 +275,11 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
         <PermRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Données d'usage anonymisées" subtitle="Aider à améliorer Bibamus">
           <MiniToggle checked={consents.consentUsageData !== false} onChange={(v) => updateConsent("consentUsageData", v)} />
         </PermRow>
-        <PermRow icon={<NavIcon name="mail" size={17} color={COLORS.amber} />} title="Communications partenaires" subtitle="Offres et évènements partenaires">
+        <PermRow icon={<NavIcon name="speaker" size={17} color={COLORS.amber} />} title="Communications partenaires" subtitle="Offres et évènements partenaires">
           <MiniToggle checked={consents.consentPartnerComms === true} onChange={(v) => updateConsent("consentPartnerComms", v)} />
         </PermRow>
         <div style={{ borderBottom: "none" }}>
-          <PermRow icon={<NavIcon name="help-circle" size={17} color={COLORS.amber} />} title="Études & sondages" subtitle="Invitations à donner votre avis">
+          <PermRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Études & sondages" subtitle="Invitations à donner votre avis">
             <MiniToggle checked={consents.consentSurveys === true} onChange={(v) => updateConsent("consentSurveys", v)} />
           </PermRow>
         </div>
@@ -302,7 +303,7 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
           </span>
           <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
         </button>
-        <PermRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Gérer mon historique" subtitle="Check-ins, recherches, activité" disabled badge="Bientôt" />
+        <PermRow icon={<NavIcon name="clock" size={17} color={COLORS.amber} />} title="Gérer mon historique" subtitle="Check-ins, recherches, activité" disabled badge="Bientôt" />
         <PermRow icon={<NavIcon name="trash" size={17} color={COLORS.amber} />} title="Supprimer certaines données" subtitle="Demandes ciblées de suppression" disabled badge="Bientôt" />
         <div style={{ borderBottom: "none" }}>
           <PermRow icon={<NavIcon name="star" size={17} color={COLORS.amber} />} title="Effacer les suggestions" subtitle="Réinitialiser mes préférences de recommandation" disabled badge="Bientôt" />
@@ -310,6 +311,21 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
       </div>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", textAlign: "center" }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            border: `2px solid ${COLORS.amber}`,
+            marginBottom: "10px",
+            lineHeight: 0,
+          }}
+        >
+          <NavIcon name="lock" size={17} color={COLORS.amber} />
+        </span>
         <p style={{ fontSize: "13.5px", fontWeight: 700, margin: 0 }}>Vos données restent sous votre contrôle</p>
         <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px", marginBottom: 0 }}>
           Vous pouvez modifier vos permissions à tout moment et consulter notre politique de confidentialité.

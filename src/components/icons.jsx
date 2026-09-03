@@ -483,6 +483,37 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M4 12h11.5M12.5 8.5 16 12l-3.5 3.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
+    case "images":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="3.5" y="6.5" width="14" height="14" rx="2" stroke={color} strokeWidth="1.7" />
+          <circle cx="8" cy="11" r="1.4" stroke={color} strokeWidth="1.5" />
+          <path d="M3.5 16.5l3.5-3.5 2 2 3-3 5.5 5.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M7.5 3.5h10a2 2 0 0 1 2 2v10" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "microphone":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="9" y="2.5" width="6" height="11" rx="3" stroke={color} strokeWidth="1.7" />
+          <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M12 18v3.5M9 21.5h6" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "speaker":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "clock":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
+          <path d="M12 7v5.3l3.5 2" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     case "faceid":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
