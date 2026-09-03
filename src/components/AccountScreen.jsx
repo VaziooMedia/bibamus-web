@@ -67,7 +67,10 @@ function AccountRow({ icon, title, value, onClick, titleColor }) {
 function AccountGroup({ title, children }) {
   return (
     <div style={{ marginBottom: "22px" }}>
-      <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: "0 0 8px 2px" }}>{title}</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
+      </div>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
     </div>
   );
@@ -425,6 +428,22 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
         />
       )}
 
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Écran générique "Bientôt disponible" pour les sous-pages de Paramètres — respecte
+// systématiquement la même règle de titre (icône si fournie, sinon barre verte) que le reste
+// des Paramètres, pour ne plus jamais avoir à corriger un titre non conforme.
+export function SettingsComingSoonScreen({ title, icon, onBack }) {
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={icon}>{title}</PageTitleWithBar>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
+        <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>Cette section arrive bientôt.</p>
+      </div>
       <PageFooterNav onBack={onBack} />
     </div>
   );

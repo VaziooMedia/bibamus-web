@@ -11,7 +11,8 @@ import { BottomNav } from "./components/ui.jsx";
 import { ErrorBoundary, installGlobalCrashReporting } from "./components/ErrorBoundary.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
 import { BarcodeScannerModal } from "./components/BarcodeScannerModal.jsx";
-import { BibamusLogoFull } from "./components/icons.jsx";
+import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
+import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
 import { SessionHubScreen, RepertoireHubScreen, ComingSoonScreen } from "./components/HubScreens.jsx";
 import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
@@ -38,7 +39,7 @@ import { MyProfileScreen } from "./components/MyProfileScreen.jsx";
 import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
-import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen } from "./components/AccountScreen.jsx";
+import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen } from "./components/SecurityScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
@@ -1755,18 +1756,24 @@ export default function App() {
             {screen === "securityResetSessions" && <ResetSessionsScreen onBack={() => setScreen("security")} />}
             {screen === "securityDataExport" && <DataExportScreen profile={profile} onBack={() => setScreen("security")} />}
             {screen === "securityComingSoon" && (
-              <ComingSoonScreen
+              <SettingsComingSoonScreen
                 icon={
-                  {
-                    biometric: "faceid",
-                    publicProfile: "eye",
-                    checkinVisibility: "map-pin-check",
-                    bibaxVisibility: "users",
-                    bibaxInvites: "user-plus",
-                    blockedUsers: "no-entry",
-                    devices: "smartphone",
-                    permissions: "check",
-                  }[viewedSecuritySub] || "lock"
+                  <NavIcon
+                    name={
+                      {
+                        biometric: "faceid",
+                        publicProfile: "eye",
+                        checkinVisibility: "map-pin-check",
+                        bibaxVisibility: "users",
+                        bibaxInvites: "user-plus",
+                        blockedUsers: "no-entry",
+                        devices: "smartphone",
+                        permissions: "check",
+                      }[viewedSecuritySub] || "lock"
+                    }
+                    size={22}
+                    color={COLORS.amber}
+                  />
                 }
                 title={
                   {
@@ -1784,8 +1791,23 @@ export default function App() {
               />
             )}
             {screen === "settingsCategory" && (
-              <ComingSoonScreen
-                eyebrow="PARAMÈTRES"
+              <SettingsComingSoonScreen
+                icon={
+                  <NavIcon
+                    name={
+                      {
+                        notifications: "bell",
+                        preferences: "sliders",
+                        appearance: "brush",
+                        connect: "link",
+                        help: "help-circle",
+                        about: "info",
+                      }[viewedSettingsCategory] || "settings"
+                    }
+                    size={22}
+                    color={COLORS.amber}
+                  />
+                }
                 title={
                   {
                     account: "Compte",

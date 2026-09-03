@@ -48,7 +48,10 @@ function SecurityRow({ icon, title, subtitle, onClick, titleColor }) {
 function SecurityGroup({ title, children }) {
   return (
     <div style={{ marginBottom: "22px" }}>
-      <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: "0 0 8px 2px" }}>{title}</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
+      </div>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
     </div>
   );
