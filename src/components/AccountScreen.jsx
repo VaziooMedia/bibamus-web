@@ -483,7 +483,7 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="eye" size={22} color={COLORS.amber} />}>Profil public</PageTitleWithBar>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisissez ce que vos Bibax peuvent voir sur votre profil.</p>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisissez ce que les autres utilisateurs peuvent voir sur votre profil.</p>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
         <VisibilityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Prénom">
