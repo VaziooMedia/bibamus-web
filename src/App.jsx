@@ -1731,7 +1731,7 @@ export default function App() {
               <SettingsScreen
                 myName={profile.name}
                 profile={profile}
-                onBack={() => setScreen("myInfo")}
+                onBack={() => setScreen("profile")}
                 isAdmin={!!profile.isAdmin}
                 goToImport={() => setScreen("importData")}
                 goToDeleteAccount={() => setScreen("deleteAccount")}
