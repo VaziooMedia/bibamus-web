@@ -28,10 +28,11 @@ async function generateCodeChallenge(codeVerifier) {
 
 // Lance la connexion — redirige vers la page d'autorisation Spotify. Le vérificateur est
 // conservé en local (nécessaire pour l'échange final), jamais transmis à Spotify lui-même.
-export async function redirectToSpotifyAuth() {
+export async function redirectToSpotifyAuth(returnScreen = "connectSpotify") {
   const verifier = generateCodeVerifier();
   const challenge = await generateCodeChallenge(verifier);
   localStorage.setItem("bibamus-spotify-verifier", verifier);
+  localStorage.setItem("bibamus-spotify-return-screen", returnScreen);
 
   const params = new URLSearchParams({
     client_id: SPOTIFY_CLIENT_ID,

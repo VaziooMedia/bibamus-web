@@ -38,6 +38,7 @@ function StatusBadge({ connected }) {
         borderRadius: "50%",
         border: `2px solid ${connected ? COLORS.amber : "#FF3B3B"}`,
         flexShrink: 0,
+        lineHeight: 0,
       }}
     >
       <NavIcon name={connected ? "check" : "x"} size={11} color={connected ? COLORS.amber : "#FF3B3B"} />

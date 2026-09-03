@@ -224,8 +224,11 @@ export default function App() {
     if (!spotifyAuthCode || !profileLoaded || !session?.user?.id) return;
     const code = spotifyAuthCode;
     setSpotifyAuthCode(null);
+    const returnScreen = localStorage.getItem("bibamus-spotify-return-screen");
+    localStorage.removeItem("bibamus-spotify-return-screen");
     completeSpotifyAuth(code, session.user.id).then((result) => {
       setSpotifyConnectResult(result);
+      if (returnScreen) setScreen(returnScreen);
       if (result.ok) {
         alert(`Compte Spotify connecté${result.displayName ? ` : ${result.displayName}` : ""} !`);
       } else if (result.error) {
