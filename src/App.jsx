@@ -1886,7 +1886,7 @@ export default function App() {
                     options: [
                       { key: "distance", label: "Distance" },
                       { key: "favorites", label: "Favoris" },
-                      { key: "popularity", label: "Popularité" },
+                      { key: "popularity", label: "Popularité", disabled: true },
                       { key: "alphabetical", label: "Alphabétique" },
                     ],
                     field: "prefVenueSort",

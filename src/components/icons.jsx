@@ -621,6 +621,16 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <circle cx="12" cy="12" r="4" fill={color} />
         </svg>
       );
+    case "weight":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="2.5" y="9" width="3" height="6" rx="1" stroke={color} strokeWidth="1.7" />
+          <rect x="18.5" y="9" width="3" height="6" rx="1" stroke={color} strokeWidth="1.7" />
+          <path d="M5.5 12h13" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <rect x="7" y="7" width="3" height="10" rx="1" stroke={color} strokeWidth="1.7" />
+          <rect x="14" y="7" width="3" height="10" rx="1" stroke={color} strokeWidth="1.7" />
+        </svg>
+      );
     case "faceid":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

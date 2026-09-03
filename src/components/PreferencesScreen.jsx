@@ -107,7 +107,8 @@ export function ChoiceScreen({ icon, title, description, options, value, onChang
         {options.map((opt, i) => (
           <button
             key={opt.key}
-            onClick={() => onChange(opt.key)}
+            onClick={() => !opt.disabled && onChange(opt.key)}
+            disabled={opt.disabled}
             style={{
               display: "flex",
               alignItems: "center",
@@ -118,13 +119,14 @@ export function ChoiceScreen({ icon, title, description, options, value, onChang
               borderBottom: i < options.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
               padding: "16px 4px",
               textAlign: "left",
-              cursor: "pointer",
+              cursor: opt.disabled ? "not-allowed" : "pointer",
               color: COLORS.ink,
               fontSize: "14.5px",
               fontWeight: value === opt.key ? 700 : 500,
+              opacity: opt.disabled ? 0.5 : 1,
             }}
           >
-            {opt.label}
+            <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>{opt.label}</span>
             {value === opt.key && <NavIcon name="check" size={18} color={COLORS.amber} />}
           </button>
         ))}
@@ -175,7 +177,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar icon={<NavIcon name="bottle" size={22} color={COLORS.amber} />}>Volumes</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="weight" size={22} color={COLORS.amber} />}>Unités de mesure</PageTitleWithBar>
 
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
         <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
@@ -196,7 +198,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
 
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
         <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
-          <NavIcon name="ruler" size={17} color={COLORS.amber} />
+          <NavIcon name="weight" size={17} color={COLORS.amber} />
         </span>
         <span style={{ fontWeight: 700, fontSize: "14px" }}>Poids</span>
       </div>
@@ -223,8 +225,6 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
     onSaveProfile(patch);
   };
 
-  const distanceLabels = { km: "Kilomètre (km)", mi: "Miles (mi)" };
-  const temperatureLabels = { celsius: "Celsius (°C)", fahrenheit: "Fahrenheit (°F)" };
   const venueSortLabels = { distance: "Distance", favorites: "Favoris", popularity: "Popularité", alphabetical: "Alphabétique" };
 
   return (
@@ -233,29 +233,22 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
       <PageTitleWithBar icon={<NavIcon name="sliders" size={22} color={COLORS.amber} />}>Préférences</PageTitleWithBar>
 
       <PrefGroup title="Langue">
-        <NavRow icon={<NavIcon name="world-map" size={17} color={COLORS.amber} />} title="Langue de l'app" value="Français" onClick={() => goToChoice("language")} last />
+        <NavRow icon={<NavIcon name="world-map" size={17} color={COLORS.amber} />} title="Langue de l'app" value="Français" disabled last />
       </PrefGroup>
 
-      <PrefGroup title="Unités">
-        <NavRow icon={<NavIcon name="ruler" size={17} color={COLORS.amber} />} title="Distances" value={distanceLabels[p.prefDistanceUnit || "km"]} onClick={() => goToChoice("distance")} />
-        <NavRow icon={<NavIcon name="thermometer" size={17} color={COLORS.amber} />} title="Température" value={temperatureLabels[p.prefTemperatureUnit || "celsius"]} onClick={() => goToChoice("temperature")} />
-        <NavRow icon={<NavIcon name="bottle" size={17} color={COLORS.amber} />} title="Volumes" onClick={goToVolumeWeight} />
+      <PrefGroup title="Unités & formats">
+        <NavRow icon={<NavIcon name="ruler" size={17} color={COLORS.amber} />} title="Distances" value="Kilomètre (km)" disabled />
+        <NavRow icon={<NavIcon name="thermometer" size={17} color={COLORS.amber} />} title="Température" value="Celsius (°C)" disabled />
+        <NavRow icon={<NavIcon name="weight" size={17} color={COLORS.amber} />} title="Unités de mesure" onClick={goToVolumeWeight} />
         <NavRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Format date" value="JJ/MM/AAAA" disabled />
-        <ToggleRow
-          icon={<NavIcon name="clock" size={17} color={COLORS.amber} />}
-          title="Format horaire"
-          trailingLabel="24h"
-          checked={p.prefTimeFormat24h !== false}
-          onChange={(v) => update({ prefTimeFormat24h: v })}
-          last
-        />
+        <NavRow icon={<NavIcon name="clock" size={17} color={COLORS.amber} />} title="Format horaire" value="24h" disabled last />
       </PrefGroup>
 
       <PrefGroup title="Expérience Bibamus">
         <NavRow icon={<NavIcon name="sort" size={17} color={COLORS.amber} />} title="Tri des lieux" value={venueSortLabels[p.prefVenueSort || "distance"]} onClick={() => goToChoice("venueSort")} />
-        <ToggleRow icon={<NavIcon name="ai" size={17} color={COLORS.amber} />} title="Suggestions personnalisées" disabled badge="Bientôt" checked={false} onChange={() => {}} />
-        <ToggleRow icon={<NavIcon name="play" size={17} color={COLORS.amber} />} title="Lecture auto des aperçus" disabled badge="Bientôt" checked={false} onChange={() => {}} />
-        <ToggleRow icon={<NavIcon name="vibrate" size={17} color={COLORS.amber} />} title="Vibrations" disabled badge="App native" checked={false} onChange={() => {}} last />
+        <ToggleRow icon={<NavIcon name="ai" size={17} color={COLORS.amber} />} title="Suggestions personnalisées" disabled checked={false} onChange={() => {}} />
+        <ToggleRow icon={<NavIcon name="play" size={17} color={COLORS.amber} />} title="Lecture auto des aperçus" disabled checked={false} onChange={() => {}} />
+        <ToggleRow icon={<NavIcon name="vibrate" size={17} color={COLORS.amber} />} title="Vibrations" disabled checked={false} onChange={() => {}} last />
       </PrefGroup>
 
       <PrefGroup title="Check-ins & activité">
