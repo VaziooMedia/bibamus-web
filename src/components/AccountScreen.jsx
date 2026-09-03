@@ -24,7 +24,7 @@ function splitPhone(stored) {
   return { prefix: "", number: stored };
 }
 
-function PageTitleWithBar({ children, size = "26px", icon }) {
+export function PageTitleWithBar({ children, size = "26px", icon }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 20px 0" }}>
       {icon ? <span style={{ display: "flex", alignItems: "center", lineHeight: 0 }}>{icon}</span> : <span style={{ width: "5px", height: "24px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />}

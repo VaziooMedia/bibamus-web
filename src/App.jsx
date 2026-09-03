@@ -39,6 +39,7 @@ import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen } from "./components/AccountScreen.jsx";
+import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen } from "./components/SecurityScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
@@ -846,6 +847,7 @@ export default function App() {
   const [viewedBibaxPhotos, setViewedBibaxPhotos] = useState(null);
   const [viewedSettingsCategory, setViewedSettingsCategory] = useState(null);
   const [viewedAccountField, setViewedAccountField] = useState(null);
+  const [viewedSecuritySub, setViewedSecuritySub] = useState(null);
   const [viewedBreweryId, setViewedBreweryId] = useState(null);
   const [viewedBrandId, setViewedBrandId] = useState(null);
 
@@ -1724,9 +1726,61 @@ export default function App() {
                     setScreen("account");
                     return;
                   }
+                  if (key === "security") {
+                    setScreen("security");
+                    return;
+                  }
                   setViewedSettingsCategory(key);
                   setScreen("settingsCategory");
                 }}
+              />
+            )}
+            {screen === "security" && (
+              <SecurityScreen
+                session={session}
+                onBack={() => setScreen("settings")}
+                goToSubScreen={(sub) => {
+                  const realScreens = { password: "securityPassword", emailVerify: "securityEmailVerify", resetSessions: "securityResetSessions", dataExport: "securityDataExport" };
+                  if (realScreens[sub]) {
+                    setScreen(realScreens[sub]);
+                    return;
+                  }
+                  setViewedSecuritySub(sub);
+                  setScreen("securityComingSoon");
+                }}
+              />
+            )}
+            {screen === "securityPassword" && <PasswordChangeScreen onBack={() => setScreen("security")} />}
+            {screen === "securityEmailVerify" && <EmailVerifyScreen session={session} onBack={() => setScreen("security")} />}
+            {screen === "securityResetSessions" && <ResetSessionsScreen onBack={() => setScreen("security")} />}
+            {screen === "securityDataExport" && <DataExportScreen profile={profile} onBack={() => setScreen("security")} />}
+            {screen === "securityComingSoon" && (
+              <ComingSoonScreen
+                icon={
+                  {
+                    biometric: "user",
+                    publicProfile: "eye",
+                    checkinVisibility: "map-pin-check",
+                    bibaxVisibility: "users",
+                    bibaxInvites: "user",
+                    blockedUsers: "x",
+                    devices: "link",
+                    permissions: "check",
+                  }[viewedSecuritySub] || "lock"
+                }
+                title={
+                  {
+                    biometric: "Connexion biométrique",
+                    publicProfile: "Profil public",
+                    checkinVisibility: "Visibilité des check-ins",
+                    bibaxVisibility: "Visibilité des Bibax",
+                    bibaxInvites: "Invitations Bibax",
+                    blockedUsers: "Utilisateurs bloqués",
+                    devices: "Appareils connectés",
+                    permissions: "Permissions & consentements",
+                  }[viewedSecuritySub] || ""
+                }
+                onBack={() => setScreen("security")}
               />
             )}
             {screen === "settingsCategory" && (
@@ -2130,7 +2184,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

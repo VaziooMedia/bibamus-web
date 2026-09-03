@@ -1,0 +1,300 @@
+// ============================================================
+// Écran "Sécurité & confidentialité" — accessible depuis
+// Paramètres. Certaines lignes sont réellement fonctionnelles
+// (mot de passe, vérification e-mail, déconnexion des autres
+// appareils, export de données) ; les autres n'ont pas encore de
+// fonctionnalité réelle derrière et affichent un écran honnête
+// "Bientôt disponible" plutôt qu'un bouton trompeur.
+// ============================================================
+import React, { useState } from "react";
+import { COLORS } from "../constants.js";
+import { NavIcon } from "./icons.jsx";
+import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
+import { PageTitleWithBar } from "./AccountScreen.jsx";
+import { updatePassword } from "../data/sharedDirectories.js";
+import { supabase } from "../supabaseClient.js";
+
+const FLUO_RED = "#FF3B3B";
+
+function SecurityRow({ icon, title, value, onClick, valueColor }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        background: "none",
+        border: "none",
+        borderBottom: `1px solid ${COLORS.paperAlt}`,
+        padding: "14px 4px",
+        textAlign: "left",
+        cursor: "pointer",
+        width: "100%",
+        color: COLORS.ink,
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0 }}>{icon}</span>
+      <span style={{ flex: 1, minWidth: 0, fontWeight: 600, fontSize: "14px" }}>{title}</span>
+      {value && <span style={{ fontSize: "13px", color: valueColor || COLORS.inkSoft, marginRight: "4px" }}>{value}</span>}
+      <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
+    </button>
+  );
+}
+
+function SecurityGroup({ title, children }) {
+  return (
+    <div style={{ marginBottom: "22px" }}>
+      <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: "0 0 8px 2px" }}>{title}</h2>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
+    </div>
+  );
+}
+
+export function SecurityScreen({ session, onBack, goToSubScreen }) {
+  const emailVerified = !!session?.user?.email_confirmed_at;
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="lock" size={22} color={COLORS.amber} />}>Sécurité & confidentialité</PageTitleWithBar>
+
+      <SecurityGroup title="Sécurité">
+        <SecurityRow icon={<NavIcon name="lock" size={17} color={COLORS.amber} />} title="Mot de passe" value="Modifier" onClick={() => goToSubScreen("password")} />
+        <SecurityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Connexion biométrique" value="Face ID / empreinte" onClick={() => goToSubScreen("biometric")} />
+        <div style={{ borderBottom: "none" }}>
+          <SecurityRow
+            icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
+            title="E-mail vérifié"
+            value={emailVerified ? "✓ Vérifié" : "✗ Non vérifié"}
+            valueColor={emailVerified ? COLORS.amber : FLUO_RED}
+            onClick={() => goToSubScreen("emailVerify")}
+          />
+        </div>
+      </SecurityGroup>
+
+      <SecurityGroup title="Confidentialité">
+        <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" value="Choisir qui peut voir" onClick={() => goToSubScreen("publicProfile")} />
+        <SecurityRow icon={<NavIcon name="map-pin-check" size={17} color={COLORS.amber} />} title="Visibilité des check-ins" onClick={() => goToSubScreen("checkinVisibility")} />
+        <SecurityRow icon={<NavIcon name="users" size={17} color={COLORS.amber} />} title="Visibilité des Bibax" onClick={() => goToSubScreen("bibaxVisibility")} />
+        <SecurityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Invitations Bibax" onClick={() => goToSubScreen("bibaxInvites")} />
+        <div style={{ borderBottom: "none" }}>
+          <SecurityRow icon={<NavIcon name="x" size={17} color={COLORS.amber} />} title="Utilisateurs bloqués" onClick={() => goToSubScreen("blockedUsers")} />
+        </div>
+      </SecurityGroup>
+
+      <SecurityGroup title="Appareils & données">
+        <SecurityRow icon={<NavIcon name="link" size={17} color={COLORS.amber} />} title="Appareils connectés" onClick={() => goToSubScreen("devices")} />
+        <SecurityRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Télécharger mes données" value="Exporter" onClick={() => goToSubScreen("dataExport")} />
+        <SecurityRow icon={<NavIcon name="check" size={17} color={COLORS.amber} />} title="Permissions & consentements" onClick={() => goToSubScreen("permissions")} />
+        <div style={{ borderBottom: "none" }}>
+          <SecurityRow
+            icon={<NavIcon name="logout" size={17} color={FLUO_RED} />}
+            title="Réinitialiser les sessions"
+            value="Déconnecter les autres appareils"
+            valueColor={FLUO_RED}
+            onClick={() => goToSubScreen("resetSessions")}
+          />
+        </div>
+      </SecurityGroup>
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Mot de passe — réellement fonctionnel (supabase.auth.updateUser).
+export function PasswordChangeScreen({ onBack }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [done, setDone] = useState(false);
+
+  const handleSave = async () => {
+    setError(null);
+    if (password.length < 6) {
+      setError("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Les deux mots de passe ne correspondent pas.");
+      return;
+    }
+    setSaving(true);
+    const result = await updatePassword(password);
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    setDone(true);
+  };
+
+  if (done) {
+    return (
+      <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+        <PageHeader onBack={onBack} />
+        <PageTitleWithBar>Mot de passe</PageTitleWithBar>
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
+          <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: 0 }}>Mot de passe mis à jour.</p>
+        </div>
+        <PageFooterNav onBack={onBack} />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar>Mot de passe</PageTitleWithBar>
+
+      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Nouveau mot de passe</label>
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px", marginBottom: "16px" }}
+      />
+      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Confirmer le mot de passe</label>
+      <input
+        type="password"
+        value={confirm}
+        onChange={(e) => setConfirm(e.target.value)}
+        style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
+      />
+      {error && <p style={{ fontSize: "12.5px", color: FLUO_RED, marginTop: "10px" }}>{error}</p>}
+
+      <PrimaryButton onClick={handleSave} disabled={saving} style={{ width: "100%", marginTop: "20px" }}>
+        {saving ? "Enregistrement..." : "Enregistrer"}
+      </PrimaryButton>
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// E-mail vérifié — statut réel (session.user.email_confirmed_at), avec renvoi réel du mail de
+// confirmation si besoin.
+export function EmailVerifyScreen({ session, onBack }) {
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState(null);
+  const emailVerified = !!session?.user?.email_confirmed_at;
+
+  const handleResend = async () => {
+    setError(null);
+    setSending(true);
+    const { error: err } = await supabase.auth.resend({ type: "signup", email: session.user.email });
+    setSending(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setSent(true);
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar>E-mail vérifié</PageTitleWithBar>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
+        <p style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: emailVerified ? COLORS.amber : FLUO_RED }}>{emailVerified ? "✓ Vérifié" : "✗ Non vérifié"}</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "6px 0 0" }}>{session?.user?.email}</p>
+      </div>
+
+      {!emailVerified && !sent && (
+        <PrimaryButton onClick={handleResend} disabled={sending} style={{ width: "100%" }}>
+          {sending ? "Envoi..." : "Renvoyer l'e-mail de confirmation"}
+        </PrimaryButton>
+      )}
+      {sent && <p style={{ fontSize: "13px", color: COLORS.amber, textAlign: "center" }}>E-mail renvoyé — vérifiez votre boîte de réception.</p>}
+      {error && <p style={{ fontSize: "12.5px", color: FLUO_RED, marginTop: "10px" }}>{error}</p>}
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Réinitialiser les sessions — réellement fonctionnel (supabase.auth.signOut scope "others").
+export function ResetSessionsScreen({ onBack }) {
+  const [confirming, setConfirming] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleReset = async () => {
+    setConfirming(false);
+    const { error: err } = await supabase.auth.signOut({ scope: "others" });
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setDone(true);
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar>Réinitialiser les sessions</PageTitleWithBar>
+
+      <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
+        Déconnecte tous les autres appareils actuellement connectés à votre compte — celui-ci reste connecté.
+      </p>
+
+      {done ? (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
+          <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: 0 }}>Les autres appareils ont été déconnectés.</p>
+        </div>
+      ) : confirming ? (
+        <>
+          <p style={{ fontSize: "13px", color: FLUO_RED, marginBottom: "14px", textAlign: "center" }}>Confirmer la déconnexion de tous les autres appareils ?</p>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button onClick={() => setConfirming(false)} style={{ flex: 1, padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontWeight: 700, cursor: "pointer" }}>
+              Annuler
+            </button>
+            <button onClick={handleReset} style={{ flex: 1, padding: "14px", borderRadius: "12px", border: `2px solid ${FLUO_RED}`, background: "none", color: FLUO_RED, fontWeight: 700, cursor: "pointer" }}>
+              Confirmer
+            </button>
+          </div>
+        </>
+      ) : (
+        <PrimaryButton onClick={() => setConfirming(true)} style={{ width: "100%" }}>
+          Déconnecter les autres appareils
+        </PrimaryButton>
+      )}
+      {error && <p style={{ fontSize: "12.5px", color: FLUO_RED, marginTop: "10px" }}>{error}</p>}
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Télécharger mes données — export réel des données déjà disponibles côté client (profil),
+// en JSON téléchargeable. Un export plus complet (historique, Stories, etc.) pourrait être
+// ajouté plus tard côté serveur.
+export function DataExportScreen({ profile, onBack }) {
+  const handleExport = () => {
+    const data = { profile, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bibamus-mes-donnees.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar>Télécharger mes données</PageTitleWithBar>
+      <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
+        Exporte les informations de votre profil dans un fichier JSON téléchargeable. L'export de l'historique complet (check-ins, dégustations, Stories) arrivera dans une prochaine version.
+      </p>
+      <PrimaryButton onClick={handleExport} style={{ width: "100%" }}>
+        Télécharger mes données
+      </PrimaryButton>
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
