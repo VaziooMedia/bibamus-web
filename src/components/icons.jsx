@@ -791,9 +791,25 @@ export function SpotifyIcon({ size = 22 }) {
 import appleLogoUrl from "../assets/brand/apple.svg";
 
 export function AppleIcon({ size = 22 }) {
+  const glyphSize = Math.round(size * 0.62);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
-      <img src={appleLogoUrl} alt="Apple" width={Math.round(size * 0.62)} height={Math.round(size * 0.62)} style={{ display: "block" }} />
+      <span
+        style={{
+          display: "block",
+          width: glyphSize,
+          height: glyphSize,
+          backgroundColor: "#fff",
+          WebkitMaskImage: `url(${appleLogoUrl})`,
+          maskImage: `url(${appleLogoUrl})`,
+          WebkitMaskSize: "contain",
+          maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center",
+          maskPosition: "center",
+        }}
+      />
     </span>
   );
 }

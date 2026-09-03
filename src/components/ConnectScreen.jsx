@@ -30,18 +30,18 @@ function StatusBadge({ connected }) {
   return (
     <span
       style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        position: "relative",
+        display: "inline-block",
         width: "20px",
         height: "20px",
         borderRadius: "50%",
         border: `2px solid ${connected ? COLORS.amber : "#FF3B3B"}`,
         flexShrink: 0,
-        lineHeight: 0,
       }}
     >
-      <NavIcon name={connected ? "check" : "x"} size={11} color={connected ? COLORS.amber : "#FF3B3B"} />
+      <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", display: "block", lineHeight: 0 }}>
+        <NavIcon name={connected ? "check" : "x"} size={11} color={connected ? COLORS.amber : "#FF3B3B"} />
+      </span>
     </span>
   );
 }
