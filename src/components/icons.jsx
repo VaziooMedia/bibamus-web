@@ -828,6 +828,8 @@ import whatsappLogoUrl from "../assets/brand/whatsapp.svg";
 import xLogoUrl from "../assets/brand/X.svg";
 import threadsLogoUrl from "../assets/brand/threads.svg";
 import linkedinLogoUrl from "../assets/brand/linkedIn.svg";
+import pinterestLogoUrl from "../assets/brand/pinterest.svg";
+import twitchLogoUrl from "../assets/brand/twitch.svg";
 
 // Facebook est déjà un rond plein (fond bleu, "f" blanc) dans le fichier officiel — rien à
 // corriger.
@@ -927,6 +929,22 @@ export function LinkedinIcon({ size = 22 }) {
   return (
     <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
       <img src={linkedinLogoUrl} alt="LinkedIn" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
+}
+
+export function PinterestIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={pinterestLogoUrl} alt="Pinterest" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
+}
+
+export function TwitchIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={twitchLogoUrl} alt="Twitch" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
     </span>
   );
 }

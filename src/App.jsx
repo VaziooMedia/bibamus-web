@@ -39,7 +39,7 @@ import { MyProfileScreen } from "./components/MyProfileScreen.jsx";
 import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
-import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen } from "./components/AccountScreen.jsx";
+import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen, EmailSummaryScreen } from "./components/NotificationsScreen.jsx";
 import { PreferencesScreen, StorySettingsScreen, ChoiceScreen, VolumeWeightScreen } from "./components/PreferencesScreen.jsx";
@@ -385,6 +385,8 @@ export default function App() {
       xUrl: profile.xUrl,
       threadsUrl: profile.threadsUrl,
       linkedinUrl: profile.linkedinUrl,
+      pinterestUrl: profile.pinterestUrl,
+      twitchUrl: profile.twitchUrl,
       displayNameField: profile.displayNameField,
       sharePrenom: profile.sharePrenom,
       shareNom: profile.shareNom,
@@ -441,6 +443,8 @@ export default function App() {
       shareX: profile.shareX,
       shareThreads: profile.shareThreads,
       shareLinkedin: profile.shareLinkedin,
+      sharePinterest: profile.sharePinterest,
+      shareTwitch: profile.shareTwitch,
       shareRecords: profile.shareRecords,
       shareVisitRanking: profile.shareVisitRanking,
       avatarUrl: profile.avatarUrl,
@@ -465,6 +469,8 @@ export default function App() {
     profile.xUrl,
     profile.threadsUrl,
     profile.linkedinUrl,
+    profile.pinterestUrl,
+    profile.twitchUrl,
     profile.displayNameField,
     profile.sharePrenom,
     profile.shareNom,
@@ -521,6 +527,8 @@ export default function App() {
     profile.shareX,
     profile.shareThreads,
     profile.shareLinkedin,
+    profile.sharePinterest,
+    profile.shareTwitch,
     profile.shareRecords,
     profile.shareVisitRanking,
     profile.avatarUrl,
@@ -2063,6 +2071,7 @@ export default function App() {
                 onBack={() => setScreen("settings")}
                 goToField={(field) => {
                   setViewedAccountField(field);
+                  const socialKeys = ["facebook", "instagram", "tiktok", "snapchat", "x", "threads", "linkedin", "pinterest", "twitch"];
                   setScreen(
                     field === "location"
                       ? "accountLocation"
@@ -2072,6 +2081,8 @@ export default function App() {
                       ? "accountEmail"
                       : field === "phone"
                       ? "accountPhone"
+                      : socialKeys.includes(field)
+                      ? "accountSocial"
                       : "accountField"
                   );
                 }}
@@ -2093,6 +2104,9 @@ export default function App() {
             {screen === "accountEmail" && <EmailViewScreen profile={profile} onBack={() => setScreen("account")} />}
             {screen === "accountPhone" && (
               <PhoneEditScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("account")} />
+            )}
+            {screen === "accountSocial" && (
+              <SocialLinkEditScreen field={viewedAccountField} profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("account")} />
             )}
             {screen === "accountPhoto" && (
               <PhotoEditScreen
@@ -2448,7 +2462,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

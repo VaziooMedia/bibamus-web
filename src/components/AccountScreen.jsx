@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS, COUNTRIES, PHONE_PREFIXES, COUNTRY_FLAGS } from "../constants.js";
-import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon } from "./icons.jsx";
+import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
@@ -53,6 +53,25 @@ export function PageTitleWithBar({ children, size = "20px", icon }) {
 function capitalizeFirst(str) {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Réseaux sociaux — préfixe fixe non modifiable par réseau (le lien complet stocké =
+// préfixe + ce que l'utilisateur tape). L'ordre ici fixe aussi l'ordre affiché.
+const SOCIAL_NETWORKS = [
+  { key: "facebook", field: "facebookUrl", label: "Facebook", prefix: "https://www.facebook.com/", icon: <FacebookIcon size={20} /> },
+  { key: "instagram", field: "instagramUrl", label: "Instagram", prefix: "https://www.instagram.com/", icon: <InstagramIcon size={20} /> },
+  { key: "tiktok", field: "tiktokUrl", label: "TikTok", prefix: "https://www.tiktok.com/@", icon: <TiktokIcon size={20} /> },
+  { key: "snapchat", field: "snapchatUrl", label: "Snapchat", prefix: "https://www.snapchat.com/add/", icon: <SnapchatIcon size={20} /> },
+  { key: "x", field: "xUrl", label: "X", prefix: "https://x.com/", icon: <XIcon size={20} /> },
+  { key: "threads", field: "threadsUrl", label: "Threads", prefix: "https://www.threads.net/@", icon: <ThreadsIcon size={20} /> },
+  { key: "linkedin", field: "linkedinUrl", label: "LinkedIn", prefix: "https://www.linkedin.com/in/", icon: <LinkedinIcon size={20} /> },
+  { key: "pinterest", field: "pinterestUrl", label: "Pinterest", prefix: "https://www.pinterest.com/", icon: <PinterestIcon size={20} /> },
+  { key: "twitch", field: "twitchUrl", label: "Twitch", prefix: "https://www.twitch.tv/", icon: <TwitchIcon size={20} /> },
+];
+
+function stripPrefix(value, prefix) {
+  if (!value) return "";
+  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
 }
 
 function AccountRow({ icon, title, value, onClick, titleColor, disabled }) {
@@ -158,22 +177,34 @@ export function AccountScreen({ myName, profile, myUserId, onOpenMyStory, onBack
         </div>
       </AccountGroup>
 
+      <AccountGroup title="Réseaux sociaux">
+        {SOCIAL_NETWORKS.slice(0, -1).map((net) => (
+          <AccountRow key={net.key} icon={net.icon} title={net.label} value={stripPrefix(profile[net.field], net.prefix) || "—"} onClick={() => goToField(net.key)} />
+        ))}
+        <div style={{ borderBottom: "none" }}>
+          {(() => {
+            const net = SOCIAL_NETWORKS[SOCIAL_NETWORKS.length - 1];
+            return <AccountRow icon={net.icon} title={net.label} value={stripPrefix(profile[net.field], net.prefix) || "—"} onClick={() => goToField(net.key)} />;
+          })()}
+        </div>
+      </AccountGroup>
+
       <AccountGroup title="Gestion du compte">
         <AccountRow
           icon={
             <span
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                position: "relative",
+                display: "inline-block",
                 width: "22px",
                 height: "22px",
                 borderRadius: "50%",
                 border: `2px solid ${FLUO_BLUE}`,
-                lineHeight: 0,
               }}
             >
-              <NavIcon name="pause" size={11} color={FLUO_BLUE} />
+              <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", display: "block", lineHeight: 0 }}>
+                <NavIcon name="pause" size={11} color={FLUO_BLUE} />
+              </span>
             </span>
           }
           title="Désactiver mon compte"
@@ -266,6 +297,57 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
 // E-mail — c'est l'identifiant de connexion, figé pour l'instant. Un système de changement
 // d'adresse de connexion est prévu séparément plus tard (implique de reconfirmer l'accès au
 // compte), pas un simple champ texte.
+// Réseaux sociaux — le préfixe (https://www.reseau.com/...) est fixe, non modifiable ;
+// l'utilisateur ne tape que la partie qui le concerne (son identifiant).
+export function SocialLinkEditScreen({ field, profile, onSaveProfile, onBack }) {
+  const net = SOCIAL_NETWORKS.find((n) => n.key === field);
+  const [handle, setHandle] = useState(stripPrefix(profile[net.field], net.prefix));
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const trimmed = handle.trim();
+    await onSaveProfile({ [net.field]: trimmed ? net.prefix + trimmed : "" });
+    setSaving(false);
+    onBack();
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={net.icon}>{net.label}</PageTitleWithBar>
+
+      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Votre lien {net.label}</label>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
+          boxSizing: "border-box",
+          borderRadius: "12px",
+          border: `2px solid ${COLORS.paperAlt}`,
+          background: COLORS.surface,
+          overflow: "hidden",
+        }}
+      >
+        <span style={{ padding: "14px 0 14px 12px", fontSize: "14px", color: COLORS.inkSoft, whiteSpace: "nowrap", flexShrink: 0 }}>{net.prefix}</span>
+        <input
+          type="text"
+          value={handle}
+          onChange={(e) => setHandle(e.target.value)}
+          placeholder="votreidentifiant"
+          style={{ flex: 1, minWidth: 0, padding: "14px 12px 14px 2px", border: "none", background: "none", color: COLORS.ink, fontSize: "14px", boxSizing: "border-box" }}
+        />
+      </div>
+
+      <PrimaryButton onClick={handleSave} disabled={saving} style={{ width: "100%", marginTop: "20px" }}>
+        {saving ? "Enregistrement..." : "Enregistrer"}
+      </PrimaryButton>
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
 export function EmailViewScreen({ profile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -598,9 +680,15 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
         <VisibilityRow icon={<ThreadsIcon size={20} />} title="Threads">
           <ShareToggle checked={p.shareThreads} onChange={(v) => update({ shareThreads: v })} />
         </VisibilityRow>
+        <VisibilityRow icon={<LinkedinIcon size={20} />} title="LinkedIn">
+          <ShareToggle checked={p.shareLinkedin} onChange={(v) => update({ shareLinkedin: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<PinterestIcon size={20} />} title="Pinterest">
+          <ShareToggle checked={p.sharePinterest} onChange={(v) => update({ sharePinterest: v })} />
+        </VisibilityRow>
         <div style={{ borderBottom: "none" }}>
-          <VisibilityRow icon={<LinkedinIcon size={20} />} title="LinkedIn">
-            <ShareToggle checked={p.shareLinkedin} onChange={(v) => update({ shareLinkedin: v })} />
+          <VisibilityRow icon={<TwitchIcon size={20} />} title="Twitch">
+            <ShareToggle checked={p.shareTwitch} onChange={(v) => update({ shareTwitch: v })} />
           </VisibilityRow>
         </div>
       </div>
