@@ -72,7 +72,7 @@ function NotifGroup({ title, children }) {
   );
 }
 
-export function NotificationsScreen({ profile, onSaveProfile, onBack }) {
+export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailSummary }) {
   const [p, setP] = useState(profile);
   const update = (patch) => {
     setP((prev) => ({ ...prev, ...patch }));
@@ -176,58 +176,89 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack }) {
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Fréquence récapitulative</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px 16px", opacity: masterEnabled ? 1 : 0.55 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", opacity: masterEnabled ? 1 : 0.55 }}>
+        <button
+          onClick={() => masterEnabled && goToEmailSummary()}
+          disabled={!masterEnabled}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            width: "100%",
+            background: "none",
+            border: "none",
+            padding: "14px 4px",
+            textAlign: "left",
+            cursor: masterEnabled ? "pointer" : "not-allowed",
+            color: COLORS.ink,
+          }}
+        >
           <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
             <NavIcon name="at" size={17} color={COLORS.amber} />
           </span>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: "14px" }}>Récapitulatif par e-mail</div>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: "14px" }}>Récapitulatif par email</div>
             <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Recevoir un récapitulatif de vos activités</div>
-          </div>
-        </div>
-
-        <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Fréquence</label>
-        <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
-          {[
-            { key: "week", label: "Semaine" },
-            { key: "month", label: "Mois" },
-            { key: "quarter", label: "Trimestre" },
-          ].map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => masterEnabled && update({ notifEmailSummaryFrequency: opt.key })}
-              disabled={!masterEnabled}
-              style={{
-                flex: 1,
-                background: (p.notifEmailSummaryFrequency || "week") === opt.key ? COLORS.amber : "none",
-                color: (p.notifEmailSummaryFrequency || "week") === opt.key ? "#0D1B2A" : COLORS.ink,
-                border: `2px solid ${(p.notifEmailSummaryFrequency || "week") === opt.key ? COLORS.amber : COLORS.paperAlt}`,
-                borderRadius: "999px",
-                padding: "8px 10px",
-                fontSize: "12.5px",
-                fontWeight: 700,
-                cursor: masterEnabled ? "pointer" : "not-allowed",
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>
-          E-mail de réception (optionnel, différent de votre e-mail de connexion)
-        </label>
-        <input
-          type="email"
-          value={p.notifEmailSummaryAddress || ""}
-          onChange={(e) => setP((prev) => ({ ...prev, notifEmailSummaryAddress: e.target.value }))}
-          onBlur={() => update({ notifEmailSummaryAddress: p.notifEmailSummaryAddress })}
-          disabled={!masterEnabled}
-          placeholder={profile.email || "vous@exemple.com"}
-          style={{ width: "100%", boxSizing: "border-box", padding: "12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
-        />
+          </span>
+          <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
+        </button>
       </div>
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Récapitulatif par email — page dédiée : fréquence + adresse email tierce optionnelle.
+export function EmailSummaryScreen({ profile, onSaveProfile, onBack }) {
+  const [p, setP] = useState(profile);
+  const update = (patch) => {
+    setP((prev) => ({ ...prev, ...patch }));
+    onSaveProfile(patch);
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="at" size={22} color={COLORS.amber} />}>Récapitulatif par email</PageTitleWithBar>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Recevoir un récapitulatif de vos activités.</p>
+
+      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Fréquence</label>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+        {[
+          { key: "week", label: "Semaine" },
+          { key: "month", label: "Mois" },
+          { key: "quarter", label: "Trimestre" },
+        ].map((opt) => (
+          <button
+            key={opt.key}
+            onClick={() => update({ notifEmailSummaryFrequency: opt.key })}
+            style={{
+              flex: 1,
+              background: (p.notifEmailSummaryFrequency || "week") === opt.key ? COLORS.amber : "none",
+              color: (p.notifEmailSummaryFrequency || "week") === opt.key ? "#0D1B2A" : COLORS.ink,
+              border: `2px solid ${(p.notifEmailSummaryFrequency || "week") === opt.key ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "9px 12px",
+              fontSize: "13px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Email de réception (optionnel, différent de votre email de connexion)</label>
+      <input
+        type="email"
+        value={p.notifEmailSummaryAddress || ""}
+        onChange={(e) => setP((prev) => ({ ...prev, notifEmailSummaryAddress: e.target.value }))}
+        onBlur={() => update({ notifEmailSummaryAddress: p.notifEmailSummaryAddress })}
+        placeholder={profile.email || "vous@exemple.com"}
+        style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
+      />
 
       <PageFooterNav onBack={onBack} />
     </div>
