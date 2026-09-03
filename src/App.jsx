@@ -1756,7 +1756,6 @@ export default function App() {
                     password: "securityPassword",
                     emailVerify: "securityEmailVerify",
                     resetSessions: "securityResetSessions",
-                    dataExport: "securityDataExport",
                     publicProfile: "securityPublicProfile",
                     blockedUsers: "securityBlockedUsers",
                     permissions: "securityPermissions",
@@ -1773,7 +1772,7 @@ export default function App() {
             {screen === "securityPassword" && <PasswordChangeScreen onBack={() => setScreen("security")} />}
             {screen === "securityEmailVerify" && <EmailVerifyScreen session={session} onBack={() => setScreen("security")} />}
             {screen === "securityResetSessions" && <ResetSessionsScreen onBack={() => setScreen("security")} />}
-            {screen === "securityDataExport" && <DataExportScreen profile={profile} onBack={() => setScreen("security")} />}
+            {screen === "securityDataExport" && <DataExportScreen profile={profile} onBack={() => setScreen("securityPermissions")} />}
             {screen === "securityPublicProfile" && (
               <PublicProfileScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("security")} />
             )}

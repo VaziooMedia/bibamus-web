@@ -95,7 +95,6 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
 
       <SecurityGroup title="Appareils & données">
         <SecurityRow icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />} title="Appareils connectés" subtitle="Prévu sur l'app native" disabled badge="App native" />
-        <SecurityRow icon={<NavIcon name="download" size={17} color={COLORS.amber} />} title="Télécharger mes données" subtitle="Exporter mes données Bibamus" onClick={() => goToSubScreen("dataExport")} />
         <SecurityRow icon={<NavIcon name="check" size={17} color={COLORS.amber} />} title="Permissions & consentements" subtitle="Gérer les autorisations et préférences" onClick={() => goToSubScreen("permissions")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow
@@ -272,10 +271,10 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
         <PermRow icon={<NavIcon name="star" size={17} color={COLORS.amber} />} title="Suggestions personnalisées" subtitle="Basées sur vos goûts et activités">
           <MiniToggle checked={consents.consentPersonalizedSuggestions !== false} onChange={(v) => updateConsent("consentPersonalizedSuggestions", v)} />
         </PermRow>
-        <PermRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Données d'usage anonymisées" subtitle="Aider à améliorer Bibamus">
+        <PermRow icon={<NavIcon name="activity" size={17} color={COLORS.amber} />} title="Données d'usage anonymisées" subtitle="Aider à améliorer Bibamus">
           <MiniToggle checked={consents.consentUsageData !== false} onChange={(v) => updateConsent("consentUsageData", v)} />
         </PermRow>
-        <PermRow icon={<NavIcon name="speaker" size={17} color={COLORS.amber} />} title="Communications partenaires" subtitle="Offres et évènements partenaires">
+        <PermRow icon={<NavIcon name="intercom" size={17} color={COLORS.amber} />} title="Communications partenaires" subtitle="Offres et évènements partenaires">
           <MiniToggle checked={consents.consentPartnerComms === true} onChange={(v) => updateConsent("consentPartnerComms", v)} />
         </PermRow>
         <div style={{ borderBottom: "none" }}>

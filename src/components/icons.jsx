@@ -514,6 +514,14 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M12 7v5.3l3.5 2" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
+    case "intercom":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="6" y="2.5" width="12" height="19" rx="2.5" stroke={color} strokeWidth="1.7" />
+          <circle cx="12" cy="8" r="2.6" stroke={color} strokeWidth="1.5" />
+          <circle cx="12" cy="15.5" r="1.3" fill={color} />
+        </svg>
+      );
     case "faceid":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
