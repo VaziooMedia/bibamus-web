@@ -782,6 +782,33 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
   }
 }
 
+export function SpotifyIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11" fill="#1DB954" />
+      <path d="M6.5 9.5c3.5-1 8-.6 11 1.2" stroke="#0D1B0F" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+      <path d="M6.8 12.8c3-.8 6.6-.5 9 1" stroke="#0D1B0F" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <path d="M7.2 16c2.3-.6 5-.4 6.9.7" stroke="#0D1B0F" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+export function AppleIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11" fill="#000" />
+      <path
+        d="M14.2 8.1c.6-.7 1-1.7.9-2.7-.9.1-2 .6-2.6 1.4-.6.6-1.1 1.7-1 2.6 1 .1 1.9-.5 2.7-1.3Z"
+        fill="#fff"
+      />
+      <path
+        d="M16.9 15.6c-.3.7-.6 1.3-1 1.9-.6.9-1.2 1.8-2.1 1.8-.9 0-1.2-.6-2.2-.6-1.1 0-1.4.5-2.2.6-.9 0-1.5-.9-2.1-1.8-1.2-1.8-2.1-5-.9-7.2.6-1.1 1.7-1.8 2.8-1.8.9 0 1.7.6 2.2.6.5 0 1.5-.7 2.5-.6.4 0 1.7.2 2.5 1.3-.1 0-1.5.9-1.5 2.6 0 2 1.8 2.7 1.9 2.8Z"
+        fill="#fff"
+      />
+    </svg>
+  );
+}
+
 export function GoogleIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
