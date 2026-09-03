@@ -42,7 +42,7 @@ import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsS
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen, EmailSummaryScreen } from "./components/NotificationsScreen.jsx";
-import { PreferencesScreen, StorySettingsScreen } from "./components/PreferencesScreen.jsx";
+import { PreferencesScreen, StorySettingsScreen, ChoiceScreen } from "./components/PreferencesScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
@@ -908,6 +908,7 @@ export default function App() {
   const [viewedSettingsCategory, setViewedSettingsCategory] = useState(null);
   const [viewedAccountField, setViewedAccountField] = useState(null);
   const [viewedSecuritySub, setViewedSecuritySub] = useState(null);
+  const [viewedChoiceKey, setViewedChoiceKey] = useState(null);
   const [viewedBreweryId, setViewedBreweryId] = useState(null);
   const [viewedBrandId, setViewedBrandId] = useState(null);
 
@@ -1820,12 +1821,101 @@ export default function App() {
                 profile={profile}
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
                 onBack={() => setScreen("settings")}
+                goToChoice={(key) => {
+                  setViewedChoiceKey(key);
+                  setScreen("preferencesChoice");
+                }}
                 goToStorySettings={() => setScreen("preferencesStorySettings")}
               />
             )}
             {screen === "preferencesStorySettings" && (
-              <StorySettingsScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("preferences")} />
+              <StorySettingsScreen
+                profile={profile}
+                onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
+                onBack={() => setScreen("preferences")}
+                goToChoice={(key) => {
+                  setViewedChoiceKey(key);
+                  setScreen("preferencesChoice");
+                }}
+              />
             )}
+            {screen === "preferencesChoice" &&
+              (() => {
+                const configs = {
+                  language: {
+                    icon: <NavIcon name="info" size={22} color={COLORS.amber} />,
+                    title: "Langue de l'app",
+                    options: [{ key: "fr", label: "Français" }],
+                    value: "fr",
+                    field: null,
+                    back: "preferences",
+                  },
+                  distance: {
+                    icon: <NavIcon name="map-pin" size={22} color={COLORS.amber} />,
+                    title: "Distances",
+                    options: [
+                      { key: "km", label: "Kilomètres" },
+                      { key: "mi", label: "Miles" },
+                    ],
+                    field: "prefDistanceUnit",
+                    back: "preferences",
+                  },
+                  temperature: {
+                    icon: <NavIcon name="activity" size={22} color={COLORS.amber} />,
+                    title: "Température",
+                    options: [
+                      { key: "celsius", label: "Celsius (°C)" },
+                      { key: "fahrenheit", label: "Fahrenheit (°F)" },
+                    ],
+                    field: "prefTemperatureUnit",
+                    back: "preferences",
+                  },
+                  volume: {
+                    icon: <NavIcon name="bottle" size={22} color={COLORS.amber} />,
+                    title: "Volume",
+                    options: [
+                      { key: "metric", label: "Centilitres / Litres" },
+                      { key: "imperial", label: "Fluid ounces (fl oz)" },
+                    ],
+                    field: "prefVolumeUnit",
+                    back: "preferences",
+                  },
+                  venueSort: {
+                    icon: <NavIcon name="map-pin-check" size={22} color={COLORS.amber} />,
+                    title: "Tri des lieux",
+                    options: [
+                      { key: "distance", label: "Distance" },
+                      { key: "popularity", label: "Popularité" },
+                      { key: "alphabetical", label: "Alphabétique" },
+                    ],
+                    field: "prefVenueSort",
+                    back: "preferences",
+                  },
+                  storyDuration: {
+                    icon: <NavIcon name="clock" size={22} color={COLORS.amber} />,
+                    title: "Durée d'affichage à la lecture",
+                    options: [
+                      { key: 5, label: "5 secondes" },
+                      { key: 7, label: "7 secondes" },
+                      { key: 10, label: "10 secondes" },
+                    ],
+                    field: "storyViewDurationSeconds",
+                    back: "preferencesStorySettings",
+                  },
+                };
+                const cfg = configs[viewedChoiceKey];
+                if (!cfg) return null;
+                return (
+                  <ChoiceScreen
+                    icon={cfg.icon}
+                    title={cfg.title}
+                    options={cfg.options}
+                    value={cfg.field ? profile[cfg.field] : cfg.value}
+                    onChange={(v) => cfg.field && setProfile((p) => ({ ...p, [cfg.field]: v }))}
+                    onBack={() => setScreen(cfg.back)}
+                  />
+                );
+              })()}
             {screen === "security" && (
               <SecurityScreen
                 session={session}
@@ -2326,7 +2416,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "preferences", "preferencesStorySettings", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "preferences", "preferencesStorySettings", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
