@@ -102,10 +102,11 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
         <NotifRow
           icon={<NavIcon name="tag" size={17} color={COLORS.amber} />}
           title="Mentions"
-          subtitle="Quand un Bibax vous mentionne"
-          checked={masterEnabled && p.notifMentions !== false}
-          disabled={!masterEnabled}
-          onChange={(v) => update({ notifMentions: v })}
+          subtitle="Pas encore disponible"
+          disabled
+          badge="Bientôt"
+          checked={false}
+          onChange={() => {}}
         />
         <NotifRow
           icon={<NavIcon name="comment" size={17} color={COLORS.amber} />}
@@ -126,10 +127,11 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
         <NotifRow
           icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
           title="Messages"
-          subtitle="Nouveaux messages privés"
-          checked={masterEnabled && p.notifMessages !== false}
-          disabled={!masterEnabled}
-          onChange={(v) => update({ notifMessages: v })}
+          subtitle="Pas encore disponible"
+          disabled
+          badge="Bientôt"
+          checked={false}
+          onChange={() => {}}
         />
         <NotifRow
           icon={<NavIcon name="bibago-nav" size={15} color={COLORS.amber} />}
@@ -164,10 +166,11 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
           <NotifRow
             icon={<NavIcon name="megaphone" size={17} color={COLORS.amber} />}
             title="Partenaires"
-            subtitle="Offres et évènements partenaires"
-            checked={masterEnabled && p.notifPartners === true}
-            disabled={!masterEnabled}
-            onChange={(v) => update({ notifPartners: v })}
+            subtitle="Pas encore disponible"
+            disabled
+            badge="Bientôt"
+            checked={false}
+            onChange={() => {}}
           />
         </div>
       </NotifGroup>
@@ -176,32 +179,19 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Fréquence récapitulative</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", opacity: masterEnabled ? 1 : 0.55 }}>
-        <button
-          onClick={() => masterEnabled && goToEmailSummary()}
-          disabled={!masterEnabled}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            width: "100%",
-            background: "none",
-            border: "none",
-            padding: "14px 4px",
-            textAlign: "left",
-            cursor: masterEnabled ? "pointer" : "not-allowed",
-            color: COLORS.ink,
-          }}
-        >
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", opacity: 0.55 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", padding: "14px 4px" }}>
           <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
             <NavIcon name="at" size={17} color={COLORS.amber} />
           </span>
           <span style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: "14px" }}>Récapitulatif par email</div>
-            <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Recevoir un récapitulatif de vos activités</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontWeight: 700, fontSize: "14px" }}>Récapitulatif par e-mail</span>
+              <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.amber, border: `1px solid ${COLORS.amber}`, borderRadius: "999px", padding: "1px 7px" }}>Bientôt</span>
+            </div>
+            <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Pas encore disponible</div>
           </span>
-          <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
-        </button>
+        </div>
       </div>
 
       <PageFooterNav onBack={onBack} />
@@ -224,7 +214,7 @@ export function EmailSummaryScreen({ profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar icon={<NavIcon name="at" size={22} color={COLORS.amber} />}>Récapitulatif par email</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="at" size={22} color={COLORS.amber} />}>Récapitulatif par e-mail</PageTitleWithBar>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Recevoir un récapitulatif de vos activités.</p>
 
       <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Fréquence</label>
@@ -254,7 +244,7 @@ export function EmailSummaryScreen({ profile, onSaveProfile, onBack }) {
         ))}
       </div>
 
-      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Email de réception (optionnel, différent de votre email de connexion)</label>
+      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>E-mail de réception (optionnel, différent de votre e-mail de connexion)</label>
       <div style={{ position: "relative" }}>
         <input
           type="email"

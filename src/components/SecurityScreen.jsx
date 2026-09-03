@@ -17,7 +17,7 @@ import { supabase } from "../supabaseClient.js";
 
 const FLUO_RED = "#FF3B3B";
 
-function SecurityRow({ icon, title, subtitle, onClick, titleColor, disabled, badge }) {
+function SecurityRow({ icon, title, subtitle, onClick, titleColor, disabled, badge, trailing, trailingColor }) {
   return (
     <button
       onClick={disabled ? undefined : onClick}
@@ -44,6 +44,7 @@ function SecurityRow({ icon, title, subtitle, onClick, titleColor, disabled, bad
           {badge && (
             <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.amber, border: `1px solid ${COLORS.amber}`, borderRadius: "999px", padding: "1px 7px" }}>{badge}</span>
           )}
+          {trailing && <span style={{ fontSize: "13px", fontWeight: 700, color: trailingColor || COLORS.amber }}>{trailing}</span>}
         </div>
         {subtitle && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{subtitle}</div>}
       </span>
@@ -79,8 +80,8 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
           <SecurityRow
             icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
             title="E-mail vérifié"
-            subtitle={emailVerified ? "✓ Vérifié" : "✗ Non vérifié"}
-            titleColor={COLORS.ink}
+            trailing={emailVerified ? "Vérifié" : "Non vérifié"}
+            trailingColor={emailVerified ? COLORS.amber : FLUO_RED}
             onClick={() => goToSubScreen("emailVerify")}
           />
         </div>
