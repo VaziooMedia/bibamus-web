@@ -522,6 +522,20 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <circle cx="12" cy="15.5" r="1.3" fill={color} />
         </svg>
       );
+    case "megaphone":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M3 10v4a1.5 1.5 0 0 0 1.5 1.5H6l2.5 5 1.8-.8L8.5 15.5H10l9-4.5v-6l-9 4.5H4.5A1.5 1.5 0 0 0 3 10Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M19 8v5.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "shield-check":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M12 3l7 3v5.5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5V6Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M9 12l2 2 4-4.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     case "faceid":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

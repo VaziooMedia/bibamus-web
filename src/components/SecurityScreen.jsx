@@ -271,10 +271,10 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
         <PermRow icon={<NavIcon name="star" size={17} color={COLORS.amber} />} title="Suggestions personnalisées" subtitle="Basées sur vos goûts et activités">
           <MiniToggle checked={consents.consentPersonalizedSuggestions !== false} onChange={(v) => updateConsent("consentPersonalizedSuggestions", v)} />
         </PermRow>
-        <PermRow icon={<NavIcon name="activity" size={17} color={COLORS.amber} />} title="Données d'usage anonymisées" subtitle="Aider à améliorer Bibamus">
+        <PermRow icon={<NavIcon name="shield-check" size={17} color={COLORS.amber} />} title="Données d'usage anonymisées" subtitle="Aider à améliorer Bibamus">
           <MiniToggle checked={consents.consentUsageData !== false} onChange={(v) => updateConsent("consentUsageData", v)} />
         </PermRow>
-        <PermRow icon={<NavIcon name="intercom" size={17} color={COLORS.amber} />} title="Communications partenaires" subtitle="Offres et évènements partenaires">
+        <PermRow icon={<NavIcon name="megaphone" size={17} color={COLORS.amber} />} title="Communications partenaires" subtitle="Offres et évènements partenaires">
           <MiniToggle checked={consents.consentPartnerComms === true} onChange={(v) => updateConsent("consentPartnerComms", v)} />
         </PermRow>
         <div style={{ borderBottom: "none" }}>
