@@ -453,7 +453,7 @@ function ShareToggle({ checked, onChange }) {
   return (
     <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, cursor: "pointer" }}>
       <input type="checkbox" checked={checked !== false} onChange={(e) => onChange(e.target.checked)} style={{ width: "15px", height: "15px", accentColor: COLORS.amber }} />
-      Visible par mes Bibax
+      Visible
     </label>
   );
 }
@@ -486,12 +486,6 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisissez ce que les autres utilisateurs peuvent voir sur votre profil.</p>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-        <VisibilityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Prénom">
-          <ShareToggle checked={p.sharePrenom} onChange={(v) => update({ sharePrenom: v })} />
-        </VisibilityRow>
-        <VisibilityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Nom">
-          <ShareToggle checked={p.shareNom} onChange={(v) => update({ shareNom: v })} />
-        </VisibilityRow>
         <VisibilityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Surnom">
           <ShareToggle checked={p.shareSurnom} onChange={(v) => update({ shareSurnom: v })} />
         </VisibilityRow>

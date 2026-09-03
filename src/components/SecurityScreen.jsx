@@ -240,7 +240,7 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Autorisations</h2>
       </div>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
-        <PermRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Localisation" subtitle="Pour trouver des lieux proches">
+        <PermRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Localisation" subtitle="Trouver des lieux proches">
           <MiniToggle
             checked={consents.consentLocation === true}
             onChange={(v) => {
