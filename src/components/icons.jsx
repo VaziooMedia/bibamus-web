@@ -552,6 +552,18 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-4 7.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
         </svg>
       );
+    case "ai":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path
+            d="M11 3.5 12.4 8l4.5 1.4-4.5 1.4L11 15.3 9.6 10.9 5.1 9.4l4.5-1.4Z"
+            stroke={color}
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <path d="M18 14.5 18.8 17l2.5.8-2.5.8-.8 2.4-.8-2.4-2.5-.8 2.5-.8Z" stroke={color} strokeWidth="1.4" strokeLinejoin="round" />
+        </svg>
+      );
     case "faceid":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

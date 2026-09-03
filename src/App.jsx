@@ -42,6 +42,7 @@ import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsS
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen, EmailSummaryScreen } from "./components/NotificationsScreen.jsx";
+import { PreferencesScreen, StorySettingsScreen } from "./components/PreferencesScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
@@ -409,6 +410,16 @@ export default function App() {
       notifEmailSummary: profile.notifEmailSummary,
       notifEmailSummaryFrequency: profile.notifEmailSummaryFrequency,
       notifEmailSummaryAddress: profile.notifEmailSummaryAddress,
+      prefDistanceUnit: profile.prefDistanceUnit,
+      prefTemperatureUnit: profile.prefTemperatureUnit,
+      prefVolumeUnit: profile.prefVolumeUnit,
+      prefTimeFormat24h: profile.prefTimeFormat24h,
+      prefVenueSort: profile.prefVenueSort,
+      prefAutoplayPreviews: profile.prefAutoplayPreviews,
+      prefVibrations: profile.prefVibrations,
+      prefConfirmCheckin: profile.prefConfirmCheckin,
+      storyDefaultShowLocation: profile.storyDefaultShowLocation,
+      storyViewDurationSeconds: profile.storyViewDurationSeconds,
       shareFacebook: profile.shareFacebook,
       shareInstagram: profile.shareInstagram,
       shareTiktok: profile.shareTiktok,
@@ -471,6 +482,16 @@ export default function App() {
     profile.notifEmailSummary,
     profile.notifEmailSummaryFrequency,
     profile.notifEmailSummaryAddress,
+    profile.prefDistanceUnit,
+    profile.prefTemperatureUnit,
+    profile.prefVolumeUnit,
+    profile.prefTimeFormat24h,
+    profile.prefVenueSort,
+    profile.prefAutoplayPreviews,
+    profile.prefVibrations,
+    profile.prefConfirmCheckin,
+    profile.storyDefaultShowLocation,
+    profile.storyViewDurationSeconds,
     profile.shareFacebook,
     profile.shareInstagram,
     profile.shareTiktok,
@@ -1774,6 +1795,10 @@ export default function App() {
                     setScreen("notifications");
                     return;
                   }
+                  if (key === "preferences") {
+                    setScreen("preferences");
+                    return;
+                  }
                   setViewedSettingsCategory(key);
                   setScreen("settingsCategory");
                 }}
@@ -1789,6 +1814,17 @@ export default function App() {
             )}
             {screen === "notificationsEmailSummary" && (
               <EmailSummaryScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("notifications")} />
+            )}
+            {screen === "preferences" && (
+              <PreferencesScreen
+                profile={profile}
+                onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
+                onBack={() => setScreen("settings")}
+                goToStorySettings={() => setScreen("preferencesStorySettings")}
+              />
+            )}
+            {screen === "preferencesStorySettings" && (
+              <StorySettingsScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("preferences")} />
             )}
             {screen === "security" && (
               <SecurityScreen
@@ -2290,7 +2326,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "preferences", "preferencesStorySettings", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

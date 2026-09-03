@@ -269,9 +269,6 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Consentements</h2>
       </div>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
-        <PermRow icon={<NavIcon name="star" size={17} color={COLORS.amber} />} title="Suggestions personnalisées" subtitle="Basées sur vos goûts et activités">
-          <MiniToggle checked={consents.consentPersonalizedSuggestions !== false} onChange={(v) => updateConsent("consentPersonalizedSuggestions", v)} />
-        </PermRow>
         <PermRow icon={<NavIcon name="shield-check" size={17} color={COLORS.amber} />} title="Données d'usage anonymisées" subtitle="Aider à améliorer Bibamus">
           <MiniToggle checked={consents.consentUsageData !== false} onChange={(v) => updateConsent("consentUsageData", v)} />
         </PermRow>
