@@ -212,6 +212,10 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
 // Récapitulatif par email — page dédiée : fréquence + adresse email tierce optionnelle.
 export function EmailSummaryScreen({ profile, onSaveProfile, onBack }) {
   const [p, setP] = useState(profile);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const address = p.notifEmailSummaryAddress || "";
+  const isValid = address === "" || emailRegex.test(address);
+
   const update = (patch) => {
     setP((prev) => ({ ...prev, ...patch }));
     onSaveProfile(patch);
@@ -251,14 +255,34 @@ export function EmailSummaryScreen({ profile, onSaveProfile, onBack }) {
       </div>
 
       <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Email de réception (optionnel, différent de votre email de connexion)</label>
-      <input
-        type="email"
-        value={p.notifEmailSummaryAddress || ""}
-        onChange={(e) => setP((prev) => ({ ...prev, notifEmailSummaryAddress: e.target.value }))}
-        onBlur={() => update({ notifEmailSummaryAddress: p.notifEmailSummaryAddress })}
-        placeholder={profile.email || "vous@exemple.com"}
-        style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
-      />
+      <div style={{ position: "relative" }}>
+        <input
+          type="email"
+          value={address}
+          onChange={(e) => setP((prev) => ({ ...prev, notifEmailSummaryAddress: e.target.value }))}
+          onBlur={() => {
+            if (isValid) update({ notifEmailSummaryAddress: address });
+          }}
+          placeholder={profile.email || "vous@exemple.com"}
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            padding: "14px",
+            paddingRight: "44px",
+            borderRadius: "12px",
+            border: `2px solid ${address && !isValid ? "#FF3B3B" : address && isValid ? COLORS.amber : COLORS.paperAlt}`,
+            background: COLORS.surface,
+            color: COLORS.ink,
+            fontSize: "16px",
+          }}
+        />
+        {address && (
+          <span style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "18px", lineHeight: 1 }}>
+            {isValid ? <NavIcon name="check" size={18} color={COLORS.amber} /> : <NavIcon name="x" size={18} color="#FF3B3B" />}
+          </span>
+        )}
+      </div>
+      {address && !isValid && <p style={{ fontSize: "12px", color: "#FF3B3B", marginTop: "6px" }}>Cette adresse ne semble pas valide.</p>}
 
       <PageFooterNav onBack={onBack} />
     </div>
