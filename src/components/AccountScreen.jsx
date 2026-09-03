@@ -26,8 +26,7 @@ function splitPhone(stored) {
 function PageTitleWithBar({ children, size = "26px", icon }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 20px 0" }}>
-      <span style={{ width: "5px", height: "24px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-      {icon && <span style={{ display: "flex", alignItems: "center", lineHeight: 0 }}>{icon}</span>}
+      {icon ? <span style={{ display: "flex", alignItems: "center", lineHeight: 0 }}>{icon}</span> : <span style={{ width: "5px", height: "24px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />}
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: size, margin: 0 }}>{children}</h1>
     </div>
   );

@@ -27,7 +27,6 @@ export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, o
         color: COLORS.ink,
       }}
     >
-      <span style={{ width: "4px", height: "28px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
         {icon}
       </span>
