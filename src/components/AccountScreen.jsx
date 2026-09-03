@@ -93,11 +93,17 @@ function AccountGroup({ title, children }) {
   );
 }
 
-export function AccountScreen({ myName, profile, onBack, goToField, goToDeactivate, goToDeleteAccount }) {
-  const [hasActiveStory, setHasActiveStory] = useState(false);
+export function AccountScreen({ myName, profile, myUserId, onOpenMyStory, onBack, goToField, goToDeactivate, goToDeleteAccount }) {
+  const [activeStories, setActiveStories] = useState([]);
   useEffect(() => {
-    loadMyStories().then((list) => setHasActiveStory(list.some((s) => new Date(s.expiresAt) > new Date())));
+    loadMyStories().then((list) => setActiveStories(list.filter((s) => new Date(s.expiresAt) > new Date())));
   }, []);
+  const hasActiveStory = activeStories.length > 0;
+
+  const openMyStory = () => {
+    if (!hasActiveStory || !onOpenMyStory) return;
+    onOpenMyStory(activeStories.map((s) => ({ ...s, authorId: myUserId, authorName: myName, authorLastName: profile.lastName, authorAvatarUrl: profile.avatarUrl })));
+  };
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -106,11 +112,23 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "18px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <div style={{ width: "72px", height: "72px", borderRadius: "50%", border: `2px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`, padding: "2px", flexShrink: 0 }}>
+          <button
+            onClick={hasActiveStory ? openMyStory : undefined}
+            style={{
+              width: "72px",
+              height: "72px",
+              borderRadius: "50%",
+              border: `2px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`,
+              padding: "2px",
+              flexShrink: 0,
+              background: "none",
+              cursor: hasActiveStory ? "pointer" : "default",
+            }}
+          >
             <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
               {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={32} color={COLORS.amber} />}
             </div>
-          </div>
+          </button>
           <div style={{ minWidth: 0 }}>
             <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", lineHeight: 1.25, margin: 0 }}>{myName}</h1>
             {profile.lastName && <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", lineHeight: 1.25, margin: 0 }}>{profile.lastName}</h1>}
@@ -156,7 +174,7 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
               <NavIcon name="pause" size={11} color={FLUO_BLUE} />
             </span>
           }
-          title="Désactiver temporairement mon compte"
+          title="Désactiver mon compte"
           value=""
           onClick={goToDeactivate}
           titleColor={FLUO_BLUE}
@@ -216,12 +234,12 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
           <p style={{ fontSize: "12px", color: COLORS.inkSoft, textAlign: "right", margin: "6px 2px 0" }}>{value.length}/40</p>
         </>
       ) : config.type === "date" ? (
-        <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, display: "flex", alignItems: "center", height: "48px" }}>
+        <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface }}>
           <input
             type="date"
             value={value}
             onChange={(e) => handleChange(e.target.value)}
-            style={{ display: "block", width: "100%", height: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box", padding: "0 12px", border: "none", background: "none", color: COLORS.ink, fontSize: "15px" }}
+            style={{ display: "block", width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box", padding: "14px 12px", border: "none", background: "none", color: COLORS.ink, fontSize: "15px", lineHeight: "normal" }}
           />
         </div>
       ) : (
@@ -374,6 +392,10 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
   const [photoError, setPhotoError] = useState(null);
   const [croppingFile, setCroppingFile] = useState(null);
   const fileInputRef = useRef(null);
+  const [hasActiveStory, setHasActiveStory] = useState(false);
+  useEffect(() => {
+    loadMyStories().then((list) => setHasActiveStory(list.some((s) => new Date(s.expiresAt) > new Date())));
+  }, []);
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -388,7 +410,7 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
             width: "140px",
             height: "140px",
             borderRadius: "50%",
-            border: `2px solid ${COLORS.amber}`,
+            border: `2px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`,
             background: COLORS.paperAlt,
             display: "flex",
             alignItems: "center",
@@ -621,7 +643,7 @@ export function DeactivateAccountScreen({ onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar icon={<NavIcon name="pause" size={22} color={COLORS.amber} />}>Désactiver temporairement mon compte</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="pause" size={22} color={COLORS.amber} />}>Désactiver mon compte</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
         <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>
           Cette fonctionnalité n'existe pas encore — seule la suppression définitive du compte est disponible pour l'instant.

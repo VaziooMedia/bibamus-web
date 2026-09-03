@@ -10,11 +10,17 @@ import { ProfileHeader } from "./ProfileParts.jsx";
 import { formatDate } from "../utils.js";
 import { loadMyStories } from "../data/sharedDirectories.js";
 
-export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, onLogout, goToCategory }) {
-  const [hasActiveStory, setHasActiveStory] = useState(false);
+export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBack, isAdmin, goToImport, onLogout, goToCategory }) {
+  const [activeStories, setActiveStories] = useState([]);
   useEffect(() => {
-    loadMyStories().then((list) => setHasActiveStory(list.some((s) => new Date(s.expiresAt) > new Date())));
+    loadMyStories().then((list) => setActiveStories(list.filter((s) => new Date(s.expiresAt) > new Date())));
   }, []);
+  const hasActiveStory = activeStories.length > 0;
+
+  const openMyStory = () => {
+    if (!hasActiveStory || !onOpenMyStory) return;
+    onOpenMyStory(activeStories.map((s) => ({ ...s, authorId: myUserId, authorName: myName, authorLastName: profile.lastName, authorAvatarUrl: profile.avatarUrl })));
+  };
 
   const SettingsRow = ({ icon, title, subtitle, onClick, danger }) => (
     <button
@@ -54,11 +60,23 @@ export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, o
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "18px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <div style={{ width: "72px", height: "72px", borderRadius: "50%", border: `2px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`, padding: "2px", flexShrink: 0 }}>
+          <button
+            onClick={hasActiveStory ? openMyStory : undefined}
+            style={{
+              width: "72px",
+              height: "72px",
+              borderRadius: "50%",
+              border: `2px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`,
+              padding: "2px",
+              flexShrink: 0,
+              background: "none",
+              cursor: hasActiveStory ? "pointer" : "default",
+            }}
+          >
             <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
               {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={32} color={COLORS.amber} />}
             </div>
-          </div>
+          </button>
           <div style={{ minWidth: 0 }}>
             <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", lineHeight: 1.25, margin: 0 }}>{myName}</h1>
             {profile.lastName && <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", lineHeight: 1.25, margin: 0 }}>{profile.lastName}</h1>}

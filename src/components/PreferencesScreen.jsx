@@ -146,12 +146,13 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
     onSaveProfile(patch);
   };
 
-  const Choice = ({ groupValue, onPick, options }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "48px" }}>
+  const Choice = ({ groupValue, onPick, options, disabled }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "48px", opacity: disabled ? 0.5 : 1 }}>
       {options.map((opt) => (
         <button
           key={opt.key}
-          onClick={() => onPick(opt.key)}
+          onClick={() => !disabled && onPick(opt.key)}
+          disabled={disabled}
           style={{
             display: "flex",
             alignItems: "center",
@@ -161,7 +162,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
             borderRadius: "10px",
             padding: "10px 12px",
             textAlign: "left",
-            cursor: "pointer",
+            cursor: disabled ? "not-allowed" : "pointer",
             color: COLORS.ink,
             fontSize: "13.5px",
             fontWeight: groupValue === opt.key ? 700 : 500,
@@ -189,6 +190,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
         <Choice
           groupValue={p.prefVolumeUnit || "metric"}
           onPick={(v) => update({ prefVolumeUnit: v })}
+          disabled
           options={[
             { key: "metric", label: "Centilitres (cl.) / Litres (L)" },
             { key: "imperial", label: "Fluid ounces (fl oz)" },
@@ -206,6 +208,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
         <Choice
           groupValue={p.prefWeightUnit || "metric"}
           onPick={(v) => update({ prefWeightUnit: v })}
+          disabled
           options={[
             { key: "metric", label: "Grammes (gr.) / Kilos (kg)" },
             { key: "imperial", label: "Onces (oz) / Livres (lb)" },
@@ -223,6 +226,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
         <Choice
           groupValue={p.prefEnergyUnit || "kcal"}
           onPick={(v) => update({ prefEnergyUnit: v })}
+          disabled
           options={[
             { key: "kcal", label: "kcal" },
             { key: "calories", label: "Cal" },
@@ -258,7 +262,7 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
         <NavRow icon={<NavIcon name="thermometer" size={17} color={COLORS.amber} />} title="Température" value="Celsius (°C)" disabled />
         <NavRow icon={<NavIcon name="ruler" size={17} color={COLORS.amber} />} title="Unités de mesure" onClick={goToVolumeWeight} />
         <NavRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Format date" value="JJ/MM/AAAA" disabled />
-        <NavRow icon={<NavIcon name="clock" size={17} color={COLORS.amber} />} title="Format horaire" value="24h" disabled last />
+        <ToggleRow icon={<NavIcon name="clock" size={17} color={COLORS.amber} />} title="Format horaire" disabled checked={true} onChange={() => {}} last />
       </PrefGroup>
 
       <PrefGroup title="Expérience Bibamus">

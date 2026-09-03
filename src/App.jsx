@@ -1795,6 +1795,8 @@ export default function App() {
               <SettingsScreen
                 myName={profile.name}
                 profile={profile}
+                myUserId={session.user.id}
+                onOpenMyStory={setViewedStoryAuthor}
                 onBack={() => setScreen("profile")}
                 isAdmin={!!profile.isAdmin}
                 goToImport={() => setScreen("importData")}
@@ -2040,6 +2042,8 @@ export default function App() {
               <AccountScreen
                 myName={profile.name}
                 profile={profile}
+                myUserId={session.user.id}
+                onOpenMyStory={setViewedStoryAuthor}
                 onBack={() => setScreen("settings")}
                 goToField={(field) => {
                   setViewedAccountField(field);

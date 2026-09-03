@@ -76,7 +76,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
                 width: "112px",
                 height: "112px",
                 borderRadius: "50%",
-                border: `2px solid ${hasActiveStory ? "#FF2C8F" : COLORS.amber}`,
+                border: `2px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`,
                 padding: "2px",
                 flexShrink: 0,
                 background: "none",
