@@ -169,6 +169,155 @@ export function BlockedUsersScreen({ onBack }) {
   );
 }
 
+function PermRow({ icon, title, subtitle, disabled, badge, children }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.55 : 1 }}>
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0, marginTop: "2px" }}>{icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontWeight: 700, fontSize: "14px" }}>{title}</span>
+          {badge && <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.amber, border: `1px solid ${COLORS.amber}`, borderRadius: "999px", padding: "1px 7px" }}>{badge}</span>}
+        </div>
+        {subtitle && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{subtitle}</div>}
+      </div>
+      {children && <div style={{ flexShrink: 0, marginTop: "2px" }}>{children}</div>}
+    </div>
+  );
+}
+
+function MiniToggle({ checked, onChange, disabled }) {
+  return (
+    <button
+      onClick={() => !disabled && onChange(!checked)}
+      disabled={disabled}
+      style={{
+        width: "42px",
+        height: "24px",
+        borderRadius: "999px",
+        border: "none",
+        background: checked ? COLORS.amber : COLORS.paperAlt,
+        position: "relative",
+        cursor: disabled ? "not-allowed" : "pointer",
+        padding: 0,
+      }}
+    >
+      <span style={{ position: "absolute", top: "3px", left: checked ? "21px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+    </button>
+  );
+}
+
+export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExport }) {
+  const [geoStatus, setGeoStatus] = useState("unknown");
+  const [consents, setConsents] = useState(profile);
+
+  useEffect(() => {
+    if (!navigator.permissions?.query) return;
+    navigator.permissions.query({ name: "geolocation" }).then((result) => {
+      setGeoStatus(result.state);
+      result.onchange = () => setGeoStatus(result.state);
+    }).catch(() => setGeoStatus("unsupported"));
+  }, []);
+
+  const requestLocation = () => {
+    navigator.geolocation?.getCurrentPosition(
+      () => setGeoStatus("granted"),
+      () => setGeoStatus("denied")
+    );
+  };
+
+  const updateConsent = (key, value) => {
+    setConsents((prev) => ({ ...prev, [key]: value }));
+    onSaveProfile({ [key]: value });
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="check" size={22} color={COLORS.amber} />}>Permissions & consentements</PageTitleWithBar>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Autorisations</h2>
+      </div>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
+        <PermRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Localisation" subtitle="Pour trouver des lieux proches">
+          {geoStatus === "granted" ? (
+            <span style={{ fontSize: "12px", color: COLORS.amber, fontWeight: 700 }}>Autorisé</span>
+          ) : geoStatus === "denied" ? (
+            <span style={{ fontSize: "11px", color: "#FF3B3B" }}>Refusé (réglages du navigateur)</span>
+          ) : (
+            <button onClick={requestLocation} style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "5px 10px", fontSize: "11.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+              Activer
+            </button>
+          )}
+        </PermRow>
+        <PermRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Appareil photo" subtitle="Scanner, ajouter des photos" disabled badge="App native" />
+        <PermRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Photos" subtitle="Ajouter ou enregistrer des visuels" disabled badge="App native" />
+        <PermRow icon={<NavIcon name="mail" size={17} color={COLORS.amber} />} title="Microphone" subtitle="Notes vocales ou contenu audio" disabled badge="App native" />
+        <PermRow icon={<NavIcon name="user-plus" size={17} color={COLORS.amber} />} title="Contacts" subtitle="Trouver des Bibax dans vos contacts" disabled badge="App native" />
+        <div style={{ borderBottom: "none" }}>
+          <PermRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Calendrier" subtitle="Ajouter vos évènements Bibamus" disabled badge="App native" />
+        </div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Consentements</h2>
+      </div>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
+        <PermRow icon={<NavIcon name="star" size={17} color={COLORS.amber} />} title="Suggestions personnalisées" subtitle="Basées sur vos goûts et activités">
+          <MiniToggle checked={consents.consentPersonalizedSuggestions !== false} onChange={(v) => updateConsent("consentPersonalizedSuggestions", v)} />
+        </PermRow>
+        <PermRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Données d'usage anonymisées" subtitle="Aider à améliorer Bibamus">
+          <MiniToggle checked={consents.consentUsageData !== false} onChange={(v) => updateConsent("consentUsageData", v)} />
+        </PermRow>
+        <PermRow icon={<NavIcon name="mail" size={17} color={COLORS.amber} />} title="Communications partenaires" subtitle="Offres et évènements partenaires">
+          <MiniToggle checked={consents.consentPartnerComms === true} onChange={(v) => updateConsent("consentPartnerComms", v)} />
+        </PermRow>
+        <div style={{ borderBottom: "none" }}>
+          <PermRow icon={<NavIcon name="help-circle" size={17} color={COLORS.amber} />} title="Études & sondages" subtitle="Invitations à donner votre avis">
+            <MiniToggle checked={consents.consentSurveys === true} onChange={(v) => updateConsent("consentSurveys", v)} />
+          </PermRow>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Mes données</h2>
+      </div>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
+        <button
+          onClick={goToDataExport}
+          style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", background: "none", border: "none", borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "14px 4px", textAlign: "left", cursor: "pointer", color: COLORS.ink }}
+        >
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0 }}>
+            <NavIcon name="download" size={17} color={COLORS.amber} />
+          </span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: "14px" }}>Télécharger mes données</div>
+            <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Exporter vos données Bibamus</div>
+          </span>
+          <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
+        </button>
+        <PermRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Gérer mon historique" subtitle="Check-ins, recherches, activité" disabled badge="Bientôt" />
+        <PermRow icon={<NavIcon name="trash" size={17} color={COLORS.amber} />} title="Supprimer certaines données" subtitle="Demandes ciblées de suppression" disabled badge="Bientôt" />
+        <div style={{ borderBottom: "none" }}>
+          <PermRow icon={<NavIcon name="star" size={17} color={COLORS.amber} />} title="Effacer les suggestions" subtitle="Réinitialiser mes préférences de recommandation" disabled badge="Bientôt" />
+        </div>
+      </div>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", textAlign: "center" }}>
+        <p style={{ fontSize: "13.5px", fontWeight: 700, margin: 0 }}>Vos données restent sous votre contrôle</p>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px", marginBottom: 0 }}>
+          Vous pouvez modifier vos permissions à tout moment et consulter notre politique de confidentialité.
+        </p>
+      </div>
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
 // Mot de passe — réellement fonctionnel (supabase.auth.updateUser).
 export function PasswordChangeScreen({ onBack }) {
   const [password, setPassword] = useState("");

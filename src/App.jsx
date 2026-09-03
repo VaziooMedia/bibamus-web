@@ -40,7 +40,7 @@ import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen } from "./components/AccountScreen.jsx";
-import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen } from "./components/SecurityScreen.jsx";
+import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
@@ -390,6 +390,10 @@ export default function App() {
       shareRegion: profile.shareRegion,
       shareCity: profile.shareCity,
       shareBio: profile.shareBio,
+      consentPersonalizedSuggestions: profile.consentPersonalizedSuggestions,
+      consentUsageData: profile.consentUsageData,
+      consentPartnerComms: profile.consentPartnerComms,
+      consentSurveys: profile.consentSurveys,
       shareFacebook: profile.shareFacebook,
       shareInstagram: profile.shareInstagram,
       shareTiktok: profile.shareTiktok,
@@ -434,6 +438,10 @@ export default function App() {
     profile.shareRegion,
     profile.shareCity,
     profile.shareBio,
+    profile.consentPersonalizedSuggestions,
+    profile.consentUsageData,
+    profile.consentPartnerComms,
+    profile.consentSurveys,
     profile.shareFacebook,
     profile.shareInstagram,
     profile.shareTiktok,
@@ -1749,6 +1757,7 @@ export default function App() {
                     dataExport: "securityDataExport",
                     publicProfile: "securityPublicProfile",
                     blockedUsers: "securityBlockedUsers",
+                    permissions: "securityPermissions",
                   };
                   if (realScreens[sub]) {
                     setScreen(realScreens[sub]);
@@ -1767,6 +1776,14 @@ export default function App() {
               <PublicProfileScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("security")} />
             )}
             {screen === "securityBlockedUsers" && <BlockedUsersScreen onBack={() => setScreen("security")} />}
+            {screen === "securityPermissions" && (
+              <PermissionsScreen
+                profile={profile}
+                onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
+                onBack={() => setScreen("security")}
+                goToDataExport={() => setScreen("securityDataExport")}
+              />
+            )}
             {screen === "securityComingSoon" && (
               <SettingsComingSoonScreen
                 icon={
@@ -2227,7 +2244,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
