@@ -1405,6 +1405,7 @@ export default function App() {
           >
             {screen === "home" && (
               <HomeScreen
+                profile={profile}
                 events={events}
                 updateEvent={updateEvent}
                 eventTotal={() => 0}

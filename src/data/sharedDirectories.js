@@ -217,6 +217,30 @@ export async function signUp(email, password, { firstName, lastName, nickname, b
 
 // Seuil d'âge minimum pour un pays donné — piloté depuis la plateforme de gestion, plus besoin
 // de déploiement de code pour ajuster un seuil ou ajouter un pays.
+// Détecte le pays où se trouve physiquement l'appareil — utilisé pour l'avertissement d'âge
+// légal en voyage (pas la même chose que le pays de résidence déclaré au profil). Nécessite
+// que l'utilisateur ait autorisé la localisation (réglage "Localisation" des Permissions).
+export async function detectCurrentCountryCode() {
+  if (!navigator.geolocation) return null;
+  const position = await new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve(pos),
+      () => resolve(null),
+      { timeout: 8000, maximumAge: 3600000 }
+    );
+  });
+  if (!position) return null;
+  try {
+    const res = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=fr`
+    );
+    const data = await res.json();
+    return data?.countryCode ? data.countryCode.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getMinimumAge(countryCode) {
   const { data, error } = await supabase.from("market_config").select("config_value").eq("country_code", countryCode).eq("config_key", "minimum_age").maybeSingle();
   if (error || !data) return 18;

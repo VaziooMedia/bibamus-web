@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { COLORS, PROFILE_COUNTRIES } from "../constants.js";
-import { signUp, signIn, resetPassword, getMinimumAge } from "../data/sharedDirectories.js";
+import React, { useState, useEffect } from "react";
+import { COLORS, PROFILE_COUNTRIES, COUNTRY_ISO_CODES } from "../constants.js";
+import { signUp, signIn, resetPassword, getMinimumAge, detectCurrentCountryCode } from "../data/sharedDirectories.js";
 
 const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "4px", display: "block" };
@@ -147,6 +147,21 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
   const [nickname, setNickname] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [country, setCountry] = useState("");
+
+  // Pré-remplit le pays de résidence selon la position actuelle de l'appareil, pour gagner un
+  // clic — reste entièrement modifiable, et ne touche jamais à un choix déjà fait.
+  useEffect(() => {
+    if (mode !== "signup") return;
+    (async () => {
+      const isoCode = await detectCurrentCountryCode();
+      if (!isoCode) return;
+      const match = Object.entries(COUNTRY_ISO_CODES).find(([, iso]) => iso === isoCode);
+      if (match) {
+        setCountry((prev) => prev || match[0]);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);

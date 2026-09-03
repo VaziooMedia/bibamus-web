@@ -9,6 +9,7 @@ import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
+import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
 function pulseTimeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -47,6 +48,7 @@ const formatTime = (timestamp) => {
 
 
 export function HomeScreen({
+  profile,
   events,
   eventTotal,
   openEvent,
@@ -185,6 +187,7 @@ export function HomeScreen({
         </div>
       </div>
 
+      <TravelAgeWarning profile={profile} />
       <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} />
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
