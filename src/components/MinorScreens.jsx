@@ -2,14 +2,20 @@
 // Écrans annexes — Paramètres, Historique des événements, Hub
 // "Mes produits". Copiés tels quels depuis le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { formatDate } from "../utils.js";
+import { loadMyStories } from "../data/sharedDirectories.js";
 
 export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, onLogout, goToCategory }) {
+  const [hasActiveStory, setHasActiveStory] = useState(false);
+  useEffect(() => {
+    loadMyStories().then((list) => setHasActiveStory(list.some((s) => new Date(s.expiresAt) > new Date())));
+  }, []);
+
   const SettingsRow = ({ icon, title, subtitle, onClick, danger }) => (
     <button
       onClick={onClick}
@@ -48,7 +54,7 @@ export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, o
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "18px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <div style={{ width: "72px", height: "72px", borderRadius: "50%", border: `2px solid ${COLORS.amber}`, padding: "2px", flexShrink: 0 }}>
+          <div style={{ width: "72px", height: "72px", borderRadius: "50%", border: `2px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`, padding: "2px", flexShrink: 0 }}>
             <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
               {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={32} color={COLORS.amber} />}
             </div>

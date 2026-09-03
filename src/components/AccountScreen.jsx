@@ -3,13 +3,14 @@
 // informations du profil, chacune ouvrant un petit éditeur dédié
 // (au lieu du grand formulaire d'un seul tenant de MyProfileScreen).
 // ============================================================
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { COLORS, COUNTRIES, PHONE_PREFIXES, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
 import { formatDDMMYYYY } from "../utils.js";
+import { loadMyStories } from "../data/sharedDirectories.js";
 
 const FLUO_BLUE = "#2E9EFF";
 const FLUO_RED = "#FF3B3B";
@@ -73,6 +74,11 @@ function AccountGroup({ title, children }) {
 }
 
 export function AccountScreen({ myName, profile, onBack, goToField, goToDeactivate, goToDeleteAccount }) {
+  const [hasActiveStory, setHasActiveStory] = useState(false);
+  useEffect(() => {
+    loadMyStories().then((list) => setHasActiveStory(list.some((s) => new Date(s.expiresAt) > new Date())));
+  }, []);
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -80,7 +86,7 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "18px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <div style={{ width: "72px", height: "72px", borderRadius: "50%", border: `2px solid ${COLORS.amber}`, padding: "2px", flexShrink: 0 }}>
+          <div style={{ width: "72px", height: "72px", borderRadius: "50%", border: `2px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`, padding: "2px", flexShrink: 0 }}>
             <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
               {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={32} color={COLORS.amber} />}
             </div>
