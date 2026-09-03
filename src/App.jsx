@@ -41,6 +41,7 @@ import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
+import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
@@ -396,6 +397,16 @@ export default function App() {
       consentSurveys: profile.consentSurveys,
       consentLocation: profile.consentLocation,
       salonDisplayMode: profile.salonDisplayMode,
+      notifEnabled: profile.notifEnabled,
+      notifMentions: profile.notifMentions,
+      notifComments: profile.notifComments,
+      notifNewBibax: profile.notifNewBibax,
+      notifMessages: profile.notifMessages,
+      notifInvitations: profile.notifInvitations,
+      notifBibaxActivity: profile.notifBibaxActivity,
+      notifNews: profile.notifNews,
+      notifPartners: profile.notifPartners,
+      notifEmailSummary: profile.notifEmailSummary,
       shareFacebook: profile.shareFacebook,
       shareInstagram: profile.shareInstagram,
       shareTiktok: profile.shareTiktok,
@@ -446,6 +457,16 @@ export default function App() {
     profile.consentSurveys,
     profile.consentLocation,
     profile.salonDisplayMode,
+    profile.notifEnabled,
+    profile.notifMentions,
+    profile.notifComments,
+    profile.notifNewBibax,
+    profile.notifMessages,
+    profile.notifInvitations,
+    profile.notifBibaxActivity,
+    profile.notifNews,
+    profile.notifPartners,
+    profile.notifEmailSummary,
     profile.shareFacebook,
     profile.shareInstagram,
     profile.shareTiktok,
@@ -1745,10 +1766,17 @@ export default function App() {
                     setScreen("security");
                     return;
                   }
+                  if (key === "notifications") {
+                    setScreen("notifications");
+                    return;
+                  }
                   setViewedSettingsCategory(key);
                   setScreen("settingsCategory");
                 }}
               />
+            )}
+            {screen === "notifications" && (
+              <NotificationsScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("settings")} />
             )}
             {screen === "security" && (
               <SecurityScreen
@@ -2250,7 +2278,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
