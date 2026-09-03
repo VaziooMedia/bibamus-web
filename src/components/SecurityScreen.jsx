@@ -87,7 +87,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
       </SecurityGroup>
 
       <SecurityGroup title="Confidentialité">
-        <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir qui peut voir votre profil" onClick={() => goToSubScreen("publicProfile")} />
+        <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir ce qui est visible (réseaux, date de naissance, ville...)" onClick={() => goToSubScreen("publicProfile")} />
         <SecurityRow icon={<NavIcon name="map-pin-check" size={17} color={COLORS.amber} />} title="Visibilité des check-ins" onClick={() => goToSubScreen("checkinVisibility")} />
         <SecurityRow icon={<img src={bibaxIconUrl} alt="" style={{ width: "17px", height: "17px" }} />} title="Visibilité des Bibax" onClick={() => goToSubScreen("bibaxVisibility")} />
         <SecurityRow icon={<NavIcon name="user-plus" size={17} color={COLORS.amber} />} title="Invitations Bibax" onClick={() => goToSubScreen("bibaxInvites")} />

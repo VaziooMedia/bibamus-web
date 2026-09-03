@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS, COUNTRIES, PHONE_PREFIXES, COUNTRY_FLAGS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
@@ -444,6 +444,130 @@ export function SettingsComingSoonScreen({ title, icon, onBack }) {
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
         <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>Cette section arrive bientôt.</p>
       </div>
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+function ShareToggle({ checked, onChange }) {
+  return (
+    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, cursor: "pointer" }}>
+      <input type="checkbox" checked={checked !== false} onChange={(e) => onChange(e.target.checked)} style={{ width: "15px", height: "15px", accentColor: COLORS.amber }} />
+      Visible par mes Bibax
+    </label>
+  );
+}
+
+function VisibilityRow({ icon, title, children }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0, marginTop: "2px" }}>{icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "6px" }}>{title}</div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Profil public — regroupe tous les réglages de visibilité (auparavant dispersés sur chaque
+// page individuelle de Compte) en un seul endroit.
+export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
+  const [p, setP] = useState(profile);
+  const update = (patch) => {
+    setP((prev) => ({ ...prev, ...patch }));
+    onSaveProfile(patch);
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="eye" size={22} color={COLORS.amber} />}>Profil public</PageTitleWithBar>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisissez ce que vos Bibax peuvent voir sur votre profil.</p>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+        <VisibilityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Prénom">
+          <ShareToggle checked={p.sharePrenom} onChange={(v) => update({ sharePrenom: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Nom">
+          <ShareToggle checked={p.shareNom} onChange={(v) => update({ shareNom: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Surnom">
+          <ShareToggle checked={p.shareSurnom} onChange={(v) => update({ shareSurnom: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<NavIcon name="align-left" size={17} color={COLORS.amber} />} title="Bio">
+          <ShareToggle checked={p.shareBio} onChange={(v) => update({ shareBio: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Date de naissance">
+          <ShareToggle checked={p.shareBirthDate} onChange={(v) => update({ shareBirthDate: v })} />
+          {p.shareBirthDate !== false && (
+            <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+              {[
+                { key: "full", label: "Date complète" },
+                { key: "dayMonth", label: "Jour et mois seulement" },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => update({ birthDateSharePrecision: opt.key })}
+                  style={{
+                    background: (p.birthDateSharePrecision || "full") === opt.key ? COLORS.amber : "none",
+                    color: (p.birthDateSharePrecision || "full") === opt.key ? "#0D1B2A" : COLORS.ink,
+                    border: `2px solid ${(p.birthDateSharePrecision || "full") === opt.key ? COLORS.amber : COLORS.paperAlt}`,
+                    borderRadius: "999px",
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {p.shareBirthDate !== false && (p.birthDateSharePrecision || "full") === "full" && (
+            <div style={{ marginTop: "8px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, cursor: "pointer" }}>
+                <input type="checkbox" checked={p.shareAge !== false} onChange={(e) => update({ shareAge: e.target.checked })} style={{ width: "15px", height: "15px", accentColor: COLORS.amber }} />
+                Afficher mon âge calculé
+              </label>
+            </div>
+          )}
+        </VisibilityRow>
+        <VisibilityRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Pays">
+          <ShareToggle checked={p.shareCountry} onChange={(v) => update({ shareCountry: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Commune de résidence">
+          <ShareToggle checked={p.shareCity} onChange={(v) => update({ shareCity: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<FacebookIcon size={20} />} title="Facebook">
+          <ShareToggle checked={p.shareFacebook} onChange={(v) => update({ shareFacebook: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<InstagramIcon size={20} />} title="Instagram">
+          <ShareToggle checked={p.shareInstagram} onChange={(v) => update({ shareInstagram: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<TiktokIcon size={20} />} title="TikTok">
+          <ShareToggle checked={p.shareTiktok} onChange={(v) => update({ shareTiktok: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<SnapchatIcon size={20} />} title="Snapchat">
+          <ShareToggle checked={p.shareSnapchat} onChange={(v) => update({ shareSnapchat: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<WhatsappIcon size={20} />} title="WhatsApp">
+          <ShareToggle checked={p.shareWhatsapp} onChange={(v) => update({ shareWhatsapp: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<XIcon size={20} />} title="X">
+          <ShareToggle checked={p.shareX} onChange={(v) => update({ shareX: v })} />
+        </VisibilityRow>
+        <VisibilityRow icon={<ThreadsIcon size={20} />} title="Threads">
+          <ShareToggle checked={p.shareThreads} onChange={(v) => update({ shareThreads: v })} />
+        </VisibilityRow>
+        <div style={{ borderBottom: "none" }}>
+          <VisibilityRow icon={<LinkedinIcon size={20} />} title="LinkedIn">
+            <ShareToggle checked={p.shareLinkedin} onChange={(v) => update({ shareLinkedin: v })} />
+          </VisibilityRow>
+        </div>
+      </div>
+
       <PageFooterNav onBack={onBack} />
     </div>
   );
