@@ -562,6 +562,37 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
         </div>
       </div>
 
+      <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: "22px 0 8px 2px" }}>Affichage dans les salons (BibaRoom)</h2>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px 16px" }}>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 12px 0" }}>
+          En cas de doublon avec un autre participant du même salon, l'initiale de votre nom de famille s'ajoute automatiquement.
+        </p>
+        <div style={{ display: "flex", gap: "8px" }}>
+          {[
+            { key: "firstName", label: "Prénom" },
+            { key: "nickname", label: "Surnom" },
+          ].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => update({ salonDisplayMode: opt.key })}
+              style={{
+                flex: 1,
+                background: (p.salonDisplayMode || "firstName") === opt.key ? COLORS.amber : "none",
+                color: (p.salonDisplayMode || "firstName") === opt.key ? "#0D1B2A" : COLORS.ink,
+                border: `2px solid ${(p.salonDisplayMode || "firstName") === opt.key ? COLORS.amber : COLORS.paperAlt}`,
+                borderRadius: "999px",
+                padding: "9px 12px",
+                fontSize: "13px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <PageFooterNav onBack={onBack} />
     </div>
   );

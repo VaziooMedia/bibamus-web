@@ -193,7 +193,19 @@ export function PotCard({ event, updateEvent, myName }) {
   );
 }
 
-export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }) {
+export function SalonSection({ event, updateEvent, myName, profile, myBibroCode, bibros }) {
+  // Calcule le nom d'affichage dans ce salon selon la préférence de l'utilisateur (prénom ou
+  // surnom), en ajoutant automatiquement l'initiale du nom de famille si ce nom est déjà pris
+  // par un autre participant présent dans ce même salon.
+  const resolveSalonDisplayName = (existingParticipants) => {
+    const mode = profile?.salonDisplayMode || "firstName";
+    const base = (mode === "nickname" && profile?.nickname ? profile.nickname : myName) || myName;
+    const collision = (existingParticipants || []).some((p) => p.name === base && p.code !== myBibroCode);
+    if (!collision) return base;
+    const initial = profile?.lastName ? ` ${profile.lastName.charAt(0).toUpperCase()}.` : "";
+    return `${base}${initial}`;
+  };
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mode, setMode] = useState(null); // null | 'join'
@@ -243,7 +255,7 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
     setError("");
     try {
       const code = await generateRoomCode();
-      const updated = { ...event, salonCode: code, participants: [{ code: myBibroCode, name: myName, joinedAt: Date.now() }] };
+      const updated = { ...event, salonCode: code, participants: [{ code: myBibroCode, name: resolveSalonDisplayName([]), joinedAt: Date.now() }] };
       await saveSalon(code, updated);
       updateEvent(event.id, (e) => ({ ...e, salonCode: code, participants: updated.participants }));
     } catch (e) {
@@ -266,7 +278,7 @@ export function SalonSection({ event, updateEvent, myName, myBibroCode, bibros }
       }
       const existingParticipants = existing.participants || [];
       const already = existingParticipants.some((p) => p.code === myBibroCode);
-      const nextParticipants = already ? existingParticipants : [...existingParticipants, { code: myBibroCode, name: myName, joinedAt: Date.now() }];
+      const nextParticipants = already ? existingParticipants : [...existingParticipants, { code: myBibroCode, name: resolveSalonDisplayName(existingParticipants), joinedAt: Date.now() }];
       if (!already) {
         await saveSalon(code, { ...existing, participants: nextParticipants });
       }

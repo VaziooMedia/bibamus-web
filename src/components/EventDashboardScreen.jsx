@@ -14,7 +14,7 @@ import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, compu
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories } from "../data/sharedDirectories.js";
 
-export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
+export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");
@@ -1332,7 +1332,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
       )}
 
 
-      <SalonSection event={event} updateEvent={updateEvent} myName={myName} myBibroCode={myBibroCode} bibros={bibros} />
+      <SalonSection event={event} updateEvent={updateEvent} myName={myName} profile={profile} myBibroCode={myBibroCode} bibros={bibros} />
 
       <PrimaryButton
         onClick={onNewRound}

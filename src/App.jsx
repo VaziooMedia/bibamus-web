@@ -395,6 +395,7 @@ export default function App() {
       consentPartnerComms: profile.consentPartnerComms,
       consentSurveys: profile.consentSurveys,
       consentLocation: profile.consentLocation,
+      salonDisplayMode: profile.salonDisplayMode,
       shareFacebook: profile.shareFacebook,
       shareInstagram: profile.shareInstagram,
       shareTiktok: profile.shareTiktok,
@@ -444,6 +445,7 @@ export default function App() {
     profile.consentPartnerComms,
     profile.consentSurveys,
     profile.consentLocation,
+    profile.salonDisplayMode,
     profile.shareFacebook,
     profile.shareInstagram,
     profile.shareTiktok,
@@ -1467,6 +1469,7 @@ export default function App() {
                 onBack={() => setScreen("home")}
                 updateEvent={updateEvent}
                 myName={profile.name}
+                profile={profile}
                 myUserId={session.user.id}
                 myBibroCode={profile.myBibroCode}
                 bibros={bibros}
