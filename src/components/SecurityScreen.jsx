@@ -6,12 +6,12 @@
 // fonctionnalité réelle derrière et affichent un écran honnête
 // "Bientôt disponible" plutôt qu'un bouton trompeur.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PageTitleWithBar } from "./AccountScreen.jsx";
-import { updatePassword } from "../data/sharedDirectories.js";
+import { updatePassword, loadMyBlockedUsers, unblockUser } from "../data/sharedDirectories.js";
 import { supabase } from "../supabaseClient.js";
 
 const FLUO_RED = "#FF3B3B";
@@ -106,6 +106,63 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
           />
         </div>
       </SecurityGroup>
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Utilisateurs bloqués — liste réelle, avec déblocage.
+export function BlockedUsersScreen({ onBack }) {
+  const [blocked, setBlocked] = useState(null);
+  const [unblockingId, setUnblockingId] = useState(null);
+
+  useEffect(() => {
+    loadMyBlockedUsers().then(setBlocked);
+  }, []);
+
+  const handleUnblock = async (userId) => {
+    setUnblockingId(userId);
+    await unblockUser(userId);
+    setBlocked((prev) => prev.filter((b) => b.userId !== userId));
+    setUnblockingId(null);
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="no-entry" size={22} color={COLORS.amber} />}>Utilisateurs bloqués</PageTitleWithBar>
+
+      {blocked === null ? (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
+      ) : blocked.length === 0 ? (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
+          <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>Vous n'avez bloqué personne pour l'instant.</p>
+        </div>
+      ) : (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+          {blocked.map((b, i) => (
+            <div
+              key={b.userId}
+              style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 4px", borderBottom: i < blocked.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none" }}
+            >
+              <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={18} color={COLORS.amber} />}
+              </div>
+              <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: "14px" }}>
+                {b.name} {b.lastName || ""}
+              </span>
+              <button
+                onClick={() => handleUnblock(b.userId)}
+                disabled={unblockingId === b.userId}
+                style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "6px 12px", fontSize: "12px", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}
+              >
+                {unblockingId === b.userId ? "..." : "Débloquer"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <PageFooterNav onBack={onBack} />
     </div>

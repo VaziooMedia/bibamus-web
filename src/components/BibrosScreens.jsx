@@ -426,10 +426,12 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   );
 }
 
-export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRemove, goToBibaxPhotos }) {
+export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRemove, goToBibaxPhotos, onBlock }) {
   const [mutualCount, setMutualCount] = useState(null);
   const [bibaxCount, setBibaxCount] = useState(null);
   const [stats, setStats] = useState(null);
+  const [confirmingBlock, setConfirmingBlock] = useState(false);
+  const [blocking, setBlocking] = useState(false);
 
   useEffect(() => {
     if (!bibro?.userId) return;
@@ -649,6 +651,44 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title="Historique" disabled badge="Bientôt" />
         <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title="Photos" onClick={() => goToBibaxPhotos && goToBibaxPhotos(bibro.userId, bibro.name)} />
       </div>
+
+      {onBlock && (
+        <div style={{ marginTop: "18px" }}>
+          {confirmingBlock ? (
+            <>
+              <p style={{ fontSize: "13px", color: "#FF3B3B", marginBottom: "10px", textAlign: "center" }}>
+                Bloquer {bibro.name} ? Votre lien Bibax sera supprimé et vous ne pourrez plus vous ajouter mutuellement.
+              </p>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  onClick={() => setConfirmingBlock(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontWeight: 700, cursor: "pointer" }}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={async () => {
+                    setBlocking(true);
+                    await onBlock(bibro.userId);
+                    setBlocking(false);
+                  }}
+                  disabled={blocking}
+                  style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "2px solid #FF3B3B", background: "none", color: "#FF3B3B", fontWeight: 700, cursor: "pointer" }}
+                >
+                  {blocking ? "..." : "Confirmer le blocage"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              onClick={() => setConfirmingBlock(true)}
+              style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "2px solid #FF3B3B", background: "none", color: "#FF3B3B", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}
+            >
+              Bloquer {bibro.name}
+            </button>
+          )}
+        </div>
+      )}
 
       <PageFooterNav onBack={onBack} />
     </div>

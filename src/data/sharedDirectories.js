@@ -957,6 +957,28 @@ export async function loadBibaxCount(otherUserId) {
   return data ?? 0;
 }
 
+export async function blockUser(targetId) {
+  const { data, error } = await supabase.rpc("block_user", { p_target_id: targetId });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return data;
+}
+
+export async function unblockUser(targetId) {
+  const { data, error } = await supabase.rpc("unblock_user", { p_target_id: targetId });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function loadMyBlockedUsers() {
+  const { data, error } = await supabase.rpc("get_my_blocked_users");
+  if (error) {
+    console.error("loadMyBlockedUsers:", error);
+    return [];
+  }
+  return data.map((r) => ({ userId: r.blocked_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url, blockedAt: r.blocked_at }));
+}
+
 export async function loadMutualBibaxCount(otherUserId) {
   const { data, error } = await supabase.rpc("get_mutual_bibax_count", { p_other_user_id: otherUserId });
   if (error) {
