@@ -23,10 +23,11 @@ function splitPhone(stored) {
   return { prefix: "", number: stored };
 }
 
-function PageTitleWithBar({ children, size = "26px" }) {
+function PageTitleWithBar({ children, size = "26px", icon }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 20px 0" }}>
       <span style={{ width: "5px", height: "24px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+      {icon && <span style={{ display: "flex", alignItems: "center", lineHeight: 0 }}>{icon}</span>}
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: size, margin: 0 }}>{children}</h1>
     </div>
   );
@@ -55,7 +56,6 @@ function AccountRow({ icon, title, value, onClick, titleColor }) {
         color: COLORS.ink,
       }}
     >
-      <span style={{ width: "3px", height: "22px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0 }}>{icon}</span>
       <span style={{ fontWeight: 600, fontSize: "14px", flexShrink: 0, color: titleColor || COLORS.ink }}>{title}</span>
       <span style={{ flex: 1, minWidth: 0, textAlign: "right", fontSize: "13px", color: COLORS.inkSoft, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
@@ -77,7 +77,7 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", margin: "4px 0 18px 0" }}>Compte</h1>
+      <PageTitleWithBar icon={<NavIcon name="user" size={22} color={COLORS.amber} />}>Compte</PageTitleWithBar>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "18px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
