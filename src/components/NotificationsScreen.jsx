@@ -78,6 +78,7 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack }) {
     setP((prev) => ({ ...prev, ...patch }));
     onSaveProfile(patch);
   };
+  const masterEnabled = p.notifEnabled !== false;
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -102,35 +103,40 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack }) {
           icon={<NavIcon name="tag" size={17} color={COLORS.amber} />}
           title="Mentions"
           subtitle="Quand un Bibax vous mentionne"
-          checked={p.notifMentions !== false}
+          checked={masterEnabled && p.notifMentions !== false}
+          disabled={!masterEnabled}
           onChange={(v) => update({ notifMentions: v })}
         />
         <NotifRow
           icon={<NavIcon name="comment" size={17} color={COLORS.amber} />}
           title="Commentaires"
           subtitle="Sur vos checks, publications, stories..."
-          checked={p.notifComments !== false}
+          checked={masterEnabled && p.notifComments !== false}
+          disabled={!masterEnabled}
           onChange={(v) => update({ notifComments: v })}
         />
         <NotifRow
           icon={<NavIcon name="user-plus" size={17} color={COLORS.amber} />}
           title="Nouveaux Bibax"
           subtitle="Ajout et acceptation"
-          checked={p.notifNewBibax !== false}
+          checked={masterEnabled && p.notifNewBibax !== false}
+          disabled={!masterEnabled}
           onChange={(v) => update({ notifNewBibax: v })}
         />
         <NotifRow
           icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
           title="Messages"
           subtitle="Nouveaux messages privés"
-          checked={p.notifMessages !== false}
+          checked={masterEnabled && p.notifMessages !== false}
+          disabled={!masterEnabled}
           onChange={(v) => update({ notifMessages: v })}
         />
         <NotifRow
-          icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />}
+          icon={<NavIcon name="bibago-nav" size={15} color={COLORS.amber} />}
           title="Invitations"
           subtitle="Invitations à rejoindre un BibaRoom ou BibArena"
-          checked={p.notifInvitations !== false}
+          checked={masterEnabled && p.notifInvitations !== false}
+          disabled={!masterEnabled}
           onChange={(v) => update({ notifInvitations: v })}
         />
         <div style={{ borderBottom: "none" }}>
@@ -138,7 +144,8 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack }) {
             icon={<NavIcon name="activity" size={17} color={COLORS.amber} />}
             title="Activités de vos Bibax"
             subtitle="Ce que font vos Bibax"
-            checked={p.notifBibaxActivity !== false}
+            checked={masterEnabled && p.notifBibaxActivity !== false}
+            disabled={!masterEnabled}
             onChange={(v) => update({ notifBibaxActivity: v })}
           />
         </div>
@@ -149,7 +156,8 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack }) {
           icon={<NavIcon name="info" size={17} color={COLORS.amber} />}
           title="Actualités Bibamus"
           subtitle="Nouveautés de l'app et annonces"
-          checked={p.notifNews !== false}
+          checked={masterEnabled && p.notifNews !== false}
+          disabled={!masterEnabled}
           onChange={(v) => update({ notifNews: v })}
         />
         <div style={{ borderBottom: "none" }}>
@@ -157,23 +165,69 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack }) {
             icon={<NavIcon name="megaphone" size={17} color={COLORS.amber} />}
             title="Partenaires"
             subtitle="Offres et évènements partenaires"
-            checked={p.notifPartners === true}
+            checked={masterEnabled && p.notifPartners === true}
+            disabled={!masterEnabled}
             onChange={(v) => update({ notifPartners: v })}
           />
         </div>
       </NotifGroup>
 
-      <NotifGroup title="Fréquence récapitulative">
-        <div style={{ borderBottom: "none" }}>
-          <NotifRow
-            icon={<NavIcon name="clock" size={17} color={COLORS.amber} />}
-            title="Récapitulatif par e-mail"
-            subtitle="Recevoir un récapitulatif de vos activités"
-            checked={p.notifEmailSummary !== false}
-            onChange={(v) => update({ notifEmailSummary: v })}
-          />
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Fréquence récapitulative</h2>
+      </div>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px 16px", opacity: masterEnabled ? 1 : 0.55 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+            <NavIcon name="at" size={17} color={COLORS.amber} />
+          </span>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "14px" }}>Récapitulatif par e-mail</div>
+            <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Recevoir un récapitulatif de vos activités</div>
+          </div>
         </div>
-      </NotifGroup>
+
+        <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Fréquence</label>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+          {[
+            { key: "week", label: "Semaine" },
+            { key: "month", label: "Mois" },
+            { key: "quarter", label: "Trimestre" },
+          ].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => masterEnabled && update({ notifEmailSummaryFrequency: opt.key })}
+              disabled={!masterEnabled}
+              style={{
+                flex: 1,
+                background: (p.notifEmailSummaryFrequency || "week") === opt.key ? COLORS.amber : "none",
+                color: (p.notifEmailSummaryFrequency || "week") === opt.key ? "#0D1B2A" : COLORS.ink,
+                border: `2px solid ${(p.notifEmailSummaryFrequency || "week") === opt.key ? COLORS.amber : COLORS.paperAlt}`,
+                borderRadius: "999px",
+                padding: "8px 10px",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                cursor: masterEnabled ? "pointer" : "not-allowed",
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>
+          E-mail de réception (optionnel, différent de votre e-mail de connexion)
+        </label>
+        <input
+          type="email"
+          value={p.notifEmailSummaryAddress || ""}
+          onChange={(e) => setP((prev) => ({ ...prev, notifEmailSummaryAddress: e.target.value }))}
+          onBlur={() => update({ notifEmailSummaryAddress: p.notifEmailSummaryAddress })}
+          disabled={!masterEnabled}
+          placeholder={profile.email || "vous@exemple.com"}
+          style={{ width: "100%", boxSizing: "border-box", padding: "12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
+        />
+      </div>
 
       <PageFooterNav onBack={onBack} />
     </div>
