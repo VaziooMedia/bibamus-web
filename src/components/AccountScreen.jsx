@@ -179,12 +179,12 @@ export function AccountScreen({ myName, profile, myUserId, onOpenMyStory, onBack
 
       <AccountGroup title="Réseaux sociaux">
         {SOCIAL_NETWORKS.slice(0, -1).map((net) => (
-          <AccountRow key={net.key} icon={net.icon} title={net.label} value={stripPrefix(profile[net.field], net.prefix) || "—"} onClick={() => goToField(net.key)} />
+          <AccountRow key={net.key} icon={net.icon} title={net.label} onClick={() => goToField(net.key)} />
         ))}
         <div style={{ borderBottom: "none" }}>
           {(() => {
             const net = SOCIAL_NETWORKS[SOCIAL_NETWORKS.length - 1];
-            return <AccountRow icon={net.icon} title={net.label} value={stripPrefix(profile[net.field], net.prefix) || "—"} onClick={() => goToField(net.key)} />;
+            return <AccountRow icon={net.icon} title={net.label} onClick={() => goToField(net.key)} />;
           })()}
         </div>
       </AccountGroup>
@@ -318,27 +318,39 @@ export function SocialLinkEditScreen({ field, profile, onSaveProfile, onBack }) 
       <PageTitleWithBar icon={net.icon}>{net.label}</PageTitleWithBar>
 
       <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Votre lien {net.label}</label>
+
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
           width: "100%",
           boxSizing: "border-box",
-          borderRadius: "12px",
+          padding: "10px 12px",
+          borderRadius: "10px 10px 0 0",
           border: `2px solid ${COLORS.paperAlt}`,
-          background: COLORS.surface,
-          overflow: "hidden",
+          borderBottom: "none",
+          background: COLORS.paperAlt,
+          fontSize: "13px",
+          color: COLORS.inkSoft,
+          overflowWrap: "anywhere",
         }}
       >
-        <span style={{ padding: "14px 0 14px 12px", fontSize: "14px", color: COLORS.inkSoft, whiteSpace: "nowrap", flexShrink: 0 }}>{net.prefix}</span>
-        <input
-          type="text"
-          value={handle}
-          onChange={(e) => setHandle(e.target.value)}
-          placeholder="votreidentifiant"
-          style={{ flex: 1, minWidth: 0, padding: "14px 12px 14px 2px", border: "none", background: "none", color: COLORS.ink, fontSize: "14px", boxSizing: "border-box" }}
-        />
+        {net.prefix}
       </div>
+      <input
+        type="text"
+        value={handle}
+        onChange={(e) => setHandle(e.target.value)}
+        placeholder="votreidentifiant"
+        style={{
+          width: "100%",
+          boxSizing: "border-box",
+          padding: "14px 12px",
+          borderRadius: "0 0 10px 10px",
+          border: `2px solid ${COLORS.paperAlt}`,
+          background: COLORS.surface,
+          color: COLORS.ink,
+          fontSize: "16px",
+        }}
+      />
 
       <PrimaryButton onClick={handleSave} disabled={saving} style={{ width: "100%", marginTop: "20px" }}>
         {saving ? "Enregistrement..." : "Enregistrer"}
