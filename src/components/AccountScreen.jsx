@@ -176,11 +176,11 @@ export function AccountScreen({ myName, profile, onBack, goToField, goToDeactiva
 // est limitée à 40 caractères (espaces compris).
 export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
   const config = {
-    name: { label: "Prénom", key: "name", type: "text", capitalize: true },
-    lastName: { label: "Nom", key: "lastName", type: "text", capitalize: true },
-    nickname: { label: "Surnom", key: "nickname", type: "text", capitalize: true },
-    bio: { label: "Bio", key: "bio", type: "textarea", maxLength: 40 },
-    birthDate: { label: "Date de naissance", key: "birthDate", type: "date" },
+    name: { label: "Prénom", key: "name", type: "text", capitalize: true, icon: "user" },
+    lastName: { label: "Nom", key: "lastName", type: "text", capitalize: true, icon: "user" },
+    nickname: { label: "Surnom", key: "nickname", type: "text", capitalize: true, icon: "tag" },
+    bio: { label: "Bio", key: "bio", type: "textarea", maxLength: 40, icon: "align-left" },
+    birthDate: { label: "Date de naissance", key: "birthDate", type: "date", icon: "calendar" },
   }[field];
 
   const [value, setValue] = useState(profile[config.key] || "");
@@ -203,7 +203,7 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>{config.label}</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name={config.icon} size={22} color={COLORS.amber} />}>{config.label}</PageTitleWithBar>
 
       {config.type === "textarea" ? (
         <>
@@ -248,7 +248,7 @@ export function EmailViewScreen({ profile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>E-mail</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="mail" size={22} color={COLORS.amber} />}>E-mail</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px" }}>
         <p style={{ fontSize: "16px", fontWeight: 700, margin: 0 }}>{profile.email || "—"}</p>
       </div>
@@ -280,7 +280,7 @@ export function PhoneEditScreen({ profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>Téléphone</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="phone" size={22} color={COLORS.amber} />}>Téléphone</PageTitleWithBar>
 
       <div style={{ display: "flex", gap: "8px" }}>
         <select
@@ -329,7 +329,7 @@ export function LocationEditScreen({ profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>Pays & Commune</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="map-pin" size={22} color={COLORS.amber} />}>Pays & Commune</PageTitleWithBar>
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Pays</label>
       <select
@@ -378,7 +378,7 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>Photo de profil</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="camera" size={22} color={COLORS.amber} />}>Photo de profil</PageTitleWithBar>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
         <button
@@ -621,7 +621,7 @@ export function DeactivateAccountScreen({ onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar>Désactiver temporairement mon compte</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="pause" size={22} color={COLORS.amber} />}>Désactiver temporairement mon compte</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
         <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>
           Cette fonctionnalité n'existe pas encore — seule la suppression définitive du compte est disponible pour l'instant.
