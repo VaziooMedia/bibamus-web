@@ -69,6 +69,7 @@ export function SettingsScreen({ myName, profile, onBack, isAdmin, goToImport, o
 
       <SettingsGroup>
         <SettingsRow icon={<NavIcon name="user" size={18} color={COLORS.amber} />} title="Compte" subtitle="Informations personnelles" onClick={() => goToCategory("account")} />
+        <SettingsRow icon={<NavIcon name="grid" size={18} color={COLORS.amber} />} title="Fonctionnalités" subtitle="Affichage, préférences de l'app" onClick={() => goToCategory("features")} />
         <SettingsRow icon={<NavIcon name="lock" size={18} color={COLORS.amber} />} title="Sécurité & confidentialité" subtitle="Mot de passe, confidentialité, données" onClick={() => goToCategory("security")} />
         <SettingsRow icon={<NavIcon name="bell" size={18} color={COLORS.amber} />} title="Notifications" subtitle="Alertes, mentions, rappels" onClick={() => goToCategory("notifications")} />
         <SettingsRow icon={<NavIcon name="sliders" size={18} color={COLORS.amber} />} title="Préférences" subtitle="Langue, unités, affichage" onClick={() => goToCategory("preferences")} />

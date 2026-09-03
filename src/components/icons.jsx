@@ -536,6 +536,15 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M9 12l2 2 4-4.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
+    case "grid":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" stroke={color} strokeWidth="1.7" />
+          <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" stroke={color} strokeWidth="1.7" />
+          <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" stroke={color} strokeWidth="1.7" />
+          <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" stroke={color} strokeWidth="1.7" />
+        </svg>
+      );
     case "faceid":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

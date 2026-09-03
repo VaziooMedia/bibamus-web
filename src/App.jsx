@@ -1835,6 +1835,7 @@ export default function App() {
                         connect: "link",
                         help: "help-circle",
                         about: "info",
+                        features: "grid",
                       }[viewedSettingsCategory] || "settings"
                     }
                     size={22}
@@ -1851,6 +1852,7 @@ export default function App() {
                     connect: "Connecter",
                     help: "Aide & support",
                     about: "À propos",
+                    features: "Fonctionnalités",
                   }[viewedSettingsCategory] || ""
                 }
                 onBack={() => setScreen("settings")}
