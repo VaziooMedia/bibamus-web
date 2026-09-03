@@ -241,16 +241,19 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
       </div>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
         <PermRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Localisation" subtitle="Pour trouver des lieux proches">
-          {geoStatus === "granted" ? (
-            <span style={{ fontSize: "12px", color: COLORS.amber, fontWeight: 700 }}>Autorisé</span>
-          ) : geoStatus === "denied" ? (
-            <span style={{ fontSize: "11px", color: "#FF3B3B" }}>Refusé (réglages du navigateur)</span>
-          ) : (
-            <button onClick={requestLocation} style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "5px 10px", fontSize: "11.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
-              Activer
-            </button>
-          )}
+          <MiniToggle
+            checked={consents.consentLocation === true}
+            onChange={(v) => {
+              updateConsent("consentLocation", v);
+              if (v && geoStatus !== "granted") requestLocation();
+            }}
+          />
         </PermRow>
+        {geoStatus === "denied" && consents.consentLocation === true && (
+          <p style={{ fontSize: "11px", color: "#FF3B3B", margin: "-8px 4px 8px 40px" }}>
+            Bibamus est autorisé dans vos réglages, mais votre navigateur a refusé l'accès — à modifier dans ses réglages.
+          </p>
+        )}
         <PermRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Appareil photo" subtitle="Scanner, ajouter des photos" disabled badge="App native" />
         <PermRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Photos" subtitle="Ajouter ou enregistrer des visuels" disabled badge="App native" />
         <PermRow icon={<NavIcon name="mail" size={17} color={COLORS.amber} />} title="Microphone" subtitle="Notes vocales ou contenu audio" disabled badge="App native" />
