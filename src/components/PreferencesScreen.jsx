@@ -177,7 +177,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar icon={<NavIcon name="weight" size={22} color={COLORS.amber} />}>Unités de mesure</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="ruler" size={22} color={COLORS.amber} />}>Unités de mesure</PageTitleWithBar>
 
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
         <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
@@ -213,6 +213,23 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
         />
       </div>
 
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0 10px" }}>
+        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+          <NavIcon name="activity" size={17} color={COLORS.amber} />
+        </span>
+        <span style={{ fontWeight: 700, fontSize: "14px" }}>Énergie</span>
+      </div>
+      <div>
+        <Choice
+          groupValue={p.prefEnergyUnit || "kcal"}
+          onPick={(v) => update({ prefEnergyUnit: v })}
+          options={[
+            { key: "kcal", label: "KCal" },
+            { key: "calories", label: "Calories (C)" },
+          ]}
+        />
+      </div>
+
       <PageFooterNav onBack={onBack} />
     </div>
   );
@@ -237,9 +254,9 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
       </PrefGroup>
 
       <PrefGroup title="Unités & formats">
-        <NavRow icon={<NavIcon name="ruler" size={17} color={COLORS.amber} />} title="Distances" value="Kilomètre (km)" disabled />
+        <NavRow icon={<NavIcon name="route" size={17} color={COLORS.amber} />} title="Distances" value="Kilomètre (km)" disabled />
         <NavRow icon={<NavIcon name="thermometer" size={17} color={COLORS.amber} />} title="Température" value="Celsius (°C)" disabled />
-        <NavRow icon={<NavIcon name="weight" size={17} color={COLORS.amber} />} title="Unités de mesure" onClick={goToVolumeWeight} />
+        <NavRow icon={<NavIcon name="ruler" size={17} color={COLORS.amber} />} title="Unités de mesure" onClick={goToVolumeWeight} />
         <NavRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Format date" value="JJ/MM/AAAA" disabled />
         <NavRow icon={<NavIcon name="clock" size={17} color={COLORS.amber} />} title="Format horaire" value="24h" disabled last />
       </PrefGroup>
@@ -279,25 +296,42 @@ export function StorySettingsScreen({ profile, onSaveProfile, onBack, goToChoice
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="stories" size={22} color={COLORS.amber} />}>Paramètres des Stories</PageTitleWithBar>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Un Bibax peut publier des Stories depuis un BibaRoom ou un BibArena.</p>
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "18px" }}>
+      <PrefGroup title="BibaRoom">
         <ToggleRow
           icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />}
           title="Afficher le lieu par défaut"
           subtitle="Pré-cochée à la création d'une nouvelle Story"
-          checked={p.storyDefaultShowLocation !== false}
-          onChange={(v) => update({ storyDefaultShowLocation: v })}
+          checked={p.storyDefaultShowLocationRoom !== false}
+          onChange={(v) => update({ storyDefaultShowLocationRoom: v })}
         />
         <ToggleRow
           icon={<NavIcon name="eye" size={17} color={COLORS.amber} />}
           title="Publier en public par défaut"
           subtitle="Visible hors salons également, pré-coché à la création"
-          checked={p.storyDefaultPublic !== false}
-          onChange={(v) => update({ storyDefaultPublic: v })}
+          checked={p.storyDefaultPublicRoom !== false}
+          onChange={(v) => update({ storyDefaultPublicRoom: v })}
           last
         />
-      </div>
+      </PrefGroup>
+
+      <PrefGroup title="BibArena">
+        <ToggleRow
+          icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />}
+          title="Afficher le lieu par défaut"
+          subtitle="Pré-cochée à la création d'une nouvelle Story"
+          checked={p.storyDefaultShowLocationArena !== false}
+          onChange={(v) => update({ storyDefaultShowLocationArena: v })}
+        />
+        <ToggleRow
+          icon={<NavIcon name="eye" size={17} color={COLORS.amber} />}
+          title="Publier en public par défaut"
+          subtitle="Visible hors salons également, pré-coché à la création"
+          checked={p.storyDefaultPublicArena !== false}
+          onChange={(v) => update({ storyDefaultPublicArena: v })}
+          last
+        />
+      </PrefGroup>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
         <NavRow
