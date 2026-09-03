@@ -525,8 +525,8 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
     case "megaphone":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M3 10v4a1.5 1.5 0 0 0 1.5 1.5H6l2.5 5 1.8-.8L8.5 15.5H10l9-4.5v-6l-9 4.5H4.5A1.5 1.5 0 0 0 3 10Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-          <path d="M19 8v5.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <path d="m3 11 18-5v12L3 14v-3z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round" />
+          <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
         </svg>
       );
     case "shield-check":
