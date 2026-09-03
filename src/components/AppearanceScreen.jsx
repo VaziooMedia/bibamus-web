@@ -51,8 +51,13 @@ export function AppearanceScreen({ onBack }) {
       <PageTitleWithBar icon={<NavIcon name="brush" size={22} color={COLORS.amber} />}>Apparence</PageTitleWithBar>
 
       <AppearanceGroup title="Couleurs & style">
-        <AppearanceRow icon={<NavIcon name="brush" size={17} color={COLORS.amber} />} title="Couleur d'accent" value="Vert fluo" disabled />
-        <AppearanceRow icon={<NavIcon name="grid" size={17} color={COLORS.amber} />} title="Icône de l'app" value="Bibamus" disabled last />
+        <AppearanceRow
+          icon={<NavIcon name="palette" size={17} color={COLORS.amber} />}
+          title="Couleur d'accent"
+          value={<span style={{ display: "inline-block", width: "18px", height: "18px", borderRadius: "50%", background: COLORS.amber, border: `2px solid ${COLORS.ink}` }} />}
+          disabled
+        />
+        <AppearanceRow icon={<NavIcon name="bibamus-monogram" size={17} color={COLORS.amber} />} title="Icône de l'app" disabled last />
       </AppearanceGroup>
 
       <PageFooterNav onBack={onBack} />
