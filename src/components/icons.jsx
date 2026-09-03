@@ -624,8 +624,27 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
     case "weight":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
-          <circle cx="12" cy="12" r="3.2" stroke={color} strokeWidth="1.7" />
+          <rect x="3" y="4" width="18" height="16" rx="3" stroke={color} strokeWidth="1.7" />
+          <rect x="8" y="7.5" width="8" height="4" rx="1" stroke={color} strokeWidth="1.4" />
+          <path d="M12 14.5v3.5M8.5 18h7" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "flame":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12 21.5c4 0 6.5-2.6 6.5-6 0-2.8-1.6-4.4-2.6-6.2-.6-1.1-.9-2.3-.7-3.8-2 1-3.5 3-3.7 5.2-1.4-1-2-2.7-1.9-4.7-2.3 1.6-4.1 4.6-4.1 7.5 0 3.4 2.5 8 6.5 8Z"
+            stroke={color}
+            strokeWidth="1.7"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "glass-water":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M6 3.5h12l-1.3 16a2 2 0 0 1-2 1.9H9.3a2 2 0 0 1-2-1.9L6 3.5Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M6.6 11h10.8" stroke={color} strokeWidth="1.7" />
         </svg>
       );
     case "route":

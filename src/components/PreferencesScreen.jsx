@@ -181,7 +181,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
 
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
         <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
-          <NavIcon name="bottle" size={17} color={COLORS.amber} />
+          <NavIcon name="glass-water" size={17} color={COLORS.amber} />
         </span>
         <span style={{ fontWeight: 700, fontSize: "14px" }}>Volume</span>
       </div>
@@ -215,7 +215,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
 
       <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0 10px" }}>
         <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
-          <NavIcon name="activity" size={17} color={COLORS.amber} />
+          <NavIcon name="flame" size={17} color={COLORS.amber} />
         </span>
         <span style={{ fontWeight: 700, fontSize: "14px" }}>Énergie</span>
       </div>
@@ -224,8 +224,8 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
           groupValue={p.prefEnergyUnit || "kcal"}
           onPick={(v) => update({ prefEnergyUnit: v })}
           options={[
-            { key: "kcal", label: "KCal" },
-            { key: "calories", label: "Calories (C)" },
+            { key: "kcal", label: "kcal" },
+            { key: "calories", label: "Cal" },
           ]}
         />
       </div>
@@ -297,6 +297,16 @@ export function StorySettingsScreen({ profile, onSaveProfile, onBack, goToChoice
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="stories" size={22} color={COLORS.amber} />}>Paramètres des Stories</PageTitleWithBar>
 
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
+        <NavRow
+          icon={<NavIcon name="clock" size={17} color={COLORS.amber} />}
+          title="Durée d'affichage à la lecture"
+          value={`${p.storyViewDurationSeconds || 7}s`}
+          onClick={() => goToChoice("storyDuration")}
+          last
+        />
+      </div>
+
       <PrefGroup title="BibaRoom">
         <ToggleRow
           icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />}
@@ -332,16 +342,6 @@ export function StorySettingsScreen({ profile, onSaveProfile, onBack, goToChoice
           last
         />
       </PrefGroup>
-
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-        <NavRow
-          icon={<NavIcon name="clock" size={17} color={COLORS.amber} />}
-          title="Durée d'affichage à la lecture"
-          value={`${p.storyViewDurationSeconds || 5}s`}
-          onClick={() => goToChoice("storyDuration")}
-          last
-        />
-      </div>
 
       <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "14px" }}>La durée de vie d'une Story (24h) n'est pas modifiable.</p>
 
