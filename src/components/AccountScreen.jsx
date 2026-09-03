@@ -24,7 +24,7 @@ function splitPhone(stored) {
   return { prefix: "", number: stored };
 }
 
-export function PageTitleWithBar({ children, size = "26px", icon }) {
+export function PageTitleWithBar({ children, size = "20px", icon }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 20px 0" }}>
       {icon ? <span style={{ display: "flex", alignItems: "center", lineHeight: 0 }}>{icon}</span> : <span style={{ width: "5px", height: "24px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />}
@@ -579,7 +579,7 @@ export function DeactivateAccountScreen({ onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar size="22px">Désactiver temporairement mon compte</PageTitleWithBar>
+      <PageTitleWithBar>Désactiver temporairement mon compte</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
         <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>
           Cette fonctionnalité n'existe pas encore — seule la suppression définitive du compte est disponible pour l'instant.
