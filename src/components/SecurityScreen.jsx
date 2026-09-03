@@ -16,14 +16,14 @@ import { supabase } from "../supabaseClient.js";
 
 const FLUO_RED = "#FF3B3B";
 
-function SecurityRow({ icon, title, value, onClick, valueColor }) {
+function SecurityRow({ icon, title, subtitle, onClick, titleColor }) {
   return (
     <button
       onClick={onClick}
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "12px",
+        gap: "14px",
         background: "none",
         border: "none",
         borderBottom: `1px solid ${COLORS.paperAlt}`,
@@ -34,9 +34,11 @@ function SecurityRow({ icon, title, value, onClick, valueColor }) {
         color: COLORS.ink,
       }}
     >
-      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0 }}>{icon}</span>
-      <span style={{ flex: 1, minWidth: 0, fontWeight: 600, fontSize: "14px" }}>{title}</span>
-      {value && <span style={{ fontSize: "13px", color: valueColor || COLORS.inkSoft, marginRight: "4px" }}>{value}</span>}
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>{icon}</span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: "14.5px", color: titleColor || COLORS.ink }}>{title}</div>
+        {subtitle && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{subtitle}</div>}
+      </span>
       <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
     </button>
   );
@@ -60,21 +62,21 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
       <PageTitleWithBar icon={<NavIcon name="lock" size={22} color={COLORS.amber} />}>Sécurité & confidentialité</PageTitleWithBar>
 
       <SecurityGroup title="Sécurité">
-        <SecurityRow icon={<NavIcon name="lock" size={17} color={COLORS.amber} />} title="Mot de passe" value="Modifier" onClick={() => goToSubScreen("password")} />
-        <SecurityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Connexion biométrique" value="Face ID / empreinte" onClick={() => goToSubScreen("biometric")} />
+        <SecurityRow icon={<NavIcon name="lock" size={17} color={COLORS.amber} />} title="Mot de passe" subtitle="Modifier votre mot de passe" onClick={() => goToSubScreen("password")} />
+        <SecurityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Connexion biométrique" subtitle="Face ID / empreinte" onClick={() => goToSubScreen("biometric")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow
             icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
             title="E-mail vérifié"
-            value={emailVerified ? "✓ Vérifié" : "✗ Non vérifié"}
-            valueColor={emailVerified ? COLORS.amber : FLUO_RED}
+            subtitle={emailVerified ? "✓ Vérifié" : "✗ Non vérifié"}
+            titleColor={COLORS.ink}
             onClick={() => goToSubScreen("emailVerify")}
           />
         </div>
       </SecurityGroup>
 
       <SecurityGroup title="Confidentialité">
-        <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" value="Choisir qui peut voir" onClick={() => goToSubScreen("publicProfile")} />
+        <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir qui peut voir votre profil" onClick={() => goToSubScreen("publicProfile")} />
         <SecurityRow icon={<NavIcon name="map-pin-check" size={17} color={COLORS.amber} />} title="Visibilité des check-ins" onClick={() => goToSubScreen("checkinVisibility")} />
         <SecurityRow icon={<NavIcon name="users" size={17} color={COLORS.amber} />} title="Visibilité des Bibax" onClick={() => goToSubScreen("bibaxVisibility")} />
         <SecurityRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Invitations Bibax" onClick={() => goToSubScreen("bibaxInvites")} />
@@ -85,14 +87,14 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
 
       <SecurityGroup title="Appareils & données">
         <SecurityRow icon={<NavIcon name="link" size={17} color={COLORS.amber} />} title="Appareils connectés" onClick={() => goToSubScreen("devices")} />
-        <SecurityRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Télécharger mes données" value="Exporter" onClick={() => goToSubScreen("dataExport")} />
-        <SecurityRow icon={<NavIcon name="check" size={17} color={COLORS.amber} />} title="Permissions & consentements" onClick={() => goToSubScreen("permissions")} />
+        <SecurityRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Télécharger mes données" subtitle="Exporter mes données Bibamus" onClick={() => goToSubScreen("dataExport")} />
+        <SecurityRow icon={<NavIcon name="check" size={17} color={COLORS.amber} />} title="Permissions & consentements" subtitle="Gérer les autorisations et préférences" onClick={() => goToSubScreen("permissions")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow
             icon={<NavIcon name="logout" size={17} color={FLUO_RED} />}
             title="Réinitialiser les sessions"
-            value="Déconnecter les autres appareils"
-            valueColor={FLUO_RED}
+            subtitle="Déconnecter tous les appareils sauf celui-ci"
+            titleColor={FLUO_RED}
             onClick={() => goToSubScreen("resetSessions")}
           />
         </div>
