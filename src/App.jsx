@@ -42,7 +42,7 @@ import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsS
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen, EmailSummaryScreen } from "./components/NotificationsScreen.jsx";
-import { PreferencesScreen, StorySettingsScreen, ChoiceScreen } from "./components/PreferencesScreen.jsx";
+import { PreferencesScreen, StorySettingsScreen, ChoiceScreen, VolumeWeightScreen } from "./components/PreferencesScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
@@ -413,6 +413,8 @@ export default function App() {
       prefDistanceUnit: profile.prefDistanceUnit,
       prefTemperatureUnit: profile.prefTemperatureUnit,
       prefVolumeUnit: profile.prefVolumeUnit,
+      prefWeightUnit: profile.prefWeightUnit,
+      storyDefaultPublic: profile.storyDefaultPublic,
       prefTimeFormat24h: profile.prefTimeFormat24h,
       prefVenueSort: profile.prefVenueSort,
       prefAutoplayPreviews: profile.prefAutoplayPreviews,
@@ -420,6 +422,7 @@ export default function App() {
       prefConfirmCheckin: profile.prefConfirmCheckin,
       storyDefaultShowLocation: profile.storyDefaultShowLocation,
       storyViewDurationSeconds: profile.storyViewDurationSeconds,
+      storyDefaultSharePublic: profile.storyDefaultSharePublic,
       shareFacebook: profile.shareFacebook,
       shareInstagram: profile.shareInstagram,
       shareTiktok: profile.shareTiktok,
@@ -485,6 +488,8 @@ export default function App() {
     profile.prefDistanceUnit,
     profile.prefTemperatureUnit,
     profile.prefVolumeUnit,
+    profile.prefWeightUnit,
+    profile.storyDefaultPublic,
     profile.prefTimeFormat24h,
     profile.prefVenueSort,
     profile.prefAutoplayPreviews,
@@ -492,6 +497,7 @@ export default function App() {
     profile.prefConfirmCheckin,
     profile.storyDefaultShowLocation,
     profile.storyViewDurationSeconds,
+    profile.storyDefaultSharePublic,
     profile.shareFacebook,
     profile.shareInstagram,
     profile.shareTiktok,
@@ -1825,8 +1831,12 @@ export default function App() {
                   setViewedChoiceKey(key);
                   setScreen("preferencesChoice");
                 }}
+                goToVolumeWeight={() => setScreen("preferencesVolumeWeight")}
                 goToStorySettings={() => setScreen("preferencesStorySettings")}
               />
+            )}
+            {screen === "preferencesVolumeWeight" && (
+              <VolumeWeightScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("preferences")} />
             )}
             {screen === "preferencesStorySettings" && (
               <StorySettingsScreen
@@ -1851,17 +1861,17 @@ export default function App() {
                     back: "preferences",
                   },
                   distance: {
-                    icon: <NavIcon name="map-pin" size={22} color={COLORS.amber} />,
+                    icon: <NavIcon name="ruler" size={22} color={COLORS.amber} />,
                     title: "Distances",
                     options: [
-                      { key: "km", label: "Kilomètres" },
-                      { key: "mi", label: "Miles" },
+                      { key: "km", label: "Kilomètre (km)" },
+                      { key: "mi", label: "Miles (mi)" },
                     ],
                     field: "prefDistanceUnit",
                     back: "preferences",
                   },
                   temperature: {
-                    icon: <NavIcon name="activity" size={22} color={COLORS.amber} />,
+                    icon: <NavIcon name="thermometer" size={22} color={COLORS.amber} />,
                     title: "Température",
                     options: [
                       { key: "celsius", label: "Celsius (°C)" },
@@ -1870,21 +1880,12 @@ export default function App() {
                     field: "prefTemperatureUnit",
                     back: "preferences",
                   },
-                  volume: {
-                    icon: <NavIcon name="bottle" size={22} color={COLORS.amber} />,
-                    title: "Volume",
-                    options: [
-                      { key: "metric", label: "Centilitres / Litres" },
-                      { key: "imperial", label: "Fluid ounces (fl oz)" },
-                    ],
-                    field: "prefVolumeUnit",
-                    back: "preferences",
-                  },
                   venueSort: {
-                    icon: <NavIcon name="map-pin-check" size={22} color={COLORS.amber} />,
+                    icon: <NavIcon name="sort" size={22} color={COLORS.amber} />,
                     title: "Tri des lieux",
                     options: [
                       { key: "distance", label: "Distance" },
+                      { key: "favorites", label: "Favoris" },
                       { key: "popularity", label: "Popularité" },
                       { key: "alphabetical", label: "Alphabétique" },
                     ],
@@ -2416,7 +2417,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "preferences", "preferencesStorySettings", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

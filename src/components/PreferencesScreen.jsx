@@ -2,11 +2,10 @@
 // Écran "Préférences" — accessible depuis Paramètres. Règle
 // systématique : seuls les vrais interrupteurs ON/OFF restent en
 // ligne sur cette page — tout choix à plusieurs options (unités,
-// tri, langue, durée...) vit sur sa propre page dédiée, via le
-// composant générique ChoiceScreen ci-dessous, sans exception.
+// tri, langue, durée...) vit sur sa propre page dédiée.
 // "Suggestions personnalisées" réutilise le même réglage que
 // Permissions & consentements (retiré de là-bas pour éviter le
-// doublon).
+// doublon) — grisé ici en attendant un vrai système IA.
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
@@ -27,7 +26,8 @@ function PrefGroup({ title, children }) {
 }
 
 // Ligne de navigation — pour tout réglage qui n'est pas un simple ON/OFF (mène à sa propre
-// page), affiche la valeur actuelle en fin de ligne.
+// page). La flèche reste toujours visible, même désactivée (grisée par l'opacité globale de la
+// ligne) pour indiquer un accès bloqué plutôt qu'une absence de destination.
 function NavRow({ icon, title, value, onClick, disabled, badge, last }) {
   return (
     <button
@@ -54,22 +54,27 @@ function NavRow({ icon, title, value, onClick, disabled, badge, last }) {
         {badge && <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.amber, border: `1px solid ${COLORS.amber}`, borderRadius: "999px", padding: "1px 7px" }}>{badge}</span>}
       </span>
       {value && <span style={{ fontSize: "13px", color: COLORS.inkSoft, marginRight: "2px" }}>{value}</span>}
-      {!disabled && <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />}
+      <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
     </button>
   );
 }
 
 // Interrupteur ON/OFF — la seule exception qui reste en ligne, jamais sur une page à part.
-function ToggleRow({ icon, title, subtitle, checked, onChange, last }) {
+function ToggleRow({ icon, title, subtitle, checked, onChange, disabled, badge, trailingLabel, last }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: last ? "none" : `1px solid ${COLORS.paperAlt}` }}>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: last ? "none" : `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.55 : 1 }}>
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>{icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 700, fontSize: "14px" }}>{title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontWeight: 700, fontSize: "14px" }}>{title}</span>
+          {badge && <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.amber, border: `1px solid ${COLORS.amber}`, borderRadius: "999px", padding: "1px 7px" }}>{badge}</span>}
+        </div>
         {subtitle && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{subtitle}</div>}
       </div>
+      {trailingLabel && <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, marginTop: "6px" }}>{trailingLabel}</span>}
       <button
-        onClick={() => onChange(!checked)}
+        onClick={() => !disabled && onChange(!checked)}
+        disabled={disabled}
         style={{
           width: "42px",
           height: "24px",
@@ -77,7 +82,7 @@ function ToggleRow({ icon, title, subtitle, checked, onChange, last }) {
           border: "none",
           background: checked ? COLORS.amber : COLORS.paperAlt,
           position: "relative",
-          cursor: "pointer",
+          cursor: disabled ? "not-allowed" : "pointer",
           padding: 0,
           flexShrink: 0,
           marginTop: "2px",
@@ -90,8 +95,7 @@ function ToggleRow({ icon, title, subtitle, checked, onChange, last }) {
 }
 
 // Page générique pour tout choix à options multiples — réutilisée pour Langue, Distances,
-// Température, Volume, Tri des lieux, Durée d'affichage des Stories, plutôt que 6 pages quasi
-// identiques écrites à la main.
+// Température, Tri des lieux, Durée d'affichage des Stories.
 export function ChoiceScreen({ icon, title, description, options, value, onChange, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -131,17 +135,97 @@ export function ChoiceScreen({ icon, title, description, options, value, onChang
   );
 }
 
-export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, goToStorySettings }) {
+// Page dédiée "Volumes" — regroupe le choix d'unité de volume ET de poids (deux préférences
+// distinctes), plutôt qu'une simple liste à choix unique.
+export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
   const [p, setP] = useState(profile);
   const update = (patch) => {
     setP((prev) => ({ ...prev, ...patch }));
     onSaveProfile(patch);
   };
 
-  const distanceLabels = { km: "Kilomètres", mi: "Miles" };
-  const temperatureLabels = { celsius: "°C", fahrenheit: "°F" };
-  const volumeLabels = { metric: "cl / L", imperial: "fl oz" };
-  const venueSortLabels = { distance: "Distance", popularity: "Popularité", alphabetical: "Alphabétique" };
+  const Choice = ({ groupValue, onPick, options }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "48px" }}>
+      {options.map((opt) => (
+        <button
+          key={opt.key}
+          onClick={() => onPick(opt.key)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: "none",
+            border: `2px solid ${groupValue === opt.key ? COLORS.amber : COLORS.paperAlt}`,
+            borderRadius: "10px",
+            padding: "10px 12px",
+            textAlign: "left",
+            cursor: "pointer",
+            color: COLORS.ink,
+            fontSize: "13.5px",
+            fontWeight: groupValue === opt.key ? 700 : 500,
+          }}
+        >
+          {opt.label}
+          {groupValue === opt.key && <NavIcon name="check" size={16} color={COLORS.amber} />}
+        </button>
+      ))}
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="bottle" size={22} color={COLORS.amber} />}>Volumes</PageTitleWithBar>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+          <NavIcon name="bottle" size={17} color={COLORS.amber} />
+        </span>
+        <span style={{ fontWeight: 700, fontSize: "14px" }}>Volume</span>
+      </div>
+      <div style={{ marginBottom: "20px" }}>
+        <Choice
+          groupValue={p.prefVolumeUnit || "metric"}
+          onPick={(v) => update({ prefVolumeUnit: v })}
+          options={[
+            { key: "metric", label: "Centilitres (cl.) / Litres (L)" },
+            { key: "imperial", label: "Fluid ounces (fl oz)" },
+          ]}
+        />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+          <NavIcon name="ruler" size={17} color={COLORS.amber} />
+        </span>
+        <span style={{ fontWeight: 700, fontSize: "14px" }}>Poids</span>
+      </div>
+      <div>
+        <Choice
+          groupValue={p.prefWeightUnit || "metric"}
+          onPick={(v) => update({ prefWeightUnit: v })}
+          options={[
+            { key: "metric", label: "Grammes (gr.) / Kilos (kg)" },
+            { key: "imperial", label: "Onces (oz) / Livres (lb)" },
+          ]}
+        />
+      </div>
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, goToVolumeWeight, goToStorySettings }) {
+  const [p, setP] = useState(profile);
+  const update = (patch) => {
+    setP((prev) => ({ ...prev, ...patch }));
+    onSaveProfile(patch);
+  };
+
+  const distanceLabels = { km: "Kilomètre (km)", mi: "Miles (mi)" };
+  const temperatureLabels = { celsius: "Celsius (°C)", fahrenheit: "Fahrenheit (°F)" };
+  const venueSortLabels = { distance: "Distance", favorites: "Favoris", popularity: "Popularité", alphabetical: "Alphabétique" };
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -149,18 +233,18 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
       <PageTitleWithBar icon={<NavIcon name="sliders" size={22} color={COLORS.amber} />}>Préférences</PageTitleWithBar>
 
       <PrefGroup title="Langue">
-        <NavRow icon={<NavIcon name="info" size={17} color={COLORS.amber} />} title="Langue de l'app" value="Français" onClick={() => goToChoice("language")} last />
+        <NavRow icon={<NavIcon name="world-map" size={17} color={COLORS.amber} />} title="Langue de l'app" value="Français" onClick={() => goToChoice("language")} last />
       </PrefGroup>
 
       <PrefGroup title="Unités">
-        <NavRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Distances" value={distanceLabels[p.prefDistanceUnit || "km"]} onClick={() => goToChoice("distance")} />
-        <NavRow icon={<NavIcon name="activity" size={17} color={COLORS.amber} />} title="Température" value={temperatureLabels[p.prefTemperatureUnit || "celsius"]} onClick={() => goToChoice("temperature")} />
-        <NavRow icon={<NavIcon name="bottle" size={17} color={COLORS.amber} />} title="Volume" value={volumeLabels[p.prefVolumeUnit || "metric"]} onClick={() => goToChoice("volume")} />
-        <NavRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Format date" disabled badge="Bientôt" />
+        <NavRow icon={<NavIcon name="ruler" size={17} color={COLORS.amber} />} title="Distances" value={distanceLabels[p.prefDistanceUnit || "km"]} onClick={() => goToChoice("distance")} />
+        <NavRow icon={<NavIcon name="thermometer" size={17} color={COLORS.amber} />} title="Température" value={temperatureLabels[p.prefTemperatureUnit || "celsius"]} onClick={() => goToChoice("temperature")} />
+        <NavRow icon={<NavIcon name="bottle" size={17} color={COLORS.amber} />} title="Volumes" onClick={goToVolumeWeight} />
+        <NavRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Format date" value="JJ/MM/AAAA" disabled />
         <ToggleRow
           icon={<NavIcon name="clock" size={17} color={COLORS.amber} />}
-          title="Format horaire 24h"
-          subtitle="Désactivé, affichage sur 12h (AM/PM)"
+          title="Format horaire"
+          trailingLabel="24h"
           checked={p.prefTimeFormat24h !== false}
           onChange={(v) => update({ prefTimeFormat24h: v })}
           last
@@ -168,29 +252,10 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
       </PrefGroup>
 
       <PrefGroup title="Expérience Bibamus">
-        <NavRow icon={<NavIcon name="map-pin-check" size={17} color={COLORS.amber} />} title="Tri des lieux" value={venueSortLabels[p.prefVenueSort || "distance"]} onClick={() => goToChoice("venueSort")} />
-        <ToggleRow
-          icon={<NavIcon name="ai" size={17} color={COLORS.amber} />}
-          title="Suggestions personnalisées"
-          subtitle="Basées sur vos goûts et activités"
-          checked={p.consentPersonalizedSuggestions !== false}
-          onChange={(v) => update({ consentPersonalizedSuggestions: v })}
-        />
-        <ToggleRow
-          icon={<NavIcon name="play" size={17} color={COLORS.amber} />}
-          title="Lecture auto des aperçus"
-          subtitle="Vidéos et Stories en avant-première"
-          checked={p.prefAutoplayPreviews !== false}
-          onChange={(v) => update({ prefAutoplayPreviews: v })}
-        />
-        <ToggleRow
-          icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />}
-          title="Vibrations"
-          subtitle="Non disponible sur iPhone (limite du navigateur)"
-          checked={p.prefVibrations !== false}
-          onChange={(v) => update({ prefVibrations: v })}
-          last
-        />
+        <NavRow icon={<NavIcon name="sort" size={17} color={COLORS.amber} />} title="Tri des lieux" value={venueSortLabels[p.prefVenueSort || "distance"]} onClick={() => goToChoice("venueSort")} />
+        <ToggleRow icon={<NavIcon name="ai" size={17} color={COLORS.amber} />} title="Suggestions personnalisées" disabled badge="Bientôt" checked={false} onChange={() => {}} />
+        <ToggleRow icon={<NavIcon name="play" size={17} color={COLORS.amber} />} title="Lecture auto des aperçus" disabled badge="Bientôt" checked={false} onChange={() => {}} />
+        <ToggleRow icon={<NavIcon name="vibrate" size={17} color={COLORS.amber} />} title="Vibrations" disabled badge="App native" checked={false} onChange={() => {}} last />
       </PrefGroup>
 
       <PrefGroup title="Check-ins & activité">
@@ -198,10 +263,10 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
           icon={<NavIcon name="check" size={17} color={COLORS.amber} />}
           title="Confirmation avant check-in"
           subtitle="Demander une confirmation avant de valider"
-          checked={p.prefConfirmCheckin !== false}
+          checked={p.prefConfirmCheckin === true}
           onChange={(v) => update({ prefConfirmCheckin: v })}
         />
-        <NavRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Stories" onClick={goToStorySettings} last />
+        <NavRow icon={<NavIcon name="stories" size={17} color={COLORS.amber} />} title="Stories" onClick={goToStorySettings} last />
       </PrefGroup>
 
       <PageFooterNav onBack={onBack} />
@@ -209,8 +274,7 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
   );
 }
 
-// Paramètres des Stories — affichage par défaut du lieu (ON/OFF, reste en ligne) et durée
-// d'affichage à la lecture (choix à options, sa propre page via goToChoice).
+// Paramètres des Stories — un Bibax peut publier depuis un BibaRoom ou un BibArena.
 export function StorySettingsScreen({ profile, onSaveProfile, onBack, goToChoice }) {
   const [p, setP] = useState(profile);
   const update = (patch) => {
@@ -221,7 +285,8 @@ export function StorySettingsScreen({ profile, onSaveProfile, onBack, goToChoice
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar icon={<NavIcon name="camera" size={22} color={COLORS.amber} />}>Paramètres des Stories</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name="stories" size={22} color={COLORS.amber} />}>Paramètres des Stories</PageTitleWithBar>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Un Bibax peut publier des Stories depuis un BibaRoom ou un BibArena.</p>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "18px" }}>
         <ToggleRow
@@ -230,6 +295,13 @@ export function StorySettingsScreen({ profile, onSaveProfile, onBack, goToChoice
           subtitle="Pré-cochée à la création d'une nouvelle Story"
           checked={p.storyDefaultShowLocation !== false}
           onChange={(v) => update({ storyDefaultShowLocation: v })}
+        />
+        <ToggleRow
+          icon={<NavIcon name="eye" size={17} color={COLORS.amber} />}
+          title="Publier en public par défaut"
+          subtitle="Visible hors salons également, pré-coché à la création"
+          checked={p.storyDefaultPublic !== false}
+          onChange={(v) => update({ storyDefaultPublic: v })}
           last
         />
       </div>

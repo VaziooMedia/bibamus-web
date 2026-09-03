@@ -564,6 +564,63 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M18 14.5 18.8 17l2.5.8-2.5.8-.8 2.4-.8-2.4-2.5-.8 2.5-.8Z" stroke={color} strokeWidth="1.4" strokeLinejoin="round" />
         </svg>
       );
+    case "world":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
+          <path d="M3 12h18M12 3c2.5 2.5 3.8 6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-6-3.8-9S9.5 5.5 12 3Z" stroke={color} strokeWidth="1.5" />
+        </svg>
+      );
+    case "ruler":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="2.5" y="7" width="19" height="10" rx="1.5" transform="rotate(-8 12 12)" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M7 9.3 7.6 11M10.5 8.7l.8 2.4M14 8.1l.6 1.7M17.5 7.5l.8 2.4" stroke={color} strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+      );
+    case "thermometer":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M14 13.76V4.5a2 2 0 0 0-4 0v9.26a4 4 0 1 0 4 0Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M12 8v6.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "sort":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M7 4v16M4 7l3-3 3 3" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M17 20V4M14 17l3 3 3-3" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "vibrate":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="8" y="3.5" width="8" height="17" rx="1.8" stroke={color} strokeWidth="1.7" />
+          <path d="M3 9v6M21 9v6" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "story-ring":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" />
+          <circle cx="12" cy="12" r="4.2" fill={color} />
+        </svg>
+      );
+    case "world-map":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
+          <ellipse cx="12" cy="12" rx="4" ry="9" stroke={color} strokeWidth="1.7" />
+          <path d="M3 12h18M4.5 7h15M4.5 17h15" stroke={color} strokeWidth="1.7" />
+        </svg>
+      );
+    case "stories":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.9" strokeDasharray="4 3" />
+          <circle cx="12" cy="12" r="4" fill={color} />
+        </svg>
+      );
     case "faceid":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
