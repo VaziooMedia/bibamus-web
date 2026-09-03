@@ -345,13 +345,11 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
     case "brush":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path
-            d="M15.5 4.5c1.4-1.4 3.6-1.4 5 0 1.4 1.4 1.4 3.6 0 5L12 18l-5 1 1-5 7.5-9.5Z"
-            stroke={color}
-            strokeWidth="1.7"
-            strokeLinejoin="round"
-          />
-          <path d="M7 19c0 1.1-.9 2-2 2H3c1.1-1.5 0-2.5 0-3.5A2 2 0 0 1 5 15.5 2 2 0 0 1 7 19Z" fill={color} />
+          <g transform="rotate(45 12 12)">
+            <rect x="10.5" y="2" width="3" height="11" rx="1.5" stroke={color} strokeWidth="1.7" />
+            <path d="M9 13h6v2a3 3 0 0 1-3 3 3 3 0 0 1-3-3v-2Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+            <path d="M12 18v3" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          </g>
         </svg>
       );
     case "settings":
