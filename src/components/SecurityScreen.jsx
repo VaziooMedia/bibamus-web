@@ -88,9 +88,9 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
 
       <SecurityGroup title="Confidentialité">
         <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir ce qui est visible (réseaux, date de naissance, ville...)" onClick={() => goToSubScreen("publicProfile")} />
-        <SecurityRow icon={<NavIcon name="map-pin-check" size={17} color={COLORS.amber} />} title="Visibilité des check-ins" onClick={() => goToSubScreen("checkinVisibility")} />
-        <SecurityRow icon={<img src={bibaxIconUrl} alt="" style={{ width: "17px", height: "17px" }} />} title="Visibilité des Bibax" onClick={() => goToSubScreen("bibaxVisibility")} />
-        <SecurityRow icon={<NavIcon name="user-plus" size={17} color={COLORS.amber} />} title="Invitations Bibax" onClick={() => goToSubScreen("bibaxInvites")} />
+        <SecurityRow icon={<NavIcon name="map-pin-check" size={17} color={COLORS.amber} />} title="Visibilité des check-ins" subtitle="Ouvert à tous pour l'instant, le temps que Bibamus se répande" disabled />
+        <SecurityRow icon={<img src={bibaxIconUrl} alt="" style={{ width: "17px", height: "17px" }} />} title="Visibilité des Bibax" subtitle="Ouvert à tous pour l'instant, le temps que Bibamus se répande" disabled />
+        <SecurityRow icon={<NavIcon name="user-plus" size={17} color={COLORS.amber} />} title="Invitations Bibax" subtitle="Ouvertes à tous pour l'instant, le temps que Bibamus se répande" disabled />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow icon={<NavIcon name="no-entry" size={17} color={COLORS.amber} />} title="Utilisateurs bloqués" onClick={() => goToSubScreen("blockedUsers")} />
         </div>
