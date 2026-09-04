@@ -61,12 +61,19 @@ function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, recentDrinks 
     setVolume(d.defaultVolumeCl ? String(d.defaultVolumeCl) : "25");
   };
 
+  const [error, setError] = useState(null);
+
   const handleSubmit = async () => {
     if (!selectedDrink || !price) return;
     setSaving(true);
+    setError(null);
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
-    await addSoloCheckin(myUserId, selectedDrink.id, parseFloat(price.replace(",", ".")), selectedVenue?.id, volumeNum);
+    const result = await addSoloCheckin(myUserId, selectedDrink.id, parseFloat(price.replace(",", ".")), selectedVenue?.id, volumeNum);
     setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     onDone();
   };
 
@@ -234,6 +241,8 @@ function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, recentDrinks 
               )}
             </>
           )}
+
+          {error && <p style={{ fontSize: "12.5px", color: "#FF3B3B", marginTop: "10px" }}>{error}</p>}
 
           <PrimaryButton onClick={handleSubmit} disabled={!price || saving} style={{ width: "100%", marginTop: "24px" }}>
             {saving ? "Enregistrement..." : "Ajouter"}
