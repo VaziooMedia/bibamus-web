@@ -139,7 +139,7 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
         {isReport ? (
           <>Décrivez le problème rencontré.<br />Plus vous êtes précis, plus vite nous pourrons y remédier.</>
         ) : (
-          <>Une question, une suggestion ?<br />Écrivez-nous, on vous répondra dans les plus brefs délais.</>
+          <>Une question, une suggestion ?<br />Écrivez-nous, nous vous répondrons dans les plus brefs délais.</>
         )}
       </p>
 
@@ -166,6 +166,17 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
       <PrimaryButton onClick={handleSubmit} disabled={sending} style={{ width: "100%", marginTop: "20px" }}>
         {sending ? "Envoi..." : "Envoyer"}
       </PrimaryButton>
+
+      {!isReport && (
+        <div style={{ textAlign: "center", marginTop: "28px" }}>
+          <p style={{ fontSize: "13px", fontWeight: 700, color: "#fff", margin: 0 }}>© 2026 Bibamus</p>
+          <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "4px 0" }}>Tous droits réservés</p>
+          <a href="https://bibamus.app" target="_blank" rel="noreferrer" style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, textDecoration: "none" }}>
+            bibamus.app
+          </a>
+        </div>
+      )}
+
       <PageFooterNav onBack={onBack} />
     </div>
   );
