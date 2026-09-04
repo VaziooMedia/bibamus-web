@@ -442,8 +442,8 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         onClick={() => onNavigate("notificationsFeed")}
         style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1, position: "relative" }}
       >
-        <span style={{ position: "relative" }}>
-          <NavIcon name="bell" size={20} color={active("notificationsFeed") ? COLORS.jetonFluo : COLORS.amber} />
+        <span style={{ position: "relative", display: "inline-block", lineHeight: 0 }}>
+          <NavIcon name="bell" size={22} color={active("notificationsFeed") ? COLORS.jetonFluo : COLORS.amber} />
           {unreadNotifications > 0 && (
             <span
               style={{
