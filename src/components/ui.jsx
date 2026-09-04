@@ -448,15 +448,26 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
             <span
               style={{
                 position: "absolute",
-                top: "-3px",
-                right: "-5px",
-                width: "9px",
-                height: "9px",
-                borderRadius: "50%",
+                top: "-6px",
+                right: "-10px",
+                minWidth: "16px",
+                height: "16px",
+                borderRadius: "999px",
                 background: "#FF3B3B",
                 border: `2px solid ${COLORS.surface}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 3px",
+                boxSizing: "border-box",
+                fontSize: "9px",
+                fontWeight: 700,
+                color: "#fff",
+                lineHeight: 1,
               }}
-            />
+            >
+              {unreadNotifications > 9 ? "9+" : unreadNotifications}
+            </span>
           )}
         </span>
         <span style={{ fontSize: "10px", fontWeight: active("notificationsFeed") ? 700 : 600, color: active("notificationsFeed") ? COLORS.jetonFluo : COLORS.ink }}>Notifications</span>
