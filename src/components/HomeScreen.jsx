@@ -5,6 +5,8 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, APP_VERSION } from "../constants.js";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
+import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
+import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories } from "../data/sharedDirectories.js";
@@ -75,6 +77,8 @@ export function HomeScreen({
   gamesVisible = true,
   goToSettings,
   goToSearch,
+  goToDrinkCheck,
+  goToPlaceCheck,
   bibros,
   bibroStatuses,
   onQuickJoinSalon,
@@ -188,26 +192,56 @@ export function HomeScreen({
         </div>
       </div>
 
-      <button
-        onClick={goToSearch}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          width: "100%",
-          boxSizing: "border-box",
-          background: COLORS.surface,
-          border: `2px solid ${COLORS.paperAlt}`,
-          borderRadius: "12px",
-          padding: "12px 14px",
-          marginBottom: "14px",
-          cursor: "pointer",
-          textAlign: "left",
-        }}
-      >
-        <NavIcon name="search" size={17} color={COLORS.inkSoft} />
-        <span style={{ fontSize: "14px", color: COLORS.inkSoft }}>Établissements, produits, Bibax...</span>
-      </button>
+      <div style={{ display: "flex", justifyContent: "center", gap: "18px", marginBottom: "14px" }}>
+        <button
+          onClick={goToSearch}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "52px",
+            height: "52px",
+            borderRadius: "50%",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            cursor: "pointer",
+          }}
+        >
+          <NavIcon name="search" size={20} color={COLORS.amber} />
+        </button>
+        <button
+          onClick={goToDrinkCheck}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "52px",
+            height: "52px",
+            borderRadius: "50%",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            cursor: "pointer",
+          }}
+        >
+          <img src={drinkChecksIconUrl} alt="Drink Check" style={{ width: "22px", height: "22px" }} />
+        </button>
+        <button
+          onClick={goToPlaceCheck}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "52px",
+            height: "52px",
+            borderRadius: "50%",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            cursor: "pointer",
+          }}
+        >
+          <img src={placeChecksIconUrl} alt="Place Check" style={{ width: "22px", height: "22px" }} />
+        </button>
+      </div>
 
       <TravelAgeWarning profile={profile} />
       <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} />

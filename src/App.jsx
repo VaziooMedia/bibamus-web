@@ -826,6 +826,7 @@ export default function App() {
   const [viewedDrinkId, setViewedDrinkId] = useState(null);
   const [viewedHistoryEventId, setViewedHistoryEventId] = useState(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [searchInitialTab, setSearchInitialTab] = useState("lieux");
   const [checkIns] = useState([]);
   const [checkedInVenueId, setCheckedInVenueId] = useState(null);
   const [alcoholFreeDays, setAlcoholFreeDays] = useState(() => loadLocal("bibamus-alcohol-free-days", []));
@@ -1466,7 +1467,18 @@ export default function App() {
                 gamesVisible={featureFlags.nav_games_visible !== false}
                 goToBibaPulse={() => setScreen("bibaPulse")}
                 goToSettings={() => setScreen("settings")}
-                goToSearch={() => setScreen("search")}
+                goToSearch={() => {
+                  setSearchInitialTab("lieux");
+                  setScreen("search");
+                }}
+                goToDrinkCheck={() => {
+                  setSearchInitialTab("produits");
+                  setScreen("search");
+                }}
+                goToPlaceCheck={() => {
+                  setSearchInitialTab("lieux");
+                  setScreen("search");
+                }}
                 bibros={bibros}
                 bibroStatuses={bibroStatuses}
                 onQuickJoinSalon={(code) => console.log("TODO: rejoindre salon", code)}
@@ -1894,6 +1906,7 @@ export default function App() {
                 }}
                 goToScan={() => setShowBarcodeScanner(true)}
                 goToAtlas={() => setScreen("repertoireHub")}
+                initialTab={searchInitialTab}
                 onBack={() => setScreen("home")}
               />
             )}

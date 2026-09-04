@@ -101,10 +101,11 @@ export function SearchScreen({
   onOpenBibaxProfile,
   goToScan,
   goToAtlas,
+  initialTab = "lieux",
   onBack,
 }) {
   const [query, setQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("lieux");
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [bibaxResults, setBibaxResults] = useState([]);
   const [bibaxLoading, setBibaxLoading] = useState(false);
   const inputRef = useRef(null);
