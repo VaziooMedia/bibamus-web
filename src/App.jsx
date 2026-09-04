@@ -2521,13 +2521,15 @@ export default function App() {
               </div>
             )}
           </div>
-          <BottomNav
-            screen={screen}
-            onNavigate={setScreen}
-            onGoToSessionHub={() => setScreen("sessionHub")}
-            onCheckVenue={() => setScreen("repertoireHub")}
-            onCheckDrink={() => setScreen("repertoireHub")}
-          />
+          {screen !== "search" && (
+            <BottomNav
+              screen={screen}
+              onNavigate={setScreen}
+              onGoToSessionHub={() => setScreen("sessionHub")}
+              onCheckVenue={() => setScreen("repertoireHub")}
+              onCheckDrink={() => setScreen("repertoireHub")}
+            />
+          )}
         </div>
       </ProfileNavContext.Provider>
       {showBarcodeScanner && (
