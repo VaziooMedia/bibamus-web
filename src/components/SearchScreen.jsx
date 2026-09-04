@@ -6,7 +6,7 @@
 // en liste complète — pensé pour rester utilisable même quand la
 // base grandit (pas de multiples listes tronquées empilées).
 // ============================================================
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
@@ -99,12 +99,14 @@ export function SearchScreen({
   onOpenBrewery,
   onOpenBrand,
   onOpenBibaxProfile,
+  goToScan,
   onBack,
 }) {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("lieux");
   const [bibaxResults, setBibaxResults] = useState([]);
   const [bibaxLoading, setBibaxLoading] = useState(false);
+  const inputRef = useRef(null);
 
   const trimmed = query.trim();
   const q = normalize(trimmed);
@@ -154,6 +156,7 @@ export function SearchScreen({
         <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px" }}>
           <NavIcon name="search" size={17} color={COLORS.inkSoft} />
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -166,6 +169,9 @@ export function SearchScreen({
               <NavIcon name="x" size={15} color={COLORS.inkSoft} />
             </button>
           )}
+          <button onClick={goToScan} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
+            <NavIcon name="camera" size={18} color={COLORS.inkSoft} />
+          </button>
         </div>
       </div>
 
@@ -173,13 +179,13 @@ export function SearchScreen({
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Tapez au moins 2 caractères pour lancer la recherche.</p>
       ) : (
         <>
-          <div style={{ display: "flex", gap: "8px", overflowX: "auto", marginBottom: "16px", paddingBottom: "2px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
             {TABS.map((t) => (
               <TagButton key={t.key} label={t.label} count={counts[t.key]} active={activeTab === t.key} onClick={() => setActiveTab(t.key)} />
             ))}
           </div>
 
-          <div style={{ flex: 1, overflowY: "auto" }}>
+          <div onScroll={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto" }}>
             {totalResults === 0 && !bibaxLoading ? (
               <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
             ) : counts[activeTab] === 0 ? (

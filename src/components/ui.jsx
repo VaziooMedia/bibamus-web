@@ -368,19 +368,14 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, onCheckVenue, 
   return (
     <div
       style={{
-        position: "fixed",
-        bottom: 0,
-        left: "50%",
-        transform: "translateX(-50%)",
         width: "100%",
-        maxWidth: "480px",
+        flexShrink: 0,
         background: COLORS.surface,
         borderTop: `2px solid ${COLORS.paperAlt}`,
         display: "flex",
         justifyContent: "space-around",
         alignItems: "flex-end",
         padding: "8px 4px calc(8px + env(safe-area-inset-bottom, 0px))",
-        zIndex: 100,
       }}
     >
       {items.map((item) => (

@@ -1411,13 +1411,13 @@ export default function App() {
             style={{
               width: "100%",
               maxWidth: "480px",
-              minHeight: "100vh",
+              height: "100dvh",
               display: "flex",
               flexDirection: "column",
               paddingTop: "env(safe-area-inset-top, 0px)",
-              paddingBottom: "calc(76px + env(safe-area-inset-bottom, 0px))",
             }}
           >
+            <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
             {screen === "home" && (
               <HomeScreen
                 profile={profile}
@@ -1892,6 +1892,7 @@ export default function App() {
                   setViewedBibaxProfileCode(code);
                   setScreen("bibaxProfilePreview");
                 }}
+                goToScan={() => setShowBarcodeScanner(true)}
                 onBack={() => setScreen("home")}
               />
             )}
@@ -2520,8 +2521,7 @@ export default function App() {
                 </button>
               </div>
             )}
-          </div>
-          {screen !== "search" && (
+            </div>
             <BottomNav
               screen={screen}
               onNavigate={setScreen}
@@ -2529,7 +2529,7 @@ export default function App() {
               onCheckVenue={() => setScreen("repertoireHub")}
               onCheckDrink={() => setScreen("repertoireHub")}
             />
-          )}
+          </div>
         </div>
       </ProfileNavContext.Provider>
       {showBarcodeScanner && (
