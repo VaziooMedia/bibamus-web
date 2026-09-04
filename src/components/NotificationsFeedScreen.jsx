@@ -85,6 +85,20 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                     <strong>{[n.actorName, n.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}</strong> {TYPE_LABELS[n.type] || n.type}
                   </span>
                   <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Il y a {timeAgo(n.createdAt)}</div>
+                  {n.postPreview && (
+                    <div
+                      style={{
+                        fontSize: "12.5px",
+                        color: COLORS.inkSoft,
+                        marginTop: "4px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      "{n.postPreview}"
+                    </div>
+                  )}
                   {n.previewText && (
                     <div
                       style={{

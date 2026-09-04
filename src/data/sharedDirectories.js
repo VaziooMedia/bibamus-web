@@ -285,6 +285,7 @@ export async function loadMyNotifications(limit = 30) {
       read: n.read,
       createdAt: n.created_at,
       previewText: n.preview_text,
+      postPreview: n.post_preview,
       actorName: actor?.display_name || null,
       actorLastName: actor?.last_name || null,
       actorAvatarUrl: actor?.avatar_url || null,
