@@ -325,6 +325,36 @@ export function subscribeToMyNotifications(userId, onNewNotification) {
   return () => supabase.removeChannel(channel);
 }
 
+// BibaSolo — historique continu, sans notion de session. addSoloCheckin enregistre une
+// consommation ; loadMySoloCheckins charge l'historique (aujourd'hui par défaut).
+export async function addSoloCheckin(userId, drinkId, price, venueId) {
+  const { error } = await supabase.from("solo_checkins").insert({ user_id: userId, drink_id: drinkId, price: price || null, venue_id: venueId || null });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function loadMySoloCheckins(sinceIso) {
+  let query = supabase.from("solo_checkins").select("*").order("created_at", { ascending: false });
+  if (sinceIso) query = query.gte("created_at", sinceIso);
+  const { data, error } = await query;
+  if (error) {
+    console.error("loadMySoloCheckins:", error);
+    return [];
+  }
+  return data.map((row) => ({
+    id: row.id,
+    drinkId: row.drink_id,
+    venueId: row.venue_id,
+    price: row.price,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function deleteSoloCheckin(id) {
+  const { error } = await supabase.from("solo_checkins").delete().eq("id", id);
+  if (error) console.error("deleteSoloCheckin:", error);
+}
+
 export async function submitSupportMessage(userId, type, message, contactEmail) {
   const { error } = await supabase.from("support_messages").insert({ user_id: userId, type, message, contact_email: contactEmail || null });
   if (error) return { error: error.message };
