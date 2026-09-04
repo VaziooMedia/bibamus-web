@@ -80,6 +80,7 @@ export function HomeScreen({
   goToSearch,
   goToDrinkCheck,
   goToPlaceCheck,
+  goToBibaSolo,
   bibros,
   bibroStatuses,
   onQuickJoinSalon,
@@ -213,6 +214,25 @@ export function HomeScreen({
             <NavIcon name="search" size={20} color={COLORS.amber} />
           </button>
           <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>Search</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+          <button
+            onClick={goToBibaSolo}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "52px",
+              height: "52px",
+              borderRadius: "50%",
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.paperAlt}`,
+              cursor: "pointer",
+            }}
+          >
+            <NavIcon name="bottle" size={20} color={COLORS.amber} />
+          </button>
+          <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>BibaSolo</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
           <button

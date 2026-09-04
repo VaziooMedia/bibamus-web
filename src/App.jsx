@@ -222,6 +222,7 @@ export default function App() {
   const [viewedStoryAuthor, setViewedStoryAuthor] = useState(null); // {authorId, authorName, authorAvatarUrl, stories}
   const [pulseStoriesRefreshKey, setPulseStoriesRefreshKey] = useState(0);
   const [screenBeforeVenueDetail, setScreenBeforeVenueDetail] = useState("venueDirectory");
+  const [screenBeforeBibaSolo, setScreenBeforeBibaSolo] = useState("sessionHub");
   const [screenBeforeDrinkDetail, setScreenBeforeDrinkDetail] = useState("drinksDirectory");
 
   // Finalise la connexion Spotify dès que la session est prête — ne peut pas se faire plus tôt,
@@ -1500,6 +1501,10 @@ export default function App() {
                   setSearchInitialTab("produits");
                   setScreen("search");
                 }}
+                goToBibaSolo={() => {
+                  setScreenBeforeBibaSolo("home");
+                  setScreen("bibaSolo");
+                }}
                 goToPlaceCheck={() => {
                   setSearchInitialTab("lieux");
                   setScreen("search");
@@ -1520,7 +1525,10 @@ export default function App() {
                 goToNewSalon={() => setScreen("newSalonEvent")}
                 goToJoinSalon={() => setScreen("joinSalon")}
                 goToBibArena={() => {}}
-                goToBibaSolo={() => setScreen("bibaSolo")}
+                goToBibaSolo={() => {
+                  setScreenBeforeBibaSolo("sessionHub");
+                  setScreen("bibaSolo");
+                }}
               />
             )}
             {screen === "repertoireHub" && (
@@ -2543,7 +2551,7 @@ export default function App() {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
-                onBack={() => setScreen("sessionHub")}
+                onBack={() => setScreen(screenBeforeBibaSolo)}
               />
             )}
             {screen === "notificationsFeed" && (
