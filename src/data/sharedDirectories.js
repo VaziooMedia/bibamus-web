@@ -261,6 +261,54 @@ export async function searchBibax(query) {
   }));
 }
 
+// Fil de notifications — chargement, marquer comme lu(es), compteur non-lus.
+export async function loadMyNotifications(limit = 30) {
+  const { data, error } = await supabase.from("notifications_feed").select("*").order("created_at", { ascending: false }).limit(limit);
+  if (error) {
+    console.error("loadMyNotifications:", error);
+    return [];
+  }
+  const actorIds = [...new Set(data.map((n) => n.actor_id).filter(Boolean))];
+  let actorsById = {};
+  if (actorIds.length > 0) {
+    const { data: actors } = await supabase.from("profiles").select("id, name, last_name, nickname, avatar_url").in("id", actorIds);
+    actorsById = Object.fromEntries((actors || []).map((a) => [a.id, a]));
+  }
+  return data.map((n) => {
+    const actor = actorsById[n.actor_id];
+    return {
+      id: n.id,
+      type: n.type,
+      entityType: n.entity_type,
+      entityId: n.entity_id,
+      read: n.read,
+      createdAt: n.created_at,
+      actorName: actor?.nickname || actor?.name || null,
+      actorLastName: actor?.last_name || null,
+      actorAvatarUrl: actor?.avatar_url || null,
+    };
+  });
+}
+
+export async function countMyUnreadNotifications() {
+  const { count, error } = await supabase.from("notifications_feed").select("id", { count: "exact", head: true }).eq("read", false);
+  if (error) {
+    console.error("countMyUnreadNotifications:", error);
+    return 0;
+  }
+  return count || 0;
+}
+
+export async function markNotificationsRead(ids) {
+  const { error } = await supabase.from("notifications_feed").update({ read: true }).in("id", ids);
+  if (error) console.error("markNotificationsRead:", error);
+}
+
+export async function markAllNotificationsRead() {
+  const { error } = await supabase.from("notifications_feed").update({ read: true }).eq("read", false);
+  if (error) console.error("markAllNotificationsRead:", error);
+}
+
 export async function submitSupportMessage(userId, type, message, contactEmail) {
   const { error } = await supabase.from("support_messages").insert({ user_id: userId, type, message, contact_email: contactEmail || null });
   if (error) return { error: error.message };

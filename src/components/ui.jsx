@@ -356,13 +356,11 @@ export function MoneyAmount({ value, currency, centered = false, jetonIconSize =
   );
 }
 
-export function BottomNav({ screen, onNavigate, onGoToSessionHub, onCheckVenue, onCheckDrink }) {
-  const [checkMenuOpen, setCheckMenuOpen] = useState(false);
+export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifications = 0 }) {
   const items = [
     { key: "bibrosList", label: "Biba", accent: "x", icon: "ti-bibax" },
     { key: "bibaPulse", label: "Biba", accent: "Pulse", icon: "ti-activity" },
   ];
-  const rightItems = [{ key: "repertoireHub", label: "Bib", accent: "Atlas", icon: "ti-map" }];
   const active = (key) => screen === key;
 
   return (
@@ -429,66 +427,40 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, onCheckVenue, 
         </span>
       </button>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-        <button
-          onClick={() => setCheckMenuOpen((o) => !o)}
-          style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", width: "100%" }}
-        >
-          <NavIcon name="check" size={20} color={checkMenuOpen ? COLORS.jetonFluo : COLORS.amber} />
-          <span style={{ fontSize: "10px", fontWeight: checkMenuOpen ? 700 : 600, color: checkMenuOpen ? COLORS.jetonFluo : COLORS.ink }}>Check</span>
-        </button>
-        {checkMenuOpen && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "56px",
-              right: "-8px",
-              zIndex: 10,
-              background: COLORS.surfaceAlt,
-              border: `2px solid ${COLORS.paperAlt}`,
-              borderRadius: "10px",
-              padding: "6px",
-              minWidth: "170px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.35)",
-            }}
-          >
-            <button
-              onClick={() => {
-                setCheckMenuOpen(false);
-                onCheckVenue();
-              }}
-              style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", background: "none", border: "none", borderRadius: "7px", padding: "9px 10px", fontSize: "13px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-            >
-              <NavIcon name="map-pin" size={15} color={COLORS.amber} />
-              Un lieu
-            </button>
-            <button
-              onClick={() => {
-                setCheckMenuOpen(false);
-                onCheckDrink();
-              }}
-              style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", background: "none", border: "none", borderRadius: "7px", padding: "9px 10px", fontSize: "13px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-            >
-              <NavIcon name="bottle" size={15} color={COLORS.amber} />
-              Une boisson
-            </button>
-          </div>
-        )}
-      </div>
+      <button
+        onClick={() => onNavigate("repertoireHub")}
+        style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1 }}
+      >
+        <NavIcon name="map" size={20} color={active("repertoireHub") ? COLORS.jetonFluo : COLORS.amber} />
+        <span style={{ fontSize: "10px", fontWeight: active("repertoireHub") ? 700 : 600 }}>
+          <span style={{ color: active("repertoireHub") ? COLORS.jetonFluo : COLORS.ink }}>Bib</span>
+          <span style={{ color: active("repertoireHub") ? COLORS.jetonFluo : COLORS.amber }}>Atlas</span>
+        </span>
+      </button>
 
-      {rightItems.map((item) => (
-        <button
-          key={item.key}
-          onClick={() => onNavigate(item.key)}
-          style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1 }}
-        >
-          <NavIcon name={item.icon.slice(3)} size={20} color={active(item.key) ? COLORS.jetonFluo : COLORS.amber} />
-          <span style={{ fontSize: "10px", fontWeight: active(item.key) ? 700 : 600 }}>
-            <span style={{ color: active(item.key) ? COLORS.jetonFluo : COLORS.ink }}>{item.label}</span>
-            <span style={{ color: active(item.key) ? COLORS.jetonFluo : COLORS.amber }}>{item.accent}</span>
-          </span>
-        </button>
-      ))}
+      <button
+        onClick={() => onNavigate("notificationsFeed")}
+        style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1, position: "relative" }}
+      >
+        <span style={{ position: "relative" }}>
+          <NavIcon name="bell" size={20} color={active("notificationsFeed") ? COLORS.jetonFluo : COLORS.amber} />
+          {unreadNotifications > 0 && (
+            <span
+              style={{
+                position: "absolute",
+                top: "-3px",
+                right: "-5px",
+                width: "9px",
+                height: "9px",
+                borderRadius: "50%",
+                background: "#FF3B3B",
+                border: `2px solid ${COLORS.surface}`,
+              }}
+            />
+          )}
+        </span>
+        <span style={{ fontSize: "10px", fontWeight: active("notificationsFeed") ? 700 : 600, color: active("notificationsFeed") ? COLORS.jetonFluo : COLORS.ink }}>Notifications</span>
+      </button>
     </div>
   );
 }

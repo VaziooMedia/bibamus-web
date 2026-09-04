@@ -47,6 +47,7 @@ import { AppearanceScreen } from "./components/AppearanceScreen.jsx";
 import { ConnectScreen, SpotifyDetailScreen } from "./components/ConnectScreen.jsx";
 import { HelpSupportScreen, ContactFormScreen, AboutScreen } from "./components/HelpSupportScreen.jsx";
 import { SearchScreen } from "./components/SearchScreen.jsx";
+import { NotificationsFeedScreen } from "./components/NotificationsFeedScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
@@ -99,6 +100,7 @@ import {
   loadContributionsForEntity,
   approveContribution,
   rejectContribution,
+  countMyUnreadNotifications,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -827,6 +829,14 @@ export default function App() {
   const [viewedHistoryEventId, setViewedHistoryEventId] = useState(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [searchInitialTab, setSearchInitialTab] = useState("lieux");
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const refresh = () => countMyUnreadNotifications().then(setUnreadNotificationsCount);
+    refresh();
+    const interval = setInterval(refresh, 60000);
+    return () => clearInterval(interval);
+  }, [session?.user?.id, screen]);
   const [checkIns] = useState([]);
   const [checkedInVenueId, setCheckedInVenueId] = useState(null);
   const [alcoholFreeDays, setAlcoholFreeDays] = useState(() => loadLocal("bibamus-alcohol-free-days", []));
@@ -2506,6 +2516,16 @@ export default function App() {
                 }}
               />
             )}
+            {screen === "notificationsFeed" && (
+              <NotificationsFeedScreen
+                onBack={() => setScreen("home")}
+                onOpenPulseEntry={() => setScreen("bibaPulse")}
+                onOpenBibaxProfile={(code) => {
+                  setViewedBibaxProfileCode(code);
+                  setScreen("bibaxProfilePreview");
+                }}
+              />
+            )}
             {screen === "bibaxProfilePreview" && viewedBibaxProfileCode && (
               <BibaxProfilePreviewScreen bibroCode={viewedBibaxProfileCode} onBack={() => setScreen("home")} />
             )}
@@ -2526,7 +2546,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "notificationsFeed", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
@@ -2536,13 +2556,7 @@ export default function App() {
               </div>
             )}
             </div>
-            <BottomNav
-              screen={screen}
-              onNavigate={setScreen}
-              onGoToSessionHub={() => setScreen("sessionHub")}
-              onCheckVenue={() => setScreen("repertoireHub")}
-              onCheckDrink={() => setScreen("repertoireHub")}
-            />
+            <BottomNav screen={screen} onNavigate={setScreen} onGoToSessionHub={() => setScreen("sessionHub")} unreadNotifications={unreadNotificationsCount} />
           </div>
         </div>
       </ProfileNavContext.Provider>
