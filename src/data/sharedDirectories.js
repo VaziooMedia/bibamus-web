@@ -284,6 +284,7 @@ export async function loadMyNotifications(limit = 30) {
       entityId: n.entity_id,
       read: n.read,
       createdAt: n.created_at,
+      previewText: n.preview_text,
       actorName: actor?.display_name || null,
       actorLastName: actor?.last_name || null,
       actorAvatarUrl: actor?.avatar_url || null,

@@ -48,11 +48,11 @@ function ReactorsList({ people, emptyLabel }) {
   );
 }
 
-function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onUpdate }) {
+const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onUpdate, initialShowComments, highlighted }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(!!initialShowComments);
   const [comments, setComments] = useState(null);
   const [commentInput, setCommentInput] = useState("");
   const [posting, setPosting] = useState(false);
@@ -94,6 +94,11 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
     if (next && !comments) setComments(await loadPulseComments(entry.id));
   };
 
+  useEffect(() => {
+    if (initialShowComments) loadPulseComments(entry.id).then(setComments);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const submitComment = async () => {
     const body = commentInput.trim();
     if (!body) return;
@@ -110,7 +115,16 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
   };
 
   return (
-    <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px" }}>
+    <div
+      ref={ref}
+      style={{
+        position: "relative",
+        background: COLORS.surface,
+        border: `2px solid ${highlighted ? COLORS.amber : COLORS.paperAlt}`,
+        borderRadius: "14px",
+        padding: "14px",
+      }}
+    >
       <span style={{ position: "absolute", top: "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
@@ -333,12 +347,26 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
       )}
     </div>
   );
-}
+});
 
-export function BibaPulseScreen({ onBack, venues = [], drinksDirectory = [], breweriesDirectory = [], brandsDirectory = [], myUserId, onOpenVenue, onOpenDrink }) {
+export function BibaPulseScreen({
+  onBack,
+  venues = [],
+  drinksDirectory = [],
+  breweriesDirectory = [],
+  brandsDirectory = [],
+  myUserId,
+  onOpenVenue,
+  onOpenDrink,
+  focusEntryId,
+  openCommentsOnFocus,
+}) {
   const [entries, setEntries] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [focusAttempts, setFocusAttempts] = useState(0);
+  const focusedCardRef = React.useRef(null);
+  const hasScrolledToFocus = React.useRef(false);
 
   const directories = { venues, drinksDirectory, breweriesDirectory, brandsDirectory };
 
@@ -374,6 +402,26 @@ export function BibaPulseScreen({ onBack, venues = [], drinksDirectory = [], bre
     setLoadingMore(false);
   };
 
+  // Si on arrive depuis une notification pointant vers une publication précise, celle-ci n'est
+  // pas forcément dans les 20 premières du fil — on charge des pages supplémentaires jusqu'à la
+  // trouver (borné à 10 tentatives), puis on y défile.
+  useEffect(() => {
+    if (!focusEntryId || !entries) return;
+    if (entries.some((e) => e.id === focusEntryId)) return;
+    if (!hasMore || focusAttempts >= 10) return;
+    setFocusAttempts((n) => n + 1);
+    loadMore();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusEntryId, entries, hasMore]);
+
+  useEffect(() => {
+    if (!focusEntryId || hasScrolledToFocus.current) return;
+    if (focusedCardRef.current) {
+      focusedCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      hasScrolledToFocus.current = true;
+    }
+  }, [focusEntryId, entries]);
+
   const updateEntry = (id, patch) => {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
   };
@@ -402,12 +450,15 @@ export function BibaPulseScreen({ onBack, venues = [], drinksDirectory = [], bre
           {entries.map((entry) => (
             <PulseCard
               key={entry.id}
+              ref={entry.id === focusEntryId ? focusedCardRef : null}
               entry={entry}
               directories={directories}
               myUserId={myUserId}
               onOpenVenue={onOpenVenue}
               onOpenDrink={onOpenDrink}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
+              highlighted={entry.id === focusEntryId}
+              initialShowComments={entry.id === focusEntryId && openCommentsOnFocus}
             />
           ))}
 

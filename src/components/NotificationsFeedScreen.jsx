@@ -40,7 +40,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
   }, []);
 
   const handleClick = (n) => {
-    if (n.entityType === "pulse_event" && onOpenPulseEntry) onOpenPulseEntry(n.entityId);
+    if (n.entityType === "pulse_event" && onOpenPulseEntry) onOpenPulseEntry(n.entityId, n.type === "pulse_comment");
     else if (n.entityType === "bibax_relationship" && onOpenBibaxProfile) onOpenBibaxProfile(n.entityId);
   };
 
@@ -85,6 +85,21 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                     <strong>{[n.actorName, n.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}</strong> {TYPE_LABELS[n.type] || n.type}
                   </span>
                   <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Il y a {timeAgo(n.createdAt)}</div>
+                  {n.previewText && (
+                    <div
+                      style={{
+                        fontSize: "12.5px",
+                        color: COLORS.ink,
+                        marginTop: "4px",
+                        fontStyle: "italic",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      « {n.previewText} »
+                    </div>
+                  )}
                 </span>
                 {!n.read && <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
               </button>

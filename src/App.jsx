@@ -830,6 +830,7 @@ export default function App() {
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [searchInitialTab, setSearchInitialTab] = useState("lieux");
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [focusPulseEntry, setFocusPulseEntry] = useState(null);
   useEffect(() => {
     if (!session?.user?.id) return;
     const refresh = () => countMyUnreadNotifications().then(setUnreadNotificationsCount);
@@ -2485,12 +2486,17 @@ export default function App() {
             )}
             {screen === "bibaPulse" && (
               <BibaPulseScreen
-                onBack={() => setScreen("home")}
+                onBack={() => {
+                  setFocusPulseEntry(null);
+                  setScreen("home");
+                }}
                 venues={venues}
                 drinksDirectory={drinksDirectory}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 myUserId={session.user.id}
+                focusEntryId={focusPulseEntry?.id}
+                openCommentsOnFocus={focusPulseEntry?.openComments}
                 onOpenVenue={(id) => {
                   setScreenBeforeVenueDetail("bibaPulse");
                   setViewedVenueId(id);
@@ -2515,7 +2521,10 @@ export default function App() {
             {screen === "notificationsFeed" && (
               <NotificationsFeedScreen
                 onBack={() => setScreen("home")}
-                onOpenPulseEntry={() => setScreen("bibaPulse")}
+                onOpenPulseEntry={(entryId, openComments) => {
+                  setFocusPulseEntry({ id: entryId, openComments: !!openComments });
+                  setScreen("bibaPulse");
+                }}
                 onOpenBibaxProfile={(code) => {
                   setViewedBibaxProfileCode(code);
                   setScreen("bibaxProfilePreview");
