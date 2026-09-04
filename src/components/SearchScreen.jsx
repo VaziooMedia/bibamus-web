@@ -28,7 +28,7 @@ function TagButton({ label, count, active, onClick }) {
         alignItems: "center",
         gap: "5px",
         background: active ? COLORS.amber : "none",
-        border: `2px solid ${active ? COLORS.amber : COLORS.paperAlt}`,
+        border: `2px solid ${active ? COLORS.amber : count > 0 ? COLORS.amber : COLORS.paperAlt}`,
         borderRadius: "999px",
         padding: "6px 12px",
         fontSize: "12.5px",
@@ -149,7 +149,7 @@ export function SearchScreen({
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px", paddingRight: "8px" }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", flexShrink: 0 }}>
           <NavIcon name="back-triangle" size={18} color={COLORS.ink} />
         </button>
