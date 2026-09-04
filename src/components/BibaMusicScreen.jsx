@@ -339,7 +339,20 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
-        <NavIcon name="bibamusic" size={36} color={COLORS.amber} />
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            background: COLORS.paperAlt,
+            flexShrink: 0,
+          }}
+        >
+          <NavIcon name="bibamusic" size={18} color={COLORS.amber} />
+        </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Music</span>

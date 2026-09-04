@@ -13,7 +13,20 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibA
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
-        <NavIcon name="bibago-nav" size={28} color={COLORS.amber} />
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            background: COLORS.paperAlt,
+            flexShrink: 0,
+          }}
+        >
+          <NavIcon name="bibago-nav" size={18} color={COLORS.amber} />
+        </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", margin: 0, lineHeight: 1 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Go</span>
@@ -91,7 +104,20 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
-        <NavIcon name="map" size={32} color={COLORS.amber} />
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            background: COLORS.paperAlt,
+            flexShrink: 0,
+          }}
+        >
+          <NavIcon name="map" size={18} color={COLORS.amber} />
+        </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", margin: 0, lineHeight: 1 }}>
           <span style={{ color: COLORS.ink }}>Bib</span>
           <span style={{ color: COLORS.amber }}>Atlas</span>
