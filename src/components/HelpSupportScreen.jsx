@@ -62,13 +62,13 @@ export function HelpSupportScreen({ onBack, goToContact, goToReport, goToAbout }
 
       <HelpGroup title="Aide rapide">
         <HelpRow icon={<NavIcon name="help-circle" size={17} color={COLORS.amber} />} title="FAQ" disabled />
-        <HelpRow icon={<NavIcon name="file-text" size={17} color={COLORS.amber} />} title="Guides & tutoriels" disabled />
-        <HelpRow icon={<NavIcon name="star" size={17} color={COLORS.amber} />} title="Astuces & conseils" disabled />
+        <HelpRow icon={<NavIcon name="book-open" size={17} color={COLORS.amber} />} title="Guides & tutoriels" disabled />
+        <HelpRow icon={<NavIcon name="lightbulb" size={17} color={COLORS.amber} />} title="Astuces & conseils" disabled />
         <HelpRow icon={<NavIcon name="activity" size={17} color={COLORS.amber} />} title="État des services" disabled last />
       </HelpGroup>
 
       <HelpGroup title="Contactez-nous">
-        <HelpRow icon={<NavIcon name="comment" size={17} color={COLORS.amber} />} title="Nous écrire" onClick={goToContact} />
+        <HelpRow icon={<NavIcon name="message-square" size={17} color={COLORS.amber} />} title="Nous écrire" onClick={goToContact} />
         <HelpRow
           icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
           title="Envoyer un e-mail"
@@ -120,7 +120,7 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
     return (
       <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
-        <PageTitleWithBar icon={<NavIcon name={isReport ? "alert-triangle" : "comment"} size={22} color={COLORS.amber} />}>{isReport ? "Signaler un problème" : "Nous écrire"}</PageTitleWithBar>
+        <PageTitleWithBar icon={<NavIcon name={isReport ? "alert-triangle" : "message-square"} size={22} color={COLORS.amber} />}>{isReport ? "Signaler un problème" : "Nous écrire"}</PageTitleWithBar>
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
           <NavIcon name="check" size={28} color={COLORS.amber} />
           <p style={{ fontSize: "14px", fontWeight: 700, margin: "10px 0 0" }}>Message envoyé</p>
@@ -134,9 +134,13 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar icon={<NavIcon name={isReport ? "alert-triangle" : "comment"} size={22} color={COLORS.amber} />}>{isReport ? "Signaler un problème" : "Nous écrire"}</PageTitleWithBar>
+      <PageTitleWithBar icon={<NavIcon name={isReport ? "alert-triangle" : "message-square"} size={22} color={COLORS.amber} />}>{isReport ? "Signaler un problème" : "Nous écrire"}</PageTitleWithBar>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-        {isReport ? "Décrivez le problème rencontré — plus vous êtes précis, plus vite on pourra le corriger." : "Une question, une suggestion ? Écrivez-nous, on vous lit."}
+        {isReport ? (
+          <>Décrivez le problème rencontré.<br />Plus vous êtes précis, plus vite nous pourrons y remédier.</>
+        ) : (
+          <>Une question, une suggestion ?<br />Écrivez-nous, on vous répondra dans les plus brefs délais.</>
+        )}
       </p>
 
       <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Votre message</label>
