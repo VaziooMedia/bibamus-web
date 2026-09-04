@@ -164,11 +164,20 @@ export function SearchScreen({
             autoFocus
             style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
           />
-          {query.length > 0 && (
-            <button onClick={() => setQuery("")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
-              <NavIcon name="x" size={15} color={COLORS.inkSoft} />
-            </button>
-          )}
+          <button
+            onClick={() => setQuery("")}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: query.length > 0 ? "pointer" : "default",
+              padding: 0,
+              flexShrink: 0,
+              visibility: query.length > 0 ? "visible" : "hidden",
+              display: "flex",
+            }}
+          >
+            <NavIcon name="x" size={15} color={COLORS.inkSoft} />
+          </button>
           <button onClick={goToScan} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
             <NavIcon name="scan-line" size={18} color={COLORS.inkSoft} />
           </button>
