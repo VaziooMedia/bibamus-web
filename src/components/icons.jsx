@@ -927,8 +927,8 @@ export function ThreadsIcon({ size = 22 }) {
 // LinkedIn — le fichier officiel a un fond carré arrondi bleu plein ; recadré en rond.
 export function LinkedinIcon({ size = 22 }) {
   return (
-    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
-      <img src={linkedinLogoUrl} alt="LinkedIn" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#2867B2", overflow: "hidden" }}>
+      <img src={linkedinLogoUrl} alt="LinkedIn" width={Math.round(size * 0.72)} height={Math.round(size * 0.72)} style={{ display: "block" }} />
     </span>
   );
 }
