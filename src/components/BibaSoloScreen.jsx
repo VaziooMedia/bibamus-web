@@ -37,7 +37,8 @@ function formatDateTime(iso) {
 function drinkCalories(drink, volumeCl) {
   if (!drink?.kcalPer100ml) return 0;
   const volume = volumeCl || drink.defaultVolumeCl || 25;
-  return Math.round((drink.kcalPer100ml * volume) / 100);
+  // kcalPer100ml est par 100 ML, mais le volume est stocké en CL (1 cl = 10 ml) — d'où le ×10.
+  return Math.round((drink.kcalPer100ml * volume * 10) / 100);
 }
 
 // Écran d'ajout — recherche une boisson, prix obligatoire, lieu optionnel.
