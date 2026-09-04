@@ -34,16 +34,17 @@ function formatDateTime(iso) {
   return `${date} à ${time}`;
 }
 
-function drinkCalories(drink) {
+function drinkCalories(drink, volumeCl) {
   if (!drink?.kcalPer100ml) return 0;
-  const volume = drink.defaultVolumeCl || 25;
+  const volume = volumeCl || drink.defaultVolumeCl || 25;
   return Math.round((drink.kcalPer100ml * volume) / 100);
 }
 
 // Écran d'ajout — recherche une boisson, prix obligatoire, lieu optionnel.
-function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, onDone, onBack }) {
+function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, recentDrinks = [], onDone, onBack }) {
   const [query, setQuery] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
+  const [volume, setVolume] = useState("");
   const [price, setPrice] = useState("");
   const [venueQuery, setVenueQuery] = useState("");
   const [selectedVenue, setSelectedVenue] = useState(null);
@@ -55,10 +56,16 @@ function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, onDone, onBac
   const vq = normalize(venueQuery);
   const venueResults = useMemo(() => (vq.length < 2 ? [] : venues.filter((v) => normalize(v.name).includes(vq)).slice(0, 6)), [venues, vq]);
 
+  const selectDrink = (d) => {
+    setSelectedDrink(d);
+    setVolume(d.defaultVolumeCl ? String(d.defaultVolumeCl) : "25");
+  };
+
   const handleSubmit = async () => {
     if (!selectedDrink || !price) return;
     setSaving(true);
-    await addSoloCheckin(myUserId, selectedDrink.id, parseFloat(price.replace(",", ".")), selectedVenue?.id);
+    const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
+    await addSoloCheckin(myUserId, selectedDrink.id, parseFloat(price.replace(",", ".")), selectedVenue?.id, volumeNum);
     setSaving(false);
     onDone();
   };
@@ -70,6 +77,35 @@ function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, onDone, onBac
 
       {!selectedDrink ? (
         <>
+          {recentDrinks.length > 0 && query.length === 0 && (
+            <div style={{ marginBottom: "18px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Vos habitués</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {recentDrinks.map((d) => (
+                  <button
+                    key={d.id}
+                    onClick={() => selectDrink(d)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: COLORS.surface,
+                      border: `2px solid ${COLORS.amber}`,
+                      borderRadius: "999px",
+                      padding: "8px 14px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: COLORS.ink,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <NavIcon name="bottle" size={14} color={COLORS.amber} />
+                    {d.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Quelle boisson ?</label>
           <input
             type="text"
@@ -84,7 +120,7 @@ function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, onDone, onBac
               {drinkResults.map((d, i) => (
                 <button
                   key={d.id}
-                  onClick={() => setSelectedDrink(d)}
+                  onClick={() => selectDrink(d)}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -127,6 +163,16 @@ function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, onDone, onBac
               <NavIcon name="x" size={15} color={COLORS.inkSoft} />
             </button>
           </div>
+
+          <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Volume (cl)</label>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={volume}
+            onChange={(e) => setVolume(e.target.value)}
+            placeholder="ex. 25"
+            style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "18px" }}
+          />
 
           <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Prix payé (€)</label>
           <input
@@ -202,11 +248,27 @@ function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, onDone, onBac
 
 export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, onOpenDrink, onBack }) {
   const [checkins, setCheckins] = useState(null);
+  const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
 
   const refresh = () => loadMySoloCheckins(startOfTodayIso()).then(setCheckins);
   useEffect(() => {
     refresh();
+    // Habitués — sur tout l'historique, pas seulement aujourd'hui, sinon la liste se vide à
+    // chaque nouvelle journée.
+    loadMySoloCheckins().then((all) => {
+      const seen = new Set();
+      const ids = [];
+      for (const c of all) {
+        const key = String(c.drinkId);
+        if (!seen.has(key)) {
+          seen.add(key);
+          ids.push(key);
+        }
+        if (ids.length >= 5) break;
+      }
+      setRecentDrinkIds(ids);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -221,7 +283,7 @@ export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, on
         return {
           count: acc.count + 1,
           price: acc.price + (c.price || 0),
-          kcal: acc.kcal + (drink ? drinkCalories(drink) : 0),
+          kcal: acc.kcal + (drink ? drinkCalories(drink, c.volumeCl) : 0),
         };
       },
       { count: 0, price: 0, kcal: 0 }
@@ -247,6 +309,7 @@ export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, on
         drinksDirectory={drinksDirectory}
         venues={venues}
         myUserId={myUserId}
+        recentDrinks={recentDrinkIds.map((id) => drinksById[id]).filter(Boolean)}
         onBack={() => setAdding(false)}
         onDone={() => {
           setAdding(false);
@@ -333,6 +396,7 @@ export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, on
                     <div style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</div>
                     <div style={{ fontSize: "12px", color: COLORS.inkSoft }}>
                       {venue ? `${venue.name} · ` : ""}
+                      {c.volumeCl ? `${c.volumeCl} cl · ` : ""}
                       {formatDateTime(c.createdAt)}
                     </div>
                   </button>
