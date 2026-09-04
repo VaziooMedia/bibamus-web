@@ -2534,7 +2534,17 @@ export default function App() {
               />
             )}
             {screen === "bibaSolo" && (
-              <BibaSoloScreen drinksDirectory={drinksDirectory} venues={venues} myUserId={session.user.id} onBack={() => setScreen("sessionHub")} />
+              <BibaSoloScreen
+                drinksDirectory={drinksDirectory}
+                venues={venues}
+                myUserId={session.user.id}
+                onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("bibaSolo");
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
+                onBack={() => setScreen("sessionHub")}
+              />
             )}
             {screen === "notificationsFeed" && (
               <NotificationsFeedScreen
