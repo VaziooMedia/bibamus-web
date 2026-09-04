@@ -74,6 +74,7 @@ export function HomeScreen({
   bibaPulseVisible = true,
   gamesVisible = true,
   goToSettings,
+  goToSearch,
   bibros,
   bibroStatuses,
   onQuickJoinSalon,
@@ -186,6 +187,27 @@ export function HomeScreen({
           </button>
         </div>
       </div>
+
+      <button
+        onClick={goToSearch}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          width: "100%",
+          boxSizing: "border-box",
+          background: COLORS.surface,
+          border: `2px solid ${COLORS.paperAlt}`,
+          borderRadius: "12px",
+          padding: "12px 14px",
+          marginBottom: "14px",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <NavIcon name="search" size={17} color={COLORS.inkSoft} />
+        <span style={{ fontSize: "14px", color: COLORS.inkSoft }}>Établissements, produits, Bibax...</span>
+      </button>
 
       <TravelAgeWarning profile={profile} />
       <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} />

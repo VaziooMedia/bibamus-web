@@ -243,6 +243,24 @@ export async function detectCurrentCountryCode() {
 
 // Envoie un message "Nous écrire" ou "Signaler un problème" — stocké, consultable plus tard
 // côté plateforme de gestion.
+// Recherche de Bibax par nom — pour la barre de recherche depuis Home. Ne renvoie que le nom
+// d'affichage déjà choisi par chacun, jamais un champ qu'il aurait masqué.
+export async function searchBibax(query) {
+  if (!query || query.trim().length < 2) return [];
+  const { data, error } = await supabase.rpc("search_bibax", { p_query: query.trim() });
+  if (error) {
+    console.error("searchBibax:", error);
+    return [];
+  }
+  return data.map((row) => ({
+    id: row.id,
+    displayName: row.display_name,
+    lastName: row.last_name,
+    avatarUrl: row.avatar_url,
+    bibroCode: row.bibro_code,
+  }));
+}
+
 export async function submitSupportMessage(userId, type, message, contactEmail) {
   const { error } = await supabase.from("support_messages").insert({ user_id: userId, type, message, contact_email: contactEmail || null });
   if (error) return { error: error.message };
