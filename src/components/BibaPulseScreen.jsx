@@ -148,7 +148,9 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             cursor: "pointer",
           }}
         >
-          <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+            <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
+          </span>
           {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
         </button>
 
@@ -192,7 +194,9 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               cursor: "pointer",
             }}
           >
-            <CheersIcon size={20} />
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+              <CheersIcon size={16} />
+            </span>
             {entry.santeCount > 0 && <span>{entry.santeCount}</span>}
           </button>
         )}
@@ -212,7 +216,9 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             cursor: "pointer",
           }}
         >
-          <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+            <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
+          </span>
           {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
         </button>
       </div>
