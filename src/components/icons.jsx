@@ -859,6 +859,13 @@ import whatsappLogoUrl from "../assets/brand/whatsapp.svg";
 import xLogoUrl from "../assets/brand/X.svg";
 import threadsLogoUrl from "../assets/brand/threads.svg";
 import linkedinLogoUrl from "../assets/brand/linkedin.png";
+import cheersIconUrl from "../assets/brand/cheers-icon.png";
+
+export function CheersIcon({ size = 28 }) {
+  const height = size;
+  const width = Math.round(size * (80 / 128));
+  return <img src={cheersIconUrl} alt="Cheers" width={width} height={height} style={{ display: "block" }} />;
+}
 import pinterestLogoUrl from "../assets/brand/pinterest.svg";
 import twitchLogoUrl from "../assets/brand/twitch.svg";
 

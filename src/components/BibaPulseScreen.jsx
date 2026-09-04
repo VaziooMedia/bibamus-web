@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment } from "../data/sharedDirectories.js";
 
@@ -200,7 +200,7 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "4px",
+              gap: "5px",
               background: entry.iSaidSante ? COLORS.amber : "none",
               border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
@@ -211,7 +211,8 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               cursor: "pointer",
             }}
           >
-            Cheers !{entry.santeCount > 0 && <span style={{ color: "#fff" }}>{` ${entry.santeCount}`}</span>}
+            <CheersIcon size={16} />
+            {entry.santeCount > 0 && <span>{entry.santeCount}</span>}
           </button>
         )}
       </div>
