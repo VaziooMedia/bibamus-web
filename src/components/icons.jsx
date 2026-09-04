@@ -859,12 +859,13 @@ import whatsappLogoUrl from "../assets/brand/whatsapp.svg";
 import xLogoUrl from "../assets/brand/X.svg";
 import threadsLogoUrl from "../assets/brand/threads.svg";
 import linkedinLogoUrl from "../assets/brand/linkedin.png";
-import cheersIconUrl from "../assets/brand/cheers-icon.png";
+import cheersIconGreyUrl from "../assets/brand/cheers-icon-grey.png";
+import cheersIconGreenUrl from "../assets/brand/cheers-icon-green.png";
 
-export function CheersIcon({ size = 28 }) {
+export function CheersIcon({ size = 28, active = false }) {
   const height = size;
   const width = Math.round(size * (80 / 128));
-  return <img src={cheersIconUrl} alt="Cheers" width={width} height={height} style={{ display: "block" }} />;
+  return <img src={active ? cheersIconGreenUrl : cheersIconGreyUrl} alt="Cheers" width={width} height={height} style={{ display: "block" }} />;
 }
 import pinterestLogoUrl from "../assets/brand/pinterest.svg";
 import twitchLogoUrl from "../assets/brand/twitch.svg";

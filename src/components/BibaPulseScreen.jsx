@@ -184,20 +184,20 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               display: "flex",
               alignItems: "center",
               gap: "4px",
-              background: entry.iSaidSante ? COLORS.amber : "none",
+              background: "none",
               border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "4px 10px",
               fontSize: "11.5px",
               fontWeight: 700,
-              color: entry.iSaidSante ? COLORS.paper : entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
+              color: entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
               cursor: "pointer",
             }}
           >
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-              <CheersIcon size={16} />
+              <CheersIcon size={16} active={entry.santeCount > 0} />
             </span>
-            {entry.santeCount > 0 && <span>{entry.santeCount}</span>}
+            {entry.santeCount > 0 && <span style={{ color: "#fff" }}>{entry.santeCount}</span>}
           </button>
         )}
 
