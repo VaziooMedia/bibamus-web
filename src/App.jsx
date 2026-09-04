@@ -1893,6 +1893,7 @@ export default function App() {
                   setScreen("bibaxProfilePreview");
                 }}
                 goToScan={() => setShowBarcodeScanner(true)}
+                goToAtlas={() => setScreen("repertoireHub")}
                 onBack={() => setScreen("home")}
               />
             )}

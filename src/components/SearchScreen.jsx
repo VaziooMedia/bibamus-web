@@ -100,6 +100,7 @@ export function SearchScreen({
   onOpenBrand,
   onOpenBibaxProfile,
   goToScan,
+  goToAtlas,
   onBack,
 }) {
   const [query, setQuery] = useState("");
@@ -148,39 +149,54 @@ export function SearchScreen({
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", flexShrink: 0 }}>
-          <NavIcon name="back-triangle" size={18} color={COLORS.ink} />
-        </button>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", marginRight: "12px" }}>
-          <NavIcon name="search" size={17} color={COLORS.inkSoft} />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Établissements, produits, marques, producteurs, Bibax..."
-            autoFocus
-            style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
-          />
-          <button
-            onClick={() => setQuery("")}
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1, boxSizing: "border-box" }}>
+      <div style={{ paddingRight: "16px", boxSizing: "border-box" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", flexShrink: 0 }}>
+            <NavIcon name="back-triangle" size={18} color={COLORS.ink} />
+          </button>
+          <div
             style={{
-              background: "none",
-              border: "none",
-              cursor: query.length > 0 ? "pointer" : "default",
-              padding: 0,
-              flexShrink: 0,
-              visibility: query.length > 0 ? "visible" : "hidden",
+              flex: 1,
+              minWidth: 0,
               display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.paperAlt}`,
+              borderRadius: "12px",
+              padding: "10px 14px",
+              boxSizing: "border-box",
             }}
           >
-            <NavIcon name="x" size={15} color={COLORS.inkSoft} />
-          </button>
-          <button onClick={goToScan} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
-            <NavIcon name="scan-line" size={18} color={COLORS.inkSoft} />
-          </button>
+            <NavIcon name="search" size={17} color={COLORS.inkSoft} />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Établissements, produits, marques, producteurs, Bibax..."
+              autoFocus
+              style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
+            />
+            <button
+              onClick={() => setQuery("")}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: query.length > 0 ? "pointer" : "default",
+                padding: 0,
+                flexShrink: 0,
+                visibility: query.length > 0 ? "visible" : "hidden",
+                display: "flex",
+              }}
+            >
+              <NavIcon name="x" size={15} color={COLORS.inkSoft} />
+            </button>
+            <button onClick={goToScan} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
+              <NavIcon name="scan-line" size={18} color={COLORS.inkSoft} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -192,6 +208,27 @@ export function SearchScreen({
             {TABS.map((t) => (
               <TagButton key={t.key} label={t.label} count={counts[t.key]} active={activeTab === t.key} onClick={() => setActiveTab(t.key)} />
             ))}
+            <button
+              onClick={goToAtlas}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                background: "none",
+                border: `2px solid ${COLORS.jetonFluo}`,
+                borderRadius: "999px",
+                padding: "6px 12px",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                color: COLORS.jetonFluo,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              <NavIcon name="map" size={13} color={COLORS.jetonFluo} />
+              BibAtlas
+            </button>
           </div>
 
           <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto" }}>
