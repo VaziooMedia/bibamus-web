@@ -271,7 +271,8 @@ export async function loadMyNotifications(limit = 30) {
   const actorIds = [...new Set(data.map((n) => n.actor_id).filter(Boolean))];
   let actorsById = {};
   if (actorIds.length > 0) {
-    const { data: actors } = await supabase.from("profiles").select("id, name, last_name, nickname, avatar_url").in("id", actorIds);
+    const { data: actors, error: actorsError } = await supabase.rpc("get_profiles_basic", { p_ids: actorIds });
+    if (actorsError) console.error("loadMyNotifications (actors):", actorsError);
     actorsById = Object.fromEntries((actors || []).map((a) => [a.id, a]));
   }
   return data.map((n) => {
@@ -283,7 +284,7 @@ export async function loadMyNotifications(limit = 30) {
       entityId: n.entity_id,
       read: n.read,
       createdAt: n.created_at,
-      actorName: actor?.nickname || actor?.name || null,
+      actorName: actor?.display_name || null,
       actorLastName: actor?.last_name || null,
       actorAvatarUrl: actor?.avatar_url || null,
     };

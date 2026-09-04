@@ -82,7 +82,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                 <EntityAvatar photoUrl={n.actorAvatarUrl} size={40} />
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ fontSize: "14px" }}>
-                    <strong>{n.actorName || "Quelqu'un"}</strong> {TYPE_LABELS[n.type] || n.type}
+                    <strong>{[n.actorName, n.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}</strong> {TYPE_LABELS[n.type] || n.type}
                   </span>
                   <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Il y a {timeAgo(n.createdAt)}</div>
                 </span>
