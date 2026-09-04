@@ -6,8 +6,8 @@
 // direct au-dessus de la liste.
 // ============================================================
 import React, { useState, useEffect, useMemo } from "react";
-import { COLORS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { COLORS, COUNTRY_FLAGS, VOLUME_DISPLAY_TYPES } from "../constants.js";
+import { NavIcon, FlagIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin } from "../data/sharedDirectories.js";
 
@@ -24,14 +24,12 @@ function startOfTodayIso() {
   return d.toISOString();
 }
 
-function formatDateTime(iso) {
-  const d = new Date(iso);
-  const time = d.toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" });
-  const today = new Date();
-  const isToday = d.toDateString() === today.toDateString();
-  if (isToday) return time;
-  const date = d.toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit" });
-  return `${date} à ${time}`;
+function formatDateOnly(iso) {
+  return new Date(iso).toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function formatTimeOnly(iso) {
+  return new Date(iso).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" });
 }
 
 function drinkCalories(drink, volumeCl) {
@@ -81,13 +79,16 @@ function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, recentDrinks 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "4px 0 18px" }}>Ajouter un verre</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Ajouter un verre</h1>
+      </div>
 
       {!selectedDrink ? (
         <>
           {recentDrinks.length > 0 && query.length === 0 && (
             <div style={{ marginBottom: "18px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Vos habitués</label>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {recentDrinks.map((d) => (
                   <button
@@ -262,10 +263,10 @@ export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, on
   const [adding, setAdding] = useState(false);
 
   const refresh = () => loadMySoloCheckins(startOfTodayIso()).then(setCheckins);
-  useEffect(() => {
-    refresh();
-    // Habitués — sur tout l'historique, pas seulement aujourd'hui, sinon la liste se vide à
-    // chaque nouvelle journée.
+
+  // Favoris — sur tout l'historique, pas seulement aujourd'hui, sinon la liste se vide à
+  // chaque nouvelle journée. Limité à 3, le plus ancien pousse dehors dès qu'un nouveau arrive.
+  const refreshFavorites = () =>
     loadMySoloCheckins().then((all) => {
       const seen = new Set();
       const ids = [];
@@ -275,10 +276,14 @@ export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, on
           seen.add(key);
           ids.push(key);
         }
-        if (ids.length >= 5) break;
+        if (ids.length >= 3) break;
       }
       setRecentDrinkIds(ids);
     });
+
+  useEffect(() => {
+    refresh();
+    refreshFavorites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -324,6 +329,7 @@ export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, on
         onDone={() => {
           setAdding(false);
           refresh();
+          refreshFavorites();
         }}
       />
     );
@@ -380,12 +386,13 @@ export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, on
             {checkins.map((c, i) => {
               const drink = drinksById[String(c.drinkId)];
               const venue = c.venueId ? venuesById[String(c.venueId)] : null;
+              const showMentions = drink && VOLUME_DISPLAY_TYPES.includes(drink.type);
               return (
                 <div
                   key={c.id}
                   style={{
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                     gap: "10px",
                     padding: "12px 0",
                     borderBottom: i === checkins.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
@@ -394,28 +401,41 @@ export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, on
                   <button
                     onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
                     disabled={!drink || !onOpenDrink}
-                    style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0 }}
+                    style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
                   >
-                    <EntityAvatar size={36} fallbackIcon="bottle" />
+                    <EntityAvatar size={40} fallbackIcon="bottle" />
                   </button>
                   <button
                     onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
                     disabled={!drink || !onOpenDrink}
                     style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
                   >
+                    {/* Ligne 1 — produit */}
                     <div style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</div>
-                    <div style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+                    {/* Ligne 2 — volume + mentions + drapeau */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px", flexWrap: "wrap" }}>
+                      {c.volumeCl && <span>{c.volumeCl} cl.</span>}
+                      {showMentions && drink.abv != null && <span>· {String(drink.abv).replace(".", ",")}%</span>}
+                      {showMentions && drink.bio && <span>· Bio</span>}
+                      {showMentions && drink.glutenFree && <span>· Sans gluten</span>}
+                      {drink?.nationality && COUNTRY_FLAGS[drink.nationality] && (
+                        <span style={{ marginLeft: "2px" }}>
+                          <FlagIcon flag={COUNTRY_FLAGS[drink.nationality]} size={12} />
+                        </span>
+                      )}
+                    </div>
+                    {/* Ligne 3 — lieu + date + heure */}
+                    <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px" }}>
                       {venue ? `${venue.name} · ` : ""}
-                      {c.volumeCl ? `${c.volumeCl} cl · ` : ""}
-                      {formatDateTime(c.createdAt)}
+                      {formatDateOnly(c.createdAt)} · {formatTimeOnly(c.createdAt)}
                     </div>
                   </button>
                   {c.price != null && (
-                    <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber }}>
+                    <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px" }}>
                       {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
                     </span>
                   )}
-                  <button onClick={() => handleDelete(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
+                  <button onClick={() => handleDelete(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginTop: "2px" }}>
                     <NavIcon name="trash" size={14} color={COLORS.inkSoft} />
                   </button>
                 </div>
