@@ -41,7 +41,7 @@ import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
-import { NotificationsScreen, EmailSummaryScreen } from "./components/NotificationsScreen.jsx";
+import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
 import { PreferencesScreen, StorySettingsScreen, ChoiceScreen, VolumeWeightScreen } from "./components/PreferencesScreen.jsx";
 import { AppearanceScreen } from "./components/AppearanceScreen.jsx";
 import { ConnectScreen, SpotifyDetailScreen } from "./components/ConnectScreen.jsx";
@@ -1879,11 +1879,7 @@ export default function App() {
                 profile={profile}
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
                 onBack={() => setScreen("settings")}
-                goToEmailSummary={() => setScreen("notificationsEmailSummary")}
               />
-            )}
-            {screen === "notificationsEmailSummary" && (
-              <EmailSummaryScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("notifications")} />
             )}
             {screen === "appearance" && <AppearanceScreen onBack={() => setScreen("settings")} />}
             {screen === "search" && (
