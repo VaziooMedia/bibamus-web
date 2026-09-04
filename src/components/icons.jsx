@@ -801,6 +801,13 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <rect x="514" y="69" width="226" height="92" rx="46" ry="46" fill={color} />
         </svg>
       );
+    case "scan-line":
+      return (
+        <svg {...common}>
+          <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
+          <path d="M3 12h18" />
+        </svg>
+      );
     case "camera":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

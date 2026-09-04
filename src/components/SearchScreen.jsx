@@ -170,7 +170,7 @@ export function SearchScreen({
             </button>
           )}
           <button onClick={goToScan} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
-            <NavIcon name="camera" size={18} color={COLORS.inkSoft} />
+            <NavIcon name="scan-line" size={18} color={COLORS.inkSoft} />
           </button>
         </div>
       </div>
@@ -179,13 +179,13 @@ export function SearchScreen({
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Tapez au moins 2 caractères pour lancer la recherche.</p>
       ) : (
         <>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px", marginBottom: "16px" }}>
             {TABS.map((t) => (
               <TagButton key={t.key} label={t.label} count={counts[t.key]} active={activeTab === t.key} onClick={() => setActiveTab(t.key)} />
             ))}
           </div>
 
-          <div onScroll={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto" }}>
+          <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto" }}>
             {totalResults === 0 && !bibaxLoading ? (
               <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
             ) : counts[activeTab] === 0 ? (
