@@ -152,25 +152,6 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
           {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
         </button>
 
-        <button
-          onClick={toggleComments}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            background: "none",
-            border: `2px solid ${entry.commentsCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
-            borderRadius: "999px",
-            padding: "4px 10px",
-            fontSize: "11.5px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
-          {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
-        </button>
-
         {entry.eventType === "venue_visit" && (
           <button
             onClick={entry.actorId !== myUserId ? handleIncoming : undefined}
@@ -200,7 +181,7 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "5px",
+              gap: "4px",
               background: entry.iSaidSante ? COLORS.amber : "none",
               border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
@@ -211,10 +192,29 @@ function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onU
               cursor: "pointer",
             }}
           >
-            <CheersIcon size={16} />
+            <CheersIcon size={20} />
             {entry.santeCount > 0 && <span>{entry.santeCount}</span>}
           </button>
         )}
+
+        <button
+          onClick={toggleComments}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            background: "none",
+            border: `2px solid ${entry.commentsCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+            borderRadius: "999px",
+            padding: "4px 10px",
+            fontSize: "11.5px",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
+          {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
+        </button>
       </div>
 
       {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
