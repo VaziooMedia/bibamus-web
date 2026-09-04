@@ -36,7 +36,7 @@ function formatDateTime(iso) {
 
 function drinkCalories(drink, volumeCl) {
   if (!drink?.kcalPer100ml) return 0;
-  const volume = volumeCl || drink.defaultVolumeCl || 25;
+  const volume = volumeCl || drink.volumeCl || 25;
   // kcalPer100ml est par 100 ML, mais le volume est stocké en CL (1 cl = 10 ml) — d'où le ×10.
   return Math.round((drink.kcalPer100ml * volume * 10) / 100);
 }
@@ -59,7 +59,7 @@ function AddSoloCheckinScreen({ drinksDirectory, venues, myUserId, recentDrinks 
 
   const selectDrink = (d) => {
     setSelectedDrink(d);
-    setVolume(d.defaultVolumeCl ? String(d.defaultVolumeCl) : "25");
+    setVolume(d.volumeCl ? String(d.volumeCl) : "25");
   };
 
   const [error, setError] = useState(null);
