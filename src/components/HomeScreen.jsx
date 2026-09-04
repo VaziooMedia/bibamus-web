@@ -7,6 +7,7 @@ import { COLORS, APP_VERSION } from "../constants.js";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
 import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
+import bibacalIconUrl from "../assets/brand/bibacal.svg";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories } from "../data/sharedDirectories.js";
@@ -193,6 +194,7 @@ export function HomeScreen({
         </div>
       </div>
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px 0" }} />
       <div style={{ display: "flex", justifyContent: "center", gap: "18px", marginBottom: "14px" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
           <button
@@ -252,6 +254,7 @@ export function HomeScreen({
           <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>Place Check</span>
         </div>
       </div>
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
       <TravelAgeWarning profile={profile} />
       <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} />
@@ -509,6 +512,13 @@ export function HomeScreen({
           <CategoryTile icon="ti-users" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
         )}
         <CategoryTile icon="ti-map" title={<><span style={{ color: COLORS.ink }}>Bib</span><span style={{ color: COLORS.amber }}>Atlas</span></>} subtitle="Lieux, produits, marques et producteurs" onClick={goToRepertoireHub} />
+        <CategoryTile
+          iconElement={<img src={bibacalIconUrl} alt="" style={{ width: "22px", height: "22px" }} />}
+          title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Cal</span></>}
+          subtitle="Votre calendrier d'évènements"
+          badge="Soon"
+          disabled
+        />
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>

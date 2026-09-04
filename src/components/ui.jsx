@@ -279,7 +279,7 @@ export function ActionCard({ icon, title, subtitle, onClick, highlight, disabled
   );
 }
 
-export function CategoryTile({ title, subtitle, onClick, badge, disabled }) {
+export function CategoryTile({ iconElement, title, subtitle, onClick, badge, disabled }) {
   return (
     <button
       onClick={disabled ? undefined : onClick}
@@ -317,6 +317,7 @@ export function CategoryTile({ title, subtitle, onClick, badge, disabled }) {
           {badge}
         </span>
       )}
+      {iconElement && <span style={{ display: "flex", lineHeight: 0 }}>{iconElement}</span>}
       <span>
         <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
