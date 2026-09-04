@@ -832,6 +832,10 @@ export default function App() {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [focusPulseEntry, setFocusPulseEntry] = useState(null);
   useEffect(() => {
+    if (screen !== "bibaPulse" && focusPulseEntry) setFocusPulseEntry(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
+  useEffect(() => {
     if (!session?.user?.id) return;
     const refresh = () => countMyUnreadNotifications().then(setUnreadNotificationsCount);
     refresh();
