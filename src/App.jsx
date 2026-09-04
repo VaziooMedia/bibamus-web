@@ -101,6 +101,7 @@ import {
   approveContribution,
   rejectContribution,
   countMyUnreadNotifications,
+  subscribeToMyNotifications,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -837,11 +838,19 @@ export default function App() {
   }, [screen]);
   useEffect(() => {
     if (!session?.user?.id) return;
-    const refresh = () => countMyUnreadNotifications().then(setUnreadNotificationsCount);
-    refresh();
-    const interval = setInterval(refresh, 60000);
-    return () => clearInterval(interval);
-  }, [session?.user?.id, screen]);
+    countMyUnreadNotifications().then(setUnreadNotificationsCount);
+    const unsubscribe = subscribeToMyNotifications(session.user.id, () => {
+      setUnreadNotificationsCount((n) => n + 1);
+    });
+    return unsubscribe;
+  }, [session?.user?.id]);
+  const prevScreenRef = React.useRef(screen);
+  useEffect(() => {
+    if (prevScreenRef.current === "notificationsFeed" && screen !== "notificationsFeed" && session?.user?.id) {
+      countMyUnreadNotifications().then(setUnreadNotificationsCount);
+    }
+    prevScreenRef.current = screen;
+  }, [screen, session?.user?.id]);
   const [checkIns] = useState([]);
   const [checkedInVenueId, setCheckedInVenueId] = useState(null);
   const [alcoholFreeDays, setAlcoholFreeDays] = useState(() => loadLocal("bibamus-alcohol-free-days", []));

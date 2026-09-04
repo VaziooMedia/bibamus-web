@@ -311,6 +311,19 @@ export async function markAllNotificationsRead() {
   if (error) console.error("markAllNotificationsRead:", error);
 }
 
+// Abonnement temps réel — appelé une fois avec l'id de l'utilisateur, prévient
+// immédiatement (sans attendre un cycle de vérification) dès qu'une nouvelle notification lui
+// est destinée. Retourne une fonction à appeler pour se désabonner proprement.
+export function subscribeToMyNotifications(userId, onNewNotification) {
+  const channel = supabase
+    .channel(`notifications-${userId}`)
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications_feed", filter: `recipient_id=eq.${userId}` }, (payload) => {
+      onNewNotification(payload.new);
+    })
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}
+
 export async function submitSupportMessage(userId, type, message, contactEmail) {
   const { error } = await supabase.from("support_messages").insert({ user_id: userId, type, message, contact_email: contactEmail || null });
   if (error) return { error: error.message };
