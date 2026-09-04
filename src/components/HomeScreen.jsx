@@ -194,54 +194,63 @@ export function HomeScreen({
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", gap: "18px", marginBottom: "14px" }}>
-        <button
-          onClick={goToSearch}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "52px",
-            height: "52px",
-            borderRadius: "50%",
-            background: COLORS.surface,
-            border: `2px solid ${COLORS.paperAlt}`,
-            cursor: "pointer",
-          }}
-        >
-          <NavIcon name="search" size={20} color={COLORS.amber} />
-        </button>
-        <button
-          onClick={goToDrinkCheck}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "52px",
-            height: "52px",
-            borderRadius: "50%",
-            background: COLORS.surface,
-            border: `2px solid ${COLORS.paperAlt}`,
-            cursor: "pointer",
-          }}
-        >
-          <img src={drinkChecksIconUrl} alt="Drink Check" style={{ width: "22px", height: "22px" }} />
-        </button>
-        <button
-          onClick={goToPlaceCheck}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "52px",
-            height: "52px",
-            borderRadius: "50%",
-            background: COLORS.surface,
-            border: `2px solid ${COLORS.paperAlt}`,
-            cursor: "pointer",
-          }}
-        >
-          <img src={placeChecksIconUrl} alt="Place Check" style={{ width: "22px", height: "22px" }} />
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+          <button
+            onClick={goToSearch}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "52px",
+              height: "52px",
+              borderRadius: "50%",
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.paperAlt}`,
+              cursor: "pointer",
+            }}
+          >
+            <NavIcon name="search" size={20} color={COLORS.amber} />
+          </button>
+          <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>Search</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+          <button
+            onClick={goToDrinkCheck}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "52px",
+              height: "52px",
+              borderRadius: "50%",
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.paperAlt}`,
+              cursor: "pointer",
+            }}
+          >
+            <img src={drinkChecksIconUrl} alt="Drink Check" style={{ width: "22px", height: "22px" }} />
+          </button>
+          <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>Drink Check</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+          <button
+            onClick={goToPlaceCheck}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "52px",
+              height: "52px",
+              borderRadius: "50%",
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.paperAlt}`,
+              cursor: "pointer",
+            }}
+          >
+            <img src={placeChecksIconUrl} alt="Place Check" style={{ width: "22px", height: "22px" }} />
+          </button>
+          <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>Place Check</span>
+        </div>
       </div>
 
       <TravelAgeWarning profile={profile} />

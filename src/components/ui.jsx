@@ -358,7 +358,7 @@ export function MoneyAmount({ value, currency, centered = false, jetonIconSize =
 
 export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifications = 0 }) {
   const items = [
-    { key: "bibrosList", label: "Biba", accent: "x", icon: "ti-bibax" },
+    { key: "home", label: "Home", accent: "", icon: "ti-home" },
     { key: "bibaPulse", label: "Biba", accent: "Pulse", icon: "ti-activity" },
   ];
   const active = (key) => screen === key;
