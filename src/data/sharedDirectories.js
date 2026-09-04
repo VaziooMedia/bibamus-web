@@ -241,6 +241,14 @@ export async function detectCurrentCountryCode() {
   }
 }
 
+// Envoie un message "Nous écrire" ou "Signaler un problème" — stocké, consultable plus tard
+// côté plateforme de gestion.
+export async function submitSupportMessage(userId, type, message, contactEmail) {
+  const { error } = await supabase.from("support_messages").insert({ user_id: userId, type, message, contact_email: contactEmail || null });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function getMinimumAge(countryCode) {
   const { data, error } = await supabase.from("market_config").select("config_value").eq("country_code", countryCode).eq("config_key", "minimum_age").maybeSingle();
   if (error || !data) return 18;

@@ -45,6 +45,7 @@ import { NotificationsScreen, EmailSummaryScreen } from "./components/Notificati
 import { PreferencesScreen, StorySettingsScreen, ChoiceScreen, VolumeWeightScreen } from "./components/PreferencesScreen.jsx";
 import { AppearanceScreen } from "./components/AppearanceScreen.jsx";
 import { ConnectScreen, SpotifyDetailScreen } from "./components/ConnectScreen.jsx";
+import { HelpSupportScreen, ContactFormScreen, AboutScreen } from "./components/HelpSupportScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
@@ -1840,6 +1841,10 @@ export default function App() {
                     setScreen("connect");
                     return;
                   }
+                  if (key === "help") {
+                    setScreen("help");
+                    return;
+                  }
                   setViewedSettingsCategory(key);
                   setScreen("settingsCategory");
                 }}
@@ -1859,6 +1864,17 @@ export default function App() {
             {screen === "appearance" && <AppearanceScreen onBack={() => setScreen("settings")} />}
             {screen === "connect" && <ConnectScreen onBack={() => setScreen("settings")} goToSpotify={() => setScreen("connectSpotify")} />}
             {screen === "connectSpotify" && <SpotifyDetailScreen myUserId={session.user.id} onBack={() => setScreen("connect")} />}
+            {screen === "help" && (
+              <HelpSupportScreen
+                onBack={() => setScreen("settings")}
+                goToContact={() => setScreen("helpContact")}
+                goToReport={() => setScreen("helpReport")}
+                goToAbout={() => setScreen("helpAbout")}
+              />
+            )}
+            {screen === "helpContact" && <ContactFormScreen type="contact" myUserId={session.user.id} profile={profile} onBack={() => setScreen("help")} />}
+            {screen === "helpReport" && <ContactFormScreen type="report" myUserId={session.user.id} profile={profile} onBack={() => setScreen("help")} />}
+            {screen === "helpAbout" && <AboutScreen onBack={() => setScreen("help")} />}
             {screen === "preferences" && (
               <PreferencesScreen
                 profile={profile}
@@ -2462,7 +2478,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "breweries", "brands", "bibrosList", "bibroDetail", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

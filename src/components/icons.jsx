@@ -653,6 +653,22 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M7 17.5C11 15 8 10 12 8s2-4.5 6-4.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeDasharray="2.5 2.5" />
         </svg>
       );
+    case "alert-triangle":
+      return (
+        <svg {...common}>
+          <path d="M12 3.5 21.5 20h-19L12 3.5Z" strokeLinejoin="round" />
+          <path d="M12 10v4" />
+          <circle cx="12" cy="17" r="0.5" fill={color} />
+        </svg>
+      );
+    case "file-text":
+      return (
+        <svg {...common}>
+          <path d="M7 3.5h7l4 4V19a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" strokeLinejoin="round" />
+          <path d="M14 3.5V8h4" />
+          <path d="M8.5 12h7M8.5 15.5h7" />
+        </svg>
+      );
     case "faceid":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
