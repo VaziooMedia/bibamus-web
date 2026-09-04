@@ -56,14 +56,14 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "36px",
-            height: "36px",
+            width: "46px",
+            height: "46px",
             borderRadius: "50%",
             background: COLORS.paperAlt,
             flexShrink: 0,
           }}
         >
-          <NavIcon name="bell" size={18} color={COLORS.amber} />
+          <NavIcon name="bell" size={22} color={COLORS.amber} />
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Notifications</h1>
       </div>

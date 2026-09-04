@@ -18,14 +18,14 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibA
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "36px",
-            height: "36px",
+            width: "46px",
+            height: "46px",
             borderRadius: "50%",
             background: COLORS.paperAlt,
             flexShrink: 0,
           }}
         >
-          <NavIcon name="bibago-nav" size={18} color={COLORS.amber} />
+          <NavIcon name="bibago-nav" size={22} color={COLORS.amber} />
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", margin: 0, lineHeight: 1 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
@@ -109,14 +109,14 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "36px",
-            height: "36px",
+            width: "46px",
+            height: "46px",
             borderRadius: "50%",
             background: COLORS.paperAlt,
             flexShrink: 0,
           }}
         >
-          <NavIcon name="map" size={18} color={COLORS.amber} />
+          <NavIcon name="map" size={22} color={COLORS.amber} />
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", margin: 0, lineHeight: 1 }}>
           <span style={{ color: COLORS.ink }}>Bib</span>
