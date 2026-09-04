@@ -21,11 +21,12 @@ const TYPE_LABELS = {
 function timeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 60) return `${mins} min`;
+  if (mins < 1) return "À l'instant";
+  if (mins < 60) return `Il y a ${mins} min`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} h`;
+  if (hours < 24) return `Il y a ${hours} h`;
   const days = Math.floor(hours / 24);
-  return `${days} j`;
+  return `Il y a ${days} j`;
 }
 
 export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxProfile }) {
@@ -84,7 +85,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                   <span style={{ fontSize: "14px" }}>
                     <strong>{[n.actorName, n.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}</strong> {TYPE_LABELS[n.type] || n.type}
                   </span>
-                  <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Il y a {timeAgo(n.createdAt)}</div>
+                  <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{timeAgo(n.createdAt)}</div>
                   {n.postPreview && (
                     <div
                       style={{

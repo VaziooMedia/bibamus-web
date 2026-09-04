@@ -16,6 +16,7 @@ import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 function pulseTimeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const secs = Math.floor(diffMs / 1000);
+  if (secs < 5) return "À l'instant";
   if (secs < 60) return `Il y a ${secs} sec.`;
   const mins = Math.floor(secs / 60);
   if (mins < 60) return `Il y a ${mins} min.`;
