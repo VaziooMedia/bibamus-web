@@ -149,11 +149,11 @@ export function SearchScreen({
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px", paddingRight: "8px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", flexShrink: 0 }}>
           <NavIcon name="back-triangle" size={18} color={COLORS.ink} />
         </button>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px" }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", marginRight: "12px" }}>
           <NavIcon name="search" size={17} color={COLORS.inkSoft} />
           <input
             ref={inputRef}
