@@ -82,7 +82,7 @@ export function HelpSupportScreen({ onBack, goToContact, goToReport, goToAbout }
       <HelpGroup title="Ressources">
         <HelpRow icon={<NavIcon name="shield-check" size={17} color={COLORS.amber} />} title="Politique de confidentialité" disabled />
         <HelpRow icon={<NavIcon name="file-text" size={17} color={COLORS.amber} />} title="Conditions d'utilisation" disabled />
-        <HelpRow icon={<NavIcon name="info" size={17} color={COLORS.amber} />} title="À propos de Bibamus" onClick={goToAbout} last />
+        <HelpRow icon={<NavIcon name="info" size={17} color={COLORS.amber} />} title="À propos de Bibamus" disabled last />
       </HelpGroup>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "18px", textAlign: "center", marginBottom: "18px" }}>
