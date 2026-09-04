@@ -51,6 +51,20 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", flexShrink: 0 }}>
           <NavIcon name="back-triangle" size={18} color={COLORS.ink} />
         </button>
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            background: COLORS.paperAlt,
+            flexShrink: 0,
+          }}
+        >
+          <NavIcon name="bell" size={18} color={COLORS.amber} />
+        </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Notifications</h1>
       </div>
 

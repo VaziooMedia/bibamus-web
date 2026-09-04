@@ -7,7 +7,6 @@ import { COLORS, APP_VERSION } from "../constants.js";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
 import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
-import bibacalIconUrl from "../assets/brand/bibacal.svg";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories } from "../data/sharedDirectories.js";
@@ -513,7 +512,6 @@ export function HomeScreen({
         )}
         <CategoryTile icon="ti-map" title={<><span style={{ color: COLORS.ink }}>Bib</span><span style={{ color: COLORS.amber }}>Atlas</span></>} subtitle="Lieux, produits, marques et producteurs" onClick={goToRepertoireHub} />
         <CategoryTile
-          iconElement={<img src={bibacalIconUrl} alt="" style={{ width: "22px", height: "22px" }} />}
           title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Cal</span></>}
           subtitle="Votre calendrier d'évènements"
           badge="Soon"
