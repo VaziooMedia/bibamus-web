@@ -85,6 +85,14 @@ export function HelpSupportScreen({ onBack, goToContact, goToReport, goToAbout }
         <HelpRow icon={<NavIcon name="info" size={17} color={COLORS.amber} />} title="À propos de Bibamus" onClick={goToAbout} last />
       </HelpGroup>
 
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "18px", textAlign: "center", marginBottom: "18px" }}>
+        <p style={{ fontSize: "13px", fontWeight: 700, color: "#fff", margin: 0 }}>© 2026 Bibamus</p>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "4px 0" }}>Tous droits réservés</p>
+        <a href="https://bibamus.app" target="_blank" rel="noreferrer" style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, textDecoration: "none" }}>
+          bibamus.app
+        </a>
+      </div>
+
       <PageFooterNav onBack={onBack} />
     </div>
   );
@@ -166,17 +174,6 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
       <PrimaryButton onClick={handleSubmit} disabled={sending} style={{ width: "100%", marginTop: "20px" }}>
         {sending ? "Envoi..." : "Envoyer"}
       </PrimaryButton>
-
-      {!isReport && (
-        <div style={{ textAlign: "center", marginTop: "28px" }}>
-          <p style={{ fontSize: "13px", fontWeight: 700, color: "#fff", margin: 0 }}>© 2026 Bibamus</p>
-          <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "4px 0" }}>Tous droits réservés</p>
-          <a href="https://bibamus.app" target="_blank" rel="noreferrer" style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, textDecoration: "none" }}>
-            bibamus.app
-          </a>
-        </div>
-      )}
-
       <PageFooterNav onBack={onBack} />
     </div>
   );

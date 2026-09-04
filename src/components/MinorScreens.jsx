@@ -98,9 +98,8 @@ export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBac
       </SettingsGroup>
 
       <SettingsGroup>
-        <SettingsRow icon={<NavIcon name="help-circle" size={18} color={COLORS.amber} />} title="Aide & support" subtitle="FAQ, assistance, contact" onClick={() => goToCategory("help")} />
         <div style={{ borderBottom: "none" }}>
-          <SettingsRow icon={<NavIcon name="info" size={18} color={COLORS.amber} />} title="À propos" subtitle="Version, mentions légales" onClick={() => goToCategory("about")} />
+          <SettingsRow icon={<NavIcon name="help-circle" size={18} color={COLORS.amber} />} title="Aide & support" subtitle="FAQ, assistance, contact" onClick={() => goToCategory("help")} />
         </div>
       </SettingsGroup>
 
