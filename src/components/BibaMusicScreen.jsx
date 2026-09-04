@@ -351,7 +351,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
             flexShrink: 0,
           }}
         >
-          <NavIcon name="bibamusic" size={22} color={COLORS.amber} />
+          <NavIcon name="bibamusic" size={31} color={COLORS.amber} />
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
