@@ -302,6 +302,18 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", marginBottom: "18px" }}>
         <button
+          onClick={onGoToBibaMusic}
+          style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
+          title="BibaMusic"
+        >
+          <NavIcon name="bibamusic" size={22} color={COLORS.amber} />
+          <span style={{ fontSize: "11px", fontWeight: 700 }}>
+            <span style={{ color: COLORS.ink }}>Biba</span>
+            <span style={{ color: COLORS.amber }}>Music</span>
+          </span>
+        </button>
+
+        <button
           onClick={onManageMenu}
           style={{ position: "relative", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "4px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px 9px", fontWeight: 600, fontSize: "11px", color: COLORS.ink, cursor: "pointer" }}
         >
@@ -454,18 +466,6 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           </div>
         )}
         </div>
-
-        <button
-          onClick={onGoToBibaMusic}
-          style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
-          title="BibaMusic"
-        >
-          <NavIcon name="bibamusic" size={22} color={COLORS.amber} />
-          <span style={{ fontSize: "11px", fontWeight: 700 }}>
-            <span style={{ color: COLORS.ink }}>Biba</span>
-            <span style={{ color: COLORS.amber }}>Music</span>
-          </span>
-        </button>
 
         <div style={{ position: "relative" }}>
         <button
