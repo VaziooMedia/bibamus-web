@@ -114,7 +114,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       }
       setNowPlayingDebug(null);
       updateEvent(event.id, (e) => {
-        if (e.nowPlayingUri === current.uri && e.nowPlayingUserId === myUserId) return e;
+        if (e.nowPlayingUri === current.uri && e.nowPlayingUserId === myUserId && e.nowPlayingIsPlaying === current.isPlaying) return e;
         const playedUris = new Set(e.playedUris || []);
         if (e.nowPlayingUri) playedUris.add(e.nowPlayingUri);
         return {
@@ -122,6 +122,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           nowPlayingUri: current.uri,
           nowPlayingTrack: { title: matchingSong.title, artist: matchingSong.artist, albumArt: matchingSong.albumArt },
           nowPlayingUserId: myUserId,
+          nowPlayingIsPlaying: current.isPlaying,
           playedUris: Array.from(playedUris),
         };
       });
@@ -244,7 +245,13 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     setPlaybackError(null);
     const result = await controlSpotifyPlayback(event.salonCode, action);
     setPlaybackBusy(false);
-    if (result.error) setPlaybackError(result.error);
+    if (result.error) {
+      setPlaybackError(result.error);
+      return;
+    }
+    if (action === "play" || action === "pause") {
+      updateEvent(event.id, (e) => ({ ...e, nowPlayingIsPlaying: action === "play" }));
+    }
   };
 
   // Déplace un morceau à une position précise dans la file d'attente — fige l'ordre actuel en
@@ -432,12 +439,11 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {[
             { action: "previous", icon: "skip-back", label: "Précédent" },
-            { action: "play", icon: "play", label: "Lecture" },
-            { action: "pause", icon: "pause", label: "Pause" },
+            { action: event.nowPlayingIsPlaying ? "pause" : "play", icon: event.nowPlayingIsPlaying ? "pause" : "play", label: event.nowPlayingIsPlaying ? "Pause" : "Lecture" },
             { action: "next", icon: "skip-forward", label: "Suivant" },
           ].map((btn) => (
             <button
-              key={btn.action}
+              key={btn.action === "pause" || btn.action === "play" ? "playpause" : btn.action}
               onClick={() => isDJ && !playbackBusy && handlePlaybackAction(btn.action)}
               disabled={!isDJ || playbackBusy}
               title={isDJ ? btn.label : "Seul le MC peut contrôler la lecture"}
