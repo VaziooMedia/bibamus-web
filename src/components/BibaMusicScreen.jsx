@@ -473,7 +473,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           disabled={creatingPlaylist}
           style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "11px 14px", fontSize: "13.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer", width: "100%", marginBottom: "18px" }}
         >
-          {creatingPlaylist ? "Création..." : "Créer la playlist Spotify du Bibroom"}
+          {creatingPlaylist ? "Création..." : "Activer la playlist"}
         </button>
       ) : (
         <div style={{ marginBottom: "18px" }}>
