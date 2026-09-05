@@ -574,16 +574,15 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           )}
         </div>
       ) : (
-        <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "18px" }}>Personne ne diffuse la playlist pour l'instant.</p>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "18px" }}>
+          Après avoir ajouté au moins un morceau, l'utilisateur relié à Spotify Premium doit activer la playlist (bouton Play de la playlist) depuis l'app Spotify.
+        </p>
       ))}
 
       {/* Proposition d'un morceau — inutile de le montrer tant qu'aucune playlist n'existe pour
       cet événement : il n'y a nulle part où faire atterrir la proposition. */}
       {event.spotifyPlaylistId && (
       <div style={{ marginBottom: "18px", position: "relative" }}>
-        <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "10px" }}>
-          Après avoir ajouté au moins un morceau, l'utilisateur relié à Spotify Premium doit activer la playlist (bouton Play de la playlist) depuis l'app Spotify.
-        </p>
         <input
           value={titleInput}
           onChange={(e) => {
