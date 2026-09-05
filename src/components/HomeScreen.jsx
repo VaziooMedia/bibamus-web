@@ -195,7 +195,7 @@ export function HomeScreen({
       </div>
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px 0" }} />
-      <div style={{ display: "flex", justifyContent: "center", gap: "18px", marginBottom: "14px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "14px" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
           <button
             onClick={goToSearch}
@@ -353,24 +353,24 @@ export function HomeScreen({
                   <span
                     style={{
                       position: "absolute",
-                      top: "-8px",
+                      top: "-7px",
                       right: "10px",
                       display: "flex",
                       alignItems: "center",
-                      gap: "5px",
-                      fontSize: "10.5px",
+                      gap: "4px",
+                      fontSize: "9px",
                       fontWeight: 700,
                       color: COLORS.paper,
                       background: ev.paused ? "#FF9E2C" : COLORS.amber,
                       borderRadius: "999px",
-                      padding: "3px 9px",
+                      padding: "2px 7px",
                       letterSpacing: "0.3px",
                     }}
                   >
                     <span
                       style={{
-                        width: "6px",
-                        height: "6px",
+                        width: "5px",
+                        height: "5px",
                         borderRadius: "50%",
                         background: COLORS.paper,
                         flexShrink: 0,
@@ -533,7 +533,7 @@ export function HomeScreen({
         <CategoryTile icon="ti-map" title={<><span style={{ color: COLORS.ink }}>Bib</span><span style={{ color: COLORS.amber }}>Atlas</span></>} subtitle="Lieux, produits, marques et producteurs" onClick={goToRepertoireHub} />
         <CategoryTile
           title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Cal</span></>}
-          subtitle="Votre calendrier d'évènements"
+          subtitle="Agenda des events autour de vous"
           badge="Soon"
           disabled
         />
