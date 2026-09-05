@@ -581,6 +581,9 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       cet événement : il n'y a nulle part où faire atterrir la proposition. */}
       {event.spotifyPlaylistId && (
       <div style={{ marginBottom: "18px", position: "relative" }}>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "10px" }}>
+          Après avoir ajouté au moins un morceau, l'utilisateur relié à Spotify Premium doit activer la playlist (bouton Play de la playlist) depuis l'app Spotify.
+        </p>
         <input
           value={titleInput}
           onChange={(e) => {
@@ -591,6 +594,11 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           placeholder={spotifyConnected ? "Chercher un titre sur Spotify ..." : "Titre — Artiste"}
           style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", background: COLORS.surface, color: COLORS.ink, outline: "none" }}
         />
+        <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "6px", marginBottom: 0 }}>
+          Une fois un morceau choisi, appuyer sur "+" pour l'ajouter à la playlist.
+          <br />
+          Les morceaux les plus bixés se mettent en haut de la playlist.
+        </p>
 
         {spotifyConnected && searchResults.length > 0 && (
           <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>
