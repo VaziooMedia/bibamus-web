@@ -30,7 +30,7 @@ export function StoriesBar({ stories, onAddStory, onOpenStory, myUserId, officia
   }
 
   return (
-    <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "4px", marginBottom: "18px" }}>
+    <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "4px", paddingLeft: "3px", marginBottom: "18px" }}>
       {officialStories.length > 0 && (
         <button
           onClick={() => onOpenStory(officialStories)}

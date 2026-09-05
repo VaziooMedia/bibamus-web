@@ -197,7 +197,7 @@ export function HomeScreen({
       </div>
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px 0" }} />
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "14px" }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: "28px", marginBottom: "14px" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
           <button
             onClick={goToSearch}
