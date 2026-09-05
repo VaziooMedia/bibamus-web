@@ -71,7 +71,7 @@ function ScrollingText({ children, style }) {
 // Bibroom, avec le lecteur officiel Spotify intégré (aucune lecture "maison" — juste le
 // widget officiel de Spotify, affiché directement dans la page).
 export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUserId, onBack }) {
-  const { goToProfile } = React.useContext(ProfileNavContext);
+  const { goToSpotifyConnect } = React.useContext(ProfileNavContext);
   const [titleInput, setTitleInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
   const [spotifyConnected, setSpotifyConnected] = useState(false);
@@ -478,13 +478,14 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       ) : (
         <div style={{ marginBottom: "18px" }}>
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "8px" }}>
-            Il faut être connecté à un compte <strong style={{ color: COLORS.ink }}>Spotify Premium</strong> pour créer une playlist partagée.
+            Il suffit qu'<strong style={{ color: COLORS.ink }}>un des participants</strong> soit connecté à un compte{" "}
+            <strong style={{ color: COLORS.ink }}>Spotify Premium</strong> pour créer une playlist partagée — pas besoin que tout le monde le soit.
           </p>
           <button
-            onClick={goToProfile}
+            onClick={goToSpotifyConnect}
             style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "9px 14px", fontSize: "13px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}
           >
-            Aller dans Mes infos →
+            Relier à Spotify Premium
           </button>
         </div>
       )}

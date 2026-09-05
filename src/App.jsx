@@ -1425,7 +1425,7 @@ export default function App() {
 
   return (
     <NavigationContext.Provider value={() => setScreen("home")}>
-      <ProfileNavContext.Provider value={{ avatarUrl: profile.avatarUrl, goToProfile: () => setScreen("profile") }}>
+      <ProfileNavContext.Provider value={{ avatarUrl: profile.avatarUrl, goToProfile: () => setScreen("profile"), goToSpotifyConnect: () => setScreen("connectSpotify") }}>
         <div
           style={{
             fontFamily: "'Work Sans', sans-serif",
