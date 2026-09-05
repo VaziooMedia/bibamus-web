@@ -21,7 +21,6 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
   const [addPeopleOpen, setAddPeopleOpen] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [room, setRoom] = useState(null);
-  const [linkingId, setLinkingId] = useState(null); // which free-typed entry is being manually linked
   const isOpenBar = event.mode === "openbar";
   const isCagnotte = event.mode === "cagnotte";
   const isAddition = event.mode === "addition";
@@ -81,11 +80,6 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
 
   // Manually link an existing free-typed entry to a real Bibax — for when the names don't match
   // exactly (nickname vs real name), so no auto-merge could catch it.
-  const linkFriend = (freeId, code, name) => {
-    setDraftFriends((prev) => prev.map((f) => (f.id === freeId ? { ...f, name: capitalizeFirst(name), code } : f)));
-    setLinkingId(null);
-  };
-
   const removeFriend = (id) => {
     setDraftFriends((prev) => {
       const next = prev.filter((f) => f.id !== id);
@@ -97,11 +91,6 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
 
   const myBibrosNotAdded = bibros.filter((b) => !draftFriends.some((f) => f.code === b.code) && !pausedCodes.has(b.code));
   const salonParticipantsNotAdded = salonParticipants.filter((p) => !draftFriends.some((f) => f.code === p.code));
-  const linkableSources = [
-    ...bibros.filter((b) => !pausedCodes.has(b.code)).map((b) => ({ code: b.code, name: b.alias || b.name })),
-    ...salonParticipants.map((p) => ({ code: p.code, name: p.name })),
-  ].filter((s, i, arr) => arr.findIndex((x) => x.code === s.code) === i && !draftFriends.some((f) => f.code === s.code));
-
   const bibaBobStatus = event.bibaBob || {};
   const activeFriend = draftFriends.find((f) => f.id === activeFriendId) || null;
   const activeFriendBob = activeFriend && activeFriend.code ? bibaBobStatus[activeFriend.code] : null;
@@ -125,6 +114,15 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
         setJokerUnlockedFor(null);
       }
     }
+    // Passe automatiquement au prochain participant qui n'a pas encore de boisson — on peut
+    // toujours revenir sur quelqu'un en cliquant sur son nom pour lui en ajouter une autre.
+    // On exclut explicitement la personne qui vient d'être servie (l'état de sa commande n'est
+    // pas encore à jour à ce stade du calcul).
+    const eligible = draftFriends.filter((f) => !(f.code && pausedCodes.has(f.code)) && f.id !== activeFriendId);
+    const currentIdx = draftFriends.findIndex((f) => f.id === activeFriendId);
+    const afterCurrent = draftFriends.slice(currentIdx + 1).filter((f) => eligible.includes(f));
+    const next = afterCurrent.find((f) => ordersForFriend(f.id).length === 0) || eligible.find((f) => ordersForFriend(f.id).length === 0);
+    if (next) setActiveFriendId(next.id);
   };
 
   const removeLastOrderFor = (friendId, drinkId) => {
@@ -246,9 +244,9 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
-                background: isPaused ? COLORS.paperAlt : isActive ? COLORS.ink : hasOrdered ? COLORS.amber : COLORS.burgundy,
-                color: isPaused ? COLORS.inkSoft : isActive || hasOrdered ? COLORS.paper : "#fff",
-                border: `2px solid ${isPaused ? COLORS.paperAlt : isActive ? COLORS.ink : hasOrdered ? COLORS.amber : COLORS.burgundy}`,
+                background: isPaused ? COLORS.paperAlt : hasOrdered ? COLORS.amber : COLORS.burgundy,
+                color: isPaused ? COLORS.inkSoft : hasOrdered ? COLORS.paper : "#fff",
+                border: isPaused ? `2px solid ${COLORS.paperAlt}` : isActive ? "2px solid #fff" : `2px solid ${hasOrdered ? COLORS.amber : COLORS.burgundy}`,
                 borderRadius: "999px",
                 padding: "8px 8px 8px 16px",
                 fontWeight: 600,
@@ -267,18 +265,6 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
                   <BobBadge />
                 </span>
               )}
-              {!f.isSelf && !f.code && linkableSources.length > 0 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLinkingId(linkingId === f.id ? null : f.id);
-                  }}
-                  title="Lier à un vrai Bibax"
-                  style={{ background: "none", border: "none", color: COLORS.paper, fontSize: "12px", cursor: "pointer", padding: 0, lineHeight: 1 }}
-                >
-                  🔗
-                </button>
-              )}
               {!f.isSelf && (
                 <button
                   onClick={(e) => {
@@ -292,7 +278,7 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
                     width: "20px",
                     height: "20px",
                     cursor: "pointer",
-                    color: isActive || hasOrdered ? COLORS.paper : "#fff",
+                    color: hasOrdered ? COLORS.paper : "#fff",
                     fontSize: "12px",
                     lineHeight: 1,
                     flexShrink: 0,
@@ -349,18 +335,6 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {linkingId && (
-        <div style={{ background: "#3D1F1F", border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "12px 14px", marginBottom: "16px" }}>
-          <p style={{ fontSize: "12px", color: COLORS.ink, fontWeight: 600, margin: "0 0 8px 0" }}>
-            "{draftFriends.find((f) => f.id === linkingId)?.name}" est en fait...
-          </p>
-          <BibaxSearchPicker bibros={linkableSources} onPick={(s) => linkFriend(linkingId, s.code, s.name)} />
-          <button onClick={() => setLinkingId(null)} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12px", cursor: "pointer", padding: "8px 0 0 0" }}>
-            Annuler
-          </button>
         </div>
       )}
 
