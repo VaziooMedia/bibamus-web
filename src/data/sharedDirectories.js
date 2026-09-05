@@ -746,6 +746,32 @@ export async function uploadMyAvatarPhoto(userId, blob) {
 
 // Envoie le média d'une Story (photo, pour l'instant — vidéo prévue plus tard) via le même
 // pipeline de modération que le reste de l'app.
+// Stories officielles Bibamus — habillées avec les mêmes champs qu'un auteur normal (nom
+// "Bibamus", pas d'avatar → le monogramme s'affiche naturellement), pour rester compatibles
+// avec le visionneur existant sans le modifier. Seules celles de moins de 24h sont chargées.
+export async function loadOfficialStories() {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase.from("official_stories").select("*").gte("created_at", since).order("created_at", { ascending: true });
+  if (error) {
+    console.error("loadOfficialStories:", error);
+    return [];
+  }
+  return data.map((s) => ({
+    id: s.id,
+    authorId: "bibamus-official",
+    authorName: "Bibamus",
+    authorLastName: null,
+    authorAvatarUrl: null,
+    mediaType: "image",
+    mediaUrl: s.media_url,
+    caption: s.caption,
+    createdAt: s.created_at,
+    contextType: "official",
+    bixCount: 0,
+    iBixed: false,
+  }));
+}
+
 export async function uploadStoryMedia(userId, blob) {
   const imageBase64 = await blobToBase64(blob);
   const path = `${userId}-${Date.now()}.jpg`;

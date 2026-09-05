@@ -9,7 +9,7 @@ import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
 import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
-import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories } from "../data/sharedDirectories.js";
+import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
@@ -92,8 +92,10 @@ export function HomeScreen({
 }) {
   const [pulseEntries, setPulseEntries] = useState(null);
   const [stories, setStories] = useState([]);
+  const [officialStories, setOfficialStories] = useState([]);
   useEffect(() => {
     loadPulseStories().then(setStories);
+    loadOfficialStories().then(setOfficialStories);
   }, [pulseStoriesRefreshKey]);
   useEffect(() => {
     loadPulseFeed(null, 3).then(setPulseEntries);
@@ -276,7 +278,7 @@ export function HomeScreen({
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
       <TravelAgeWarning profile={profile} />
-      <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} />
+      <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} officialStories={officialStories} />
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
