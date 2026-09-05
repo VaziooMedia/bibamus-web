@@ -828,7 +828,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           onClick={() => setShowRoundsList((s) => !s)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: showRoundsList ? "8px" : 0 }}
         >
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Notes intermédiaires</span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Tournées</span>
           <span style={{ display: "inline-flex", transform: `rotate(${showRoundsList ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
             <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
           </span>
