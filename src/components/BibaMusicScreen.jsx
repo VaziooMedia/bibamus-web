@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, SpotifyIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { normalizeUrl } from "../utils.js";
 import {
@@ -387,26 +387,32 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           href={event.spotifyPlaylistUrl}
           target="_blank"
           rel="noreferrer"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            background: COLORS.amber,
-            borderRadius: "12px",
-            padding: "14px",
-            fontSize: "15px",
-            fontWeight: 800,
-            color: COLORS.paper,
-            textDecoration: "none",
-            marginBottom: "18px",
-          }}
+          title="Ouvrir dans Spotify"
+          style={{ position: "relative", display: "inline-flex", marginBottom: "18px" }}
         >
-          <NavIcon name="bibamusic" size={26} color={COLORS.paper} />
-          Ouvrir dans Spotify
+          <SpotifyIcon size={52} />
           {playlist.filter((s) => s.addedToPlaylist).length > 0 && (
-            <span style={{ fontSize: "12px", fontWeight: 700, opacity: 0.85 }}>
-              ({playlist.filter((s) => s.addedToPlaylist).length} titre{playlist.filter((s) => s.addedToPlaylist).length > 1 ? "s" : ""})
+            <span
+              style={{
+                position: "absolute",
+                top: "-4px",
+                right: "-6px",
+                minWidth: "20px",
+                height: "20px",
+                borderRadius: "999px",
+                background: COLORS.amber,
+                border: `2px solid ${COLORS.paper}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 4px",
+                boxSizing: "border-box",
+                fontSize: "11px",
+                fontWeight: 800,
+                color: COLORS.paper,
+              }}
+            >
+              {playlist.filter((s) => s.addedToPlaylist).length}
             </span>
           )}
         </a>

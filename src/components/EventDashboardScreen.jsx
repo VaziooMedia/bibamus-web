@@ -566,6 +566,16 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
         </div>
       </div>
 
+      {event.nowPlayingTrack && (
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "18px", marginTop: "-10px" }}>
+          <NavIcon name="bibamusic" size={13} color={COLORS.inkSoft} />
+          <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {event.nowPlayingTrack.title}
+            {event.nowPlayingTrack.artist && ` — ${event.nowPlayingTrack.artist}`}
+          </span>
+        </div>
+      )}
+
 
       <PrimaryButton
         onClick={onNewRound}
