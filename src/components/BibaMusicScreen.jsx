@@ -478,14 +478,26 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       ) : (
         <div style={{ marginBottom: "18px" }}>
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "8px" }}>
-            Il suffit qu'<strong style={{ color: COLORS.ink }}>un des participants</strong> soit connecté à un compte{" "}
-            <strong style={{ color: COLORS.ink }}>Spotify Premium</strong> pour créer une playlist partagée — pas besoin que tout le monde le soit.
+            Un des participants à ce BibaRoom doit être connecté à un compte <strong style={{ color: COLORS.ink }}>Spotify Premium</strong> pour créer une playlist partagée.
           </p>
           <button
             onClick={goToSpotifyConnect}
-            style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "9px 14px", fontSize: "13px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "none",
+              border: `2px solid ${COLORS.amber}`,
+              borderRadius: "8px",
+              padding: "9px 14px",
+              fontSize: "13px",
+              fontWeight: 700,
+              color: COLORS.amber,
+              cursor: "pointer",
+            }}
           >
             Relier à Spotify Premium
+            <SpotifyIcon size={18} />
           </button>
         </div>
       )}
@@ -620,9 +632,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       </div>
       )}
 
-      {sorted.length === 0 ? (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucun morceau proposé pour l'instant.</p>
-      ) : (
+      {sorted.length === 0 ? null : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {sorted.map((s) => {
             const bixCount = (s.bix || []).length;
