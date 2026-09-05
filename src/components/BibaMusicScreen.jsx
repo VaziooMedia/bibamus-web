@@ -481,7 +481,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
             Un des participants à ce BibaRoom doit être connecté à un compte <strong style={{ color: COLORS.ink }}>Spotify Premium</strong> pour créer une playlist partagée.
           </p>
           <button
-            onClick={goToSpotifyConnect}
+            onClick={() => goToSpotifyConnect("bibaMusic", event.id)}
             style={{
               display: "flex",
               alignItems: "center",

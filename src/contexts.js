@@ -7,4 +7,4 @@
 import React from "react";
 
 export const NavigationContext = React.createContext(() => {});
-export const ProfileNavContext = React.createContext({ avatarUrl: null, goToProfile: () => {}, goToSpotifyConnect: () => {} });
+export const ProfileNavContext = React.createContext({ avatarUrl: null, goToProfile: () => {}, goToSpotifyConnect: (_returnScreen, _returnEventId) => {} });

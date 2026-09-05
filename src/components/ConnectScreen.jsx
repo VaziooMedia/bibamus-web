@@ -134,7 +134,7 @@ export function ConnectScreen({ onBack, goToSpotify }) {
 
 // Spotify — seule intégration réellement fonctionnelle. Connexion/déconnexion se passent ici,
 // pas sur la liste.
-export function SpotifyDetailScreen({ myUserId, onBack }) {
+export function SpotifyDetailScreen({ myUserId, onBack, returnScreen = "connectSpotify", returnEventId = null }) {
   const [status, setStatus] = useState(null);
   useEffect(() => {
     getMySpotifyStatus().then(setStatus);
@@ -163,7 +163,7 @@ export function SpotifyDetailScreen({ myUserId, onBack }) {
           Déconnecter Spotify
         </button>
       ) : (
-        <PrimaryButton onClick={redirectToSpotifyAuth} style={{ width: "100%" }}>
+        <PrimaryButton onClick={() => redirectToSpotifyAuth(returnScreen, returnEventId)} style={{ width: "100%" }}>
           Connecter Spotify
         </PrimaryButton>
       )}

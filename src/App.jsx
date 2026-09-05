@@ -223,6 +223,7 @@ export default function App() {
   const [pulseStoriesRefreshKey, setPulseStoriesRefreshKey] = useState(0);
   const [screenBeforeVenueDetail, setScreenBeforeVenueDetail] = useState("venueDirectory");
   const [screenBeforeBibaSolo, setScreenBeforeBibaSolo] = useState("sessionHub");
+  const [spotifyReturnContext, setSpotifyReturnContext] = useState({ screen: "connectSpotify", eventId: null });
   const [screenBeforeVenueDirectory, setScreenBeforeVenueDirectory] = useState("repertoireHub");
   const [screenBeforeDrinksDirectory, setScreenBeforeDrinksDirectory] = useState("repertoireHub");
   const [screenBeforeDrinkDetail, setScreenBeforeDrinkDetail] = useState("drinksDirectory");
@@ -234,9 +235,12 @@ export default function App() {
     const code = spotifyAuthCode;
     setSpotifyAuthCode(null);
     const returnScreen = localStorage.getItem("bibamus-spotify-return-screen");
+    const returnEventId = localStorage.getItem("bibamus-spotify-return-event-id");
     localStorage.removeItem("bibamus-spotify-return-screen");
+    localStorage.removeItem("bibamus-spotify-return-event-id");
     completeSpotifyAuth(code, session.user.id).then((result) => {
       setSpotifyConnectResult(result);
+      if (returnEventId) setActiveEventId(returnEventId);
       if (returnScreen) setScreen(returnScreen);
       if (result.ok) {
         alert(`Compte Spotify connecté${result.displayName ? ` : ${result.displayName}` : ""} !`);
@@ -1425,7 +1429,16 @@ export default function App() {
 
   return (
     <NavigationContext.Provider value={() => setScreen("home")}>
-      <ProfileNavContext.Provider value={{ avatarUrl: profile.avatarUrl, goToProfile: () => setScreen("profile"), goToSpotifyConnect: () => setScreen("connectSpotify") }}>
+      <ProfileNavContext.Provider
+        value={{
+          avatarUrl: profile.avatarUrl,
+          goToProfile: () => setScreen("profile"),
+          goToSpotifyConnect: (returnScreen = "connectSpotify", returnEventId = null) => {
+            setSpotifyReturnContext({ screen: returnScreen, eventId: returnEventId });
+            setScreen("connectSpotify");
+          },
+        }}
+      >
         <div
           style={{
             fontFamily: "'Work Sans', sans-serif",
@@ -1948,8 +1961,23 @@ export default function App() {
                 onBack={() => setScreen("home")}
               />
             )}
-            {screen === "connect" && <ConnectScreen onBack={() => setScreen("settings")} goToSpotify={() => setScreen("connectSpotify")} />}
-            {screen === "connectSpotify" && <SpotifyDetailScreen myUserId={session.user.id} onBack={() => setScreen("connect")} />}
+            {screen === "connect" && (
+              <ConnectScreen
+                onBack={() => setScreen("settings")}
+                goToSpotify={() => {
+                  setSpotifyReturnContext({ screen: "connectSpotify", eventId: null });
+                  setScreen("connectSpotify");
+                }}
+              />
+            )}
+            {screen === "connectSpotify" && (
+              <SpotifyDetailScreen
+                myUserId={session.user.id}
+                onBack={() => setScreen("connect")}
+                returnScreen={spotifyReturnContext.screen}
+                returnEventId={spotifyReturnContext.eventId}
+              />
+            )}
             {screen === "help" && (
               <HelpSupportScreen
                 onBack={() => setScreen("settings")}
