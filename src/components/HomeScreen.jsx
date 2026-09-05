@@ -198,7 +198,7 @@ export function HomeScreen({
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px 0" }} />
       <div style={{ display: "flex", justifyContent: "center", gap: "28px", marginBottom: "14px" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
             onClick={goToSearch}
             style={{
@@ -215,9 +215,9 @@ export function HomeScreen({
           >
             <NavIcon name="search" size={20} color={COLORS.amber} />
           </button>
-          <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>Search</span>
+          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Search</span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
             onClick={goToBibaSolo}
             style={{
@@ -234,9 +234,9 @@ export function HomeScreen({
           >
             <NavIcon name="bottle" size={20} color={COLORS.amber} />
           </button>
-          <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>BibaSolo</span>
+          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>BibaSolo</span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
             onClick={goToDrinkCheck}
             style={{
@@ -253,9 +253,9 @@ export function HomeScreen({
           >
             <img src={drinkChecksIconUrl} alt="Drink Check" style={{ width: "22px", height: "22px" }} />
           </button>
-          <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>Drink Check</span>
+          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Drink Check</span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
             onClick={goToPlaceCheck}
             style={{
@@ -272,7 +272,7 @@ export function HomeScreen({
           >
             <img src={placeChecksIconUrl} alt="Place Check" style={{ width: "22px", height: "22px" }} />
           </button>
-          <span style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft }}>Place Check</span>
+          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Place Check</span>
         </div>
       </div>
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
