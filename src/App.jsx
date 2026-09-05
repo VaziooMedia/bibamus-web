@@ -105,7 +105,7 @@ import {
   subscribeToMyNotifications,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
-import { completeSpotifyAuth } from "./data/spotify.js";
+import { completeSpotifyAuth, getMySpotifyStatus, ensureFreshSpotifyToken, getCurrentlyPlaying } from "./data/spotify.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, kcalForDrink } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
@@ -594,6 +594,43 @@ export default function App() {
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentEvent?.salonCode]);
+
+  // Vérifie ce qui joue sur Spotify pour l'événement en cours — indépendamment de la page
+  // affichée, pour que "morceau en cours" reste à jour même en dehors de BibaMusic.
+  React.useEffect(() => {
+    if (!currentEvent) return;
+    let cancelled = false;
+    let interval = null;
+    getMySpotifyStatus().then((s) => {
+      if (cancelled || !s.connected) return;
+      const poll = async () => {
+        const token = await ensureFreshSpotifyToken(session.user.id);
+        if (!token) return;
+        const current = await getCurrentlyPlaying(token);
+        if (!current?.uri) return;
+        const matchingSong = (currentEvent.playlist || []).find((s2) => s2.spotifyUri === current.uri);
+        if (!matchingSong) return;
+        updateEvent(currentEvent.id, (e) => {
+          if (e.nowPlayingUri === current.uri) return e;
+          const playedUris = new Set(e.playedUris || []);
+          if (e.nowPlayingUri) playedUris.add(e.nowPlayingUri);
+          return {
+            ...e,
+            nowPlayingUri: current.uri,
+            nowPlayingTrack: { title: matchingSong.title, artist: matchingSong.artist, albumArt: matchingSong.albumArt },
+            playedUris: Array.from(playedUris),
+          };
+        });
+      };
+      poll();
+      interval = setInterval(poll, 6000);
+    });
+    return () => {
+      cancelled = true;
+      if (interval) clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentEvent?.id]);
 
   const startNewRound = () => {
     const selfEntry = { id: "self", name: profile.name, isSelf: true, code: profile.myBibroCode };

@@ -388,7 +388,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           target="_blank"
           rel="noreferrer"
           title="Ouvrir dans Spotify"
-          style={{ position: "relative", display: "inline-flex", marginBottom: "18px" }}
+          style={{ position: "relative", display: "inline-flex", alignSelf: "flex-start", marginBottom: "18px" }}
         >
           <SpotifyIcon size={52} />
           {playlist.filter((s) => s.addedToPlaylist).length > 0 && (
