@@ -618,6 +618,7 @@ export default function App() {
             ...e,
             nowPlayingUri: current.uri,
             nowPlayingTrack: { title: matchingSong.title, artist: matchingSong.artist, albumArt: matchingSong.albumArt },
+            nowPlayingUserId: session.user.id,
             playedUris: Array.from(playedUris),
           };
         });

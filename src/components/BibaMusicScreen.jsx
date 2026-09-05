@@ -3,6 +3,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, SpotifyIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { normalizeUrl } from "../utils.js";
+import { controlSpotifyPlayback } from "../data/sharedDirectories.js";
 import {
   getMySpotifyStatus,
   ensureFreshSpotifyToken,
@@ -76,6 +77,8 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
   const [searching, setSearching] = useState(false);
   const [creatingPlaylist, setCreatingPlaylist] = useState(false);
   const [addingId, setAddingId] = useState(null);
+  const [playbackBusy, setPlaybackBusy] = useState(false);
+  const [playbackError, setPlaybackError] = useState(null);
   const [nowPlayingDebug, setNowPlayingDebug] = useState(null);
   const searchDebounce = useRef(null);
 
@@ -235,6 +238,14 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
   const becomeDJ = () => updateEvent(event.id, (e) => ({ ...e, djCode: myBibroCode }));
   const relinquishDJ = () => updateEvent(event.id, (e) => ({ ...e, djCode: null }));
 
+  const handlePlaybackAction = async (action) => {
+    setPlaybackBusy(true);
+    setPlaybackError(null);
+    const result = await controlSpotifyPlayback(event.salonCode, action);
+    setPlaybackBusy(false);
+    if (result.error) setPlaybackError(result.error);
+  };
+
   // Déplace un morceau à une position précise dans la file d'attente — fige l'ordre actuel en
   // rangs manuels explicites, pour que la modération du MC ne soit pas aussitôt écrasée par un
   // nouveau Bix. La synchronisation vers la vraie playlist Spotify se fait ensuite pour le
@@ -383,12 +394,13 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       {/* Écoute réelle — se fait dans la vraie app Spotify, pas dans un lecteur limité aux
       extraits de 30 secondes. Quelqu'un du groupe ouvre la playlist et la fait jouer. */}
       {event.spotifyPlaylistId ? (
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: playbackError ? "4px" : "18px", flexWrap: "wrap" }}>
         <a
           href={event.spotifyPlaylistUrl}
           target="_blank"
           rel="noreferrer"
           title="Ouvrir dans Spotify"
-          style={{ position: "relative", display: "inline-flex", alignSelf: "flex-start", marginBottom: "18px" }}
+          style={{ position: "relative", display: "inline-flex", alignSelf: "flex-start" }}
         >
           <SpotifyIcon size={52} />
           {playlist.filter((s) => s.addedToPlaylist).length > 0 && (
@@ -416,6 +428,36 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
             </span>
           )}
         </a>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {[
+            { action: "previous", icon: "skip-back", label: "Précédent" },
+            { action: "play", icon: "play", label: "Lecture" },
+            { action: "pause", icon: "pause", label: "Pause" },
+            { action: "next", icon: "skip-forward", label: "Suivant" },
+          ].map((btn) => (
+            <button
+              key={btn.action}
+              onClick={() => isDJ && !playbackBusy && handlePlaybackAction(btn.action)}
+              disabled={!isDJ || playbackBusy}
+              title={isDJ ? btn.label : "Seul le MC peut contrôler la lecture"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                background: "none",
+                border: `2px solid ${COLORS.paperAlt}`,
+                opacity: isDJ ? 1 : 0.4,
+                cursor: isDJ ? (playbackBusy ? "default" : "pointer") : "not-allowed",
+              }}
+            >
+              <NavIcon name={btn.icon} size={16} color={isDJ ? COLORS.amber : COLORS.inkSoft} />
+            </button>
+          ))}
+        </div>
+        </div>
       ) : spotifyConnected ? (
         <button
           onClick={createPlaylist}
@@ -429,6 +471,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           Connectez Spotify depuis "Mes infos" pour créer une vraie playlist partagée.
         </p>
       )}
+      {playbackError && <p style={{ fontSize: "11.5px", color: COLORS.redFluo, marginBottom: "14px" }}>{playbackError}</p>}
 
       {/* Faux lecteur — purement visuel, aucune lecture réelle depuis Bibamus. Affiche ce qui
       joue actuellement, tel que remonté par la personne qui contrôle la musique. Reprend le

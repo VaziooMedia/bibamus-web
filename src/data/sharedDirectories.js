@@ -772,6 +772,15 @@ export async function loadOfficialStories() {
   }));
 }
 
+// Contrôle la lecture Spotify du DJ — seul le MC du salon peut l'utiliser (vérifié côté
+// serveur). action: "play" | "pause" | "next" | "previous".
+export async function controlSpotifyPlayback(salonCode, action) {
+  const { data, error } = await supabase.functions.invoke("spotify-playback-control", { body: { salonCode, action } });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
+
 export async function uploadStoryMedia(userId, blob) {
   const imageBase64 = await blobToBase64(blob);
   const path = `${userId}-${Date.now()}.jpg`;

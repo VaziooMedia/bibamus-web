@@ -251,6 +251,20 @@ M 591 35 L 579 41 L 574 47 L 571 53 L 571 56 L 570 57 L 570 67 L 571 68 L 571 72
           <path d="M7 5.5c0-1.1 1.2-1.8 2.2-1.2l9 6.5c.9.7.9 2.1 0 2.8l-9 6.5c-1 .7-2.2 0-2.2-1.2v-13Z" fill={color} />
         </svg>
       );
+    case "skip-back":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M6 5v14" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
+          <path d="M18.5 5.5c0-1.1-1.2-1.8-2.2-1.2l-8.5 6.5c-.9.7-.9 2.1 0 2.8l8.5 6.5c1 .7 2.2 0 2.2-1.2v-13Z" fill={color} />
+        </svg>
+      );
+    case "skip-forward":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M18 5v14" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
+          <path d="M5.5 5.5c0-1.1 1.2-1.8 2.2-1.2l8.5 6.5c.9.7.9 2.1 0 2.8l-8.5 6.5c-1 .7-2.2 0-2.2-1.2v-13Z" fill={color} />
+        </svg>
+      );
     case "check":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
