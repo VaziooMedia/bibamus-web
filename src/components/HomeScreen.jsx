@@ -281,6 +281,8 @@ export function HomeScreen({
       <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} officialStories={officialStories} />
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "-10px 0 18px 0" }} />
+
+      {bibros.some((b) => bibroStatuses[b.code] && (bibroStatuses[b.code].activeSalonName || isFreshCheckIn(bibroStatuses[b.code]))) && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
