@@ -86,10 +86,10 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     getMySpotifyStatus().then((s) => setSpotifyConnected(!!s.connected));
   }, []);
 
-  // Vérifie périodiquement ce qui joue sur MON appareil — ne remonte l'info que si ce morceau
-  // fait partie de la playlist proposée par le groupe (sinon, ce serait juste ma propre écoute
-  // personnelle, sans rapport avec le Bibroom). Marque aussi le morceau précédent comme "déjà
-  // joué" dès que la lecture passe au suivant.
+  // Vérifie périodiquement ce qui joue sur MON appareil — uniquement pour le message de
+  // diagnostic affiché ici. La mise à jour réelle de l'événement (nowPlayingTrack, DJ actuel)
+  // est centralisée dans App.jsx, pour qu'elle continue même en dehors de cet écran — on évite
+  // ainsi que deux vérifications distinctes se marchent dessus.
   useEffect(() => {
     if (!spotifyConnected) return;
     const poll = async () => {
@@ -113,18 +113,6 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
         return;
       }
       setNowPlayingDebug(null);
-      updateEvent(event.id, (e) => {
-        if (e.nowPlayingUri === current.uri && e.nowPlayingUserId === myUserId) return e;
-        const playedUris = new Set(e.playedUris || []);
-        if (e.nowPlayingUri) playedUris.add(e.nowPlayingUri);
-        return {
-          ...e,
-          nowPlayingUri: current.uri,
-          nowPlayingTrack: { title: matchingSong.title, artist: matchingSong.artist, albumArt: matchingSong.albumArt },
-          nowPlayingUserId: myUserId,
-          playedUris: Array.from(playedUris),
-        };
-      });
     };
     poll();
     const interval = setInterval(poll, 6000);
