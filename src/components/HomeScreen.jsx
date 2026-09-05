@@ -280,9 +280,7 @@ export function HomeScreen({
       <TravelAgeWarning profile={profile} />
       <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} officialStories={officialStories} />
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
-
-      {bibros.some((b) => bibroStatuses[b.code] && (bibroStatuses[b.code].activeSalonName || isFreshCheckIn(bibroStatuses[b.code]))) && (
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "-10px 0 18px 0" }} />
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
@@ -324,7 +322,7 @@ export function HomeScreen({
 
       {events.some((ev) => !ev.closed) && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px", marginBottom: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px", marginBottom: "8px" }}>
             <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
             <span style={{ fontSize: "13px", fontWeight: 700 }}>
               <span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Live</span>
