@@ -411,7 +411,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       {/* Écoute réelle — se fait dans la vraie app Spotify, pas dans un lecteur limité aux
       extraits de 30 secondes. Quelqu'un du groupe ouvre la playlist et la fait jouer. */}
       {event.spotifyPlaylistId ? (
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: playbackError ? "4px" : "18px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: playbackError ? "4px" : "10px", flexWrap: "wrap" }}>
         <a
           href={event.spotifyPlaylistUrl}
           target="_blank"
@@ -575,7 +575,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
         </div>
       ) : (
         <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "18px" }}>
-          Après avoir ajouté au moins un morceau, l'utilisateur relié à Spotify Premium doit activer la playlist (bouton Play de la playlist) depuis l'app Spotify.
+          Après avoir ajouté au moins un morceau, l'utilisateur relié à Spotify Premium doit activer la playlist (bouton PLAY de la playlist) depuis l'app Spotify.
         </p>
       ))}
 
