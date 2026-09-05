@@ -168,27 +168,42 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
   // sur ce qui est réellement joué — tout l'intérêt collaboratif de BibaMusic.
   const topUpcomingUri = upcomingSongs[0]?.spotifyUri || null;
   const lastSyncedTopUri = useRef(null);
-  useEffect(() => {
-    if (!event.spotifyPlaylistId || !topUpcomingUri || !spotifyConnected) return;
-    if (lastSyncedTopUri.current === topUpcomingUri) return;
-    lastSyncedTopUri.current = topUpcomingUri;
+  const topUpcomingUriRef = useRef(topUpcomingUri);
+  const nowPlayingUriRef = useRef(event.nowPlayingUri);
+  topUpcomingUriRef.current = topUpcomingUri;
+  nowPlayingUriRef.current = event.nowPlayingUri;
 
-    (async () => {
+  useEffect(() => {
+    if (!event.spotifyPlaylistId || !spotifyConnected) return;
+
+    const trySync = async () => {
+      const targetUri = topUpcomingUriRef.current;
+      if (!targetUri || lastSyncedTopUri.current === targetUri) return;
+
       const token = await ensureFreshSpotifyToken(myUserId);
       if (!token) return;
       const realOrder = await getSpotifyPlaylistOrder(token, event.spotifyPlaylistId);
-      if (!realOrder) return;
+      if (!realOrder) return; // échec réseau — on retentera au prochain passage
 
-      const topIndex = realOrder.indexOf(topUpcomingUri);
-      if (topIndex === -1) return; // pas encore ajouté à la vraie playlist
+      const topIndex = realOrder.indexOf(targetUri);
+      if (topIndex === -1) return; // pas encore ajouté à la vraie playlist — on retentera bientôt
 
-      const currentIndex = event.nowPlayingUri ? realOrder.indexOf(event.nowPlayingUri) : -1;
+      const currentIndex = nowPlayingUriRef.current ? realOrder.indexOf(nowPlayingUriRef.current) : -1;
       const targetPosition = currentIndex === -1 ? 0 : currentIndex + 1;
-      if (topIndex <= targetPosition) return; // déjà à la bonne place ou avant
+      if (topIndex <= targetPosition) {
+        lastSyncedTopUri.current = targetUri; // déjà à la bonne place, vraiment réglé
+        return;
+      }
 
-      await reorderSpotifyPlaylistItem(token, event.spotifyPlaylistId, topIndex, targetPosition);
-    })();
-  }, [topUpcomingUri, event.spotifyPlaylistId, event.nowPlayingUri, spotifyConnected, myUserId]);
+      const ok = await reorderSpotifyPlaylistItem(token, event.spotifyPlaylistId, topIndex, targetPosition);
+      if (ok) lastSyncedTopUri.current = targetUri;
+    };
+
+    trySync();
+    const interval = setInterval(trySync, 4000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.spotifyPlaylistId, spotifyConnected, myUserId]);
 
   const runSearch = (query) => {
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
