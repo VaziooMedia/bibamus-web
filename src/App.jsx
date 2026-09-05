@@ -611,7 +611,7 @@ export default function App() {
         const matchingSong = (currentEvent.playlist || []).find((s2) => s2.spotifyUri === current.uri);
         if (!matchingSong) return;
         updateEvent(currentEvent.id, (e) => {
-          if (e.nowPlayingUri === current.uri) return e;
+          if (e.nowPlayingUri === current.uri && e.nowPlayingUserId === session.user.id) return e;
           const playedUris = new Set(e.playedUris || []);
           if (e.nowPlayingUri) playedUris.add(e.nowPlayingUri);
           return {
