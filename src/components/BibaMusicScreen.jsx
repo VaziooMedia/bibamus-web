@@ -3,6 +3,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, SpotifyIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { normalizeUrl } from "../utils.js";
+import { ProfileNavContext } from "../contexts.js";
 import { controlSpotifyPlayback } from "../data/sharedDirectories.js";
 import {
   getMySpotifyStatus,
@@ -70,6 +71,7 @@ function ScrollingText({ children, style }) {
 // Bibroom, avec le lecteur officiel Spotify intégré (aucune lecture "maison" — juste le
 // widget officiel de Spotify, affiché directement dans la page).
 export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUserId, onBack }) {
+  const { goToProfile } = React.useContext(ProfileNavContext);
   const [titleInput, setTitleInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
   const [spotifyConnected, setSpotifyConnected] = useState(false);
@@ -474,9 +476,17 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           {creatingPlaylist ? "Création..." : "Créer la playlist Spotify du Bibroom"}
         </button>
       ) : (
-        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "18px" }}>
-          Connectez Spotify depuis "Mes infos" pour créer une vraie playlist partagée.
-        </p>
+        <div style={{ marginBottom: "18px" }}>
+          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "8px" }}>
+            Il faut être connecté à un compte <strong style={{ color: COLORS.ink }}>Spotify Premium</strong> pour créer une playlist partagée.
+          </p>
+          <button
+            onClick={goToProfile}
+            style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "9px 14px", fontSize: "13px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}
+          >
+            Aller dans Mes infos →
+          </button>
+        </div>
       )}
       {playbackError && <p style={{ fontSize: "11.5px", color: COLORS.redFluo, marginBottom: "14px" }}>{playbackError}</p>}
 
@@ -554,7 +564,9 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
         </>
       ))}
 
-      {/* Proposition d'un morceau */}
+      {/* Proposition d'un morceau — inutile de le montrer tant qu'aucune playlist n'existe pour
+      cet événement : il n'y a nulle part où faire atterrir la proposition. */}
+      {event.spotifyPlaylistId && (
       <div style={{ marginBottom: "18px", position: "relative" }}>
         <input
           value={titleInput}
@@ -605,6 +617,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           </div>
         )}
       </div>
+      )}
 
       {sorted.length === 0 ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucun morceau proposé pour l'instant.</p>
