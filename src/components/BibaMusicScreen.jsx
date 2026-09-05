@@ -88,6 +88,13 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     getMySpotifyStatus().then((s) => setSpotifyConnected(!!s.connected));
   }, []);
 
+  // Toujours la dernière playlist en mémoire — évite que la vérification périodique reste
+  // bloquée sur une version figée si un titre est ajouté après son démarrage.
+  const eventRef = useRef(event);
+  useEffect(() => {
+    eventRef.current = event;
+  }, [event]);
+
   // Vérifie périodiquement ce qui joue sur MON appareil — uniquement pour le message de
   // diagnostic affiché ici. La mise à jour réelle de l'événement (nowPlayingTrack, DJ actuel)
   // est centralisée dans App.jsx, pour qu'elle continue même en dehors de cet écran — on évite
@@ -109,13 +116,13 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
         setNowPlayingDebug("Aucun morceau détecté.");
         return;
       }
-      const matchingSong = (event.playlist || []).find((s) => s.spotifyUri === current.uri);
+      const matchingSong = (eventRef.current.playlist || []).find((s) => s.spotifyUri === current.uri);
       if (!matchingSong) {
         setNowPlayingDebug(`Morceau en cours (${current.uri}) ne correspond à aucune proposition Bibamus.`);
         return;
       }
       setNowPlayingDebug(null);
-      updateEvent(event.id, (e) => {
+      updateEvent(eventRef.current.id, (e) => {
         if (e.nowPlayingUri === current.uri && e.nowPlayingUserId === myUserId && e.nowPlayingIsPlaying === current.isPlaying) return e;
         const playedUris = new Set(e.playedUris || []);
         if (e.nowPlayingUri) playedUris.add(e.nowPlayingUri);
@@ -133,7 +140,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     const interval = setInterval(poll, 3000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spotifyConnected, myUserId, event.id]);
+  }, [spotifyConnected, myUserId]);
 
   const playlist = event.playlist || [];
   // Le classement par Bix ne doit influencer que les morceaux pas encore joués — sinon, un Bix
@@ -567,14 +574,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
           )}
         </div>
       ) : (
-        <>
-          <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: nowPlayingDebug ? "4px" : "18px" }}>
-            Personne ne diffuse la playlist pour l'instant.
-          </p>
-          {nowPlayingDebug && spotifyConnected && (
-            <p style={{ fontSize: "10.5px", color: COLORS.inkSoft, opacity: 0.6, marginBottom: "18px" }}>Diagnostic : {nowPlayingDebug}</p>
-          )}
-        </>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "18px" }}>Personne ne diffuse la playlist pour l'instant.</p>
       ))}
 
       {/* Proposition d'un morceau — inutile de le montrer tant qu'aucune playlist n'existe pour
