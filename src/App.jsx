@@ -223,6 +223,8 @@ export default function App() {
   const [pulseStoriesRefreshKey, setPulseStoriesRefreshKey] = useState(0);
   const [screenBeforeVenueDetail, setScreenBeforeVenueDetail] = useState("venueDirectory");
   const [screenBeforeBibaSolo, setScreenBeforeBibaSolo] = useState("sessionHub");
+  const [screenBeforeVenueDirectory, setScreenBeforeVenueDirectory] = useState("repertoireHub");
+  const [screenBeforeDrinksDirectory, setScreenBeforeDrinksDirectory] = useState("repertoireHub");
   const [screenBeforeDrinkDetail, setScreenBeforeDrinkDetail] = useState("drinksDirectory");
 
   // Finalise la connexion Spotify dès que la session est prête — ne peut pas se faire plus tôt,
@@ -1498,16 +1500,16 @@ export default function App() {
                   setScreen("search");
                 }}
                 goToDrinkCheck={() => {
-                  setSearchInitialTab("produits");
-                  setScreen("search");
+                  setScreenBeforeDrinksDirectory("home");
+                  setScreen("drinksDirectory");
                 }}
                 goToBibaSolo={() => {
                   setScreenBeforeBibaSolo("home");
                   setScreen("bibaSolo");
                 }}
                 goToPlaceCheck={() => {
-                  setSearchInitialTab("lieux");
-                  setScreen("search");
+                  setScreenBeforeVenueDirectory("home");
+                  setScreen("venueDirectory");
                 }}
                 bibros={bibros}
                 bibroStatuses={bibroStatuses}
@@ -1534,8 +1536,14 @@ export default function App() {
             {screen === "repertoireHub" && (
               <RepertoireHubScreen
                 onBack={() => setScreen("home")}
-                goToDiscover={() => setScreen("venueDirectory")}
-                goToDrinks={() => setScreen("drinksDirectory")}
+                goToDiscover={() => {
+                  setScreenBeforeVenueDirectory("repertoireHub");
+                  setScreen("venueDirectory");
+                }}
+                goToDrinks={() => {
+                  setScreenBeforeDrinksDirectory("repertoireHub");
+                  setScreen("drinksDirectory");
+                }}
                 goToManageBreweries={() => setScreen("breweries")}
                 goToManageBrands={() => setScreen("brands")}
                 goToScanBarcode={() => setShowBarcodeScanner(true)}
@@ -1570,7 +1578,7 @@ export default function App() {
                 myBibroCode={profile.myBibroCode}
                 isAdmin={!!profile.isAdmin}
                 addIntent={false}
-                onBack={() => setScreen("repertoireHub")}
+                onBack={() => setScreen(screenBeforeVenueDirectory)}
                 onOpenVenue={(id) => {
                   setViewedVenueId(id);
                   setScreen("venueDetail");
@@ -1669,7 +1677,7 @@ export default function App() {
                 drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
-                onBack={() => setScreen("repertoireHub")}
+                onBack={() => setScreen(screenBeforeDrinksDirectory)}
                 onOpenDrink={(id) => {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
