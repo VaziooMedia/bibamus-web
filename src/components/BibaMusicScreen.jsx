@@ -113,6 +113,18 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
         return;
       }
       setNowPlayingDebug(null);
+      updateEvent(event.id, (e) => {
+        if (e.nowPlayingUri === current.uri && e.nowPlayingUserId === myUserId) return e;
+        const playedUris = new Set(e.playedUris || []);
+        if (e.nowPlayingUri) playedUris.add(e.nowPlayingUri);
+        return {
+          ...e,
+          nowPlayingUri: current.uri,
+          nowPlayingTrack: { title: matchingSong.title, artist: matchingSong.artist, albumArt: matchingSong.albumArt },
+          nowPlayingUserId: myUserId,
+          playedUris: Array.from(playedUris),
+        };
+      });
     };
     poll();
     const interval = setInterval(poll, 6000);
