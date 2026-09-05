@@ -128,7 +128,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       });
     };
     poll();
-    const interval = setInterval(poll, 6000);
+    const interval = setInterval(poll, 3000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spotifyConnected, myUserId, event.id]);
