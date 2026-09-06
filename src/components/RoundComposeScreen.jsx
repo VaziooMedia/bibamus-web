@@ -225,7 +225,7 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px", marginTop: "-6px" }}>
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "24px", fontWeight: 800, color: COLORS.amber }}>
-          {!isOpenBar && <MoneyAmount value={roundTotal} currency={event.currency} />}
+          {!isOpenBar && <MoneyAmount value={roundTotal} currency={event.currency} jetonIcon="pink" />}
         </span>
       </div>
 

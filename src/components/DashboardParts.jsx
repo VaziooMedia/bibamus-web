@@ -50,7 +50,7 @@ export function PotCard({ event, updateEvent, myName }) {
     <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
       <div style={{ fontSize: "13px", fontWeight: 600, opacity: 0.7, textAlign: "center" }}>Solde de la cagnotte</div>
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: balance < 0 ? "#e08585" : COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
-        <MoneyAmount value={balance} currency={unit} />
+        <MoneyAmount value={balance} currency={unit} jetonIcon="pink" />
       </div>
       <div style={{ fontSize: "12px", opacity: 0.75, marginTop: "2px", textAlign: "center" }}>
         {unit === "jeton" ? (
@@ -116,7 +116,7 @@ export function PotCard({ event, updateEvent, myName }) {
               <div key={c.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "2px 0" }}>
                 <span style={{ opacity: 0.85 }}>{c.name}</span>
                 <span style={{ fontWeight: 700 }}>
-                  <MoneyAmount value={c.amount} currency={unit} />
+                  <MoneyAmount value={c.amount} currency={unit} jetonIcon="pink" />
                 </span>
               </div>
             ));

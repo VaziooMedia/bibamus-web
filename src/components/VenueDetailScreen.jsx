@@ -189,7 +189,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>
               {moneyEuro > 0 && <MoneyAmount value={moneyEuro} currency="euro" />}
               {moneyEuro > 0 && moneyJeton > 0 && " · "}
-              {moneyJeton > 0 && <MoneyAmount value={moneyJeton} currency="jeton" />}
+              {moneyJeton > 0 && <MoneyAmount value={moneyJeton} currency="jeton" jetonIcon="pink" />}
             </div>
           </div>
         )}

@@ -175,7 +175,7 @@ export function EventHistoryScreen({ myName, profile, bibros, checkIns, events, 
                     {ev.rounds.length} tournée{ev.rounds.length > 1 ? "s" : ""}
                   </div>
                 </div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amberDark }}><MoneyAmount value={displayTotalFor(ev)} currency={ev.currency} /></div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amberDark }}><MoneyAmount value={displayTotalFor(ev)} currency={ev.currency} jetonIcon="pink" /></div>
               </button>
               <button
                 onClick={() => (confirmDeleteId === ev.id ? onDeleteEvent(ev.id) : setConfirmDeleteId(ev.id))}

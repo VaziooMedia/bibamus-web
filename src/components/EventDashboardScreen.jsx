@@ -770,27 +770,27 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                 <div style={{ display: "flex", justifyContent: "space-between", maxWidth: "180px" }}>
                   <span>Sur ma note</span>
                   <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                    <MoneyAmount value={myPending} currency={event.currency} />
+                    <MoneyAmount value={myPending} currency={event.currency} jetonIcon="pink" />
                   </strong>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", maxWidth: "180px" }}>
                   <span>Déjà payé</span>
                   <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                    <MoneyAmount value={myPaid} currency={event.currency} />
+                    <MoneyAmount value={myPaid} currency={event.currency} jetonIcon="pink" />
                   </strong>
                 </div>
                 {myTips > 0 && (
                   <div style={{ display: "flex", justifyContent: "space-between", maxWidth: "180px" }}>
                     <span>+ Pourboire</span>
                     <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                      <MoneyAmount value={myTips} currency={event.currency} />
+                      <MoneyAmount value={myTips} currency={event.currency} jetonIcon="pink" />
                     </strong>
                   </div>
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between", maxWidth: "180px" }}>
                   <span>Total</span>
                   <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                    <MoneyAmount value={myRoundsTotal} currency={event.currency} />
+                    <MoneyAmount value={myRoundsTotal} currency={event.currency} jetonIcon="pink" />
                   </strong>
                 </div>
               </div>
@@ -898,7 +898,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                   </span>
                   {!isOpenBar && (
                     <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: r.offeredBy ? COLORS.amber : isAddition || r.settledDirectly === false ? COLORS.redFluo : COLORS.amber }}>
-                      <MoneyAmount value={r.total} currency={event.currency} />
+                      <MoneyAmount value={r.total} currency={event.currency} jetonIcon="pink" />
                     </span>
                   )}
                 </div>
@@ -1155,13 +1155,14 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                   value={event.finalTotal != null ? event.finalTotal + (event.tip || 0) + event.rounds.reduce((s, r) => s + (r.tip || 0), 0) : eventTotal}
                   currency={event.currency}
                   centered
+                  jetonIcon="pink"
                 />
               </div>
               {event.finalTotal != null && (
                 <div style={{ fontSize: "12px", opacity: 0.75, marginTop: "2px" }}>
                   Tournées sur la note :{" "}
                   <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.jetonFluo }}>
-                    <MoneyAmount value={tabTotal} currency={event.currency} />
+                    <MoneyAmount value={tabTotal} currency={event.currency} jetonIcon="pink" />
                   </span>
                   {Math.abs(event.finalTotal - tabTotal) < 0.01 ? (
                     <span style={{ color: COLORS.amber, fontWeight: 700 }}> · OK ✓</span>
@@ -1169,7 +1170,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                     <>
                       {" · écart de "}
                       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.redFluo }}>
-                        <MoneyAmount value={Math.abs(event.finalTotal - tabTotal)} currency={event.currency} />
+                        <MoneyAmount value={Math.abs(event.finalTotal - tabTotal)} currency={event.currency} jetonIcon="pink" />
                       </span>
                     </>
                   )}

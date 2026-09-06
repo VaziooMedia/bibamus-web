@@ -84,9 +84,9 @@ export function EventHistoryDetailScreen({ event, venues, displayTotal, roundsSu
 
       <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "16px" }}>
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55 }}>TOTAL DÉPENSÉ</div>
-        <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "38px", color: COLORS.amber, lineHeight: 1.3 }}><MoneyAmount value={displayTotal} currency={event.currency} /></div>
+        <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "38px", color: COLORS.amber, lineHeight: 1.3 }}><MoneyAmount value={displayTotal} currency={event.currency} jetonIcon="pink" /></div>
         {event.currency === "euro" && event.finalTotal != null && Math.abs(displayTotal - roundsSum) > 0.01 && (
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7 }}>Tournées suivies : <MoneyAmount value={roundsSum} currency={event.currency} /></div>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7 }}>Tournées suivies : <MoneyAmount value={roundsSum} currency={event.currency} jetonIcon="pink" /></div>
         )}
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7, marginTop: "6px" }}>
           {event.rounds.length} tournée{event.rounds.length > 1 ? "s" : ""} · {attendees.length} personne{attendees.length > 1 ? "s" : ""}
@@ -164,7 +164,7 @@ export function EventHistoryDetailScreen({ event, venues, displayTotal, roundsSu
                   </span>
                   {!isOpenBar && (
                     <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: r.offeredBy ? COLORS.sage : isAddition || r.settledDirectly === false ? COLORS.wine : COLORS.sage }}>
-                      <MoneyAmount value={r.total} currency={event.currency} />
+                      <MoneyAmount value={r.total} currency={event.currency} jetonIcon="pink" />
                     </span>
                   )}
                 </div>
