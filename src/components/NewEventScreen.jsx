@@ -106,7 +106,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onCancel} />
       {/* Taille standard pour ce type de grand titre — à répliquer sur tous les titres équivalents de l'app. */}
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "0 0 6px 0" }}>
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "0 0 24px 0" }}>
         {isSalon ? (
           <>
             Nouveau Biba<span style={{ color: COLORS.amber }}>Room</span>
@@ -116,7 +116,6 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         )}
       </h1>
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
       <SectionTitle>Lieu</SectionTitle>
       <div style={{ marginBottom: "16px" }}>
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
@@ -267,7 +266,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
       <SectionTitle>Choix du mode</SectionTitle>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "20px" }}>
         {[
           { key: "tournees", label: "Mode ORBIS", desc: "Tournées" },
           { key: "cagnotte", label: "Mode ARCA", desc: "Cagnotte" },
@@ -378,6 +377,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
 
       {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginTop: "12px" }}>{error}</p>}
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 0" }} />
       <PrimaryButton onClick={handleSubmit} disabled={!canCreate || loading} style={{ marginTop: "24px", width: "100%" }}>
         {loading ? "..." : isSalon ? "Créer le BibaRoom →" : "Créer l'événement →"}
       </PrimaryButton>
