@@ -5,6 +5,161 @@ import React from "react";
 import { COLORS } from "../constants.js";
 import tokenPinkUrl from "../assets/brand/Bibamus App - Icon UI - Token Pink.svg";
 
+// Chaque drapeau réellement utilisé par l'app est importé individuellement — plus verbeux
+// qu'un glob global, mais évite d'embarquer les 271 drapeaux disponibles dans le dépôt alors
+// que seule cette quarantaine sert réellement (le glob gonflait le bundle de ~200 Ko).
+import flagBe from "../assets/flags/be.svg";
+import flagFr from "../assets/flags/fr.svg";
+import flagLu from "../assets/flags/lu.svg";
+import flagDe from "../assets/flags/de.svg";
+import flagNl from "../assets/flags/nl.svg";
+import flagDz from "../assets/flags/dz.svg";
+import flagGbEng from "../assets/flags/gb-eng.svg";
+import flagAt from "../assets/flags/at.svg";
+import flagBm from "../assets/flags/bm.svg";
+import flagBg from "../assets/flags/bg.svg";
+import flagCa from "../assets/flags/ca.svg";
+import flagCy from "../assets/flags/cy.svg";
+import flagCi from "../assets/flags/ci.svg";
+import flagHr from "../assets/flags/hr.svg";
+import flagCu from "../assets/flags/cu.svg";
+import flagDk from "../assets/flags/dk.svg";
+import flagGbSct from "../assets/flags/gb-sct.svg";
+import flagEs from "../assets/flags/es.svg";
+import flagEe from "../assets/flags/ee.svg";
+import flagUs from "../assets/flags/us.svg";
+import flagFi from "../assets/flags/fi.svg";
+import flagGr from "../assets/flags/gr.svg";
+import flagHu from "../assets/flags/hu.svg";
+import flagIe from "../assets/flags/ie.svg";
+import flagIs from "../assets/flags/is.svg";
+import flagIt from "../assets/flags/it.svg";
+import flagJp from "../assets/flags/jp.svg";
+import flagLv from "../assets/flags/lv.svg";
+import flagLt from "../assets/flags/lt.svg";
+import flagMt from "../assets/flags/mt.svg";
+import flagMa from "../assets/flags/ma.svg";
+import flagMx from "../assets/flags/mx.svg";
+import flagNo from "../assets/flags/no.svg";
+import flagPl from "../assets/flags/pl.svg";
+import flagPt from "../assets/flags/pt.svg";
+import flagCz from "../assets/flags/cz.svg";
+import flagRo from "../assets/flags/ro.svg";
+import flagGb from "../assets/flags/gb.svg";
+import flagSn from "../assets/flags/sn.svg";
+import flagSk from "../assets/flags/sk.svg";
+import flagSi from "../assets/flags/si.svg";
+import flagSe from "../assets/flags/se.svg";
+import flagCh from "../assets/flags/ch.svg";
+import flagTn from "../assets/flags/tn.svg";
+import flagVe from "../assets/flags/ve.svg";
+
+const FLAG_URLS_BY_CODE = {
+  be: flagBe,
+  fr: flagFr,
+  lu: flagLu,
+  de: flagDe,
+  nl: flagNl,
+  dz: flagDz,
+  "gb-eng": flagGbEng,
+  at: flagAt,
+  bm: flagBm,
+  bg: flagBg,
+  ca: flagCa,
+  cy: flagCy,
+  ci: flagCi,
+  hr: flagHr,
+  cu: flagCu,
+  dk: flagDk,
+  "gb-sct": flagGbSct,
+  es: flagEs,
+  ee: flagEe,
+  us: flagUs,
+  fi: flagFi,
+  gr: flagGr,
+  hu: flagHu,
+  ie: flagIe,
+  is: flagIs,
+  it: flagIt,
+  jp: flagJp,
+  lv: flagLv,
+  lt: flagLt,
+  mt: flagMt,
+  ma: flagMa,
+  mx: flagMx,
+  no: flagNo,
+  pl: flagPl,
+  pt: flagPt,
+  cz: flagCz,
+  ro: flagRo,
+  gb: flagGb,
+  sn: flagSn,
+  sk: flagSk,
+  si: flagSi,
+  se: flagSe,
+  ch: flagCh,
+  tn: flagTn,
+  ve: flagVe,
+};
+
+// Mappe chaque nom de pays (tel que stocké dans COUNTRY_FLAGS) vers son code ISO à 2 lettres,
+// correspondant aux fichiers SVG dans src/assets/flags/. L'Angleterre et l'Écosse utilisent les
+// drapeaux de nation constitutive du Royaume-Uni plutôt que le drapeau britannique générique.
+const COUNTRY_ISO_CODES = {
+  Belgique: "be",
+  France: "fr",
+  Luxembourg: "lu",
+  Allemagne: "de",
+  "Pays-Bas": "nl",
+  Algérie: "dz",
+  Angleterre: "gb-eng",
+  Autriche: "at",
+  Bermudes: "bm",
+  Bulgarie: "bg",
+  Canada: "ca",
+  Chypre: "cy",
+  "Côte d'Ivoire": "ci",
+  Croatie: "hr",
+  Cuba: "cu",
+  Danemark: "dk",
+  Écosse: "gb-sct",
+  Espagne: "es",
+  Estonie: "ee",
+  "États-Unis": "us",
+  Finlande: "fi",
+  Grèce: "gr",
+  Hongrie: "hu",
+  Irlande: "ie",
+  Islande: "is",
+  Italie: "it",
+  Japon: "jp",
+  Lettonie: "lv",
+  Lituanie: "lt",
+  Malte: "mt",
+  Maroc: "ma",
+  Mexique: "mx",
+  Norvège: "no",
+  Pologne: "pl",
+  Portugal: "pt",
+  "République tchèque": "cz",
+  Roumanie: "ro",
+  "Royaume-Uni": "gb",
+  Sénégal: "sn",
+  Slovaquie: "sk",
+  Slovénie: "si",
+  Suède: "se",
+  Suisse: "ch",
+  Tunisie: "tn",
+  Vénézuéla: "ve",
+};
+
+export function CountryFlagImg({ country, size = 16 }) {
+  const code = COUNTRY_ISO_CODES[country];
+  const url = code && FLAG_URLS_BY_CODE[code];
+  if (!url) return null;
+  return <img src={url} alt={country} style={{ width: `${size}px`, height: `${Math.round((size * 3) / 4)}px`, display: "inline-block", verticalAlign: "middle", objectFit: "cover", borderRadius: "2px" }} />;
+}
+
 export function TokenPinkIcon({ size = 22 }) {
   return <img src={tokenPinkUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
 }

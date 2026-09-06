@@ -3,8 +3,8 @@
 // le prototype Claude (boutons, cartes, barre d'accès rapide...).
 // ============================================================
 import React, { useState } from "react";
-import { COLORS, COUNTRY_FLAGS } from "../constants.js";
-import { NavIcon, TokenPinkIcon } from "./icons.jsx";
+import { COLORS } from "../constants.js";
+import { NavIcon, TokenPinkIcon, CountryFlagImg } from "./icons.jsx";
 import { NavigationContext, ProfileNavContext } from "../contexts.js";
 import { formatMoney } from "../utils.js";
 
@@ -102,7 +102,6 @@ export function SectionTitle({ children }) {
 export function BibaxName({ name, lastName, nickname, city, locality, country, style }) {
   const fullName = [name, lastName].filter(Boolean).join(" ") || "Bibax";
   const location = city ? (locality ? `${city} (${locality})` : city) : null;
-  const flag = country && COUNTRY_FLAGS[country];
   return (
     <span style={{ display: "inline-flex", flexDirection: "column", minWidth: 0, ...style }}>
       <span style={{ fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName}</span>
@@ -110,7 +109,7 @@ export function BibaxName({ name, lastName, nickname, city, locality, country, s
       {location && (
         <span style={{ fontSize: "0.8em", fontWeight: 400, color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "inline-flex", alignItems: "center", gap: "4px" }}>
           {location}
-          {flag && <span>{flag}</span>}
+          {country && <CountryFlagImg country={country} size={14} />}
         </span>
       )}
     </span>

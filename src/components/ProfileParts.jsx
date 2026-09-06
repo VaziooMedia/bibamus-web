@@ -4,10 +4,9 @@
 // de statistique. Copiés tels quels depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, WEEKDAY_SHORT_MON_FIRST, COUNTRY_FLAGS } from "../constants.js";
-import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
+import { COLORS, WEEKDAY_SHORT_MON_FIRST } from "../constants.js";
+import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
-import belgiumFlagUrl from "../assets/flags/be.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
 import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
@@ -137,11 +136,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                   <img src={residenceIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
                   {profile.city}{" "}
-                  {profile.country === "Belgique" ? (
-                    <img src={belgiumFlagUrl} alt="Belgique" style={{ width: "16px", height: "12px", display: "inline-block", verticalAlign: "middle" }} />
-                  ) : (
-                    COUNTRY_FLAGS[profile.country] || ""
-                  )}
+                  {profile.country && <CountryFlagImg country={profile.country} size={16} />}
                 </span>
               )}
             </div>

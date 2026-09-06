@@ -4,8 +4,8 @@
 // le prototype Claude.
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
-import { COLORS, COUNTRY_FLAGS } from "../constants.js";
-import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
+import { COLORS } from "../constants.js";
+import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard } from "./ui.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
@@ -507,7 +507,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
               {bibro.city && (
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                   <img src={residenceIconUrl} alt="" style={{ width: "14px", height: "14px" }} />
-                  {bibro.city} {COUNTRY_FLAGS[bibro.country] || ""}
+                  {bibro.city} {bibro.country && <CountryFlagImg country={bibro.country} size={14} />}
                 </span>
               )}
             </div>
@@ -828,7 +828,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                     {r.city && (
                       <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, display: "flex", alignItems: "center", gap: "4px" }}>
                         {r.city}
-                        {r.country && COUNTRY_FLAGS[r.country] && <span>{COUNTRY_FLAGS[r.country]}</span>}
+                        {r.country && <CountryFlagImg country={r.country} size={14} />}
                       </div>
                     )}
                   </div>
@@ -999,7 +999,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                   {foundSocials.city && (
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                       {foundSocials.city}
-                      {foundSocials.country && COUNTRY_FLAGS[foundSocials.country] && <span>{COUNTRY_FLAGS[foundSocials.country]}</span>}
+                      {foundSocials.country && <CountryFlagImg country={foundSocials.country} size={14} />}
                     </div>
                   )}
                   {mutualBibaxCount > 0 && (
