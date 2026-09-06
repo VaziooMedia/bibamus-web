@@ -167,7 +167,10 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const selectClubToPrefill = async (club) => {
     setLinkingClub(true);
     const members = await loadClubMembers(club.id);
-    const memberNames = members.map((m) => [m.name, m.lastName].filter(Boolean).join(" ")).filter((n) => n && n !== myName);
+    const memberNames = members
+      .filter((m) => m.userId !== myUserId)
+      .map((m) => m.name)
+      .filter(Boolean);
     updateEvent(event.id, (e) => ({ ...e, knownFriends: Array.from(new Set([...(e.knownFriends || []), ...memberNames])) }));
     if (event.salonCode) await linkSalonToClub(club.id, event.salonCode, myUserId);
     setLinkingClub(false);

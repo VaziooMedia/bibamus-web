@@ -106,6 +106,8 @@ import {
   rejectContribution,
   countMyUnreadNotifications,
   subscribeToMyNotifications,
+  loadClubMembers,
+  linkSalonToClub,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -679,7 +681,7 @@ export default function App() {
     setScreen("eventDashboard");
   };
 
-  const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants) => {
+  const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants, clubId) => {
     const isSalon = screen === "newSalonEvent";
     const isHome = venueId === "@home";
     const isEventPlace = venueId === "@event";
@@ -727,7 +729,13 @@ export default function App() {
       const code = randomCode(4);
       newEvent.salonCode = code;
       newEvent.participants = [{ code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }];
+      if (clubId) {
+        const clubMembers = await loadClubMembers(clubId);
+        const memberNames = clubMembers.filter((m) => m.userId !== session.user.id).map((m) => m.name).filter(Boolean);
+        newEvent.knownFriends = Array.from(new Set([...(newEvent.knownFriends || []), ...memberNames]));
+      }
       await createSalon(code, newEvent);
+      if (clubId) await linkSalonToClub(clubId, code, session.user.id);
       emitEvent(EVENT_TYPES.BIBAROOM_CREATED, { actorBibroCode: profile.myBibroCode, entityType: "salon", entityId: newEvent.id, payload: { salonCode: code } });
     }
 
@@ -1579,6 +1587,7 @@ export default function App() {
                     : publicVenueOrDraft
                 }
                 bibros={bibros}
+                myUserId={session.user.id}
               />
             )}
             {screen === "joinSalon" && (

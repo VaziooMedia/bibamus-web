@@ -9,8 +9,9 @@ import { PageHeader, PageFooterNav, PrimaryButton, SectionTitle } from "./ui.jsx
 import { ParticipantsEditor, PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { capitalizeFirst, todayISO } from "../utils.js";
+import { loadMyClubs } from "../data/sharedDirectories.js";
 
-export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, venues = [], publicVenues = [], onResolvePublicVenue, bibros = [] }) {
+export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, venues = [], publicVenues = [], onResolvePublicVenue, bibros = [], myUserId }) {
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("euro");
   const [date, setDate] = useState(todayISO());
@@ -20,9 +21,16 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
   const [selectedVenueId, setSelectedVenueId] = useState(null);
   const [eventMode, setEventMode] = useState("tournees");
   const [participants, setParticipants] = useState([]);
+  const [myClubs, setMyClubs] = useState(null);
+  const [selectedClubId, setSelectedClubId] = useState(null);
 
   const isSalon = screenKind === "salon";
   const canCreate = name.trim().length > 0;
+
+  React.useEffect(() => {
+    if (isSalon && myUserId) loadMyClubs(myUserId).then(setMyClubs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSalon, myUserId]);
 
   // Le titre de la session est librement modifiable — sans ce repère, personnaliser le titre
   // faisait perdre toute trace visible du lieu réellement lié.
@@ -87,7 +95,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
     setLoading(true);
     setError("");
     try {
-      await onCreate(name.trim(), currency, date, parseFloat(jetonUnitValue) || 0, selectedVenueId, eventMode, participants);
+      await onCreate(name.trim(), currency, date, parseFloat(jetonUnitValue) || 0, selectedVenueId, eventMode, participants, selectedClubId);
     } catch (e) {
       setError("Un problème est survenu. Réessayez.");
       setLoading(false);
@@ -219,6 +227,50 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
       <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-14px", marginBottom: "20px" }}>
         Tu pourras toujours en ajouter plus tard.
       </p>
+
+      {isSalon && myClubs && myClubs.length > 0 && (
+        <>
+          <SectionTitle>Lier à un BibaClub (optionnel)</SectionTitle>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
+            <button
+              onClick={() => setSelectedClubId(null)}
+              style={{
+                padding: "8px 14px",
+                borderRadius: "999px",
+                border: `2px solid ${selectedClubId === null ? COLORS.amber : COLORS.paperAlt}`,
+                background: selectedClubId === null ? COLORS.amber : "none",
+                color: selectedClubId === null ? COLORS.paper : COLORS.ink,
+                fontSize: "13px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Aucun
+            </button>
+            {myClubs.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setSelectedClubId(c.id)}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: "999px",
+                  border: `2px solid ${selectedClubId === c.id ? COLORS.amber : COLORS.paperAlt}`,
+                  background: selectedClubId === c.id ? COLORS.amber : "none",
+                  color: selectedClubId === c.id ? COLORS.paper : COLORS.ink,
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+          <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-14px", marginBottom: "20px" }}>
+            Pré-remplit les participants avec les membres du club, et rattache ce salon à ses statistiques.
+          </p>
+        </>
+      )}
 
       <SectionTitle>Choix du mode</SectionTitle>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
