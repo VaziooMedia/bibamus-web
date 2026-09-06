@@ -548,7 +548,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
               }}
             >
               <NavIcon name={event.paused ? "play" : "pause"} size={14} color={COLORS.jetonFluo} />
-              {event.paused ? "Reprendre l'événement" : "Mettre l'événement en pause"}
+              {event.paused ? "Reprendre" : "Session en pause"}
             </button>
             <button
               onClick={() => (confirmClose ? onCloseEvent() : setConfirmClose(true))}
@@ -569,7 +569,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
               }}
             >
               <NavIcon name="stop" size={14} color={COLORS.redFluo} />
-              {confirmClose ? "Confirmer ?" : "Fin de l'événement"}
+              {confirmClose ? "Confirmer ?" : "Fin de la session"}
             </button>
             {confirmClose && (
               <p style={{ fontSize: "10.5px", color: COLORS.redFluo, padding: "0 10px 6px 10px", margin: 0 }}>
