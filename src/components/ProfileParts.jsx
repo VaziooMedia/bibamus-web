@@ -333,7 +333,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
     return (
       <div style={{ textAlign: "center" }}>
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "38px", color: COLORS.sage, lineHeight: 1 }}>
-          {summary.withoutAlcohol} jour{summary.withoutAlcohol !== 1 ? "s" : ""} sans alcool
+          {summary.withoutAlcohol} jour{summary.withoutAlcohol > 1 ? "s" : ""} sans alcool
         </div>
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "6px" }}>
           {label}
@@ -357,7 +357,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.sage, lineHeight: 1 }}>
                 🔥 {currentFreeStreak}
               </div>
-              <div style={{ fontSize: "10.5px", color: COLORS.sage, fontWeight: 700 }}>jour{currentFreeStreak !== 1 ? "s" : ""} d'affilée sans alcool</div>
+              <div style={{ fontSize: "10.5px", color: COLORS.sage, fontWeight: 700 }}>jour{currentFreeStreak > 1 ? "s" : ""} d'affilée sans alcool</div>
             </div>
           )}
           {longestFreeStreak > currentFreeStreak && (

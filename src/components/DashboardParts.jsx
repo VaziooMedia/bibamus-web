@@ -74,9 +74,9 @@ export function PotCard({ event, updateEvent, myName }) {
           <div style={{ textAlign: "center" }}>
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.chalkWhite, lineHeight: 1 }}>{event.rounds.length}</div>
             <div style={{ fontSize: "10.5px", opacity: 0.65, fontWeight: 600, marginTop: "2px", lineHeight: 1.4 }}>
-              TOURNÉE{event.rounds.length !== 1 ? "S" : ""}
+              TOURNÉE{event.rounds.length > 1 ? "S" : ""}
               <br />
-              OFFERTE{event.rounds.length !== 1 ? "S" : ""}
+              OFFERTE{event.rounds.length > 1 ? "S" : ""}
             </div>
           </div>
           <div style={{ textAlign: "center" }}>

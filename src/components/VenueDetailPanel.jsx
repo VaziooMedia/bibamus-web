@@ -247,7 +247,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             }}
           >
             <span>🍺 Gérer la carte boissons</span>
-            <span style={{ color: "#8792A6" }}>{(venue.menu || []).length} produit{(venue.menu || []).length !== 1 ? "s" : ""} →</span>
+            <span style={{ color: "#8792A6" }}>{(venue.menu || []).length} produit{(venue.menu || []).length > 1 ? "s" : ""} →</span>
           </button>
         )}
 

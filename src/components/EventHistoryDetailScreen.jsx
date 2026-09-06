@@ -89,7 +89,7 @@ export function EventHistoryDetailScreen({ event, venues, displayTotal, roundsSu
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7 }}>Tournées suivies : <MoneyAmount value={roundsSum} currency={event.currency} /></div>
         )}
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7, marginTop: "6px" }}>
-          {event.rounds.length} tournée{event.rounds.length !== 1 ? "s" : ""} · {attendees.length} personne{attendees.length !== 1 ? "s" : ""}
+          {event.rounds.length} tournée{event.rounds.length > 1 ? "s" : ""} · {attendees.length} personne{attendees.length > 1 ? "s" : ""}
         </div>
       </div>
 

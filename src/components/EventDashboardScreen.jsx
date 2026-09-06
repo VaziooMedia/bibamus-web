@@ -721,7 +721,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
         <div style={{ display: "flex", marginTop: "10px" }}>
           <div style={{ flex: 1, textAlign: "center" }}>
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
-            <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal !== 1 ? "S" : ""}</div>
+            <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal > 1 ? "S" : ""}</div>
           </div>
           {!isOpenBar && !isCagnotte && !isAddition && (
             <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
@@ -1182,11 +1182,11 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.chalkWhite, lineHeight: 1 }}>{event.rounds.length}</div>
                 <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
-                  TOURNÉE{event.rounds.length !== 1 ? "S" : ""}
+                  TOURNÉE{event.rounds.length > 1 ? "S" : ""}
                   {!isAddition && (
                     <>
                       <br />
-                      OFFERTE{event.rounds.length !== 1 ? "S" : ""}
+                      OFFERTE{event.rounds.length > 1 ? "S" : ""}
                     </>
                   )}
                 </div>
@@ -1217,7 +1217,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           <div style={{ textAlign: "center", flex: 1 }}>
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: COLORS.amber, lineHeight: 1 }}>{event.rounds.length}</div>
             <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
-              TOURNÉE{event.rounds.length !== 1 ? "S" : ""}
+              TOURNÉE{event.rounds.length > 1 ? "S" : ""}
             </div>
           </div>
           <div style={{ textAlign: "center", flex: 1 }}>
@@ -1244,9 +1244,9 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           <div style={{ textAlign: "center", flex: 1 }}>
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: COLORS.amber, lineHeight: 1 }}>{event.rounds.length}</div>
             <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
-              TOURNÉE{event.rounds.length !== 1 ? "S" : ""}
+              TOURNÉE{event.rounds.length > 1 ? "S" : ""}
               <br />
-              OFFERTE{event.rounds.length !== 1 ? "S" : ""}
+              OFFERTE{event.rounds.length > 1 ? "S" : ""}
             </div>
           </div>
           <div style={{ textAlign: "center", flex: 1 }}>

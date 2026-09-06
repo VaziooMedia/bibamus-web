@@ -126,7 +126,7 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
             )}
 
             <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, textAlign: "center", marginTop: "-8px", marginBottom: "16px" }}>
-              {pool.length} produit{pool.length !== 1 ? "s" : ""} en jeu
+              {pool.length} produit{pool.length > 1 ? "s" : ""} en jeu
             </p>
 
             <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>

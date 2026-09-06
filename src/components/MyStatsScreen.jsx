@@ -408,7 +408,7 @@ export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibr
                     <strong>{i + 1}.</strong> {v.name}
                   </span>
                   <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>
-                    {v.stats.visits} visite{v.stats.visits !== 1 ? "s" : ""}
+                    {v.stats.visits} visite{v.stats.visits > 1 ? "s" : ""}
                   </span>
                 </button>
               ))}
@@ -476,7 +476,7 @@ export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibr
                     <strong>{i + 1}.</strong> {r.bibro.alias || r.bibro.name}
                   </span>
                   <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>
-                    {r.count} tournée{r.count !== 1 ? "s" : ""}
+                    {r.count} tournée{r.count > 1 ? "s" : ""}
                   </span>
                 </button>
               ))}

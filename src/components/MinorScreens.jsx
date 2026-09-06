@@ -172,7 +172,7 @@ export function EventHistoryScreen({ myName, profile, bibros, checkIns, events, 
                   </div>
                   <div style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "2px" }}>
                     {ev.date && `${formatDate(ev.date)} · `}
-                    {ev.rounds.length} tournée{ev.rounds.length !== 1 ? "s" : ""}
+                    {ev.rounds.length} tournée{ev.rounds.length > 1 ? "s" : ""}
                   </div>
                 </div>
                 <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amberDark }}><MoneyAmount value={displayTotalFor(ev)} currency={ev.currency} /></div>
