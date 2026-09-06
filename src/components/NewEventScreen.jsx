@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, TokenCyanIcon } from "./icons.jsx";
+import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, SectionTitle } from "./ui.jsx";
 import { ParticipantsEditor, PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
@@ -338,7 +338,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
                   }}
                 >
                   <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                    <TokenCyanIcon size={20} />
+                    <TokenPinkIcon size={20} />
                     Jetons
                   </span>
                 </button>
