@@ -407,6 +407,7 @@ export async function lookupBibroCode(code) {
     xUrl: row.x_url,
     threadsUrl: row.threads_url,
     linkedinUrl: row.linkedin_url,
+    mutualBibaxCount: row.mutual_bibax_count || 0,
   };
 }
 

@@ -9,6 +9,7 @@ import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, Whatsap
 import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard } from "./ui.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
+import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
 import {
   loadPendingBibaxRequests,
@@ -656,11 +657,14 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
   const [status, setStatus] = useState("idle"); // idle | loading | found | notFound
   const [foundName, setFoundName] = useState("");
   const [foundSocials, setFoundSocials] = useState({});
+  const [mutualBibaxCount, setMutualBibaxCount] = useState(0);
+  const [scanning, setScanning] = useState(false);
 
-  const handleLookup = async () => {
-    if (code.trim().length !== 5) return;
+  const handleLookup = async (explicitCode) => {
+    const codeToUse = explicitCode || code;
+    if (codeToUse.trim().length !== 5) return;
     setStatus("loading");
-    const identity = await onLookup(code.trim());
+    const identity = await onLookup(codeToUse.trim());
     if (identity && identity.displayName) {
       setFoundName(identity.displayName);
       setFoundSocials({
@@ -681,6 +685,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
         pinterestUrl: identity.pinterestUrl || "",
         twitchUrl: identity.twitchUrl || "",
       });
+      setMutualBibaxCount(identity.mutualBibaxCount || 0);
       setStatus("found");
     } else {
       setStatus("notFound");
@@ -688,19 +693,25 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
   };
 
   const handleCodeChange = (value) => {
-    setCode(value.toUpperCase().replace(/[^23456789ABCDEFGHJKMNPQRSTUVWXYZ]/g, "").slice(0, 5));
+    setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 5));
     setStatus("idle");
+  };
+
+  const handleScanned = (scannedCode) => {
+    setScanning(false);
+    setCode(scannedCode);
+    handleLookup(scannedCode);
   };
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onCancel} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "0 0 8px 0" }}>Ajouter un Bibax</h1>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-        Entrez son code — son nom est récupéré automatiquement depuis son profil, tel qu'il apparaîtra dans les Bibrooms.
-      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Ajouter un Bibax</h1>
+      </div>
 
-      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Son code Bibax</label>
+      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Code Bibax</label>
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         <input
           value={code}
@@ -708,7 +719,6 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
           onKeyDown={(e) => e.key === "Enter" && handleLookup()}
           placeholder="Ex. 4K7TX"
           maxLength={5}
-          autoFocus
           style={{
             flex: 1,
             padding: "14px",
@@ -722,7 +732,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
           }}
         />
         <button
-          onClick={handleLookup}
+          onClick={() => handleLookup()}
           disabled={code.length !== 5 || status === "loading"}
           style={{
             background: COLORS.surfaceAlt,
@@ -739,6 +749,38 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
           {status === "loading" ? "..." : "Chercher"}
         </button>
       </div>
+
+      <button
+        onClick={() => setScanning(true)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          background: "none",
+          border: `2px solid ${COLORS.paperAlt}`,
+          borderRadius: "10px",
+          padding: "11px",
+          fontSize: "13.5px",
+          fontWeight: 700,
+          color: COLORS.amber,
+          cursor: "pointer",
+          marginBottom: "16px",
+          width: "100%",
+        }}
+      >
+        <NavIcon name="scan-line" size={16} color={COLORS.amber} />
+        Scanner un QR code Bibax
+      </button>
+
+      {scanning && (
+        <SalonQrScannerModal
+          onClose={() => setScanning(false)}
+          onScanned={handleScanned}
+          title="Scanner un QR code Bibax"
+          instruction="Visez le QR code affiché sur le profil d'un Bibax"
+        />
+      )}
 
       {status === "found" && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", marginBottom: "16px" }}>
@@ -782,11 +824,20 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
               <div style={{ fontSize: "17px", fontWeight: 700 }}>
                 {foundSocials.firstName || foundSocials.lastName ? [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") : foundName}
               </div>
-              {(foundSocials.nickname || foundSocials.city || foundSocials.country) && (
+              {(foundSocials.nickname || foundSocials.city) && (
                 <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "6px", lineHeight: 1.6 }}>
-                  {foundSocials.nickname && <div>- {foundSocials.nickname}</div>}
-                  {foundSocials.city && <div>- {foundSocials.city}</div>}
-                  {foundSocials.country && <div>- {foundSocials.country}</div>}
+                  {foundSocials.nickname && <div style={{ color: COLORS.amber, fontWeight: 700 }}>{foundSocials.nickname}</div>}
+                  {foundSocials.city && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      {foundSocials.city}
+                      {foundSocials.country && COUNTRY_FLAGS[foundSocials.country] && <span>{COUNTRY_FLAGS[foundSocials.country]}</span>}
+                    </div>
+                  )}
+                  {mutualBibaxCount > 0 && (
+                    <div style={{ marginTop: "2px" }}>
+                      {mutualBibaxCount} Bibax en commun
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -888,13 +939,10 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
 
       {myBibroCode && (
         <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Ton code Bibax</div>
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <QRCodeSVG value={myBibroCode} size={72} color={COLORS.paper} background={COLORS.ink} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "4px" }}>Ton code Bibax</div>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "26px", letterSpacing: "4px" }}>{myBibroCode}</div>
-              <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px" }}>Partage-le à un ami pour qu'il t'ajoute comme Bibax.</p>
-            </div>
+            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "26px", letterSpacing: "4px", marginTop: "10px" }}>{myBibroCode}</div>
           </div>
         </div>
       )}

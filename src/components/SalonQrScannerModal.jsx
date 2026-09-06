@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 
-export function SalonQrScannerModal({ onClose, onScanned }) {
+export function SalonQrScannerModal({ onClose, onScanned, title = "Scanner le QR code", instruction = "Visez le QR code affiché par un participant du BibaRoom" }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
   const streamRef = useRef(null);
@@ -92,7 +92,7 @@ export function SalonQrScannerModal({ onClose, onScanned }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: COLORS.paper, zIndex: 1000, display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
-        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.ink }}>Scanner le QR code</span>
+        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.ink }}>{title}</span>
         <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "22px", cursor: "pointer" }}>
           ✕
         </button>
@@ -103,7 +103,7 @@ export function SalonQrScannerModal({ onClose, onScanned }) {
           <div style={{ width: "100%", maxWidth: "320px", aspectRatio: "1", borderRadius: "16px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, position: "relative" }}>
             <video ref={videoRef} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", background: "#000" }} muted playsInline />
           </div>
-          <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", marginTop: "16px", textAlign: "center" }}>Visez le QR code affiché par un participant du BibaRoom</p>
+          <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", marginTop: "16px", textAlign: "center" }}>{instruction}</p>
         </div>
       )}
 
