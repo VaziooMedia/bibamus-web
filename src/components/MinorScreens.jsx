@@ -221,7 +221,6 @@ export function MyProductsHubScreen({ ratedCount, toTryCount, onBack, goToRated,
 
 export function EventSettingsScreen({ event, onSave, onBack }) {
   const [eventMode, setEventMode] = useState(event.mode || "tournees");
-  const [jetonUnitValueInput, setJetonUnitValueInput] = useState(event.jetonUnitValue ? String(event.jetonUnitValue).replace(".", ",") : "");
 
   const modes = [
     { key: "tournees", label: "Mode ORBIS", desc: "Tournées" },
@@ -233,7 +232,10 @@ export function EventSettingsScreen({ event, onSave, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 18px 0", lineHeight: 1.2 }}>Choix du mode</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0, lineHeight: 1.2 }}>Choix du mode</h1>
+      </div>
 
       <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "16px" }}>
         Changer de mode ne modifie que ce qui se passe à partir de maintenant.
@@ -250,7 +252,7 @@ export function EventSettingsScreen({ event, onSave, onBack }) {
               textAlign: "left",
               background: eventMode === m.key ? COLORS.amber : COLORS.surface,
               color: eventMode === m.key ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${eventMode === m.key ? COLORS.ink : COLORS.paperAlt}`,
+              border: `2px solid ${eventMode === m.key ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "12px",
               padding: "12px 14px",
               cursor: "pointer",
@@ -270,24 +272,7 @@ export function EventSettingsScreen({ event, onSave, onBack }) {
         ))}
       </div>
 
-      {event.currency === "jeton" && (
-        <div style={{ marginBottom: "20px" }}>
-          <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Valeur du jeton</label>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={jetonUnitValueInput}
-            onChange={(e) => setJetonUnitValueInput(e.target.value.replace(",", "."))}
-            placeholder="0.00"
-            style={{ width: "140px", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "15px", outline: "none" }}
-          />
-          <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "6px" }}>
-            À renseigner ou corriger ici — que ce soit parce que tu ne connaissais pas encore le prix à la création, ou pour corriger une valeur erronée. Ne change rien aux jetons déjà achetés, juste leur valeur en €.
-          </p>
-        </div>
-      )}
-
-      <PrimaryButton onClick={() => onSave(eventMode, parseFloat(jetonUnitValueInput) || 0)} style={{ width: "100%" }}>
+      <PrimaryButton onClick={() => onSave(eventMode, event.jetonUnitValue || 0)} style={{ width: "100%" }}>
         Valider
       </PrimaryButton>
       <BackFooterLink onClick={onBack} />

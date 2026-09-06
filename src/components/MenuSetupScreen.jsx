@@ -193,7 +193,10 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   return (
     <div style={{ padding: "24px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "36px", margin: "0 0 4px 0" }}>Carte boissons</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 4px 0" }}>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Carte boissons</h1>
+      </div>
       {event.currency === "euro" ? (
         <div style={{ marginBottom: "18px" }}>
           <button
@@ -266,7 +269,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                   onChange={(e) => setJetonValueInput(e.target.value.replace(".", ","))}
                   placeholder="0,00"
                   autoFocus
-                  style={{ width: "100%", minWidth: 0, border: "none", padding: "9px 0", fontSize: "16px", fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amber, outline: "none" }}
+                  style={{ width: "100%", minWidth: 0, border: "none", padding: "9px 0", fontSize: "16px", fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amber, outline: "none", textAlign: "center" }}
                 />
                 <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>
               </div>
