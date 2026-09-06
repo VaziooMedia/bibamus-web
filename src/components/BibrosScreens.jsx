@@ -255,9 +255,12 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
       <PageHeader onBack={onBack} />
 
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "14px" }}>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 0 0", lineHeight: 1.2 }}>
-          <span style={{ color: COLORS.ink }}>Mes Biba</span>
-          <span style={{ color: COLORS.amber }}>x</span>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 0 0", lineHeight: 1.2, display: "flex", alignItems: "center", gap: "10px" }}>
+          <img src={bibaxIconUrl} alt="" style={{ width: "24px", height: "24px" }} />
+          <span>
+            <span style={{ color: COLORS.ink }}>Mes Biba</span>
+            <span style={{ color: COLORS.amber }}>x</span>
+          </span>
         </h1>
         <span
           style={{
@@ -275,38 +278,28 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
         </span>
       </div>
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "14px" }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "4px" }}>Ton code Bibax</div>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "26px", letterSpacing: "4px" }}>{myBibroCode || "…"}</div>
-          <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px" }}>Partage-le à un ami pour qu'il t'ajoute comme Bibax.</p>
-        </div>
-        {myBibroCode && (
-          <div style={{ position: "relative", opacity: 0.4, flexShrink: 0 }}>
-            <QRCodeSVG value={myBibroCode} size={72} color={COLORS.paper} background={COLORS.ink} />
-            <span
-              style={{
-                position: "absolute",
-                top: "-6px",
-                right: "-6px",
-                fontSize: "8px",
-                fontWeight: 700,
-                letterSpacing: "0.3px",
-                color: COLORS.redFluo,
-                background: COLORS.paperAlt,
-                borderRadius: "999px",
-                padding: "2px 6px",
-              }}
-            >
-              Soon
-            </span>
-          </div>
-        )}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
+        <button
+          onClick={goToAddBibro}
+          title="Ajouter un Bibax"
+          style={{
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            background: COLORS.amber,
+            border: "none",
+            color: COLORS.paper,
+            fontSize: "24px",
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          +
+        </button>
       </div>
-
-      <PrimaryButton onClick={goToAddBibro} style={{ width: "100%", marginBottom: "14px" }}>
-        + Ajouter un Bibax
-      </PrimaryButton>
 
       <BibaxRequestsAndSuggestions onBibaxAdded={onBibaxAdded || (() => {})} onOpenProfile={onOpenBibaxProfile || (() => {})} onSeeAllSuggestions={onSeeAllSuggestions} />
 
@@ -356,61 +349,6 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                   </div>
                 </div>
               </div>
-
-              {(b.facebookUrl || b.instagramUrl || b.tiktokUrl || b.snapchatUrl || b.whatsappUrl || b.xUrl || b.threadsUrl || b.linkedinUrl || b.pinterestUrl || b.twitchUrl) && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
-                  {b.facebookUrl && (
-                    <a href={normalizeUrl(b.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <FacebookIcon size={19} />
-                    </a>
-                  )}
-                  {b.instagramUrl && (
-                    <a href={normalizeUrl(b.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <InstagramIcon size={19} />
-                    </a>
-                  )}
-                  {b.tiktokUrl && (
-                    <a href={normalizeUrl(b.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <TiktokIcon size={19} />
-                    </a>
-                  )}
-                  {b.snapchatUrl && (
-                    <a href={normalizeUrl(b.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <SnapchatIcon size={19} />
-                    </a>
-                  )}
-                  {b.whatsappUrl && (
-                    <a href={normalizeUrl(b.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <WhatsappIcon size={19} />
-                    </a>
-                  )}
-                  {b.xUrl && (
-                    <a href={normalizeUrl(b.xUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <XIcon size={19} />
-                    </a>
-                  )}
-                  {b.threadsUrl && (
-                    <a href={normalizeUrl(b.threadsUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <ThreadsIcon size={19} />
-                    </a>
-                  )}
-                  {b.linkedinUrl && (
-                    <a href={normalizeUrl(b.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <LinkedinIcon size={19} />
-                    </a>
-                  )}
-                  {b.pinterestUrl && (
-                    <a href={normalizeUrl(b.pinterestUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <PinterestIcon size={19} />
-                    </a>
-                  )}
-                  {b.twitchUrl && (
-                    <a href={normalizeUrl(b.twitchUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <TwitchIcon size={19} />
-                    </a>
-                  )}
-                </div>
-              )}
 
               {status && (
                 <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, display: "flex", justifyContent: "space-between", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
@@ -713,7 +651,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
     </div>
   );
 }
-export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
+export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | found | notFound
   const [foundName, setFoundName] = useState("");
@@ -947,6 +885,20 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel }) {
       >
         Ajouter {foundName || "ce Bibax"}
       </PrimaryButton>
+
+      {myBibroCode && (
+        <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px" }}>
+            <QRCodeSVG value={myBibroCode} size={72} color={COLORS.paper} background={COLORS.ink} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "4px" }}>Ton code Bibax</div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "26px", letterSpacing: "4px" }}>{myBibroCode}</div>
+              <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px" }}>Partage-le à un ami pour qu'il t'ajoute comme Bibax.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <PageFooterNav onBack={onCancel} />
     </div>
   );
