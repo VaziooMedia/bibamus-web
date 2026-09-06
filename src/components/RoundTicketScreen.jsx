@@ -207,7 +207,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                       × {n}
                     </span>
                     <span style={{ width: "58px", textAlign: "right", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber, flexShrink: 0 }}>
-                      {!undefinedPrice && <MoneyAmount value={drinkPrice(id) * n} currency={event.currency} />}
+                      {!undefinedPrice && <MoneyAmount value={drinkPrice(id) * n} currency={event.currency} jetonIcon="pink" />}
                     </span>
                   </div>
                 );
@@ -286,7 +286,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
             {!isEuro && (
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "22px", fontWeight: 700, color: hasUndefinedPrice ? COLORS.alert : COLORS.amber }}>
                 <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px" }}>À payer</span>
-                <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}><MoneyAmount value={estimatedTotal} currency={event.currency} /></span>
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}><MoneyAmount value={estimatedTotal} currency={event.currency} jetonIcon="pink" /></span>
               </div>
             )}
           </div>
@@ -325,7 +325,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                           </span>
                           <span style={{ width: "28px", textAlign: "center", fontFamily: "'Urbanist', sans-serif", opacity: 0.7, flexShrink: 0 }}>×{n}</span>
                           <span style={{ width: "58px", textAlign: "right", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber, flexShrink: 0 }}>
-                            <MoneyAmount value={drinkPrice(id) * n} currency={event.currency} />
+                            <MoneyAmount value={drinkPrice(id) * n} currency={event.currency} jetonIcon="pink" />
                           </span>
                         </div>
                       ))}

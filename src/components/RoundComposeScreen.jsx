@@ -196,7 +196,7 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
           </div>
           {!isOpenBar && (
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "14px", color: COLORS.ink, flexShrink: 0 }}>
-              <MoneyAmount value={drink.price} currency={event.currency} />
+              <MoneyAmount value={drink.price} currency={event.currency} jetonIcon="pink" />
             </span>
           )}
         </div>
