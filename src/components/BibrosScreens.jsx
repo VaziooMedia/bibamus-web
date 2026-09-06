@@ -740,7 +740,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
         </h1>
       </div>
 
-      <div style={{ position: "relative", marginTop: "22px", marginBottom: "16px" }}>
+      <div style={{ position: "relative", marginTop: "22px", marginBottom: "24px" }}>
         <div
           style={{
             display: "flex",
@@ -812,7 +812,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
         )}
       </div>
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 8px" }} />
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 24px" }} />
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Code Bibax</label>
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
