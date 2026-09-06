@@ -63,10 +63,8 @@ export function SalonQrScannerModal({ onClose, onScanned }) {
             }
           }, 400);
         } else {
-          const { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } = await import("@zxing/browser");
-          const hints = new Map();
-          hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
-          const reader = new BrowserMultiFormatReader(hints);
+          const { BrowserMultiFormatReader } = await import("@zxing/browser");
+          const reader = new BrowserMultiFormatReader();
           readerRef.current = reader;
           await reader.decodeFromConstraints({ video: { facingMode: { ideal: "environment" } } }, videoRef.current, (result) => {
             if (cancelled || !result) return;
