@@ -12,7 +12,7 @@ import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
-import { loadRoomStories } from "../data/sharedDirectories.js";
+import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub } from "../data/sharedDirectories.js";
 
 export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
@@ -68,6 +68,9 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const [editingRoundId, setEditingRoundId] = useState(null);
   const [confirmDeleteRoundId, setConfirmDeleteRoundId] = useState(null);
   const [participantsEditorOpen, setParticipantsEditorOpen] = useState(false);
+  const [clubPickerOpen, setClubPickerOpen] = useState(false);
+  const [myClubsForPicker, setMyClubsForPicker] = useState(null);
+  const [linkingClub, setLinkingClub] = useState(false);
   const [bibaBobModal, setBibaBobModal] = useState(null); // { code, name, mode: "activate"|"deactivate" }
   const newVenueItemsCount = computeMissingVenueItems(event, venue, drinksDirectory).length;
   const menuIsEmpty = event.menu.length === 0;
@@ -155,6 +158,21 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   };
 
   const personalTotal = event.personalOrders.length;
+
+  const openClubPicker = () => {
+    setClubPickerOpen(true);
+    if (myClubsForPicker === null) loadMyClubs(myUserId).then(setMyClubsForPicker);
+  };
+
+  const selectClubToPrefill = async (club) => {
+    setLinkingClub(true);
+    const members = await loadClubMembers(club.id);
+    const memberNames = members.map((m) => [m.name, m.lastName].filter(Boolean).join(" ")).filter((n) => n && n !== myName);
+    updateEvent(event.id, (e) => ({ ...e, knownFriends: Array.from(new Set([...(e.knownFriends || []), ...memberNames])) }));
+    if (event.salonCode) await linkSalonToClub(club.id, event.salonCode, myUserId);
+    setLinkingClub(false);
+    setClubPickerOpen(false);
+  };
 
   const caloriesInfo = event.personalOrders.reduce(
     (acc, order) => {
@@ -640,7 +658,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           );
         })()}
         <button
-          disabled
+          onClick={openClubPicker}
           style={{
             display: "flex",
             alignItems: "center",
@@ -651,30 +669,47 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             borderTop: `1px dashed ${COLORS.paperAlt}`,
             marginTop: "12px",
             paddingTop: "10px",
-            cursor: "not-allowed",
-            opacity: 0.55,
+            cursor: "pointer",
             textAlign: "left",
           }}
-          title="Bientôt disponible"
         >
           <span style={{ fontSize: "12.5px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
             Pré-remplir avec un BibaClub
           </span>
-          <span
-            style={{
-              fontSize: "9px",
-              fontWeight: 700,
-              letterSpacing: "0.5px",
-              color: COLORS.redFluo,
-              background: COLORS.paperAlt,
-              borderRadius: "999px",
-              padding: "3px 8px",
-            }}
-          >
-            Soon
-          </span>
+          <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
         </button>
+        {clubPickerOpen && (
+          <div style={{ marginTop: "10px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px" }}>
+            {myClubsForPicker === null ? (
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>Chargement...</p>
+            ) : myClubsForPicker.length === 0 ? (
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>Vous n'êtes membre d'aucun BibaClub pour l'instant.</p>
+            ) : (
+              myClubsForPicker.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => selectClubToPrefill(c)}
+                  disabled={linkingClub}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "left",
+                    background: "none",
+                    border: "none",
+                    padding: "8px 4px",
+                    fontSize: "13.5px",
+                    fontWeight: 600,
+                    color: COLORS.ink,
+                    cursor: linkingClub ? "default" : "pointer",
+                  }}
+                >
+                  {c.name}
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>

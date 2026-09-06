@@ -742,7 +742,260 @@ export async function uploadMyAvatarPhoto(userId, blob) {
   return { url: data.url };
 }
 
-/* ---------------- STORIES ---------------- */
+/* ---------------- BIBACLUB ---------------- */
+
+export async function uploadClubPhoto(userId, blob) {
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${userId}-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "biba-clubs", path, imageBase64, contentType: "image/jpeg", entityType: "club", entityId: userId, kind: "club-photo" },
+  });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { url: data.url };
+}
+
+function generateInviteCode() {
+  const alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+  let out = "";
+  for (let i = 0; i < 6; i++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return out;
+}
+
+export async function createClub({ name, description, photoUrl, category, visibility, joinMode }, userId) {
+  const inviteCode = joinMode === "invite" ? generateInviteCode() : null;
+  const { data: club, error } = await supabase
+    .from("biba_clubs")
+    .insert({ name, description: description || null, photo_url: photoUrl || null, category: category || null, visibility, join_mode: joinMode, invite_code: inviteCode, created_by: userId })
+    .select()
+    .single();
+  if (error) return { error: error.message };
+  const { error: memberError } = await supabase.from("biba_club_members").insert({ club_id: club.id, user_id: userId, role: "admin", status: "active" });
+  if (memberError) return { error: memberError.message };
+  return { ok: true, clubId: club.id };
+}
+
+function rowToClub(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    photoUrl: row.photo_url,
+    category: row.category,
+    visibility: row.visibility,
+    joinMode: row.join_mode,
+    inviteCode: row.invite_code,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+  };
+}
+
+// Mes clubs — ceux où je suis membre actif.
+export async function loadMyClubs(userId) {
+  const { data, error } = await supabase
+    .from("biba_club_members")
+    .select("role, biba_clubs(*)")
+    .eq("user_id", userId)
+    .eq("status", "active");
+  if (error) {
+    console.error("loadMyClubs:", error);
+    return [];
+  }
+  return data.filter((r) => r.biba_clubs).map((r) => ({ ...rowToClub(r.biba_clubs), myRole: r.role }));
+}
+
+export async function loadClubDetail(clubId) {
+  const { data, error } = await supabase.from("biba_clubs").select("*").eq("id", clubId).single();
+  if (error) {
+    console.error("loadClubDetail:", error);
+    return null;
+  }
+  return rowToClub(data);
+}
+
+export async function loadClubMembers(clubId) {
+  const { data, error } = await supabase.from("biba_club_members").select("*").eq("club_id", clubId).order("joined_at");
+  if (error) {
+    console.error("loadClubMembers:", error);
+    return [];
+  }
+  const userIds = data.map((m) => m.user_id);
+  let profilesById = {};
+  if (userIds.length > 0) {
+    const { data: actors } = await supabase.rpc("get_profiles_basic", { p_ids: userIds });
+    profilesById = Object.fromEntries((actors || []).map((a) => [a.id, a]));
+  }
+  return data.map((m) => ({
+    userId: m.user_id,
+    role: m.role,
+    status: m.status,
+    joinedAt: m.joined_at,
+    name: profilesById[m.user_id]?.display_name || null,
+    lastName: profilesById[m.user_id]?.last_name || null,
+    avatarUrl: profilesById[m.user_id]?.avatar_url || null,
+  }));
+}
+
+// Rejoindre — comportement différent selon join_mode : "open" ajoute directement, "request" crée
+// une demande en attente, "invite" vérifie le code fourni avant d'ajouter directement.
+export async function joinClub(clubId, userId, { inviteCode } = {}) {
+  const { data: club, error: clubError } = await supabase.from("biba_clubs").select("join_mode, invite_code").eq("id", clubId).single();
+  if (clubError) return { error: clubError.message };
+
+  if (club.join_mode === "invite") {
+    if (!inviteCode || inviteCode.toUpperCase() !== club.invite_code) return { error: "Code d'invitation invalide." };
+    const { error } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "member", status: "active" });
+    if (error) return { error: error.message };
+    return { ok: true, status: "active" };
+  }
+
+  if (club.join_mode === "open") {
+    const { error } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "member", status: "active" });
+    if (error) return { error: error.message };
+    return { ok: true, status: "active" };
+  }
+
+  // "request" — en attente de validation par un admin/modérateur
+  const { error } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "member", status: "pending" });
+  if (error) return { error: error.message };
+  return { ok: true, status: "pending" };
+}
+
+export async function loadPendingClubRequests(clubId) {
+  const { data, error } = await supabase.from("biba_club_members").select("*").eq("club_id", clubId).eq("status", "pending").order("joined_at");
+  if (error) {
+    console.error("loadPendingClubRequests:", error);
+    return [];
+  }
+  const userIds = data.map((m) => m.user_id);
+  let profilesById = {};
+  if (userIds.length > 0) {
+    const { data: actors } = await supabase.rpc("get_profiles_basic", { p_ids: userIds });
+    profilesById = Object.fromEntries((actors || []).map((a) => [a.id, a]));
+  }
+  return data.map((m) => ({ userId: m.user_id, joinedAt: m.joined_at, name: profilesById[m.user_id]?.display_name || null }));
+}
+
+export async function approveClubMember(clubId, userId) {
+  const { error } = await supabase.from("biba_club_members").update({ status: "active" }).eq("club_id", clubId).eq("user_id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function rejectClubMember(clubId, userId) {
+  const { error } = await supabase.from("biba_club_members").delete().eq("club_id", clubId).eq("user_id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function updateClubMemberRole(clubId, userId, role) {
+  const { error } = await supabase.from("biba_club_members").update({ role }).eq("club_id", clubId).eq("user_id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function removeClubMember(clubId, userId) {
+  const { error } = await supabase.from("biba_club_members").delete().eq("club_id", clubId).eq("user_id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function leaveClub(clubId, userId) {
+  return removeClubMember(clubId, userId);
+}
+
+// Fil du club — vraies publications des membres (l'activité automatique façon BibaPulse se
+// construit à part, à partir des salons rattachés).
+export async function loadClubPosts(clubId) {
+  const { data, error } = await supabase.from("biba_club_posts").select("*").eq("club_id", clubId).order("created_at", { ascending: false });
+  if (error) {
+    console.error("loadClubPosts:", error);
+    return [];
+  }
+  const authorIds = [...new Set(data.map((p) => p.author_id))];
+  let profilesById = {};
+  if (authorIds.length > 0) {
+    const { data: actors } = await supabase.rpc("get_profiles_basic", { p_ids: authorIds });
+    profilesById = Object.fromEntries((actors || []).map((a) => [a.id, a]));
+  }
+  return data.map((p) => ({
+    id: p.id,
+    body: p.body,
+    createdAt: p.created_at,
+    authorId: p.author_id,
+    authorName: profilesById[p.author_id]?.display_name || null,
+    authorLastName: profilesById[p.author_id]?.last_name || null,
+    authorAvatarUrl: profilesById[p.author_id]?.avatar_url || null,
+  }));
+}
+
+export async function createClubPost(clubId, userId, body) {
+  const { error } = await supabase.from("biba_club_posts").insert({ club_id: clubId, author_id: userId, body: body.trim() });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function deleteClubPost(postId) {
+  const { error } = await supabase.from("biba_club_posts").delete().eq("id", postId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+// Rattache un salon existant à un club — alimente les statistiques du club, et permet de
+// pré-remplir un futur salon avec les membres du club.
+export async function linkSalonToClub(clubId, salonCode, userId) {
+  const { error } = await supabase.from("biba_club_salons").insert({ club_id: clubId, salon_code: salonCode, linked_by: userId });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function loadClubSalons(clubId) {
+  const { data, error } = await supabase.from("biba_club_salons").select("*").eq("club_id", clubId).order("linked_at", { ascending: false });
+  if (error) {
+    console.error("loadClubSalons:", error);
+    return [];
+  }
+  return data.map((s) => ({ salonCode: s.salon_code, linkedAt: s.linked_at }));
+}
+
+// Statistiques du club — calculées à la volée à partir des vrais salons rattachés (pas de
+// compteur maintenu à part, pour rester toujours exact). Compte les tournées achetées par
+// chaque membre du club, tous salons rattachés confondus.
+export async function loadClubStats(clubId) {
+  const salons = await loadClubSalons(clubId);
+  if (salons.length === 0) return { totalRounds: 0, memberStats: [] };
+
+  const { data: salonRows, error } = await supabase
+    .from("salons")
+    .select("code, data")
+    .in("code", salons.map((s) => s.salonCode));
+  if (error) {
+    console.error("loadClubStats:", error);
+    return { totalRounds: 0, memberStats: [] };
+  }
+
+  const roundsByBuyerName = {};
+  let totalRounds = 0;
+  for (const row of salonRows) {
+    const rounds = row.data?.rounds || [];
+    for (const round of rounds) {
+      totalRounds++;
+      const buyer = round.buyerName;
+      if (!buyer) continue;
+      roundsByBuyerName[buyer] = (roundsByBuyerName[buyer] || 0) + 1;
+    }
+  }
+
+  return {
+    totalRounds,
+    salonsCount: salons.length,
+    memberStats: Object.entries(roundsByBuyerName)
+      .map(([name, count]) => ({ name, roundsCount: count }))
+      .sort((a, b) => b.roundsCount - a.roundsCount),
+  };
+}
+
+
 
 // Envoie le média d'une Story (photo, pour l'instant — vidéo prévue plus tard) via le même
 // pipeline de modération que le reste de l'app.
