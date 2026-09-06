@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, TokenCyanIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, SectionTitle } from "./ui.jsx";
 import { ParticipantsEditor, PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
@@ -115,11 +115,6 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
           "Nouvel événement"
         )}
       </h1>
-      {isSalon && (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>
-          Tu seras l'hôte. Un code à 4 caractères sera généré pour que tes amis rejoignent depuis leur téléphone.
-        </p>
-      )}
 
       <SectionTitle>Lieu</SectionTitle>
       <div style={{ marginBottom: "16px" }}>
@@ -333,7 +328,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
                   }}
                 >
                   <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                    <NavIcon name="jeton-token" size={20} color="#0040ef" />
+                    <TokenCyanIcon size={20} />
                     Jetons
                   </span>
                 </button>

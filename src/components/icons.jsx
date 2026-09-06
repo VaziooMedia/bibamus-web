@@ -3,6 +3,11 @@
 // ============================================================
 import React from "react";
 import { COLORS } from "../constants.js";
+import tokenCyanUrl from "../assets/brand/Bibamus App - Icon UI - Token Cyan.svg";
+
+export function TokenCyanIcon({ size = 22 }) {
+  return <img src={tokenCyanUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
+}
 
 export function FlagIcon({ flag, size = 15 }) {
   const width = Math.round(size * 1.4);
