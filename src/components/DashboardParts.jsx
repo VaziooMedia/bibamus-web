@@ -436,30 +436,10 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
       <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Inviter des Bibax à rejoindre ce BibaRoom</div>
       <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
-        <div style={{ position: "relative", opacity: 0.4 }}>
-          <QRCodeSVG value={salonCode} size={64} color={COLORS.paper} background={COLORS.ink} />
-          <span
-            style={{
-              position: "absolute",
-              top: "-6px",
-              right: "-6px",
-              fontSize: "8px",
-              fontWeight: 700,
-              letterSpacing: "0.3px",
-              color: COLORS.redFluo,
-              background: COLORS.paperAlt,
-              borderRadius: "999px",
-              padding: "2px 6px",
-            }}
-          >
-            Soon
-          </span>
-        </div>
+        <QRCodeSVG value={salonCode} size={72} color={COLORS.paper} background={COLORS.ink} />
         <div>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "22px", letterSpacing: "3px" }}>{salonCode}</div>
-          <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "4px 0 0 0" }}>
-            Partagez ce code pour l'instant — le scan du QR arrivera dans une prochaine version.
-          </p>
+          <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "4px 0 0 0" }}>Scannable directement, ou partagez le code.</p>
         </div>
       </div>
 
