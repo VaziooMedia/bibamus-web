@@ -715,24 +715,47 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Code Bibax</label>
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <input
-          value={code}
-          onChange={(e) => handleCodeChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleLookup()}
-          placeholder="Ex. 4K7TX"
-          maxLength={5}
+        <div
           style={{
             flex: 1,
-            padding: "14px",
-            borderRadius: "10px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            background: COLORS.surface,
             border: `2px solid ${COLORS.paperAlt}`,
-            fontSize: "20px",
-            fontFamily: "'Urbanist', sans-serif",
-            letterSpacing: "4px",
-            textAlign: "center",
-            outline: "none",
+            borderRadius: "10px",
+            padding: "0 14px",
+            boxSizing: "border-box",
           }}
-        />
+        >
+          <input
+            value={code}
+            onChange={(e) => handleCodeChange(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleLookup()}
+            placeholder="Ex. 4K7TX"
+            maxLength={5}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              padding: "14px 0",
+              border: "none",
+              background: "none",
+              fontSize: "20px",
+              fontFamily: "'Urbanist', sans-serif",
+              letterSpacing: "4px",
+              textAlign: "center",
+              outline: "none",
+              color: COLORS.ink,
+            }}
+          />
+          <button
+            onClick={() => setScanning(true)}
+            title="Scanner un QR code Bibax"
+            style={{ display: "flex", alignItems: "center", background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0 }}
+          >
+            <NavIcon name="scan-line" size={18} color={COLORS.amber} />
+          </button>
+        </div>
         <button
           onClick={() => handleLookup()}
           disabled={code.length !== 5 || status === "loading"}
@@ -749,23 +772,6 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
           }}
         >
           {status === "loading" ? "..." : "Chercher"}
-        </button>
-        <button
-          onClick={() => setScanning(true)}
-          title="Scanner un QR code Bibax"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "none",
-            border: `2px solid ${COLORS.paperAlt}`,
-            borderRadius: "10px",
-            width: "48px",
-            flexShrink: 0,
-            cursor: "pointer",
-          }}
-        >
-          <NavIcon name="scan-line" size={18} color={COLORS.amber} />
         </button>
       </div>
 
