@@ -716,7 +716,10 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
       </div>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques</span>
+        </div>
 
         <div style={{ display: "flex", marginTop: "10px" }}>
           <div style={{ flex: 1, textAlign: "center" }}>
@@ -876,7 +879,10 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           onClick={() => setShowRoundsList((s) => !s)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: showRoundsList ? "8px" : 0 }}
         >
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Tournées</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Tournées</span>
+          </span>
           <span style={{ display: "inline-flex", transform: `rotate(${showRoundsList ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
             <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
           </span>
@@ -1121,21 +1127,28 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
         <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
           {event.currency === "jeton" ? (
             <>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+                <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons</span>
+              </div>
               <div style={{ display: "flex", justifyContent: "space-evenly", marginTop: "10px" }}>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ display: "flex", justifyContent: "center" }}>
                     <NavIcon name="jeton-token" size={28} color="#39FF14" />
                   </div>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.chalkWhite, lineHeight: 1.3 }}>{ticketsPurchased - myJetonSpend}</div>
-                  <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>RESTANTS</div>
+                  <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
+                    RESTANT{ticketsPurchased - myJetonSpend > 1 ? "S" : ""}
+                  </div>
                 </div>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ display: "flex", justifyContent: "center" }}>
                     <NavIcon name="jeton-token" size={28} color="#ef1700" />
                   </div>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.chalkWhite, lineHeight: 1.3 }}>{myJetonSpend}</div>
-                  <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>DÉPENSÉS</div>
+                  <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
+                    DÉPENSÉ{myJetonSpend > 1 ? "S" : ""}
+                  </div>
                 </div>
               </div>
             </>
@@ -1277,7 +1290,10 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
               {formatEuroTrim(event.jetonUnitValue)} / jeton
             </div>
           )}
-          <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Jetons acquis par {myName} (moi)</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", marginBottom: "2px" }}>
+            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons acquis</span>
+          </div>
           <div style={{ fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>{ticketsPurchased}</div>
           {event.jetonUnitValue > 0 ? (
             purchasedTicketsCount > 0 && (
@@ -1342,7 +1358,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             </div>
           )}
           <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600 }}>
-            Jetons utilisés : {myJetonSpend} sur {ticketsPurchased}
+            Jeton{myJetonSpend > 1 ? "s" : ""} utilisé{myJetonSpend > 1 ? "s" : ""} : {myJetonSpend} sur {ticketsPurchased}
           </div>
         </div>
       )}
