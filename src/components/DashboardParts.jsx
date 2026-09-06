@@ -434,12 +434,10 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
     </div>
 
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-      <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Inviter des Bibax à rejoindre ce BibaRoom</div>
       <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
         <QRCodeSVG value={salonCode} size={72} color={COLORS.paper} background={COLORS.ink} />
         <div>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "22px", letterSpacing: "3px" }}>{salonCode}</div>
-          <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "4px 0 0 0" }}>Scannable directement, ou partagez le code.</p>
         </div>
       </div>
 
