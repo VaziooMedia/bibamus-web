@@ -815,7 +815,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 24px" }} />
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Code Bibax</label>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: 0 }}>
         <div
           style={{
             flex: 1,
@@ -833,7 +833,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
             value={code}
             onChange={(e) => handleCodeChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLookup()}
-            placeholder="Ex. 4K7TX"
+            placeholder="00000"
             maxLength={5}
             style={{
               flex: 1,
@@ -983,13 +983,10 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
       )}
 
       {status === "notFound" && (
-        <p style={{ fontSize: "13px", color: COLORS.wine, marginBottom: "auto" }}>
+        <p style={{ fontSize: "13px", color: COLORS.wine, marginBottom: 0 }}>
           Code introuvable. Vérifie qu'il·elle a bien ouvert l'app et configuré son profil.
         </p>
       )}
-
-      {status !== "found" && status !== "notFound" && <div style={{ marginBottom: "auto" }} />}
-      {status === "found" && <div style={{ marginBottom: "auto" }} />}
 
       {myBibroCode && (
         <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
