@@ -433,30 +433,51 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
       </div>
     </div>
 
-    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
+    <div style={{ display: "flex", gap: "12px", marginBottom: "16px", alignItems: "stretch" }}>
+      <div
+        style={{
+          flex: 1,
+          background: COLORS.surface,
+          border: `2px solid ${COLORS.paperAlt}`,
+          borderRadius: "14px",
+          padding: "14px 16px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <QRCodeSVG value={salonCode} size={72} color={COLORS.paper} background={COLORS.ink} />
-        <div>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "22px", letterSpacing: "3px" }}>{salonCode}</div>
-        </div>
+        <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "22px", letterSpacing: "3px", marginTop: "8px" }}>{salonCode}</div>
       </div>
 
-      <div style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", borderTop: `1px dashed ${COLORS.paperAlt}`, paddingTop: "12px" }}>
-        <span style={{ color: COLORS.amber }}>{myName}</span> — Faire une pause ou quitter la session
-      </div>
-      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-        <button
-          onClick={togglePauseSelf}
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "5px",
-            background: "none",
-            border: `2px solid ${myEntry && myEntry.paused ? COLORS.amber : COLORS.paperAlt}`,
-            borderRadius: "8px",
-            padding: "9px 10px",
+      <div
+        style={{
+          flex: 1,
+          background: COLORS.surface,
+          border: `2px solid ${COLORS.paperAlt}`,
+          borderRadius: "14px",
+          padding: "14px 16px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ fontSize: "11.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", textAlign: "center" }}>
+          <span style={{ color: COLORS.amber }}>{myName}</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <button
+            onClick={togglePauseSelf}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "5px",
+              background: "none",
+              border: `2px solid ${myEntry && myEntry.paused ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "8px",
+              padding: "9px 10px",
             color: myEntry && myEntry.paused ? COLORS.amber : COLORS.ink,
             fontSize: "12px",
             fontWeight: 600,
@@ -470,7 +491,6 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
         <button
           onClick={() => (confirmLeave ? leaveSalon() : setConfirmLeave(true))}
           style={{
-            flex: 1,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -488,6 +508,8 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           <NavIcon name="stop" size={13} color={confirmLeave ? COLORS.redFluo : COLORS.amber} />
           {confirmLeave ? "Confirmer ?" : "Quitter"}
         </button>
+        </div>
+      </div>
       </div>
       {confirmLeave && (
         <p style={{ fontSize: "11px", color: COLORS.redFluo, marginTop: "8px", textAlign: "center" }}>
@@ -500,7 +522,6 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           </button>
         </p>
       )}
-    </div>
     </>
   );
 }
