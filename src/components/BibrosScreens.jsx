@@ -708,7 +708,9 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
       <PageHeader onBack={onCancel} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
         <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Ajouter un Bibax</h1>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>
+          Ajouter un Biba<span style={{ color: COLORS.amber }}>x</span>
+        </h1>
       </div>
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Code Bibax</label>
@@ -748,30 +750,24 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
         >
           {status === "loading" ? "..." : "Chercher"}
         </button>
+        <button
+          onClick={() => setScanning(true)}
+          title="Scanner un QR code Bibax"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "none",
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "10px",
+            width: "48px",
+            flexShrink: 0,
+            cursor: "pointer",
+          }}
+        >
+          <NavIcon name="scan-line" size={18} color={COLORS.amber} />
+        </button>
       </div>
-
-      <button
-        onClick={() => setScanning(true)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-          background: "none",
-          border: `2px solid ${COLORS.paperAlt}`,
-          borderRadius: "10px",
-          padding: "11px",
-          fontSize: "13.5px",
-          fontWeight: 700,
-          color: COLORS.amber,
-          cursor: "pointer",
-          marginBottom: "16px",
-          width: "100%",
-        }}
-      >
-        <NavIcon name="scan-line" size={16} color={COLORS.amber} />
-        Scanner un QR code Bibax
-      </button>
 
       {scanning && (
         <SalonQrScannerModal
@@ -783,27 +779,42 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
       )}
 
       {status === "found" && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", marginBottom: "16px" }}>
-          <div
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", marginBottom: "16px", position: "relative" }}>
+          <button
+            onClick={async () => {
+              const result = await onAdd(code.trim(), foundName, "", foundSocials);
+              if (result?.error) return;
+              if (result?.status === "pending") {
+                alert(`Demande envoyée à ${foundName} — en attente de sa confirmation.`);
+              } else if (result?.status === "already_bibax") {
+                alert(`Vous êtes déjà Bibax avec ${foundName}.`);
+              } else if (result?.status === "accepted") {
+                alert(`${foundName} avait déjà envoyé une demande — vous êtes maintenant Bibax !`);
+              }
+              onCancel();
+            }}
+            title={`Ajouter ${foundName || "ce Bibax"}`}
             style={{
+              position: "absolute",
+              top: "12px",
+              right: "12px",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              background: COLORS.amber,
+              border: "none",
+              color: COLORS.paper,
+              fontSize: "18px",
+              fontWeight: 700,
+              cursor: "pointer",
               display: "flex",
-              alignItems: "flex-start",
-              gap: "12px",
-              marginBottom:
-                foundSocials.facebookUrl ||
-                foundSocials.instagramUrl ||
-                foundSocials.tiktokUrl ||
-                foundSocials.snapchatUrl ||
-                foundSocials.whatsappUrl ||
-                foundSocials.xUrl ||
-                foundSocials.threadsUrl ||
-                foundSocials.linkedinUrl ||
-                foundSocials.pinterestUrl ||
-                foundSocials.twitchUrl
-                  ? "12px"
-                  : 0,
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
+            +
+          </button>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
             <div
               style={{
                 width: "48px",
@@ -820,7 +831,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
             >
               {foundSocials.avatarUrl ? <img src={foundSocials.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={26} color={COLORS.amber} />}
             </div>
-            <div>
+            <div style={{ paddingRight: "36px" }}>
               <div style={{ fontSize: "17px", fontWeight: 700 }}>
                 {foundSocials.firstName || foundSocials.lastName ? [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") : foundName}
               </div>
@@ -842,69 +853,6 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
               )}
             </div>
           </div>
-          {(foundSocials.facebookUrl ||
-            foundSocials.instagramUrl ||
-            foundSocials.tiktokUrl ||
-            foundSocials.snapchatUrl ||
-            foundSocials.whatsappUrl ||
-            foundSocials.xUrl ||
-            foundSocials.threadsUrl ||
-            foundSocials.linkedinUrl ||
-            foundSocials.pinterestUrl ||
-            foundSocials.twitchUrl) && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {foundSocials.facebookUrl && (
-                <a href={normalizeUrl(foundSocials.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <FacebookIcon size={20} />
-                </a>
-              )}
-              {foundSocials.instagramUrl && (
-                <a href={normalizeUrl(foundSocials.instagramUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <InstagramIcon size={20} />
-                </a>
-              )}
-              {foundSocials.tiktokUrl && (
-                <a href={normalizeUrl(foundSocials.tiktokUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <TiktokIcon size={20} />
-                </a>
-              )}
-              {foundSocials.snapchatUrl && (
-                <a href={normalizeUrl(foundSocials.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <SnapchatIcon size={20} />
-                </a>
-              )}
-              {foundSocials.whatsappUrl && (
-                <a href={normalizeUrl(foundSocials.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <WhatsappIcon size={20} />
-                </a>
-              )}
-              {foundSocials.xUrl && (
-                <a href={normalizeUrl(foundSocials.xUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <XIcon size={20} />
-                </a>
-              )}
-              {foundSocials.threadsUrl && (
-                <a href={normalizeUrl(foundSocials.threadsUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <ThreadsIcon size={20} />
-                </a>
-              )}
-              {foundSocials.linkedinUrl && (
-                <a href={normalizeUrl(foundSocials.linkedinUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <LinkedinIcon size={20} />
-                </a>
-              )}
-              {foundSocials.pinterestUrl && (
-                <a href={normalizeUrl(foundSocials.pinterestUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <PinterestIcon size={20} />
-                </a>
-              )}
-              {foundSocials.twitchUrl && (
-                <a href={normalizeUrl(foundSocials.twitchUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <TwitchIcon size={20} />
-                </a>
-              )}
-            </div>
-          )}
         </div>
       )}
 
@@ -916,26 +864,6 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
 
       {status !== "found" && status !== "notFound" && <div style={{ marginBottom: "auto" }} />}
       {status === "found" && <div style={{ marginBottom: "auto" }} />}
-
-      <PrimaryButton
-        onClick={async () => {
-          if (status !== "found") return;
-          const result = await onAdd(code.trim(), foundName, "", foundSocials);
-          if (result?.error) return;
-          if (result?.status === "pending") {
-            alert(`Demande envoyée à ${foundName} — en attente de sa confirmation.`);
-          } else if (result?.status === "already_bibax") {
-            alert(`Vous êtes déjà Bibax avec ${foundName}.`);
-          } else if (result?.status === "accepted") {
-            alert(`${foundName} avait déjà envoyé une demande — vous êtes maintenant Bibax !`);
-          }
-          onCancel();
-        }}
-        disabled={status !== "found"}
-        style={{ width: "100%", marginTop: "20px" }}
-      >
-        Ajouter {foundName || "ce Bibax"}
-      </PrimaryButton>
 
       {myBibroCode && (
         <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
