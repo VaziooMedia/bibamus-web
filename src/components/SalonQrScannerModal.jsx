@@ -30,7 +30,17 @@ export function SalonQrScannerModal({ onClose, onScanned }) {
 
     (async () => {
       try {
+        let supportsQr = false;
         if ("BarcodeDetector" in window) {
+          try {
+            const supported = await window.BarcodeDetector.getSupportedFormats();
+            supportsQr = supported.includes("qr_code");
+          } catch (e) {
+            supportsQr = false;
+          }
+        }
+
+        if (supportsQr) {
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
           if (cancelled) {
             stream.getTracks().forEach((t) => t.stop());
