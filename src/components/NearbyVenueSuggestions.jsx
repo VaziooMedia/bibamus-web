@@ -42,6 +42,14 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId }) {
     setCollapsed(true);
   };
 
+  // Si un autre choix a été fait ailleurs (@Home, @Event, un lieu favori...), cette liste n'a
+  // plus lieu de rester ouverte — elle se referme, sans rien afficher à la place.
+  useEffect(() => {
+    if (selectedVenueId && venues && !venues.some((v) => v.id === selectedVenueId)) {
+      setCollapsed(true);
+    }
+  }, [selectedVenueId, venues]);
+
   // Dès que la position vient d'être accordée, on enchaîne automatiquement sur la recherche.
   useEffect(() => {
     if (status === "granted" && position && venues === null) {
@@ -52,6 +60,7 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId }) {
 
   if (venues && venues.length > 0) {
     const picked = venues.find((v) => v.id === selectedVenueId);
+    if (collapsed && !picked) return null;
     if (collapsed && picked) {
       return (
         <div style={{ marginBottom: "12px" }}>
