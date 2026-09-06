@@ -1442,7 +1442,7 @@ export default function App() {
         <div
           style={{
             fontFamily: "'Work Sans', sans-serif",
-            background: "#0D1B2A",
+            background: screen === "home" ? "#08131F" : "#0D1B2A",
             color: "#F2F2E8",
             minHeight: "100vh",
             display: "flex",
