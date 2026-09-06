@@ -231,42 +231,29 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
       {isSalon && myClubs && myClubs.length > 0 && (
         <>
           <SectionTitle>Lier à un BibaClub (optionnel)</SectionTitle>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
-            <button
-              onClick={() => setSelectedClubId(null)}
-              style={{
-                padding: "8px 14px",
-                borderRadius: "999px",
-                border: `2px solid ${selectedClubId === null ? COLORS.amber : COLORS.paperAlt}`,
-                background: selectedClubId === null ? COLORS.amber : "none",
-                color: selectedClubId === null ? COLORS.paper : COLORS.ink,
-                fontSize: "13px",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Aucun
-            </button>
+          <select
+            value={selectedClubId || ""}
+            onChange={(e) => setSelectedClubId(e.target.value || null)}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "12px 14px",
+              borderRadius: "12px",
+              border: `2px solid ${COLORS.paperAlt}`,
+              background: COLORS.surface,
+              color: COLORS.ink,
+              fontSize: "14px",
+              marginBottom: "8px",
+            }}
+          >
+            <option value="">Aucun</option>
             {myClubs.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedClubId(c.id)}
-                style={{
-                  padding: "8px 14px",
-                  borderRadius: "999px",
-                  border: `2px solid ${selectedClubId === c.id ? COLORS.amber : COLORS.paperAlt}`,
-                  background: selectedClubId === c.id ? COLORS.amber : "none",
-                  color: selectedClubId === c.id ? COLORS.paper : COLORS.ink,
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
+              <option key={c.id} value={c.id}>
                 {c.name}
-              </button>
+              </option>
             ))}
-          </div>
-          <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-14px", marginBottom: "20px" }}>
+          </select>
+          <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
             Pré-remplit les participants avec les membres du club, et rattache ce salon à ses statistiques.
           </p>
         </>
