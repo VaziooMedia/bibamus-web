@@ -395,8 +395,15 @@ export async function searchBibaxByName(query) {
     lastName: row.last_name,
     nickname: row.nickname,
     city: row.city,
-    country: row.country ? row.country.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("-") : null,
+    country: prettifyCountry(row.country),
   }));
+}
+
+// Les codes pays sont stockés en minuscules avec underscores (ex. "pays_bas") — cette fonction
+// les convertit en libellé lisible ("Pays-Bas") pour l'affichage et pour la correspondance avec
+// COUNTRY_FLAGS. Utilisée partout où un pays de profil est renvoyé au client.
+function prettifyCountry(raw) {
+  return raw ? raw.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("-") : null;
 }
 
 export async function lookupBibroCode(code) {
@@ -416,7 +423,7 @@ export async function lookupBibroCode(code) {
     city: row.city,
     // Les codes pays sont stockés en minuscules avec underscores (ex. "pays_bas") — converti
     // ici en libellé lisible ("Pays-Bas") pour l'affichage.
-    country: row.country ? row.country.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("-") : null,
+    country: prettifyCountry(row.country),
     facebookUrl: row.facebook_url,
     instagramUrl: row.instagram_url,
     tiktokUrl: row.tiktok_url,
@@ -2124,7 +2131,7 @@ export async function loadMyBibax() {
     bibroCode: r.bibro_code,
     city: r.city,
     locality: r.locality,
-    country: r.country,
+    country: prettifyCountry(r.country),
     birthDate: r.birth_date,
     shareAge: r.share_age,
     bio: r.bio,
@@ -2146,7 +2153,7 @@ export async function loadPendingBibaxRequests() {
     console.error("loadPendingBibaxRequests:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, createdAt: r.created_at }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, country: prettifyCountry(r.country), createdAt: r.created_at }));
 }
 
 export async function loadSentBibaxRequests() {
@@ -2155,7 +2162,7 @@ export async function loadSentBibaxRequests() {
     console.error("loadSentBibaxRequests:", error);
     return [];
   }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, createdAt: r.created_at }));
+  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, country: prettifyCountry(r.country), createdAt: r.created_at }));
 }
 
 export async function cancelBibaxRequest(relationshipId) {
@@ -2170,5 +2177,5 @@ export async function loadBibaxSuggestions(limit = 10) {
     console.error("loadBibaxSuggestions:", error);
     return [];
   }
-  return data.map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, mutualCount: r.mutual_count, distanceKm: r.distance_km }));
+  return data.map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, country: prettifyCountry(r.country), mutualCount: r.mutual_count, distanceKm: r.distance_km }));
 }
