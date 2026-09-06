@@ -1459,7 +1459,7 @@ export default function App() {
               paddingTop: "env(safe-area-inset-top, 0px)",
             }}
           >
-            <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+            <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", display: "flex", flexDirection: "column" }}>
             {screen === "home" && (
               <HomeScreen
                 profile={profile}
