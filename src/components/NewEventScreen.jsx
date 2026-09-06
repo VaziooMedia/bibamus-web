@@ -106,7 +106,15 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onCancel} />
       {/* Taille standard pour ce type de grand titre — à répliquer sur tous les titres équivalents de l'app. */}
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "0 0 6px 0" }}>{isSalon ? "Nouveau BibaRoom" : "Nouvel événement"}</h1>
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "0 0 6px 0" }}>
+        {isSalon ? (
+          <>
+            Nouveau Biba<span style={{ color: COLORS.amber }}>Room</span>
+          </>
+        ) : (
+          "Nouvel événement"
+        )}
+      </h1>
       {isSalon && (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>
           Tu seras l'hôte. Un code à 4 caractères sera généré pour que tes amis rejoignent depuis leur téléphone.
@@ -192,7 +200,6 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
           value={name}
           onChange={(e) => setName(capitalizeFirst(e.target.value))}
           placeholder="Titre de la session"
-          autoFocus={venues.length === 0}
           style={{
             flex: 1,
             padding: "13px 14px",
