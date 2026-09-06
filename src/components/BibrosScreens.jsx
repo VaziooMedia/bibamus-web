@@ -652,13 +652,15 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
     </div>
   );
 }
-export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
+export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros = [] }) {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | found | notFound
   const [foundName, setFoundName] = useState("");
   const [foundSocials, setFoundSocials] = useState({});
   const [mutualBibaxCount, setMutualBibaxCount] = useState(0);
   const [scanning, setScanning] = useState(false);
+
+  const alreadyBibax = status === "found" && bibros.some((b) => b.code === code.trim().toUpperCase());
 
   const handleLookup = async (explicitCode) => {
     const codeToUse = explicitCode || code;
@@ -748,6 +750,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
               color: COLORS.ink,
             }}
           />
+          <span style={{ width: "1px", height: "24px", background: COLORS.paperAlt, flexShrink: 0 }} />
           <button
             onClick={() => setScanning(true)}
             title="Scanner un QR code Bibax"
@@ -760,8 +763,8 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
           onClick={() => handleLookup()}
           disabled={code.length !== 5 || status === "loading"}
           style={{
-            background: COLORS.surfaceAlt,
-            color: COLORS.chalkWhite,
+            background: code.length === 5 ? COLORS.amber : COLORS.surfaceAlt,
+            color: code.length === 5 ? COLORS.paper : COLORS.chalkWhite,
             border: "none",
             borderRadius: "10px",
             padding: "0 18px",
@@ -786,40 +789,58 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
 
       {status === "found" && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", marginBottom: "16px", position: "relative" }}>
-          <button
-            onClick={async () => {
-              const result = await onAdd(code.trim(), foundName, "", foundSocials);
-              if (result?.error) return;
-              if (result?.status === "pending") {
-                alert(`Demande envoyée à ${foundName} — en attente de sa confirmation.`);
-              } else if (result?.status === "already_bibax") {
-                alert(`Vous êtes déjà Bibax avec ${foundName}.`);
-              } else if (result?.status === "accepted") {
-                alert(`${foundName} avait déjà envoyé une demande — vous êtes maintenant Bibax !`);
-              }
-              onCancel();
-            }}
-            title={`Ajouter ${foundName || "ce Bibax"}`}
-            style={{
-              position: "absolute",
-              top: "12px",
-              right: "12px",
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
-              background: COLORS.amber,
-              border: "none",
-              color: COLORS.paper,
-              fontSize: "18px",
-              fontWeight: 700,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            +
-          </button>
+          {alreadyBibax ? (
+            <div
+              style={{
+                position: "absolute",
+                top: "12px",
+                right: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "13px",
+                fontWeight: 700,
+              }}
+            >
+              <span style={{ color: COLORS.ink }}>Bibax</span>
+              <span style={{ color: COLORS.amber }}>✓</span>
+            </div>
+          ) : (
+            <button
+              onClick={async () => {
+                const result = await onAdd(code.trim(), foundName, "", foundSocials);
+                if (result?.error) return;
+                if (result?.status === "pending") {
+                  alert(`Demande envoyée à ${foundName} — en attente de sa confirmation.`);
+                } else if (result?.status === "already_bibax") {
+                  alert(`Vous êtes déjà Bibax avec ${foundName}.`);
+                } else if (result?.status === "accepted") {
+                  alert(`${foundName} avait déjà envoyé une demande — vous êtes maintenant Bibax !`);
+                }
+                onCancel();
+              }}
+              title={`Ajouter ${foundName || "ce Bibax"}`}
+              style={{
+                position: "absolute",
+                top: "12px",
+                right: "12px",
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                background: COLORS.amber,
+                border: "none",
+                color: COLORS.paper,
+                fontSize: "18px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              +
+            </button>
+          )}
           <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
             <div
               style={{
@@ -872,7 +893,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
       {status === "found" && <div style={{ marginBottom: "auto" }} />}
 
       {myBibroCode && (
-        <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
+        <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
           <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Ton code Bibax</div>
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <QRCodeSVG value={myBibroCode} size={72} color={COLORS.paper} background={COLORS.ink} />
@@ -881,7 +902,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode }) {
         </div>
       )}
 
-      <PageFooterNav onBack={onCancel} />
+      <PageFooterNav onBack={onCancel} hideBorder />
     </div>
   );
 }

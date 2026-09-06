@@ -2567,6 +2567,7 @@ export default function App() {
                 onLookup={lookupBibroCode}
                 onCancel={() => setScreen("bibrosList")}
                 myBibroCode={profile.myBibroCode}
+                bibros={bibros}
               />
             )}
             {screen === "adminUnlock" && (

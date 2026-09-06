@@ -187,10 +187,10 @@ export function PageHeader({ onBack, style, right }) {
   );
 }
 
-export function PageFooterNav({ onBack }) {
+export function PageFooterNav({ onBack, hideBorder = false }) {
   const goHome = React.useContext(NavigationContext);
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px", marginTop: "24px", paddingTop: "18px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px", marginTop: "24px", paddingTop: "18px", borderTop: hideBorder ? "none" : `1px solid ${COLORS.paperAlt}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center" }} title="Retour" aria-label="Retour">
           <NavIcon name="back-triangle" size={22} color={COLORS.amber} />
