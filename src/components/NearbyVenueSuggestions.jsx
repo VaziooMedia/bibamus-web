@@ -60,7 +60,31 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId }) {
 
   if (venues && venues.length > 0) {
     const picked = venues.find((v) => v.id === selectedVenueId);
-    if (collapsed && !picked) return null;
+    if (collapsed && !picked) {
+      return (
+        <button
+          onClick={() => setCollapsed(false)}
+          style={{
+            background: "none",
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "10px",
+            padding: "10px 14px",
+            color: COLORS.amber,
+            fontSize: "12.5px",
+            fontWeight: 700,
+            cursor: "pointer",
+            marginBottom: "12px",
+            width: "100%",
+            textAlign: "left",
+          }}
+        >
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <NavIcon name="chevron-right" size={12} color={COLORS.amber} />
+            Voir les lieux près de vous
+          </span>
+        </button>
+      );
+    }
     if (collapsed && picked) {
       return (
         <div style={{ marginBottom: "12px" }}>
