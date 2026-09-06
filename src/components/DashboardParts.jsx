@@ -12,7 +12,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { MoneyAmount, PrimaryButton } from "./ui.jsx";
 import { formatMoney, nextId } from "../utils.js";
 import { loadSalon, saveSalon, generateRoomCode } from "../data/salons.js";
@@ -55,7 +55,7 @@ export function PotCard({ event, updateEvent, myName }) {
       <div style={{ fontSize: "12px", opacity: 0.75, marginTop: "2px", textAlign: "center" }}>
         {unit === "jeton" ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-            <NavIcon name="jeton" size={17} color={COLORS.jetonFluo} /> {potTotal} versés · 🔴 {spent} dépensés · 🟢 {balance} restants
+            <TokenPinkIcon size={17} /> {potTotal} versés · 🔴 {spent} dépensés · 🟢 {balance} restants
           </span>
         ) : (
           <>

@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS, RATABLE_DRINK_TYPES, SERVING_MODE_LABELS, VOLUME_DISPLAY_TYPES } from "../constants.js";
-import { NavIcon, VerifiedBadge } from "./icons.jsx";
+import { NavIcon, VerifiedBadge, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { PhotoUploadField } from "./PhotoUploadField.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
@@ -227,7 +227,7 @@ export function DrinkDetailScreen({ drink, drinksDirectory = [], isAdmin, myBibr
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
               <span style={{ color: COLORS.inkSoft }}>Valeur en jetons</span>
               <span style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "5px" }}>
-                {drink.averageJetonValue} <NavIcon name="jeton" size={14} color={COLORS.jetonFluo} />
+                {drink.averageJetonValue} <TokenPinkIcon size={14} />
               </span>
             </div>
           )}

@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon } from "./icons.jsx";
+import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx";
 import { formatAddress, formatCompactCount, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
@@ -218,7 +218,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
                 {venue.menu.length} boisson{venue.menu.length > 1 ? "s" : ""} enregistrée{venue.menu.length > 1 ? "s" : ""} (
                 {venue.defaultCurrency === "jeton" ? (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
-                    jetons <NavIcon name="jeton" size={16} color={COLORS.jetonFluo} />
+                    jetons <TokenPinkIcon size={16} />
                   </span>
                 ) : (
                   "€"

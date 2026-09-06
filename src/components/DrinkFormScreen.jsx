@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS, DRINK_TYPES, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, DRINK_VOLUMES_CL, SNACK_WEIGHTS_G, SERVING_MODE_LABELS, BEER_STYLE_TAGS, SOFT_DRINK_TAGS, SPIRIT_TAGS, WINE_TAGS, SNACK_TYPES, BEER_TYPES, COUNTRIES } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { BrewerySearchSelect } from "./BrewerySearchSelect.jsx";
 import { BrandSearchSelect, DrinkLinkPicker } from "./MoreSearchPickers.jsx";
@@ -266,7 +266,7 @@ export function DrinkFormScreen({ drink, breweriesDirectory, onRegisterBrewery, 
             </p>
             <label style={{ ...labelStyle, marginTop: 0, display: "flex", alignItems: "center", gap: "6px" }}>
               Valeur en jetons (facultatif)
-              <NavIcon name="jeton" size={15} color={COLORS.jetonFluo} />
+              <TokenPinkIcon size={15} />
             </label>
             <input
               value={averageJetonValue}

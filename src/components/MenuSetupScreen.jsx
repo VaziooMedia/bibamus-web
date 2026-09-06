@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS, MENU_CATEGORIES } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { DrinkRow } from "./DrinkRow.jsx";
@@ -304,7 +304,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                 key={drink.id}
                 drink={drink}
                 priceStep={step}
-                priceSymbol={unitLabel === "€" ? "€" : <NavIcon name="jeton" size={17} color={COLORS.jetonFluo} />}
+                priceSymbol={unitLabel === "€" ? "€" : <TokenPinkIcon size={17} />}
                 forceLocked
                 onChangeName={(name) => setDrinkField(drink.id, "name", name)}
                 onChangePrice={(price) => setPrice(drink.id, price)}
@@ -360,7 +360,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                         key={drink.id}
                         drink={drink}
                         priceStep={step}
-                        priceSymbol={unitLabel === "€" ? "€" : <NavIcon name="jeton" size={17} color={COLORS.jetonFluo} />}
+                        priceSymbol={unitLabel === "€" ? "€" : <TokenPinkIcon size={17} />}
                         forceLocked
                         onChangeName={(name) => setDrinkField(drink.id, "name", name)}
                         onChangePrice={(price) => setPrice(drink.id, price)}

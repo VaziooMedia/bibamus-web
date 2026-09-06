@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS, VENUE_TYPE_TAGS, COUNTRIES, DRINK_TYPES, BEER_TYPES, DRINK_CATEGORY_ICONS, MENU_CATEGORIES } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { DrinkRow } from "./DrinkRow.jsx";
@@ -127,7 +127,7 @@ export function DirectoryVenueFormScreen({ venue, drinksDirectory, breweriesDire
 
   const isJetonMenu = defaultCurrency === "jeton";
   const menuPriceStep = isJetonMenu ? "1" : "0.10";
-  const menuPriceSymbol = isJetonMenu ? <NavIcon name="jeton" size={17} color={COLORS.jetonFluo} /> : "€";
+  const menuPriceSymbol = isJetonMenu ? <TokenPinkIcon size={17} /> : "€";
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -250,7 +250,7 @@ export function DirectoryVenueFormScreen({ venue, drinksDirectory, breweriesDire
           }}
         >
           <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-            <NavIcon name="jeton" size={20} color={COLORS.jetonFluo} />
+            <TokenPinkIcon size={20} />
             Jetons
           </span>
         </button>
