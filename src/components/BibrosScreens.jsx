@@ -7,7 +7,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard } from "./ui.jsx";
-import { ProfileHeader } from "./ProfileParts.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
@@ -254,12 +253,12 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>BIBAX</span>
-
-      <ProfileHeader myName={myName} profile={profile} bibros={bibros} checkIns={checkIns} />
 
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "14px" }}>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "4px 0 0 0", lineHeight: 1 }}>Tes Bibax</h1>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 0 0", lineHeight: 1.2 }}>
+          <span style={{ color: COLORS.ink }}>Mes Biba</span>
+          <span style={{ color: COLORS.amber }}>x</span>
+        </h1>
         <span
           style={{
             fontFamily: "'Urbanist', sans-serif",
