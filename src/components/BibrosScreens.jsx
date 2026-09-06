@@ -803,8 +803,16 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                     {r.avatarUrl ? <img src={r.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={18} color={COLORS.amber} />}
                   </div>
                   <div>
-                    <div style={{ fontSize: "13.5px", fontWeight: 700, color: COLORS.ink }}>{r.displayName}</div>
-                    {r.city && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>{r.city}</div>}
+                    <div style={{ fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, display: "flex", alignItems: "baseline", gap: "6px" }}>
+                      <span>{[r.firstName, r.lastName].filter(Boolean).join(" ") || r.displayName}</span>
+                      {r.nickname && <span style={{ fontSize: "11.5px", fontWeight: 700, color: COLORS.amber }}>{r.nickname}</span>}
+                    </div>
+                    {r.city && (
+                      <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, display: "flex", alignItems: "center", gap: "4px" }}>
+                        {r.city}
+                        {r.country && COUNTRY_FLAGS[r.country] && <span>{COUNTRY_FLAGS[r.country]}</span>}
+                      </div>
+                    )}
                   </div>
                 </button>
               ))}
