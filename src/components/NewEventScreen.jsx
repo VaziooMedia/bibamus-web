@@ -116,6 +116,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         )}
       </h1>
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
       <SectionTitle>Lieu</SectionTitle>
       <div style={{ marginBottom: "16px" }}>
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
@@ -189,6 +190,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} />
       </div>
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
       <SectionTitle>Titre de la session</SectionTitle>
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         <input
@@ -222,6 +224,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         </p>
       )}
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
       <SectionTitle>Participants</SectionTitle>
       <div style={{ marginBottom: "20px" }}>
         <ParticipantsEditor names={participants} onChange={setParticipants} bibros={bibros} />
@@ -232,6 +235,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
 
       {isSalon && myClubs && myClubs.length > 0 && (
         <>
+          <div style={{ height: "1px", background: COLORS.paperAlt, margin: "2px 0 16px" }} />
           <SectionTitle>Lier à un BibaClub (optionnel)</SectionTitle>
           <select
             value={selectedClubId || ""}
@@ -261,6 +265,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         </>
       )}
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
       <SectionTitle>Choix du mode</SectionTitle>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
         {[
@@ -295,6 +300,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         <>
           {eventMode === "tournees" || eventMode === "cagnotte" ? (
             <>
+              <div style={{ height: "1px", background: COLORS.paperAlt, margin: "2px 0 16px" }} />
               <SectionTitle>Type de paiement</SectionTitle>
               <div style={{ display: "flex", gap: "10px", marginBottom: currency === "jeton" ? "16px" : "auto" }}>
                 <button
