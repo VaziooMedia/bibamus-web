@@ -190,7 +190,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>
           {venues.length > 0 ? "Autres lieux" : "Un lieu déjà répertorié ?"}
         </label>
-        <NearbyVenueSuggestions onPick={pickFromDirectory} />
+        <NearbyVenueSuggestions onPick={pickFromDirectory} selectedVenueId={selectedVenueId} />
         <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} />
       </div>
 

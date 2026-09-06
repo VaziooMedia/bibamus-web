@@ -12,10 +12,11 @@ const MIN_RESULTS_TARGET = 3;
 
 // Ne déclenche jamais la géolocalisation toute seule — seulement au clic, pour ne jamais
 // demander la position sans un geste explicite de la personne.
-export function NearbyVenueSuggestions({ onPick }) {
+export function NearbyVenueSuggestions({ onPick, selectedVenueId }) {
   const { status, position, requestPosition } = useGeolocation();
   const [venues, setVenues] = useState(null);
   const [loadingVenues, setLoadingVenues] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const fetchNearby = async (pos) => {
     setLoadingVenues(true);
@@ -36,6 +37,11 @@ export function NearbyVenueSuggestions({ onPick }) {
     requestPosition();
   };
 
+  const handlePick = (v) => {
+    onPick(v);
+    setCollapsed(true);
+  };
+
   // Dès que la position vient d'être accordée, on enchaîne automatiquement sur la recherche.
   useEffect(() => {
     if (status === "granted" && position && venues === null) {
@@ -45,34 +51,70 @@ export function NearbyVenueSuggestions({ onPick }) {
   }, [status, position]);
 
   if (venues && venues.length > 0) {
+    const picked = venues.find((v) => v.id === selectedVenueId);
+    if (collapsed && picked) {
+      return (
+        <div style={{ marginBottom: "12px" }}>
+          <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>Près de vous :</p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.amber}`,
+              borderRadius: "10px",
+              padding: "10px 12px",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: "8px", color: COLORS.ink, fontSize: "13.5px", fontWeight: 700 }}>
+              <NavIcon name="check" size={14} color={COLORS.amber} />
+              {picked.name}
+            </span>
+            <button
+              onClick={() => setCollapsed(false)}
+              style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "12px", fontWeight: 700, cursor: "pointer", padding: 0 }}
+            >
+              Changer
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div style={{ marginBottom: "12px" }}>
         <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>Près de vous :</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {venues.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => onPick(v)}
-              style={{
-                textAlign: "left",
-                background: COLORS.surface,
-                border: `2px solid ${COLORS.paperAlt}`,
-                borderRadius: "10px",
-                padding: "10px 12px",
-                cursor: "pointer",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span style={{ color: COLORS.ink, fontSize: "13.5px", fontWeight: 600 }}>{v.name}</span>
-              {v.distanceMeters != null && (
-                <span style={{ color: COLORS.inkSoft, fontSize: "11.5px" }}>
-                  {v.distanceMeters < 1000 ? `${Math.round(v.distanceMeters)} m` : `${(v.distanceMeters / 1000).toFixed(1)} km`}
+          {venues.map((v) => {
+            const isSelected = v.id === selectedVenueId;
+            return (
+              <button
+                key={v.id}
+                onClick={() => handlePick(v)}
+                style={{
+                  textAlign: "left",
+                  background: COLORS.surface,
+                  border: `2px solid ${isSelected ? COLORS.amber : COLORS.paperAlt}`,
+                  borderRadius: "10px",
+                  padding: "10px 12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: "8px", color: COLORS.ink, fontSize: "13.5px", fontWeight: 600 }}>
+                  {isSelected && <NavIcon name="check" size={14} color={COLORS.amber} />}
+                  {v.name}
                 </span>
-              )}
-            </button>
-          ))}
+                {v.distanceMeters != null && (
+                  <span style={{ color: COLORS.inkSoft, fontSize: "11.5px" }}>
+                    {v.distanceMeters < 1000 ? `${Math.round(v.distanceMeters)} m` : `${(v.distanceMeters / 1000).toFixed(1)} km`}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
     );
