@@ -114,10 +114,22 @@ export function SearchScreen({
   const q = normalize(trimmed);
   const hasQuery = trimmed.length >= 2;
 
-  const venueResults = useMemo(() => (q.length < 2 ? [] : venues.filter((v) => normalize(v.name).includes(q))), [venues, q]);
-  const drinkResults = useMemo(() => (q.length < 2 ? [] : drinksDirectory.filter((d) => normalize(d.name).includes(q))), [drinksDirectory, q]);
-  const brandResults = useMemo(() => (q.length < 2 ? [] : brandsDirectory.filter((b) => normalize(b.name).includes(q))), [brandsDirectory, q]);
-  const breweryResults = useMemo(() => (q.length < 2 ? [] : breweriesDirectory.filter((b) => normalize(b.name).includes(q))), [breweriesDirectory, q]);
+  const venueResults = useMemo(
+    () => (q.length < 2 ? [] : venues.filter((v) => normalize(v.name).includes(q) || (v.aliases || []).some((a) => normalize(a).includes(q)))),
+    [venues, q]
+  );
+  const drinkResults = useMemo(
+    () => (q.length < 2 ? [] : drinksDirectory.filter((d) => normalize(d.name).includes(q) || (d.aliases || []).some((a) => normalize(a).includes(q)))),
+    [drinksDirectory, q]
+  );
+  const brandResults = useMemo(
+    () => (q.length < 2 ? [] : brandsDirectory.filter((b) => normalize(b.name).includes(q) || (b.aliases || []).some((a) => normalize(a).includes(q)))),
+    [brandsDirectory, q]
+  );
+  const breweryResults = useMemo(
+    () => (q.length < 2 ? [] : breweriesDirectory.filter((b) => normalize(b.name).includes(q) || (b.aliases || []).some((a) => normalize(a).includes(q)))),
+    [breweriesDirectory, q]
+  );
 
   useEffect(() => {
     if (trimmed.length < 2) {
