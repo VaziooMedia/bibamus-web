@@ -37,6 +37,8 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
   const [suggestions, setSuggestions] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [suggestionsExpanded, setSuggestionsExpanded] = useState(true);
+  const [pendingExpanded, setPendingExpanded] = useState(true);
+  const [sentExpanded, setSentExpanded] = useState(true);
   const prevSentIds = useRef(null);
 
   const refresh = () => {
@@ -108,10 +110,17 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
     <>
       {hasPending && (
         <div style={{ marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+          <button
+            onClick={() => setPendingExpanded((e) => !e)}
+            style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: pendingExpanded ? "8px" : 0, background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer" }}
+          >
             <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
             <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Demandes reçues ({pending.length})</span>
-          </div>
+            <span style={{ display: "inline-flex", marginLeft: "auto", transform: `rotate(${pendingExpanded ? 90 : 0}deg)`, transition: "transform 0.15s ease" }}>
+              <NavIcon name="chevron-right" size={14} color={COLORS.amber} />
+            </span>
+          </button>
+          {pendingExpanded && (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {pending.map((r) => (
               <div
@@ -144,15 +153,23 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
 
       {hasSent && (
         <div style={{ marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+          <button
+            onClick={() => setSentExpanded((e) => !e)}
+            style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: sentExpanded ? "8px" : 0, background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer" }}
+          >
             <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
             <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Demandes envoyées ({sent.length})</span>
-          </div>
+            <span style={{ display: "inline-flex", marginLeft: "auto", transform: `rotate(${sentExpanded ? 90 : 0}deg)`, transition: "transform 0.15s ease" }}>
+              <NavIcon name="chevron-right" size={14} color={COLORS.amber} />
+            </span>
+          </button>
+          {sentExpanded && (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {sent.map((r) => (
               <div
@@ -178,6 +195,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
               </div>
             ))}
           </div>
+        )}
         </div>
       )}
 
@@ -347,7 +365,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                     {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={19} color={COLORS.amber} />}
                   </div>
                   <div>
-                    <BibaxName name={b.firstName || b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} style={{ fontSize: "15px" }} />
+                    <BibaxName name={b.firstName || b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ fontSize: "15px" }} />
                   </div>
                 </div>
               </div>
@@ -894,8 +912,14 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
         />
       )}
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "24px 0" }} />
+
+      {status !== "found" && status !== "notFound" && (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", margin: 0 }}>Bibax recherché</p>
+      )}
+
       {status === "found" && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", marginBottom: "16px", position: "relative" }}>
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", position: "relative" }}>
           {alreadyBibax ? (
             <div
               style={{

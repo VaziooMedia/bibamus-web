@@ -3,7 +3,7 @@
 // le prototype Claude (boutons, cartes, barre d'accès rapide...).
 // ============================================================
 import React, { useState } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { NavigationContext, ProfileNavContext } from "../contexts.js";
 import { formatMoney } from "../utils.js";
@@ -99,14 +99,20 @@ export function SectionTitle({ children }) {
 // petit à côté. Utilisé partout où un Bibax est listé (relations, demandes, suggestions),
 // pour ne jamais se retrouver avec un simple prénom qui ne permet pas de reconnaître qui est
 // qui.
-export function BibaxName({ name, lastName, nickname, city, locality, style }) {
+export function BibaxName({ name, lastName, nickname, city, locality, country, style }) {
   const fullName = [name, lastName].filter(Boolean).join(" ") || "Bibax";
   const location = city ? (locality ? `${city} (${locality})` : city) : null;
+  const flag = country && COUNTRY_FLAGS[country];
   return (
     <span style={{ display: "inline-flex", flexDirection: "column", minWidth: 0, ...style }}>
       <span style={{ fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName}</span>
       {nickname && <span style={{ fontSize: "0.85em", fontWeight: 400, fontStyle: "italic", color: COLORS.amber, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nickname}</span>}
-      {location && <span style={{ fontSize: "0.8em", fontWeight: 400, color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{location}</span>}
+      {location && (
+        <span style={{ fontSize: "0.8em", fontWeight: 400, color: COLORS.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+          {location}
+          {flag && <span>{flag}</span>}
+        </span>
+      )}
     </span>
   );
 }
