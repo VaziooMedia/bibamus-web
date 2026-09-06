@@ -23,7 +23,7 @@ export function TasteScale({ label, value, onChange, lowLabel, highLabel }) {
               borderRadius: "6px",
               border: `2px solid ${value === n ? "#39FF66" : "#28405C"}`,
               background: value === n ? "#39FF66" : "none",
-              color: value === n ? "#0D1B2A" : "#F2F2E8",
+              color: value === n ? "#08131F" : "#F2F2E8",
               fontWeight: 700,
               fontSize: "13px",
               cursor: "pointer",

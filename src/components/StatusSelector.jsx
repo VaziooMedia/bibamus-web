@@ -21,7 +21,7 @@ export function StatusSelector({ value, onChange }) {
               borderRadius: "8px",
               border: `2px solid ${active ? s.color : "#28405C"}`,
               background: active ? s.color : "none",
-              color: active ? "#0D1B2A" : "#F2F2E8",
+              color: active ? "#08131F" : "#F2F2E8",
               fontSize: "12px",
               fontWeight: 700,
               cursor: "pointer",

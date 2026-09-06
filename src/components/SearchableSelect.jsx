@@ -28,7 +28,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Rech
           padding: "10px 12px",
           borderRadius: "8px",
           border: "2px solid #28405C",
-          background: "#0D1B2A",
+          background: "#08131F",
           color: value ? "#F2F2E8" : "#8792A6",
           fontSize: "14px",
           cursor: "pointer",
@@ -132,7 +132,7 @@ export function SearchableMultiSelect({ options, values, onChange, placeholder =
           padding: "6px 12px",
           borderRadius: "8px",
           border: "2px solid #28405C",
-          background: "#0D1B2A",
+          background: "#08131F",
           cursor: "pointer",
           display: "flex",
           flexWrap: "wrap",
@@ -144,7 +144,7 @@ export function SearchableMultiSelect({ options, values, onChange, placeholder =
         {selected.map((o) => (
           <span
             key={o.id}
-            style={{ background: "#39FF66", color: "#0D1B2A", borderRadius: "999px", padding: "3px 10px", fontSize: "12px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}
+            style={{ background: "#39FF66", color: "#08131F", borderRadius: "999px", padding: "3px 10px", fontSize: "12px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}
           >
             {o.name}
             <span

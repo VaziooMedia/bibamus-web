@@ -38,7 +38,7 @@ export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin",
         alignItems: "center",
         gap: "20px",
         padding: "14px 32px",
-        background: "#0D1B2A",
+        background: "#08131F",
         borderBottom: "2px solid #16273D",
       }}
     >

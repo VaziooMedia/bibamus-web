@@ -32,7 +32,7 @@ export function LoginScreen({ onUnlock }) {
         {error && <p style={{ color: "#FF3B4E", fontSize: "13px", margin: 0 }}>{error}</p>}
         <button
           type="submit"
-          style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
+          style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#08131F", cursor: "pointer" }}
         >
           Entrer
         </button>

@@ -4,7 +4,7 @@
 // ============================================================
 
 export const COLORS = {
-  paper: "#0D1B2A",
+  paper: "#08131F",
   paperAlt: "#28405C",
   surface: "#16273D",
   surfaceAlt: "#1E3350",

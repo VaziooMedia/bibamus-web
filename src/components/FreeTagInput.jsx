@@ -18,9 +18,9 @@ export function FreeTagInput({ tags, onChange, placeholder }) {
       {tags.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "6px" }}>
           {tags.map((t) => (
-            <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#39FF66", color: "#0D1B2A", borderRadius: "999px", padding: "4px 10px", fontSize: "12px", fontWeight: 700 }}>
+            <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#39FF66", color: "#08131F", borderRadius: "999px", padding: "4px 10px", fontSize: "12px", fontWeight: 700 }}>
               {t}
-              <button onClick={() => remove(t)} style={{ background: "none", border: "none", color: "#0D1B2A", cursor: "pointer", padding: 0, fontWeight: 800 }}>
+              <button onClick={() => remove(t)} style={{ background: "none", border: "none", color: "#08131F", cursor: "pointer", padding: 0, fontWeight: 800 }}>
                 ✕
               </button>
             </span>

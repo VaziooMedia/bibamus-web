@@ -17,7 +17,7 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
   return `${h}:${m}`;
 });
 
-const fieldStyle = { padding: "6px 8px", borderRadius: "6px", border: "2px solid #28405C", fontSize: "12.5px", background: "#0D1B2A" };
+const fieldStyle = { padding: "6px 8px", borderRadius: "6px", border: "2px solid #28405C", fontSize: "12.5px", background: "#08131F" };
 
 export function OpeningHoursEditor({ value, onChange }) {
   const days = value?.days || {};

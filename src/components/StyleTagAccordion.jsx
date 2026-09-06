@@ -89,7 +89,7 @@ export function StyleTagAccordion({ groups, selected, onToggle }) {
                           padding: "5px 11px",
                           fontSize: "11.5px",
                           fontWeight: 600,
-                          color: checked ? "#0D1B2A" : "#F2F2E8",
+                          color: checked ? "#08131F" : "#F2F2E8",
                           cursor: "pointer",
                         }}
                       >

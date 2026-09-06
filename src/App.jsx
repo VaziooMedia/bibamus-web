@@ -1389,7 +1389,7 @@ export default function App() {
           alignItems: "center",
           justifyContent: "center",
           padding: "32px 24px",
-          background: "#0D1B2A",
+          background: "#08131F",
           color: "#F2F2E8",
           textAlign: "center",
         }}
@@ -1442,7 +1442,7 @@ export default function App() {
         <div
           style={{
             fontFamily: "'Work Sans', sans-serif",
-            background: screen === "home" ? "#08131F" : "#0D1B2A",
+            background: "#08131F",
             color: "#F2F2E8",
             minHeight: "100vh",
             display: "flex",

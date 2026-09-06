@@ -129,7 +129,7 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
         {onAdd && (
           <button
             onClick={onAdd}
-            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "10px 16px", color: "#0D1B2A", cursor: "pointer", fontSize: "14px", fontWeight: 800 }}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "10px 16px", color: "#08131F", cursor: "pointer", fontSize: "14px", fontWeight: 800 }}
           >
             +
           </button>

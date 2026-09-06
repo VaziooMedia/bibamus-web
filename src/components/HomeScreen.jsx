@@ -135,7 +135,7 @@ export function HomeScreen({
   }, []);
 
   return (
-    <div style={{ padding: "20px 20px 28px 20px", display: "flex", flexDirection: "column", flex: 1, background: "#08131F" }}>
+    <div style={{ padding: "20px 20px 28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
         <div style={{ display: "flex", flexDirection: "column", marginTop: "-16px" }}>
           <div style={{ height: "76px", display: "flex", alignItems: "center", gap: "8px" }}>

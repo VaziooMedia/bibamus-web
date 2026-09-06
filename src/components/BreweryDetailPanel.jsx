@@ -75,7 +75,7 @@ function TagPicker({ options, selected, onToggle }) {
               padding: "6px 12px",
               fontSize: "12px",
               fontWeight: 600,
-              color: checked ? "#0D1B2A" : "#F2F2E8",
+              color: checked ? "#08131F" : "#F2F2E8",
               cursor: "pointer",
             }}
           >
@@ -193,7 +193,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
-      <div style={{ width: "540px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
+      <div style={{ width: "540px", background: "#08131F", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isNew ? "Ajouter un producteur" : "Vérifier le producteur"}</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
@@ -319,7 +319,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
           <button
             onClick={save}
             disabled={saving || !requiredOk}
-            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: requiredOk ? 1 : 0.5 }}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#08131F", cursor: "pointer", opacity: requiredOk ? 1 : 0.5 }}
           >
             ✓ {isNew ? "Créer le producteur" : "Enregistrer"}
           </button>

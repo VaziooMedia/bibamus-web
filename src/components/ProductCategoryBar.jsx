@@ -40,16 +40,16 @@ export function ProductCategoryBar({ counts, selectedType, onSelect }) {
             const isActive = selectedType === c.type;
             return (
               <button key={c.type} onClick={() => onSelect(isActive ? null : c.type)} style={blockStyle(isActive)}>
-                <div style={{ fontSize: "11px", color: isActive ? "#0D1B2A" : "#8792A6", marginBottom: "4px" }}>{c.label}</div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: isActive ? "#0D1B2A" : "#39FF66" }}>
+                <div style={{ fontSize: "11px", color: isActive ? "#08131F" : "#8792A6", marginBottom: "4px" }}>{c.label}</div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: isActive ? "#08131F" : "#39FF66" }}>
                   {counts ? counts[c.type] ?? "…" : "…"}
                 </div>
               </button>
             );
           })}
           <button onClick={() => onSelect(selectedType === "__other__" ? null : "__other__")} style={blockStyle(selectedType === "__other__")}>
-            <div style={{ fontSize: "11px", color: selectedType === "__other__" ? "#0D1B2A" : "#8792A6", marginBottom: "4px" }}>Autres - Divers</div>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: selectedType === "__other__" ? "#0D1B2A" : "#39FF66" }}>
+            <div style={{ fontSize: "11px", color: selectedType === "__other__" ? "#08131F" : "#8792A6", marginBottom: "4px" }}>Autres - Divers</div>
+            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: selectedType === "__other__" ? "#08131F" : "#39FF66" }}>
               {counts ? counts.autres ?? "…" : "…"}
             </div>
           </button>

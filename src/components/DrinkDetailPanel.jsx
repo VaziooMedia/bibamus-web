@@ -370,7 +370,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
-      <div style={{ width: "520px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
+      <div style={{ width: "520px", background: "#08131F", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isNew ? "Ajouter un produit" : "Vérifier le produit"}</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
@@ -581,7 +581,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                           <button
                             key={a.code}
                             onClick={() => toggleArrayField("allergens", a.code)}
-                            style={{ background: checked ? "#39FF66" : "none", border: `2px solid ${checked ? "#39FF66" : "#28405C"}`, borderRadius: "999px", padding: "5px 11px", fontSize: "11.5px", fontWeight: 600, color: checked ? "#0D1B2A" : "#F2F2E8", cursor: "pointer" }}
+                            style={{ background: checked ? "#39FF66" : "none", border: `2px solid ${checked ? "#39FF66" : "#28405C"}`, borderRadius: "999px", padding: "5px 11px", fontSize: "11.5px", fontWeight: 600, color: checked ? "#08131F" : "#F2F2E8", cursor: "pointer" }}
                           >
                             {a.fr}
                           </button>
@@ -843,7 +843,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       <button
                         key={f.code}
                         onClick={() => toggleArrayField("foodPairings", f.code)}
-                        style={{ background: checked ? "#39FF66" : "none", border: `2px solid ${checked ? "#39FF66" : "#28405C"}`, borderRadius: "999px", padding: "5px 11px", fontSize: "11.5px", fontWeight: 600, color: checked ? "#0D1B2A" : "#F2F2E8", cursor: "pointer" }}
+                        style={{ background: checked ? "#39FF66" : "none", border: `2px solid ${checked ? "#39FF66" : "#28405C"}`, borderRadius: "999px", padding: "5px 11px", fontSize: "11.5px", fontWeight: 600, color: checked ? "#08131F" : "#F2F2E8", cursor: "pointer" }}
                       >
                         {f.fr}
                       </button>
@@ -1139,7 +1139,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
           <button
             onClick={save}
             disabled={saving || !form.name.trim()}
-            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: form.name.trim() ? 1 : 0.5 }}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#08131F", cursor: "pointer", opacity: form.name.trim() ? 1 : 0.5 }}
           >
             ✓ {isNew ? "Créer le produit" : "Enregistrer"}
           </button>

@@ -74,7 +74,7 @@ export function GooglePlaceLinker({ venueId, name, address, googlePlaceId, check
             <button
               onClick={search}
               disabled={searching || !venueId}
-              style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px 14px", color: "#0D1B2A", fontWeight: 700, fontSize: "12.5px", cursor: venueId ? "pointer" : "default", opacity: venueId ? 1 : 0.5 }}
+              style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px 14px", color: "#08131F", fontWeight: 700, fontSize: "12.5px", cursor: venueId ? "pointer" : "default", opacity: venueId ? 1 : 0.5 }}
             >
               {searching ? "Recherche..." : "Associer à une fiche Google"}
             </button>
@@ -97,7 +97,7 @@ export function GooglePlaceLinker({ venueId, name, address, googlePlaceId, check
             <button
               key={c.placeId}
               onClick={() => confirmMatch(c.placeId)}
-              style={{ textAlign: "left", background: "#0D1B2A", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 12px", cursor: "pointer", color: "#F2F2E8" }}
+              style={{ textAlign: "left", background: "#08131F", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 12px", cursor: "pointer", color: "#F2F2E8" }}
             >
               <div style={{ fontWeight: 700, fontSize: "13px" }}>{c.name}</div>
               <div style={{ fontSize: "11.5px", color: "#8792A6" }}>{c.address}</div>

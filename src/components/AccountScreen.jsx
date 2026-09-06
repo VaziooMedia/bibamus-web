@@ -642,7 +642,7 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
                   onClick={() => update({ birthDateSharePrecision: opt.key })}
                   style={{
                     background: (p.birthDateSharePrecision || "full") === opt.key ? COLORS.amber : "none",
-                    color: (p.birthDateSharePrecision || "full") === opt.key ? "#0D1B2A" : COLORS.ink,
+                    color: (p.birthDateSharePrecision || "full") === opt.key ? "#08131F" : COLORS.ink,
                     border: `2px solid ${(p.birthDateSharePrecision || "full") === opt.key ? COLORS.amber : COLORS.paperAlt}`,
                     borderRadius: "999px",
                     padding: "6px 12px",
@@ -721,7 +721,7 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
               style={{
                 flex: 1,
                 background: (p.salonDisplayMode || "firstName") === opt.key ? COLORS.amber : "none",
-                color: (p.salonDisplayMode || "firstName") === opt.key ? "#0D1B2A" : COLORS.ink,
+                color: (p.salonDisplayMode || "firstName") === opt.key ? "#08131F" : COLORS.ink,
                 border: `2px solid ${(p.salonDisplayMode || "firstName") === opt.key ? COLORS.amber : COLORS.paperAlt}`,
                 borderRadius: "999px",
                 padding: "9px 12px",
