@@ -21,6 +21,7 @@ import {
   loadMutualBibaxCount,
   loadBibaxCount,
   loadMyProfileStats,
+  searchBibaxByName,
 } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -659,6 +660,30 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
   const [foundSocials, setFoundSocials] = useState({});
   const [mutualBibaxCount, setMutualBibaxCount] = useState(0);
   const [scanning, setScanning] = useState(false);
+  const [nameQuery, setNameQuery] = useState("");
+  const [nameResults, setNameResults] = useState([]);
+  const [nameSearching, setNameSearching] = useState(false);
+
+  useEffect(() => {
+    if (nameQuery.trim().length < 2) {
+      setNameResults([]);
+      return;
+    }
+    setNameSearching(true);
+    const timer = setTimeout(async () => {
+      const results = await searchBibaxByName(nameQuery.trim());
+      setNameResults(results);
+      setNameSearching(false);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [nameQuery]);
+
+  const selectNameResult = (result) => {
+    setNameQuery("");
+    setNameResults([]);
+    setCode(result.bibroCode);
+    handleLookup(result.bibroCode);
+  };
 
   const alreadyBibax = status === "found" && bibros.some((b) => b.code === code.trim().toUpperCase());
 
@@ -714,6 +739,81 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
           Ajouter un Biba<span style={{ color: COLORS.amber }}>x</span>
         </h1>
       </div>
+
+      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Prénom, nom ou surnom</label>
+      <div style={{ position: "relative", marginBottom: "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "10px",
+            padding: "12px 14px",
+            boxSizing: "border-box",
+          }}
+        >
+          <NavIcon name="search" size={17} color={COLORS.inkSoft} />
+          <input
+            value={nameQuery}
+            onChange={(e) => setNameQuery(e.target.value)}
+            placeholder="Rechercher un Bibax..."
+            style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
+          />
+        </div>
+
+        {nameQuery.trim().length >= 2 && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              left: 0,
+              right: 0,
+              zIndex: 5,
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.paperAlt}`,
+              borderRadius: "10px",
+              maxHeight: "260px",
+              overflowY: "auto",
+            }}
+          >
+            {nameSearching && <p style={{ fontSize: "13px", color: COLORS.inkSoft, padding: "12px 14px", margin: 0 }}>Recherche...</p>}
+            {!nameSearching && nameResults.length === 0 && (
+              <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", padding: "12px 14px", margin: 0 }}>Aucun Bibax trouvé.</p>
+            )}
+            {!nameSearching &&
+              nameResults.map((r) => (
+                <button
+                  key={r.bibroCode}
+                  onClick={() => selectNameResult(r)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    width: "100%",
+                    textAlign: "left",
+                    background: "none",
+                    border: "none",
+                    borderBottom: `1px solid ${COLORS.paperAlt}`,
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                    {r.avatarUrl ? <img src={r.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={18} color={COLORS.amber} />}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "13.5px", fontWeight: 700, color: COLORS.ink }}>{r.displayName}</div>
+                    {r.city && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>{r.city}</div>}
+                  </div>
+                </button>
+              ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Code Bibax</label>
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>

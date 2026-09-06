@@ -381,6 +381,24 @@ export async function deleteMyAccount(confirmPassword) {
   return { ok: true };
 }
 
+export async function searchBibaxByName(query) {
+  const { data, error } = await supabase.rpc("search_bibax_by_name", { p_query: query });
+  if (error) {
+    console.error("searchBibaxByName:", error);
+    return [];
+  }
+  return data.map((row) => ({
+    bibroCode: row.bibro_code,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    nickname: row.nickname,
+    city: row.city,
+    country: row.country ? row.country.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("-") : null,
+  }));
+}
+
 export async function lookupBibroCode(code) {
   const { data, error } = await supabase.rpc("lookup_bibro_code", { p_code: code });
   if (error) {
