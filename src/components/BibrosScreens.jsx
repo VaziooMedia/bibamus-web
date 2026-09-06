@@ -740,8 +740,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
         </h1>
       </div>
 
-      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Prénom, nom ou surnom</label>
-      <div style={{ position: "relative", marginBottom: "16px" }}>
+      <div style={{ position: "relative", marginTop: "22px", marginBottom: "16px" }}>
         <div
           style={{
             display: "flex",
@@ -813,7 +812,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
         )}
       </div>
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 8px" }} />
 
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Code Bibax</label>
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
@@ -941,7 +940,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
               +
             </button>
           )}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div
               style={{
                 width: "48px",
@@ -963,7 +962,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                 {foundSocials.firstName || foundSocials.lastName ? [foundSocials.firstName, foundSocials.lastName].filter(Boolean).join(" ") : foundName}
               </div>
               {(foundSocials.nickname || foundSocials.city) && (
-                <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "6px", lineHeight: 1.6 }}>
+                <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "2px", lineHeight: 1.6 }}>
                   {foundSocials.nickname && <div style={{ color: COLORS.amber, fontWeight: 700 }}>{foundSocials.nickname}</div>}
                   {foundSocials.city && (
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
