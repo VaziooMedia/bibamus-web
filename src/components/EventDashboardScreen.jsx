@@ -726,7 +726,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           {!isOpenBar && !isCagnotte && !isAddition && (
             <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
-                <MoneyAmount value={myRoundsTotal} currency={event.currency} centered jetonIconSize={28} />
+                <MoneyAmount value={myRoundsTotal} currency={event.currency} centered jetonIconSize={28} jetonIcon="pink" />
               </div>
               <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>{myRoundsTotal > 0 ? "DÉPENSÉS" : "DÉPENSÉ"}</div>
             </div>
