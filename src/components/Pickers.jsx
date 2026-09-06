@@ -191,7 +191,7 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
   );
 }
 
-export function PublicVenueSearchPicker({ publicVenues, myVenues, onPick }) {
+export function PublicVenueSearchPicker({ publicVenues, myVenues, onPick, onOpen }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
@@ -246,7 +246,13 @@ export function PublicVenueSearchPicker({ publicVenues, myVenues, onPick }) {
     <div ref={containerRef} style={{ position: "relative" }}>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() =>
+          setOpen((o) => {
+            const next = !o;
+            if (next) onOpen?.();
+            return next;
+          })
+        }
         style={{
           width: "100%",
           textAlign: "center",

@@ -23,6 +23,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
   const [participants, setParticipants] = useState([]);
   const [myClubs, setMyClubs] = useState(null);
   const [selectedClubId, setSelectedClubId] = useState(null);
+  const [directoryOpenCount, setDirectoryOpenCount] = useState(0);
 
   const isSalon = screenKind === "salon";
   const canCreate = name.trim().length > 0;
@@ -171,12 +172,16 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         </div>
         {selectedVenueId === "@home" && (
           <p style={{ fontSize: "11.5px", color: COLORS.amber, marginTop: "8px" }}>
-            La carte s'ouvrira sur l'ensemble du répertoire "Boissons", en Mode Open Bar — pas de prix à gérer, chacun boit ce qu'il y a.
+            La carte s'ouvrira sur l'ensemble du répertoire "Boissons", en Mode Open Bar
+            <br />
+            pas de prix à gérer, chacun boit ce qu'il y a.
           </p>
         )}
         {selectedVenueId === "@event" && (
           <p style={{ fontSize: "11.5px", color: COLORS.amber, marginTop: "8px" }}>
-            Pour un lieu ponctuel sans fiche répertoriée — festival, mariage, fête d'entreprise... Tu composeras la carte boissons toi-même.
+            Pour un lieu ponctuel sans fiche répertoriée (festival, mariage, fête d'entreprise...)
+            <br />
+            Tu composeras la carte boissons toi-même.
           </p>
         )}
       </div>
@@ -185,8 +190,8 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>
           {venues.length > 0 ? "Autres lieux" : "Un lieu déjà répertorié ?"}
         </label>
-        <NearbyVenueSuggestions onPick={pickFromDirectory} selectedVenueId={selectedVenueId} />
-        <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} />
+        <NearbyVenueSuggestions onPick={pickFromDirectory} selectedVenueId={selectedVenueId} forceCollapseKey={directoryOpenCount} />
+        <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} onOpen={() => setDirectoryOpenCount((n) => n + 1)} />
       </div>
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />

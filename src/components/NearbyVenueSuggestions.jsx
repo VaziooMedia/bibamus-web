@@ -12,11 +12,16 @@ const MIN_RESULTS_TARGET = 3;
 
 // Ne déclenche jamais la géolocalisation toute seule — seulement au clic, pour ne jamais
 // demander la position sans un geste explicite de la personne.
-export function NearbyVenueSuggestions({ onPick, selectedVenueId }) {
+export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseKey }) {
   const { status, position, requestPosition } = useGeolocation();
   const [venues, setVenues] = useState(null);
   const [loadingVenues, setLoadingVenues] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (forceCollapseKey) setCollapsed(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceCollapseKey]);
 
   const fetchNearby = async (pos) => {
     setLoadingVenues(true);
@@ -65,23 +70,25 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId }) {
         <button
           onClick={() => setCollapsed(false)}
           style={{
-            background: "none",
-            border: `2px solid ${COLORS.paperAlt}`,
-            borderRadius: "10px",
-            padding: "10px 14px",
-            color: COLORS.amber,
-            fontSize: "12.5px",
-            fontWeight: 700,
-            cursor: "pointer",
-            marginBottom: "12px",
             width: "100%",
-            textAlign: "left",
+            textAlign: "center",
+            padding: "11px",
+            borderRadius: "9px",
+            border: `2px solid ${COLORS.paperAlt}`,
+            background: COLORS.surface,
+            color: COLORS.amber,
+            fontWeight: 700,
+            fontSize: "13.5px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            marginBottom: "12px",
           }}
         >
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-            <NavIcon name="chevron-right" size={12} color={COLORS.amber} />
-            Voir les lieux près de vous
-          </span>
+          <NavIcon name="chevron-right" size={12} color={COLORS.amber} />
+          Voir les lieux près de vous
         </button>
       );
     }
@@ -162,16 +169,21 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId }) {
       onClick={handleClick}
       disabled={status === "loading" || loadingVenues}
       style={{
-        background: "none",
-        border: `2px solid ${COLORS.paperAlt}`,
-        borderRadius: "10px",
-        padding: "10px 14px",
-        color: COLORS.amber,
-        fontSize: "12.5px",
-        fontWeight: 700,
-        cursor: "pointer",
-        marginBottom: "12px",
         width: "100%",
+        textAlign: "center",
+        padding: "11px",
+        borderRadius: "9px",
+        border: `2px solid ${COLORS.paperAlt}`,
+        background: COLORS.surface,
+        color: COLORS.amber,
+        fontWeight: 700,
+        fontSize: "13.5px",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
+        marginBottom: "12px",
       }}
     >
       {status === "loading" || loadingVenues ? (
