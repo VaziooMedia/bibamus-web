@@ -356,7 +356,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
             Valeur du jeton
           </label>
           <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-2px", marginBottom: "10px" }}>
-            Tu pourras toujours l'ajouter ou le modifier dans la gestion des boissons.
+            Tu pourras toujours l'ajouter ou le modifier dans la gestion des produits.
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <input
@@ -366,7 +366,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
               onChange={(e) => setJetonUnitValue(e.target.value.replace(",", "."))}
               placeholder="0.00"
               style={{
-                width: "120px",
+                width: "80px",
                 padding: "12px 14px",
                 borderRadius: "10px",
                 border: `2px solid ${COLORS.paperAlt}`,
