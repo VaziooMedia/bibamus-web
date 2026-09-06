@@ -87,7 +87,7 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseK
             marginBottom: "12px",
           }}
         >
-          <NavIcon name="chevron-right" size={12} color={COLORS.amber} />
+          <NavIcon name="map-pin" size={14} color={COLORS.amber} />
           Voir les lieux près de vous
         </button>
       );
@@ -190,7 +190,7 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseK
         "Recherche..."
       ) : (
         <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          <NavIcon name="plus" size={14} color={COLORS.amber} />
+          <NavIcon name="map-pin" size={14} color={COLORS.amber} />
           Suggérer des lieux près de moi
         </span>
       )}

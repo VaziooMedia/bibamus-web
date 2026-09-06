@@ -373,6 +373,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
                 fontSize: "15px",
                 outline: "none",
                 fontFamily: "'Urbanist', sans-serif",
+                textAlign: "center",
               }}
             />
             <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>€ par jeton acheté</span>
