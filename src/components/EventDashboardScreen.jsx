@@ -12,7 +12,7 @@ import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
-import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, sendWaterAlertPush, claimWaterAlertRoundReminder } from "../data/sharedDirectories.js";
+import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub } from "../data/sharedDirectories.js";
 
 export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
@@ -63,24 +63,18 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const [waterAlertModalOpen, setWaterAlertModalOpen] = useState(false);
   const waterAlertClaimedForCount = React.useRef(null);
 
-  // Water Alert — mode "tournées" : compare le nombre de tournées écoulées depuis le dernier
-  // rappel au seuil configuré. Se redéclenche à chaque nouveau seuil franchi. La fenêtre à
-  // l'écran ET la notification dépendent toutes les deux du même verdict serveur (la
-  // vérification atomique) — jamais du calcul local seul, qui peut être basé sur un état pas
-  // encore à jour (ex. en rouvrant le salon avant que la synchronisation ait rattrapé le retard).
+  // Water Alert — mode "tournées" : la notification réelle est désormais entièrement gérée par
+  // un déclencheur côté base de données (fiable, une seule fois par vraie tournée ajoutée, peu
+  // importe combien d'appareils regardent). Ici, on se contente d'afficher une fenêtre locale
+  // à titre de rappel visuel pour qui a l'écran ouvert au bon moment — un affichage en plus ou
+  // en moins de cette fenêtre est sans conséquence, contrairement à la notification elle-même.
   useEffect(() => {
     const wa = event.waterAlert;
     if (!wa || !wa.enabled || wa.mode !== "rounds") return;
     const since = event.rounds.length - (wa.lastReminderRoundCount || 0);
     if (since >= (wa.everyRounds || 3) && waterAlertClaimedForCount.current !== event.rounds.length) {
       waterAlertClaimedForCount.current = event.rounds.length;
-      claimWaterAlertRoundReminder(event.salonCode, event.rounds.length).then((claimed) => {
-        if (claimed) {
-          setWaterAlertModalOpen(true);
-          const codes = (event.participants || []).map((p) => p.code).filter(Boolean);
-          if (codes.length > 0) sendWaterAlertPush(codes);
-        }
-      });
+      setWaterAlertModalOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event.rounds.length, event.waterAlert?.enabled, event.waterAlert?.mode]);
