@@ -1483,7 +1483,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
       {event.currency === "euro" && !isOpenBar && (
         <div style={{ marginBottom: "0" }}>
           {isAddition ? (
-            <SplitBillCard event={event} updateEvent={updateEvent} total={eventTotal} />
+            <SplitBillCard event={event} updateEvent={updateEvent} />
           ) : (
             (tabTotal >= 0.01 || event.finalTotal != null) && <FinalTotalCard event={event} updateEvent={updateEvent} roundsSum={tabTotal} />
           )}

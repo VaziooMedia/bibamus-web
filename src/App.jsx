@@ -1624,7 +1624,7 @@ export default function App() {
                 event={events.find((e) => e.id === activeEventId)}
                 venue={venues.find((v) => v.id === events.find((e) => e.id === activeEventId)?.venueId) || null}
                 drinksDirectory={drinksDirectory}
-                eventTotal={(currentEvent?.rounds || []).reduce((sum, r) => sum + (r.total || 0), 0)}
+                eventTotal={(currentEvent?.rounds || []).reduce((sum, r) => sum + (r.total || 0), 0) + (currentEvent?.tip || 0) + (currentEvent?.tipsCollected || 0)}
                 onNewRound={startNewRound}
                 onManageMenu={() => setScreen("menuSetup")}
                 onBack={() => setScreen("home")}

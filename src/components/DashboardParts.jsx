@@ -598,13 +598,16 @@ export function FinalTotalCard({ event, updateEvent, roundsSum }) {
   );
 }
 
-export function SplitBillCard({ event, updateEvent, total }) {
+export function SplitBillCard({ event, updateEvent }) {
   const [newName, setNewName] = useState("");
   const [tipValue, setTipValue] = useState(event.tip ? String(event.tip) : "");
   const [editingAmountName, setEditingAmountName] = useState(null);
   const [editingAmountValue, setEditingAmountValue] = useState("");
   const [splitMethod, setSplitMethod] = useState(null); // null | "equal" | "proportional"
 
+  // Seules les tournées pas encore validées comptent ici — une fois "Valider l'addition"
+  // cliqué, elles passent en vert et ne doivent plus alourdir ce qui reste à répartir.
+  const total = event.rounds.filter((r) => !r.additionValidated && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
   const totalWithTip = total + (event.tip || 0);
 
   // Now {name, amount}[] instead of plain names — each share is independently editable, e.g.
@@ -922,7 +925,17 @@ export function SplitBillCard({ event, updateEvent, total }) {
 
           {event.rounds.some((r) => !r.additionValidated) && (
             <button
-              onClick={() => updateEvent(event.id, (e) => ({ ...e, rounds: e.rounds.map((r) => ({ ...r, additionValidated: true })) }))}
+              onClick={() => {
+                updateEvent(event.id, (e) => ({
+                  ...e,
+                  rounds: e.rounds.map((r) => ({ ...r, additionValidated: true })),
+                  tipsCollected: (e.tipsCollected || 0) + (e.tip || 0),
+                  tip: 0,
+                  splitParticipants: [],
+                }));
+                setTipValue("");
+                setSplitMethod(null);
+              }}
               style={{ width: "100%", marginTop: "14px", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "11px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}
             >
               Valider l'addition
