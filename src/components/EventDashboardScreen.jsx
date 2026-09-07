@@ -354,6 +354,12 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           {event.createdAt && `Start : ${formatTime(event.createdAt)}`}
         </span>
       </div>
+      {venue && (
+        <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginBottom: "4px" }}>
+          <NavIcon name="map-pin" size={11} color={COLORS.amber} />
+          {venue.name}
+        </div>
+      )}
       <div style={{ marginTop: "8px", marginBottom: "18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
         <button
           onClick={onOpenSettings}
