@@ -1374,7 +1374,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                 <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
                   <span style={{ fontSize: "36px", fontWeight: 800, color: "#ef007c" }}>
                     {formatEuroTrim(purchasedTicketsCount * event.jetonUnitValue).replace(" €", "")}
-                    <span style={{ fontSize: "13px" }}> €</span>
+                    <span style={{ fontSize: "20px", color: COLORS.ink }}> €</span>
                   </span>
                   <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>dépensés</span>
                 </div>
