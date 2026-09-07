@@ -1238,6 +1238,50 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
 
       {isCagnotte && <PotCard event={event} updateEvent={updateEvent} myName={myName} />}
 
+      {isCagnotte && event.rounds.length > 0 && (
+        <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+            <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>
+              Total général pour cette session <span style={{ fontSize: "12px", opacity: 0.7 }}>≈</span>
+            </div>
+          </div>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
+            <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + (event.tip || 0)} currency={event.currency} centered jetonIcon="pink" />
+          </div>
+          <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+              <span>Payé par la cagnotte</span>
+              <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                <MoneyAmount value={cagnottePaidByPot} currency={event.currency} jetonIcon="pink" />
+              </strong>
+            </div>
+            {cagnotteDirect > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                <span>Payé directement</span>
+                <strong style={{ color: "#00C8FF", fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                  <MoneyAmount value={cagnotteDirect} currency={event.currency} jetonIcon="pink" />
+                </strong>
+              </div>
+            )}
+            {event.tip > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                <span>+ Pourboire</span>
+                <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                  <MoneyAmount value={event.tip} currency={event.currency} jetonIcon="pink" />
+                </strong>
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+              <span>Total</span>
+              <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + (event.tip || 0)} currency={event.currency} jetonIcon="pink" />
+              </strong>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {!isOpenBar && !isCagnotte && (
         <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
@@ -1318,38 +1362,6 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                         <span>Total</span>
                         <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
                           <MoneyAmount value={sessionRoundsTotal} currency={event.currency} jetonIcon="pink" />
-                        </strong>
-                      </div>
-                    </>
-                  )}
-                  {isCagnotte && (
-                    <>
-                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                        <span>Payé par la cagnotte</span>
-                        <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                          <MoneyAmount value={cagnottePaidByPot} currency={event.currency} jetonIcon="pink" />
-                        </strong>
-                      </div>
-                      {cagnotteDirect > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                          <span>Payé directement</span>
-                          <strong style={{ color: "#00C8FF", fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                            <MoneyAmount value={cagnotteDirect} currency={event.currency} jetonIcon="pink" />
-                          </strong>
-                        </div>
-                      )}
-                      {event.tip > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                          <span>+ Pourboire</span>
-                          <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                            <MoneyAmount value={event.tip} currency={event.currency} jetonIcon="pink" />
-                          </strong>
-                        </div>
-                      )}
-                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                        <span>Total</span>
-                        <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                          <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + (event.tip || 0)} currency={event.currency} jetonIcon="pink" />
                         </strong>
                       </div>
                     </>
