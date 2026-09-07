@@ -932,14 +932,32 @@ export function WaterAlertModal({ onClose }) {
       <div style={{ background: COLORS.surface, borderRadius: "20px", padding: "28px 24px", width: "100%", maxWidth: "340px", textAlign: "center" }}>
         <WaterAlertIcon size={56} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", margin: "14px 0 8px 0" }}>
-          <span style={{ color: COLORS.ink }}>Water</span> <span style={{ color: COLORS.amber }}>Alert</span>
+          <span style={{ color: COLORS.ink }}>Water</span><span style={{ color: COLORS.amber }}>Alert</span>
         </h2>
         <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
-          Pense à boire un verre d'eau entre deux tournées — ça ne remplace rien, ça s'ajoute juste.
+          Pensez à boire un verre d'eau entre deux verres d'alcool.
         </p>
-        <PrimaryButton onClick={onClose} style={{ width: "100%" }}>
-          J'ai compris
-        </PrimaryButton>
+        <button
+          onClick={onClose}
+          style={{
+            width: "56px",
+            height: "56px",
+            borderRadius: "50%",
+            background: COLORS.amber,
+            border: "none",
+            color: COLORS.paper,
+            fontFamily: "'Urbanist', sans-serif",
+            fontWeight: 800,
+            fontSize: "24px",
+            cursor: "pointer",
+            margin: "0 auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          V
+        </button>
       </div>
     </div>
   );
