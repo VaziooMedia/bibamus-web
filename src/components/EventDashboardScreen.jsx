@@ -248,6 +248,10 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const myTips = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0);
   const myPaid = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + r.total, 0);
   const myRoundsTotal = myPending + myPaid;
+  const sessionPending = event.rounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + r.total, 0);
+  const sessionTips = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0);
+  const sessionPaid = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + r.total, 0);
+  const sessionRoundsTotal = sessionPending + sessionPaid;
 
   const addPersonal = (drinkId) => {
     updateEvent(event.id, (e) => ({
@@ -1281,6 +1285,36 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                   jetonIcon="pink"
                 />
               </div>
+              {!isOpenBar && !isCagnotte && !isAddition && event.finalTotal == null && event.rounds.length > 0 && (
+                <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                    <span>Sur ma note</span>
+                    <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                      <MoneyAmount value={sessionPending} currency={event.currency} jetonIcon="pink" />
+                    </strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                    <span>Déjà payé</span>
+                    <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                      <MoneyAmount value={sessionPaid} currency={event.currency} jetonIcon="pink" />
+                    </strong>
+                  </div>
+                  {sessionTips > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                      <span>+ Pourboire</span>
+                      <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                        <MoneyAmount value={sessionTips} currency={event.currency} jetonIcon="pink" />
+                      </strong>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                    <span>Total</span>
+                    <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                      <MoneyAmount value={sessionRoundsTotal} currency={event.currency} jetonIcon="pink" />
+                    </strong>
+                  </div>
+                </div>
+              )}
               {event.finalTotal != null && (
                 <div style={{ fontSize: "12px", opacity: 0.75, marginTop: "2px" }}>
                   Tournées sur la note :{" "}
