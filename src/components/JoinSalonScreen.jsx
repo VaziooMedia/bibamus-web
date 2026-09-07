@@ -78,6 +78,7 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
             color: COLORS.ink,
           }}
         />
+        <span style={{ width: "1px", height: "24px", background: COLORS.paperAlt, flexShrink: 0 }} />
         <button
           onClick={() => setScanning(true)}
           title="Scanner le QR code"
