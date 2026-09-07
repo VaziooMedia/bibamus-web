@@ -67,8 +67,8 @@ export function PotCard({ event, updateEvent, myName }) {
         )}
       </div>
       {balance < potTotal * 0.15 && potTotal > 0 && (
-        <div style={{ fontSize: "12px", color: "#e08585", fontWeight: 700, marginTop: "8px" }}>
-          {balance <= 0 ? "⚠️ La cagnotte est à sec — pensez à remettre au pot !" : "⚠️ Il ne reste plus grand-chose dans la cagnotte."}
+        <div style={{ fontSize: "12px", color: balance <= 0 ? "#e08585" : "#ef007c", fontWeight: 700, marginTop: "8px" }}>
+          {balance <= 0 ? "⚠️ La cagnotte est à sec — pensez à remettre au pot !" : "Cagnotte presque vide"}
         </div>
       )}
 
