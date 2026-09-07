@@ -324,7 +324,13 @@ export function EventSettingsScreen({ event, onSave, onBack }) {
       )}
 
       <PrimaryButton
-        onClick={() => onSave(eventMode, eventMode === "tournees" || eventMode === "cagnotte" ? currency : "euro", event.jetonUnitValue || 0)}
+        onClick={() =>
+          onSave(
+            eventMode,
+            eventMode === "tournees" || eventMode === "cagnotte" ? currency : eventMode === "addition" ? "euro" : event.currency,
+            event.jetonUnitValue || 0
+          )
+        }
         style={{ width: "100%" }}
       >
         Valider
