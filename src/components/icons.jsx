@@ -4,6 +4,8 @@
 import React from "react";
 import { COLORS } from "../constants.js";
 import tokenPinkUrl from "../assets/brand/Bibamus App - Icon UI - Token Pink.svg";
+import tokenRedUrl from "../assets/brand/Bibamus App - Icon UI - Token Red.svg";
+import tokenGreenUrl from "../assets/brand/Bibamus App - Icon UI - Token Green.svg";
 
 // Chaque drapeau réellement utilisé par l'app est importé individuellement — plus verbeux
 // qu'un glob global, mais évite d'embarquer les 271 drapeaux disponibles dans le dépôt alors
@@ -162,6 +164,14 @@ export function CountryFlagImg({ country, size = 16 }) {
 
 export function TokenPinkIcon({ size = 22 }) {
   return <img src={tokenPinkUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
+}
+
+export function TokenRedIcon({ size = 22 }) {
+  return <img src={tokenRedUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
+}
+
+export function TokenGreenIcon({ size = 22 }) {
+  return <img src={tokenGreenUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
 }
 
 export function FlagIcon({ flag, size = 15 }) {
