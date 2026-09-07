@@ -1363,18 +1363,22 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
             <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons acquis</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>
-            {ticketsPurchased}
-            <TokenCyanIcon size={30} />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>
+              {ticketsPurchased}
+              <TokenCyanIcon size={30} />
+            </div>
+            {event.jetonUnitValue > 0 && purchasedTicketsCount > 0 && (
+              <>
+                <span style={{ fontSize: "18px", color: COLORS.paperAlt }}>|</span>
+                <div style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>
+                  <span style={{ color: COLORS.amber }}>{formatEuroTrim(purchasedTicketsCount * event.jetonUnitValue).replace(" €", "")}</span>
+                  <span style={{ fontSize: "11px" }}> €</span> dépensés
+                </div>
+              </>
+            )}
           </div>
-          {event.jetonUnitValue > 0 ? (
-            purchasedTicketsCount > 0 && (
-              <div style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>
-                <span style={{ color: COLORS.amber }}>{formatEuroTrim(purchasedTicketsCount * event.jetonUnitValue).replace(" €", "")}</span>
-                <span style={{ fontSize: "11px" }}> €</span> dépensés
-              </div>
-            )
-          ) : (
+          {event.jetonUnitValue <= 0 && (
             <button
               onClick={onOpenSettings}
               style={{ background: "none", border: "none", color: COLORS.bobBlue, fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0 }}
