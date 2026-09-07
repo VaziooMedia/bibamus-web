@@ -7,6 +7,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, WaterAlertIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton, SectionTitle } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
+import settingsIconUrl from "../assets/brand/settings-icon.png";
 import { PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { formatDate } from "../utils.js";
@@ -247,15 +248,12 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], public
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 20px 0" }}>
-        <NavIcon name="settings" size={22} color={COLORS.amber} />
+        <img src={settingsIconUrl} alt="" style={{ width: "22px", height: "22px" }} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0, lineHeight: 1.2 }}>Réglages de la session</h1>
       </div>
 
       <SectionTitle>Changer de lieu</SectionTitle>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>
-        Recharge automatiquement la carte du nouveau lieu — utile si vous changez de bar en cours de soirée.
-      </p>
-      <div style={{ marginBottom: "16px" }}>
+      <div style={{ marginBottom: "16px", marginTop: "8px" }}>
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
           <button
@@ -366,7 +364,9 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], public
           <div style={{ height: "1px", background: COLORS.paperAlt, margin: "2px 0 16px" }} />
           <SectionTitle>Type de paiement</SectionTitle>
           <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>
-            Ne change que les prochaines tournées — l'historique déjà enregistré garde sa monnaie d'origine.
+            Ne change que les prochaines tournées
+            <br />
+            L'historique déjà enregistré garde sa monnaie d'origine.
           </p>
           <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
             <button
