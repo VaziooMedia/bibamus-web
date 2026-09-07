@@ -647,7 +647,7 @@ export default function App() {
       orders: draftOrders,
       total: finalAmount,
       settledDirectly,
-      paidByPot: currentEvent?.mode === "cagnotte",
+      paidByPot: currentEvent?.mode === "cagnotte" && settledDirectly,
       createdInMode: currentEvent?.mode,
       buyerName,
       tip,

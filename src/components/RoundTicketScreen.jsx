@@ -345,7 +345,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                 <>
                   <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", marginTop: "12px", cursor: "pointer" }}>
                     <input type="checkbox" checked={!settledDirectly} onChange={(e) => setSettledDirectly(!e.target.checked)} style={{ width: "16px", height: "16px", accentColor: COLORS.amber }} />
-                    Je mets cette tournée sur ma note
+                    {isCagnotte ? "À mettre sur la note" : "Je mets cette tournée sur ma note"}
                   </label>
                   {!settledDirectly && (
                     <p style={{ fontSize: "11px", opacity: 0.55, marginTop: "4px" }}>
@@ -511,7 +511,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
         onClick={() =>
           onFinish(
             finalAmount,
-            isEuro ? settledDirectly : true,
+            isEuro || isCagnotte ? settledDirectly : true,
             isCagnotte || isAddition || offeredByType ? null : buyerName,
             isEuro && settledDirectly && !offeredByType ? tip : 0,
             offeredByType ? { type: offeredByType, label: offeredByLabel.trim() } : null
