@@ -727,7 +727,7 @@ export default function App() {
     };
 
     if (isSalon) {
-      const code = randomCode(4);
+      const code = randomCode(6);
       newEvent.salonCode = code;
       newEvent.participants = [{ code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }];
       if (clubId) {

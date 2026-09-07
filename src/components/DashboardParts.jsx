@@ -337,11 +337,11 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <input
               value={codeInput}
-              onChange={(e) => setCodeInput(e.target.value.toUpperCase().replace(/[^23456789ABCDEFGHJKMNPQRSTUVWXYZ]/g, "").slice(0, 4))}
+              onChange={(e) => setCodeInput(e.target.value.toUpperCase().replace(/[^23456789ABCDEFGHJKMNPQRSTUVWXYZ]/g, "").slice(0, 6))}
               onKeyDown={(e) => e.key === "Enter" && joinSalon()}
-              placeholder="Code du BibaRoom (4 caractères)"
+              placeholder="Code du BibaRoom (6 caractères)"
               autoFocus
-              maxLength={4}
+              maxLength={6}
               style={{ padding: "10px 12px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", fontFamily: "'Urbanist', sans-serif", letterSpacing: "2px" }}
             />
             <div style={{ display: "flex", gap: "8px" }}>

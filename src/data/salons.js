@@ -55,11 +55,11 @@ const randomCode = (length) => {
 // prototype Claude — mais ici, la vérification interroge une vraie base de données.
 export async function generateRoomCode() {
   for (let attempt = 0; attempt < 8; attempt++) {
-    const code = randomCode(4);
+    const code = randomCode(6);
     const existing = await loadSalon(code);
     if (!existing) return code;
   }
-  return randomCode(4);
+  return randomCode(6);
 }
 
 // Écoute les changements d'un salon en direct. `onChange` est appelé avec les nouvelles

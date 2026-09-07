@@ -1,5 +1,5 @@
 // ============================================================
-// Scanner de QR code — dédié aux codes de BibaRoom (4 caractères
+// Scanner de QR code — dédié aux codes de BibaRoom (6 caractères
 // alphanumériques). Même approche que BarcodeScannerModal (API
 // native BarcodeDetector en priorité, repli sur ZXing), mais
 // bien plus simple : pas de recherche en base, juste lire le

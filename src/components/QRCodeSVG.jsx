@@ -2,7 +2,7 @@
 // Générateur de QR code — un encodeur QR minimal écrit à la main
 // (versions 1-4, correction d'erreur niveau M), copié tel quel
 // depuis le prototype Claude. Fonctionne pour n'importe quel
-// code de salon (4-5 caractères alphanumériques), sans dépendance
+// code de salon (jusqu'à 6 caractères alphanumériques), sans dépendance
 // externe.
 // ============================================================
 import React from "react";
