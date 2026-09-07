@@ -43,7 +43,9 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
         </h1>
       </div>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "22px" }}>
-        Entre le code à 4 caractères partagé par tes amis. Tu rejoindras en tant que <strong>{myName}</strong>.
+        Entrez le code à 4 caractères ou scannez le QR code du BibaRoom.
+        <br />
+        Vous rejoindrez la session en tant que <strong style={{ color: COLORS.amber }}>{myName}</strong>.
       </p>
       <div
         style={{
@@ -62,7 +64,7 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^23456789ABCDEFGHJKMNPQRSTUVWXYZ]/g, "").slice(0, 4))}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          placeholder="Ex. 4K7T"
+          placeholder="0000"
           maxLength={4}
           style={{
             flex: 1,
