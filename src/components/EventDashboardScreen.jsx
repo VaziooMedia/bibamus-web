@@ -1249,20 +1249,20 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             </div>
           </div>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
-            <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips} currency={event.currency} centered jetonIcon="pink" />
+            <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips} currency={event.currency} centered jetonIconSize={34} jetonIcon="cyan" />
           </div>
           <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
               <span>Payé par la cagnotte</span>
               <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                <MoneyAmount value={cagnottePaidByPot} currency={event.currency} jetonIcon="pink" />
+                <MoneyAmount value={cagnottePaidByPot} currency={event.currency} jetonIcon="cyan" />
               </strong>
             </div>
             {cagnotteDirect > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                 <span>Payé directement</span>
                 <strong style={{ color: "#00C8FF", fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                  <MoneyAmount value={cagnotteDirect} currency={event.currency} jetonIcon="pink" />
+                  <MoneyAmount value={cagnotteDirect} currency={event.currency} jetonIcon="cyan" />
                 </strong>
               </div>
             )}
@@ -1270,7 +1270,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
               <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                 <span>Sur la note</span>
                 <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                  <MoneyAmount value={cagnottePending} currency={event.currency} jetonIcon="pink" />
+                  <MoneyAmount value={cagnottePending} currency={event.currency} jetonIcon="cyan" />
                 </strong>
               </div>
             )}
@@ -1278,14 +1278,14 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
               <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                 <span>+ Pourboire</span>
                 <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                  <MoneyAmount value={cagnotteTips} currency={event.currency} jetonIcon="pink" />
+                  <MoneyAmount value={cagnotteTips} currency={event.currency} jetonIcon="cyan" />
                 </strong>
               </div>
             )}
             <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
               <span>Total</span>
               <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips} currency={event.currency} jetonIcon="pink" />
+                <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips} currency={event.currency} jetonIcon="cyan" />
               </strong>
             </div>
           </div>
@@ -1341,7 +1341,8 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                   value={event.finalTotal != null ? event.finalTotal + (event.tip || 0) + event.rounds.reduce((s, r) => s + (r.tip || 0), 0) : eventTotal}
                   currency={event.currency}
                   centered
-                  jetonIcon="pink"
+                  jetonIconSize={34}
+                  jetonIcon="cyan"
                 />
               </div>
               {!isOpenBar && event.finalTotal == null && event.rounds.length > 0 && (
@@ -1351,27 +1352,27 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                       <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                         <span>Sur ma note</span>
                         <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                          <MoneyAmount value={sessionPending} currency={event.currency} jetonIcon="pink" />
+                          <MoneyAmount value={sessionPending} currency={event.currency} jetonIcon="cyan" />
                         </strong>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                         <span>Déjà payé</span>
                         <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                          <MoneyAmount value={sessionPaid} currency={event.currency} jetonIcon="pink" />
+                          <MoneyAmount value={sessionPaid} currency={event.currency} jetonIcon="cyan" />
                         </strong>
                       </div>
                       {sessionTips > 0 && (
                         <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                           <span>+ Pourboire</span>
                           <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                            <MoneyAmount value={sessionTips} currency={event.currency} jetonIcon="pink" />
+                            <MoneyAmount value={sessionTips} currency={event.currency} jetonIcon="cyan" />
                           </strong>
                         </div>
                       )}
                       <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                         <span>Total</span>
                         <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                          <MoneyAmount value={sessionRoundsTotal} currency={event.currency} jetonIcon="pink" />
+                          <MoneyAmount value={sessionRoundsTotal} currency={event.currency} jetonIcon="cyan" />
                         </strong>
                       </div>
                     </>
@@ -1381,27 +1382,27 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                       <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                         <span>En attente du partage</span>
                         <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                          <MoneyAmount value={additionPending} currency={event.currency} jetonIcon="pink" />
+                          <MoneyAmount value={additionPending} currency={event.currency} jetonIcon="cyan" />
                         </strong>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                         <span>Déjà payé</span>
                         <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                          <MoneyAmount value={additionPaid} currency={event.currency} jetonIcon="pink" />
+                          <MoneyAmount value={additionPaid} currency={event.currency} jetonIcon="cyan" />
                         </strong>
                       </div>
                       {additionTips > 0 && (
                         <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                           <span>+ Pourboire</span>
                           <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                            <MoneyAmount value={additionTips} currency={event.currency} jetonIcon="pink" />
+                            <MoneyAmount value={additionTips} currency={event.currency} jetonIcon="cyan" />
                           </strong>
                         </div>
                       )}
                       <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                         <span>Total</span>
                         <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                          <MoneyAmount value={additionPending + additionPaid + additionTips} currency={event.currency} jetonIcon="pink" />
+                          <MoneyAmount value={additionPending + additionPaid + additionTips} currency={event.currency} jetonIcon="cyan" />
                         </strong>
                       </div>
                     </>
@@ -1412,7 +1413,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                 <div style={{ fontSize: "12px", opacity: 0.75, marginTop: "2px" }}>
                   Tournées sur la note :{" "}
                   <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.jetonFluo }}>
-                    <MoneyAmount value={tabTotal} currency={event.currency} jetonIcon="pink" />
+                    <MoneyAmount value={tabTotal} currency={event.currency} jetonIcon="cyan" />
                   </span>
                   {Math.abs(event.finalTotal - tabTotal) < 0.01 ? (
                     <span style={{ color: COLORS.amber, fontWeight: 700 }}> · OK ✓</span>
@@ -1420,7 +1421,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                     <>
                       {" · écart de "}
                       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.redFluo }}>
-                        <MoneyAmount value={Math.abs(event.finalTotal - tabTotal)} currency={event.currency} jetonIcon="pink" />
+                        <MoneyAmount value={Math.abs(event.finalTotal - tabTotal)} currency={event.currency} jetonIcon="cyan" />
                       </span>
                     </>
                   )}
@@ -1551,10 +1552,10 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           </div>
           {event.jetonUnitValue <= 0 && (
             <button
-              onClick={onOpenSettings}
-              style={{ background: "none", border: "none", color: COLORS.bobBlue, fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0 }}
+              onClick={onManageMenu}
+              style={{ background: "none", border: "none", color: "#ef007c", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0 }}
             >
-              ⚠️ Valeur du jeton non définie — la renseigner
+              Valeur du jeton non définie — la renseigner
             </button>
           )}
 
