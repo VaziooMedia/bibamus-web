@@ -136,6 +136,11 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const isOpenBar = event.mode === "openbar";
   const isCagnotte = event.mode === "cagnotte";
   const isAddition = event.mode === "addition";
+  // Une tournée compte comme payée en mode addition si elle a été explicitement validée via ce
+  // mode, OU si elle avait déjà été réglée directement AVANT le passage en addition (auquel cas
+  // son "settledDirectly" reflète un vrai choix fait à l'époque — pas juste la valeur par défaut
+  // que prend ce champ pour les tournées créées alors que l'addition partagée était déjà active).
+  const isRoundPaidInAddition = (r) => r.additionValidated || (r.createdInMode && r.createdInMode !== "addition" && r.settledDirectly === true);
 
   // Same as formatMoney for euros, but drops the decimals entirely when they're .00 — used just
   // in this card for the smaller, secondary money figures.
@@ -1005,7 +1010,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                     </strong>
                   </span>
                   {!isOpenBar && (
-                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: r.offeredBy ? COLORS.amber : isAddition ? (r.additionValidated ? COLORS.amber : COLORS.redFluo) : r.settledDirectly === false ? COLORS.redFluo : COLORS.amber }}>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: r.offeredBy ? COLORS.amber : isAddition ? (isRoundPaidInAddition(r) ? COLORS.amber : COLORS.redFluo) : r.settledDirectly === false ? COLORS.redFluo : COLORS.amber }}>
                       <MoneyAmount value={r.total} currency={event.currency} jetonIcon="pink" />
                     </span>
                   )}
@@ -1056,8 +1061,8 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
                       <div style={{ fontSize: "11px", fontWeight: 600, flex: 1, minWidth: 0 }}>
                         {event.currency === "euro" && !isOpenBar && !r.offeredBy ? (
-                          <span style={{ color: isAddition ? (r.additionValidated ? COLORS.amber : COLORS.redFluo) : r.settledDirectly === false ? COLORS.redFluo : COLORS.amber }}>
-                            {isAddition ? (r.additionValidated ? "Payée" : "En attente du partage") : r.settledDirectly === false ? "Sur la note" : "Réglée directement"}
+                          <span style={{ color: isAddition ? (isRoundPaidInAddition(r) ? COLORS.amber : COLORS.redFluo) : r.settledDirectly === false ? COLORS.redFluo : COLORS.amber }}>
+                            {isAddition ? (isRoundPaidInAddition(r) ? "Payée" : "En attente du partage") : r.settledDirectly === false ? "Sur la note" : "Réglée directement"}
                           </span>
                         ) : r.offeredBy ? (
                           <span style={{ color: COLORS.inkSoft, fontWeight: 400 }}>Montant informatif — ne compte dans aucun total d'argent dépensé.</span>

@@ -606,8 +606,11 @@ export function SplitBillCard({ event, updateEvent }) {
   const [splitMethod, setSplitMethod] = useState(null); // null | "equal" | "proportional"
 
   // Seules les tournées pas encore validées comptent ici — une fois "Valider l'addition"
-  // cliqué, elles passent en vert et ne doivent plus alourdir ce qui reste à répartir.
-  const total = event.rounds.filter((r) => !r.additionValidated && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
+  // cliqué, elles passent en vert et ne doivent plus alourdir ce qui reste à répartir. Idem
+  // pour une tournée déjà réglée directement AVANT le passage en addition partagée.
+  const total = event.rounds
+    .filter((r) => !r.offeredBy && !r.additionValidated && !(r.createdInMode && r.createdInMode !== "addition" && r.settledDirectly === true))
+    .reduce((sum, r) => sum + r.total, 0);
   const totalWithTip = total + (event.tip || 0);
 
   // Now {name, amount}[] instead of plain names — each share is independently editable, e.g.
@@ -752,7 +755,7 @@ export function SplitBillCard({ event, updateEvent }) {
           <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Addition partagée</span>
         </div>
         <strong style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber }}>
-          <MoneyAmount value={total} currency="euro" />
+          <MoneyAmount value={totalWithTip} currency="euro" />
         </strong>
       </div>
 
