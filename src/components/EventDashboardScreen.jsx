@@ -6,7 +6,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
-import { NavIcon, WaterAlertIcon, TokenCyanIcon } from "./icons.jsx";
+import { NavIcon, WaterAlertIcon, TokenCyanIcon, TokenPinkIcon } from "./icons.jsx";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
@@ -1212,7 +1212,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                 </div>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ display: "flex", justifyContent: "center" }}>
-                    <NavIcon name="jeton-token" size={28} color="#ef1700" />
+                    <TokenPinkIcon size={28} />
                   </div>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.chalkWhite, lineHeight: 1.3 }}>{myJetonSpend}</div>
                   <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
