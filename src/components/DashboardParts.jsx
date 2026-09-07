@@ -945,10 +945,6 @@ export function WaterAlertModal({ onClose }) {
             borderRadius: "50%",
             background: COLORS.amber,
             border: "none",
-            color: COLORS.paper,
-            fontFamily: "'Urbanist', sans-serif",
-            fontWeight: 800,
-            fontSize: "24px",
             cursor: "pointer",
             margin: "0 auto",
             display: "flex",
@@ -956,7 +952,7 @@ export function WaterAlertModal({ onClose }) {
             justifyContent: "center",
           }}
         >
-          V
+          <NavIcon name="check" size={24} color={COLORS.paper} />
         </button>
       </div>
     </div>
