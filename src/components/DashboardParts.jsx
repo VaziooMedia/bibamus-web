@@ -48,7 +48,10 @@ export function PotCard({ event, updateEvent, myName }) {
 
   return (
     <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
-      <div style={{ fontSize: "13px", fontWeight: 600, opacity: 0.7, textAlign: "center" }}>Solde de la cagnotte</div>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+        <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+        <span style={{ fontSize: "13px", fontWeight: 600, opacity: 0.7 }}>Solde de la cagnotte</span>
+      </div>
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: balance < 0 ? "#e08585" : COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
         <MoneyAmount value={balance} currency={unit} jetonIcon="pink" />
       </div>
