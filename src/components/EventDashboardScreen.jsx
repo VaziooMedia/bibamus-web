@@ -252,6 +252,11 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const sessionTips = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0);
   const sessionPaid = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + r.total, 0);
   const sessionRoundsTotal = sessionPending + sessionPaid;
+  const cagnottePaidByPot = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
+  const cagnotteDirect = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
+  const additionPending = event.rounds.filter((r) => !r.offeredBy && !isRoundPaidInAddition(r)).reduce((sum, r) => sum + r.total, 0);
+  const additionPaid = event.rounds.filter((r) => !r.offeredBy && isRoundPaidInAddition(r)).reduce((sum, r) => sum + r.total, 0);
+  const additionTips = (event.tip || 0) + (event.tipsCollected || 0);
 
   const addPersonal = (drinkId) => {
     updateEvent(event.id, (e) => ({
@@ -1285,34 +1290,100 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                   jetonIcon="pink"
                 />
               </div>
-              {!isOpenBar && !isCagnotte && !isAddition && event.finalTotal == null && event.rounds.length > 0 && (
+              {!isOpenBar && event.finalTotal == null && event.rounds.length > 0 && (
                 <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                    <span>Sur ma note</span>
-                    <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                      <MoneyAmount value={sessionPending} currency={event.currency} jetonIcon="pink" />
-                    </strong>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                    <span>Déjà payé</span>
-                    <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                      <MoneyAmount value={sessionPaid} currency={event.currency} jetonIcon="pink" />
-                    </strong>
-                  </div>
-                  {sessionTips > 0 && (
-                    <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                      <span>+ Pourboire</span>
-                      <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                        <MoneyAmount value={sessionTips} currency={event.currency} jetonIcon="pink" />
-                      </strong>
-                    </div>
+                  {!isCagnotte && !isAddition && (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                        <span>Sur ma note</span>
+                        <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                          <MoneyAmount value={sessionPending} currency={event.currency} jetonIcon="pink" />
+                        </strong>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                        <span>Déjà payé</span>
+                        <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                          <MoneyAmount value={sessionPaid} currency={event.currency} jetonIcon="pink" />
+                        </strong>
+                      </div>
+                      {sessionTips > 0 && (
+                        <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                          <span>+ Pourboire</span>
+                          <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                            <MoneyAmount value={sessionTips} currency={event.currency} jetonIcon="pink" />
+                          </strong>
+                        </div>
+                      )}
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                        <span>Total</span>
+                        <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                          <MoneyAmount value={sessionRoundsTotal} currency={event.currency} jetonIcon="pink" />
+                        </strong>
+                      </div>
+                    </>
                   )}
-                  <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                    <span>Total</span>
-                    <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                      <MoneyAmount value={sessionRoundsTotal} currency={event.currency} jetonIcon="pink" />
-                    </strong>
-                  </div>
+                  {isCagnotte && (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                        <span>Payé par la cagnotte</span>
+                        <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                          <MoneyAmount value={cagnottePaidByPot} currency={event.currency} jetonIcon="pink" />
+                        </strong>
+                      </div>
+                      {cagnotteDirect > 0 && (
+                        <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                          <span>Payé directement</span>
+                          <strong style={{ color: "#00C8FF", fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                            <MoneyAmount value={cagnotteDirect} currency={event.currency} jetonIcon="pink" />
+                          </strong>
+                        </div>
+                      )}
+                      {event.tip > 0 && (
+                        <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                          <span>+ Pourboire</span>
+                          <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                            <MoneyAmount value={event.tip} currency={event.currency} jetonIcon="pink" />
+                          </strong>
+                        </div>
+                      )}
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                        <span>Total</span>
+                        <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                          <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + (event.tip || 0)} currency={event.currency} jetonIcon="pink" />
+                        </strong>
+                      </div>
+                    </>
+                  )}
+                  {isAddition && (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                        <span>En attente du partage</span>
+                        <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                          <MoneyAmount value={additionPending} currency={event.currency} jetonIcon="pink" />
+                        </strong>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                        <span>Déjà payé</span>
+                        <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                          <MoneyAmount value={additionPaid} currency={event.currency} jetonIcon="pink" />
+                        </strong>
+                      </div>
+                      {additionTips > 0 && (
+                        <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                          <span>+ Pourboire</span>
+                          <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                            <MoneyAmount value={additionTips} currency={event.currency} jetonIcon="pink" />
+                          </strong>
+                        </div>
+                      )}
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                        <span>Total</span>
+                        <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                          <MoneyAmount value={additionPending + additionPaid + additionTips} currency={event.currency} jetonIcon="pink" />
+                        </strong>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
               {event.finalTotal != null && (
