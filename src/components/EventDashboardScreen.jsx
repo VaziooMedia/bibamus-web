@@ -364,16 +364,38 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
       <div style={{ marginTop: "8px", marginBottom: "18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
         <button
           onClick={onOpenSettings}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "7px", minWidth: 0 }}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "7px", minWidth: 0, flex: 1, overflow: "hidden" }}
         >
           <NavIcon name="switch" size={19} color={COLORS.amber} />
-          <span style={{ fontSize: "12.5px", fontWeight: 700 }}>
+          <span style={{ fontSize: "12.5px", fontWeight: 700, whiteSpace: "nowrap" }}>
             <span style={{ color: COLORS.ink }}>Mode </span>
             <span style={{ color: COLORS.amber }}>{EVENT_MODE_LABELS[event.mode] || event.mode}</span>
           </span>
           {EVENT_MODE_DESC[event.mode] && (
-            <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500 }}>({EVENT_MODE_DESC[event.mode]})</span>
+            <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              ({EVENT_MODE_DESC[event.mode]})
+            </span>
           )}
+        </button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        <button
+          onClick={onOpenSettings}
+          title="Réglages de la session"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "40px",
+            height: "32px",
+            background: "none",
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "8px",
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+        >
+          <img src={settingsIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
         </button>
 
         <div style={{ position: "relative" }}>
@@ -473,25 +495,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           </div>
         )}
         </div>
-
-        <button
-          onClick={onOpenSettings}
-          title="Réglages de la session"
-          style={{
-            flexShrink: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "40px",
-            height: "32px",
-            background: "none",
-            border: `2px solid ${COLORS.paperAlt}`,
-            borderRadius: "8px",
-            cursor: "pointer",
-          }}
-        >
-          <img src={settingsIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
-        </button>
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", marginBottom: "18px" }}>
