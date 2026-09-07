@@ -406,6 +406,13 @@ function prettifyCountry(raw) {
   return raw ? raw.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("-") : null;
 }
 
+export async function sendWaterAlertPush(bibroCodes) {
+  const { error } = await supabase.functions.invoke("send-push-notification", {
+    body: { bibro_codes: bibroCodes, title: "WaterAlert", body: "Pense à boire un verre d'eau !" },
+  });
+  if (error) console.error("sendWaterAlertPush:", error);
+}
+
 export async function upsertPushSubscription(fcmToken, platform = "web") {
   const { error } = await supabase.rpc("upsert_push_subscription", { p_fcm_token: fcmToken, p_platform: platform });
   if (error) {

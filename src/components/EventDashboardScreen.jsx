@@ -12,7 +12,7 @@ import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
-import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub } from "../data/sharedDirectories.js";
+import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, sendWaterAlertPush } from "../data/sharedDirectories.js";
 
 export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
@@ -71,6 +71,8 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
     if (since >= (wa.everyRounds || 3)) {
       setWaterAlertModalOpen(true);
       updateEvent(event.id, (e) => ({ ...e, waterAlert: { ...e.waterAlert, lastReminderRoundCount: event.rounds.length } }));
+      const codes = (event.participants || []).map((p) => p.code).filter(Boolean);
+      if (codes.length > 0) sendWaterAlertPush(codes);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event.rounds.length, event.waterAlert?.enabled, event.waterAlert?.mode]);
