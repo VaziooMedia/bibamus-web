@@ -311,7 +311,9 @@ export function WaterAlertSettingsScreen({ event, onSave, onBack }) {
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 6px 0" }}>
         <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <WaterAlertIcon size={26} />
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Water Alert</h1>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>
+          Water<span style={{ color: COLORS.amber }}>Alert</span>
+        </h1>
       </div>
 
       <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "18px" }}>
@@ -340,28 +342,34 @@ export function WaterAlertSettingsScreen({ event, onSave, onBack }) {
             {o.key === "time" && mode === "time" && (
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", paddingLeft: "4px" }}>
                 <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>Toutes les</span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min="1"
+                <select
                   value={everyMinutes}
-                  onChange={(e) => setEveryMinutes(e.target.value.replace(/[^0-9]/g, ""))}
-                  style={{ width: "70px", padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", textAlign: "center", outline: "none" }}
-                />
+                  onChange={(e) => setEveryMinutes(e.target.value)}
+                  style={{ padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" }}
+                >
+                  {[15, 30, 45, 60, 75, 90, 120, 150, 180].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
                 <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>minutes</span>
               </div>
             )}
             {o.key === "rounds" && mode === "rounds" && (
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", paddingLeft: "4px" }}>
                 <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>Toutes les</span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min="1"
+                <select
                   value={everyRounds}
-                  onChange={(e) => setEveryRounds(e.target.value.replace(/[^0-9]/g, ""))}
-                  style={{ width: "70px", padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", textAlign: "center", outline: "none" }}
-                />
+                  onChange={(e) => setEveryRounds(e.target.value)}
+                  style={{ padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" }}
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
                 <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>tournées</span>
               </div>
             )}
