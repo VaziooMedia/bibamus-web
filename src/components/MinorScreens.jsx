@@ -323,7 +323,10 @@ export function EventSettingsScreen({ event, onSave, onBack }) {
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>L'addition partagée se règle en €.</p>
       )}
 
-      <PrimaryButton onClick={() => onSave(eventMode, currency, event.jetonUnitValue || 0)} style={{ width: "100%" }}>
+      <PrimaryButton
+        onClick={() => onSave(eventMode, eventMode === "tournees" || eventMode === "cagnotte" ? currency : "euro", event.jetonUnitValue || 0)}
+        style={{ width: "100%" }}
+      >
         Valider
       </PrimaryButton>
       <BackFooterLink onClick={onBack} />
