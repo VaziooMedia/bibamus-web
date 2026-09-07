@@ -23,7 +23,7 @@ import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub } from "
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
+export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");
@@ -356,10 +356,13 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
         </span>
       </div>
       {venue && (
-        <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginBottom: "4px" }}>
+        <button
+          onClick={() => onOpenVenue(venue.id)}
+          style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginBottom: "4px", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+        >
           <NavIcon name="map-pin" size={11} color={COLORS.amber} />
           {venue.name}
-        </div>
+        </button>
       )}
       <div style={{ marginTop: "8px", marginBottom: "18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
         <button

@@ -1640,6 +1640,10 @@ export default function App() {
                   setScreen("home");
                 }}
                 onOpenSettings={() => setScreen("eventSettings")}
+                onOpenVenue={(id) => {
+                  setViewedVenueId(id);
+                  setScreen("venueDetail");
+                }}
                 onOpenWaterAlertSettings={() => setScreen("waterAlertSettings")}
                 onDeleteRound={(roundId) => deleteRound(activeEventId, roundId)}
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
