@@ -963,6 +963,16 @@ export function BibaBobModal({ friendName, storedPin, mode, onActivate, onDeacti
   const [code, setCode] = useState("");
   const [tolerance, setTolerance] = useState(null);
   const [error, setError] = useState("");
+  const codeInputRef = React.useRef(null);
+
+  // Ne force le clavier que si on est en désactivation (pas de choix à lire avant), ou une fois
+  // qu'une option de tolérance a été choisie en activation — sinon le clavier s'ouvre trop tôt et
+  // empêche de lire le texte au-dessus.
+  React.useEffect(() => {
+    if (mode !== "activate" || tolerance) {
+      codeInputRef.current?.focus();
+    }
+  }, [mode, tolerance]);
 
   const submit = () => {
     if (!code.trim()) {
@@ -1055,7 +1065,7 @@ export function BibaBobModal({ friendName, storedPin, mode, onActivate, onDeacti
           }}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="Ex. 1234"
-          autoFocus
+          ref={codeInputRef}
           style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${error ? COLORS.wine : COLORS.paperAlt}`, fontSize: "15px", outline: "none", marginBottom: "6px", fontFamily: "'Urbanist', sans-serif" }}
         />
         {error && <p style={{ fontSize: "12px", color: COLORS.wine, fontWeight: 600, margin: "0 0 10px 0" }}>{error}</p>}
