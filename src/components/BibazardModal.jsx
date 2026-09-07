@@ -7,6 +7,7 @@ import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { PrimaryButton } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkTypeLabel, isAlcoholicDrink } from "../utils.js";
+import { CountryFlagImg } from "./icons.jsx";
 
 export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
@@ -185,21 +186,24 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
                 gap: "4px",
               }}
             >
-              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: phase === "result" ? "19px" : "15px", color: phase === "result" ? COLORS.amber : COLORS.chalkWhite, lineHeight: 1.2 }}>
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: phase === "result" ? "19px" : "15px", color: COLORS.chalkWhite, lineHeight: 1.2 }}>
                 {displayName}
                 {phase === "result" && resultDrink && resultDrink.volumeCl && VOLUME_DISPLAY_TYPES.includes(resultDrink.type) && (
-                  <span style={{ color: COLORS.chalkWhite }}> {resultDrink.volumeCl}cl.</span>
+                  <span style={{ color: COLORS.amber }}> {resultDrink.volumeCl}cl.</span>
                 )}
               </span>
               {phase === "result" && resultDrink && (
-                <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, fontWeight: 600 }}>{drinkTypeLabel(categoryOf(resultDrink))}</span>
+                <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, fontWeight: 600, display: "flex", alignItems: "center", gap: "5px" }}>
+                  {categoryOf(resultDrink) === "Bières & Cidres" && resultDrink.abv != null && <span>{resultDrink.abv.toFixed(1)}%</span>}
+                  {resultDrink.nationality && <CountryFlagImg country={resultDrink.nationality} size={14} />}
+                </span>
               )}
             </div>
 
             {phase === "spinning" && (
               <button
                 onClick={stopSpin}
-                style={{ width: "100%", padding: "15px", borderRadius: "10px", border: "none", background: COLORS.wine, color: "#fff", fontWeight: 700, fontSize: "15px", cursor: "pointer" }}
+                style={{ width: "100%", padding: "15px", borderRadius: "10px", border: "none", background: "#ef007c", color: "#fff", fontWeight: 700, fontSize: "15px", cursor: "pointer" }}
               >
                 STOP !
               </button>
