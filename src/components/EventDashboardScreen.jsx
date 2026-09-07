@@ -1363,7 +1363,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
             <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons acquis</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>
               {ticketsPurchased}
               <TokenCyanIcon size={30} />
@@ -1371,9 +1371,12 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             {event.jetonUnitValue > 0 && purchasedTicketsCount > 0 && (
               <>
                 <span style={{ fontSize: "18px", color: COLORS.paperAlt }}>|</span>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>
-                  <span style={{ color: COLORS.amber }}>{formatEuroTrim(purchasedTicketsCount * event.jetonUnitValue).replace(" €", "")}</span>
-                  <span style={{ fontSize: "11px" }}> €</span> dépensés
+                <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+                  <span style={{ fontSize: "36px", fontWeight: 800, color: "#ef007c" }}>
+                    {formatEuroTrim(purchasedTicketsCount * event.jetonUnitValue).replace(" €", "")}
+                    <span style={{ fontSize: "13px" }}> €</span>
+                  </span>
+                  <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>dépensés</span>
                 </div>
               </>
             )}
