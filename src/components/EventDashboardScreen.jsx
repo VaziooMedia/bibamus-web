@@ -62,6 +62,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const [sessionMenuOpen, setSessionMenuOpen] = useState(false);
   const [waterAlertModalOpen, setWaterAlertModalOpen] = useState(false);
   const waterAlertClaimedForCount = React.useRef(null);
+  const waterAlertIsFirstRun = React.useRef(true);
 
   // Water Alert — mode "tournées" : la notification réelle est désormais entièrement gérée par
   // un déclencheur côté base de données (fiable, une seule fois par vraie tournée ajoutée, peu
@@ -69,6 +70,11 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   // à titre de rappel visuel pour qui a l'écran ouvert au bon moment — un affichage en plus ou
   // en moins de cette fenêtre est sans conséquence, contrairement à la notification elle-même.
   useEffect(() => {
+    if (waterAlertIsFirstRun.current) {
+      waterAlertIsFirstRun.current = false;
+      waterAlertClaimedForCount.current = event.rounds.length;
+      return;
+    }
     const wa = event.waterAlert;
     if (!wa || !wa.enabled || wa.mode !== "rounds") return;
     const since = event.rounds.length - (wa.lastReminderRoundCount || 0);
