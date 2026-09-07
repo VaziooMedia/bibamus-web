@@ -997,7 +997,7 @@ export function BibaBobModal({ friendName, storedPin, mode, onActivate, onDeacti
         {mode === "activate" && (
           <>
             <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", marginBottom: "14px" }}>
-              Tant que ce mode est actif, seules les boissons ≤ 0,5% seront proposées pour <span style={{ color: COLORS.amber, fontWeight: 700 }}>{friendName}</span>.
+              Tant que ce mode est actif, seules les boissons ≤&nbsp;0,5% seront proposées pour <span style={{ color: COLORS.amber, fontWeight: 700 }}>{friendName}</span>.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
               <button
