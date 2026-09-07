@@ -53,7 +53,7 @@ export function PotCard({ event, updateEvent, myName }) {
         <span style={{ fontSize: "13px", fontWeight: 600, opacity: 0.7 }}>Solde de la cagnotte</span>
       </div>
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: balance < 0 ? "#e08585" : COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
-        <MoneyAmount value={balance} currency={unit} jetonIcon="pink" />
+        <MoneyAmount value={balance} currency={unit} jetonIcon="pink" jetonIconSize={34} />
       </div>
       <div style={{ fontSize: "12px", opacity: 0.75, marginTop: "2px", textAlign: "center" }}>
         {unit === "jeton" ? (
