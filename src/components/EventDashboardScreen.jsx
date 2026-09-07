@@ -6,7 +6,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
-import { NavIcon, WaterAlertIcon } from "./icons.jsx";
+import { NavIcon, WaterAlertIcon, TokenCyanIcon } from "./icons.jsx";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
@@ -1363,7 +1363,10 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
             <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons acquis</span>
           </div>
-          <div style={{ fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>{ticketsPurchased}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>
+            {ticketsPurchased}
+            <TokenCyanIcon size={30} />
+          </div>
           {event.jetonUnitValue > 0 ? (
             purchasedTicketsCount > 0 && (
               <div style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>
