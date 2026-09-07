@@ -832,7 +832,7 @@ export function SplitBillCard({ event, updateEvent, total }) {
           <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
             <button
               onClick={applyEqualSplit}
-              style={{ flex: 1, background: "none", border: `2px solid ${splitMethod === "equal" ? COLORS.amber : "#fff"}`, borderRadius: "8px", padding: "9px", fontWeight: 600, fontSize: "12.5px", color: COLORS.ink, cursor: "pointer" }}
+              style={{ flex: 1, background: "none", border: `2px solid ${stillEqualSplit ? COLORS.amber : "#fff"}`, borderRadius: "8px", padding: "9px", fontWeight: 600, fontSize: "12.5px", color: COLORS.ink, cursor: "pointer" }}
             >
               À parts égales
             </button>
@@ -900,23 +900,34 @@ export function SplitBillCard({ event, updateEvent, total }) {
 
             <p style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "6px" }}>Montant précis :</p>
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <div style={{ display: "flex", alignItems: "center", width: "80px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
+              <div style={{ display: "flex", alignItems: "center", width: "60px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 6px" }}>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.10"
+                  type="text"
+                  inputMode="decimal"
                   value={tipValue}
                   onChange={(e) => setTipValue(e.target.value)}
                   placeholder="0,00"
-                  style={{ width: "100%", minWidth: 0, border: "none", padding: "9px 0", fontSize: "13.5px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
+                  style={{ width: "100%", minWidth: 0, border: "none", padding: "7px 0", fontSize: "13px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
                 />
               </div>
               <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginRight: "6px" }}>€</span>
-              <button onClick={saveTip} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 14px", fontWeight: 700, fontSize: "12.5px", cursor: "pointer", color: COLORS.paper }}>
-                Valider
+              <button
+                onClick={saveTip}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", background: COLORS.amber, border: "none", borderRadius: "8px", cursor: "pointer" }}
+              >
+                <NavIcon name="check" size={16} color={COLORS.paper} />
               </button>
             </div>
           </div>
+
+          {event.rounds.some((r) => !r.additionValidated) && (
+            <button
+              onClick={() => updateEvent(event.id, (e) => ({ ...e, rounds: e.rounds.map((r) => ({ ...r, additionValidated: true })) }))}
+              style={{ width: "100%", marginTop: "14px", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "11px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}
+            >
+              Valider l'addition
+            </button>
+          )}
         </>
       )}
     </div>
