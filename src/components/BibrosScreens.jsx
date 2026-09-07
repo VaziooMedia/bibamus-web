@@ -707,7 +707,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
 
   const handleLookup = async (explicitCode) => {
     const codeToUse = explicitCode || code;
-    if (codeToUse.trim().length !== 5) return;
+    if (codeToUse.trim().length !== 6) return;
     setStatus("loading");
     const identity = await onLookup(codeToUse.trim());
     if (identity && identity.displayName) {
@@ -738,7 +738,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
   };
 
   const handleCodeChange = (value) => {
-    setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 5));
+    setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6));
     setStatus("idle");
   };
 
@@ -859,8 +859,8 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
             value={code}
             onChange={(e) => handleCodeChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLookup()}
-            placeholder="00000"
-            maxLength={5}
+            placeholder="000000"
+            maxLength={6}
             style={{
               flex: 1,
               minWidth: 0,
@@ -886,17 +886,17 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
         </div>
         <button
           onClick={() => handleLookup()}
-          disabled={code.length !== 5 || status === "loading"}
+          disabled={code.length !== 6 || status === "loading"}
           style={{
-            background: code.length === 5 ? COLORS.amber : COLORS.surfaceAlt,
-            color: code.length === 5 ? COLORS.paper : COLORS.chalkWhite,
+            background: code.length === 6 ? COLORS.amber : COLORS.surfaceAlt,
+            color: code.length === 6 ? COLORS.paper : COLORS.chalkWhite,
             border: "none",
             borderRadius: "10px",
             padding: "0 18px",
             fontWeight: 700,
             fontSize: "14px",
-            cursor: code.length !== 5 ? "default" : "pointer",
-            opacity: code.length !== 5 ? 0.5 : 1,
+            cursor: code.length !== 6 ? "default" : "pointer",
+            opacity: code.length !== 6 ? 0.5 : 1,
           }}
         >
           {status === "loading" ? "..." : "Chercher"}
