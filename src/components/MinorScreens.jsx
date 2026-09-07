@@ -247,7 +247,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], public
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 20px 0" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 32px 0" }}>
         <img src={settingsIconUrl} alt="" style={{ width: "22px", height: "22px" }} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0, lineHeight: 1.2 }}>Réglages de la session</h1>
       </div>

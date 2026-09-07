@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
 import { NavIcon, WaterAlertIcon, TokenCyanIcon, TokenPinkIcon } from "./icons.jsx";
+import settingsIconUrl from "../assets/brand/settings-icon.png";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
@@ -472,6 +473,25 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           </div>
         )}
         </div>
+
+        <button
+          onClick={onOpenSettings}
+          title="Réglages de la session"
+          style={{
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "40px",
+            height: "32px",
+            background: "none",
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          <img src={settingsIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
+        </button>
       </div>
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", marginBottom: "18px" }}>
