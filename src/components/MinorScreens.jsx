@@ -246,11 +246,86 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], public
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
-        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0, lineHeight: 1.2 }}>Choix du mode</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 20px 0" }}>
+        <NavIcon name="settings" size={22} color={COLORS.amber} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0, lineHeight: 1.2 }}>Réglages de la session</h1>
       </div>
 
+      <SectionTitle>Changer de lieu</SectionTitle>
+      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>
+        Recharge automatiquement la carte du nouveau lieu — utile si vous changez de bar en cours de soirée.
+      </p>
+      <div style={{ marginBottom: "16px" }}>
+        <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          <button
+            onClick={() => setSelectedVenueId(selectedVenueId === "@home" ? null : "@home")}
+            style={{
+              background: selectedVenueId === "@home" ? COLORS.amber : COLORS.surface,
+              color: selectedVenueId === "@home" ? COLORS.paper : COLORS.ink,
+              border: `2px solid ${selectedVenueId === "@home" ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "8px 14px",
+              fontSize: "13.5px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            @Home
+          </button>
+          <button
+            onClick={() => setSelectedVenueId(selectedVenueId === "@event" ? null : "@event")}
+            style={{
+              background: selectedVenueId === "@event" ? COLORS.amber : COLORS.surface,
+              color: selectedVenueId === "@event" ? COLORS.paper : COLORS.ink,
+              border: `2px solid ${selectedVenueId === "@event" ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "8px 14px",
+              fontSize: "13.5px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            @Event
+          </button>
+          {venues.map((v) => (
+            <button
+              key={v.id}
+              onClick={() => setSelectedVenueId(selectedVenueId === v.id ? null : v.id)}
+              style={{
+                background: selectedVenueId === v.id ? COLORS.amber : COLORS.surface,
+                color: selectedVenueId === v.id ? COLORS.paper : COLORS.ink,
+                border: `2px solid ${selectedVenueId === v.id ? COLORS.amber : COLORS.paperAlt}`,
+                borderRadius: "999px",
+                padding: "8px 14px",
+                fontSize: "13.5px",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {v.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: "12px" }}>
+        <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>
+          {venues.length > 0 ? "Autres lieux" : "Un lieu déjà répertorié ?"}
+        </label>
+        <NearbyVenueSuggestions onPick={pickFromDirectory} selectedVenueId={selectedVenueId} forceCollapseKey={directoryOpenCount} />
+        <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} onOpen={() => setDirectoryOpenCount((n) => n + 1)} />
+      </div>
+
+      {linkedVenueLabel && (
+        <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginBottom: "8px" }}>
+          <NavIcon name="map-pin" size={13} color={COLORS.amber} />
+          Lieu lié : {linkedVenueLabel}
+        </p>
+      )}
+
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "8px 0 16px" }} />
+      <SectionTitle>Choix du mode</SectionTitle>
       <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "16px" }}>
         Changer de mode ne modifie que ce qui se passe à partir de maintenant.
         <br />
@@ -334,80 +409,6 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], public
       ) : eventMode === "addition" ? (
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>L'addition partagée se règle en €.</p>
       ) : null}
-
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "2px 0 16px" }} />
-      <SectionTitle>Changer de lieu</SectionTitle>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>
-        Recharge automatiquement la carte du nouveau lieu — utile si vous changez de bar en cours de soirée.
-      </p>
-      <div style={{ marginBottom: "16px" }}>
-        <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          <button
-            onClick={() => setSelectedVenueId(selectedVenueId === "@home" ? null : "@home")}
-            style={{
-              background: selectedVenueId === "@home" ? COLORS.amber : COLORS.surface,
-              color: selectedVenueId === "@home" ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${selectedVenueId === "@home" ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontSize: "13.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            @Home
-          </button>
-          <button
-            onClick={() => setSelectedVenueId(selectedVenueId === "@event" ? null : "@event")}
-            style={{
-              background: selectedVenueId === "@event" ? COLORS.amber : COLORS.surface,
-              color: selectedVenueId === "@event" ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${selectedVenueId === "@event" ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontSize: "13.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            @Event
-          </button>
-          {venues.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => setSelectedVenueId(selectedVenueId === v.id ? null : v.id)}
-              style={{
-                background: selectedVenueId === v.id ? COLORS.amber : COLORS.surface,
-                color: selectedVenueId === v.id ? COLORS.paper : COLORS.ink,
-                border: `2px solid ${selectedVenueId === v.id ? COLORS.amber : COLORS.paperAlt}`,
-                borderRadius: "999px",
-                padding: "8px 14px",
-                fontSize: "13.5px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              {v.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ marginBottom: "12px" }}>
-        <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>
-          {venues.length > 0 ? "Autres lieux" : "Un lieu déjà répertorié ?"}
-        </label>
-        <NearbyVenueSuggestions onPick={pickFromDirectory} selectedVenueId={selectedVenueId} forceCollapseKey={directoryOpenCount} />
-        <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} onOpen={() => setDirectoryOpenCount((n) => n + 1)} />
-      </div>
-
-      {linkedVenueLabel && (
-        <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginBottom: "20px" }}>
-          <NavIcon name="map-pin" size={13} color={COLORS.amber} />
-          Lieu lié : {linkedVenueLabel}
-        </p>
-      )}
 
       <PrimaryButton
         onClick={() =>
