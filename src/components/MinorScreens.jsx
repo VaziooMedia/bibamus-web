@@ -319,9 +319,9 @@ export function EventSettingsScreen({ event, onSave, onBack }) {
             </button>
           </div>
         </>
-      ) : (
+      ) : eventMode === "addition" ? (
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>L'addition partagée se règle en €.</p>
-      )}
+      ) : null}
 
       <PrimaryButton
         onClick={() =>
