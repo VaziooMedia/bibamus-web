@@ -12,7 +12,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, TokenPinkIcon, TokenRedIcon, TokenGreenIcon, WaterAlertIcon } from "./icons.jsx";
+import { NavIcon, TokenPinkIcon, TokenCyanIcon, TokenGreenIcon, WaterAlertIcon } from "./icons.jsx";
 import { MoneyAmount, PrimaryButton } from "./ui.jsx";
 import { formatMoney, nextId } from "../utils.js";
 import { loadSalon, saveSalon, generateRoomCode } from "../data/salons.js";
@@ -53,12 +53,12 @@ export function PotCard({ event, updateEvent, myName }) {
         <span style={{ fontSize: "13px", fontWeight: 600, opacity: 0.7 }}>Solde de la cagnotte</span>
       </div>
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: balance < 0 ? "#e08585" : COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
-        <MoneyAmount value={balance} currency={unit} jetonIcon="pink" jetonIconSize={34} />
+        <MoneyAmount value={balance} currency={unit} jetonIcon="cyan" jetonIconSize={34} />
       </div>
       <div style={{ fontSize: "12px", opacity: 0.75, marginTop: "2px", textAlign: "center" }}>
         {unit === "jeton" ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-            <TokenPinkIcon size={17} /> {potTotal} versés · <TokenRedIcon size={17} /> {spent} dépensés · <TokenGreenIcon size={17} /> {balance} restants
+            <TokenCyanIcon size={17} /> {potTotal} versés · <TokenPinkIcon size={17} /> {spent} dépensés · <TokenGreenIcon size={17} /> {balance} restants
           </span>
         ) : (
           <>

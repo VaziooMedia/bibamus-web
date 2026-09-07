@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, TokenPinkIcon, CountryFlagImg } from "./icons.jsx";
+import { NavIcon, TokenPinkIcon, TokenCyanIcon, CountryFlagImg } from "./icons.jsx";
 import { NavigationContext, ProfileNavContext } from "../contexts.js";
 import { formatMoney } from "../utils.js";
 
@@ -340,7 +340,7 @@ export function MoneyAmount({ value, currency, centered = false, jetonIconSize =
     const numPart = n % 1 === 0 ? n : n.toFixed(1);
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-        {numPart} {jetonIcon === "pink" ? <TokenPinkIcon size={jetonIconSize} /> : <NavIcon name="jeton-token" size={jetonIconSize} color="#0040ef" />}
+        {numPart} {jetonIcon === "pink" ? <TokenPinkIcon size={jetonIconSize} /> : jetonIcon === "cyan" ? <TokenCyanIcon size={jetonIconSize} /> : <NavIcon name="jeton-token" size={jetonIconSize} color="#0040ef" />}
       </span>
     );
   }

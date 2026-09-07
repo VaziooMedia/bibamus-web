@@ -4,6 +4,7 @@
 import React from "react";
 import { COLORS } from "../constants.js";
 import tokenPinkUrl from "../assets/brand/Bibamus App - Icon UI - Token Pink.svg";
+import tokenCyanUrl from "../assets/brand/Bibamus App - Icon UI - Token Cyan.svg";
 import tokenRedUrl from "../assets/brand/Bibamus App - Icon UI - Token Red.svg";
 import tokenGreenUrl from "../assets/brand/Bibamus App - Icon UI - Token Green.svg";
 import waterAlertUrl from "../assets/brand/water-alert.svg";
@@ -165,6 +166,10 @@ export function CountryFlagImg({ country, size = 16 }) {
 
 export function TokenPinkIcon({ size = 22 }) {
   return <img src={tokenPinkUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
+}
+
+export function TokenCyanIcon({ size = 22 }) {
+  return <img src={tokenCyanUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
 }
 
 export function TokenRedIcon({ size = 22 }) {
