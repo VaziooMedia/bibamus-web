@@ -17,16 +17,11 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Affiche la notification système quand un push arrive et que l'app n'est pas au premier plan.
-messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || "Bibamus";
-  const options = {
-    body: payload.notification?.body || "",
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
-  };
-  self.registration.showNotification(title, options);
-});
+// PAS de gestionnaire onBackgroundMessage ici volontairement : notre fonction serveur envoie un
+// message avec un champ "notification" (title/body), que Firebase affiche déjà tout seul
+// automatiquement quand l'app est en arrière-plan. Ajouter un onBackgroundMessage qui appelle
+// SA PROPRE showNotification() pour ce même message causait un AFFICHAGE EN DOUBLE (celui
+// automatique de Firebase + le nôtre) — c'était la cause des notifications reçues deux fois.
 
 // Au clic sur la notification, ouvre ou ramène l'app au premier plan.
 self.addEventListener("notificationclick", (event) => {
