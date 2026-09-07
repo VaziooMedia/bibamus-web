@@ -2350,8 +2350,8 @@ export default function App() {
             {screen === "eventSettings" && currentEvent && (
               <EventSettingsScreen
                 event={currentEvent}
-                onSave={(mode, jetonUnitValue) => {
-                  updateEvent(activeEventId, (e) => ({ ...e, mode, jetonUnitValue }));
+                onSave={(mode, currency, jetonUnitValue) => {
+                  updateEvent(activeEventId, (e) => ({ ...e, mode, currency, jetonUnitValue }));
                   setScreen("eventDashboard");
                 }}
                 onBack={() => setScreen("eventDashboard")}

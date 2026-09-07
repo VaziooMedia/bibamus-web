@@ -4,8 +4,8 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, WaterAlertIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton } from "./ui.jsx";
+import { NavIcon, WaterAlertIcon, TokenPinkIcon } from "./icons.jsx";
+import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton, SectionTitle } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { formatDate } from "../utils.js";
 import { loadMyStories, upsertPushSubscription } from "../data/sharedDirectories.js";
@@ -222,6 +222,7 @@ export function MyProductsHubScreen({ ratedCount, toTryCount, onBack, goToRated,
 
 export function EventSettingsScreen({ event, onSave, onBack }) {
   const [eventMode, setEventMode] = useState(event.mode || "tournees");
+  const [currency, setCurrency] = useState(event.currency || "euro");
 
   const modes = [
     { key: "tournees", label: "Mode ORBIS", desc: "Tournées" },
@@ -273,7 +274,56 @@ export function EventSettingsScreen({ event, onSave, onBack }) {
         ))}
       </div>
 
-      <PrimaryButton onClick={() => onSave(eventMode, event.jetonUnitValue || 0)} style={{ width: "100%" }}>
+      {eventMode === "tournees" || eventMode === "cagnotte" ? (
+        <>
+          <div style={{ height: "1px", background: COLORS.paperAlt, margin: "2px 0 16px" }} />
+          <SectionTitle>Type de paiement</SectionTitle>
+          <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>
+            Ne change que les prochaines tournées — l'historique déjà enregistré garde sa monnaie d'origine.
+          </p>
+          <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+            <button
+              onClick={() => setCurrency("euro")}
+              style={{
+                flex: 1,
+                padding: "18px 10px",
+                borderRadius: "12px",
+                border: `2px solid ${currency === "euro" ? COLORS.amber : COLORS.paperAlt}`,
+                background: currency === "euro" ? COLORS.amber : COLORS.surface,
+                color: currency === "euro" ? COLORS.paper : COLORS.ink,
+                fontWeight: 700,
+                fontSize: "16px",
+                cursor: "pointer",
+              }}
+            >
+              € Euros
+            </button>
+            <button
+              onClick={() => setCurrency("jeton")}
+              style={{
+                flex: 1,
+                padding: "18px 10px",
+                borderRadius: "12px",
+                border: `2px solid ${currency === "jeton" ? COLORS.amber : COLORS.paperAlt}`,
+                background: currency === "jeton" ? COLORS.amber : COLORS.surface,
+                color: currency === "jeton" ? COLORS.paper : COLORS.ink,
+                fontWeight: 700,
+                fontSize: "16px",
+                cursor: "pointer",
+              }}
+            >
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                <TokenPinkIcon size={20} />
+                Jetons
+              </span>
+            </button>
+          </div>
+        </>
+      ) : (
+        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>L'addition partagée se règle en €.</p>
+      )}
+
+      <PrimaryButton onClick={() => onSave(eventMode, currency, event.jetonUnitValue || 0)} style={{ width: "100%" }}>
         Valider
       </PrimaryButton>
       <BackFooterLink onClick={onBack} />
