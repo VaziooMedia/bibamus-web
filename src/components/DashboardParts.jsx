@@ -743,19 +743,15 @@ export function SplitBillCard({ event, updateEvent, total }) {
 
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-        <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Addition partagée</span>
-      </div>
-      <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "10px" }}>
-        Total accumulé ce soir :{" "}
-        <strong style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Addition partagée</span>
+        </div>
+        <strong style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber }}>
           <MoneyAmount value={total} currency="euro" />
         </strong>
-        .
-      </p>
-
-      <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Qui partage l'addition ?</label>
+      </div>
 
       {participants.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
@@ -874,28 +870,31 @@ export function SplitBillCard({ event, updateEvent, total }) {
           </div>
 
           <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
-            <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Envie d'arrondir avec un pourboire ?</label>
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Pourboire</label>
 
             {tipProposals.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
-                {tipProposals.map((p) => (
-                  <button
-                    key={p.share}
-                    onClick={() => applyTipProposal(p)}
-                    style={{
-                      background: Math.abs((event.tip || 0) - p.tip) < 0.005 ? COLORS.amber : COLORS.surface,
-                      color: Math.abs((event.tip || 0) - p.tip) < 0.005 ? COLORS.paper : COLORS.ink,
-                      border: `2px solid ${Math.abs((event.tip || 0) - p.tip) < 0.005 ? COLORS.ink : COLORS.paperAlt}`,
-                      borderRadius: "10px",
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      textAlign: "center",
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, fontSize: "13.5px" }}>{formatMoney(p.share, "euro")}/pers.</div>
-                    <div style={{ fontSize: "10.5px", opacity: 0.75 }}>+{formatMoney(p.tip, "euro")} au total</div>
-                  </button>
-                ))}
+                {tipProposals.map((p) => {
+                  const isSelected = Math.abs((event.tip || 0) - p.tip) < 0.005;
+                  return (
+                    <button
+                      key={p.share}
+                      onClick={() => (isSelected ? applyTipProposal({ share: total / (participants.length || 1), tip: 0 }) : applyTipProposal(p))}
+                      style={{
+                        background: isSelected ? COLORS.amber : COLORS.surface,
+                        color: isSelected ? COLORS.paper : COLORS.ink,
+                        border: `2px solid ${COLORS.paperAlt}`,
+                        borderRadius: "10px",
+                        padding: "8px 12px",
+                        cursor: "pointer",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, fontSize: "13.5px" }}>{formatMoney(p.share, "euro")}/pers.</div>
+                      <div style={{ fontSize: "10.5px", opacity: 0.75 }}>+{formatMoney(p.tip, "euro")} au total</div>
+                    </button>
+                  );
+                })}
               </div>
             )}
 
