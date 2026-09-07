@@ -8,7 +8,8 @@ import { NavIcon, WaterAlertIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { formatDate } from "../utils.js";
-import { loadMyStories } from "../data/sharedDirectories.js";
+import { loadMyStories, upsertPushSubscription } from "../data/sharedDirectories.js";
+import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
 
 export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBack, isAdmin, goToImport, onLogout, goToCategory }) {
   const [activeStories, setActiveStories] = useState([]);
@@ -292,10 +293,16 @@ export function WaterAlertSettingsScreen({ event, onSave, onBack }) {
     { key: "rounds", label: "Toutes les X tournées", desc: "Rappel basé sur le nombre de tournées" },
   ];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (mode === "off") {
       onSave({ enabled: false });
       return;
+    }
+    const token = await requestNotificationPermissionAndGetToken();
+    if (token) {
+      await upsertPushSubscription(token, "web");
+    } else if (Notification?.permission === "denied") {
+      alert("Notifications refusées — le rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.");
     }
     onSave({
       enabled: true,
@@ -317,7 +324,7 @@ export function WaterAlertSettingsScreen({ event, onSave, onBack }) {
       </div>
 
       <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-        Un rappel s'affiche pour te suggérer de boire un verre d'eau entre deux tournées — sans remplacer un verre d'alcool par de l'eau, juste en plus.
+        Un rappel s'affiche pour te suggérer de boire un verre d'eau.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>

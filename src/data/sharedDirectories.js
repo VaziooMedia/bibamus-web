@@ -406,6 +406,15 @@ function prettifyCountry(raw) {
   return raw ? raw.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("-") : null;
 }
 
+export async function upsertPushSubscription(fcmToken, platform = "web") {
+  const { error } = await supabase.rpc("upsert_push_subscription", { p_fcm_token: fcmToken, p_platform: platform });
+  if (error) {
+    console.error("upsertPushSubscription:", error);
+    return false;
+  }
+  return true;
+}
+
 export async function lookupBibroCode(code) {
   const { data, error } = await supabase.rpc("lookup_bibro_code", { p_code: code });
   if (error) {
