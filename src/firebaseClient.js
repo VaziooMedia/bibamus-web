@@ -13,7 +13,7 @@ const firebaseConfig = {
 
 // Clé VAPID publique, générée dans Firebase Console → Paramètres du projet → Cloud Messaging
 // → Certificats push web. Nécessaire pour que le navigateur puisse s'abonner aux notifications.
-const VAPID_KEY = "REMPLACER_PAR_LA_CLE_VAPID";
+const VAPID_KEY = "BEvIN9h7fW2f2q4O7V8n140J3o8BSrjVdrP43OOjO8S8xOkuHGZdvbo0phoukMsWFUIbSWUmjJBAACtg1OBVmcc";
 
 const firebaseApp = initializeApp(firebaseConfig);
 
