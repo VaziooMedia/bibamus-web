@@ -628,7 +628,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                 style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", fontSize: "12.5px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", padding: 0, whiteSpace: "nowrap" }}
               >
                 <NavIcon name="play" size={13} color={COLORS.amber} />
-                Activer le mode <span><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>ZERO</span></span>
+                Activer <span><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>ZERO</span></span>
               </button>
             )}
           </div>
