@@ -63,15 +63,18 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const [waterAlertModalOpen, setWaterAlertModalOpen] = useState(false);
 
   // Water Alert — mode "tournées" : compare le nombre de tournées écoulées depuis le dernier
-  // rappel au seuil configuré. Se redéclenche à chaque nouveau seuil franchi.
+  // rappel au seuil configuré. Se redéclenche à chaque nouveau seuil franchi. La fenêtre à
+  // l'écran ET la notification dépendent toutes les deux du même verdict serveur (la
+  // vérification atomique) — jamais du calcul local seul, qui peut être basé sur un état pas
+  // encore à jour (ex. en rouvrant le salon avant que la synchronisation ait rattrapé le retard).
   useEffect(() => {
     const wa = event.waterAlert;
     if (!wa || !wa.enabled || wa.mode !== "rounds") return;
     const since = event.rounds.length - (wa.lastReminderRoundCount || 0);
     if (since >= (wa.everyRounds || 3)) {
-      setWaterAlertModalOpen(true);
       claimWaterAlertRoundReminder(event.salonCode, event.rounds.length).then((claimed) => {
         if (claimed) {
+          setWaterAlertModalOpen(true);
           const codes = (event.participants || []).map((p) => p.code).filter(Boolean);
           if (codes.length > 0) sendWaterAlertPush(codes);
         }
