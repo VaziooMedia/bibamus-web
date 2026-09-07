@@ -671,7 +671,7 @@ export function SplitBillCard({ event, updateEvent }) {
     const newTip = isNaN(parsed) ? 0 : parsed;
     const newTotalWithTip = total + newTip;
     updateEvent(event.id, (e) => {
-      if (splitMethod === "equal" && participants.length > 0) {
+      if (stillEqualSplit && participants.length > 0) {
         const share = Math.round((newTotalWithTip / participants.length) * 100) / 100;
         return { ...e, tip: newTip, splitParticipants: participants.map((p) => ({ ...p, amount: share })) };
       }
