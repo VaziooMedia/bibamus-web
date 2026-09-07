@@ -2350,8 +2350,37 @@ export default function App() {
             {screen === "eventSettings" && currentEvent && (
               <EventSettingsScreen
                 event={currentEvent}
-                onSave={(mode, currency, jetonUnitValue) => {
-                  updateEvent(activeEventId, (e) => ({ ...e, mode, currency, jetonUnitValue }));
+                venues={venues.filter((v) => favoriteVenueIds.includes(v.id))}
+                publicVenues={venues}
+                onResolvePublicVenue={(publicVenueOrDraft) =>
+                  publicVenueOrDraft && publicVenueOrDraft.id
+                    ? venues.find((v) => v.id === publicVenueOrDraft.id) || publicVenueOrDraft
+                    : publicVenueOrDraft
+                }
+                onSave={(mode, currency, jetonUnitValue, selectedVenueId) => {
+                  updateEvent(activeEventId, (e) => {
+                    const currentVenueRef = e.isHome ? "@home" : e.venueId === "@event" ? "@event" : e.venueId || null;
+                    if (selectedVenueId === currentVenueRef) {
+                      // Lieu inchangé — on ne touche pas à la carte déjà en place.
+                      return { ...e, mode, currency, jetonUnitValue };
+                    }
+                    const isHome = selectedVenueId === "@home";
+                    const isEventPlace = selectedVenueId === "@event";
+                    const venue = selectedVenueId && !isHome && !isEventPlace ? venues.find((v) => v.id === selectedVenueId) : null;
+                    const menu =
+                      venue && venue.menu && venue.menu.length
+                        ? venue.menu.map((d) => ({ ...resolveMenuItem(d, drinksDirectory), id: `local-${Date.now()}-${Math.random()}` }))
+                        : [];
+                    return {
+                      ...e,
+                      mode,
+                      currency,
+                      jetonUnitValue,
+                      venueId: isHome ? null : selectedVenueId || null,
+                      isHome,
+                      menu,
+                    };
+                  });
                   setScreen("eventDashboard");
                 }}
                 onBack={() => setScreen("eventDashboard")}
