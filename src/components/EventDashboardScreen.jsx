@@ -634,7 +634,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           }}
           title="Water Alert"
         >
-          <WaterAlertIcon size={20} />
+          <WaterAlertIcon size={20} dark={event.waterAlert?.enabled} />
         </button>
         </div>
       </div>

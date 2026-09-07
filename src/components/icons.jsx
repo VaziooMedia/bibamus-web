@@ -175,8 +175,16 @@ export function TokenGreenIcon({ size = 22 }) {
   return <img src={tokenGreenUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
 }
 
-export function WaterAlertIcon({ size = 22 }) {
-  return <img src={waterAlertUrl} alt="" width={size} height={Math.round(size * (570 / 477))} style={{ display: "block" }} />;
+export function WaterAlertIcon({ size = 22, dark = false }) {
+  return (
+    <img
+      src={waterAlertUrl}
+      alt=""
+      width={size}
+      height={Math.round(size * (570 / 477))}
+      style={{ display: "block", filter: dark ? "brightness(0)" : "none" }}
+    />
+  );
 }
 
 export function FlagIcon({ flag, size = 15 }) {
