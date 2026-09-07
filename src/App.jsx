@@ -647,6 +647,7 @@ export default function App() {
       orders: draftOrders,
       total: finalAmount,
       settledDirectly,
+      paidByPot: currentEvent?.mode === "cagnotte",
       buyerName,
       tip,
       offeredBy,
