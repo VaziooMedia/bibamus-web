@@ -1366,8 +1366,9 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           <div style={{ fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>{ticketsPurchased}</div>
           {event.jetonUnitValue > 0 ? (
             purchasedTicketsCount > 0 && (
-              <div style={{ fontSize: "15px", fontWeight: 700, color: COLORS.amberDark }}>
-                {formatEuroTrim(purchasedTicketsCount * event.jetonUnitValue)} dépensés
+              <div style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>
+                <span style={{ color: COLORS.amber }}>{formatEuroTrim(purchasedTicketsCount * event.jetonUnitValue).replace(" €", "")}</span>
+                <span style={{ fontSize: "11px" }}> €</span> dépensés
               </div>
             )
           ) : (
@@ -1396,14 +1397,14 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             <button
               onClick={() => addPurchase(true)}
               title="Jetons obtenus sans les payer — reportés, donnés par un autre Bibax, trouvés par terre... peu importe la source"
-              style={{ background: COLORS.jetonFluo, border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: COLORS.paper }}
+              style={{ background: "#00C8FF", border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: "#000" }}
             >
               Gratuit
             </button>
             <button
               onClick={addGivenAway}
               title="Jeton donné à quelqu'un, ou perdu"
-              style={{ background: COLORS.redFluo, border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: "#000" }}
+              style={{ background: "#ef007c", border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: "#fff" }}
             >
               Donner
             </button>
@@ -1411,7 +1412,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
 
           {event.ticketPurchases.length > 0 && (
             <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "10px", marginBottom: "10px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.paper, background: COLORS.amber, borderRadius: "999px", padding: "3px 9px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber, background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "999px", padding: "3px 9px" }}>
                 Achetés : {purchasedTicketsCount}
               </span>
               {freeTicketsCount > 0 && (
