@@ -14,6 +14,14 @@ import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, compu
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub } from "../data/sharedDirectories.js";
 
+// Retient, pour toute la durée de la session dans l'app (pas juste le montage de CE composant),
+// les salons pour lesquels on a déjà fait la vérification initiale au moins une fois — pour
+// distinguer "je reviens juste après avoir ajouté une tournée" (où la fenêtre DOIT pouvoir
+// s'afficher) de "je rouvre l'app/le salon depuis le début" (où elle ne le doit pas), cas qui
+// se ressemblent tous les deux du point de vue de CE composant (un nouveau montage), mais pas
+// du point de vue de la session dans son ensemble.
+const waterAlertSessionInitialized = new Set();
+
 export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -62,7 +70,6 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const [sessionMenuOpen, setSessionMenuOpen] = useState(false);
   const [waterAlertModalOpen, setWaterAlertModalOpen] = useState(false);
   const waterAlertClaimedForCount = React.useRef(null);
-  const waterAlertIsFirstRun = React.useRef(true);
 
   // Water Alert — mode "tournées" : la notification réelle est désormais entièrement gérée par
   // un déclencheur côté base de données (fiable, une seule fois par vraie tournée ajoutée, peu
@@ -70,8 +77,8 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   // à titre de rappel visuel pour qui a l'écran ouvert au bon moment — un affichage en plus ou
   // en moins de cette fenêtre est sans conséquence, contrairement à la notification elle-même.
   useEffect(() => {
-    if (waterAlertIsFirstRun.current) {
-      waterAlertIsFirstRun.current = false;
+    if (event.salonCode && !waterAlertSessionInitialized.has(event.salonCode)) {
+      waterAlertSessionInitialized.add(event.salonCode);
       waterAlertClaimedForCount.current = event.rounds.length;
       return;
     }
