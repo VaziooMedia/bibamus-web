@@ -253,7 +253,8 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const sessionPaid = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + r.total, 0);
   const sessionRoundsTotal = sessionPending + sessionPaid;
   const cagnottePaidByPot = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
-  const cagnotteDirect = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
+  const cagnotteDirect = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy && r.settledDirectly !== false).reduce((sum, r) => sum + r.total, 0);
+  const cagnottePending = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy && r.settledDirectly === false).reduce((sum, r) => sum + r.total, 0);
   const cagnotteTips = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + (r.tip || 0), 0);
   const additionPending = event.rounds.filter((r) => !r.offeredBy && !isRoundPaidInAddition(r)).reduce((sum, r) => sum + r.total, 0);
   const additionPaid = event.rounds.filter((r) => !r.offeredBy && isRoundPaidInAddition(r)).reduce((sum, r) => sum + r.total, 0);
@@ -1248,7 +1249,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             </div>
           </div>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
-            <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnotteTips} currency={event.currency} centered jetonIcon="pink" />
+            <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips} currency={event.currency} centered jetonIcon="pink" />
           </div>
           <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
@@ -1265,6 +1266,14 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
                 </strong>
               </div>
             )}
+            {cagnottePending > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                <span>Sur la note</span>
+                <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                  <MoneyAmount value={cagnottePending} currency={event.currency} jetonIcon="pink" />
+                </strong>
+              </div>
+            )}
             {cagnotteTips > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                 <span>+ Pourboire</span>
@@ -1276,7 +1285,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
               <span>Total</span>
               <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnotteTips} currency={event.currency} jetonIcon="pink" />
+                <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips} currency={event.currency} jetonIcon="pink" />
               </strong>
             </div>
           </div>
