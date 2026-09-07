@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, WaterAlertIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import { formatDate } from "../utils.js";
@@ -273,6 +273,103 @@ export function EventSettingsScreen({ event, onSave, onBack }) {
       </div>
 
       <PrimaryButton onClick={() => onSave(eventMode, event.jetonUnitValue || 0)} style={{ width: "100%" }}>
+        Valider
+      </PrimaryButton>
+      <BackFooterLink onClick={onBack} />
+    </div>
+  );
+}
+
+export function WaterAlertSettingsScreen({ event, onSave, onBack }) {
+  const wa = event.waterAlert || {};
+  const [mode, setMode] = useState(wa.enabled ? wa.mode || "time" : "off");
+  const [everyMinutes, setEveryMinutes] = useState(wa.everyMinutes ? String(wa.everyMinutes) : "30");
+  const [everyRounds, setEveryRounds] = useState(wa.everyRounds ? String(wa.everyRounds) : "3");
+
+  const options = [
+    { key: "off", label: "Désactivé", desc: "Aucun rappel" },
+    { key: "time", label: "Toutes les X minutes", desc: "Rappel basé sur le temps écoulé" },
+    { key: "rounds", label: "Toutes les X tournées", desc: "Rappel basé sur le nombre de tournées" },
+  ];
+
+  const handleSubmit = () => {
+    if (mode === "off") {
+      onSave({ enabled: false });
+      return;
+    }
+    onSave({
+      enabled: true,
+      mode,
+      everyMinutes: parseInt(everyMinutes, 10) || 30,
+      everyRounds: parseInt(everyRounds, 10) || 3,
+    });
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 6px 0" }}>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <WaterAlertIcon size={26} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Water Alert</h1>
+      </div>
+
+      <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "18px" }}>
+        Un rappel s'affiche pour te suggérer de boire un verre d'eau entre deux tournées — sans remplacer un verre d'alcool par de l'eau, juste en plus.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+        {options.map((o) => (
+          <div key={o.key}>
+            <button
+              onClick={() => setMode(o.key)}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                background: mode === o.key ? COLORS.amber : COLORS.surface,
+                color: mode === o.key ? COLORS.paper : COLORS.ink,
+                border: `2px solid ${mode === o.key ? COLORS.amber : COLORS.paperAlt}`,
+                borderRadius: "12px",
+                padding: "12px 14px",
+                cursor: "pointer",
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: "14.5px" }}>{o.label}</div>
+              <div style={{ fontSize: "12px", marginTop: "2px", opacity: mode === o.key ? 0.85 : 0.65 }}>{o.desc}</div>
+            </button>
+            {o.key === "time" && mode === "time" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", paddingLeft: "4px" }}>
+                <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>Toutes les</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={everyMinutes}
+                  onChange={(e) => setEveryMinutes(e.target.value.replace(/[^0-9]/g, ""))}
+                  style={{ width: "70px", padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", textAlign: "center", outline: "none" }}
+                />
+                <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>minutes</span>
+              </div>
+            )}
+            {o.key === "rounds" && mode === "rounds" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", paddingLeft: "4px" }}>
+                <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>Toutes les</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={everyRounds}
+                  onChange={(e) => setEveryRounds(e.target.value.replace(/[^0-9]/g, ""))}
+                  style={{ width: "70px", padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", textAlign: "center", outline: "none" }}
+                />
+                <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>tournées</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <PrimaryButton onClick={handleSubmit} style={{ width: "100%" }}>
         Valider
       </PrimaryButton>
       <BackFooterLink onClick={onBack} />

@@ -6,15 +6,15 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, WaterAlertIcon } from "./icons.jsx";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
-import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal } from "./DashboardParts.jsx";
+import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub } from "../data/sharedDirectories.js";
 
-export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
+export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");
@@ -60,6 +60,38 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
   const [purchaseQty, setPurchaseQty] = useState(1);
   const [confirmClose, setConfirmClose] = useState(false);
   const [sessionMenuOpen, setSessionMenuOpen] = useState(false);
+  const [waterAlertModalOpen, setWaterAlertModalOpen] = useState(false);
+
+  // Water Alert — mode "tournées" : compare le nombre de tournées écoulées depuis le dernier
+  // rappel au seuil configuré. Se redéclenche à chaque nouveau seuil franchi.
+  useEffect(() => {
+    const wa = event.waterAlert;
+    if (!wa || !wa.enabled || wa.mode !== "rounds") return;
+    const since = event.rounds.length - (wa.lastReminderRoundCount || 0);
+    if (since >= (wa.everyRounds || 3)) {
+      setWaterAlertModalOpen(true);
+      updateEvent(event.id, (e) => ({ ...e, waterAlert: { ...e.waterAlert, lastReminderRoundCount: event.rounds.length } }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.rounds.length, event.waterAlert?.enabled, event.waterAlert?.mode]);
+
+  // Water Alert — mode "temps" : vérifie toutes les 15s si l'intervalle configuré est dépassé
+  // depuis le dernier rappel (ou depuis le début de la session si aucun rappel encore montré).
+  useEffect(() => {
+    const wa = event.waterAlert;
+    if (!wa || !wa.enabled || wa.mode !== "time") return;
+    const checkElapsed = () => {
+      const lastAt = wa.lastReminderAt || event.createdAt;
+      const elapsedMs = Date.now() - new Date(lastAt).getTime();
+      if (elapsedMs >= (wa.everyMinutes || 30) * 60000) {
+        setWaterAlertModalOpen(true);
+        updateEvent(event.id, (e) => ({ ...e, waterAlert: { ...e.waterAlert, lastReminderAt: new Date().toISOString() } }));
+      }
+    };
+    const interval = setInterval(checkElapsed, 15000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.waterAlert?.enabled, event.waterAlert?.mode, event.waterAlert?.lastReminderAt]);
   const [bibaZeroMenuOpen, setBibaZeroMenuOpen] = useState(false);
   // Pause: for events spanning several days (a festival, say) — a simple on/off flag with a
   // timestamp of when it was last toggled, shown as a badge. Doesn't split "today"'s stats by
@@ -305,7 +337,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           {event.createdAt && `Start : ${formatTime(event.createdAt)}`}
         </span>
       </div>
-      <div style={{ marginTop: "8px", marginBottom: "18px" }}>
+      <div style={{ marginTop: "8px", marginBottom: "18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
         <button
           onClick={onOpenSettings}
           style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "7px", minWidth: 0 }}
@@ -319,6 +351,104 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500 }}>({EVENT_MODE_DESC[event.mode]})</span>
           )}
         </button>
+
+        <div style={{ position: "relative" }}>
+        <button
+          onClick={() => setSessionMenuOpen((o) => !o)}
+          style={{
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+            width: "60px",
+            height: "32px",
+            background: "none",
+            border: `2px solid ${event.paused || confirmClose ? COLORS.jetonFluo : COLORS.paperAlt}`,
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+          title="Pause / Fin de l'événement"
+        >
+          <NavIcon name="pause" size={12} color={event.paused ? COLORS.jetonFluo : COLORS.amber} />
+          <span style={{ fontSize: "10px", color: COLORS.inkSoft }}>/</span>
+          <NavIcon name="stop" size={12} color={confirmClose ? COLORS.redFluo : COLORS.amber} />
+        </button>
+
+        {sessionMenuOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "36px",
+              right: 0,
+              zIndex: 10,
+              background: COLORS.surfaceAlt,
+              border: `2px solid ${COLORS.paperAlt}`,
+              borderRadius: "10px",
+              padding: "6px",
+              minWidth: "190px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.35)",
+            }}
+          >
+            <button
+              onClick={() => {
+                togglePause();
+                setSessionMenuOpen(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                width: "100%",
+                background: "none",
+                border: "none",
+                borderRadius: "7px",
+                padding: "9px 10px",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: event.paused ? COLORS.jetonFluo : COLORS.ink,
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <NavIcon name={event.paused ? "play" : "pause"} size={14} color={COLORS.jetonFluo} />
+              {event.paused ? "Reprendre" : "Session en pause"}
+            </button>
+            <button
+              onClick={() => (confirmClose ? onCloseEvent() : setConfirmClose(true))}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                width: "100%",
+                background: "none",
+                border: "none",
+                borderRadius: "7px",
+                padding: "9px 10px",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: confirmClose ? COLORS.redFluo : COLORS.ink,
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <NavIcon name="stop" size={14} color={COLORS.redFluo} />
+              {confirmClose ? "Confirmer ?" : "Fin de la session"}
+            </button>
+            {confirmClose && (
+              <p style={{ fontSize: "10.5px", color: COLORS.redFluo, padding: "0 10px 6px 10px", margin: 0 }}>
+                Sortira de tes événements en cours — reste consultable dans l'historique.{" "}
+                <button
+                  onClick={() => setConfirmClose(false)}
+                  style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "10.5px", cursor: "pointer", padding: 0 }}
+                >
+                  Annuler
+                </button>
+              </p>
+            )}
+          </div>
+        )}
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", marginBottom: "18px" }}>
@@ -490,100 +620,22 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
 
         <div style={{ position: "relative" }}>
         <button
-          onClick={() => setSessionMenuOpen((o) => !o)}
+          onClick={onOpenWaterAlertSettings}
           style={{
-            flexShrink: 0,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "6px",
             width: "60px",
             height: "32px",
-            background: "none",
-            border: `2px solid ${event.paused || confirmClose ? COLORS.jetonFluo : COLORS.paperAlt}`,
+            background: event.waterAlert?.enabled ? COLORS.amber : "none",
+            border: `2px solid ${event.waterAlert?.enabled ? COLORS.amber : COLORS.paperAlt}`,
             borderRadius: "8px",
             cursor: "pointer",
           }}
-          title="Pause / Fin de l'événement"
+          title="Water Alert"
         >
-          <NavIcon name="pause" size={12} color={event.paused ? COLORS.jetonFluo : COLORS.amber} />
-          <span style={{ fontSize: "10px", color: COLORS.inkSoft }}>/</span>
-          <NavIcon name="stop" size={12} color={confirmClose ? COLORS.redFluo : COLORS.amber} />
+          <WaterAlertIcon size={20} />
         </button>
-
-        {sessionMenuOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: "36px",
-              right: 0,
-              zIndex: 10,
-              background: COLORS.surfaceAlt,
-              border: `2px solid ${COLORS.paperAlt}`,
-              borderRadius: "10px",
-              padding: "6px",
-              minWidth: "190px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.35)",
-            }}
-          >
-            <button
-              onClick={() => {
-                togglePause();
-                setSessionMenuOpen(false);
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                width: "100%",
-                background: "none",
-                border: "none",
-                borderRadius: "7px",
-                padding: "9px 10px",
-                fontSize: "13px",
-                fontWeight: 600,
-                color: event.paused ? COLORS.jetonFluo : COLORS.ink,
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <NavIcon name={event.paused ? "play" : "pause"} size={14} color={COLORS.jetonFluo} />
-              {event.paused ? "Reprendre" : "Session en pause"}
-            </button>
-            <button
-              onClick={() => (confirmClose ? onCloseEvent() : setConfirmClose(true))}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                width: "100%",
-                background: "none",
-                border: "none",
-                borderRadius: "7px",
-                padding: "9px 10px",
-                fontSize: "13px",
-                fontWeight: 600,
-                color: confirmClose ? COLORS.redFluo : COLORS.ink,
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <NavIcon name="stop" size={14} color={COLORS.redFluo} />
-              {confirmClose ? "Confirmer ?" : "Fin de la session"}
-            </button>
-            {confirmClose && (
-              <p style={{ fontSize: "10.5px", color: COLORS.redFluo, padding: "0 10px 6px 10px", margin: 0 }}>
-                Sortira de tes événements en cours — reste consultable dans l'historique.{" "}
-                <button
-                  onClick={() => setConfirmClose(false)}
-                  style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "10.5px", cursor: "pointer", padding: 0 }}
-                >
-                  Annuler
-                </button>
-              </p>
-            )}
-          </div>
-        )}
         </div>
       </div>
 
@@ -1419,6 +1471,8 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
 
 
       <BackFooterLink onClick={onBack} />
+
+      {waterAlertModalOpen && <WaterAlertModal onClose={() => setWaterAlertModalOpen(false)} />}
 
     </div>
   );

@@ -12,7 +12,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, TokenPinkIcon, TokenRedIcon, TokenGreenIcon } from "./icons.jsx";
+import { NavIcon, TokenPinkIcon, TokenRedIcon, TokenGreenIcon, WaterAlertIcon } from "./icons.jsx";
 import { MoneyAmount, PrimaryButton } from "./ui.jsx";
 import { formatMoney, nextId } from "../utils.js";
 import { loadSalon, saveSalon, generateRoomCode } from "../data/salons.js";
@@ -922,6 +922,25 @@ export function SplitBillCard({ event, updateEvent, total }) {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+export function WaterAlertModal({ onClose }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+      <div style={{ background: COLORS.surface, borderRadius: "20px", padding: "28px 24px", width: "100%", maxWidth: "340px", textAlign: "center" }}>
+        <WaterAlertIcon size={56} />
+        <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", margin: "14px 0 8px 0" }}>
+          <span style={{ color: COLORS.ink }}>Water</span> <span style={{ color: COLORS.amber }}>Alert</span>
+        </h2>
+        <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
+          Pense à boire un verre d'eau entre deux tournées — ça ne remplace rien, ça s'ajoute juste.
+        </p>
+        <PrimaryButton onClick={onClose} style={{ width: "100%" }}>
+          J'ai compris
+        </PrimaryButton>
+      </div>
     </div>
   );
 }

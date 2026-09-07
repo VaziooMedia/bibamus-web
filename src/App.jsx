@@ -41,7 +41,7 @@ import { ClubDetailScreen } from "./components/ClubDetailScreen.jsx";
 import { MyProfileScreen } from "./components/MyProfileScreen.jsx";
 import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
-import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen } from "./components/MinorScreens.jsx";
+import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen, WaterAlertSettingsScreen } from "./components/MinorScreens.jsx";
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
@@ -1639,6 +1639,7 @@ export default function App() {
                   setScreen("home");
                 }}
                 onOpenSettings={() => setScreen("eventSettings")}
+                onOpenWaterAlertSettings={() => setScreen("waterAlertSettings")}
                 onDeleteRound={(roundId) => deleteRound(activeEventId, roundId)}
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
@@ -2350,6 +2351,16 @@ export default function App() {
                 event={currentEvent}
                 onSave={(mode, jetonUnitValue) => {
                   updateEvent(activeEventId, (e) => ({ ...e, mode, jetonUnitValue }));
+                  setScreen("eventDashboard");
+                }}
+                onBack={() => setScreen("eventDashboard")}
+              />
+            )}
+            {screen === "waterAlertSettings" && currentEvent && (
+              <WaterAlertSettingsScreen
+                event={currentEvent}
+                onSave={(waterAlert) => {
+                  updateEvent(activeEventId, (e) => ({ ...e, waterAlert }));
                   setScreen("eventDashboard");
                 }}
                 onBack={() => setScreen("eventDashboard")}

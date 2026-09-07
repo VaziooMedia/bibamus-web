@@ -6,6 +6,7 @@ import { COLORS } from "../constants.js";
 import tokenPinkUrl from "../assets/brand/Bibamus App - Icon UI - Token Pink.svg";
 import tokenRedUrl from "../assets/brand/Bibamus App - Icon UI - Token Red.svg";
 import tokenGreenUrl from "../assets/brand/Bibamus App - Icon UI - Token Green.svg";
+import waterAlertUrl from "../assets/brand/water-alert.svg";
 
 // Chaque drapeau réellement utilisé par l'app est importé individuellement — plus verbeux
 // qu'un glob global, mais évite d'embarquer les 271 drapeaux disponibles dans le dépôt alors
@@ -172,6 +173,10 @@ export function TokenRedIcon({ size = 22 }) {
 
 export function TokenGreenIcon({ size = 22 }) {
   return <img src={tokenGreenUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
+}
+
+export function WaterAlertIcon({ size = 22 }) {
+  return <img src={waterAlertUrl} alt="" width={size} height={Math.round(size * (570 / 477))} style={{ display: "block" }} />;
 }
 
 export function FlagIcon({ flag, size = 15 }) {
