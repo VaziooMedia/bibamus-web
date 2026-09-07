@@ -743,19 +743,19 @@ export function SplitBillCard({ event, updateEvent, total }) {
 
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-      <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "4px" }}>Addition partagée</div>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+        <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Addition partagée</span>
+      </div>
       <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "10px" }}>
         Total accumulé ce soir :{" "}
         <strong style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber }}>
           <MoneyAmount value={total} currency="euro" />
         </strong>
         .
-        <br />
-        Ajustez qui partage l'addition ci-dessous.
       </p>
 
       <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Qui partage l'addition ?</label>
-      {participants.length === 0 && <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "8px" }}>Personne pour l'instant — ajoutez des noms ci-dessous.</p>}
 
       {participants.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
@@ -790,15 +790,13 @@ export function SplitBillCard({ event, updateEvent, total }) {
 
       {suggestable.length > 0 && (
         <div style={{ marginBottom: "10px" }}>
-          <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "6px" }}>Repérés dans les tournées :</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
             {suggestable.map((name) => {
-              const hadDrinks = (consumptionByName[name] || 0) > 0;
               return (
                 <button
                   key={name}
                   onClick={() => addParticipant(name)}
-                  style={{ background: COLORS.surface, border: `2px dashed ${COLORS.paperAlt}`, borderRadius: "999px", padding: "5px 12px", fontSize: "12.5px", fontWeight: 600, color: hadDrinks ? COLORS.redFluo : "#fff", cursor: "pointer" }}
+                  style={{ background: COLORS.surface, border: `2px dashed ${COLORS.paperAlt}`, borderRadius: "999px", padding: "5px 12px", fontSize: "12.5px", fontWeight: 600, color: "#ef007c", cursor: "pointer" }}
                 >
                   + {name}
                 </button>

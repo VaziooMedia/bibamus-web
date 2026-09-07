@@ -1256,14 +1256,17 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             </>
           ) : (
             <>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>
-                {event.finalTotal != null ? (
-                  "NOTE FINALE DU BAR"
-                ) : (
-                  <>
-                    Total général pour cette session <span style={{ fontSize: "12px", opacity: 0.7 }}>≈</span>
-                  </>
-                )}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+                <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>
+                  {event.finalTotal != null ? (
+                    "NOTE FINALE DU BAR"
+                  ) : (
+                    <>
+                      Total général pour cette session <span style={{ fontSize: "12px", opacity: 0.7 }}>≈</span>
+                    </>
+                  )}
+                </div>
               </div>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
                 <MoneyAmount
