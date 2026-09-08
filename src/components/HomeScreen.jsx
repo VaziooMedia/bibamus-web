@@ -251,11 +251,11 @@ export function HomeScreen({
           >
             <svg width="26" height="26" viewBox="0 0 24 24">
               <path
-                d="M8 5.5c-.3-.8.2-1.7 1-1.9.3-.9 1.3-1.4 2.1-1 .5-.6 1.4-.7 2-.2.7-.4 1.6-.1 1.9.6.9.1 1.5 1 1.3 1.8.6.4.8 1.2.4 1.8-.2.9-1.1 1.4-2 1.2H9.4c-.9 0-1.6-.7-1.4-1.6z"
-                fill="#fff"
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M9.5 2h5v2.8l1.6 2.6c.25.4.4.9.4 1.4v9.7c0 1.9-1.5 3.5-3.5 3.5h-1c-1.9 0-3.5-1.6-3.5-3.5V8.8c0-.5.15-1 .4-1.4l1.6-2.6V2Z M8.6 13.5l2.3 2.3 4.1-4.4 1.2 1.2-5.3 5.6-3.5-3.5Z"
+                fill={COLORS.amber}
               />
-              <path d="M8 8.2h9l-.9 10.8A2 2 0 0 1 14.1 21h-3.2a2 2 0 0 1-2-1.9L8 8.2Z" fill={COLORS.amber} />
-              <path d="M9.8 13.5l1.7 1.7 3-3.2" fill="none" stroke={COLORS.paper} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Drink Check</span>
