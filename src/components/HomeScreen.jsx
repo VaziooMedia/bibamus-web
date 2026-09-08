@@ -4,6 +4,8 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, APP_VERSION } from "../constants.js";
+import placeCheckIconUrl from "../assets/brand/place-check.svg";
+import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
@@ -249,16 +251,7 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <svg width="32" height="32" viewBox="425 130 405 1070" fill="none">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                fill={COLORS.amber}
-                d="M 542 146 C 543 198, 538 276, 530 361 C 526 410, 516 445, 489 474 C 458 507, 443 548, 443 600 L 443 1083 C 443 1143, 487 1185, 547 1185 L 707 1185 C 767 1185, 811 1143, 811 1083 L 811 600 C 811 548, 796 507, 765 474 C 738 445, 728 410, 724 361 C 716 276, 711 198, 712 146 Z M 578 157 C 578 153, 581 151, 585 151 L 669 151 C 673 151, 676 153, 676 157 L 672 222 C 672 227, 669 230, 664 230 L 590 230 C 585 230, 582 227, 582 222 Z"
-              />
-              <rect x="490" y="500" width="270" height="90" rx="14" fill={COLORS.amber} />
-              <path d="M517 800l78 78 142-155" fill="none" stroke={COLORS.paper} strokeWidth="70" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <img src={drinkCheckIconUrl} alt="Drink Check" style={{ width: "32px", height: "32px" }} />
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Drink Check</span>
         </div>
@@ -277,10 +270,7 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24">
-              <path d="M12 3.5c-3.3 0-6 2.7-6 6 0 4.5 6 11 6 11s6-6.5 6-11c0-3.3-2.7-6-6-6z" fill={COLORS.amber} />
-              <path d="M9.3 9.4l1.9 1.9 3.5-3.7" fill="none" stroke={COLORS.paper} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <img src={placeCheckIconUrl} alt="Place Check" style={{ width: "32px", height: "32px" }} />
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Place Check</span>
         </div>
