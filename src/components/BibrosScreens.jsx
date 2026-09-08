@@ -486,7 +486,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             padding: 0,
           }}
         >
-          <NavIcon name="bell" size={20} color={notifyPulse ? COLORS.amber : COLORS.paperAlt} filled={notifyPulse} />
+          <NavIcon name="bell" size={26} color={notifyPulse ? COLORS.amber : COLORS.paperAlt} filled={notifyPulse} />
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
           <div
@@ -610,7 +610,8 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         <button
           onClick={() => setShowRemoveSheet(true)}
           style={{
-            flex: 1,
+            width: "90px",
+            flexShrink: 0,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -625,7 +626,9 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             cursor: "pointer",
           }}
         >
-          <NavIcon name="check" size={14} color={COLORS.amber} />
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
+            <NavIcon name="check" size={11} color={COLORS.amber} />
+          </span>
           Bibax
         </button>
         <button
@@ -635,7 +638,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "48px",
+            width: "68px",
             flexShrink: 0,
             background: COLORS.surface,
             border: `2px solid ${COLORS.paperAlt}`,
@@ -644,7 +647,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             opacity: 0.5,
           }}
         >
-          <NavIcon name="mail" size={18} color={COLORS.inkSoft} />
+          <NavIcon name="mail" size={24} color={COLORS.inkSoft} />
         </button>
         <div
           style={{
@@ -692,7 +695,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
                 padding: "14px 6px",
                 fontSize: "15px",
                 fontWeight: 600,
-                color: COLORS.wine,
+                color: COLORS.ink,
                 cursor: "pointer",
                 textAlign: "left",
               }}
@@ -703,7 +706,54 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
                   <NavIcon name="x" size={13} color={COLORS.wine} />
                 </span>
               </span>
-              Retirer des Bibax
+              Retirer de mes Bibax
+            </button>
+            {onBlock && (
+              <button
+                onClick={() => {
+                  setShowRemoveSheet(false);
+                  setConfirmingBlock(true);
+                }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  background: "none",
+                  border: "none",
+                  padding: "14px 6px",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  color: COLORS.ink,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <NavIcon name="no-entry" size={20} color={COLORS.ink} />
+                Bloquer {bibro.name}
+              </button>
+            )}
+            <button
+              disabled
+              title="Bientôt disponible"
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                background: "none",
+                border: "none",
+                padding: "14px 6px",
+                fontSize: "15px",
+                fontWeight: 600,
+                color: COLORS.ink,
+                opacity: 0.4,
+                cursor: "not-allowed",
+                textAlign: "left",
+              }}
+            >
+              <NavIcon name="alert-triangle" size={20} color={COLORS.ink} />
+              Signaler {bibro.name}
             </button>
             <button
               onClick={() => setShowRemoveSheet(false)}
