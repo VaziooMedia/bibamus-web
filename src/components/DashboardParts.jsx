@@ -1103,7 +1103,7 @@ export function BibaBobModal({ friendName, storedPin, mode, onActivate, onDeacti
         )}
 
         <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>
-          {mode === "activate" ? "Code PIN" : "Entre le même code utilisé lors de l'activation"}
+          {mode === "activate" ? "Code PIN" : "Entre le même code PIN utilisé lors de l'activation"}
         </label>
         <div style={{ display: "flex", gap: "10px", marginBottom: "6px" }}>
           {[0, 1, 2, 3].map((i) => (
