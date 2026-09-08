@@ -843,6 +843,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         </div>
       )}
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px" }} />
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         <StatCard label="Bibax" value={bibaxCount} />
         <StatCard label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
