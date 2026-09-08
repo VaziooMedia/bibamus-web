@@ -550,13 +550,19 @@ export function FinalTotalCard({ event, updateEvent, roundsSum }) {
 
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-      <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "4px" }}>Note finale du bar</div>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+        <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Note finale du bar</span>
+      </div>
       <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "10px" }}>
-        Facultatif — encode le montant de l'addition quand tu le connais, pour le comparer à tes tournées sur la note ({formatMoney(roundsSum, "euro")}). Les tournées déjà réglées au comptoir n'y comptent pas.
+        Facultatif.
+        <br />
+        Encode le montant de l'addition finale réelle pour le comparer à tes tournées sur la note ({formatMoney(roundsSum, "euro")}).
+        <br />
+        Les tournées déjà réglées n'y comptent pas.
       </p>
       <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
         <div>
-          <div style={{ fontSize: "10.5px", color: COLORS.inkSoft, marginBottom: "3px" }}>Addition</div>
           <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
             <input
               type="number"
@@ -564,14 +570,13 @@ export function FinalTotalCard({ event, updateEvent, roundsSum }) {
               step="0.10"
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder="0,00"
+              placeholder="Addition"
               style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
             />
             <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>
           </div>
         </div>
         <div>
-          <div style={{ fontSize: "10.5px", color: COLORS.inkSoft, marginBottom: "3px" }}>Pourboire</div>
           <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
             <input
               type="number"
@@ -579,7 +584,7 @@ export function FinalTotalCard({ event, updateEvent, roundsSum }) {
               step="0.10"
               value={tipValue}
               onChange={(e) => setTipValue(e.target.value)}
-              placeholder="0,00"
+              placeholder="Pourboire"
               style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
             />
             <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>
