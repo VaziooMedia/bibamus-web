@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, TokenPinkIcon } from "./icons.jsx";
+import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, TokenPinkIcon, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx";
 import { formatAddress, formatCompactCount, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
@@ -64,7 +64,10 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{venue.name}</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{venue.name}</h1>
+            <CertificationIcon level={venue.certificationLevel} size={17} />
+          </div>
           {venue.subtitle && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
         </div>
         <button

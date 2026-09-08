@@ -1287,6 +1287,7 @@ function rowToVenue(row) {
     pendingContributionsCount: row.pending_contributions_count || 0,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
+    certificationLevel: row.certification_level,
   };
 }
 

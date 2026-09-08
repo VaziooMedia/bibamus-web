@@ -8,6 +8,7 @@ import tokenCyanUrl from "../assets/brand/Bibamus App - Icon UI - Token Cyan.svg
 import tokenRedUrl from "../assets/brand/Bibamus App - Icon UI - Token Red.svg";
 import tokenGreenUrl from "../assets/brand/Bibamus App - Icon UI - Token Green.svg";
 import waterAlertUrl from "../assets/brand/water-alert.svg";
+import bibameIconUrl from "../assets/brand/bibame.svg";
 
 // Chaque drapeau réellement utilisé par l'app est importé individuellement — plus verbeux
 // qu'un glob global, mais évite d'embarquer les 271 drapeaux disponibles dans le dépôt alors
@@ -1193,6 +1194,51 @@ export function TwitchIcon({ size = 22 }) {
   return (
     <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
       <img src={twitchLogoUrl} alt="Twitch" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
+}
+
+// Certification d'une fiche (lieu, boisson, marque...) — reprend exactement les mêmes 3
+// niveaux et le même rendu que la plateforme de gestion (CertificationIcon.jsx), pour rester
+// cohérent avec ce qui a déjà été choisi côté admin.
+const CERTIFICATION_TOOLTIP = {
+  utilisateur: "Fiche créée par un Bibax (non vérifiée)",
+  bibamus: "Fiche vérifiée par Bibamus",
+  producteur: "Fiche contrôlée par le propriétaire",
+};
+
+function RosetteBadge({ size, color, innerColor }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24">
+      <polygon
+        points="12,1 14.51,2.63 17.5,2.47 18.86,5.14 21.53,6.5 21.37,9.49 23,12 21.37,14.51 21.53,17.5 18.86,18.86 17.5,21.53 14.51,21.37 12,23 9.49,21.37 6.5,21.53 5.14,18.86 2.47,17.5 2.63,14.51 1,12 2.63,9.49 2.47,6.5 5.14,5.14 6.5,2.47 9.49,2.63"
+        fill={color}
+      />
+      <circle cx="12" cy="12" r="7.4" fill={innerColor} />
+      <path d="M8.3 12.3l2.4 2.4 5-5.4" fill="none" stroke="#0D1B2A" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function CertificationIcon({ level, size = 20 }) {
+  const title = CERTIFICATION_TOOLTIP[level] || CERTIFICATION_TOOLTIP.utilisateur;
+  if (level === "bibamus") {
+    return (
+      <span title={title}>
+        <RosetteBadge size={size} color="#39FF66" innerColor="#1E7A38" />
+      </span>
+    );
+  }
+  if (level === "producteur") {
+    return (
+      <span title={title}>
+        <RosetteBadge size={size} color="#FFC145" innerColor="#8A6A1E" />
+      </span>
+    );
+  }
+  return (
+    <span title={title}>
+      <img src={bibameIconUrl} alt="" width={size} height={size} style={{ display: "block" }} />
     </span>
   );
 }
