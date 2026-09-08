@@ -47,25 +47,38 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={onBack} />
-      {venue.pendingContributionsCount > 0 && (
-        <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: "#F2C94C" }}>
-          📝 Une modification de la fiche est proposée, en attente de validation.
+      <div style={{ position: "relative", margin: "-28px -20px 0 -20px" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "150px",
+            background: venue.coverPhotoUrl ? `url(${venue.coverPhotoUrl}) center/cover` : COLORS.surfaceAlt,
+          }}
+        />
+        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
+          <PageHeader onBack={onBack} />
         </div>
-      )}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-          <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={48} />
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "0 0 2px 0", lineHeight: 1 }}>{venue.name}</h1>
+        <div style={{ position: "absolute", bottom: "-40px", left: "20px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
+          <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
         </div>
-        <button
-          onClick={() => onToggleLike(venue.sourcePublicVenueId)}
-          style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", padding: "4px 6px" }}
-        >
-          <NavIcon name="heart" size={24} color={iLike ? COLORS.redFluo : COLORS.paperAlt} />
-          {likes.length > 0 && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.redFluo, marginTop: "2px" }}>{formatCompactCount(likes.length)}</span>}
-        </button>
       </div>
+
+      <div style={{ marginTop: "48px" }}>
+        {venue.pendingContributionsCount > 0 && (
+          <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: "#F2C94C" }}>
+            📝 Une modification de la fiche est proposée, en attente de validation.
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: "0 0 2px 0", lineHeight: 1.2 }}>{venue.name}</h1>
+          <button
+            onClick={() => onToggleLike(venue.sourcePublicVenueId)}
+            style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", padding: "4px 6px", flexShrink: 0 }}
+          >
+            <NavIcon name="heart" size={24} color={iLike ? COLORS.redFluo : COLORS.paperAlt} />
+            {likes.length > 0 && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.redFluo, marginTop: "2px" }}>{formatCompactCount(likes.length)}</span>}
+          </button>
+        </div>
       {venue.isFavorite ? (
         <p style={{ fontSize: "14px", color: COLORS.amber, fontWeight: 600, margin: "0 0 4px 0" }}>★</p>
       ) : (
@@ -312,6 +325,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       </button>
       {claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       <BackFooterLink onClick={onBack} />
+      </div>
     </div>
   );
 }
