@@ -1120,7 +1120,8 @@ export function BibaBobModal({ friendName, storedPin, mode, onActivate, onDeacti
               onKeyDown={(e) => handleDigitKeyDown(i, e)}
               ref={(el) => (codeInputRef.current[i] = el)}
               style={{
-                flex: 1,
+                width: "48px",
+                flexShrink: 0,
                 boxSizing: "border-box",
                 padding: "12px 0",
                 borderRadius: "10px",
