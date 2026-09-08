@@ -399,6 +399,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   const [stats, setStats] = useState(null);
   const [confirmingBlock, setConfirmingBlock] = useState(false);
   const [blocking, setBlocking] = useState(false);
+  const [showRemoveSheet, setShowRemoveSheet] = useState(false);
 
   useEffect(() => {
     if (!bibro?.userId) return;
@@ -572,7 +573,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
         <button
-          onClick={onRemove}
+          onClick={() => setShowRemoveSheet(true)}
           style={{
             flex: 1,
             display: "flex",
@@ -591,6 +592,24 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         >
           <NavIcon name="check" size={14} color={COLORS.amber} />
           Bibax
+        </button>
+        <button
+          disabled
+          title="Bientôt disponible"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "48px",
+            flexShrink: 0,
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "14px",
+            cursor: "not-allowed",
+            opacity: 0.5,
+          }}
+        >
+          <NavIcon name="mail" size={18} color={COLORS.inkSoft} />
         </button>
         <div
           style={{
@@ -612,6 +631,54 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
           {mutualCount != null ? mutualCount : "…"} Bibax en commun
         </div>
       </div>
+
+      {showRemoveSheet && (
+        <div
+          onClick={() => setShowRemoveSheet(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
+          >
+            <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
+            <button
+              onClick={() => {
+                setShowRemoveSheet(false);
+                onRemove();
+              }}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                background: "none",
+                border: "none",
+                padding: "14px 6px",
+                fontSize: "15px",
+                fontWeight: 600,
+                color: COLORS.wine,
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                <img src={bibaxIconUrl} alt="" style={{ width: "22px", height: "22px" }} />
+                <span style={{ position: "absolute", top: "-4px", right: "-8px" }}>
+                  <NavIcon name="x" size={13} color={COLORS.wine} />
+                </span>
+              </span>
+              Retirer des Bibax
+            </button>
+            <button
+              onClick={() => setShowRemoveSheet(false)}
+              style={{ width: "100%", padding: "14px 6px", background: "none", border: "none", fontSize: "15px", fontWeight: 600, color: COLORS.inkSoft, cursor: "pointer", textAlign: "left" }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
         <StatCard icon={<img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Bibax" value={bibaxCount} />
