@@ -83,7 +83,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           </div>
         )}
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "14px", marginBottom: "12px" }}>
           <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <NavIcon name="map-pin" size={15} color={COLORS.amber} />
