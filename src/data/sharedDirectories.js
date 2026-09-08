@@ -13,6 +13,140 @@
 
 import { supabase } from "../supabaseClient.js";
 
+/* ---------------- PERMISSIONS CENTRALISÉES ---------------- */
+
+// Miroir côté code de la fonction SQL has_capability() — une seule matrice à consulter pour
+// savoir "ce rôle a-t-il cette capacité ?", plutôt que de comparer des rôles un peu partout
+// dans l'interface. À tenir à jour en même temps que la fonction SQL équivalente.
+const CAPABILITY_MATRIX = {
+  view_reports: ["moderator", "admin", "super_admin"],
+  resolve_reports: ["moderator", "admin", "super_admin"],
+  block_users: ["admin", "super_admin"],
+  manage_admins: ["super_admin"],
+  manage_database: ["admin", "super_admin"],
+  view_all_statuses: ["moderator", "admin", "super_admin"],
+  moderate_content: ["moderator", "admin", "super_admin"],
+};
+
+/* ---------------- SIGNALEMENTS ---------------- */
+
+const ENTITY_TABLE_BY_TYPE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
+const ENTITY_SELECT_FIELDS = {
+  venue: "id, name, street_name, street_number, city, cover_photo_url, profile_photo_url, status, certification_level",
+  drink: "id, name, type, main_photo_url, status, certification_level",
+  brand: "id, name, logo_url, status, certification_level",
+  producer: "id, name, country, profile_photo_url, cover_photo_url, status, certification_level",
+};
+
+export async function loadReports(status = "pending") {
+  const { data: reports, error } = await supabase.from("entity_reports").select("*").eq("status", status).order("created_at", { ascending: false });
+  if (error) {
+    console.error("loadReports:", error);
+    return [];
+  }
+
+  // Récupère les détails complets de chaque fiche concernée (et, pour un doublon, de la fiche
+  // identifiée aussi) — regroupé par table plutôt qu'une requête par signalement.
+  const idsByTable = {};
+  const addId = (entityType, id) => {
+    const table = ENTITY_TABLE_BY_TYPE[entityType];
+    if (!table || !id) return;
+    idsByTable[table] = idsByTable[table] || new Set();
+    idsByTable[table].add(id);
+  };
+  reports.forEach((r) => {
+    addId(r.entity_type, r.entity_id);
+    if (r.duplicate_of_id) addId(r.entity_type, r.duplicate_of_id);
+  });
+
+  const detailsById = {};
+  await Promise.all(
+    Object.entries(idsByTable).map(async ([table, ids]) => {
+      const entityType = Object.keys(ENTITY_TABLE_BY_TYPE).find((k) => ENTITY_TABLE_BY_TYPE[k] === table);
+      const { data } = await supabase.from(table).select(ENTITY_SELECT_FIELDS[entityType]).in("id", Array.from(ids));
+      (data || []).forEach((row) => (detailsById[row.id] = row));
+    })
+  );
+
+  return reports.map((r) => ({
+    ...r,
+    entityName: detailsById[r.entity_id]?.name || "(fiche introuvable)",
+    entityDetails: detailsById[r.entity_id] || null,
+    duplicateDetails: r.duplicate_of_id ? detailsById[r.duplicate_of_id] || null : null,
+  }));
+}
+
+// Confirme un doublon : marque le lien officiel (duplicate_of_id) et passe la fiche au statut
+// "duplicate" — plus juste qu'un archivage générique, puisque ça garde la trace de quelle
+// fiche est la bonne à conserver.
+// Correction directe depuis "Signalements" — un modérateur a déjà le droit de modifier ces
+// champs (seuls statut/certification/doublon sont protégés), il ne manquait que l'interface.
+export async function updateEntityField(entityType, entityId, patch) {
+  const table = ENTITY_TABLE_BY_TYPE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+  const { error } = await supabase.from(table).update(patch).eq("id", entityId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+// Charge une fiche complète (même format que dans la Database), quel que soit son type — pour
+// pouvoir ouvrir la vraie fiche d'édition directement depuis un signalement.
+export async function loadEntityDetail(entityType, entityId) {
+  const table = ENTITY_TABLE_BY_TYPE[entityType];
+  if (!table) return null;
+  const { data, error } = await supabase.from(table).select("*").eq("id", entityId).single();
+  if (error || !data) return null;
+  if (entityType === "venue") return rowToVenue(data);
+  if (entityType === "drink") return rowToDrink(data);
+  if (entityType === "producer") return rowToBrewery(data);
+  if (entityType === "brand") return rowToBrand(data);
+  return null;
+}
+
+// Fusion réelle — transfère les relations (propriété Business, produits liés à une
+// marque/producteur fusionné, revendications en attente), pas seulement le tombstone.
+export async function mergeEntities(entityType, loserId, keeperId) {
+  const { data, error } = await supabase.rpc("merge_entities", { p_entity_type: entityType, p_loser_id: loserId, p_keeper_id: keeperId });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
+
+export async function confirmDuplicate(reportId, entityType, loserId, keeperId) {
+  const mergeResult = await mergeEntities(entityType, loserId, keeperId);
+  if (mergeResult.error) return { error: mergeResult.error };
+
+  const { error: resolveError } = await supabase.from("entity_reports").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("id", reportId);
+  if (resolveError) return { error: resolveError.message };
+
+  return { ok: true };
+}
+
+export async function archiveReportedEntity(reportId, entityType, entityId) {
+  const table = ENTITY_TABLE_BY_TYPE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+
+  const { error: archiveError } = await supabase.from(table).update({ status: "archived" }).eq("id", entityId);
+  if (archiveError) return { error: archiveError.message };
+
+  const { error: resolveError } = await supabase.from("entity_reports").update({ status: "archived", resolved_at: new Date().toISOString() }).eq("id", reportId);
+  if (resolveError) return { error: resolveError.message };
+
+  return { ok: true };
+}
+
+export async function resolveReport(id, resolverId) {
+  const { error } = await supabase.from("entity_reports").update({ status: "resolved", resolved_by: resolverId || null, resolved_at: new Date().toISOString() }).eq("id", id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function dismissReport(id, resolverId) {
+  const { error } = await supabase.from("entity_reports").update({ status: "dismissed", resolved_by: resolverId || null, resolved_at: new Date().toISOString() }).eq("id", id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
 // vrai contenu de la réponse pour afficher le message utile à la place.
@@ -28,748 +162,397 @@ async function extractFunctionError(error) {
   return error?.message || "Une erreur est survenue.";
 }
 
-/* ---------------- AUTHENTIFICATION ---------------- */
+/* ---------------- COLLABORATEURS (comptes pro de la plateforme de gestion) ---------------- */
 
-// Vrais comptes (Supabase Auth) — remplace la génération locale du code Bibax. Le profil
-// (avec le code Bibax) est désormais stocké côté serveur, lié au compte, récupérable en cas de
-// changement d'appareil.
-
-// Feature flags — pilotés depuis la plateforme de gestion, sans déploiement de code. Renvoie
-// un objet { flag_key: true/false } pour une lecture simple côté app. Si un pays est fourni,
-// une éventuelle surcharge par pays l'emporte sur la valeur globale (héritage) — jamais
-// mélangé aux permissions utilisateur (rôle, Business...), qui restent un système séparé.
-export async function loadFeatureFlags(countryCode) {
-  const { data: globalFlags, error } = await supabase.from("feature_flags").select("flag_key, enabled");
+export async function loadAppUsers() {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "id, email, name, last_name, nickname, bibro_code, birth_date, avatar_emoji, country, city, locality, facebook_url, whatsapp_url, instagram_url, tiktok_url, snapchat_url, x_url, threads_url, linkedin_url, pinterest_url, twitch_url, app_language, active, blocked_reason, blocked_until, created_at"
+    )
+    .eq("role", "user")
+    .order("created_at", { ascending: false });
   if (error) {
-    console.error("loadFeatureFlags:", error);
-    return {};
+    console.error("loadAppUsers:", error);
+    return [];
   }
-  const result = Object.fromEntries(globalFlags.map((f) => [f.flag_key, f.enabled]));
-
-  if (countryCode) {
-    const { data: overrides } = await supabase.from("feature_flag_overrides").select("flag_key, enabled").eq("country_code", countryCode);
-    (overrides || []).forEach((o) => {
-      result[o.flag_key] = o.enabled;
-    });
-  }
-
-  return result;
+  return data;
 }
 
-// Crash reporting — envoie une erreur technique pour consultation côté plateforme de gestion.
-// N'échoue jamais bruyamment : un souci réseau ici ne doit pas empêcher le reste de l'app de
-// continuer à fonctionner.
-// Analytics — suivi simple d'usage (vues d'écran, actions clés), consultable côté plateforme
-// de gestion. N'échoue jamais bruyamment : un souci ici ne doit pas gêner le reste de l'app.
-export async function submitClaim(entityType, entityId, entityName, { companyName, vatNumber, officers, justification }, claimantId, claimantBibroCode) {
-  const { error } = await supabase.from("entity_claims").insert({
-    id: `claim-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-    entity_type: entityType,
-    entity_id: entityId,
-    entity_name: entityName,
-    claimant_id: claimantId,
-    claimant_bibro_code: claimantBibroCode,
-    company_name: companyName,
-    vat_number: vatNumber || null,
-    officers: officers || null,
-    justification,
-    status: "pending",
+export async function createAppUser(email, password, firstName, lastName, nickname, birthDate) {
+  const { data, error } = await supabase.functions.invoke("admin-create-user", {
+    body: { email, password, firstName, lastName, nickname, birthDate },
   });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
+
+export async function deleteAppUser(targetUserId, confirmPassword) {
+  const { data, error } = await supabase.functions.invoke("admin-delete-user", { body: { targetUserId, confirmPassword } });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
+
+export async function updateAppUserProfile(userId, patch) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      name: patch.firstName,
+      last_name: patch.lastName,
+      nickname: patch.nickname,
+      birth_date: patch.birthDate || null,
+      country: patch.country,
+      locality: patch.locality,
+      city: patch.city,
+      facebook_url: patch.facebookUrl,
+      whatsapp_url: patch.whatsappUrl,
+      instagram_url: patch.instagramUrl,
+      tiktok_url: patch.tiktokUrl,
+      snapchat_url: patch.snapchatUrl,
+      x_url: patch.xUrl,
+      threads_url: patch.threadsUrl,
+      linkedin_url: patch.linkedinUrl,
+      pinterest_url: patch.pinterestUrl,
+      twitch_url: patch.twitchUrl,
+      app_language: patch.appLanguage,
+      active: patch.active,
+      blocked_reason: patch.active === false ? patch.blockedReason || null : null,
+      blocked_until: patch.active === false ? patch.blockedUntil || null : null,
+    })
+    .eq("id", userId);
   if (error) return { error: error.message };
   return { ok: true };
 }
 
-// EventPublisher — émission centralisée d'un événement métier (Chantier n°9). Le domaine émet
-// l'événement sans jamais connaître ses futurs consommateurs (Stats, Pulse, Badges,
-// Notifications) — ceux-ci s'y abonneront plus tard sans qu'aucune ligne de ce fichier n'ait
-// besoin de changer. N'échoue jamais bruyamment, comme trackEvent et reportCrash.
-// BibaPulse — types d'événements déjà câblés côté domaine (chantier "architecture des
-// événements métier") qui doivent aussi produire une activité sociale. Un type absent de
-// cette liste ne produit jamais de PulseEvent — c'est le comportement par défaut voulu.
-const PULSE_EVENT_MAP = {
-  DRINK_CHECKED: "product_discovered",
-  VENUE_CHECKED: "venue_visit",
-  PRODUCT_ADDED: "database_contribution",
-};
+const CLAIM_ENTITY_TABLE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
 
-// Émission centralisée d'un PulseEvent — jamais d'écriture directe en base depuis le client
-// (voir la fonction serveur create-pulse-event), qui applique le dédoublonnage et la
-// confidentialité par défaut.
-export async function createPulseEvent(eventType, objectType, objectId, options = {}) {
-  try {
-    // Aucune gestion manuelle de la session ici — la librairie Supabase gère déjà le
-    // rafraîchissement toute seule en interne. Un rafraîchissement forcé ajouté ici en
-    // parallèle risquait justement d'entrer en conflit avec ce mécanisme automatique, ce qui
-    // pousse Supabase à invalider toute la session par mesure de sécurité (double utilisation
-    // détectée d'un même jeton de rafraîchissement).
-    const { error } = await supabase.functions.invoke("create-pulse-event", {
-      body: {
-        eventType,
-        objectType,
-        objectId,
-        sourceType: objectType,
-        sourceId: objectId,
-        venueId: options.venueId || null,
-        roomSalonCode: options.roomSalonCode || null,
-        visibility: options.visibility || null,
-        metadata: options.metadata || null,
-      },
-    });
-    if (error) {
-      // FunctionsHttpError cache le vrai message de la fonction dans error.context (la
-      // réponse HTTP elle-même) — sans ça, la console n'affiche qu'un message générique.
-      let detail = error.message;
-      if (error.context?.json) {
-        try {
-          const body = await error.context.json();
-          detail = body?.error || JSON.stringify(body);
-        } catch (_) {
-          try {
-            detail = await error.context.text();
-          } catch (_) {}
-        }
-      }
-      console.error("createPulseEvent:", detail);
-    }
-  } catch (e) {
-    console.error("createPulseEvent:", e);
-  }
+// Toutes les fiches liées au compte Business actuellement connecté, tous types confondus.
+export async function loadMyBusinessEntities(userId) {
+  const tables = [
+    { table: "public_venues", type: "venue", label: "Établissement" },
+    { table: "drinks_directory", type: "drink", label: "Produit" },
+    { table: "brands_directory", type: "brand", label: "Marque" },
+    { table: "breweries_directory", type: "producer", label: "Producteur" },
+  ];
+  const results = await Promise.all(
+    tables.map(async ({ table, type, label }) => {
+      const { data } = await supabase.from(table).select("id, name, status").eq("business_owner_id", userId);
+      return (data || []).map((row) => ({ ...row, entityType: type, entityTypeLabel: label }));
+    })
+  );
+  return results.flat();
 }
 
-export async function emitEvent(type, { actorBibroCode, entityType, entityId, payload, version = 1 } = {}) {
-  try {
-    await supabase.from("analytics_events").insert({
-      id: `evt-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-      event_type: type,
-      bibro_code: actorBibroCode || null,
-      entity_type: entityType || null,
-      entity_id: entityId || null,
-      version,
-      metadata: payload || null,
-    });
-  } catch (e) {
-    console.error("emitEvent:", e);
+export async function loadClaims(status = "pending") {
+  const { data, error } = await supabase.from("entity_claims").select("*").eq("status", status).order("created_at", { ascending: false });
+  if (error) {
+    console.error("loadClaims:", error);
+    return [];
   }
 
-  const pulseType = PULSE_EVENT_MAP[type];
-  if (pulseType && entityType && entityId) {
-    createPulseEvent(pulseType, entityType, entityId, { roomSalonCode: payload?.salonCode });
-  }
+  const claimantIds = [...new Set(data.map((c) => c.claimant_id).filter(Boolean))];
+  if (claimantIds.length === 0) return data;
+
+  const { data: claimants } = await supabase.from("profiles").select("id, name, last_name, email").in("id", claimantIds);
+  const byId = Object.fromEntries((claimants || []).map((p) => [p.id, p]));
+
+  return data.map((c) => ({ ...c, claimant: byId[c.claimant_id] || null }));
 }
 
-export async function trackEvent(eventType, screen, bibroCode, metadata) {
-  try {
-    await supabase.from("analytics_events").insert({
-      id: `evt-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-      event_type: eventType,
-      screen: screen || null,
-      bibro_code: bibroCode || null,
-      metadata: metadata || null,
-    });
-  } catch (e) {
-    console.error("trackEvent:", e);
+const BUSINESS_FIELDS =
+  "id, email, name, last_name, active, company_name, vat_number, company_email, company_phone, company_street, company_street_number, " +
+  "company_address_line2, company_postal_code, company_city, company_country, contact_function, contact_email, contact_phone, contact_languages, " +
+  "business_label, business_status";
+
+export async function loadBusinessAccountsFull() {
+  const { data, error } = await supabase.from("profiles").select(BUSINESS_FIELDS).eq("role", "business").order("company_name");
+  if (error) {
+    console.error("loadBusinessAccountsFull:", error);
+    return [];
   }
+  return data;
 }
 
-export async function reportCrash({ message, stack, source, screen, bibroCode }) {
-  try {
-    await supabase.from("crash_reports").insert({
-      id: `crash-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-      message: message || null,
-      stack: stack || null,
-      source: source || null,
-      screen: screen || null,
-      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-      bibro_code: bibroCode || null,
-    });
-  } catch (e) {
-    console.error("reportCrash:", e);
-  }
-}
+const BUSINESS_ENTITY_TABLE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
 
-export async function signUp(email, password, { firstName, lastName, nickname, birthDate, country }) {
-  // Les informations passent en métadonnées Supabase Auth — c'est le déclencheur côté base de
-  // données (handle_new_user) qui crée ensuite la ligne de profil, jamais ce code client
-  // directement (une session active n'existe pas encore tant que l'email n'est pas confirmé).
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        first_name: firstName,
-        last_name: lastName,
-        nickname: nickname || null,
-        birth_date: birthDate,
-        country,
-      },
-    },
-  });
+export async function unlinkEntityFromBusiness(entityType, entityId, entityName) {
+  const table = BUSINESS_ENTITY_TABLE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+  const { error } = await supabase.from(table).update({ business_owner_id: null }).eq("id", entityId);
   if (error) return { error: error.message };
-  // Supabase renvoie un succès apparent même si l'email existe déjà (pour ne pas révéler quels
-  // emails sont enregistrés) — mais le tableau "identities" reste vide dans ce cas précis,
-  // contrairement à une vraie nouvelle inscription. C'est le seul signal fiable pour distinguer
-  // les deux cas côté client.
-  if (data.user && data.user.identities && data.user.identities.length === 0) {
-    return { error: "Un compte existe déjà avec cet email — connectez-vous plutôt, ou réinitialisez votre mot de passe." };
-  }
-  return { user: data.user, session: data.session };
+  await supabase.rpc("log_audit_event", { p_action: "ownership_revoked", p_entity_type: entityType, p_entity_id: entityId, p_entity_name: entityName || null, p_details: null });
+  return { ok: true };
 }
 
-// Seuil d'âge minimum pour un pays donné — piloté depuis la plateforme de gestion, plus besoin
-// de déploiement de code pour ajuster un seuil ou ajouter un pays.
-// Détecte le pays où se trouve physiquement l'appareil — utilisé pour l'avertissement d'âge
-// légal en voyage (pas la même chose que le pays de résidence déclaré au profil). Nécessite
-// que l'utilisateur ait autorisé la localisation (réglage "Localisation" des Permissions).
-export async function detectCurrentCountryCode() {
-  if (!navigator.geolocation) return null;
-  const position = await new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve(pos),
-      () => resolve(null),
-      { timeout: 8000, maximumAge: 3600000 }
-    );
+export async function linkEntityToBusiness(entityType, entityId, businessId, entityName) {
+  const table = BUSINESS_ENTITY_TABLE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+  // Le lien précédent (le cas échéant) permet de distinguer une première attribution d'un
+  // transfert d'un compte Business à un autre (ex. revente d'un établissement).
+  const { data: current } = await supabase.from(table).select("business_owner_id").eq("id", entityId).single();
+  const previousOwnerId = current?.business_owner_id || null;
+
+  const { error } = await supabase.from(table).update({ business_owner_id: businessId }).eq("id", entityId);
+  if (error) return { error: error.message };
+
+  const action = previousOwnerId && previousOwnerId !== businessId ? "ownership_transferred" : "ownership_granted";
+  await supabase.rpc("log_audit_event", {
+    p_action: action,
+    p_entity_type: entityType,
+    p_entity_id: entityId,
+    p_entity_name: entityName || null,
+    p_details: previousOwnerId ? { from_business_id: previousOwnerId, to_business_id: businessId } : { to_business_id: businessId },
   });
-  if (!position) return null;
-  try {
-    const res = await fetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=fr`
-    );
-    const data = await res.json();
-    return data?.countryCode ? data.countryCode.toLowerCase() : null;
-  } catch {
+  return { ok: true };
+}
+
+// Recherche par nom, pour retrouver une fiche à lier manuellement (transfert suite à une
+// revente, par exemple) — indépendamment de son propriétaire Business actuel, s'il en a un.
+export async function searchEntitiesByName(entityType, query) {
+  const table = BUSINESS_ENTITY_TABLE[entityType];
+  if (!table || !query.trim()) return [];
+  const { data, error } = await supabase.from(table).select("id, name, business_owner_id").ilike("name", `%${query.trim()}%`).limit(8);
+  if (error) {
+    console.error("searchEntitiesByName:", error);
+    return [];
+  }
+  return data;
+}
+
+// Organisation et abonnement d'un compte Business — architecture posée pour le chantier B2B,
+// pas encore utilisée pour restreindre quoi que ce soit (aucune fonctionnalité payante
+// n'existe encore), affichée ici à titre informatif.
+export async function loadOrganizationForProfile(profileId) {
+  const { data: membership } = await supabase.from("memberships").select("organization_id").eq("profile_id", profileId).maybeSingle();
+  if (!membership) return null;
+  const [{ data: org }, { data: sub }] = await Promise.all([
+    supabase.from("organizations").select("*").eq("id", membership.organization_id).maybeSingle(),
+    supabase.from("subscriptions").select("*").eq("organization_id", membership.organization_id).maybeSingle(),
+  ]);
+  return { organization: org, subscription: sub };
+}
+
+export async function loadBusinessAccountById(userId) {
+  const { data, error } = await supabase.from("profiles").select(BUSINESS_FIELDS).eq("id", userId).single();
+  if (error) {
+    console.error("loadBusinessAccountById:", error);
     return null;
   }
+  return data;
 }
 
-// Envoie un message "Nous écrire" ou "Signaler un problème" — stocké, consultable plus tard
-// côté plateforme de gestion.
-// Recherche de Bibax par nom — pour la barre de recherche depuis Home. Ne renvoie que le nom
-// d'affichage déjà choisi par chacun, jamais un champ qu'il aurait masqué.
-export async function searchBibax(query) {
-  if (!query || query.trim().length < 2) return [];
-  const { data, error } = await supabase.rpc("search_bibax", { p_query: query.trim() });
-  if (error) {
-    console.error("searchBibax:", error);
-    return [];
-  }
-  return data.map((row) => ({
-    id: row.id,
-    displayName: row.display_name,
-    lastName: row.last_name,
-    avatarUrl: row.avatar_url,
-    bibroCode: row.bibro_code,
-  }));
-}
-
-// Fil de notifications — chargement, marquer comme lu(es), compteur non-lus.
-export async function loadMyNotifications(limit = 30) {
-  const { data, error } = await supabase.from("notifications_feed").select("*").order("created_at", { ascending: false }).limit(limit);
-  if (error) {
-    console.error("loadMyNotifications:", error);
-    return [];
-  }
-  const actorIds = [...new Set(data.map((n) => n.actor_id).filter(Boolean))];
-  let actorsById = {};
-  if (actorIds.length > 0) {
-    const { data: actors, error: actorsError } = await supabase.rpc("get_profiles_basic", { p_ids: actorIds });
-    if (actorsError) console.error("loadMyNotifications (actors):", actorsError);
-    actorsById = Object.fromEntries((actors || []).map((a) => [a.id, a]));
-  }
-  return data.map((n) => {
-    const actor = actorsById[n.actor_id];
-    return {
-      id: n.id,
-      type: n.type,
-      entityType: n.entity_type,
-      entityId: n.entity_id,
-      read: n.read,
-      createdAt: n.created_at,
-      previewText: n.preview_text,
-      postPreview: n.post_preview,
-      actorName: actor?.display_name || null,
-      actorLastName: actor?.last_name || null,
-      actorAvatarUrl: actor?.avatar_url || null,
-    };
-  });
-}
-
-export async function countMyUnreadNotifications() {
-  const { count, error } = await supabase.from("notifications_feed").select("id", { count: "exact", head: true }).eq("read", false);
-  if (error) {
-    console.error("countMyUnreadNotifications:", error);
-    return 0;
-  }
-  return count || 0;
-}
-
-export async function markNotificationsRead(ids) {
-  const { error } = await supabase.from("notifications_feed").update({ read: true }).in("id", ids);
-  if (error) console.error("markNotificationsRead:", error);
-}
-
-export async function markAllNotificationsRead() {
-  const { error } = await supabase.from("notifications_feed").update({ read: true }).eq("read", false);
-  if (error) console.error("markAllNotificationsRead:", error);
-}
-
-// Abonnement temps réel — appelé une fois avec l'id de l'utilisateur, prévient
-// immédiatement (sans attendre un cycle de vérification) dès qu'une nouvelle notification lui
-// est destinée. Retourne une fonction à appeler pour se désabonner proprement.
-export function subscribeToMyNotifications(userId, onNewNotification) {
-  const channel = supabase
-    .channel(`notifications-${userId}`)
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications_feed", filter: `recipient_id=eq.${userId}` }, (payload) => {
-      onNewNotification(payload.new);
+export async function updateBusinessAccount(userId, patch) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      name: patch.firstName,
+      last_name: patch.lastName,
+      company_name: patch.companyName,
+      vat_number: patch.vatNumber,
+      company_email: patch.companyEmail,
+      company_phone: patch.companyPhone,
+      company_street: patch.companyStreet,
+      company_street_number: patch.companyStreetNumber,
+      company_address_line2: patch.companyAddressLine2,
+      company_postal_code: patch.companyPostalCode,
+      company_city: patch.companyCity,
+      company_country: patch.companyCountry,
+      contact_function: patch.contactFunction,
+      contact_email: patch.contactEmail,
+      contact_phone: patch.contactPhone,
+      contact_languages: patch.contactLanguages,
+      business_label: patch.businessLabel,
+      business_status: patch.businessStatus,
+      active: patch.active,
     })
-    .subscribe();
-  return () => supabase.removeChannel(channel);
-}
-
-// BibaSolo — historique continu, sans notion de session. addSoloCheckin enregistre une
-// consommation ; loadMySoloCheckins charge l'historique (aujourd'hui par défaut).
-export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl) {
-  const { error } = await supabase.from("solo_checkins").insert({ user_id: userId, drink_id: drinkId, price: price || null, venue_id: venueId || null, volume_cl: volumeCl || null });
+    .eq("id", userId);
   if (error) return { error: error.message };
   return { ok: true };
 }
 
-export async function loadMySoloCheckins(sinceIso) {
-  let query = supabase.from("solo_checkins").select("*").order("created_at", { ascending: false });
-  if (sinceIso) query = query.gte("created_at", sinceIso);
+export async function loadBusinessAccounts() {
+  const { data, error } = await supabase.from("profiles").select("id, name, last_name, email, company_name").eq("role", "business").order("company_name");
+  if (error) {
+    console.error("loadBusinessAccounts:", error);
+    return [];
+  }
+  return data;
+}
+
+// Lie une fiche à un compte Business (existant ou nouvellement créé) et marque la
+// revendication comme approuvée.
+export async function approveClaim(claimId, entityType, entityId, businessId, entityName) {
+  const table = CLAIM_ENTITY_TABLE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+
+  const { error: linkError } = await supabase.from(table).update({ business_owner_id: businessId }).eq("id", entityId);
+  if (linkError) return { error: linkError.message };
+
+  const { error: claimError } = await supabase.from("entity_claims").update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", claimId);
+  if (claimError) return { error: claimError.message };
+
+  await supabase.rpc("log_audit_event", {
+    p_action: "ownership_granted",
+    p_entity_type: entityType,
+    p_entity_id: entityId,
+    p_entity_name: entityName || null,
+    p_details: { claim_id: claimId, to_business_id: businessId },
+  });
+
+  return { ok: true };
+}
+
+export async function rejectClaim(claimId, reason) {
+  const { error } = await supabase.from("entity_claims").update({ status: "rejected", rejection_reason: reason || null, reviewed_at: new Date().toISOString() }).eq("id", claimId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function loadAuditLog(filters = {}) {
+  let query = supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(200);
+  if (filters.action) query = query.eq("action", filters.action);
+  if (filters.entityType) query = query.eq("entity_type", filters.entityType);
   const { data, error } = await query;
   if (error) {
-    console.error("loadMySoloCheckins:", error);
+    console.error("loadAuditLog:", error);
     return [];
   }
-  return data.map((row) => ({
-    id: row.id,
-    drinkId: row.drink_id,
-    venueId: row.venue_id,
-    price: row.price,
-    volumeCl: row.volume_cl,
-    createdAt: row.created_at,
-  }));
+  return data;
 }
 
-export async function deleteSoloCheckin(id) {
-  const { error } = await supabase.from("solo_checkins").delete().eq("id", id);
-  if (error) console.error("deleteSoloCheckin:", error);
+export async function loadMyActivity() {
+  const { data, error } = await supabase.rpc("my_audit_activity");
+  if (error) {
+    console.error("loadMyActivity:", error);
+    return [];
+  }
+  return data;
 }
 
-export async function submitSupportMessage(userId, type, message, contactEmail) {
-  const { error } = await supabase.from("support_messages").insert({ user_id: userId, type, message, contact_email: contactEmail || null });
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
+// Seuil d'âge minimum pour un pays donné — piloté depuis "Configuration pays", plus besoin de
+// déploiement de code pour ajuster un seuil ou ajouter un pays.
 export async function getMinimumAge(countryCode) {
   const { data, error } = await supabase.from("market_config").select("config_value").eq("country_code", countryCode).eq("config_key", "minimum_age").maybeSingle();
   if (error || !data) return 18;
   return data.config_value;
 }
 
-export async function signIn(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: error.message };
-  return { user: data.user, session: data.session };
+export async function loadAnalyticsEvents() {
+  const { data, error } = await supabase.from("analytics_events").select("*").order("created_at", { ascending: false }).limit(5000);
+  if (error) {
+    console.error("loadAnalyticsEvents:", error);
+    return [];
+  }
+  return data;
 }
 
-export async function deleteMyAccount(confirmPassword) {
-  const { data, error } = await supabase.functions.invoke("delete-my-account", { body: { confirmPassword } });
+export async function loadCrashReports() {
+  const { data, error } = await supabase.from("crash_reports").select("*").order("created_at", { ascending: false }).limit(200);
+  if (error) {
+    console.error("loadCrashReports:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function loadFeatureFlagOverrides(flagKey) {
+  const { data, error } = await supabase.from("feature_flag_overrides").select("*").eq("flag_key", flagKey).order("country_code");
+  if (error) {
+    console.error("loadFeatureFlagOverrides:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function setFeatureFlagOverride(flagKey, countryCode, enabled) {
+  const { error } = await supabase
+    .from("feature_flag_overrides")
+    .upsert({ flag_key: flagKey, country_code: countryCode, enabled, updated_at: new Date().toISOString() }, { onConflict: "flag_key,country_code" });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function removeFeatureFlagOverride(flagKey, countryCode) {
+  const { error } = await supabase.from("feature_flag_overrides").delete().eq("flag_key", flagKey).eq("country_code", countryCode);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function loadFeatureFlags() {
+  const { data, error } = await supabase.from("feature_flags").select("*").order("flag_key");
+  if (error) {
+    console.error("loadFeatureFlags:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function updateFeatureFlag(flagKey, enabled) {
+  const { error } = await supabase.from("feature_flags").update({ enabled, updated_at: new Date().toISOString() }).eq("flag_key", flagKey);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function loadCountryRules() {
+  const { data, error } = await supabase.from("market_config").select("country_code, config_value, updated_at").eq("config_key", "minimum_age").order("country_code");
+  if (error) {
+    console.error("loadCountryRules:", error);
+    return [];
+  }
+  return data.map((r) => ({ country_code: r.country_code, minimum_age: r.config_value, updated_at: r.updated_at }));
+}
+
+export async function updateCountryRule(countryCode, minimumAge) {
+  const { error } = await supabase
+    .from("market_config")
+    .upsert({ country_code: countryCode, config_key: "minimum_age", config_value: minimumAge, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function loadCollaborators() {
+  const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, avatar_url, role, active, can_moderate").order("name");
+  if (error) {
+    console.error("loadCollaborators:", error);
+    return [];
+  }
+  return data;
+}
+
+// Passe par la fonction serveur dédiée — un compte ne peut jamais être créé directement
+// depuis le navigateur, quel que soit le rôle de la personne connectée.
+export async function createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate, extra = {}) {
+  const { data, error } = await supabase.functions.invoke("admin-create-collaborator", {
+    body: { email, password, firstName, lastName, birthDate, role, canModerate, ...extra },
+  });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { ok: true, userId: data.userId };
+}
+
+// Modification de la fiche (nom/prénom/date de naissance/rôle/statut actif/modération) — le
+// rôle, le statut actif, et le droit de modération restent malgré tout protégés côté base de
+// données (réservés au super_admin), peu importe qui appelle cette fonction.
+export async function updateCollaboratorProfile(userId, { firstName, lastName, birthDate, role, active, canModerate }) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ name: firstName, last_name: lastName, birth_date: birthDate || null, role, active, can_moderate: canModerate })
+    .eq("id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function deleteCollaborator(targetUserId, confirmPassword) {
+  const { data, error } = await supabase.functions.invoke("admin-delete-collaborator", { body: { targetUserId, confirmPassword } });
   if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
   return { ok: true };
 }
 
-export async function searchBibaxByName(query) {
-  const { data, error } = await supabase.rpc("search_bibax_by_name", { p_query: query });
-  if (error) {
-    console.error("searchBibaxByName:", error);
-    return [];
-  }
-  return data.map((row) => ({
-    bibroCode: row.bibro_code,
-    displayName: row.display_name,
-    avatarUrl: row.avatar_url,
-    firstName: row.first_name,
-    lastName: row.last_name,
-    nickname: row.nickname,
-    city: row.city,
-    country: prettifyCountry(row.country),
-  }));
-}
-
-// Les codes pays sont stockés en minuscules avec underscores (ex. "pays_bas") — cette fonction
-// les convertit en libellé lisible ("Pays-Bas") pour l'affichage et pour la correspondance avec
-// COUNTRY_FLAGS. Utilisée partout où un pays de profil est renvoyé au client.
-function prettifyCountry(raw) {
-  return raw ? raw.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("-") : null;
-}
-
-export async function claimWaterAlertRoundReminder(salonCode, roundCount) {
-  const { data, error } = await supabase.rpc("claim_water_alert_round_reminder", { p_salon_code: salonCode, p_round_count: roundCount });
-  if (error) {
-    console.error("claimWaterAlertRoundReminder:", error);
-    return false;
-  }
-  return data === true;
-}
-
-export async function sendWaterAlertPush(bibroCodes) {
-  const { error } = await supabase.functions.invoke("send-push-notification", {
-    body: { bibro_codes: bibroCodes, title: "WaterAlert", body: "Pense à boire un verre d'eau !" },
-  });
-  if (error) console.error("sendWaterAlertPush:", error);
-}
-
-export async function upsertPushSubscription(fcmToken, platform = "web") {
-  const { error } = await supabase.rpc("upsert_push_subscription", { p_fcm_token: fcmToken, p_platform: platform });
-  if (error) {
-    console.error("upsertPushSubscription:", error);
-    return false;
-  }
-  return true;
-}
-
-export async function lookupBibroCode(code) {
-  const { data, error } = await supabase.rpc("lookup_bibro_code", { p_code: code });
-  if (error) {
-    console.error("lookupBibroCode:", error);
-    return null;
-  }
-  const row = data?.[0];
-  if (!row || !row.display_name) return null;
-  return {
-    displayName: row.display_name,
-    avatarUrl: row.avatar_url,
-    firstName: row.first_name,
-    lastName: row.last_name,
-    nickname: row.nickname,
-    city: row.city,
-    // Les codes pays sont stockés en minuscules avec underscores (ex. "pays_bas") — converti
-    // ici en libellé lisible ("Pays-Bas") pour l'affichage.
-    country: prettifyCountry(row.country),
-    facebookUrl: row.facebook_url,
-    instagramUrl: row.instagram_url,
-    tiktokUrl: row.tiktok_url,
-    snapchatUrl: row.snapchat_url,
-    whatsappUrl: row.whatsapp_url,
-    xUrl: row.x_url,
-    threadsUrl: row.threads_url,
-    linkedinUrl: row.linkedin_url,
-    mutualBibaxCount: row.mutual_bibax_count || 0,
-  };
-}
-
-export async function signOut() {
-  await supabase.auth.signOut();
-}
-
-export async function resetPassword(email) {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset-password`,
-  });
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function updatePassword(newPassword) {
-  const { error } = await supabase.auth.updateUser({ password: newPassword });
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function getSession() {
-  const { data } = await supabase.auth.getSession();
-  return data.session;
-}
-
-export function onAuthStateChange(callback) {
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => callback(session));
-  return data.subscription;
-}
-
-export async function loadMyProfile(userId) {
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
-  if (error) {
-    console.error("loadMyProfile:", error);
-    return null;
-  }
-  return {
-    myBibroCode: data.bibro_code,
-    registeredAt: data.created_at || null,
-    name: data.name || "",
-    lastName: data.last_name || "",
-    nickname: data.nickname || "",
-    email: data.email || "",
-    phone: data.phone || "",
-    birthDate: data.birth_date || null,
-    country: data.country || null,
-    city: data.city || null,
-    locality: data.locality || "",
-    latitude: data.latitude || null,
-    longitude: data.longitude || null,
-    bio: data.bio || "",
-    facebookUrl: data.facebook_url || "",
-    instagramUrl: data.instagram_url || "",
-    tiktokUrl: data.tiktok_url || "",
-    snapchatUrl: data.snapchat_url || "",
-    whatsappUrl: data.whatsapp_url || "",
-    xUrl: data.x_url || "",
-    threadsUrl: data.threads_url || "",
-    linkedinUrl: data.linkedin_url || "",
-    pinterestUrl: data.pinterest_url || "",
-    twitchUrl: data.twitch_url || "",
-    displayNameField: data.display_name_field || "firstName",
-    sharePrenom: data.share_prenom,
-    shareNom: data.share_nom,
-    shareSurnom: data.share_surnom,
-    shareEmail: data.share_email,
-    shareBirthDate: data.share_birth_date,
-    birthDateSharePrecision: data.birth_date_share_precision || "full",
-    shareAge: data.share_age,
-    shareCountry: data.share_country,
-    shareCity: data.share_city,
-    shareBio: data.share_bio,
-    consentPersonalizedSuggestions: data.consent_personalized_suggestions,
-    consentUsageData: data.consent_usage_data,
-    consentPartnerComms: data.consent_partner_comms,
-    consentSurveys: data.consent_surveys,
-    consentLocation: data.consent_location,
-    salonDisplayMode: data.salon_display_mode || "firstName",
-    notifEnabled: data.notif_enabled,
-    notifMentions: data.notif_mentions,
-    notifComments: data.notif_comments,
-    notifNewBibax: data.notif_new_bibax,
-    notifMessages: data.notif_messages,
-    notifInvitations: data.notif_invitations,
-    notifBibaxActivity: data.notif_bibax_activity,
-    notifNews: data.notif_news,
-    notifPartners: data.notif_partners,
-    notifEmailSummary: data.notif_email_summary,
-    notifEmailSummaryFrequency: data.notif_email_summary_frequency || "week",
-    notifEmailSummaryAddress: data.notif_email_summary_address || "",
-    prefDistanceUnit: data.pref_distance_unit || "km",
-    prefTemperatureUnit: data.pref_temperature_unit || "celsius",
-    prefVolumeUnit: data.pref_volume_unit || "metric",
-    prefWeightUnit: data.pref_weight_unit || "metric",
-    prefEnergyUnit: data.pref_energy_unit || "kcal",
-    storyDefaultShowLocationRoom: data.story_default_show_location_room,
-    storyDefaultPublicRoom: data.story_default_public_room,
-    storyDefaultShowLocationArena: data.story_default_show_location_arena,
-    storyDefaultPublicArena: data.story_default_public_arena,
-    storyDefaultPublic: data.story_default_public,
-    prefTimeFormat24h: data.pref_time_format_24h,
-    prefVenueSort: data.pref_venue_sort || "distance",
-    prefAutoplayPreviews: data.pref_autoplay_previews,
-    prefVibrations: data.pref_vibrations,
-    prefConfirmCheckin: data.pref_confirm_checkin,
-    storyDefaultShowLocation: data.story_default_show_location,
-    storyViewDurationSeconds: data.story_view_duration_seconds || 5,
-    storyDefaultSharePublic: data.story_default_share_public,
-    shareFacebook: data.share_facebook,
-    shareInstagram: data.share_instagram,
-    shareTiktok: data.share_tiktok,
-    shareSnapchat: data.share_snapchat,
-    shareWhatsapp: data.share_whatsapp,
-    shareX: data.share_x,
-    shareThreads: data.share_threads,
-    shareLinkedin: data.share_linkedin,
-    sharePinterest: data.share_pinterest,
-    shareTwitch: data.share_twitch,
-    shareRecords: data.share_records,
-    shareVisitRanking: data.share_visit_ranking,
-    avatarUrl: data.avatar_url || null,
-    // isAdmin vient désormais du vrai rôle vérifié côté base de données, plus d'une passphrase
-    // locale — cohérent avec les règles RLS qui vérifient ce même rôle.
-    isAdmin: data.role === "admin" || data.role === "super_admin",
-    active: data.active !== false,
-    blockedReason: data.blocked_reason || null,
-    blockedUntil: data.blocked_until || null,
-  };
-}
-
-export async function updateMyProfile(
-  userId,
-  {
-    name,
-    lastName,
-    nickname,
-    email,
-    phone,
-    birthDate,
-    country,
-    city,
-    locality,
-    latitude,
-    longitude,
-    bio,
-    facebookUrl,
-    instagramUrl,
-    tiktokUrl,
-    snapchatUrl,
-    whatsappUrl,
-    xUrl,
-    threadsUrl,
-    linkedinUrl,
-    pinterestUrl,
-    twitchUrl,
-    displayNameField,
-    sharePrenom,
-    shareNom,
-    shareSurnom,
-    shareEmail,
-    shareBirthDate,
-    birthDateSharePrecision,
-    shareAge,
-    shareCountry,
-    shareCity,
-    shareBio,
-    consentPersonalizedSuggestions,
-    consentUsageData,
-    consentPartnerComms,
-    consentSurveys,
-    consentLocation,
-    salonDisplayMode,
-    notifEnabled,
-    notifMentions,
-    notifComments,
-    notifNewBibax,
-    notifMessages,
-    notifInvitations,
-    notifBibaxActivity,
-    notifNews,
-    notifPartners,
-    notifEmailSummary,
-    notifEmailSummaryFrequency,
-    notifEmailSummaryAddress,
-    prefDistanceUnit,
-    prefTemperatureUnit,
-    prefVolumeUnit,
-    prefWeightUnit,
-    prefEnergyUnit,
-    storyDefaultShowLocationRoom,
-    storyDefaultPublicRoom,
-    storyDefaultShowLocationArena,
-    storyDefaultPublicArena,
-    storyDefaultPublic,
-    prefTimeFormat24h,
-    prefVenueSort,
-    prefAutoplayPreviews,
-    prefVibrations,
-    prefConfirmCheckin,
-    storyDefaultShowLocation,
-    storyViewDurationSeconds,
-    storyDefaultSharePublic,
-    shareFacebook,
-    shareInstagram,
-    shareTiktok,
-    shareSnapchat,
-    shareWhatsapp,
-    shareX,
-    shareThreads,
-    shareLinkedin,
-    sharePinterest,
-    shareTwitch,
-    shareRecords,
-    shareVisitRanking,
-    avatarUrl,
-  }
-) {
-  const patch = {
-    name,
-    last_name: lastName,
-    nickname,
-    email,
-    phone,
-    birth_date: birthDate || null,
-    country,
-    city,
-    locality,
-    latitude,
-    longitude,
-    bio,
-    facebook_url: facebookUrl,
-    instagram_url: instagramUrl,
-    tiktok_url: tiktokUrl,
-    snapchat_url: snapchatUrl,
-    whatsapp_url: whatsappUrl,
-    x_url: xUrl,
-    threads_url: threadsUrl,
-    linkedin_url: linkedinUrl,
-    pinterest_url: pinterestUrl,
-    twitch_url: twitchUrl,
-    display_name_field: displayNameField,
-    share_prenom: sharePrenom,
-    share_nom: shareNom,
-    share_surnom: shareSurnom,
-    share_email: shareEmail,
-    share_birth_date: shareBirthDate,
-    birth_date_share_precision: birthDateSharePrecision,
-    share_age: shareAge,
-    share_country: shareCountry,
-    share_city: shareCity,
-    share_bio: shareBio,
-    consent_personalized_suggestions: consentPersonalizedSuggestions,
-    consent_usage_data: consentUsageData,
-    consent_partner_comms: consentPartnerComms,
-    consent_surveys: consentSurveys,
-    consent_location: consentLocation,
-    salon_display_mode: salonDisplayMode,
-    notif_enabled: notifEnabled,
-    notif_mentions: notifMentions,
-    notif_comments: notifComments,
-    notif_new_bibax: notifNewBibax,
-    notif_messages: notifMessages,
-    notif_invitations: notifInvitations,
-    notif_bibax_activity: notifBibaxActivity,
-    notif_news: notifNews,
-    notif_partners: notifPartners,
-    notif_email_summary: notifEmailSummary,
-    notif_email_summary_frequency: notifEmailSummaryFrequency,
-    notif_email_summary_address: notifEmailSummaryAddress,
-    pref_distance_unit: prefDistanceUnit,
-    pref_temperature_unit: prefTemperatureUnit,
-    pref_volume_unit: prefVolumeUnit,
-    pref_weight_unit: prefWeightUnit,
-    pref_energy_unit: prefEnergyUnit,
-    story_default_show_location_room: storyDefaultShowLocationRoom,
-    story_default_public_room: storyDefaultPublicRoom,
-    story_default_show_location_arena: storyDefaultShowLocationArena,
-    story_default_public_arena: storyDefaultPublicArena,
-    story_default_public: storyDefaultPublic,
-    pref_time_format_24h: prefTimeFormat24h,
-    pref_venue_sort: prefVenueSort,
-    pref_autoplay_previews: prefAutoplayPreviews,
-    pref_vibrations: prefVibrations,
-    pref_confirm_checkin: prefConfirmCheckin,
-    story_default_show_location: storyDefaultShowLocation,
-    story_view_duration_seconds: storyViewDurationSeconds,
-    story_default_share_public: storyDefaultSharePublic,
-    share_facebook: shareFacebook,
-    share_instagram: shareInstagram,
-    share_tiktok: shareTiktok,
-    share_snapchat: shareSnapchat,
-    share_whatsapp: shareWhatsapp,
-    share_x: shareX,
-    share_threads: shareThreads,
-    share_linkedin: shareLinkedin,
-    share_pinterest: sharePinterest,
-    share_twitch: shareTwitch,
-    share_records: shareRecords,
-    share_visit_ranking: shareVisitRanking,
-    avatar_url: avatarUrl,
-  };
-  // Ne transmet que les champs réellement fournis — un appel partiel (ex. juste avatarUrl
-  // après un envoi de photo) n'écrase jamais les autres champs avec des valeurs vides.
-  Object.keys(patch).forEach((k) => patch[k] === undefined && delete patch[k]);
-
-  const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
-  if (error) console.error("updateMyProfile:", error);
-}
-
-// Convertit un blob en base64 — nécessaire pour l'envoyer à la fonction serveur de
-// vérification de contenu, qui reçoit du JSON plutôt qu'un fichier binaire direct.
+// Convertit un blob en base64 — nécessaire pour l'envoyer à la fonction serveur de pipeline
+// média (vérification de contenu + enregistrement dans media_assets).
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -779,451 +562,28 @@ function blobToBase64(blob) {
   });
 }
 
-// Photo de profil réelle — remplace l'ancien sélecteur d'emoji. Recadrage carré centré, comme
-// pour les photos d'administrateurs. Passe par la vérification de contenu (Google Cloud
-// Vision) avant tout envoi — bloque les cas jugés "très probables" (nudité, violence...).
-export async function uploadMyAvatarPhoto(userId, blob) {
+export async function uploadAdminAvatar(userId, file) {
+  const blob = await resizeImageTo(file, 400, 400);
   const imageBase64 = await blobToBase64(blob);
   const path = `${userId}-${Date.now()}.jpg`;
   const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
-    body: { bucket: "bibax-avatars", path, imageBase64, contentType: "image/jpeg", entityType: "profile", entityId: userId, kind: "avatar" },
+    body: { bucket: "admin-avatars", path, imageBase64, contentType: "image/jpeg", entityType: "admin", entityId: userId, kind: "avatar" },
   });
-  if (error) return { error: await extractFunctionError(error) };
-  if (data?.error) return { error: data.error };
-  return { url: data.url };
-}
-
-/* ---------------- BIBACLUB ---------------- */
-
-export async function uploadClubPhoto(userId, blob) {
-  const imageBase64 = await blobToBase64(blob);
-  const path = `${userId}-${Date.now()}.jpg`;
-  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
-    body: { bucket: "biba-clubs", path, imageBase64, contentType: "image/jpeg", entityType: "club", entityId: userId, kind: "club-photo" },
-  });
-  if (error) return { error: await extractFunctionError(error) };
-  if (data?.error) return { error: data.error };
-  return { url: data.url };
-}
-
-function generateInviteCode() {
-  const alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-  let out = "";
-  for (let i = 0; i < 6; i++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  return out;
-}
-
-export async function createClub({ name, description, photoUrl, category, visibility, joinMode }, userId) {
-  const inviteCode = joinMode === "invite" ? generateInviteCode() : null;
-  const { data: club, error } = await supabase
-    .from("biba_clubs")
-    .insert({ name, description: description || null, photo_url: photoUrl || null, category: category || null, visibility, join_mode: joinMode, invite_code: inviteCode, created_by: userId })
-    .select()
-    .single();
-  if (error) return { error: error.message };
-  const { error: memberError } = await supabase.from("biba_club_members").insert({ club_id: club.id, user_id: userId, role: "admin", status: "active" });
-  if (memberError) return { error: memberError.message };
-  return { ok: true, clubId: club.id };
-}
-
-function rowToClub(row) {
-  return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    photoUrl: row.photo_url,
-    category: row.category,
-    visibility: row.visibility,
-    joinMode: row.join_mode,
-    inviteCode: row.invite_code,
-    createdBy: row.created_by,
-    createdAt: row.created_at,
-  };
-}
-
-// Mes clubs — ceux où je suis membre actif.
-export async function loadMyClubs(userId) {
-  const { data, error } = await supabase
-    .from("biba_club_members")
-    .select("role, biba_clubs(*)")
-    .eq("user_id", userId)
-    .eq("status", "active");
   if (error) {
-    console.error("loadMyClubs:", error);
-    return [];
-  }
-  return data.filter((r) => r.biba_clubs).map((r) => ({ ...rowToClub(r.biba_clubs), myRole: r.role }));
-}
-
-export async function loadClubDetail(clubId) {
-  const { data, error } = await supabase.from("biba_clubs").select("*").eq("id", clubId).single();
-  if (error) {
-    console.error("loadClubDetail:", error);
+    console.error("uploadAdminAvatar:", error);
     return null;
   }
-  return rowToClub(data);
-}
-
-export async function loadClubMembers(clubId) {
-  const { data, error } = await supabase.from("biba_club_members").select("*").eq("club_id", clubId).order("joined_at");
-  if (error) {
-    console.error("loadClubMembers:", error);
-    return [];
+  if (data?.error) {
+    console.error("uploadAdminAvatar:", data.error);
+    return null;
   }
-  const userIds = data.map((m) => m.user_id);
-  let profilesById = {};
-  if (userIds.length > 0) {
-    const { data: actors } = await supabase.rpc("get_profiles_basic", { p_ids: userIds });
-    profilesById = Object.fromEntries((actors || []).map((a) => [a.id, a]));
-  }
-  return data.map((m) => ({
-    userId: m.user_id,
-    role: m.role,
-    status: m.status,
-    joinedAt: m.joined_at,
-    name: profilesById[m.user_id]?.display_name || null,
-    lastName: profilesById[m.user_id]?.last_name || null,
-    avatarUrl: profilesById[m.user_id]?.avatar_url || null,
-  }));
-}
-
-// Rejoindre — comportement différent selon join_mode : "open" ajoute directement, "request" crée
-// une demande en attente, "invite" vérifie le code fourni avant d'ajouter directement.
-export async function joinClub(clubId, userId, { inviteCode } = {}) {
-  const { data: club, error: clubError } = await supabase.from("biba_clubs").select("join_mode, invite_code").eq("id", clubId).single();
-  if (clubError) return { error: clubError.message };
-
-  if (club.join_mode === "invite") {
-    if (!inviteCode || inviteCode.toUpperCase() !== club.invite_code) return { error: "Code d'invitation invalide." };
-    const { error } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "member", status: "active" });
-    if (error) return { error: error.message };
-    return { ok: true, status: "active" };
-  }
-
-  if (club.join_mode === "open") {
-    const { error } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "member", status: "active" });
-    if (error) return { error: error.message };
-    return { ok: true, status: "active" };
-  }
-
-  // "request" — en attente de validation par un admin/modérateur
-  const { error } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "member", status: "pending" });
-  if (error) return { error: error.message };
-  return { ok: true, status: "pending" };
-}
-
-export async function loadPendingClubRequests(clubId) {
-  const { data, error } = await supabase.from("biba_club_members").select("*").eq("club_id", clubId).eq("status", "pending").order("joined_at");
-  if (error) {
-    console.error("loadPendingClubRequests:", error);
-    return [];
-  }
-  const userIds = data.map((m) => m.user_id);
-  let profilesById = {};
-  if (userIds.length > 0) {
-    const { data: actors } = await supabase.rpc("get_profiles_basic", { p_ids: userIds });
-    profilesById = Object.fromEntries((actors || []).map((a) => [a.id, a]));
-  }
-  return data.map((m) => ({ userId: m.user_id, joinedAt: m.joined_at, name: profilesById[m.user_id]?.display_name || null }));
-}
-
-export async function approveClubMember(clubId, userId) {
-  const { error } = await supabase.from("biba_club_members").update({ status: "active" }).eq("club_id", clubId).eq("user_id", userId);
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function rejectClubMember(clubId, userId) {
-  const { error } = await supabase.from("biba_club_members").delete().eq("club_id", clubId).eq("user_id", userId);
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function updateClubMemberRole(clubId, userId, role) {
-  const { error } = await supabase.from("biba_club_members").update({ role }).eq("club_id", clubId).eq("user_id", userId);
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function removeClubMember(clubId, userId) {
-  const { error } = await supabase.from("biba_club_members").delete().eq("club_id", clubId).eq("user_id", userId);
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function leaveClub(clubId, userId) {
-  return removeClubMember(clubId, userId);
-}
-
-// Fil du club — vraies publications des membres (l'activité automatique façon BibaPulse se
-// construit à part, à partir des salons rattachés).
-export async function loadClubPosts(clubId) {
-  const { data, error } = await supabase.from("biba_club_posts").select("*").eq("club_id", clubId).order("created_at", { ascending: false });
-  if (error) {
-    console.error("loadClubPosts:", error);
-    return [];
-  }
-  const authorIds = [...new Set(data.map((p) => p.author_id))];
-  let profilesById = {};
-  if (authorIds.length > 0) {
-    const { data: actors } = await supabase.rpc("get_profiles_basic", { p_ids: authorIds });
-    profilesById = Object.fromEntries((actors || []).map((a) => [a.id, a]));
-  }
-  return data.map((p) => ({
-    id: p.id,
-    body: p.body,
-    createdAt: p.created_at,
-    authorId: p.author_id,
-    authorName: profilesById[p.author_id]?.display_name || null,
-    authorLastName: profilesById[p.author_id]?.last_name || null,
-    authorAvatarUrl: profilesById[p.author_id]?.avatar_url || null,
-  }));
-}
-
-export async function createClubPost(clubId, userId, body) {
-  const { error } = await supabase.from("biba_club_posts").insert({ club_id: clubId, author_id: userId, body: body.trim() });
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function deleteClubPost(postId) {
-  const { error } = await supabase.from("biba_club_posts").delete().eq("id", postId);
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-// Rattache un salon existant à un club — alimente les statistiques du club, et permet de
-// pré-remplir un futur salon avec les membres du club.
-export async function linkSalonToClub(clubId, salonCode, userId) {
-  const { error } = await supabase.from("biba_club_salons").insert({ club_id: clubId, salon_code: salonCode, linked_by: userId });
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function loadClubSalons(clubId) {
-  const { data, error } = await supabase.from("biba_club_salons").select("*").eq("club_id", clubId).order("linked_at", { ascending: false });
-  if (error) {
-    console.error("loadClubSalons:", error);
-    return [];
-  }
-  return data.map((s) => ({ salonCode: s.salon_code, linkedAt: s.linked_at }));
-}
-
-// Statistiques du club — calculées à la volée à partir des vrais salons rattachés (pas de
-// compteur maintenu à part, pour rester toujours exact). Compte les tournées achetées par
-// chaque membre du club, tous salons rattachés confondus.
-export async function loadClubStats(clubId) {
-  const salons = await loadClubSalons(clubId);
-  if (salons.length === 0) return { totalRounds: 0, memberStats: [] };
-
-  const { data: salonRows, error } = await supabase
-    .from("salons")
-    .select("code, data")
-    .in("code", salons.map((s) => s.salonCode));
-  if (error) {
-    console.error("loadClubStats:", error);
-    return { totalRounds: 0, memberStats: [] };
-  }
-
-  const roundsByBuyerName = {};
-  let totalRounds = 0;
-  for (const row of salonRows) {
-    const rounds = row.data?.rounds || [];
-    for (const round of rounds) {
-      totalRounds++;
-      const buyer = round.buyerName;
-      if (!buyer) continue;
-      roundsByBuyerName[buyer] = (roundsByBuyerName[buyer] || 0) + 1;
-    }
-  }
-
-  return {
-    totalRounds,
-    salonsCount: salons.length,
-    memberStats: Object.entries(roundsByBuyerName)
-      .map(([name, count]) => ({ name, roundsCount: count }))
-      .sort((a, b) => b.roundsCount - a.roundsCount),
-  };
-}
-
-
-
-// Envoie le média d'une Story (photo, pour l'instant — vidéo prévue plus tard) via le même
-// pipeline de modération que le reste de l'app.
-// Stories officielles Bibamus — habillées avec les mêmes champs qu'un auteur normal (nom
-// "Bibamus", pas d'avatar → le monogramme s'affiche naturellement), pour rester compatibles
-// avec le visionneur existant sans le modifier. Seules celles de moins de 24h sont chargées.
-export async function loadOfficialStories() {
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await supabase.from("official_stories").select("*").gte("created_at", since).order("created_at", { ascending: true });
-  if (error) {
-    console.error("loadOfficialStories:", error);
-    return [];
-  }
-  return data.map((s) => ({
-    id: s.id,
-    authorId: "bibamus-official",
-    authorName: "Bibamus",
-    authorLastName: null,
-    authorAvatarUrl: null,
-    mediaType: "image",
-    mediaUrl: s.media_url,
-    caption: s.caption,
-    createdAt: s.created_at,
-    contextType: "official",
-    bixCount: 0,
-    iBixed: false,
-  }));
-}
-
-// Contrôle la lecture Spotify du DJ — seul le MC du salon peut l'utiliser (vérifié côté
-// serveur). action: "play" | "pause" | "next" | "previous".
-export async function controlSpotifyPlayback(salonCode, action) {
-  const { data, error } = await supabase.functions.invoke("Spotify-playback-control-ts", { body: { salonCode, action } });
-  if (error) return { error: await extractFunctionError(error) };
-  if (data?.error) return { error: data.error };
-  return { ok: true };
-}
-
-export async function uploadStoryMedia(userId, blob) {
-  const imageBase64 = await blobToBase64(blob);
-  const path = `${userId}-${Date.now()}.jpg`;
-  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
-    body: { bucket: "stories", path, imageBase64, contentType: "image/jpeg", entityType: "story", entityId: userId, kind: "story" },
-  });
-  if (error) return { error: await extractFunctionError(error) };
-  if (data?.error) return { error: data.error };
-  return { url: data.url };
-}
-
-// Crée la Story elle-même — insertion directe protégée par RLS (chacun ne peut créer que ses
-// propres Stories), pas besoin de fonction serveur pour ça.
-export async function createStory({ contextType, contextId, mediaUrl, caption, sharedToPulse, pulseVisibility, locationName }) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié." };
-  const { data, error } = await supabase
-    .from("stories")
-    .insert({
-      author_id: user.id,
-      context_type: contextType,
-      context_id: contextId || null,
-      media_type: "image",
-      media_url: mediaUrl,
-      caption: caption || null,
-      shared_to_pulse: contextType === "global" ? false : !!sharedToPulse,
-      pulse_visibility: pulseVisibility || "relations",
-      location_name: locationName || null,
-    })
-    .select("id")
-    .single();
-  if (error) return { error: error.message };
-  return { ok: true, id: data.id };
-}
-
-export async function loadRoomStories(salonCode) {
-  const { data, error } = await supabase.rpc("get_room_stories", { p_salon_code: salonCode });
-  if (error) {
-    console.error("loadRoomStories:", error);
-    return [];
-  }
-  return data.map((s) => ({
-    id: s.id,
-    authorId: s.author_id,
-    authorName: s.author_name,
-    authorLastName: s.author_last_name,
-    locationName: s.location_name,
-    authorAvatarUrl: s.author_avatar_url,
-    mediaType: s.media_type,
-    mediaUrl: s.media_url,
-    caption: s.caption,
-    createdAt: s.created_at,
-    contextType: "room",
-    sharedToPulse: s.shared_to_pulse,
-    bixCount: s.bix_count,
-    iBixed: s.i_bixed,
-  }));
-}
-
-export async function loadPulseStories() {
-  const { data, error } = await supabase.rpc("get_pulse_stories");
-  if (error) {
-    console.error("loadPulseStories:", error);
-    return [];
-  }
-  return data.map((s) => ({
-    id: s.id,
-    authorId: s.author_id,
-    authorName: s.author_name,
-    authorLastName: s.author_last_name,
-    locationName: s.location_name,
-    authorAvatarUrl: s.author_avatar_url,
-    mediaType: s.media_type,
-    mediaUrl: s.media_url,
-    caption: s.caption,
-    createdAt: s.created_at,
-    contextType: s.context_type,
-    contextId: s.context_id,
-    sharedToPulse: s.shared_to_pulse,
-    bixCount: s.bix_count,
-    iBixed: s.i_bixed,
-  }));
-}
-
-export async function setStoryPulseSharing(storyId, shared) {
-  const { data, error } = await supabase.rpc("set_story_pulse_sharing", { p_story_id: storyId, p_shared: shared });
-  if (error) return { error: error.message };
-  return data;
-}
-
-export async function loadMyStories() {
-  const { data, error } = await supabase.rpc("get_my_stories");
-  if (error) {
-    console.error("loadMyStories:", error);
-    return [];
-  }
-  return data.map((s) => ({
-    id: s.id,
-    contextType: s.context_type,
-    contextId: s.context_id,
-    mediaType: s.media_type,
-    mediaUrl: s.media_url,
-    caption: s.caption,
-    createdAt: s.created_at,
-    expiresAt: s.expires_at,
-    sharedToPulse: s.shared_to_pulse,
-  }));
-}
-
-export async function toggleStoryBix(storyId, alreadyBixed) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié." };
-  if (alreadyBixed) {
-    const { error } = await supabase.from("story_bix").delete().eq("story_id", storyId).eq("user_id", user.id);
-    if (error) return { error: error.message };
-  } else {
-    const { error } = await supabase.from("story_bix").insert({ story_id: storyId, user_id: user.id });
-    if (error) return { error: error.message };
-  }
-  return { ok: true };
-}
-
-export async function deleteStory(storyId) {
-  const { error } = await supabase.from("stories").delete().eq("id", storyId);
-  if (error) return { error: error.message };
-  return { ok: true };
+  return data.url;
 }
 
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
 
-// Statuts visibles dans l'app grand public — jamais brouillon, rejeté, archivé ou doublon.
-const APP_VISIBLE_STATUSES = ["to_process", "to_fix", "complete"];
-
 export async function loadPublicVenues() {
-  const { data, error } = await supabase.from("public_venues").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
+  const { data, error } = await supabase.from("public_venues").select("*").order("name");
   if (error) {
     console.error("loadPublicVenues:", error);
     return [];
@@ -1243,12 +603,23 @@ export async function createPublicVenue(venue) {
 
 export async function updatePublicVenue(id, patch) {
   const { error } = await supabase.from("public_venues").update(venueToRow(patch, true)).eq("id", id);
-  if (error) console.error("updatePublicVenue:", error);
+  if (error) {
+    console.error("updatePublicVenue:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 export async function deletePublicVenue(id) {
-  const { error } = await supabase.from("public_venues").delete().eq("id", id);
-  if (error) console.error("deletePublicVenue:", error);
+  const { data, error } = await supabase.from("public_venues").delete().eq("id", id).select();
+  if (error) {
+    console.error("deletePublicVenue:", error);
+    return { error: error.message };
+  }
+  if (!data || data.length === 0) {
+    return { error: "Vous n'avez pas les droits nécessaires pour supprimer cette fiche." };
+  }
+  return { ok: true };
 }
 
 function rowToVenue(row) {
@@ -1261,41 +632,63 @@ function rowToVenue(row) {
     postalCode: row.postal_code,
     city: row.city,
     village: row.village,
-    country: COUNTRY_CODE_TO_LABEL[row.country] || row.country,
+    country: row.country,
     phone: row.phone,
+    whatsapp: row.whatsapp,
     email: row.email,
     website: row.website,
     googleUrl: row.google_url,
-    googlePlaceId: row.google_place_id,
     facebookUrl: row.facebook_url,
     instagramUrl: row.instagram_url,
     tiktokUrl: row.tiktok_url,
     snapchatUrl: row.snapchat_url,
-    tripadvisorUrl: row.tripadvisor_url,
     restaurantGuruUrl: row.restaurant_guru_url,
-    whatsapp: row.whatsapp,
-    hasWifi: !!row.has_wifi,
-    wheelchairAccessible: !!row.wheelchair_accessible,
-    canDance: !!row.can_dance,
+    tripadvisorUrl: row.tripadvisor_url,
     hasFood: row.has_food,
     defaultCurrency: row.default_currency,
     jetonUnitValue: row.jeton_unit_value,
     tags: row.tags || [],
-    venueTypes: row.venue_types || [],
     lat: row.lat,
     lng: row.lng,
     avatarEmoji: row.avatar_emoji,
     profilePhotoUrl: row.profile_photo_url,
     coverPhotoUrl: row.cover_photo_url,
+    acceptedPaymentMethods: row.accepted_payment_methods || [],
+    venueType: row.venue_type,
+    venueTypes: row.venue_types || [],
+    hasDogs: !!row.has_dogs,
+    canDance: !!row.can_dance,
+    reservationPossible: !!row.reservation_possible,
+    goodForGroups: !!row.good_for_groups,
+    privatizationPossible: !!row.privatization_possible,
+    hasPrivateRoom: !!row.has_private_room,
+    smokingArea: !!row.smoking_area,
+    menuPdfUrl: row.menu_pdf_url,
+    hasTerrace: !!row.has_terrace,
+    wheelchairAccessible: !!row.wheelchair_accessible,
+    hasWifi: !!row.has_wifi,
+    googlePlaceId: row.google_place_id,
+    googlePlaceIdCheckedAt: row.google_place_id_checked_at,
+    noGooglePresence: !!row.no_google_presence,
+    noFixedHours: !!row.no_fixed_hours,
+    googleHoursLastFetchAt: row.google_hours_last_fetch_at,
+    googleHoursLastStatus: row.google_hours_last_status,
+    geocodeSource: row.geocode_source,
+    geocodeConfidence: row.geocode_confidence,
+    geocodeStatus: row.geocode_status,
+    geocodedAt: row.geocoded_at,
+    ownerManaged: !!row.owner_managed,
     status: row.status,
     aliases: row.aliases || [],
+    certificationLevel: row.certification_level,
+    duplicateOfId: row.duplicate_of_id,
+    openReportsCount: row.open_reports_count || 0,
     likes: row.likes || [],
     menu: row.menu || [],
     stats: row.stats || {},
-    pendingContributionsCount: row.pending_contributions_count || 0,
+    pendingEdit: row.pending_edit || null,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
-    certificationLevel: row.certification_level,
   };
 }
 
@@ -1310,24 +703,51 @@ function venueToRow(v, partial = false) {
     village: v.village,
     country: v.country,
     phone: v.phone,
+    whatsapp: v.whatsapp,
     email: v.email,
     website: v.website,
     google_url: v.googleUrl,
     facebook_url: v.facebookUrl,
     instagram_url: v.instagramUrl,
     tiktok_url: v.tiktokUrl,
+    snapchat_url: v.snapchatUrl,
+    restaurant_guru_url: v.restaurantGuruUrl,
+    tripadvisor_url: v.tripadvisorUrl,
     has_food: v.hasFood,
     default_currency: v.defaultCurrency,
     jeton_unit_value: v.jetonUnitValue,
     tags: v.tags,
     lat: v.lat,
     lng: v.lng,
+    geocode_status: v.geocodeStatus,
+    geocode_source: v.geocodeSource,
+    geocode_confidence: v.geocodeConfidence,
     avatar_emoji: v.avatarEmoji,
+    profile_photo_url: v.profilePhotoUrl,
+    cover_photo_url: v.coverPhotoUrl,
+    accepted_payment_methods: v.acceptedPaymentMethods,
+    venue_type: v.venueType,
+    venue_types: v.venueTypes,
+    has_dogs: v.hasDogs,
+    can_dance: v.canDance,
+    reservation_possible: v.reservationPossible,
+    good_for_groups: v.goodForGroups,
+    privatization_possible: v.privatizationPossible,
+    has_private_room: v.hasPrivateRoom,
+    smoking_area: v.smokingArea,
+    menu_pdf_url: v.menuPdfUrl,
+    has_terrace: v.hasTerrace,
+    wheelchair_accessible: v.wheelchairAccessible,
+    has_wifi: v.hasWifi,
+    owner_managed: v.ownerManaged,
     status: v.status,
-    likes: v.likes,
     aliases: v.aliases,
+    certification_level: v.certificationLevel,
+    duplicate_of_id: v.duplicateOfId,
+    likes: v.likes,
     menu: v.menu,
     stats: v.stats,
+    pending_edit: v.pendingEdit,
     submitted_by: v.submittedBy,
     submitted_at: v.submittedAt ? new Date(v.submittedAt).toISOString() : undefined,
   };
@@ -1338,494 +758,93 @@ function venueToRow(v, partial = false) {
   return row;
 }
 
-// Établissements proches — s'appuie sur PostGIS côté Supabase (fonction get_nearby_venues),
-// jamais sur Geoapify pour ce calcul. Réutilisable pour tous les usages "autour de moi"
-// (suggestions à la création d'un salon, écran Découvrir, BibaGo...).
-export async function loadNearbyVenues(lat, lng, radiusMeters = 2000, limit = 10) {
-  const { data, error } = await supabase.rpc("get_nearby_venues", { p_lat: lat, p_lng: lng, p_radius_meters: radiusMeters, p_limit: limit });
-  if (error) {
-    console.error("loadNearbyVenues:", error);
-    return [];
-  }
-  return data.map((row) => ({ ...rowToVenue(row.venue), distanceMeters: row.distance_meters }));
-}
+/* ---------------- HORAIRES — GOOGLE PLACES (source unique) ---------------- */
 
-// Géocode la ville déclarée d'un profil (pas d'adresse précise, juste le centre-ville) — pour
-// alimenter les suggestions Bibax par vraie proximité géographique plutôt qu'une correspondance
-// exacte sur le nom de ville. Réutilise la même fonction serveur que le géocodage d'adresse
-// d'établissement.
-export async function geocodeCityForProfile(city, countryIsoCode) {
-  if (!city || !countryIsoCode) return null;
+// Les horaires ne sont jamais encodés à la main — Google est la source unique. Ces fonctions
+// ne gèrent QUE la liaison (recherche + confirmation du Google Place ID) ; l'appel réel à
+// Google se fait côté serveur (Edge Function Supabase), jamais depuis le navigateur, pour ne
+// jamais exposer la clé API.
+
+export async function searchGooglePlaceMatches({ name, address }) {
   try {
-    const { data, error } = await supabase.functions.invoke("geoapify-geocode", { body: { city, countryIsoCode } });
-    if (error || data?.error || data?.notFound) return null;
-    return { lat: data.lat, lng: data.lng };
+    const { data, error } = await supabase.functions.invoke("google-place-search", { body: { name, address } });
+    if (error) {
+      console.error("searchGooglePlaceMatches:", error);
+      return null;
+    }
+    return data?.candidates || [];
   } catch (e) {
-    console.error("geocodeCityForProfile:", e);
+    console.error("searchGooglePlaceMatches:", e);
     return null;
   }
 }
 
-/* ---------------- HORAIRES — GOOGLE PLACES (source unique) ---------------- */
+export async function linkGooglePlace(venueId, googlePlaceId) {
+  const { error } = await supabase
+    .from("public_venues")
+    .update({ google_place_id: googlePlaceId, google_place_id_checked_at: new Date().toISOString() })
+    .eq("id", venueId);
+  if (error) console.error("linkGooglePlace:", error);
+}
 
-// Google est la source unique des horaires — jamais de saisie manuelle dans Bibamus.
-// L'appel réel à Google se fait côté serveur (Edge Function), la clé API n'est jamais
-// exposée ici.
-const GOOGLE_HOURS_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 heures — court, jamais traité comme un fait Bibamus.
-
-export async function loadEstablishmentOpeningHours(googlePlaceId) {
-  if (!googlePlaceId) return { status: "LINK_REQUIRED" };
+// Geoapify géocode l'adresse (adresse → lat/lng) — jamais de calcul de proximité ici, ça reste
+// le rôle de PostGIS côté Supabase (fonction get_nearby_venues). N'écrit rien elle-même ; c'est
+// l'appelant qui enregistre ensuite le résultat sur la fiche.
+export async function geocodeAddress({ streetName, streetNumber, postalCode, city, countryIsoCode }) {
   try {
-    // Vérifie d'abord si un résultat récent est déjà en cache — évite d'appeler Google à
-    // chaque simple affichage de la fiche, réduit le coût et la dépendance à la disponibilité
-    // de Google en temps réel.
-    const { data: cached } = await supabase
-      .from("public_venues")
-      .select("google_hours_cache, google_hours_last_fetch_at")
-      .eq("google_place_id", googlePlaceId)
-      .maybeSingle();
-
-    if (cached?.google_hours_cache && cached?.google_hours_last_fetch_at) {
-      const age = Date.now() - new Date(cached.google_hours_last_fetch_at).getTime();
-      if (age < GOOGLE_HOURS_CACHE_DURATION_MS) {
-        return { status: "OK", ...cached.google_hours_cache };
-      }
-    }
-
-    const { data, error } = await supabase.functions.invoke("google-place-hours", { body: { placeId: googlePlaceId } });
+    const { data, error } = await supabase.functions.invoke("geoapify-geocode", {
+      body: { streetName, streetNumber, postalCode, city, countryIsoCode },
+    });
     if (error) {
-      console.error("loadEstablishmentOpeningHours:", error);
-      return { status: "ERROR" };
+      console.error("geocodeAddress:", error);
+      return null;
     }
     return data;
   } catch (e) {
-    console.error("loadEstablishmentOpeningHours:", e);
-    return { status: "ERROR" };
-  }
-}
-
-/* ---------------- GOUVERNANCE — CONTRIBUTIONS & TRAÇABILITÉ ---------------- */
-
-// Table générique partagée par les 4 piliers (venue/drink/brand/producer) — chaque champ
-// proposé est sa PROPRE ligne, jamais un bloc fourre-tout, pour permettre d'accepter ou
-// refuser champ par champ et garder l'historique complet (rien n'est jamais écrasé).
-
-function rowToContribution(row) {
-  return {
-    id: row.id,
-    entityType: row.entity_type,
-    entityId: row.entity_id,
-    fieldPath: row.field_path,
-    proposedValue: row.proposed_value,
-    previousValue: row.previous_value,
-    sourceType: row.source_type,
-    sourceId: row.source_id,
-    status: row.status,
-    reviewedBy: row.reviewed_by,
-    reviewedAt: row.reviewed_at,
-    createdAt: row.created_at,
-    appliedAt: row.applied_at,
-  };
-}
-
-// entityType: 'venue' | 'drink' | 'brand' | 'producer'
-// fields: { champ: nouvelle_valeur } — un diff, comme avant. currentEntity sert à capturer la
-// valeur remplacée (previous_value), pour l'historique.
-/* ---------------- SIGNALEMENTS ---------------- */
-
-export async function submitReport(entityType, entityId, reason, comment, reportedBy, duplicateOf) {
-  const { error } = await supabase.from("entity_reports").insert({
-    id: `report-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-    entity_type: entityType,
-    entity_id: entityId,
-    reason,
-    comment: comment || null,
-    reported_by: reportedBy || null,
-    status: "pending",
-    duplicate_of_id: duplicateOf?.id || null,
-    duplicate_of_name: duplicateOf?.name || null,
-  });
-  if (error) {
-    console.error("submitReport:", error);
-    return { error: error.message };
-  }
-  return { ok: true };
-}
-
-export async function proposeContribution(entityType, entityId, fields, currentEntity, sourceId) {
-  const rows = Object.entries(fields).map(([fieldPath, proposedValue]) => ({
-    id: `contrib-${Date.now()}-${Math.floor(Math.random() * 100000)}-${fieldPath}`,
-    entity_type: entityType,
-    entity_id: entityId,
-    field_path: fieldPath,
-    proposed_value: proposedValue,
-    previous_value: currentEntity ? currentEntity[fieldPath] ?? null : null,
-    source_type: "bibax",
-    source_id: sourceId || null,
-    status: "pending_review",
-  }));
-  if (rows.length === 0) return;
-  const { error } = await supabase.from("data_contributions").insert(rows);
-  if (error) {
-    console.error("proposeContribution:", error);
-    return;
-  }
-  await incrementPendingCount(entityType, entityId, rows.length);
-}
-
-export async function loadContributionsForEntity(entityType, entityId, status = "pending_review") {
-  let query = supabase.from("data_contributions").select("*").eq("entity_type", entityType).eq("entity_id", entityId);
-  if (status) query = query.eq("status", status);
-  const { data, error } = await query.order("created_at");
-  if (error) {
-    console.error("loadContributionsForEntity:", error);
-    return [];
-  }
-  return data.map(rowToContribution);
-}
-
-const ENTITY_TABLES = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
-
-async function incrementPendingCount(entityType, entityId, delta) {
-  const table = ENTITY_TABLES[entityType];
-  if (!table) return;
-  const { data } = await supabase.from(table).select("pending_contributions_count").eq("id", entityId).single();
-  const current = data?.pending_contributions_count || 0;
-  await supabase.from(table).update({ pending_contributions_count: Math.max(0, current + delta) }).eq("id", entityId);
-}
-
-// Applique la valeur proposée sur la vraie fiche, marque la contribution "published", et
-// archive (sans supprimer) toute contribution précédemment publiée pour ce même champ.
-export async function approveContribution(contribution, reviewerId) {
-  const table = ENTITY_TABLES[contribution.entityType];
-  if (!table) return;
-
-  await supabase
-    .from("data_contributions")
-    .update({ status: "superseded" })
-    .eq("entity_type", contribution.entityType)
-    .eq("entity_id", contribution.entityId)
-    .eq("field_path", contribution.fieldPath)
-    .eq("status", "published");
-
-  await supabase
-    .from(table)
-    .update({ [contribution.fieldPath]: contribution.proposedValue })
-    .eq("id", contribution.entityId);
-
-  await supabase
-    .from("data_contributions")
-    .update({ status: "published", reviewed_by: reviewerId || null, reviewed_at: new Date().toISOString(), applied_at: new Date().toISOString() })
-    .eq("id", contribution.id);
-
-  await incrementPendingCount(contribution.entityType, contribution.entityId, -1);
-}
-
-export async function rejectContribution(contribution, reviewerId) {
-  await supabase
-    .from("data_contributions")
-    .update({ status: "rejected", reviewed_by: reviewerId || null, reviewed_at: new Date().toISOString() })
-    .eq("id", contribution.id);
-  await incrementPendingCount(contribution.entityType, contribution.entityId, -1);
-}
-
-/* ---------------- PRODUITS (RÉPERTOIRE DES BOISSONS) ---------------- */
-
-/* ---------------- DÉGUSTATIONS (serveur, remplace le localStorage) ---------------- */
-
-export async function loadMyTastedDrinkIds() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
-  const { data, error } = await supabase.from("tasted_drinks").select("drink_id").eq("user_id", user.id);
-  if (error) {
-    console.error("loadMyTastedDrinkIds:", error);
-    return [];
-  }
-  return data.map((r) => r.drink_id);
-}
-
-export async function setDrinkTastedServer(drinkId, tasted) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié." };
-  if (tasted) {
-    const { error } = await supabase.from("tasted_drinks").insert({ user_id: user.id, drink_id: drinkId });
-    if (error) return { error: error.message };
-  } else {
-    const { error } = await supabase.from("tasted_drinks").delete().eq("user_id", user.id).eq("drink_id", drinkId);
-    if (error) return { error: error.message };
-  }
-  return { ok: true };
-}
-
-/* ---------------- MES PHOTOS ---------------- */
-
-export async function loadMyMediaAssets() {
-  const { data, error } = await supabase.rpc("get_my_media_assets");
-  if (error) {
-    console.error("loadMyMediaAssets:", error);
-    return [];
-  }
-  return data.map((r) => ({
-    id: r.id,
-    entityType: r.entity_type,
-    entityId: r.entity_id,
-    kind: r.kind,
-    url: r.url,
-    createdAt: r.created_at,
-  }));
-}
-
-export async function deleteMyMediaAsset(id) {
-  const { error } = await supabase.rpc("delete_my_media_asset", { p_id: id });
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function loadBibaxCount(otherUserId) {
-  const { data, error } = await supabase.rpc("get_bibax_count", { p_other_user_id: otherUserId });
-  if (error) {
-    console.error("loadBibaxCount:", error);
-    return 0;
-  }
-  return data ?? 0;
-}
-
-export async function blockUser(targetId) {
-  const { data, error } = await supabase.rpc("block_user", { p_target_id: targetId });
-  if (error) return { error: error.message };
-  if (data?.error) return { error: data.error };
-  return data;
-}
-
-export async function unblockUser(targetId) {
-  const { data, error } = await supabase.rpc("unblock_user", { p_target_id: targetId });
-  if (error) return { error: error.message };
-  return data;
-}
-
-export async function loadMyBlockedUsers() {
-  const { data, error } = await supabase.rpc("get_my_blocked_users");
-  if (error) {
-    console.error("loadMyBlockedUsers:", error);
-    return [];
-  }
-  return data.map((r) => ({ userId: r.blocked_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url, blockedAt: r.blocked_at }));
-}
-
-export async function loadBibaxPulseActivity(targetUserId, before = null) {
-  const { data, error } = await supabase.rpc("get_bibax_pulse_activity", { p_target_user_id: targetUserId, p_before: before });
-  if (error) {
-    console.error("loadBibaxPulseActivity:", error);
-    return [];
-  }
-  return data.map((e) => ({
-    id: e.id,
-    eventType: e.event_type,
-    actorId: e.actor_id,
-    actorName: e.actor_name,
-    actorLastName: e.actor_last_name,
-    actorAvatarUrl: e.actor_avatar_url,
-    actorBibroCode: e.actor_bibro_code,
-    objectType: e.object_type,
-    objectId: e.object_id,
-    venueId: e.venue_id,
-    roomSalonCode: e.room_salon_code,
-    visibility: e.visibility,
-    metadata: e.metadata,
-    bixCount: e.bix_count,
-    commentsCount: e.comments_count,
-    lastBixerName: e.last_bixer_name,
-    santeCount: e.sante_count,
-    iSaidSante: e.i_said_sante,
-    incomingCount: e.incoming_count,
-    iAmIncoming: e.i_am_incoming,
-    createdAt: e.created_at,
-    iBixed: e.i_bixed,
-  }));
-}
-
-export async function loadMutualBibaxList(otherUserId) {
-  const { data, error } = await supabase.rpc("get_mutual_bibax", { p_target_user_id: otherUserId });
-  if (error) {
-    console.error("loadMutualBibaxList:", error);
-    return [];
-  }
-  return data.map((b) => ({
-    userId: b.user_id,
-    name: b.name,
-    lastName: b.last_name,
-    nickname: b.nickname,
-    avatarUrl: b.avatar_url,
-    code: b.bibro_code,
-    city: b.city,
-    locality: b.locality,
-    country: b.country,
-  }));
-}
-
-export async function loadMutualBibaxCount(otherUserId) {
-  const { data, error } = await supabase.rpc("get_mutual_bibax_count", { p_other_user_id: otherUserId });
-  if (error) {
-    console.error("loadMutualBibaxCount:", error);
-    return 0;
-  }
-  return data ?? 0;
-}
-
-export async function loadBibaxMediaAssets(otherUserId) {
-  const { data, error } = await supabase.rpc("get_bibax_media_assets", { p_other_user_id: otherUserId });
-  if (error) {
-    console.error("loadBibaxMediaAssets:", error);
-    return [];
-  }
-  return data.map((r) => ({
-    id: r.id,
-    entityType: r.entity_type,
-    entityId: r.entity_id,
-    kind: r.kind,
-    url: r.url,
-    createdAt: r.created_at,
-  }));
-}
-
-export async function loadMyProfileStats(userId) {
-  const [{ data: tastedCount }, { data: venuesCount }] = await Promise.all([
-    supabase.rpc("get_tasted_drinks_count", { p_user_id: userId }),
-    supabase.rpc("get_venue_checkins_count", { p_user_id: userId }),
-  ]);
-  return { tastedDrinksCount: tastedCount ?? 0, venueCheckinsCount: venuesCount ?? 0 };
-}
-
-export async function loadDrinksDirectory() {
-  const { data, error } = await supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
-  if (error) {
-    console.error("loadDrinksDirectory:", error);
-    return [];
-  }
-  return data.map(rowToDrink);
-}
-
-export async function createDrink(drink) {
-  const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
-  if (error) {
-    console.error("createDrink:", error);
+    console.error("geocodeAddress:", e);
     return null;
   }
-  return rowToDrink(data);
 }
 
-export async function updateDrink(id, patch) {
-  const { error } = await supabase.from("drinks_directory").update(drinkToRow(patch, true)).eq("id", id);
-  if (error) console.error("updateDrink:", error);
+export async function saveGeocodeResult(venueId, { lat, lng, source, confidence, status }) {
+  const { error } = await supabase
+    .from("public_venues")
+    .update({
+      lat,
+      lng,
+      geocode_source: source,
+      geocode_confidence: confidence,
+      geocode_status: status,
+      geocoded_at: new Date().toISOString(),
+    })
+    .eq("id", venueId);
+  if (error) console.error("saveGeocodeResult:", error);
 }
 
-export async function deleteDrink(id) {
-  const { error } = await supabase.from("drinks_directory").delete().eq("id", id);
-  if (error) console.error("deleteDrink:", error);
+export async function unlinkGooglePlace(venueId) {
+  const { error } = await supabase
+    .from("public_venues")
+    .update({ google_place_id: null, google_place_id_checked_at: null, google_hours_last_fetch_at: null, google_hours_last_status: null })
+    .eq("id", venueId);
+  if (error) console.error("unlinkGooglePlace:", error);
 }
 
-// bibamus-admin stocke le type de produit sous forme de code technique stable (chantier
-// multilingue) — ex. "bieres_cidres" — alors que l'app grand public affiche et compare encore
-// sur le libellé français. Cette correspondance traduit à la frontière, dans les deux sens,
-// pour que les deux applications restent d'accord sur la valeur réellement stockée.
-const DRINK_TYPE_CODE_TO_LABEL = {
-  bieres_cidres: "Bières & Cidres",
-  vins_bulles: "Vins & Bulles",
-  spiritueux: "Spiritueux",
-  cocktails_mocktails: "Cocktails / Mocktails",
-  softs_eaux: "Softs & Eaux",
-  boissons_chaudes: "Boissons chaudes",
-  snacks: "Snacks",
-  generiques: "Génériques",
-};
-const DRINK_TYPE_LABEL_TO_CODE = Object.fromEntries(Object.entries(DRINK_TYPE_CODE_TO_LABEL).map(([code, label]) => [label, code]));
-
-function rowToDrink(row) {
-  return {
-    id: row.id,
-    name: row.name,
-    type: DRINK_TYPE_CODE_TO_LABEL[row.type] || row.type,
-    defaultVolumeCl: row.default_volume_cl,
-    defaultServingMode: row.default_serving_mode,
-    brewery: row.brewery,
-    brand: row.brand,
-    nationality: row.nationality,
-    abv: row.abv,
-    kcalPer100ml: row.kcal_per_100ml,
-    volumeCl: row.volume_cl,
-    glutenFree: row.gluten_free,
-    bio: row.bio,
-    servingMode: row.serving_mode,
-    beerTags: row.beer_tags || [],
-    aliases: row.aliases || [],
-    status: row.status,
-    isGeneric: row.is_generic,
-    averagePrice: row.average_price,
-    averageJetonValue: row.average_jeton_value,
-    avatarEmoji: row.avatar_emoji,
-    photoUrl: row.photo_url,
-    submittedBy: row.submitted_by,
-    submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
-    description: row.description,
-    snackType: row.snack_type,
-    weightG: row.weight_g,
-    countsAsDrinkId: row.counts_as_drink_id,
-    ratings: row.ratings || {},
-    ratingDates: row.rating_dates || {},
-    ratedServingModes: row.rated_serving_modes || {},
-    pendingContributionsCount: row.pending_contributions_count || 0,
-  };
+export async function setNoGooglePresence(venueId, value) {
+  const { error } = await supabase.from("public_venues").update({ no_google_presence: value }).eq("id", venueId);
+  if (error) console.error("setNoGooglePresence:", error);
 }
 
-function drinkToRow(d, partial = false) {
-  const row = {
-    name: d.name,
-    type: DRINK_TYPE_LABEL_TO_CODE[d.type] || d.type,
-    brewery: d.brewery,
-    brand: d.brand,
-    nationality: d.nationality,
-    abv: d.abv,
-    kcal_per_100ml: d.kcalPer100ml,
-    volume_cl: d.volumeCl,
-    gluten_free: d.glutenFree,
-    bio: d.bio,
-    serving_mode: d.servingMode,
-    beer_tags: d.beerTags,
-    status: d.status,
-    is_generic: d.isGeneric,
-    aliases: d.aliases,
-    average_price: d.averagePrice,
-    average_jeton_value: d.averageJetonValue,
-    avatar_emoji: d.avatarEmoji,
-    photo_url: d.photoUrl,
-    submitted_by: d.submittedBy,
-    submitted_at: d.submittedAt ? new Date(d.submittedAt).toISOString() : undefined,
-    description: d.description,
-    snack_type: d.snackType,
-    weight_g: d.weightG,
-    counts_as_drink_id: d.countsAsDrinkId,
-    ratings: d.ratings,
-    rating_dates: d.ratingDates,
-    rated_serving_modes: d.ratedServingModes,
-  };
-  if (!partial) row.id = d.id;
-  Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
-  return row;
+export async function setNoFixedHours(venueId, value) {
+  const { error } = await supabase.from("public_venues").update({ no_fixed_hours: value }).eq("id", venueId);
+  if (error) console.error("setNoFixedHours:", error);
 }
 
-/* ---------------- PHOTOS DE PRODUITS ---------------- */
+/* ---------------- PHOTOS D'ÉTABLISSEMENTS ---------------- */
 
-// Compresse et redimensionne l'image côté appareil avant l'envoi — un smartphone produit
-// souvent des photos de plusieurs Mo, largement plus grandes que nécessaire pour un affichage
-// mobile, et ça évite de saturer inutilement le stockage et de ralentir le chargement des fiches.
-// Recadrage carré centré — pour une photo de profil, contrairement à resizeImage() qui garde
-// le ratio d'origine (adapté aux photos de produits/lieux, pas à un avatar rond).
-async function resizeImageSquare(file, targetW, targetH, quality = 0.85) {
+async function resizeImageTo(file, targetW, targetH, quality = 0.85) {
   const bitmap = await createImageBitmap(file);
+  // Recadrage centré pour remplir exactement le format demandé (carré pour le profil,
+  // bannière large pour la couverture), plutôt que de déformer l'image.
   const srcRatio = bitmap.width / bitmap.height;
   const targetRatio = targetW / targetH;
   let sx = 0, sy = 0, sw = bitmap.width, sh = bitmap.height;
@@ -1844,32 +863,622 @@ async function resizeImageSquare(file, targetW, targetH, quality = 0.85) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
 }
 
-async function resizeImage(file, maxDim = 1000, quality = 0.82) {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-}
-
-export async function uploadDrinkPhoto(drinkId, file) {
-  const blob = await resizeImage(file);
+// ============================================================
+// Stories officielles Bibamus — déposées uniquement depuis la
+// plateforme de gestion, visibles par tout le monde dans l'app.
+// ============================================================
+export async function uploadOfficialStoryMedia(adminUserId, file) {
+  const blob = await resizeImageTo(file, 720, 1280);
   const imageBase64 = await blobToBase64(blob);
-  const path = `${drinkId}-${Date.now()}.jpg`;
+  const path = `official-${Date.now()}.jpg`;
   const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
-    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg", entityType: "drink", entityId: drinkId, kind: "gallery" },
+    body: { bucket: "stories", path, imageBase64, contentType: "image/jpeg", entityType: "story", entityId: adminUserId, kind: "story" },
   });
-  if (error) return { error: await extractFunctionError(error) };
+  if (error) return { error: error.message };
   if (data?.error) return { error: data.error };
   return { url: data.url };
 }
 
+export async function createOfficialStory(mediaUrl, caption, createdBy) {
+  const { error } = await supabase.from("official_stories").insert({ media_url: mediaUrl, caption: caption || null, created_by: createdBy });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function loadOfficialStoriesAdmin() {
+  const { data, error } = await supabase.from("official_stories").select("*").order("created_at", { ascending: false });
+  if (error) {
+    console.error("loadOfficialStoriesAdmin:", error);
+    return [];
+  }
+  return data.map((s) => ({ id: s.id, mediaUrl: s.media_url, caption: s.caption, createdAt: s.created_at }));
+}
+
+export async function deleteOfficialStory(id) {
+  const { error } = await supabase.from("official_stories").delete().eq("id", id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function uploadVenuePhoto(venueId, file, kind) {
+  const dims = kind === "cover" ? [1200, 400] : [400, 400];
+  const blob = await resizeImageTo(file, dims[0], dims[1]);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${venueId}-${kind}-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "venue-photos", path, imageBase64, contentType: "image/jpeg", entityType: "venue", entityId: venueId, kind: kind === "cover" ? "cover" : "profile_photo" },
+  });
+  if (error) {
+    console.error("uploadVenuePhoto:", error);
+    return null;
+  }
+  if (data?.error) {
+    console.error("uploadVenuePhoto:", data.error);
+    return null;
+  }
+  return data.url;
+}
+
+export async function uploadVenueMenuPdf(venueId, file) {
+  const path = `${venueId}-menu-${Date.now()}.pdf`;
+  const { error: uploadError } = await supabase.storage.from("venue-menus").upload(path, file, { contentType: "application/pdf", upsert: true });
+  if (uploadError) {
+    console.error("uploadVenueMenuPdf:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("venue-menus").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/* ---------------- PRODUITS (RÉPERTOIRE DES BOISSONS) ---------------- */
+
+// Chargements allégés (juste id + nom) pour alimenter les menus déroulants avec recherche —
+// bien plus légers qu'un chargement complet des fiches, pour les liens marque/producteur.
+export async function loadBrandsForSelect() {
+  const { data, error } = await supabase.from("brands_directory").select("id, name").order("name");
+  if (error) {
+    console.error("loadBrandsForSelect:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function loadBreweriesForSelect() {
+  const { data, error } = await supabase.from("breweries_directory").select("id, name").order("name");
+  if (error) {
+    console.error("loadBreweriesForSelect:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function uploadDrinkMainPhoto(drinkId, file) {
+  const blob = await resizeImageTo(file, 800, 800);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${drinkId}-main-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg", entityType: "drink", entityId: drinkId, kind: "profile_photo" },
+  });
+  if (error) {
+    console.error("uploadDrinkMainPhoto:", error);
+    return null;
+  }
+  if (data?.error) {
+    console.error("uploadDrinkMainPhoto:", data.error);
+    return null;
+  }
+  return data.url;
+}
+
+export async function uploadDrinkGalleryPhoto(drinkId, file) {
+  const blob = await resizeImageTo(file, 1000, 1000);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${drinkId}-gallery-${Date.now()}-${Math.floor(Math.random() * 10000)}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg", entityType: "drink", entityId: drinkId, kind: "gallery" },
+  });
+  if (error) {
+    console.error("uploadDrinkGalleryPhoto:", error);
+    return null;
+  }
+  if (data?.error) {
+    console.error("uploadDrinkGalleryPhoto:", data.error);
+    return null;
+  }
+  return data.url;
+}
+
+export async function uploadDrinkAwardBadge(drinkId, file) {
+  const blob = await resizeImageTo(file, 600, 600);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${drinkId}-award-${Date.now()}-${Math.floor(Math.random() * 10000)}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg", entityType: "drink", entityId: drinkId, kind: "award_badge" },
+  });
+  if (error) {
+    console.error("uploadDrinkAwardBadge:", error);
+    return null;
+  }
+  if (data?.error) {
+    console.error("uploadDrinkAwardBadge:", data.error);
+    return null;
+  }
+  return data.url;
+}
+
+export async function loadDrinksDirectory() {
+  const { data, error } = await supabase.from("drinks_directory").select("*").order("name");
+  if (error) {
+    console.error("loadDrinksDirectory:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
+// Un statut vide en base ("null") équivaut à "à traiter" — traité comme tel dans les comptages.
+function applyStatusFilter(query, status) {
+  if (status === "to_process") return query.or("status.is.null,status.eq.to_process,status.eq.draft");
+  return query.eq("status", status);
+}
+
+const KNOWN_DRINK_TYPES = ["bieres_cidres", "vins_bulles", "spiritueux", "cocktails_mocktails", "softs_eaux", "boissons_chaudes", "snacks", "generiques"];
+
+function applyTypeFilter(query, type) {
+  if (!type) return query;
+  if (type === "__other__") return query.not("type", "in", `(${KNOWN_DRINK_TYPES.map((t) => `"${t}"`).join(",")})`);
+  return query.eq("type", type);
+}
+
+// Charge une SEULE page de produits, filtrée et triée côté serveur — jamais l'ensemble du
+// répertoire d'un coup, pour rester rapide même avec des dizaines ou centaines de milliers de
+// produits.
+export async function loadDrinksPage({ type, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
+  // Jointure sur une seule profondeur seulement — une double jointure imbriquée (produit → marque
+  // → producteur) s'est révélée trop fragile : si Supabase n'arrive pas à résoudre sans ambiguïté
+  // l'une des deux relations, la requête ENTIÈRE échoue et plus aucun produit ne s'affiche.
+  let query = supabase.from("drinks_directory").select("*, brands_directory(name, producer_id)", { count: "exact" });
+  query = applyTypeFilter(query, type);
+  if (search && search.trim()) query = query.ilike("name", `%${search.trim()}%`);
+  // "brandName"/"producerName" résultent d'une jointure, pas d'une vraie colonne — on trie par brand_id à la place.
+  const realSortKey = sortKey === "brandName" || sortKey === "producerName" ? "brand_id" : sortKey;
+  query = query.order(realSortKey, { ascending: sortDir === 1, nullsFirst: false });
+  query = query.range(page * pageSize, page * pageSize + pageSize - 1);
+
+  const [{ data, error, count }, { data: breweriesData }] = await Promise.all([
+    query,
+    supabase.from("breweries_directory").select("id, name"),
+  ]);
+  if (error) {
+    console.error("loadDrinksPage:", error);
+    return { items: [], total: 0 };
+  }
+  const producerNameById = {};
+  (breweriesData || []).forEach((b) => (producerNameById[b.id] = b.name));
+
+  return {
+    items: data.map((row) => ({
+      ...rowToDrink(row),
+      brandName: row.brands_directory?.name || null,
+      producerName: row.brands_directory?.producer_id ? producerNameById[row.brands_directory.producer_id] || null : null,
+    })),
+    total: count || 0,
+  };
+}
+
+// Un seul décompte rapide (via count exact, sans jamais rapatrier les lignes elles-mêmes) —
+// utilisé pour les blocs de statistiques, avec un filtre de catégorie optionnel pour qu'ils
+// restent justes une fois qu'une catégorie est sélectionnée.
+export async function countDrinks({ type, status } = {}) {
+  let query = supabase.from("drinks_directory").select("id", { count: "exact", head: true });
+  query = applyTypeFilter(query, type);
+  if (status) query = applyStatusFilter(query, status);
+  const { count, error } = await query;
+  if (error) {
+    console.error("countDrinks:", error);
+    return 0;
+  }
+  return count || 0;
+}
+
+// Compte les produits par catégorie (les 8 blocs), y compris "Autres - Divers" — 8 petites
+// requêtes de comptage exact, bien plus légères qu'un chargement complet du répertoire pour
+// ensuite compter en mémoire.
+export async function countDrinksByType() {
+  const results = await Promise.all([...KNOWN_DRINK_TYPES.map((t) => countDrinks({ type: t })), countDrinks({ type: "__other__" })]);
+  const map = {};
+  KNOWN_DRINK_TYPES.forEach((t, i) => (map[t] = results[i]));
+  map.autres = results[KNOWN_DRINK_TYPES.length];
+  return map;
+}
+
+export async function createDrink(drink) {
+  const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
+  if (error) {
+    console.error("createDrink:", error);
+    return null;
+  }
+  return rowToDrink(data);
+}
+
+export async function updateDrink(id, patch) {
+  const { error } = await supabase.from("drinks_directory").update(drinkToRow(patch, true)).eq("id", id);
+  if (error) {
+    console.error("updateDrink:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
+export async function deleteDrink(id) {
+  const { data, error } = await supabase.from("drinks_directory").delete().eq("id", id).select();
+  if (error) {
+    console.error("deleteDrink:", error);
+    return { error: error.message };
+  }
+  if (!data || data.length === 0) {
+    return { error: "Vous n'avez pas les droits nécessaires pour supprimer cette fiche." };
+  }
+  return { ok: true };
+}
+
+function rowToDrink(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    brewery: row.brewery,
+    brand: row.brand,
+    nationality: row.nationality,
+    abv: row.abv,
+    kcalPer100ml: row.kcal_per_100ml,
+    volumeCl: row.volume_cl,
+    glutenFree: row.gluten_free,
+    bio: row.bio,
+    servingMode: row.serving_mode,
+    beerTags: row.beer_tags || [],
+    status: row.status,
+    aliases: row.aliases || [],
+    certificationLevel: row.certification_level,
+    duplicateOfId: row.duplicate_of_id,
+    openReportsCount: row.open_reports_count || 0,
+    isGeneric: row.is_generic,
+    averagePrice: row.average_price,
+    averageJetonValue: row.average_jeton_value,
+    avatarEmoji: row.avatar_emoji,
+    brandId: row.brand_id,
+    producerIds: row.producer_ids || [],
+    defaultVolumeCl: row.default_volume_cl,
+    defaultServingMode: row.default_serving_mode,
+    beverageSubtype: row.beverage_subtype,
+    originRegion: row.origin_region,
+    originCity: row.origin_city,
+    mainPhotoUrl: row.main_photo_url,
+    galleryPhotos: row.gallery_photos || [],
+    styles: row.styles || [],
+    productStatus: row.product_status,
+    alternateName: row.alternate_name,
+    launchYear: row.launch_year,
+    // Niveau 2 — composition bière
+    malts: row.malts || [],
+    hops: row.hops || [],
+    yeast: row.yeast,
+    cereals: row.cereals || [],
+    fruits: row.fruits || [],
+    spices: row.spices || [],
+    otherIngredients: row.other_ingredients || [],
+    allergens: row.allergens || [],
+    // Niveau 2 — fabrication bière
+    fermentationType: row.fermentation_type,
+    bottleRefermented: row.bottle_refermented,
+    filtered: row.filtered,
+    pasteurized: row.pasteurized,
+    dryHopping: row.dry_hopping,
+    beerAging: row.beer_aging,
+    barrelType: row.barrel_type,
+    // Niveau 2 — composition & fabrication cidre/poiré
+    mainFruit: row.main_fruit,
+    fruitVarieties: row.fruit_varieties,
+    fruitOrigin: row.fruit_origin,
+    pureJuice: row.pure_juice,
+    concentrateUsed: row.concentrate_used,
+    ciderFermentation: row.cider_fermentation,
+    carbonationMethod: row.carbonation_method,
+    ciderFiltered: row.cider_filtered,
+    ciderPasteurized: row.cider_pasteurized,
+    ciderAging: row.cider_aging,
+    ciderBarrelType: row.cider_barrel_type,
+    // Niveau 2 — profil gustatif
+    tasteBitterness: row.taste_bitterness,
+    tasteSweetness: row.taste_sweetness,
+    tasteAcidity: row.taste_acidity,
+    tasteBody: row.taste_body,
+    tasteFruitiness: row.taste_fruitiness,
+    tasteHoppiness: row.taste_hoppiness,
+    tasteMaltiness: row.taste_maltiness,
+    tasteTannin: row.taste_tannin,
+    tasteCarbonation: row.taste_carbonation,
+    // Niveau 2 — arômes & saveurs
+    flavorNotes: row.flavor_notes || [],
+    // Niveau 2 — service & consommation
+    servingTemperature: row.serving_temperature,
+    recommendedGlass: row.recommended_glass,
+    foodPairings: row.food_pairings || [],
+    occasion: row.occasion,
+    // Niveau 2 — caractéristiques & labels
+    alcoholFree: !!row.alcohol_free,
+    lowAlcohol: !!row.low_alcohol,
+    glutenReduced: !!row.gluten_reduced,
+    vegan: row.vegan,
+    sugarFree: !!row.sugar_free,
+    lactoseFree: !!row.lactose_free,
+    certifications: row.certifications || [],
+    // Niveau 2 — présentation
+    shortDescription: row.short_description,
+    fullDescription: row.full_description,
+    productHistory: row.product_history,
+    officialUrl: row.official_url,
+    videoLinks: row.video_links || [],
+    awardBadges: row.award_badges || [],
+    // Niveau 3 — données techniques bière
+    ibu: row.ibu,
+    colorEbc: row.color_ebc,
+    colorSrm: row.color_srm,
+    originalGravity: row.original_gravity,
+    finalGravity: row.final_gravity,
+    platoDegree: row.plato_degree,
+    apparentAttenuation: row.apparent_attenuation,
+    finalPh: row.final_ph,
+    carbonationTechnical: row.carbonation_technical,
+    relativeBitterness: row.relative_bitterness,
+    realExtract: row.real_extract,
+    // Niveau 3 — procédé brassicole avancé
+    mashingProcess: row.mashing_process,
+    hoppingDetails: row.hopping_details,
+    dryHopDetail: row.dry_hop_detail,
+    yeastStrain: row.yeast_strain,
+    primaryFermentation: row.primary_fermentation,
+    secondaryFermentation: row.secondary_fermentation,
+    conditioningProcess: row.conditioning_process,
+    maturationDetails: row.maturation_details,
+    barrelDetails: row.barrel_details,
+    blendDetails: row.blend_details,
+    // Niveau 3 — données techniques cidre/poiré
+    ciderInitialGravity: row.cider_initial_gravity,
+    ciderFinalGravity: row.cider_final_gravity,
+    residualSugar: row.residual_sugar,
+    totalAcidity: row.total_acidity,
+    ciderPh: row.cider_ph,
+    tanninLevel: row.tannin_level,
+    ciderCarbonationTechnical: row.cider_carbonation_technical,
+    detailedVarieties: row.detailed_varieties,
+    appleType: row.apple_type,
+    pressingMethod: row.pressing_method,
+    defecationKeeving: row.defecation_keeving,
+    malolacticFermentation: row.malolactic_fermentation,
+    ciderBlendDetails: row.cider_blend_details,
+    ciderAgingDetails: row.cider_aging_details,
+    // Niveau 3 — traçabilité & sources
+    infoSource: row.info_source,
+    sourceUrl: row.source_url,
+    verificationDate: row.verification_date,
+    contributor: row.contributor,
+    verificationStatus: row.verification_status,
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
+    description: row.description,
+    snackType: row.snack_type,
+    weightG: row.weight_g,
+    countsAsDrinkId: row.counts_as_drink_id,
+    ratings: row.ratings || {},
+    ratingDates: row.rating_dates || {},
+    ratedServingModes: row.rated_serving_modes || {},
+    pendingEdit: row.pending_edit || null,
+  };
+}
+
+function drinkToRow(d, partial = false) {
+  const row = {
+    name: d.name,
+    type: d.type,
+    brewery: d.brewery,
+    brand: d.brand,
+    nationality: d.nationality,
+    abv: d.abv,
+    kcal_per_100ml: d.kcalPer100ml,
+    volume_cl: d.volumeCl,
+    gluten_free: d.glutenFree,
+    bio: d.bio,
+    serving_mode: d.servingMode,
+    beer_tags: d.beerTags,
+    status: d.status,
+    aliases: d.aliases,
+    certification_level: d.certificationLevel,
+    duplicate_of_id: d.duplicateOfId,
+    is_generic: d.isGeneric,
+    average_price: d.averagePrice,
+    average_jeton_value: d.averageJetonValue,
+    avatar_emoji: d.avatarEmoji,
+    brand_id: d.brandId,
+    producer_ids: d.producerIds,
+    default_volume_cl: d.defaultVolumeCl,
+    default_serving_mode: d.defaultServingMode,
+    beverage_subtype: d.beverageSubtype,
+    origin_region: d.originRegion,
+    origin_city: d.originCity,
+    main_photo_url: d.mainPhotoUrl,
+    gallery_photos: d.galleryPhotos,
+    styles: d.styles,
+    product_status: d.productStatus,
+    alternate_name: d.alternateName,
+    launch_year: d.launchYear,
+    malts: d.malts,
+    hops: d.hops,
+    yeast: d.yeast,
+    cereals: d.cereals,
+    fruits: d.fruits,
+    spices: d.spices,
+    other_ingredients: d.otherIngredients,
+    allergens: d.allergens,
+    fermentation_type: d.fermentationType,
+    bottle_refermented: d.bottleRefermented,
+    filtered: d.filtered,
+    pasteurized: d.pasteurized,
+    dry_hopping: d.dryHopping,
+    beer_aging: d.beerAging,
+    barrel_type: d.barrelType,
+    main_fruit: d.mainFruit,
+    fruit_varieties: d.fruitVarieties,
+    fruit_origin: d.fruitOrigin,
+    pure_juice: d.pureJuice,
+    concentrate_used: d.concentrateUsed,
+    cider_fermentation: d.ciderFermentation,
+    carbonation_method: d.carbonationMethod,
+    cider_filtered: d.ciderFiltered,
+    cider_pasteurized: d.ciderPasteurized,
+    cider_aging: d.ciderAging,
+    cider_barrel_type: d.ciderBarrelType,
+    taste_bitterness: d.tasteBitterness,
+    taste_sweetness: d.tasteSweetness,
+    taste_acidity: d.tasteAcidity,
+    taste_body: d.tasteBody,
+    taste_fruitiness: d.tasteFruitiness,
+    taste_hoppiness: d.tasteHoppiness,
+    taste_maltiness: d.tasteMaltiness,
+    taste_tannin: d.tasteTannin,
+    taste_carbonation: d.tasteCarbonation,
+    flavor_notes: d.flavorNotes,
+    serving_temperature: d.servingTemperature,
+    recommended_glass: d.recommendedGlass,
+    food_pairings: d.foodPairings,
+    occasion: d.occasion,
+    alcohol_free: d.alcoholFree,
+    low_alcohol: d.lowAlcohol,
+    gluten_reduced: d.glutenReduced,
+    vegan: d.vegan,
+    sugar_free: d.sugarFree,
+    lactose_free: d.lactoseFree,
+    certifications: d.certifications,
+    short_description: d.shortDescription,
+    full_description: d.fullDescription,
+    product_history: d.productHistory,
+    official_url: d.officialUrl,
+    video_links: d.videoLinks,
+    award_badges: d.awardBadges,
+    ibu: d.ibu,
+    color_ebc: d.colorEbc,
+    color_srm: d.colorSrm,
+    original_gravity: d.originalGravity,
+    final_gravity: d.finalGravity,
+    plato_degree: d.platoDegree,
+    apparent_attenuation: d.apparentAttenuation,
+    final_ph: d.finalPh,
+    carbonation_technical: d.carbonationTechnical,
+    relative_bitterness: d.relativeBitterness,
+    real_extract: d.realExtract,
+    mashing_process: d.mashingProcess,
+    hopping_details: d.hoppingDetails,
+    dry_hop_detail: d.dryHopDetail,
+    yeast_strain: d.yeastStrain,
+    primary_fermentation: d.primaryFermentation,
+    secondary_fermentation: d.secondaryFermentation,
+    conditioning_process: d.conditioningProcess,
+    maturation_details: d.maturationDetails,
+    barrel_details: d.barrelDetails,
+    blend_details: d.blendDetails,
+    cider_initial_gravity: d.ciderInitialGravity,
+    cider_final_gravity: d.ciderFinalGravity,
+    residual_sugar: d.residualSugar,
+    total_acidity: d.totalAcidity,
+    cider_ph: d.ciderPh,
+    tannin_level: d.tanninLevel,
+    cider_carbonation_technical: d.ciderCarbonationTechnical,
+    detailed_varieties: d.detailedVarieties,
+    apple_type: d.appleType,
+    pressing_method: d.pressingMethod,
+    defecation_keeving: d.defecationKeeving,
+    malolactic_fermentation: d.malolacticFermentation,
+    cider_blend_details: d.ciderBlendDetails,
+    cider_aging_details: d.ciderAgingDetails,
+    info_source: d.infoSource,
+    source_url: d.sourceUrl,
+    verification_date: d.verificationDate,
+    contributor: d.contributor,
+    verification_status: d.verificationStatus,
+    submitted_by: d.submittedBy,
+    submitted_at: d.submittedAt ? new Date(d.submittedAt).toISOString() : undefined,
+    description: d.description,
+    snack_type: d.snackType,
+    weight_g: d.weightG,
+    counts_as_drink_id: d.countsAsDrinkId,
+    ratings: d.ratings,
+    rating_dates: d.ratingDates,
+    rated_serving_modes: d.ratedServingModes,
+    pending_edit: d.pendingEdit,
+  };
+  if (!partial) row.id = d.id;
+  Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
+  return row;
+}
+
+/* ---------------- CONDITIONNEMENTS / VARIANTES (réutilise drink_barcodes) ---------------- */
+
+// Une variante = un conditionnement précis (bouteille 33cl, canette 50cl, fût...) rattaché à un
+// produit. Le code-barres est optionnel — une variante peut exister sans qu'on le connaisse
+// encore. Cette table est la même que celle utilisée par le scanner dans l'app.
+function rowToVariant(row) {
+  return {
+    id: row.id,
+    drinkId: row.product_id,
+    barcode: row.barcode,
+    container: row.container,
+    volumeMl: row.volume_ml,
+    marketCountry: row.market_country,
+    verified: !!row.verified,
+  };
+}
+
+export async function loadDrinkVariants(drinkId) {
+  const { data, error } = await supabase.from("drink_barcodes").select("*").eq("product_id", drinkId).order("created_at");
+  if (error) {
+    console.error("loadDrinkVariants:", error);
+    return [];
+  }
+  return data.map(rowToVariant);
+}
+
+export async function createDrinkVariant({ drinkId, container, volumeMl, barcode, marketCountry }) {
+  const row = {
+    id: `variant-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+    product_id: drinkId,
+    container: container || null,
+    volume_ml: volumeMl || null,
+    barcode: barcode || null,
+    market_country: marketCountry || null,
+    verified: false,
+  };
+  const { data, error } = await supabase.from("drink_barcodes").insert(row).select().single();
+  if (error) {
+    console.error("createDrinkVariant:", error);
+    return null;
+  }
+  return rowToVariant(data);
+}
+
+export async function updateDrinkVariant(id, { container, volumeMl, barcode, marketCountry }) {
+  const patch = { container: container || null, volume_ml: volumeMl || null, barcode: barcode || null, market_country: marketCountry || null };
+  const { error } = await supabase.from("drink_barcodes").update(patch).eq("id", id);
+  if (error) console.error("updateDrinkVariant:", error);
+}
+
+export async function deleteDrinkVariant(id) {
+  const { error } = await supabase.from("drink_barcodes").delete().eq("id", id);
+  if (error) console.error("deleteDrinkVariant:", error);
+}
+
+/* ---------------- BRASSERIES & PRODUCTEURS ---------------- */
 
 export async function loadBreweriesDirectory() {
-  const { data, error } = await supabase.from("breweries_directory").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
+  const { data, error } = await supabase.from("breweries_directory").select("*").order("name");
   if (error) {
     console.error("loadBreweriesDirectory:", error);
     return [];
@@ -1888,129 +1497,129 @@ export async function createBrewery(brewery) {
 
 export async function updateBrewery(id, patch) {
   const { error } = await supabase.from("breweries_directory").update(breweryToRow(patch, true)).eq("id", id);
-  if (error) console.error("updateBrewery:", error);
+  if (error) {
+    console.error("updateBrewery:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 export async function deleteBrewery(id) {
-  const { error } = await supabase.from("breweries_directory").delete().eq("id", id);
-  if (error) console.error("deleteBrewery:", error);
+  const { data, error } = await supabase.from("breweries_directory").delete().eq("id", id).select();
+  if (error) {
+    console.error("deleteBrewery:", error);
+    return { error: error.message };
+  }
+  if (!data || data.length === 0) {
+    return { error: "Vous n'avez pas les droits nécessaires pour supprimer cette fiche." };
+  }
+  return { ok: true };
 }
-
-// Même logique de frontière que pour le type de produit — bibamus-admin stocke le pays sous
-// forme de code technique (ex. "belgique"), l'app grand public affiche et compare encore sur
-// le libellé français.
-const COUNTRY_CODE_TO_LABEL = {
-  belgique: "Belgique",
-  france: "France",
-  pays_bas: "Pays-Bas",
-  allemagne: "Allemagne",
-  luxembourg: "Luxembourg",
-  algerie: "Algérie",
-  autriche: "Autriche",
-  bulgarie: "Bulgarie",
-  canada: "Canada",
-  chypre: "Chypre",
-  cote_d_ivoire: "Côte d'Ivoire",
-  croatie: "Croatie",
-  cuba: "Cuba",
-  danemark: "Danemark",
-  espagne: "Espagne",
-  estonie: "Estonie",
-  etats_unis: "États-Unis",
-  finlande: "Finlande",
-  grece: "Grèce",
-  hongrie: "Hongrie",
-  irlande: "Irlande",
-  islande: "Islande",
-  italie: "Italie",
-  lettonie: "Lettonie",
-  lituanie: "Lituanie",
-  malte: "Malte",
-  maroc: "Maroc",
-  mexique: "Mexique",
-  norvege: "Norvège",
-  pologne: "Pologne",
-  portugal: "Portugal",
-  republique_tcheque: "République tchèque",
-  roumanie: "Roumanie",
-  royaume_uni: "Royaume-Uni",
-  senegal: "Sénégal",
-  slovaquie: "Slovaquie",
-  slovenie: "Slovénie",
-  suede: "Suède",
-  suisse: "Suisse",
-  tunisie: "Tunisie",
-  venezuela: "Vénézuéla",
-  autre: "Autre",
-};
-const COUNTRY_LABEL_TO_CODE = Object.fromEntries(Object.entries(COUNTRY_CODE_TO_LABEL).map(([code, label]) => [label, code]));
 
 function rowToBrewery(row) {
   return {
     id: row.id,
     name: row.name,
-    aliases: row.aliases || [],
-    country: COUNTRY_CODE_TO_LABEL[row.country] || row.country,
+    subtitle: row.subtitle,
+    country: row.country,
+    profilePhotoUrl: row.profile_photo_url,
+    coverPhotoUrl: row.cover_photo_url,
+    streetName: row.street_name,
+    streetNumber: row.street_number,
+    postalCode: row.postal_code,
+    city: row.city,
+    village: row.village,
+    lat: row.lat,
+    lng: row.lng,
+    phone: row.phone,
+    email: row.email,
+    website: row.website,
+    googleUrl: row.google_url,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    linkedinUrl: row.linkedin_url,
+    youtubeUrl: row.youtube_url,
+    tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+    producerTypes: row.producer_types || [],
+    producerProfiles: row.producer_profiles || [],
+    linkedVenueId: row.linked_venue_id,
     status: row.status,
+    aliases: row.aliases || [],
+    certificationLevel: row.certification_level,
+    duplicateOfId: row.duplicate_of_id,
+    openReportsCount: row.open_reports_count || 0,
+    ownerManaged: !!row.owner_managed,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
-    pendingContributionsCount: row.pending_contributions_count || 0,
+    pendingEdit: row.pending_edit || null,
   };
 }
 
 function breweryToRow(b, partial = false) {
   const row = {
     name: b.name,
-    country: COUNTRY_LABEL_TO_CODE[b.country] || b.country,
+    subtitle: b.subtitle,
+    country: b.country,
+    profile_photo_url: b.profilePhotoUrl,
+    cover_photo_url: b.coverPhotoUrl,
+    street_name: b.streetName,
+    street_number: b.streetNumber,
+    postal_code: b.postalCode,
+    city: b.city,
+    village: b.village,
+    lat: b.lat,
+    lng: b.lng,
+    phone: b.phone,
+    email: b.email,
+    website: b.website,
+    google_url: b.googleUrl,
+    facebook_url: b.facebookUrl,
+    instagram_url: b.instagramUrl,
+    tiktok_url: b.tiktokUrl,
+    snapchat_url: b.snapchatUrl,
+    linkedin_url: b.linkedinUrl,
+    youtube_url: b.youtubeUrl,
+    producer_types: b.producerTypes,
+    producer_profiles: b.producerProfiles,
+    linked_venue_id: b.linkedVenueId,
     status: b.status,
-    submitted_by: b.submittedBy,
     aliases: b.aliases,
+    certification_level: b.certificationLevel,
+    duplicate_of_id: b.duplicateOfId,
+    owner_managed: b.ownerManaged,
+    submitted_by: b.submittedBy,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
+    pending_edit: b.pendingEdit,
   };
   if (!partial) row.id = b.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
 }
 
-/* ---------------- CODES-BARRES ---------------- */
-
-// Un code-barres n'est jamais l'identité d'une boisson — plusieurs conditionnements (bouteille,
-// canette, différents volumes) d'une même bière ont chacun leur propre code, tous rattachés à
-// la même fiche. Le scan sert uniquement de raccourci vers une fiche existante, jamais à créer
-// automatiquement un nouveau produit.
-
-export async function lookupBarcode(barcode) {
-  const { data, error } = await supabase.from("drink_barcodes").select("*").eq("barcode", barcode).maybeSingle();
-  if (error) {
-    console.error("lookupBarcode:", error);
-    return null;
-  }
-  if (!data) return null;
-  return { productId: data.product_id, container: data.container, volumeMl: data.volume_ml, verified: data.verified };
-}
-
-export async function associateBarcode({ barcode, productId, format, container, volumeMl, addedBy }) {
-  const { error } = await supabase.from("drink_barcodes").insert({
-    id: `barcode-${Date.now()}`,
-    barcode,
-    product_id: productId,
-    format: format || null,
-    container: container || null,
-    volume_ml: volumeMl || null,
-    added_by: addedBy || null,
-    verified: false,
+export async function uploadBreweryPhoto(breweryId, file, kind) {
+  const dims = kind === "cover" ? [1200, 400] : [400, 400];
+  const blob = await resizeImageTo(file, dims[0], dims[1]);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${breweryId}-${kind}-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "brewery-photos", path, imageBase64, contentType: "image/jpeg", entityType: "producer", entityId: breweryId, kind: kind === "cover" ? "cover" : "profile_photo" },
   });
   if (error) {
-    console.error("associateBarcode:", error);
-    return false;
+    console.error("uploadBreweryPhoto:", error);
+    return null;
   }
-  return true;
+  if (data?.error) {
+    console.error("uploadBreweryPhoto:", data.error);
+    return null;
+  }
+  return data.url;
 }
 
 /* ---------------- MARQUES ---------------- */
 
 export async function loadBrandsDirectory() {
-  const { data, error } = await supabase.from("brands_directory").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
+  const { data, error } = await supabase.from("brands_directory").select("*").order("name");
   if (error) {
     console.error("loadBrandsDirectory:", error);
     return [];
@@ -2029,245 +1638,104 @@ export async function createBrand(brand) {
 
 export async function updateBrand(id, patch) {
   const { error } = await supabase.from("brands_directory").update(brandToRow(patch, true)).eq("id", id);
-  if (error) console.error("updateBrand:", error);
+  if (error) {
+    console.error("updateBrand:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 export async function deleteBrand(id) {
-  const { error } = await supabase.from("brands_directory").delete().eq("id", id);
-  if (error) console.error("deleteBrand:", error);
+  const { data, error } = await supabase.from("brands_directory").delete().eq("id", id).select();
+  if (error) {
+    console.error("deleteBrand:", error);
+    return { error: error.message };
+  }
+  if (!data || data.length === 0) {
+    return { error: "Vous n'avez pas les droits nécessaires pour supprimer cette fiche." };
+  }
+  return { ok: true };
 }
 
 function rowToBrand(row) {
   return {
-    aliases: row.aliases || [],
     id: row.id,
     name: row.name,
+    alternateName: row.alternate_name,
+    slogan: row.slogan,
+    logoUrl: row.logo_url,
+    foundedYear: row.founded_year,
+    originCountry: row.origin_country,
+    originCity: row.origin_city,
+    classifications: row.classifications || [],
+    brandTypes: row.brand_types || [],
+    website: row.website,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    tiktokUrl: row.tiktok_url,
+    youtubeUrl: row.youtube_url,
+    snapchatUrl: row.snapchat_url,
+    producerId: row.producer_id,
+    brandOwner: row.brand_owner,
     status: row.status,
+    aliases: row.aliases || [],
+    certificationLevel: row.certification_level,
+    duplicateOfId: row.duplicate_of_id,
+    openReportsCount: row.open_reports_count || 0,
+    ownerManaged: !!row.owner_managed,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
-    pendingContributionsCount: row.pending_contributions_count || 0,
+    pendingEdit: row.pending_edit || null,
   };
 }
 
 function brandToRow(b, partial = false) {
   const row = {
     name: b.name,
+    alternate_name: b.alternateName,
+    slogan: b.slogan,
+    logo_url: b.logoUrl,
+    founded_year: b.foundedYear,
+    origin_country: b.originCountry,
+    origin_city: b.originCity,
+    classifications: b.classifications,
+    brand_types: b.brandTypes,
+    website: b.website,
+    facebook_url: b.facebookUrl,
+    instagram_url: b.instagramUrl,
+    tiktok_url: b.tiktokUrl,
+    snapchat_url: b.snapchatUrl,
+    youtube_url: b.youtubeUrl,
+    producer_id: b.producerId,
+    brand_owner: b.brandOwner,
     status: b.status,
-    submitted_by: b.submittedBy,
     aliases: b.aliases,
+    certification_level: b.certificationLevel,
+    duplicate_of_id: b.duplicateOfId,
+    owner_managed: b.ownerManaged,
+    submitted_by: b.submittedBy,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
+    pending_edit: b.pendingEdit,
   };
   if (!partial) row.id = b.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
 }
 
-/* ---------------- BIBAPULSE ---------------- */
-
-export async function loadPulseFeed(before = null, limit = 20) {
-  const { data, error } = await supabase.rpc("get_pulse_feed", { p_limit: limit, p_before: before });
+export async function uploadBrandLogo(brandId, file) {
+  const blob = await resizeImageTo(file, 400, 400);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${brandId}-logo-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "brand-logos", path, imageBase64, contentType: "image/jpeg", entityType: "brand", entityId: brandId, kind: "logo" },
+  });
   if (error) {
-    console.error("loadPulseFeed:", error);
-    return [];
+    console.error("uploadBrandLogo:", error);
+    return null;
   }
-  return data.map((row) => ({
-    id: row.id,
-    eventType: row.event_type,
-    actorId: row.actor_id,
-    actorName: row.actor_name,
-    actorAvatarUrl: row.actor_avatar_url,
-    actorLastName: row.actor_last_name,
-    actorBibroCode: row.actor_bibro_code,
-    objectType: row.object_type,
-    objectId: row.object_id,
-    venueId: row.venue_id,
-    roomSalonCode: row.room_salon_code,
-    visibility: row.visibility,
-    metadata: row.metadata,
-    bixCount: row.bix_count,
-    commentsCount: row.comments_count,
-    incomingCount: row.incoming_count,
-    lastBixerName: row.last_bixer_name,
-    santeCount: row.sante_count,
-    iSaidSante: row.i_said_sante,
-    createdAt: row.created_at,
-    iBixed: row.i_bixed,
-    iAmIncoming: row.i_am_incoming,
-  }));
-}
-
-export async function togglePulseBix(pulseEventId, alreadyBixed) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié." };
-  if (alreadyBixed) {
-    const { error } = await supabase.from("pulse_bix").delete().eq("pulse_event_id", pulseEventId).eq("user_id", user.id);
-    if (error) return { error: error.message };
-  } else {
-    const { error } = await supabase.from("pulse_bix").insert({ pulse_event_id: pulseEventId, user_id: user.id });
-    if (error) return { error: error.message };
+  if (data?.error) {
+    console.error("uploadBrandLogo:", data.error);
+    return null;
   }
-  return { ok: true };
-}
-
-export async function toggleNotifyPulse(targetBibroCode) {
-  const { data, error } = await supabase.rpc("toggle_notify_pulse", { p_target_code: targetBibroCode });
-  if (error) return { error: error.message };
-  if (data?.error) return { error: data.error };
-  return data;
-}
-
-export async function toggleFollow(targetBibroCode) {
-  const { data, error } = await supabase.rpc("toggle_follow", { p_target_code: targetBibroCode });
-  if (error) return { error: error.message };
-  if (data?.error) return { error: data.error };
-  return data;
-}
-
-export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié." };
-  if (alreadyIncoming) {
-    const { error } = await supabase.from("pulse_incoming").delete().eq("pulse_event_id", pulseEventId).eq("user_id", user.id);
-    if (error) return { error: error.message };
-  } else {
-    const { error } = await supabase.from("pulse_incoming").insert({ pulse_event_id: pulseEventId, user_id: user.id });
-    if (error) return { error: error.message };
-  }
-  return { ok: true };
-}
-
-export async function toggleSanteReaction(pulseEventId) {
-  const { error } = await supabase.rpc("toggle_pulse_sante", { p_pulse_event_id: pulseEventId });
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function loadPulseReactors(pulseEventId) {
-  const { data, error } = await supabase.rpc("get_pulse_reactors", { p_pulse_event_id: pulseEventId });
-  if (error) {
-    console.error("loadPulseReactors:", error);
-    return { bix: [], incoming: [], sante: [] };
-  }
-  return {
-    bix: data.filter((r) => r.kind === "bix").map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url })),
-    incoming: data.filter((r) => r.kind === "incoming").map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url })),
-    sante: data.filter((r) => r.kind === "sante").map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url })),
-  };
-}
-
-export async function loadPulseComments(pulseEventId) {
-  const { data, error } = await supabase.rpc("get_pulse_comments", { p_pulse_event_id: pulseEventId });
-  if (error) {
-    console.error("loadPulseComments:", error);
-    return [];
-  }
-  return data.map((c) => ({ id: c.id, userId: c.user_id, userName: c.user_name, userAvatarUrl: c.user_avatar_url, body: c.body, createdAt: c.created_at }));
-}
-
-export async function postPulseComment(pulseEventId, body) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié." };
-  const { error } = await supabase.from("pulse_comments").insert({ pulse_event_id: pulseEventId, user_id: user.id, body: body.trim() });
-  if (error) return { error: error.message };
-  return { ok: true };
-}
-
-/* ---------------- RELATIONS BIBAX (mutuelles, façon Facebook) ---------------- */
-
-export async function sendBibaxRequest(targetBibroCode) {
-  const { data, error } = await supabase.rpc("send_bibax_request", { p_target_code: targetBibroCode });
-  if (error) return { error: error.message };
-  if (data?.error) return { error: data.error };
-  return data;
-}
-
-export async function respondBibaxRequest(relationshipId, accept) {
-  const { data, error } = await supabase.rpc("respond_bibax_request", { p_relationship_id: relationshipId, p_accept: accept });
-  if (error) return { error: error.message };
-  if (data?.error) return { error: data.error };
-  return data;
-}
-
-export async function removeBibax(relationshipId) {
-  const { data, error } = await supabase.rpc("remove_bibax", { p_relationship_id: relationshipId });
-  if (error) return { error: error.message };
-  return data;
-}
-
-export async function removeBibaxByCode(bibroCode) {
-  const { data, error } = await supabase.rpc("remove_bibax_by_code", { p_target_code: bibroCode });
-  if (error) return { error: error.message };
-  if (data?.error) return { error: data.error };
-  return data;
-}
-
-export async function loadMyBibax() {
-  const { data, error } = await supabase.rpc("get_my_bibax");
-  if (error) {
-    console.error("loadMyBibax:", error);
-    return [];
-  }
-  return data.map((r) => ({
-    relationshipId: r.relationship_id,
-    userId: r.user_id,
-    name: r.name,
-    lastName: r.last_name,
-    nickname: r.nickname,
-    avatarUrl: r.avatar_url,
-    bibroCode: r.bibro_code,
-    city: r.city,
-    locality: r.locality,
-    country: prettifyCountry(r.country),
-    birthDate: r.birth_date,
-    shareAge: r.share_age,
-    bio: r.bio,
-    registeredAt: r.registered_at,
-    facebookUrl: r.facebook_url,
-    instagramUrl: r.instagram_url,
-    tiktokUrl: r.tiktok_url,
-    snapchatUrl: r.snapchat_url,
-    whatsappUrl: r.whatsapp_url,
-    xUrl: r.x_url,
-    threadsUrl: r.threads_url,
-    linkedinUrl: r.linkedin_url,
-  }));
-}
-
-export async function loadPendingBibaxRequests() {
-  const { data, error } = await supabase.rpc("get_pending_bibax_requests");
-  if (error) {
-    console.error("loadPendingBibaxRequests:", error);
-    return [];
-  }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, country: prettifyCountry(r.country), createdAt: r.created_at }));
-}
-
-export async function loadSentBibaxRequests() {
-  const { data, error } = await supabase.rpc("get_sent_bibax_requests");
-  if (error) {
-    console.error("loadSentBibaxRequests:", error);
-    return [];
-  }
-  return data.map((r) => ({ relationshipId: r.relationship_id, userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, country: prettifyCountry(r.country), createdAt: r.created_at }));
-}
-
-export async function cancelBibaxRequest(relationshipId) {
-  const { data, error } = await supabase.rpc("cancel_bibax_request", { p_relationship_id: relationshipId });
-  if (error) return { error: error.message };
-  return data;
-}
-
-export async function loadBibaxSuggestions(limit = 10) {
-  const { data, error } = await supabase.rpc("get_bibax_suggestions", { p_limit: limit });
-  if (error) {
-    console.error("loadBibaxSuggestions:", error);
-    return [];
-  }
-  return data.map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, country: prettifyCountry(r.country), mutualCount: r.mutual_count, distanceKm: r.distance_km }));
+  return data.url;
 }
