@@ -60,7 +60,18 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           }}
         />
         <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
-          <PageHeader onBack={onBack} />
+          <PageHeader
+            onBack={onBack}
+            right={
+              <button
+                onClick={onEdit}
+                title="Modifier ce lieu"
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center" }}
+              >
+                <NavIcon name="pencil" size={20} color={COLORS.amber} />
+              </button>
+            }
+          />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
           <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
@@ -182,7 +193,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "10px", alignItems: "stretch", marginBottom: "20px" }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "20px" }}>
         <div style={{ flex: 2 }}>
           <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} noFixedHours={venue.noFixedHours} />
         </div>
@@ -270,6 +281,30 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         </div>
         <span style={{ color: COLORS.wine, fontSize: "13px", fontWeight: 700 }}>Gérer →</span>
       </button>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Prochains évènements</div>
+        <div style={{ textAlign: "center", padding: "16px 0" }}>
+          <NavIcon name="calendar" size={26} color={COLORS.paperAlt} />
+          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
+        </div>
+      </div>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Médias</div>
+        <div style={{ textAlign: "center", padding: "16px 0" }}>
+          <NavIcon name="camera" size={26} color={COLORS.paperAlt} />
+          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
+        </div>
+      </div>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Produits populaires ici</div>
+        <div style={{ textAlign: "center", padding: "16px 0" }}>
+          <NavIcon name="star" size={26} color={COLORS.paperAlt} />
+          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
+        </div>
+      </div>
 
       <button
         onClick={handleCleanup}
