@@ -14,7 +14,6 @@ import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 
 export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
-  const [confirmReset, setConfirmReset] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -28,15 +27,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const handleCheckIn = () => {
     onCheckIn(venue);
     setJustCheckedIn(true);
-  };
-
-  const handleResetClick = () => {
-    if (!confirmReset) {
-      setConfirmReset(true);
-      return;
-    }
-    onResetStats();
-    setConfirmReset(false);
   };
 
   return (
@@ -191,7 +181,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           onClick={onManageMenu}
           style={{
             flex: 1,
-            height: "51px",
+            height: "48px",
             borderRadius: "12px",
             background: COLORS.surface,
             border: `2px solid ${COLORS.paperAlt}`,
@@ -245,9 +235,9 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px", display: "flex", alignItems: "stretch" }}>
         <button
           onClick={onOpenCheckInsHistory}
-          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "center" }}
         >
-          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Check-ins ici</span>
+          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Tes check-ins ici</span>
           <span style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{stats.visits || 0}</span>
             <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
@@ -256,31 +246,15 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         <div style={{ width: "1px", background: COLORS.paperAlt, margin: "0 14px" }} />
         <button
           onClick={onOpenDrinksHistory}
-          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "center" }}
         >
-          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Boissons bues ici</span>
+          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Tes boissons bues ici</span>
           <span style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{stats.drinksOrdered || 0}</span>
             <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
           </span>
         </button>
       </div>
-
-      <button
-        onClick={handleResetClick}
-        style={{
-          background: "none",
-          border: "none",
-          color: confirmReset ? COLORS.wine : COLORS.inkSoft,
-          fontWeight: confirmReset ? 700 : 500,
-          fontSize: "12.5px",
-          cursor: "pointer",
-          padding: "14px 0 0 0",
-          textAlign: "left",
-        }}
-      >
-        {confirmReset ? "Confirmer la réinitialisation des statistiques ?" : "Réinitialiser les statistiques"}
-      </button>
 
       <button
         onClick={() => setReporting(true)}
@@ -291,9 +265,20 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       {reporting && <ReportModal entityType="venue" entityId={venue.id} myBibroCode={myBibroCode} directory={venues} onClose={() => setReporting(false)} />}
       <button
         onClick={() => setClaiming(true)}
-        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "10px 0 0 0", textAlign: "left" }}
+        style={{
+          background: "none",
+          border: `2px solid ${COLORS.paperAlt}`,
+          borderRadius: "10px",
+          padding: "13px",
+          color: COLORS.ink,
+          fontWeight: 600,
+          fontSize: "14px",
+          cursor: "pointer",
+          textAlign: "center",
+          marginTop: "16px",
+        }}
       >
-        Cet établissement vous appartient ? Revendiquez cette fiche
+        Revendiquer la gérance de ce lieu
       </button>
       {claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       <BackFooterLink onClick={onBack} />
