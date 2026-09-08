@@ -12,6 +12,12 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
+import snapchatIconUrl from "../assets/brand/snapchat.svg";
+import tripadvisorIconUrl from "../assets/brand/tripadvisor.svg";
+import restaurantGuruIconUrl from "../assets/brand/restaurant-guru.svg";
+import wifiIconUrl from "../assets/brand/wifi-free.svg";
+import pmrIconUrl from "../assets/brand/acces-pmr.svg";
+import danceIconUrl from "../assets/brand/danser.svg";
 
 export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
   const [claiming, setClaiming] = useState(false);
@@ -125,7 +131,25 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             <div />
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "14px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            {venue.hasWifi && (
+              <span title="WiFi" style={{ lineHeight: 0 }}>
+                <img src={wifiIconUrl} alt="WiFi" style={{ width: "20px", height: "20px" }} />
+              </span>
+            )}
+            {venue.wheelchairAccessible && (
+              <span title="Accès PMR" style={{ lineHeight: 0 }}>
+                <img src={pmrIconUrl} alt="Accès PMR" style={{ width: "20px", height: "20px" }} />
+              </span>
+            )}
+            {venue.canDance && (
+              <span title="Danse" style={{ lineHeight: 0 }}>
+                <img src={danceIconUrl} alt="Danse" style={{ width: "20px", height: "20px" }} />
+              </span>
+            )}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "14px" }}>
           {venue.website && (
             <a href={normalizeUrl(venue.website)} target="_blank" rel="noreferrer" title="Site internet" style={{ lineHeight: 0 }}>
               <WebsiteIcon size={20} />
@@ -151,6 +175,22 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
               <TiktokIcon size={20} />
             </a>
           )}
+          {venue.snapchatUrl && (
+            <a href={normalizeUrl(venue.snapchatUrl)} target="_blank" rel="noreferrer" title="Snapchat" style={{ lineHeight: 0 }}>
+              <img src={snapchatIconUrl} alt="Snapchat" style={{ width: "20px", height: "20px" }} />
+            </a>
+          )}
+          {venue.tripadvisorUrl && (
+            <a href={normalizeUrl(venue.tripadvisorUrl)} target="_blank" rel="noreferrer" title="Tripadvisor" style={{ lineHeight: 0 }}>
+              <img src={tripadvisorIconUrl} alt="Tripadvisor" style={{ width: "20px", height: "20px" }} />
+            </a>
+          )}
+          {venue.restaurantGuruUrl && (
+            <a href={normalizeUrl(venue.restaurantGuruUrl)} target="_blank" rel="noreferrer" title="Restaurant Guru" style={{ lineHeight: 0 }}>
+              <img src={restaurantGuruIconUrl} alt="Restaurant Guru" style={{ width: "20px", height: "20px" }} />
+            </a>
+          )}
+          </div>
         </div>
         {venue.venueTypes && venue.venueTypes.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "12px" }}>
