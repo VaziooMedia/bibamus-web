@@ -6,11 +6,8 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, WEEKDAY_SHORT_MON_FIRST } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
-import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
-import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
-import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, formatSharedBirthDate, computeAgeFromBirthDate, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
 import { loadMyProfileStats, loadMyStories } from "../data/sharedDirectories.js";
 
@@ -33,7 +30,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
     );
   };
 
-  const StatCard = ({ icon, label, value, onClick }) => (
+  const StatCard = ({ label, value, onClick }) => (
     <button
       onClick={onClick}
       disabled={!onClick}
@@ -42,24 +39,16 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "6px",
+        gap: "4px",
         background: COLORS.surface,
         border: `2px solid ${COLORS.paperAlt}`,
-        borderRadius: "14px",
-        padding: "12px",
+        borderRadius: "12px",
+        padding: "8px",
         textAlign: "center",
         cursor: onClick ? "pointer" : "default",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-        {icon}
-        {onClick && (
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
-            <NavIcon name="chevron-right" size={10} color={COLORS.amber} />
-          </span>
-        )}
-      </div>
-      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2, height: "27px", display: "flex", alignItems: "center" }}>{label}</span>
+      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
     </button>
   );
@@ -75,7 +64,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
                 width: "112px",
                 height: "112px",
                 borderRadius: "50%",
-                border: `2px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`,
+                border: `3px solid ${hasActiveStory ? "#FF2C8F" : "transparent"}`,
                 padding: "2px",
                 flexShrink: 0,
                 background: "none",
@@ -211,9 +200,9 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
-        <StatCard icon={<img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Bibax" value={bibros.length} onClick={goToBibros} />
-        <StatCard icon={<img src={drinkChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Drink Checks" value={stats ? stats.tastedDrinksCount : "…"} onClick={goToProducts} />
-        <StatCard icon={<img src={placeChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Place Checks" value={stats ? stats.venueCheckinsCount : "…"} onClick={goToVenues} />
+        <StatCard label="Bibax" value={bibros.length} onClick={goToBibros} />
+        <StatCard label="Drink Checks" value={stats ? stats.tastedDrinksCount : "…"} onClick={goToProducts} />
+        <StatCard label="Place Checks" value={stats ? stats.venueCheckinsCount : "…"} onClick={goToVenues} />
       </div>
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
