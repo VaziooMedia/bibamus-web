@@ -58,7 +58,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
           <PageHeader onBack={onBack} />
         </div>
-        <div style={{ position: "absolute", bottom: "-25px", left: "12px", right: "12px", display: "flex", alignItems: "flex-end", gap: "12px" }}>
+        <div style={{ position: "absolute", bottom: "-64px", left: "12px", right: "12px", display: "flex", alignItems: "flex-end", gap: "12px" }}>
           <div style={{ border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0, flexShrink: 0 }}>
             <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
           </div>
@@ -69,7 +69,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         </div>
       </div>
 
-      <div style={{ marginTop: "40px" }}>
+      <div style={{ marginTop: "76px" }}>
         {venue.pendingContributionsCount > 0 && (
           <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: "#F2C94C" }}>
             📝 Une modification de la fiche est proposée, en attente de validation.
