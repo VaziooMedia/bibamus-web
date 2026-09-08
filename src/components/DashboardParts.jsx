@@ -561,10 +561,14 @@ export function FinalTotalCard({ event, updateEvent, roundsSum }) {
         <br />
         Les tournées déjà réglées n'y comptent pas.
       </p>
+      <style>{`
+        .final-total-input::placeholder { font-size: 11px; }
+      `}</style>
       <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
             <input
+              className="final-total-input"
               type="number"
               min="0"
               step="0.10"
@@ -573,12 +577,13 @@ export function FinalTotalCard({ event, updateEvent, roundsSum }) {
               placeholder="Addition"
               style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
             />
-            <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>
+            {value && <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>}
           </div>
         </div>
         <div>
           <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
             <input
+              className="final-total-input"
               type="number"
               min="0"
               step="0.10"
@@ -587,7 +592,7 @@ export function FinalTotalCard({ event, updateEvent, roundsSum }) {
               placeholder="Pourboire"
               style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
             />
-            <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>
+            {tipValue && <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>}
           </div>
         </div>
         <button onClick={save} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "11px 16px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper, flexShrink: 0 }}>
