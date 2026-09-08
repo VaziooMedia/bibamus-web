@@ -86,7 +86,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           </div>
         )}
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 64px 1px 64px", gap: "12px", marginBottom: "12px", alignItems: "center" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 40px 1px 40px", gap: "10px", marginBottom: "12px", alignItems: "center" }}>
           <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <NavIcon name="map-pin" size={20} color={COLORS.amber} />
@@ -117,27 +117,27 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "14px" }}>
           {venue.website && (
             <a href={normalizeUrl(venue.website)} target="_blank" rel="noreferrer" title="Site internet" style={{ lineHeight: 0 }}>
-              <WebsiteIcon />
+              <WebsiteIcon size={20} />
             </a>
           )}
           {venue.googleUrl && (
             <a href={normalizeUrl(venue.googleUrl)} target="_blank" rel="noreferrer" title="Page Google" style={{ lineHeight: 0 }}>
-              <GoogleIcon />
+              <GoogleIcon size={20} />
             </a>
           )}
           {venue.facebookUrl && (
             <a href={normalizeUrl(venue.facebookUrl)} target="_blank" rel="noreferrer" title="Facebook" style={{ lineHeight: 0 }}>
-              <FacebookIcon />
+              <FacebookIcon size={20} />
             </a>
           )}
           {venue.instagramUrl && (
             <a href={normalizeUrl(venue.instagramUrl)} target="_blank" rel="noreferrer" title="Instagram" style={{ lineHeight: 0 }}>
-              <InstagramIcon />
+              <InstagramIcon size={20} />
             </a>
           )}
           {venue.tiktokUrl && (
             <a href={normalizeUrl(venue.tiktokUrl)} target="_blank" rel="noreferrer" title="TikTok" style={{ lineHeight: 0 }}>
-              <TiktokIcon />
+              <TiktokIcon size={20} />
             </a>
           )}
         </div>
