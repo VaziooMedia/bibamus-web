@@ -22,6 +22,7 @@ import {
   loadBibaxCount,
   loadMyProfileStats,
   searchBibaxByName,
+  toggleNotifyPulse,
 } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -400,6 +401,19 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   const [confirmingBlock, setConfirmingBlock] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const [showRemoveSheet, setShowRemoveSheet] = useState(false);
+  const [notifyPulse, setNotifyPulse] = useState(bibro?.notifyPulse || false);
+  const [togglingNotify, setTogglingNotify] = useState(false);
+
+  const handleToggleNotify = async () => {
+    setTogglingNotify(true);
+    const result = await toggleNotifyPulse(bibro.code);
+    setTogglingNotify(false);
+    if (result?.error) {
+      alert(result.error);
+      return;
+    }
+    setNotifyPulse(result.notifyPulse);
+  };
 
   useEffect(() => {
     if (!bibro?.userId) return;
@@ -453,6 +467,27 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
       )}
 
       <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "10px" }}>
+        <button
+          onClick={handleToggleNotify}
+          disabled={togglingNotify}
+          title={notifyPulse ? "Suivi sur Pulse — toutes ses activités apparaissent" : "Suivre sur Pulse"}
+          style={{
+            position: "absolute",
+            top: "12px",
+            right: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "32px",
+            height: "32px",
+            background: "none",
+            border: "none",
+            cursor: togglingNotify ? "default" : "pointer",
+            padding: 0,
+          }}
+        >
+          <NavIcon name="bell" size={20} color={notifyPulse ? COLORS.amber : COLORS.paperAlt} filled={notifyPulse} />
+        </button>
         <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
           <div
             style={{

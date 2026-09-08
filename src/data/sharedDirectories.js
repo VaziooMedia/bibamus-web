@@ -2051,6 +2051,13 @@ export async function togglePulseBix(pulseEventId, alreadyBixed) {
   return { ok: true };
 }
 
+export async function toggleNotifyPulse(targetBibroCode) {
+  const { data, error } = await supabase.rpc("toggle_notify_pulse", { p_target_code: targetBibroCode });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return data;
+}
+
 export async function toggleFollow(targetBibroCode) {
   const { data, error } = await supabase.rpc("toggle_follow", { p_target_code: targetBibroCode });
   if (error) return { error: error.message };
