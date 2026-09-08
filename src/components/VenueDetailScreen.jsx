@@ -23,6 +23,8 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const moneyJeton = moneySpent.jeton || 0;
   const drinkEntries = Object.entries(stats.personalDrinksByType || {}).filter(([, n]) => n > 0);
   const address = formatAddress(venue);
+  const addressLine1 = [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
+  const addressLine2 = [venue.postalCode ? `B-${venue.postalCode}` : "", venue.city].filter(Boolean).join(" ") + (venue.village ? ` (${venue.village})` : "");
   const likes = venue.likes || [];
   const iLike = likes.includes(myBibroCode);
 
@@ -62,9 +64,16 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: 0, lineHeight: 1.2, color: COLORS.chalkWhite }}>{venue.name}</h1>
-          {venue.subtitle && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
+          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{venue.name}</h1>
+          {venue.subtitle && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
         </div>
+        <button
+          onClick={() => onToggleLike(venue.sourcePublicVenueId)}
+          style={{ position: "absolute", bottom: "8px", right: "8px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", padding: "4px 6px" }}
+        >
+          <NavIcon name="heart" size={24} color={iLike ? COLORS.redFluo : "#fff"} />
+          {likes.length > 0 && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.redFluo, marginTop: "2px" }}>{formatCompactCount(likes.length)}</span>}
+        </button>
       </div>
 
       <div style={{ marginTop: "76px" }}>
@@ -73,48 +82,30 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             📝 Une modification de la fiche est proposée, en attente de validation.
           </div>
         )}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
-          <button
-            onClick={() => onToggleLike(venue.sourcePublicVenueId)}
-            style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", padding: "4px 6px", flexShrink: 0 }}
-          >
-            <NavIcon name="heart" size={24} color={iLike ? COLORS.redFluo : COLORS.paperAlt} />
-            {likes.length > 0 && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.redFluo, marginTop: "2px" }}>{formatCompactCount(likes.length)}</span>}
-          </button>
-        </div>
-      {venue.isFavorite ? (
-        <p style={{ fontSize: "14px", color: COLORS.amber, fontWeight: 600, margin: "0 0 4px 0" }}>★</p>
-      ) : (
-        <button
-          onClick={onToggleFavorite}
-          style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, margin: "0 0 4px 0", textAlign: "left" }}
-        >
-          Lieu suivi ponctuellement · ⭐ ajouter aux favoris
-        </button>
-      )}
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
-        {address && (
-          <a
-            href={mapsUrlFor(venue)}
-            target="_blank"
-            rel="noreferrer"
-            style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: COLORS.inkSoft, marginBottom: "10px", textDecoration: "none" }}
-          >
-            <NavIcon name="map-pin" size={16} color={COLORS.amber} />
-            {address}
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+          <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <NavIcon name="map-pin" size={15} color={COLORS.amber} />
+              <span>
+                {addressLine1}
+                {addressLine1 && <br />}
+                {addressLine2}
+              </span>
+            </div>
           </a>
-        )}
-        <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
           {venue.phone && (
-            <a href={`tel:${venue.phone.replace(/\s+/g, "")}`} title={venue.phone} style={{ lineHeight: 0 }}>
+            <a href={`tel:${venue.phone.replace(/\s+/g, "")}`} title={venue.phone} style={{ lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
               <NavIcon name="phone" size={20} color={COLORS.amber} />
             </a>
           )}
           {venue.email && (
-            <a href={`mailto:${venue.email}`} title={venue.email} style={{ lineHeight: 0 }}>
+            <a href={`mailto:${venue.email}`} title={venue.email} style={{ lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
               <NavIcon name="mail" size={20} color={COLORS.amber} />
             </a>
           )}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "14px" }}>
           <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" title="Voir sur la carte" style={{ lineHeight: 0 }}>
             <svg width="20" height="20" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="11" fill={COLORS.sage} />
