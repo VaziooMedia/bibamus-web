@@ -58,6 +58,7 @@ function capitalizeFirst(str) {
 // Réseaux sociaux — préfixe fixe non modifiable par réseau (le lien complet stocké =
 // préfixe + ce que l'utilisateur tape). L'ordre ici fixe aussi l'ordre affiché.
 const SOCIAL_NETWORKS = [
+  { key: "whatsapp", field: "whatsappUrl", label: "WhatsApp", prefix: "https://wa.me/", icon: <WhatsappIcon size={20} /> },
   { key: "facebook", field: "facebookUrl", label: "Facebook", prefix: "https://www.facebook.com/", icon: <FacebookIcon size={20} /> },
   { key: "instagram", field: "instagramUrl", label: "Instagram", prefix: "https://www.instagram.com/", icon: <InstagramIcon size={20} /> },
   { key: "tiktok", field: "tiktokUrl", label: "TikTok", prefix: "https://www.tiktok.com/@", icon: <TiktokIcon size={20} /> },
@@ -671,6 +672,9 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
         <VisibilityRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Commune de résidence">
           <ShareToggle checked={p.shareCity} onChange={(v) => update({ shareCity: v })} />
         </VisibilityRow>
+        <VisibilityRow icon={<WhatsappIcon size={20} />} title="WhatsApp">
+          <ShareToggle checked={p.shareWhatsapp} onChange={(v) => update({ shareWhatsapp: v })} />
+        </VisibilityRow>
         <VisibilityRow icon={<FacebookIcon size={20} />} title="Facebook">
           <ShareToggle checked={p.shareFacebook} onChange={(v) => update({ shareFacebook: v })} />
         </VisibilityRow>
@@ -682,9 +686,6 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
         </VisibilityRow>
         <VisibilityRow icon={<SnapchatIcon size={20} />} title="Snapchat">
           <ShareToggle checked={p.shareSnapchat} onChange={(v) => update({ shareSnapchat: v })} />
-        </VisibilityRow>
-        <VisibilityRow icon={<WhatsappIcon size={20} />} title="WhatsApp">
-          <ShareToggle checked={p.shareWhatsapp} onChange={(v) => update({ shareWhatsapp: v })} />
         </VisibilityRow>
         <VisibilityRow icon={<XIcon size={20} />} title="X">
           <ShareToggle checked={p.shareX} onChange={(v) => update({ shareX: v })} />
