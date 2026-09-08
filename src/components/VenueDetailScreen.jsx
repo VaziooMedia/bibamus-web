@@ -86,10 +86,10 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           </div>
         )}
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "14px", marginBottom: "12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 64px 1px 64px", gap: "12px", marginBottom: "12px", alignItems: "center" }}>
           <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <NavIcon name="map-pin" size={15} color={COLORS.amber} />
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <NavIcon name="map-pin" size={20} color={COLORS.amber} />
               <span>
                 {addressLine1}
                 {addressLine1 && <br />}
@@ -97,24 +97,24 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
               </span>
             </div>
           </a>
-          {venue.phone && (
+          <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />
+          {venue.phone ? (
             <a href={`tel:${venue.phone.replace(/\s+/g, "")}`} title={venue.phone} style={{ lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <NavIcon name="phone" size={20} color={COLORS.amber} />
+              <NavIcon name="phone" size={26} color={COLORS.amber} />
             </a>
+          ) : (
+            <div />
           )}
-          {venue.email && (
+          <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />
+          {venue.email ? (
             <a href={`mailto:${venue.email}`} title={venue.email} style={{ lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <NavIcon name="mail" size={20} color={COLORS.amber} />
+              <NavIcon name="mail" size={26} color={COLORS.amber} />
             </a>
+          ) : (
+            <div />
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "14px" }}>
-          <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" title="Voir sur la carte" style={{ lineHeight: 0 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="11" fill={COLORS.sage} />
-              <path d="M12 6c-2 0-3.6 1.6-3.6 3.6 0 2.7 3.6 6.4 3.6 6.4s3.6-3.7 3.6-6.4C15.6 7.6 14 6 12 6zm0 4.9a1.3 1.3 0 110-2.6 1.3 1.3 0 010 2.6z" fill="#fff" />
-            </svg>
-          </a>
           {venue.website && (
             <a href={normalizeUrl(venue.website)} target="_blank" rel="noreferrer" title="Site internet" style={{ lineHeight: 0 }}>
               <WebsiteIcon />
