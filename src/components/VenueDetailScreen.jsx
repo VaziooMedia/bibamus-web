@@ -4,9 +4,9 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS, VENUE_TYPES } from "../constants.js";
-import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, TokenPinkIcon, CertificationIcon } from "./icons.jsx";
-import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx";
-import { formatAddress, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
+import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, CertificationIcon } from "./icons.jsx";
+import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { formatAddress, mapsUrlFor, normalizeUrl } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
@@ -15,15 +15,10 @@ import carteIconUrl from "../assets/brand/carte.svg";
 
 export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
   const [confirmReset, setConfirmReset] = useState(false);
-  const [cleanupMessage, setCleanupMessage] = useState(null);
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [reporting, setReporting] = useState(false);
   const stats = venue.stats || {};
-  const moneySpent = stats.moneySpent || {};
-  const moneyEuro = moneySpent.euro || 0;
-  const moneyJeton = moneySpent.jeton || 0;
-  const drinkEntries = Object.entries(stats.personalDrinksByType || {}).filter(([, n]) => n > 0);
   const address = formatAddress(venue);
   const addressLine1 = [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
   const addressLine2 = [venue.postalCode ? `B-${venue.postalCode}` : "", venue.city].filter(Boolean).join(" ") + (venue.village ? ` (${venue.village})` : "");
@@ -42,11 +37,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
     }
     onResetStats();
     setConfirmReset(false);
-  };
-
-  const handleCleanup = () => {
-    const result = onCleanupDuplicates();
-    setCleanupMessage(result.removed === 0 ? "Aucun doublon trouvé." : `${result.removed} doublon${result.removed > 1 ? "s" : ""} retiré${result.removed > 1 ? "s" : ""}.`);
   };
 
   return (
@@ -219,70 +209,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       </div>
 
 
-      <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "16px" }}>
-        <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55, marginBottom: "10px" }}>
-          {venue.trackingStartDate ? `STATS DEPUIS LE ${formatDate(venue.trackingStartDate).toUpperCase()}` : "STATISTIQUES"}
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <div>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>VISITES</div>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{stats.visits || 0}</div>
-          </div>
-          <div>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>BOISSONS COMMANDÉES</div>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{stats.drinksOrdered || 0}</div>
-          </div>
-        </div>
-        {(moneyEuro > 0 || moneyJeton > 0) && (
-          <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: `2px solid ${COLORS.chalkWhite}30` }}>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6, marginBottom: "4px" }}>ARGENT DÉPENSÉ (TOURNÉES)</div>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>
-              {moneyEuro > 0 && <MoneyAmount value={moneyEuro} currency="euro" />}
-              {moneyEuro > 0 && moneyJeton > 0 && " · "}
-              {moneyJeton > 0 && <MoneyAmount value={moneyJeton} currency="jeton" jetonIcon="pink" />}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <button
-        onClick={onManageMenu}
-        style={{
-          textAlign: "left",
-          background: COLORS.surface,
-          border: `2px solid ${COLORS.paperAlt}`,
-          borderRadius: "14px",
-          padding: "16px",
-          marginBottom: "16px",
-          cursor: "pointer",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Carte boissons de ce lieu</div>
-          <div style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "2px" }}>
-            {venue.menu && venue.menu.length > 0 ? (
-              <>
-                {venue.menu.length} boisson{venue.menu.length > 1 ? "s" : ""} enregistrée{venue.menu.length > 1 ? "s" : ""} (
-                {venue.defaultCurrency === "jeton" ? (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
-                    jetons <TokenPinkIcon size={16} />
-                  </span>
-                ) : (
-                  "€"
-                )}
-                )
-              </>
-            ) : (
-              "Pas encore de carte — à préremplir"
-            )}
-          </div>
-        </div>
-        <span style={{ color: COLORS.wine, fontSize: "13px", fontWeight: 700 }}>Gérer →</span>
-      </button>
-
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
           <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
@@ -316,62 +242,28 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         </div>
       </div>
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px", display: "flex", alignItems: "stretch" }}>
         <button
           onClick={onOpenCheckInsHistory}
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", cursor: "pointer", padding: "6px 0", textAlign: "left" }}
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
         >
-          <span style={{ fontSize: "13px", color: COLORS.ink }}>Check-ins ici</span>
-          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{stats.visits || 0}</span>
+          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Check-ins ici</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{stats.visits || 0}</span>
             <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
           </span>
         </button>
-        <div style={{ height: "1px", background: COLORS.paperAlt, margin: "4px 0" }} />
+        <div style={{ width: "1px", background: COLORS.paperAlt, margin: "0 14px" }} />
         <button
           onClick={onOpenDrinksHistory}
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", cursor: "pointer", padding: "6px 0", textAlign: "left" }}
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
         >
-          <span style={{ fontSize: "13px", color: COLORS.ink }}>Boissons bues ici</span>
-          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{stats.drinksOrdered || 0}</span>
+          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Boissons bues ici</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{stats.drinksOrdered || 0}</span>
             <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
           </span>
         </button>
-      </div>
-
-      <button
-        onClick={handleCleanup}
-        style={{
-          background: "none",
-          border: "none",
-          color: COLORS.wine,
-          fontSize: "12.5px",
-          fontWeight: 600,
-          cursor: "pointer",
-          padding: 0,
-          textAlign: "left",
-          marginBottom: cleanupMessage ? "6px" : "16px",
-        }}
-      >
-        🧹 Nettoyer les doublons de la carte
-      </button>
-      {cleanupMessage && <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>{cleanupMessage}</p>}
-
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "auto" }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Tes verres bus ici, par boisson</div>
-        {drinkEntries.length === 0 ? (
-          <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucun verre personnel enregistré pour l'instant.</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {drinkEntries.map(([name, n]) => (
-              <div key={name} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span>{name}</span>
-                <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700 }}>{n}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <button
@@ -390,20 +282,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         {confirmReset ? "Confirmer la réinitialisation des statistiques ?" : "Réinitialiser les statistiques"}
       </button>
 
-      <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
-        <button
-          onClick={onEdit}
-          style={{ flex: 1, background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "13px", fontWeight: 600, fontSize: "14px", color: COLORS.ink, cursor: "pointer" }}
-        >
-          Modifier
-        </button>
-        <button
-          onClick={onDelete}
-          style={{ flex: 1, background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "13px", fontWeight: 600, fontSize: "14px", color: COLORS.wine, cursor: "pointer" }}
-        >
-          Supprimer
-        </button>
-      </div>
       <button
         onClick={() => setReporting(true)}
         style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
