@@ -159,6 +159,14 @@ export default function App() {
     return "home";
   });
 
+  // Changer d'écran ne recharge jamais vraiment la page (tout reste dans le même conteneur
+  // défilant) — sans ça, un écran hérite de la position de défilement laissée par le précédent,
+  // au lieu de toujours démarrer en haut.
+  const mainScrollRef = React.useRef(null);
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo(0, 0);
+  }, [screen]);
+
   // BibaMusic — retour de la connexion Spotify (OAuth PKCE). Le code d'autorisation arrive en
   // paramètre d'URL sur bibamus.app/spotify-callback ; on le conserve ici jusqu'à ce que la
   // session soit chargée, seul moment où on peut réellement finaliser l'échange.
@@ -1473,7 +1481,7 @@ export default function App() {
               paddingTop: "env(safe-area-inset-top, 0px)",
             }}
           >
-            <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", display: "flex", flexDirection: "column" }}>
+            <div ref={mainScrollRef} style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", display: "flex", flexDirection: "column" }}>
             {screen === "home" && (
               <HomeScreen
                 profile={profile}
