@@ -238,6 +238,7 @@ export function HomeScreen({
           <button
             onClick={goToDrinkCheck}
             style={{
+              position: "relative",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -249,14 +250,17 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <svg width="30" height="30" viewBox="425 130 405 1070" fill="none">
+            <svg width="24" height="24" viewBox="425 130 405 1070" fill="none">
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
                 fill={COLORS.amber}
                 d="M 542 146 C 543 198, 538 276, 530 361 C 526 410, 516 445, 489 474 C 458 507, 443 548, 443 600 L 443 1083 C 443 1143, 487 1185, 547 1185 L 707 1185 C 767 1185, 811 1143, 811 1083 L 811 600 C 811 548, 796 507, 765 474 C 738 445, 728 410, 724 361 C 716 276, 711 198, 712 146 Z M 578 157 C 578 153, 581 151, 585 151 L 669 151 C 673 151, 676 153, 676 157 L 672 222 C 672 227, 669 230, 664 230 L 590 230 C 585 230, 582 227, 582 222 Z M 596 626 C 546 626, 518 657, 518 707 L 518 920 C 518 970, 546 1001, 596 1001 L 658 1001 C 708 1001, 736 970, 736 920 L 736 707 C 736 657, 708 626, 658 626 Z"
               />
-              <path d="M562 800l55 55 95-105" fill="none" stroke={COLORS.paper} strokeWidth="34" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" style={{ position: "absolute", bottom: "3px", right: "3px" }}>
+              <circle cx="12" cy="12" r="11" fill={COLORS.amber} stroke={COLORS.surface} strokeWidth="2" />
+              <path d="M8 12.5l2.3 2.3 4.2-4.6" fill="none" stroke={COLORS.paper} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Drink Check</span>
