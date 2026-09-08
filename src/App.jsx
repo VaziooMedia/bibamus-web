@@ -2257,7 +2257,7 @@ export default function App() {
                 onBack={() => setScreen("settings")}
                 goToField={(field) => {
                   setViewedAccountField(field);
-                  const socialKeys = ["facebook", "instagram", "tiktok", "snapchat", "x", "threads", "linkedin", "pinterest", "twitch"];
+                  const socialKeys = ["whatsapp", "facebook", "instagram", "tiktok", "snapchat", "x", "threads", "linkedin", "pinterest", "twitch"];
                   setScreen(
                     field === "location"
                       ? "accountLocation"
