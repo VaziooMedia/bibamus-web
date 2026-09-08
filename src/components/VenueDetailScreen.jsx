@@ -28,6 +28,17 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const addressLine1 = [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
   const addressLine2 = [venue.postalCode ? `B-${venue.postalCode}` : "", venue.city].filter(Boolean).join(" ") + (venue.village ? ` (${venue.village})` : "");
   const likes = venue.likes || [];
+  const hasAmenities = !!(venue.hasWifi || venue.wheelchairAccessible || venue.canDance);
+  const hasSocials = !!(
+    venue.website ||
+    venue.googleUrl ||
+    venue.facebookUrl ||
+    venue.instagramUrl ||
+    venue.tiktokUrl ||
+    venue.snapchatUrl ||
+    venue.tripadvisorUrl ||
+    venue.restaurantGuruUrl
+  );
   const iLike = likes.includes(myBibroCode);
 
   const handleCheckIn = () => {
@@ -131,7 +142,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             <div />
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             {venue.hasWifi && (
               <span title="WiFi" style={{ lineHeight: 0 }}>
@@ -149,7 +160,8 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
               </span>
             )}
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "14px" }}>
+          {hasAmenities && hasSocials && <div style={{ width: "1px", height: "20px", background: COLORS.paperAlt }} />}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "14px", marginLeft: "auto" }}>
           {venue.website && (
             <a href={normalizeUrl(venue.website)} target="_blank" rel="noreferrer" title="Site internet" style={{ lineHeight: 0 }}>
               <WebsiteIcon size={20} />
@@ -198,8 +210,11 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           )}
           </div>
         </div>
+        {(hasAmenities || hasSocials) && venue.venueTypes && venue.venueTypes.length > 0 && (
+          <div style={{ height: "1px", background: COLORS.paperAlt, margin: "12px 0" }} />
+        )}
         {venue.venueTypes && venue.venueTypes.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "12px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: hasAmenities || hasSocials ? "0" : "12px" }}>
             {venue.venueTypes.map((code) => (
               <span
                 key={code}
