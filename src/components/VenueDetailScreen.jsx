@@ -167,12 +167,26 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       </button>
 
       {venue.tags && venue.tags.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px" }}>
-          {venue.tags.map((tag) => (
-            <span key={tag} style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 10px", fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft }}>
-              {tag}
-            </span>
-          ))}
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Type d'établissement</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {venue.tags.map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "999px",
+                  border: `1.5px solid ${COLORS.amber}`,
+                  background: COLORS.amber,
+                  color: COLORS.paper,
+                  fontSize: "12.5px",
+                  fontWeight: 700,
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
