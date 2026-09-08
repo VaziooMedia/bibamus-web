@@ -23,6 +23,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const moneyJeton = moneySpent.jeton || 0;
   const drinkEntries = Object.entries(stats.personalDrinksByType || {}).filter(([, n]) => n > 0);
   const address = formatAddress(venue);
+  console.log("DIAGNOSTIC tags:", venue.id, venue.name, venue.tags);
   const addressLine1 = [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
   const addressLine2 = [venue.postalCode ? `B-${venue.postalCode}` : "", venue.city].filter(Boolean).join(" ") + (venue.village ? ` (${venue.village})` : "");
   const likes = venue.likes || [];
