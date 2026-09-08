@@ -162,26 +162,31 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         )}
       </div>
 
-      <button
-        onClick={handleCheckIn}
-        style={{
-          background: justCheckedIn ? COLORS.sage : COLORS.amber,
-          color: COLORS.ink,
-          border: "none",
-          borderRadius: "10px",
-          padding: "12px 16px",
-          fontWeight: 700,
-          fontSize: "14px",
-          cursor: "pointer",
-          marginBottom: "16px",
-          textAlign: "center",
-        }}
-      >
-        {justCheckedIn ? "✓ Tes Bibax peuvent te voir ici" : "📍 Je suis ici !"}
-      </button>
-
-      <div style={{ marginBottom: "20px" }}>
-        <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} noFixedHours={venue.noFixedHours} />
+      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "20px" }}>
+        <div style={{ flex: 1 }}>
+          <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} noFixedHours={venue.noFixedHours} />
+        </div>
+        <button
+          onClick={handleCheckIn}
+          title={justCheckedIn ? "Tes Bibax peuvent te voir ici" : "Je suis ici !"}
+          style={{
+            flexShrink: 0,
+            width: "58px",
+            height: "58px",
+            borderRadius: "50%",
+            background: justCheckedIn ? COLORS.sage : COLORS.amber,
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1px",
+          }}
+        >
+          <NavIcon name="map-pin" size={18} color={COLORS.ink} />
+          <NavIcon name="check" size={13} color={COLORS.ink} />
+        </button>
       </div>
 
 

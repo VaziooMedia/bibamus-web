@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { loadEstablishmentOpeningHours } from "../data/sharedDirectories.js";
+import { NavIcon } from "./icons.jsx";
 
 // Les horaires ne sont jamais saisis dans Bibamus — uniquement affichés depuis Google, avec
 // l'attribution requise. Aucun formulaire, aucun bouton d'édition ici.
 export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHours }) {
   const [hours, setHours] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,29 +76,50 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
     );
   }
 
+  const DAY_NAMES_FR = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  const todayName = DAY_NAMES_FR[new Date().getDay()];
+  const todayEntry = hours?.days?.find((d) => d.dayLabel?.toLowerCase().startsWith(todayName)) || null;
+
   return (
-    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+    <div
+      onClick={() => setExpanded((e) => !e)}
+      style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", cursor: "pointer" }}
+    >
       {hours?.isOpenNow != null && (
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: hours.isOpenNow ? COLORS.amber : "#FF3B4E", display: "inline-block" }} />
-          <span style={{ fontWeight: 700, fontSize: "14px", color: hours.isOpenNow ? COLORS.amber : "#FF3B4E" }}>{hours.isOpenNow ? "Ouvert" : "Fermé"}</span>
-        </div>
-      )}
-      {hours?.days?.length > 0 ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          {hours.days.map((d) => (
-            <div key={d.dayLabel} style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px" }}>
-              <span style={{ color: COLORS.ink }}>{d.dayLabel}</span>
-              <span style={{ color: COLORS.inkSoft }}>
-                {d.closed ? "Fermé" : d.periods.map((p) => `${p.open}–${p.close || "?"}`).join(", ")}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: hours.isOpenNow ? COLORS.amber : COLORS.redFluo, display: "inline-block", flexShrink: 0 }} />
+            <span style={{ fontWeight: 700, fontSize: "14px", color: hours.isOpenNow ? COLORS.amber : COLORS.redFluo }}>{hours.isOpenNow ? "Ouvert" : "Fermé"}</span>
+            {!expanded && todayEntry && (
+              <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>
+                — {todayEntry.closed ? "toute la journée" : todayEntry.periods.map((p) => `${p.open}–${p.close || "?"}`).join(", ")}
               </span>
-            </div>
-          ))}
+            )}
+          </div>
+          <span style={{ display: "flex", transform: expanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>
+            <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
+          </span>
         </div>
-      ) : (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Horaires non communiqués par l'établissement.</p>
       )}
-      <p style={{ fontSize: "10.5px", color: COLORS.inkSoft, marginTop: "10px", marginBottom: 0, opacity: 0.7 }}>Horaires fournis par Google</p>
+      {expanded && (
+        <>
+          {hours?.days?.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "10px" }}>
+              {hours.days.map((d) => (
+                <div key={d.dayLabel} style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px" }}>
+                  <span style={{ color: COLORS.ink }}>{d.dayLabel}</span>
+                  <span style={{ color: COLORS.inkSoft }}>
+                    {d.closed ? "Fermé" : d.periods.map((p) => `${p.open}–${p.close || "?"}`).join(", ")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "10px 0 0" }}>Horaires non communiqués par l'établissement.</p>
+          )}
+          <p style={{ fontSize: "10.5px", color: COLORS.inkSoft, marginTop: "10px", marginBottom: 0, opacity: 0.7 }}>Horaires fournis par Google</p>
+        </>
+      )}
     </div>
   );
 }
