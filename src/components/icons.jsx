@@ -3,194 +3,6 @@
 // ============================================================
 import React from "react";
 import { COLORS } from "../constants.js";
-import tokenPinkUrl from "../assets/brand/Bibamus App - Icon UI - Token Pink.svg";
-import tokenCyanUrl from "../assets/brand/Bibamus App - Icon UI - Token Cyan.svg";
-import tokenRedUrl from "../assets/brand/Bibamus App - Icon UI - Token Red.svg";
-import tokenGreenUrl from "../assets/brand/Bibamus App - Icon UI - Token Green.svg";
-import waterAlertUrl from "../assets/brand/water-alert.svg";
-
-// Chaque drapeau réellement utilisé par l'app est importé individuellement — plus verbeux
-// qu'un glob global, mais évite d'embarquer les 271 drapeaux disponibles dans le dépôt alors
-// que seule cette quarantaine sert réellement (le glob gonflait le bundle de ~200 Ko).
-import flagBe from "../assets/flags/be.svg";
-import flagFr from "../assets/flags/fr.svg";
-import flagLu from "../assets/flags/lu.svg";
-import flagDe from "../assets/flags/de.svg";
-import flagNl from "../assets/flags/nl.svg";
-import flagDz from "../assets/flags/dz.svg";
-import flagGbEng from "../assets/flags/gb-eng.svg";
-import flagAt from "../assets/flags/at.svg";
-import flagBm from "../assets/flags/bm.svg";
-import flagBg from "../assets/flags/bg.svg";
-import flagCa from "../assets/flags/ca.svg";
-import flagCy from "../assets/flags/cy.svg";
-import flagCi from "../assets/flags/ci.svg";
-import flagHr from "../assets/flags/hr.svg";
-import flagCu from "../assets/flags/cu.svg";
-import flagDk from "../assets/flags/dk.svg";
-import flagGbSct from "../assets/flags/gb-sct.svg";
-import flagEs from "../assets/flags/es.svg";
-import flagEe from "../assets/flags/ee.svg";
-import flagUs from "../assets/flags/us.svg";
-import flagFi from "../assets/flags/fi.svg";
-import flagGr from "../assets/flags/gr.svg";
-import flagHu from "../assets/flags/hu.svg";
-import flagIe from "../assets/flags/ie.svg";
-import flagIs from "../assets/flags/is.svg";
-import flagIt from "../assets/flags/it.svg";
-import flagJp from "../assets/flags/jp.svg";
-import flagLv from "../assets/flags/lv.svg";
-import flagLt from "../assets/flags/lt.svg";
-import flagMt from "../assets/flags/mt.svg";
-import flagMa from "../assets/flags/ma.svg";
-import flagMx from "../assets/flags/mx.svg";
-import flagNo from "../assets/flags/no.svg";
-import flagPl from "../assets/flags/pl.svg";
-import flagPt from "../assets/flags/pt.svg";
-import flagCz from "../assets/flags/cz.svg";
-import flagRo from "../assets/flags/ro.svg";
-import flagGb from "../assets/flags/gb.svg";
-import flagSn from "../assets/flags/sn.svg";
-import flagSk from "../assets/flags/sk.svg";
-import flagSi from "../assets/flags/si.svg";
-import flagSe from "../assets/flags/se.svg";
-import flagCh from "../assets/flags/ch.svg";
-import flagTn from "../assets/flags/tn.svg";
-import flagVe from "../assets/flags/ve.svg";
-
-const FLAG_URLS_BY_CODE = {
-  be: flagBe,
-  fr: flagFr,
-  lu: flagLu,
-  de: flagDe,
-  nl: flagNl,
-  dz: flagDz,
-  "gb-eng": flagGbEng,
-  at: flagAt,
-  bm: flagBm,
-  bg: flagBg,
-  ca: flagCa,
-  cy: flagCy,
-  ci: flagCi,
-  hr: flagHr,
-  cu: flagCu,
-  dk: flagDk,
-  "gb-sct": flagGbSct,
-  es: flagEs,
-  ee: flagEe,
-  us: flagUs,
-  fi: flagFi,
-  gr: flagGr,
-  hu: flagHu,
-  ie: flagIe,
-  is: flagIs,
-  it: flagIt,
-  jp: flagJp,
-  lv: flagLv,
-  lt: flagLt,
-  mt: flagMt,
-  ma: flagMa,
-  mx: flagMx,
-  no: flagNo,
-  pl: flagPl,
-  pt: flagPt,
-  cz: flagCz,
-  ro: flagRo,
-  gb: flagGb,
-  sn: flagSn,
-  sk: flagSk,
-  si: flagSi,
-  se: flagSe,
-  ch: flagCh,
-  tn: flagTn,
-  ve: flagVe,
-};
-
-// Mappe chaque nom de pays (tel que stocké dans COUNTRY_FLAGS) vers son code ISO à 2 lettres,
-// correspondant aux fichiers SVG dans src/assets/flags/. L'Angleterre et l'Écosse utilisent les
-// drapeaux de nation constitutive du Royaume-Uni plutôt que le drapeau britannique générique.
-const COUNTRY_ISO_CODES = {
-  Belgique: "be",
-  France: "fr",
-  Luxembourg: "lu",
-  Allemagne: "de",
-  "Pays-Bas": "nl",
-  Algérie: "dz",
-  Angleterre: "gb-eng",
-  Autriche: "at",
-  Bermudes: "bm",
-  Bulgarie: "bg",
-  Canada: "ca",
-  Chypre: "cy",
-  "Côte d'Ivoire": "ci",
-  Croatie: "hr",
-  Cuba: "cu",
-  Danemark: "dk",
-  Écosse: "gb-sct",
-  Espagne: "es",
-  Estonie: "ee",
-  "États-Unis": "us",
-  Finlande: "fi",
-  Grèce: "gr",
-  Hongrie: "hu",
-  Irlande: "ie",
-  Islande: "is",
-  Italie: "it",
-  Japon: "jp",
-  Lettonie: "lv",
-  Lituanie: "lt",
-  Malte: "mt",
-  Maroc: "ma",
-  Mexique: "mx",
-  Norvège: "no",
-  Pologne: "pl",
-  Portugal: "pt",
-  "République tchèque": "cz",
-  Roumanie: "ro",
-  "Royaume-Uni": "gb",
-  Sénégal: "sn",
-  Slovaquie: "sk",
-  Slovénie: "si",
-  Suède: "se",
-  Suisse: "ch",
-  Tunisie: "tn",
-  Vénézuéla: "ve",
-};
-
-export function CountryFlagImg({ country, size = 16 }) {
-  const code = COUNTRY_ISO_CODES[country];
-  const url = code && FLAG_URLS_BY_CODE[code];
-  if (!url) return null;
-  return <img src={url} alt={country} style={{ width: `${size}px`, height: `${Math.round((size * 3) / 4)}px`, display: "inline-block", verticalAlign: "middle", objectFit: "cover", borderRadius: "2px" }} />;
-}
-
-export function TokenPinkIcon({ size = 22 }) {
-  return <img src={tokenPinkUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
-}
-
-export function TokenCyanIcon({ size = 22 }) {
-  return <img src={tokenCyanUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
-}
-
-export function TokenRedIcon({ size = 22 }) {
-  return <img src={tokenRedUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
-}
-
-export function TokenGreenIcon({ size = 22 }) {
-  return <img src={tokenGreenUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
-}
-
-export function WaterAlertIcon({ size = 22, dark = false }) {
-  return (
-    <img
-      src={waterAlertUrl}
-      alt=""
-      width={size}
-      height={Math.round(size * (570 / 477))}
-      style={{ display: "block", filter: dark ? "brightness(0)" : "none" }}
-    />
-  );
-}
 
 export function FlagIcon({ flag, size = 15 }) {
   const width = Math.round(size * 1.4);
@@ -262,7 +74,7 @@ export function BibamusIcon({ size = 22 }) {
   );
 }
 
-export function NavIcon({ name, size = 20, color = "currentColor", filled = false }) {
+export function NavIcon({ name, size = 20, color = "currentColor" }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" };
   switch (name) {
     case "home":
@@ -270,24 +82,6 @@ export function NavIcon({ name, size = 20, color = "currentColor", filled = fals
         <svg {...common}>
           <path d="M4 11.5 12 4l8 7.5" />
           <path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9" />
-        </svg>
-      );
-    case "comment":
-      return (
-        <svg {...common}>
-          <path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4.5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
-        </svg>
-      );
-    case "chevron-right":
-      return (
-        <svg {...common}>
-          <path d="M9 5l7 7-7 7" />
-        </svg>
-      );
-    case "plus":
-      return (
-        <svg {...common}>
-          <path d="M12 5v14M5 12h14" />
         </svg>
       );
     case "map-pin":
@@ -328,8 +122,13 @@ export function NavIcon({ name, size = 20, color = "currentColor", filled = fals
       );
     case "activity":
       return (
-        <svg {...common}>
-          <path d="M3 12h4l2.5-7 4 14L16 12h5" />
+        <svg width={size} height={size} viewBox="0 0 1024 1024" fill="none">
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            fill={color}
+            d="M 961 418 L 960 417 L 959 409 L 954 399 L 947 392 L 941 388 L 932 385 L 911 385 L 910 386 L 888 387 L 887 388 L 877 388 L 876 389 L 866 389 L 865 390 L 854 390 L 853 391 L 844 391 L 843 392 L 821 393 L 820 394 L 811 394 L 810 395 L 797 396 L 785 402 L 779 408 L 774 416 L 772 422 L 772 426 L 771 427 L 771 436 L 776 450 L 785 460 L 792 464 L 798 466 L 802 466 L 803 467 L 825 466 L 826 465 L 836 465 L 837 464 L 847 464 L 848 463 L 858 463 L 859 462 L 870 462 L 871 461 L 882 461 L 883 460 L 893 460 L 894 459 L 903 459 L 904 458 L 927 457 L 941 453 L 946 450 L 954 442 L 960 429 Z M 413 241 L 412 242 L 398 242 L 397 243 L 379 244 L 378 245 L 372 245 L 371 246 L 352 249 L 347 251 L 343 251 L 339 253 L 332 254 L 307 262 L 304 264 L 299 265 L 296 267 L 284 271 L 273 277 L 267 279 L 265 281 L 261 282 L 229 301 L 220 308 L 217 309 L 194 327 L 165 354 L 139 384 L 116 417 L 107 434 L 105 436 L 86 477 L 83 488 L 81 491 L 77 503 L 77 506 L 75 510 L 75 513 L 72 522 L 72 526 L 69 535 L 69 539 L 68 540 L 68 545 L 67 546 L 67 551 L 65 558 L 65 564 L 64 565 L 64 574 L 63 575 L 62 619 L 63 620 L 63 635 L 64 636 L 64 646 L 65 647 L 66 660 L 67 661 L 67 666 L 68 667 L 68 671 L 70 676 L 70 680 L 71 681 L 73 692 L 84 726 L 86 729 L 90 741 L 96 752 L 96 754 L 115 788 L 140 823 L 153 838 L 180 865 L 207 887 L 242 910 L 271 925 L 273 925 L 278 928 L 280 928 L 285 931 L 300 936 L 303 938 L 312 940 L 319 943 L 322 943 L 329 946 L 333 946 L 341 949 L 345 949 L 346 950 L 350 950 L 356 952 L 361 952 L 362 953 L 384 955 L 385 956 L 393 956 L 394 957 L 430 958 L 431 957 L 461 956 L 462 955 L 469 955 L 470 954 L 483 953 L 484 952 L 489 952 L 490 951 L 504 949 L 508 947 L 523 944 L 550 935 L 562 929 L 567 928 L 574 924 L 576 924 L 606 908 L 635 889 L 658 871 L 688 842 L 707 820 L 729 789 L 737 774 L 739 772 L 744 761 L 746 759 L 753 744 L 757 732 L 760 727 L 770 696 L 770 693 L 774 680 L 776 666 L 777 665 L 777 660 L 778 659 L 780 636 L 781 635 L 782 593 L 781 592 L 780 567 L 779 566 L 778 553 L 777 552 L 777 547 L 776 546 L 776 541 L 775 540 L 775 535 L 773 530 L 773 526 L 760 483 L 747 454 L 747 452 L 733 425 L 708 386 L 687 360 L 668 340 L 642 317 L 611 295 L 591 284 L 589 282 L 567 271 L 565 271 L 548 263 L 514 252 L 510 252 L 502 249 L 492 248 L 491 247 L 482 246 L 481 245 L 467 244 L 466 243 L 456 243 L 455 242 Z M 416 304 L 440 304 L 441 305 L 454 305 L 455 306 L 470 307 L 471 308 L 476 308 L 477 309 L 482 309 L 483 310 L 491 311 L 495 313 L 506 315 L 527 322 L 563 339 L 596 360 L 621 381 L 646 407 L 659 423 L 673 443 L 684 463 L 686 465 L 695 483 L 695 485 L 699 492 L 700 497 L 704 505 L 712 530 L 714 542 L 716 547 L 716 551 L 717 552 L 717 557 L 719 564 L 719 571 L 720 572 L 720 581 L 721 582 L 721 625 L 720 626 L 720 635 L 719 636 L 718 649 L 717 650 L 717 654 L 713 668 L 713 672 L 707 692 L 705 695 L 704 700 L 702 703 L 698 715 L 683 744 L 668 767 L 647 793 L 618 821 L 596 838 L 566 857 L 552 864 L 550 864 L 529 874 L 502 883 L 499 883 L 486 887 L 471 889 L 470 890 L 465 890 L 464 891 L 457 891 L 456 892 L 430 893 L 429 894 L 411 894 L 410 893 L 388 892 L 387 891 L 368 889 L 367 888 L 354 886 L 350 884 L 346 884 L 339 881 L 336 881 L 318 875 L 297 865 L 295 865 L 269 851 L 245 835 L 231 824 L 201 795 L 189 781 L 168 751 L 160 735 L 158 733 L 150 717 L 138 684 L 135 669 L 133 665 L 131 651 L 130 650 L 130 644 L 129 643 L 129 637 L 128 636 L 128 627 L 127 626 L 127 582 L 128 581 L 128 571 L 129 570 L 129 564 L 130 563 L 130 557 L 131 556 L 133 541 L 143 506 L 152 486 L 152 484 L 164 460 L 178 438 L 187 427 L 189 423 L 201 409 L 219 390 L 242 370 L 269 351 L 300 334 L 302 334 L 309 330 L 311 330 L 318 326 L 323 325 L 333 320 L 336 320 L 353 314 L 356 314 L 365 311 L 369 311 L 374 309 L 384 308 L 385 307 L 401 306 L 402 305 L 415 305 Z M 370 422 L 357 428 L 348 438 L 329 475 L 327 477 L 303 523 L 295 536 L 289 549 L 282 560 L 277 571 L 272 578 L 196 578 L 189 580 L 179 586 L 172 594 L 168 604 L 168 609 L 167 610 L 168 620 L 171 628 L 175 634 L 180 639 L 187 643 L 197 646 L 291 646 L 292 645 L 296 645 L 302 643 L 309 639 L 319 628 L 330 606 L 337 595 L 344 580 L 349 573 L 364 544 L 372 532 L 374 539 L 376 542 L 376 545 L 379 552 L 382 565 L 385 571 L 385 574 L 391 591 L 394 604 L 398 614 L 398 617 L 401 623 L 403 633 L 407 643 L 408 649 L 410 652 L 413 665 L 418 678 L 418 681 L 423 694 L 426 707 L 437 739 L 437 742 L 451 784 L 453 793 L 458 802 L 469 811 L 482 815 L 493 814 L 506 808 L 515 798 L 592 645 L 665 645 L 675 642 L 680 639 L 687 632 L 692 623 L 693 615 L 694 614 L 694 608 L 693 607 L 692 600 L 688 592 L 684 587 L 674 580 L 668 578 L 664 578 L 663 577 L 572 577 L 571 578 L 563 579 L 554 584 L 544 595 L 495 694 L 493 696 L 491 693 L 485 675 L 485 672 L 474 640 L 474 637 L 470 627 L 470 624 L 465 610 L 465 607 L 462 601 L 462 598 L 457 585 L 454 572 L 446 550 L 443 537 L 437 521 L 437 518 L 431 502 L 431 499 L 425 483 L 425 480 L 417 458 L 417 455 L 413 443 L 408 435 L 401 428 L 394 424 L 388 422 L 383 422 L 382 421 Z M 874 177 L 864 171 L 858 169 L 851 169 L 850 168 L 838 170 L 830 174 L 822 180 L 753 244 L 749 249 L 739 257 L 720 275 L 714 282 L 710 290 L 709 298 L 708 299 L 709 313 L 712 321 L 717 328 L 723 333 L 737 339 L 750 339 L 761 335 L 767 331 L 784 316 L 807 294 L 817 286 L 828 275 L 878 230 L 882 224 L 887 209 L 887 202 L 886 201 L 885 193 L 881 185 Z M 662 66 L 647 66 L 635 71 L 624 81 L 618 95 L 618 101 L 617 102 L 617 108 L 616 109 L 616 115 L 615 116 L 615 123 L 614 124 L 613 137 L 611 144 L 611 152 L 610 153 L 610 159 L 609 160 L 609 166 L 608 167 L 608 173 L 607 174 L 607 180 L 606 181 L 605 196 L 604 197 L 604 203 L 603 204 L 603 210 L 602 211 L 602 229 L 605 238 L 611 247 L 620 254 L 631 258 L 645 258 L 658 253 L 662 250 L 670 241 L 675 226 L 675 220 L 676 219 L 676 213 L 677 212 L 677 206 L 678 205 L 678 198 L 679 197 L 679 191 L 680 190 L 680 182 L 681 181 L 681 175 L 682 174 L 682 168 L 683 167 L 683 161 L 684 160 L 684 154 L 685 153 L 685 146 L 686 145 L 686 139 L 687 138 L 689 115 L 691 108 L 691 96 L 689 89 L 684 80 L 674 71 Z"
+          />
         </svg>
       );
     case "device-gamepad":
@@ -391,12 +190,6 @@ M 591 35 L 579 41 L 574 47 L 571 53 L 571 56 L 570 57 L 570 67 L 571 68 L 571 72
           />
         </svg>
       );
-    case "star":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2.5l2.9 6.1 6.6.7-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.2 1.3-6.6-4.9-4.6 6.6-.7z" />
-        </svg>
-      );
     case "back-triangle":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -437,20 +230,6 @@ M 591 35 L 579 41 L 574 47 L 571 53 L 571 56 L 570 57 L 570 67 L 571 68 L 571 72
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
           <path d="M7 5.5c0-1.1 1.2-1.8 2.2-1.2l9 6.5c.9.7.9 2.1 0 2.8l-9 6.5c-1 .7-2.2 0-2.2-1.2v-13Z" fill={color} />
-        </svg>
-      );
-    case "skip-back":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M6 5v14" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
-          <path d="M18.5 5.5c0-1.1-1.2-1.8-2.2-1.2l-8.5 6.5c-.9.7-.9 2.1 0 2.8l8.5 6.5c1 .7 2.2 0 2.2-1.2v-13Z" fill={color} />
-        </svg>
-      );
-    case "skip-forward":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M18 5v14" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
-          <path d="M5.5 5.5c0-1.1 1.2-1.8 2.2-1.2l8.5 6.5c.9.7.9 2.1 0 2.8l-8.5 6.5c-1 .7-2.2 0-2.2-1.2v-13Z" fill={color} />
         </svg>
       );
     case "check":
@@ -530,422 +309,12 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M20 5.5V11H14.5" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       );
-    case "sliders":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M4 6h16M4 12h16M4 18h16" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-          <circle cx="9" cy="6" r="2.2" fill={color} />
-          <circle cx="16" cy="12" r="2.2" fill={color} />
-          <circle cx="7" cy="18" r="2.2" fill={color} />
-        </svg>
-      );
-    case "brush":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <g transform="rotate(45 12 12)">
-            <rect x="10.5" y="2" width="3" height="11" rx="1.5" stroke={color} strokeWidth="1.7" />
-            <path d="M9 13h6v2a3 3 0 0 1-3 3 3 3 0 0 1-3-3v-2Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-            <path d="M12 18v3" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-          </g>
-        </svg>
-      );
-    case "settings":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-          <path
-            fillRule="evenodd"
-            clipRule="evenodd"
-            d="M12 1a1 1 0 0 1 1 1v1.09a6.97 6.97 0 0 1 2.6 1.08l.77-.77a1 1 0 1 1 1.42 1.42l-.77.77c.5.75.87 1.61 1.08 2.6H19a1 1 0 1 1 0 2h-1.09a6.97 6.97 0 0 1-1.08 2.6l.77.77a1 1 0 1 1-1.42 1.42l-.77-.77a6.97 6.97 0 0 1-2.6 1.08V19a1 1 0 1 1-2 0v-1.09a6.97 6.97 0 0 1-2.6-1.08l-.77.77a1 1 0 1 1-1.42-1.42l.77-.77A6.97 6.97 0 0 1 5.09 13H4a1 1 0 1 1 0-2h1.09a6.97 6.97 0 0 1 1.08-2.6l-.77-.77a1 1 0 0 1 1.42-1.42l.77.77A6.97 6.97 0 0 1 11 3.09V2a1 1 0 0 1 1-1Zm0 7.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"
-          />
-        </svg>
-      );
-    case "crown":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M3 8.5l4 3 5-6 5 6 4-3-1.6 9.5H4.6L3 8.5Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" fill={filled ? color : "none"} />
-        </svg>
-      );
-    case "bar-chart":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="4" y="12" width="4" height="8" rx="1" fill={color} />
-          <rect x="10" y="7" width="4" height="13" rx="1" fill={color} />
-          <rect x="16" y="3" width="4" height="17" rx="1" fill={color} />
-        </svg>
-      );
-    case "calendar":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke={color} strokeWidth="1.7" />
-          <path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "map-pin-check":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M12 21s7-6.5 7-11.5A7 7 0 1 0 5 9.5C5 14.5 12 21 12 21Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-          <path d="M9 9.3l2 2 3.3-3.6" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case "tag":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M11.5 4H5a1 1 0 0 0-1 1v6.5a1 1 0 0 0 .29.7l9 9a1 1 0 0 0 1.42 0l6.5-6.5a1 1 0 0 0 0-1.42l-9-9A1 1 0 0 0 11.5 4Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-          <circle cx="8.5" cy="8.5" r="1.3" fill={color} />
-        </svg>
-      );
-    case "align-left":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M4 6h16M4 11h11M4 16h16M4 21h11" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "mail":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke={color} strokeWidth="1.7" />
-          <path d="M4.5 7l7.5 6 7.5-6" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case "phone":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path
-            d="M6.6 10.8c1.3 2.6 3.5 4.7 6 6l2-2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6a1 1 0 0 1 1 1V19.5a1 1 0 0 1-1 1C10.5 20.5 3.5 13.5 3.5 4.5a1 1 0 0 1 1-1H8a1 1 0 0 1 1 1c0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2 2Z"
-            stroke={color}
-            strokeWidth="1.7"
-            strokeLinejoin="round"
-          />
-        </svg>
-      );
-    case "lock":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="5" y="11" width="14" height="10" rx="2" stroke={color} strokeWidth="1.7" />
-          <path d="M8 11V7.5a4 4 0 0 1 8 0V11" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-          <circle cx="12" cy="16" r="1.6" fill={color} />
-        </svg>
-      );
-    case "bell":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-          <path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "palette":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 3C7 3 3 6.8 3 11.5 3 15.6 6 17 8.3 17H9c.8 0 1.3.9.8 1.6l-.4.6c-.6.9.1 2.1 1.2 2.1 6.4 0 10.4-4.6 10.4-9.8C21 6.8 17 3 12 3Z"
-            stroke={color}
-            strokeWidth="1.7"
-            strokeLinejoin="round"
-          />
-          <circle cx="7.7" cy="10.5" r="1.1" fill={color} />
-          <circle cx="11" cy="7.7" r="1.1" fill={color} />
-          <circle cx="15" cy="8.3" r="1.1" fill={color} />
-          <circle cx="16.8" cy="12" r="1.1" fill={color} />
-        </svg>
-      );
-    case "link":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M10 14a4 4 0 0 0 5.7.2l2-2a4 4 0 0 0-5.6-5.6l-1 1" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-          <path d="M14 10a4 4 0 0 0-5.7-.2l-2 2a4 4 0 0 0 5.6 5.6l1-1" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "help-circle":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
-          <path d="M9.3 9.3a2.7 2.7 0 1 1 3.9 2.4c-.8.4-1.2 1-1.2 1.9" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-          <circle cx="12" cy="17" r="1.1" fill={color} />
-        </svg>
-      );
-    case "info":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
-          <path d="M12 11v5.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-          <circle cx="12" cy="7.7" r="1.1" fill={color} />
-        </svg>
-      );
-    case "logout":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M15 4h2.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H15" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-          <path d="M4 12h11.5M12.5 8.5 16 12l-3.5 3.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case "images":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="3.5" y="6.5" width="14" height="14" rx="2" stroke={color} strokeWidth="1.7" />
-          <circle cx="8" cy="11" r="1.4" stroke={color} strokeWidth="1.5" />
-          <path d="M3.5 16.5l3.5-3.5 2 2 3-3 5.5 5.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M7.5 3.5h10a2 2 0 0 1 2 2v10" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "microphone":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="9" y="2.5" width="6" height="11" rx="3" stroke={color} strokeWidth="1.7" />
-          <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-          <path d="M12 18v3.5M9 21.5h6" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "speaker":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-          <path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "clock":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
-          <path d="M12 7v5.3l3.5 2" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case "intercom":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="6" y="2.5" width="12" height="19" rx="2.5" stroke={color} strokeWidth="1.7" />
-          <circle cx="12" cy="8" r="2.6" stroke={color} strokeWidth="1.5" />
-          <circle cx="12" cy="15.5" r="1.3" fill={color} />
-        </svg>
-      );
-    case "megaphone":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="m3 11 18-5v12L3 14v-3z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round" />
-          <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "shield-check":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M12 3l7 3v5.5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5V6Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-          <path d="M9 12l2 2 4-4.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case "grid":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" stroke={color} strokeWidth="1.7" />
-          <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" stroke={color} strokeWidth="1.7" />
-          <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" stroke={color} strokeWidth="1.7" />
-          <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" stroke={color} strokeWidth="1.7" />
-        </svg>
-      );
-    case "at":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="4" stroke={color} strokeWidth="1.7" />
-          <path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-4 7.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "ai":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path
-            d="M11 3.5 12.4 8l4.5 1.4-4.5 1.4L11 15.3 9.6 10.9 5.1 9.4l4.5-1.4Z"
-            stroke={color}
-            strokeWidth="1.6"
-            strokeLinejoin="round"
-          />
-          <path d="M18 14.5 18.8 17l2.5.8-2.5.8-.8 2.4-.8-2.4-2.5-.8 2.5-.8Z" stroke={color} strokeWidth="1.4" strokeLinejoin="round" />
-        </svg>
-      );
-    case "world":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
-          <path d="M3 12h18M12 3c2.5 2.5 3.8 6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-6-3.8-9S9.5 5.5 12 3Z" stroke={color} strokeWidth="1.5" />
-        </svg>
-      );
-    case "ruler":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="2.5" y="7" width="19" height="10" rx="1.5" transform="rotate(-8 12 12)" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-          <path d="M7 9.3 7.6 11M10.5 8.7l.8 2.4M14 8.1l.6 1.7M17.5 7.5l.8 2.4" stroke={color} strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-      );
-    case "thermometer":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M14 13.76V4.5a2 2 0 0 0-4 0v9.26a4 4 0 1 0 4 0Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-          <path d="M12 8v6.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "sort":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M7 4v16M4 7l3-3 3 3" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M17 20V4M14 17l3 3 3-3" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case "vibrate":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="8" y="3.5" width="8" height="17" rx="1.8" stroke={color} strokeWidth="1.7" />
-          <path d="M3 9v6M21 9v6" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "story-ring":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" />
-          <circle cx="12" cy="12" r="4.2" fill={color} />
-        </svg>
-      );
-    case "world-map":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
-          <ellipse cx="12" cy="12" rx="4" ry="9" stroke={color} strokeWidth="1.7" />
-          <path d="M3 12h18M4.5 7h15M4.5 17h15" stroke={color} strokeWidth="1.7" />
-        </svg>
-      );
-    case "stories":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.9" strokeDasharray="4 3" />
-          <circle cx="12" cy="12" r="4" fill={color} />
-        </svg>
-      );
-    case "weight":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="4" width="18" height="16" rx="3" stroke={color} strokeWidth="1.7" />
-          <rect x="8" y="7.5" width="8" height="4" rx="1" stroke={color} strokeWidth="1.4" />
-          <path d="M12 14.5v3.5M8.5 18h7" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "flame":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 21.5c4 0 6.5-2.6 6.5-6 0-2.8-1.6-4.4-2.6-6.2-.6-1.1-.9-2.3-.7-3.8-2 1-3.5 3-3.7 5.2-1.4-1-2-2.7-1.9-4.7-2.3 1.6-4.1 4.6-4.1 7.5 0 3.4 2.5 8 6.5 8Z"
-            stroke={color}
-            strokeWidth="1.7"
-            strokeLinejoin="round"
-          />
-        </svg>
-      );
-    case "glass-water":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M6 3.5h12l-1.3 16a2 2 0 0 1-2 1.9H9.3a2 2 0 0 1-2-1.9L6 3.5Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
-          <path d="M6.6 11h10.8" stroke={color} strokeWidth="1.7" />
-        </svg>
-      );
-    case "route":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="5.5" cy="18.5" r="2" stroke={color} strokeWidth="1.7" />
-          <circle cx="18.5" cy="5.5" r="2" stroke={color} strokeWidth="1.7" />
-          <path d="M7 17.5C11 15 8 10 12 8s2-4.5 6-4.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeDasharray="2.5 2.5" />
-        </svg>
-      );
-    case "book-open":
-      return (
-        <svg {...common}>
-          <path d="M3.5 5.5c2.5-1 5.5-1 8.5 1 3-2 6-2 8.5-1v13c-2.5-1-5.5-1-8.5 1-3-2-6-2-8.5-1Z" strokeLinejoin="round" />
-          <path d="M12 6.5V19" />
-        </svg>
-      );
-    case "lightbulb":
-      return (
-        <svg {...common}>
-          <path d="M9 18h6M10 21h4" />
-          <path d="M12 3a6 6 0 0 0-3.5 10.9c.6.44 1 1.15 1 1.95V16h5v-.15c0-.8.4-1.5 1-1.95A6 6 0 0 0 12 3Z" strokeLinejoin="round" />
-        </svg>
-      );
-    case "message-square":
-      return (
-        <svg {...common}>
-          <path d="M4 5.5h16a1 1 0 0 1 1 1V16a1 1 0 0 1-1 1H9l-4.5 4v-4H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z" strokeLinejoin="round" />
-        </svg>
-      );
-    case "alert-triangle":
-      return (
-        <svg {...common}>
-          <path d="M12 3.5 21.5 20h-19L12 3.5Z" strokeLinejoin="round" />
-          <path d="M12 10v4" />
-          <circle cx="12" cy="17" r="0.5" fill={color} />
-        </svg>
-      );
-    case "file-text":
-      return (
-        <svg {...common}>
-          <path d="M7 3.5h7l4 4V19a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" strokeLinejoin="round" />
-          <path d="M14 3.5V8h4" />
-          <path d="M8.5 12h7M8.5 15.5h7" />
-        </svg>
-      );
-    case "faceid":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M4 8V6a2 2 0 0 1 2-2h2M18 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M6 20H4a2 2 0 0 1-2-2v-2" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="9" cy="10.5" r="1" fill={color} />
-          <circle cx="15" cy="10.5" r="1" fill={color} />
-          <path d="M9 15c.8.7 1.9 1 3 1s2.2-.3 3-1" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "user-plus":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="9.5" cy="8" r="3.3" stroke={color} strokeWidth="1.7" />
-          <path d="M3 20c.6-3.6 3.2-5.8 6.5-5.8s5.9 2.2 6.5 5.8" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-          <path d="M18.5 8v5.5M15.8 10.7h5.4" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "no-entry":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
-          <path d="M5.8 5.8l12.4 12.4" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "smartphone":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <rect x="6" y="2.5" width="12" height="19" rx="2.2" stroke={color} strokeWidth="1.7" />
-          <path d="M10.5 18.5h3" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "download":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M12 3.5v11M8 11l4 4 4-4" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M4.5 17v2.5A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5V17" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
-    case "trash":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path d="M4 7h16M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7M6.5 7l.7 12.2A2 2 0 0 0 9.2 21h5.6a2 2 0 0 0 2-1.8L17.5 7" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M10 11v6M14 11v6" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-      );
     case "heart":
-      return filled ? (
+      return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
           <path
-            d="M12 21s-6.7-4.35-9.33-8.66C.94 9.4 1.9 5.6 5.4 4.62c2.15-.6 4.2.2 5.6 2.1a.5.5 0 0 0 .8 0c1.4-1.9 3.45-2.7 5.6-2.1 3.5.98 4.46 4.78 2.73 7.72C18.7 16.65 12 21 12 21Z"
+            d="M12 20.5s-7.5-4.6-10-9.3C.5 8 2.3 5 5.4 5c1.9 0 3.4 1 4.6 2.6C11.2 6 12.7 5 14.6 5c3.1 0 4.9 3 3.4 6.2-2.5 4.7-10 9.3-10 9.3Z"
             fill={color}
-          />
-        </svg>
-      ) : (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 21s-6.7-4.35-9.33-8.66C.94 9.4 1.9 5.6 5.4 4.62c2.15-.6 4.2.2 5.6 2.1a.5.5 0 0 0 .8 0c1.4-1.9 3.45-2.7 5.6-2.1 3.5.98 4.46 4.78 2.73 7.72C18.7 16.65 12 21 12 21Z"
-            stroke={color}
-            strokeWidth="1.8"
-            strokeLinejoin="round"
           />
         </svg>
       );
@@ -993,7 +362,7 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
       );
     case "bottle":
       return (
-        <svg width={Math.round(size * (405 / 1070))} height={size} viewBox="425 130 405 1070" fill="none">
+        <svg width={Math.round(size * (1254 / 1254))} height={size} viewBox="0 0 1254 1254" fill="none">
           <path
             fillRule="evenodd"
             clipRule="evenodd"
@@ -1003,49 +372,18 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <rect x="514" y="69" width="226" height="92" rx="46" ry="46" fill={color} />
         </svg>
       );
-    case "scan-line":
-      return (
-        <svg {...common}>
-          <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
-          <path d="M3 12h18" />
-        </svg>
-      );
-    case "camera":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-          <circle cx="12" cy="13" r="4" />
-        </svg>
-      );
     default:
       return null;
   }
 }
 
-import spotifyLogoUrl from "../assets/brand/spotify.svg";
-
-export function SpotifyIcon({ size = 22 }) {
-  return <img src={spotifyLogoUrl} alt="Spotify" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
-}
-
-import appleLogoUrl from "../assets/brand/apple.svg";
-
-export function AppleIcon({ size = 22 }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
-      <img src={appleLogoUrl} alt="Apple" width={Math.round(size * 0.62)} height={Math.round(size * 0.62)} style={{ display: "block" }} />
-    </span>
-  );
-}
-
 export function GoogleIcon({ size = 22 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48">
-      <circle cx="24" cy="24" r="23" fill="#fff" stroke="#DADCE0" strokeWidth="2" />
-      <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z" />
-      <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z" />
-      <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z" />
-      <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z" />
+    <svg width={size} height={size} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11" fill="#fff" stroke="#DADCE0" strokeWidth="1.5" />
+      <text x="12" y="16.5" textAnchor="middle" fontSize="12" fontWeight="700" fill="#4285F4" fontFamily="Arial, sans-serif">
+        G
+      </text>
     </svg>
   );
 }
@@ -1053,7 +391,7 @@ export function GoogleIcon({ size = 22 }) {
 export function WebsiteIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11.2" fill="#000" stroke={COLORS.paperAlt} strokeWidth="1" />
+      <circle cx="12" cy="12" r="11" fill={COLORS.ink} />
       <circle cx="12" cy="12" r="7.5" fill="none" stroke="#fff" strokeWidth="1.4" />
       <line x1="4.7" y1="12" x2="19.3" y2="12" stroke="#fff" strokeWidth="1.4" />
       <path d="M12 4.7c-2.1 2-2.1 12.6 0 14.6M12 4.7c2.1 2 2.1 12.6 0 14.6" fill="none" stroke="#fff" strokeWidth="1.4" />
@@ -1064,29 +402,26 @@ export function WebsiteIcon({ size = 22 }) {
 import facebookLogoUrl from "../assets/brand/facebook.svg";
 import tiktokLogoUrl from "../assets/brand/tiktok.svg";
 import snapchatLogoUrl from "../assets/brand/snapchat.svg";
-import whatsappLogoUrl from "../assets/brand/whatsapp.svg";
 import xLogoUrl from "../assets/brand/X.svg";
 import threadsLogoUrl from "../assets/brand/threads.svg";
 import linkedinLogoUrl from "../assets/brand/linkedin.png";
-import cheersIconGreyUrl from "../assets/brand/cheers-icon-grey.png";
-import cheersIconGreenUrl from "../assets/brand/cheers-icon-green.png";
-
-export function CheersIcon({ size = 28, active = false }) {
-  const height = size;
-  const width = Math.round(size * (80 / 128));
-  return <img src={active ? cheersIconGreenUrl : cheersIconGreyUrl} alt="Cheers" width={width} height={height} style={{ display: "block" }} />;
-}
 import pinterestLogoUrl from "../assets/brand/pinterest.svg";
 import twitchLogoUrl from "../assets/brand/twitch.svg";
+import whatsappLogoUrl from "../assets/brand/whatsapp.svg";
 
-// Facebook est déjà un rond plein (fond bleu, "f" blanc) dans le fichier officiel — rien à
-// corriger.
 export function FacebookIcon({ size = 22 }) {
   return <img src={facebookLogoUrl} alt="Facebook" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
 }
 
-// Instagram — vrai tracé officiel (récupéré léger sur GitHub, pas le fichier de 10,8 Mo
-// initialement trouvé), posé sur le dégradé de marque habituel.
+export function WhatsappIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={whatsappLogoUrl} alt="WhatsApp" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
+}
+
+// Instagram — vrai tracé officiel, posé sur le dégradé de marque habituel.
 export function InstagramIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
@@ -1108,12 +443,61 @@ export function InstagramIcon({ size = 22 }) {
   );
 }
 
-// TikTok — le fichier officiel a un fond carré noir plein ; recadré en rond (les coins du
-// carré sont coupés, le logo lui-même reste bien centré et intact).
+// TikTok — fond carré noir plein ; recadré en rond.
 export function TiktokIcon({ size = 22 }) {
   return (
     <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
       <img src={tiktokLogoUrl} alt="TikTok" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
+}
+
+// Snapchat — même souci que TikTok, fond carré jaune plein ; recadré en rond.
+export function SnapchatIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={snapchatLogoUrl} alt="Snapchat" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
+}
+
+// X — tracé blanc sur transparent ; ajout d'un rond noir derrière.
+export function XIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
+      <img src={xLogoUrl} alt="X" width={Math.round(size * 0.55)} height={Math.round(size * 0.55)} style={{ display: "block" }} />
+    </span>
+  );
+}
+
+// Threads — tracé noir sur transparent ; inversé en blanc, posé sur un rond noir.
+export function ThreadsIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
+      <img src={threadsLogoUrl} alt="Threads" width={Math.round(size * 0.6)} height={Math.round(size * 0.6)} style={{ display: "block", filter: "invert(1)" }} />
+    </span>
+  );
+}
+
+// LinkedIn — fond carré arrondi bleu plein, "in" déjà blanc dans le fichier ; recadré en rond.
+export function LinkedinIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#2867B2", overflow: "hidden" }}>
+      <img src={linkedinLogoUrl} alt="LinkedIn" width={Math.round(size * 0.72)} height={Math.round(size * 0.72)} style={{ display: "block" }} />
+    </span>
+  );
+}
+
+// Pinterest — le tracé encode le rond ET le "P" en un seul chemin plein.
+export function PinterestIcon({ size = 22 }) {
+  return <img src={pinterestLogoUrl} alt="Pinterest" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
+}
+
+// Twitch — tracé glyphe seul sur transparent ; posé sur un rond violet de marque.
+export function TwitchIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#9146FF", overflow: "hidden" }}>
+      <img src={twitchLogoUrl} alt="Twitch" width={Math.round(size * 0.62)} height={Math.round(size * 0.62)} style={{ display: "block", filter: "invert(1) brightness(2)" }} />
     </span>
   );
 }
@@ -1130,122 +514,5 @@ export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé 
         strokeLinejoin="round"
       />
     </svg>
-  );
-}
-
-// Snapchat — même souci que TikTok, fond carré jaune plein ; recadré en rond.
-export function SnapchatIcon({ size = 22 }) {
-  return (
-    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
-      <img src={snapchatLogoUrl} alt="Snapchat" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
-    </span>
-  );
-}
-
-// WhatsApp — le fichier officiel n'a aucun fond (juste le tracé vert sur transparent) ; ajout
-// d'un rond blanc derrière, convention habituelle pour ce logo.
-export function WhatsappIcon({ size = 22 }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#fff", overflow: "hidden" }}>
-      <img src={whatsappLogoUrl} alt="WhatsApp" width={Math.round(size * 0.82)} height={Math.round(size * 0.82)} style={{ display: "block" }} />
-    </span>
-  );
-}
-
-// X — le tracé officiel est blanc sur transparent ; ajout d'un rond noir derrière, couleur de
-// marque officielle.
-export function XIcon({ size = 22 }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
-      <img src={xLogoUrl} alt="X" width={Math.round(size * 0.55)} height={Math.round(size * 0.55)} style={{ display: "block" }} />
-    </span>
-  );
-}
-
-// Threads — le tracé officiel est noir sur transparent ; inversé en blanc et posé sur un rond
-// noir, comme l'icône d'app officielle de Threads.
-export function ThreadsIcon({ size = 22 }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
-      <img src={threadsLogoUrl} alt="Threads" width={Math.round(size * 0.6)} height={Math.round(size * 0.6)} style={{ display: "block", filter: "invert(1)" }} />
-    </span>
-  );
-}
-
-// LinkedIn — le fichier officiel a un fond carré arrondi bleu plein ; recadré en rond.
-export function LinkedinIcon({ size = 22 }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#2867B2", overflow: "hidden" }}>
-      <img src={linkedinLogoUrl} alt="LinkedIn" width={Math.round(size * 0.72)} height={Math.round(size * 0.72)} style={{ display: "block" }} />
-    </span>
-  );
-}
-
-export function PinterestIcon({ size = 22 }) {
-  return (
-    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
-      <img src={pinterestLogoUrl} alt="Pinterest" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
-    </span>
-  );
-}
-
-export function TwitchIcon({ size = 22 }) {
-  return (
-    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
-      <img src={twitchLogoUrl} alt="Twitch" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
-    </span>
-  );
-}
-
-// Certification d'une fiche (lieu, boisson, marque...) — reprend exactement les mêmes 3
-// niveaux et le même rendu que la plateforme de gestion (CertificationIcon.jsx), pour rester
-// cohérent avec ce qui a déjà été choisi côté admin.
-const CERTIFICATION_TOOLTIP = {
-  utilisateur: "Fiche créée par un Bibax (non vérifiée)",
-  bibamus: "Fiche vérifiée par Bibamus",
-  producteur: "Fiche contrôlée par le propriétaire",
-};
-
-function RosetteBadge({ size, color, innerColor }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <polygon
-        points="12,1 14.51,2.63 17.5,2.47 18.86,5.14 21.53,6.5 21.37,9.49 23,12 21.37,14.51 21.53,17.5 18.86,18.86 17.5,21.53 14.51,21.37 12,23 9.49,21.37 6.5,21.53 5.14,18.86 2.47,17.5 2.63,14.51 1,12 2.63,9.49 2.47,6.5 5.14,5.14 6.5,2.47 9.49,2.63"
-        fill={color}
-      />
-      <circle cx="12" cy="12" r="7.4" fill={innerColor} />
-      <path d="M8.3 12.3l2.4 2.4 5-5.4" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function BibaMeIcon({ size, color }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 1024 1024">
-      <path d="M 142 808 L 141 822 L 140 823 L 140 836 L 139 837 L 139 872 L 140 873 L 141 884 L 142 885 L 142 888 L 143 889 L 145 897 L 154 915 L 159 921 L 159 922 L 163 926 L 163 927 L 170 934 L 171 934 L 180 942 L 186 945 L 188 947 L 208 956 L 211 956 L 212 957 L 215 957 L 216 958 L 221 958 L 222 959 L 231 959 L 232 960 L 792 960 L 793 959 L 801 959 L 802 958 L 807 958 L 808 957 L 811 957 L 812 956 L 815 956 L 816 955 L 821 954 L 835 947 L 837 945 L 847 939 L 863 923 L 863 922 L 868 916 L 872 908 L 874 906 L 874 904 L 877 899 L 877 897 L 879 894 L 879 892 L 881 888 L 882 880 L 883 879 L 883 872 L 884 871 L 884 839 L 883 838 L 883 826 L 882 825 L 881 809 L 880 808 L 880 803 L 879 802 L 879 798 L 878 797 L 878 794 L 877 793 L 877 789 L 876 788 L 874 777 L 872 773 L 872 770 L 871 769 L 871 767 L 870 766 L 866 752 L 864 749 L 864 747 L 860 739 L 860 737 L 846 709 L 842 704 L 841 701 L 839 699 L 838 696 L 836 694 L 830 684 L 827 681 L 822 673 L 812 662 L 812 661 L 788 636 L 787 636 L 780 629 L 779 629 L 769 620 L 768 620 L 761 614 L 751 608 L 745 603 L 738 600 L 736 598 L 720 590 L 718 588 L 714 587 L 700 580 L 698 580 L 695 578 L 688 576 L 685 574 L 683 574 L 676 571 L 673 571 L 669 569 L 666 569 L 659 566 L 651 565 L 650 564 L 642 563 L 641 562 L 637 562 L 636 561 L 624 560 L 623 559 L 616 559 L 615 558 L 603 558 L 602 557 L 421 557 L 420 558 L 408 558 L 407 559 L 399 559 L 398 560 L 392 560 L 391 561 L 380 562 L 379 563 L 376 563 L 375 564 L 372 564 L 371 565 L 367 565 L 366 566 L 359 567 L 352 570 L 349 570 L 348 571 L 334 575 L 331 577 L 326 578 L 323 580 L 321 580 L 312 585 L 310 585 L 296 592 L 294 594 L 282 600 L 280 602 L 277 603 L 275 605 L 268 609 L 265 612 L 264 612 L 254 620 L 253 620 L 234 637 L 233 637 L 213 658 L 213 659 L 207 665 L 207 666 L 203 670 L 203 671 L 199 675 L 194 683 L 191 686 L 191 687 L 185 695 L 184 698 L 182 700 L 181 703 L 179 705 L 177 710 L 175 712 L 165 732 L 165 734 L 161 741 L 161 743 L 157 751 L 157 753 L 156 754 L 156 756 L 155 757 L 155 759 L 154 760 L 154 762 L 153 763 L 153 765 L 150 772 L 149 779 L 147 783 L 146 792 L 145 793 L 145 796 L 144 797 L 143 807 Z M 202 832 L 203 831 L 203 824 L 204 823 L 204 817 L 205 816 L 206 806 L 207 805 L 208 798 L 210 794 L 210 791 L 212 787 L 212 784 L 213 783 L 216 772 L 219 767 L 221 760 L 231 740 L 242 724 L 245 718 L 257 704 L 257 703 L 264 696 L 264 695 L 276 683 L 277 683 L 284 676 L 285 676 L 291 670 L 292 670 L 299 664 L 303 662 L 306 659 L 314 655 L 319 651 L 324 649 L 326 647 L 336 642 L 338 642 L 343 639 L 345 639 L 350 636 L 352 636 L 355 634 L 360 633 L 366 630 L 369 630 L 373 628 L 376 628 L 377 627 L 380 627 L 381 626 L 384 626 L 385 625 L 388 625 L 389 624 L 393 624 L 394 623 L 398 623 L 399 622 L 404 622 L 405 621 L 412 621 L 413 620 L 424 620 L 425 619 L 596 619 L 597 620 L 608 620 L 609 621 L 616 621 L 617 622 L 623 622 L 624 623 L 633 624 L 634 625 L 637 625 L 638 626 L 649 628 L 653 630 L 656 630 L 662 633 L 664 633 L 670 636 L 672 636 L 675 638 L 677 638 L 682 641 L 684 641 L 708 654 L 713 658 L 719 661 L 726 667 L 730 669 L 743 681 L 744 681 L 762 699 L 762 700 L 768 706 L 768 707 L 772 711 L 772 712 L 781 723 L 784 729 L 788 734 L 789 737 L 794 744 L 795 748 L 806 770 L 806 772 L 807 773 L 807 775 L 808 776 L 808 778 L 809 779 L 809 781 L 810 782 L 810 784 L 813 791 L 813 794 L 814 795 L 814 798 L 815 799 L 815 802 L 816 803 L 816 806 L 817 807 L 817 811 L 818 812 L 818 817 L 819 818 L 819 824 L 820 825 L 820 834 L 821 835 L 821 870 L 820 871 L 820 873 L 817 880 L 808 890 L 799 895 L 793 896 L 792 897 L 231 897 L 230 896 L 224 895 L 215 890 L 208 883 L 203 874 L 203 871 L 202 870 L 202 865 L 201 864 Z M 484 64 L 483 65 L 469 66 L 468 67 L 459 68 L 458 69 L 451 70 L 447 72 L 444 72 L 443 73 L 429 77 L 426 79 L 421 80 L 418 82 L 416 82 L 394 93 L 392 95 L 387 97 L 385 99 L 369 109 L 360 117 L 355 120 L 344 131 L 343 131 L 337 138 L 335 139 L 335 140 L 321 155 L 319 159 L 316 162 L 314 166 L 311 169 L 311 170 L 305 178 L 304 181 L 300 186 L 295 197 L 293 199 L 290 205 L 290 207 L 286 214 L 286 216 L 283 221 L 282 226 L 280 229 L 280 231 L 279 232 L 279 234 L 276 241 L 276 244 L 275 245 L 274 251 L 273 252 L 273 255 L 272 256 L 272 260 L 271 261 L 271 265 L 270 266 L 270 271 L 269 272 L 269 277 L 268 278 L 268 285 L 267 286 L 267 299 L 266 300 L 266 321 L 267 322 L 267 334 L 268 335 L 268 342 L 269 343 L 270 354 L 271 355 L 271 359 L 272 360 L 272 363 L 273 364 L 274 372 L 275 373 L 275 375 L 276 376 L 276 378 L 277 379 L 281 393 L 283 396 L 283 398 L 287 405 L 287 407 L 296 425 L 298 427 L 299 430 L 301 432 L 311 448 L 315 452 L 315 453 L 322 461 L 322 462 L 335 475 L 335 476 L 338 479 L 339 479 L 354 493 L 355 493 L 366 502 L 367 502 L 381 512 L 386 514 L 388 516 L 393 518 L 395 520 L 409 527 L 411 527 L 416 530 L 418 530 L 423 533 L 431 535 L 434 537 L 436 537 L 440 539 L 443 539 L 447 541 L 455 542 L 456 543 L 459 543 L 460 544 L 470 545 L 471 546 L 475 546 L 476 547 L 484 547 L 485 548 L 498 548 L 499 549 L 522 549 L 523 548 L 537 548 L 538 547 L 551 546 L 552 545 L 556 545 L 557 544 L 561 544 L 562 543 L 566 543 L 567 542 L 570 542 L 571 541 L 582 539 L 588 536 L 590 536 L 591 535 L 599 533 L 602 531 L 604 531 L 631 518 L 633 516 L 636 515 L 641 511 L 644 510 L 646 508 L 653 504 L 661 497 L 666 494 L 671 489 L 672 489 L 696 465 L 696 464 L 702 458 L 704 454 L 708 450 L 708 449 L 711 446 L 711 445 L 719 434 L 720 431 L 725 424 L 728 417 L 730 415 L 730 413 L 737 400 L 737 398 L 739 395 L 739 393 L 741 390 L 741 388 L 743 385 L 743 383 L 744 382 L 744 380 L 747 373 L 747 370 L 748 369 L 748 366 L 749 365 L 749 362 L 750 361 L 750 358 L 751 357 L 752 348 L 753 347 L 754 334 L 755 333 L 755 325 L 756 324 L 756 293 L 755 292 L 755 283 L 754 282 L 753 270 L 752 269 L 752 265 L 751 264 L 751 261 L 750 260 L 750 257 L 749 256 L 747 245 L 746 244 L 742 230 L 740 227 L 740 225 L 736 217 L 736 215 L 725 192 L 723 190 L 717 178 L 715 176 L 707 163 L 704 160 L 702 156 L 696 150 L 696 149 L 691 144 L 691 143 L 663 116 L 662 116 L 655 110 L 651 108 L 648 105 L 647 105 L 636 97 L 631 95 L 629 93 L 607 82 L 605 82 L 597 78 L 595 78 L 594 77 L 592 77 L 591 76 L 589 76 L 588 75 L 586 75 L 585 74 L 583 74 L 576 71 L 573 71 L 572 70 L 569 70 L 568 69 L 565 69 L 564 68 L 560 68 L 559 67 L 555 67 L 554 66 L 541 65 L 540 64 L 530 64 L 529 63 L 496 63 L 495 64 Z M 502 125 L 522 125 L 523 126 L 539 127 L 540 128 L 544 128 L 545 129 L 553 130 L 557 132 L 560 132 L 561 133 L 572 136 L 575 138 L 580 139 L 598 148 L 600 150 L 603 151 L 605 153 L 611 156 L 614 159 L 615 159 L 618 162 L 619 162 L 622 165 L 627 168 L 642 182 L 642 183 L 654 196 L 654 197 L 658 201 L 658 202 L 666 213 L 670 221 L 672 223 L 676 231 L 676 233 L 679 238 L 679 240 L 682 245 L 682 247 L 685 254 L 685 257 L 688 264 L 689 272 L 690 273 L 690 278 L 691 279 L 691 285 L 692 286 L 692 295 L 693 296 L 693 316 L 692 317 L 692 328 L 691 329 L 690 341 L 689 342 L 689 345 L 687 349 L 687 352 L 686 353 L 686 356 L 685 357 L 684 362 L 682 365 L 682 367 L 679 373 L 679 375 L 666 400 L 661 406 L 656 414 L 653 417 L 653 418 L 647 424 L 647 425 L 623 448 L 622 448 L 619 451 L 618 451 L 615 454 L 614 454 L 606 460 L 596 465 L 594 467 L 590 468 L 579 474 L 577 474 L 574 476 L 572 476 L 571 477 L 569 477 L 568 478 L 566 478 L 559 481 L 556 481 L 555 482 L 552 482 L 551 483 L 547 483 L 546 484 L 542 484 L 541 485 L 536 485 L 535 486 L 528 486 L 527 487 L 496 487 L 495 486 L 489 486 L 488 485 L 476 484 L 475 483 L 472 483 L 471 482 L 467 482 L 463 480 L 460 480 L 459 479 L 451 477 L 448 475 L 443 474 L 432 468 L 430 468 L 424 465 L 422 463 L 419 462 L 414 458 L 408 455 L 405 452 L 404 452 L 397 446 L 396 446 L 389 439 L 388 439 L 368 418 L 368 417 L 362 410 L 362 409 L 356 401 L 355 398 L 353 396 L 352 393 L 350 391 L 346 383 L 346 381 L 342 374 L 341 369 L 339 366 L 339 364 L 336 357 L 336 354 L 335 353 L 335 350 L 334 349 L 334 346 L 333 345 L 333 341 L 332 340 L 331 325 L 330 324 L 330 295 L 331 294 L 331 285 L 332 284 L 332 279 L 333 278 L 333 274 L 334 273 L 335 265 L 336 264 L 336 262 L 337 261 L 341 247 L 343 244 L 345 237 L 356 216 L 358 214 L 361 208 L 364 205 L 366 201 L 370 197 L 370 196 L 374 192 L 374 191 L 378 187 L 378 186 L 398 167 L 403 164 L 407 160 L 408 160 L 419 152 L 427 148 L 429 146 L 439 141 L 441 141 L 451 136 L 453 136 L 454 135 L 456 135 L 463 132 L 466 132 L 467 131 L 470 131 L 471 130 L 474 130 L 475 129 L 478 129 L 479 128 L 484 128 L 485 127 L 490 127 L 491 126 L 501 126 Z" fill={color} fillRule="evenodd" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-export function CertificationIcon({ level, size = 20 }) {
-  const title = CERTIFICATION_TOOLTIP[level] || CERTIFICATION_TOOLTIP.utilisateur;
-  if (level === "bibamus") {
-    return (
-      <span title={title}>
-        <RosetteBadge size={size} color="#39FF66" innerColor="#1E7A38" />
-      </span>
-    );
-  }
-  if (level === "producteur") {
-    return (
-      <span title={title}>
-        <RosetteBadge size={size} color="#FFC145" innerColor="#8A6A1E" />
-      </span>
-    );
-  }
-  return (
-    <span title={title}>
-      <BibaMeIcon size={size} color="#FF2C8F" />
-    </span>
   );
 }

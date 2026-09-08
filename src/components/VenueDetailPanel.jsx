@@ -1,38 +1,56 @@
-import React, { useState } from "react";
-import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf } from "../data/sharedDirectories.js";
+import React, { useState, useEffect } from "react";
+import { WhatsappIcon } from "./icons.jsx";
+import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities } from "../data/sharedDirectories.js";
+import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
+import { SearchableSelect } from "./SearchableSelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
-import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES } from "../constants.js";
+import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
+import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES, COUNTRY_ISO_CODES } from "../constants.js";
+
+const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
 // Majuscule en début de chaque mot — appliqué à la validation (au moment de quitter le champ),
 // pas pendant la frappe, pour ne pas gêner la saisie.
-const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a"]);
+const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a", "au", "aux"]);
 const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
 
-// Majuscule en début de chaque mot, mais garde les déterminants (de/du/des/la/le/les/à/et/the/a,
-// ainsi que d'/l') en minuscule sauf en tout début de texte — ex. "Café de la Gare",
-// "Côte d'Ivoire". Corrige aussi un bug où les lettres accentuées en milieu de mot (café → CafÉ)
-// étaient capitalisées à tort : \b (limite de mot) en JavaScript ignore les lettres accentuées.
+// Ne force jamais la casse d'une lettre déjà en majuscule (préserve les sigles comme "RFC" ou
+// les noms composés comme "BrewTous") — ajoute une majuscule seulement au tout premier
+// caractère d'un mot/segment, s'il manque. Garde les déterminants (de/du/des/la/le/les/à/et/
+// the/a/au/aux, ainsi que d'/l') en minuscule sauf en tout début de texte — ex. "Café de la
+// Gare", "Côte d'Ivoire", "Rue Henri-Blès".
+const capFirstOnly = (w) => {
+  if (!w) return w;
+  if (w.charAt(0) === w.charAt(0).toUpperCase()) return w;
+  return w.charAt(0).toUpperCase() + w.slice(1);
+};
+
+const capSegment = (segment, isVeryFirst) => {
+  if (!segment) return segment;
+  const apostropheMatch = segment.match(/^([a-zàâäéèêëïîôöùûüÿœæçA-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸŒÆÇ]+)(['’])(.*)$/);
+  if (apostropheMatch) {
+    const [, prefix, apos, rest] = apostropheMatch;
+    const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefix.toLowerCase());
+    const newPrefix = !isVeryFirst && isSmallPrefix ? prefix.toLowerCase() : capFirstOnly(prefix);
+    return newPrefix + apos + capFirstOnly(rest);
+  }
+  const lower = segment.toLowerCase();
+  if (!isVeryFirst && SMALL_WORDS.has(lower)) return lower;
+  return capFirstOnly(segment);
+};
+
 const capitalizeWords = (s) => {
   if (!s) return s;
-  const cap = (w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w);
   return s
     .split(" ")
-    .map((word, index) => {
-      if (!word) return word;
-      const apostropheMatch = word.match(/^([a-zàâäéèêëïîôöùûüÿœæç]+)(['’])(.*)$/i);
-      if (apostropheMatch) {
-        const [, prefix, apos, rest] = apostropheMatch;
-        const prefixLower = prefix.toLowerCase();
-        const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefixLower);
-        const newPrefix = index === 0 || !isSmallPrefix ? cap(prefixLower) : prefixLower;
-        return newPrefix + apos + cap(rest.toLowerCase());
-      }
-      const lower = word.toLowerCase();
-      if (index !== 0 && SMALL_WORDS.has(lower)) return lower;
-      return cap(lower);
-    })
+    .map((word, wordIndex) =>
+      word
+        .split("-")
+        .map((segment, segIndex) => capSegment(segment, wordIndex === 0 && segIndex === 0))
+        .join("-")
+    )
     .join(" ");
 };
 
@@ -70,6 +88,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const isNew = !venue;
   const [form, setForm] = useState({
     name: venue?.name || "",
+    aliasesText: (venue?.aliases || []).join(", "),
     subtitle: venue?.subtitle || "",
     streetName: venue?.streetName || "",
     streetNumber: venue?.streetNumber || "",
@@ -79,7 +98,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     country: venue?.country || "belgique",
     lat: venue?.lat ?? "",
     lng: venue?.lng ?? "",
-    phone: venue?.phone || "",
+    phone: (venue?.phone || "").replace(/^(\+\d+\s*)+/, ""),
+    whatsapp: (venue?.whatsapp || "").replace(/^(\+\d+\s*)+/, ""),
     email: venue?.email || "",
     website: venue?.website || "",
     googleUrl: venue?.googleUrl || "",
@@ -110,9 +130,50 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingMenu, setUploadingMenu] = useState(false);
-  const [status, setStatus] = useState(venue?.status || (isNew ? "certified" : "pending"));
+  const [status, setStatus] = useState(venue?.status || "to_process");
+  const [certificationLevel, setCertificationLevel] = useState(venue?.certificationLevel || "utilisateur");
+  const [duplicateOfId, setDuplicateOfId] = useState(venue?.duplicateOfId || null);
+  const [otherVenueOptions, setOtherVenueOptions] = useState([]);
+
+  useEffect(() => {
+    if (status === "duplicate") {
+      loadPublicVenues().then((list) => setOtherVenueOptions(list.filter((v) => v.id !== venue?.id).map((v) => ({ id: v.id, name: v.name }))));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
   const [googlePlaceId, setGooglePlaceId] = useState(venue?.googlePlaceId || null);
   const [noGooglePresence, setNoGooglePresenceState] = useState(!!venue?.noGooglePresence);
+  const [noFixedHours, setNoFixedHoursState] = useState(!!venue?.noFixedHours);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeNotFound, setGeocodeNotFound] = useState(false);
+  const [geocodeStatus, setGeocodeStatus] = useState(venue?.geocodeStatus || null);
+  const [geocodeSource, setGeocodeSource] = useState(venue?.geocodeSource || null);
+  const [geocodeConfidence, setGeocodeConfidence] = useState(venue?.geocodeConfidence ?? null);
+
+  const handleGeocode = async () => {
+    setGeocoding(true);
+    setGeocodeNotFound(false);
+    const result = await geocodeAddress({
+      streetName: form.streetName,
+      streetNumber: form.streetNumber,
+      postalCode: form.postalCode,
+      city: form.city,
+      countryIsoCode: COUNTRY_ISO_CODES[form.country],
+    });
+    setGeocoding(false);
+    if (!result || result.notFound || !result.lat) {
+      setGeocodeNotFound(true);
+      return;
+    }
+    set("lat", String(result.lat));
+    set("lng", String(result.lng));
+    setGeocodeStatus(result.status);
+    setGeocodeSource(result.source);
+    setGeocodeConfidence(result.confidence);
+    if (venue?.id) {
+      await saveGeocodeResult(venue.id, { lat: result.lat, lng: result.lng, source: result.source, confidence: result.confidence, status: result.status });
+    }
+  };
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -128,6 +189,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
   const buildPatch = () => ({
     name: capitalizeWords(form.name.trim()),
+    aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
     subtitle: capitalizeWords(form.subtitle.trim()),
     streetName: capitalizeWords(form.streetName.trim()),
     streetNumber: form.streetNumber.trim(),
@@ -137,7 +199,11 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     country: form.country,
     lat: form.lat === "" ? null : parseFloat(form.lat),
     lng: form.lng === "" ? null : parseFloat(form.lng),
+    geocodeStatus,
+    geocodeSource,
+    geocodeConfidence,
     phone: form.phone.trim() ? `${phonePrefix} ${form.phone.trim()}` : "",
+    whatsapp: form.whatsapp.trim() ? `${phonePrefix} ${form.whatsapp.trim()}` : "",
     email: form.email.trim(),
     website: form.website.trim(),
     googleUrl: form.googleUrl.trim(),
@@ -165,27 +231,46 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     profilePhotoUrl,
     coverPhotoUrl,
     status,
+    certificationLevel,
+    duplicateOfId: status === "duplicate" ? duplicateOfId : null,
   });
 
   const save = async () => {
-    if (!form.name.trim() || !form.streetName.trim() || !form.streetNumber.trim() || !form.postalCode.trim() || !form.city.trim()) return;
+    if (!form.name.trim() || !form.streetName.trim() || !form.streetNumber.trim()) return;
     setSaving(true);
     if (isNew) {
       const id = `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
       const created = await createPublicVenue({ id, ...buildPatch(), menu: [], likes: [] });
       setSaving(false);
       onSaved(created);
+    } else if (status === "duplicate" && duplicateOfId) {
+      // Passe par la vraie fusion (transfert des relations) plutôt qu'un simple tombstone.
+      const result = await mergeEntities("venue", venue.id, duplicateOfId);
+      setSaving(false);
+      if (result.error) {
+        alert("La fusion a échoué : " + result.error);
+        return;
+      }
+      onSaved({ ...venue, status: "duplicate", duplicateOfId });
     } else {
       const patch = buildPatch();
-      await updatePublicVenue(venue.id, patch);
+      const result = await updatePublicVenue(venue.id, patch);
       setSaving(false);
+      if (result?.error) {
+        alert("La sauvegarde a échoué : " + result.error);
+        return;
+      }
       onSaved({ ...venue, ...patch });
     }
   };
 
   const remove = async () => {
     if (!confirm(`Supprimer définitivement "${venue.name}" ?`)) return;
-    await deletePublicVenue(venue.id);
+    const result = await deletePublicVenue(venue.id);
+    if (result?.error) {
+      alert("La suppression a échoué : " + result.error);
+      return;
+    }
     onSaved(null);
   };
 
@@ -216,11 +301,11 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     e.target.value = "";
   };
 
-  const requiredOk = form.name.trim() && form.streetName.trim() && form.streetNumber.trim() && form.postalCode.trim() && form.city.trim();
+  const requiredOk = form.name.trim() && form.streetName.trim() && form.streetNumber.trim();
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
-      <div style={{ width: "540px", background: "#08131F", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
+      <div style={{ width: "540px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isNew ? "Ajouter un établissement" : "Vérifier l'établissement"}</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
@@ -247,7 +332,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             }}
           >
             <span>🍺 Gérer la carte boissons</span>
-            <span style={{ color: "#8792A6" }}>{(venue.menu || []).length} produit{(venue.menu || []).length > 1 ? "s" : ""} →</span>
+            <span style={{ color: "#8792A6" }}>{(venue.menu || []).length} produit{(venue.menu || []).length !== 1 ? "s" : ""} →</span>
           </button>
         )}
 
@@ -256,6 +341,14 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         <label style={labelStyle}>Nom *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+        <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
+        <input
+          value={form.aliasesText}
+          onChange={(e) => set("aliasesText", e.target.value)}
+          placeholder="Ex. anciens noms, traductions dans une autre langue..."
+          style={{ ...fieldStyle, marginBottom: "14px" }}
+        />
 
         <label style={labelStyle}>Sous-titre</label>
         <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
@@ -273,16 +366,28 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
-          <div>
-            <label style={labelStyle}>Code postal *</label>
-            <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
+        {GEOAPIFY_CONFIGURED ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
+            <AddressAutocomplete
+              postalCode={form.postalCode}
+              city={form.city}
+              countryIsoCode={COUNTRY_ISO_CODES[form.country]}
+              onPostalCodeChange={(v) => set("postalCode", v)}
+              onCityChange={(v) => set("city", v)}
+            />
           </div>
-          <div>
-            <label style={labelStyle}>Ville *</label>
-            <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
+            <div>
+              <label style={labelStyle}>Code postal</label>
+              <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Ville</label>
+              <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
           <div>
@@ -325,16 +430,54 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             />
           </div>
         </div>
-        <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "-2px", marginBottom: "14px" }}>
+        <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "-2px", marginBottom: "10px" }}>
           Vous pouvez coller directement au format "50.4261° N" — converti automatiquement.
         </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+          <button
+            onClick={handleGeocode}
+            disabled={geocoding || !(form.streetName && form.postalCode && form.city)}
+            style={{
+              background: "none",
+              border: "2px solid #28405C",
+              borderRadius: "8px",
+              padding: "8px 14px",
+              color: "#39FF66",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              cursor: form.streetName && form.postalCode && form.city ? "pointer" : "default",
+              opacity: form.streetName && form.postalCode && form.city ? 1 : 0.5,
+            }}
+          >
+            {geocoding ? "Géocodage..." : "📍 Géocoder automatiquement"}
+          </button>
+          {geocodeNotFound && <span style={{ fontSize: "12px", color: "#FF3B4E" }}>Adresse introuvable — vérifiez les champs</span>}
+          {!geocodeNotFound && geocodeStatus === "verified" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position vérifiée</span>}
+          {!geocodeNotFound && geocodeStatus === "exact" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position exacte</span>}
+          {!geocodeNotFound && geocodeStatus === "manual" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position corrigée manuellement</span>}
+          {!geocodeNotFound && geocodeStatus === "building" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : bâtiment</span>}
+          {!geocodeNotFound && geocodeStatus === "street" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : rue</span>}
+          {!geocodeNotFound && geocodeStatus === "postcode" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : code postal seulement</span>}
+          {!geocodeNotFound && geocodeStatus === "city" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : ville seulement</span>}
+          {!geocodeNotFound && geocodeStatus === "approximate" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Position approximative</span>}
+          {!geocodeNotFound && geocodeStatus === "pending" && <span style={{ fontSize: "12px", color: "#8792A6" }}>Pas encore géocodée</span>}
+        </div>
         <div style={separatorStyle} />
         <SectionTitle>Coordonnées</SectionTitle>
 
         <label style={labelStyle}>Téléphone</label>
         <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
           <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
-          <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="494 90 90 38" style={fieldStyle} />
+          <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
+        </div>
+
+        <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+          <WhatsappIcon size={18} />
+          WhatsApp
+        </label>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+          <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
+          <input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
         </div>
 
         <label style={labelStyle}>Email</label>
@@ -374,7 +517,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
                   padding: "6px 12px",
                   fontSize: "12px",
                   fontWeight: 600,
-                  color: checked ? "#08131F" : "#F2F2E8",
+                  color: checked ? "#0D1B2A" : "#F2F2E8",
                   cursor: "pointer",
                 }}
               >
@@ -401,7 +544,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
                 padding: "9px",
                 fontWeight: 700,
                 fontSize: "13px",
-                color: form.defaultCurrency === opt.key ? "#08131F" : "#F2F2E8",
+                color: form.defaultCurrency === opt.key ? "#0D1B2A" : "#F2F2E8",
                 cursor: "pointer",
               }}
             >
@@ -427,7 +570,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
                   padding: "6px 12px",
                   fontSize: "12px",
                   fontWeight: 600,
-                  color: checked ? "#08131F" : "#F2F2E8",
+                  color: checked ? "#0D1B2A" : "#F2F2E8",
                   cursor: "pointer",
                 }}
               >
@@ -446,8 +589,10 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             googlePlaceId={googlePlaceId}
             checkedAt={venue?.googlePlaceIdCheckedAt}
             noGooglePresence={noGooglePresence}
+            noFixedHours={noFixedHours}
             onLinked={setGooglePlaceId}
             onNoPresenceChange={setNoGooglePresenceState}
+            onNoFixedHoursChange={setNoFixedHoursState}
           />
         </div>
 
@@ -528,15 +673,27 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         <div style={separatorStyle} />
         <label style={labelStyle}>Statut</label>
-        <div style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "14px" }}>
           <StatusSelector value={status} onChange={setStatus} />
+        </div>
+
+        {status === "duplicate" && (
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle}>Doublon de</label>
+            <SearchableSelect options={otherVenueOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher l'établissement conservé..." />
+          </div>
+        )}
+
+        <label style={labelStyle}>Niveau de certification</label>
+        <div style={{ marginBottom: "20px" }}>
+          <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
           <button
             onClick={save}
             disabled={saving || !requiredOk}
-            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#08131F", cursor: "pointer", opacity: requiredOk ? 1 : 0.5 }}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: requiredOk ? 1 : 0.5 }}
           >
             ✓ {isNew ? "Créer l'établissement" : "Enregistrer"}
           </button>
