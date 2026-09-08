@@ -177,17 +177,23 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           )}
           {venue.snapchatUrl && (
             <a href={normalizeUrl(venue.snapchatUrl)} target="_blank" rel="noreferrer" title="Snapchat" style={{ lineHeight: 0 }}>
-              <img src={snapchatIconUrl} alt="Snapchat" style={{ width: "20px", height: "20px" }} />
+              <span style={{ display: "inline-flex", width: "20px", height: "20px", borderRadius: "50%", overflow: "hidden" }}>
+                <img src={snapchatIconUrl} alt="Snapchat" width="20" height="20" style={{ display: "block", objectFit: "cover" }} />
+              </span>
             </a>
           )}
           {venue.tripadvisorUrl && (
             <a href={normalizeUrl(venue.tripadvisorUrl)} target="_blank" rel="noreferrer" title="Tripadvisor" style={{ lineHeight: 0 }}>
-              <img src={tripadvisorIconUrl} alt="Tripadvisor" style={{ width: "20px", height: "20px" }} />
+              <span style={{ display: "inline-flex", width: "20px", height: "20px", borderRadius: "50%", overflow: "hidden" }}>
+                <img src={tripadvisorIconUrl} alt="Tripadvisor" width="20" height="20" style={{ display: "block", objectFit: "cover" }} />
+              </span>
             </a>
           )}
           {venue.restaurantGuruUrl && (
             <a href={normalizeUrl(venue.restaurantGuruUrl)} target="_blank" rel="noreferrer" title="Restaurant Guru" style={{ lineHeight: 0 }}>
-              <img src={restaurantGuruIconUrl} alt="Restaurant Guru" style={{ width: "20px", height: "20px" }} />
+              <span style={{ display: "inline-flex", width: "20px", height: "20px", borderRadius: "50%", overflow: "hidden" }}>
+                <img src={restaurantGuruIconUrl} alt="Restaurant Guru" width="20" height="20" style={{ display: "block", objectFit: "cover" }} />
+              </span>
             </a>
           )}
           </div>
