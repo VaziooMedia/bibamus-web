@@ -23,6 +23,7 @@ import {
   loadMyProfileStats,
   searchBibaxByName,
   toggleNotifyPulse,
+  loadPulseStories,
 } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -394,7 +395,64 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   );
 }
 
-export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRemove, goToBibaxPhotos, onBlock }) {
+export function MutualBibaxScreen({ bibros, bibroName, onBack, onViewBibro, onOpenStoryAuthor }) {
+  const [pulseStories, setPulseStories] = useState([]);
+
+  useEffect(() => {
+    loadPulseStories().then(setPulseStories);
+  }, []);
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 20px 0" }}>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0, lineHeight: 1.2 }}>
+          Bibax en commun {bibroName && <>avec <span style={{ color: COLORS.amber }}>{bibroName}</span></>}
+        </h1>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {bibros.map((b) => {
+          const stories = pulseStories.filter((s) => s.authorId === b.userId);
+          const hasStory = stories.length > 0;
+          return (
+            <div
+              key={b.code}
+              onClick={() => onViewBibro(b.code)}
+              style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", cursor: "pointer" }}
+            >
+              <div
+                onClick={hasStory ? (e) => { e.stopPropagation(); onOpenStoryAuthor?.({ authorId: b.userId, authorName: b.name, authorAvatarUrl: b.avatarUrl, stories }); } : undefined}
+                style={{
+                  width: "42px",
+                  height: "42px",
+                  borderRadius: "50%",
+                  border: `2px solid ${hasStory ? "#FF2C8F" : "transparent"}`,
+                  padding: "2px",
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: hasStory ? "pointer" : "default",
+                }}
+              >
+                <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                  {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={19} color={COLORS.amber} />}
+                </div>
+              </div>
+              <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ fontSize: "15px" }} />
+            </div>
+          );
+        })}
+      </div>
+
+      <BackFooterLink onClick={onBack} />
+    </div>
+  );
+}
+
+export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRemove, goToBibaxPhotos, onBlock, onOpenStoryAuthor, onViewMutualBibax }) {
   const [mutualCount, setMutualCount] = useState(null);
   const [bibaxCount, setBibaxCount] = useState(null);
   const [stats, setStats] = useState(null);
@@ -403,6 +461,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   const [showRemoveSheet, setShowRemoveSheet] = useState(false);
   const [notifyPulse, setNotifyPulse] = useState(bibro?.notifyPulse || false);
   const [togglingNotify, setTogglingNotify] = useState(false);
+  const [activeStories, setActiveStories] = useState([]);
 
   const handleToggleNotify = async () => {
     setTogglingNotify(true);
@@ -420,6 +479,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
     loadMutualBibaxCount(bibro.userId).then(setMutualCount);
     loadBibaxCount(bibro.userId).then(setBibaxCount);
     loadMyProfileStats(bibro.userId).then(setStats);
+    loadPulseStories().then((stories) => setActiveStories(stories.filter((s) => s.authorId === bibro.userId)));
   }, [bibro?.userId]);
 
   const age = bibro.shareAge !== false ? computeAgeFromBirthDate(bibro.birthDate) : null;
@@ -490,16 +550,18 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
           <div
+            onClick={activeStories.length > 0 ? () => onOpenStoryAuthor?.({ authorId: bibro.userId, authorName: bibro.name, authorAvatarUrl: bibro.avatarUrl, stories: activeStories }) : undefined}
             style={{
               width: "112px",
               height: "112px",
               borderRadius: "50%",
-              border: `2px solid ${COLORS.amber}`,
+              border: `2px solid ${activeStories.length > 0 ? "#FF2C8F" : "transparent"}`,
               padding: "2px",
               flexShrink: 0,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              cursor: activeStories.length > 0 ? "pointer" : "default",
             }}
           >
             <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
@@ -650,6 +712,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
           <NavIcon name="mail" size={28} color={COLORS.inkSoft} />
         </button>
         <div
+          onClick={mutualCount > 0 ? () => onViewMutualBibax(bibro.userId, bibro.name) : undefined}
           style={{
             flex: 2,
             display: "flex",
@@ -663,6 +726,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             fontSize: "12.5px",
             color: COLORS.inkSoft,
             textAlign: "center",
+            cursor: mutualCount > 0 ? "pointer" : "default",
           }}
         >
           <img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />

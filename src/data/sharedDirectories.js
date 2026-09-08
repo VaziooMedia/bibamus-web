@@ -1607,6 +1607,25 @@ export async function loadMyBlockedUsers() {
   return data.map((r) => ({ userId: r.blocked_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url, blockedAt: r.blocked_at }));
 }
 
+export async function loadMutualBibaxList(otherUserId) {
+  const { data, error } = await supabase.rpc("get_mutual_bibax", { p_target_user_id: otherUserId });
+  if (error) {
+    console.error("loadMutualBibaxList:", error);
+    return [];
+  }
+  return data.map((b) => ({
+    userId: b.user_id,
+    name: b.name,
+    lastName: b.last_name,
+    nickname: b.nickname,
+    avatarUrl: b.avatar_url,
+    code: b.bibro_code,
+    city: b.city,
+    locality: b.locality,
+    country: b.country,
+  }));
+}
+
 export async function loadMutualBibaxCount(otherUserId) {
   const { data, error } = await supabase.rpc("get_mutual_bibax_count", { p_other_user_id: otherUserId });
   if (error) {
