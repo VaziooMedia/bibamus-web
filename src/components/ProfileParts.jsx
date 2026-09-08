@@ -55,7 +55,7 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
 
   return (
     <>
-      <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "10px" }}>
+      <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "10px 16px", marginTop: "4px", marginBottom: "10px" }}>
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
             <button
