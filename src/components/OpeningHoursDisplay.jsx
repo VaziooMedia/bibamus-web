@@ -3,6 +3,39 @@ import { COLORS } from "../constants.js";
 import { loadEstablishmentOpeningHours } from "../data/sharedDirectories.js";
 import { NavIcon } from "./icons.jsx";
 
+function timeToMinutes(t) {
+  if (!t) return 0;
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + (m || 0);
+}
+
+// Un jour d'ouverture pour un bar/resto peut se terminer aux petites heures du matin. Google
+// découpe toujours par jour calendaire (00:00-23:59), ce qui coupe artificiellement une soirée
+// en deux périodes distinctes : la fin de nuit réapparaît comme une period du lendemain (ex.
+// mercredi "09:00–01:00" + jeudi "00:00–01:00", qui est en réalité la même soirée). On regroupe
+// ici selon une "journée d'exploitation" 07:00→06:59 : toute period qui commence avant 07:00
+// appartient en fait à la soirée de la veille.
+function regroupIntoBusinessDays(days) {
+  if (!days || days.length === 0) return days;
+  const n = days.length;
+  const earlyByDay = days.map((d) => (d.periods || []).filter((p) => timeToMinutes(p.open) < 7 * 60));
+  const regularByDay = days.map((d) => (d.periods || []).filter((p) => timeToMinutes(p.open) >= 7 * 60));
+
+  return days.map((d, i) => {
+    const nextEarly = earlyByDay[(i + 1) % n];
+    let periods = [...regularByDay[i]];
+    if (nextEarly.length > 0) {
+      if (periods.length > 0) {
+        const last = { ...periods[periods.length - 1], close: nextEarly[nextEarly.length - 1].close };
+        periods = [...periods.slice(0, -1), last];
+      } else {
+        periods = nextEarly;
+      }
+    }
+    return { ...d, periods, closed: periods.length === 0 };
+  });
+}
+
 // Les horaires ne sont jamais saisis dans Bibamus — uniquement affichés depuis Google, avec
 // l'attribution requise. Aucun formulaire, aucun bouton d'édition ici.
 export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHours }) {
@@ -76,9 +109,10 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
     );
   }
 
+  const businessDays = hours?.days ? regroupIntoBusinessDays(hours.days) : hours?.days;
   const DAY_NAMES_FR = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
   const todayName = DAY_NAMES_FR[new Date().getDay()];
-  const todayEntry = hours?.days?.find((d) => d.dayLabel?.toLowerCase().startsWith(todayName)) || null;
+  const todayEntry = businessDays?.find((d) => d.dayLabel?.toLowerCase().startsWith(todayName)) || null;
 
   return (
     <div
@@ -103,9 +137,9 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
       )}
       {expanded && (
         <>
-          {hours?.days?.length > 0 ? (
+          {businessDays?.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "10px" }}>
-              {hours.days.map((d) => (
+              {businessDays.map((d) => (
                 <div key={d.dayLabel} style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px" }}>
                   <span style={{ color: COLORS.ink }}>{d.dayLabel}</span>
                   <span style={{ color: COLORS.inkSoft }}>
