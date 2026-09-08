@@ -44,6 +44,11 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
             identity.pinterestUrl ||
             identity.twitchUrl) && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "18px" }}>
+              {identity.whatsappUrl && (
+                <a href={normalizeUrl(identity.whatsappUrl)} target="_blank" rel="noreferrer">
+                  <WhatsappIcon size={26} color={COLORS.inkSoft} />
+                </a>
+              )}
               {identity.facebookUrl && (
                 <a href={normalizeUrl(identity.facebookUrl)} target="_blank" rel="noreferrer">
                   <FacebookIcon size={26} color={COLORS.inkSoft} />
@@ -62,11 +67,6 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
               {identity.snapchatUrl && (
                 <a href={normalizeUrl(identity.snapchatUrl)} target="_blank" rel="noreferrer">
                   <SnapchatIcon size={26} color={COLORS.inkSoft} />
-                </a>
-              )}
-              {identity.whatsappUrl && (
-                <a href={normalizeUrl(identity.whatsappUrl)} target="_blank" rel="noreferrer">
-                  <WhatsappIcon size={26} color={COLORS.inkSoft} />
                 </a>
               )}
               {identity.xUrl && (

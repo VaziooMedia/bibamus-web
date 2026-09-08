@@ -142,6 +142,11 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
             profile.pinterestUrl ||
             profile.twitchUrl) && (
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px", marginTop: "6px" }}>
+              {profile.whatsappUrl && (
+                <a href={normalizeUrl(profile.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
+                  <WhatsappIcon size={24} />
+                </a>
+              )}
               {profile.facebookUrl && (
                 <a href={normalizeUrl(profile.facebookUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                   <FacebookIcon size={24} />
@@ -160,11 +165,6 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
               {profile.snapchatUrl && (
                 <a href={normalizeUrl(profile.snapchatUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                   <SnapchatIcon size={24} />
-                </a>
-              )}
-              {profile.whatsappUrl && (
-                <a href={normalizeUrl(profile.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
-                  <WhatsappIcon size={24} />
                 </a>
               )}
               {profile.xUrl && (
