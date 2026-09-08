@@ -511,8 +511,8 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         cursor: onClick ? "pointer" : "default",
       }}
     >
-      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value != null ? value : "…"}</span>
+      <span style={{ fontSize: "9.5px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.amber, lineHeight: 1 }}>{value != null ? value : "…"}</span>
     </button>
   );
 
@@ -828,15 +828,10 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <StatCard label="Bibax" value={bibaxCount} />
-        <StatCard label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
-        <StatCard label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
-      </div>
-
       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
         {[
           { key: "pulse", label: "BibaPulse" },
+          { key: "stats", label: "Statistiques" },
           { key: "media", label: "Médias" },
           { key: "club", label: "BibaClub" },
           { key: "history", label: "Historique" },
@@ -859,6 +854,14 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
           </button>
         ))}
       </div>
+
+      {activeTab === "stats" && (
+        <div style={{ display: "flex", gap: "6px" }}>
+          <StatCard label="Bibax" value={bibaxCount} />
+          <StatCard label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
+          <StatCard label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
+        </div>
+      )}
 
       {activeTab === "pulse" &&
         (pulseActivity === null ? (
