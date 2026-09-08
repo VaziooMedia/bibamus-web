@@ -367,12 +367,12 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           style={{
             display: "inline-block",
             background: "none",
-            border: `2px solid ${COLORS.paperAlt}`,
-            borderRadius: "8px",
-            padding: "7px 14px",
+            border: `1.5px solid ${COLORS.paperAlt}`,
+            borderRadius: "7px",
+            padding: "5px 10px",
             color: COLORS.inkSoft,
             fontWeight: 600,
-            fontSize: "11.5px",
+            fontSize: "10px",
             cursor: "pointer",
             textAlign: "center",
           }}
@@ -384,7 +384,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           title="Plus d'options"
           style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center" }}
         >
-          <NavIcon name="dots" size={18} color={COLORS.inkSoft} />
+          <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
       {claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}

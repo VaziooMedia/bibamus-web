@@ -63,7 +63,10 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
         ) : (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-              <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.ink, margin: 0 }}>Revendiquer cette fiche</h2>
+              <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.ink, margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+                Revendiquer cette fiche
+              </h2>
               <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "20px", cursor: "pointer" }}>
                 ✕
               </button>
