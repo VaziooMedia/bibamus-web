@@ -10,6 +10,7 @@ import { formatAddress, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
+import placeCheckIconUrl from "../assets/brand/place-check.svg";
 
 export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
   const [confirmReset, setConfirmReset] = useState(false);
@@ -89,11 +90,11 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             justifyContent: "center",
           }}
         >
-          <svg width="52" height="52" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="11" fill={justCheckedIn ? COLORS.sage : COLORS.amber} stroke="#000" strokeWidth="1.5" />
-            <path d="M12 5.2c-2.7 0-4.9 2.2-4.9 4.9 0 3.4 4.9 8.6 4.9 8.6s4.9-5.2 4.9-8.6c0-2.7-2.2-4.9-4.9-4.9z" fill="#000" />
-            <path d="M9.6 9.9l1.7 1.7 3.1-3.3" fill="none" stroke={justCheckedIn ? COLORS.sage : COLORS.amber} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <img
+            src={placeCheckIconUrl}
+            alt="Check-in"
+            style={{ width: "52px", height: "52px", opacity: justCheckedIn ? 0.55 : 1 }}
+          />
         </button>
       </div>
 

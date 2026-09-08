@@ -10,6 +10,7 @@ import { COLORS, COUNTRY_FLAGS, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { NavIcon, FlagIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin } from "../data/sharedDirectories.js";
+import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 
 function normalize(str) {
   return (str || "")
@@ -340,7 +341,7 @@ export function BibaSoloScreen({ drinksDirectory = [], venues = [], myUserId, on
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
         <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "46px", height: "46px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
-          <NavIcon name="bottle" size={22} color={COLORS.amber} />
+          <img src={bibaSoloIconUrl} alt="BibaSolo" style={{ width: "26px", height: "26px" }} />
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0, flex: 1 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
