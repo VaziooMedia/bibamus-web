@@ -226,7 +226,7 @@ export function DrinkDetailScreen({ drink, drinksDirectory = [], isAdmin, myBibr
           {drink.isGeneric && drink.averageJetonValue != null && (
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
               <span style={{ color: COLORS.inkSoft }}>Valeur en jetons</span>
-              <span style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "5px" }}>
+              <span style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
                 {drink.averageJetonValue} <TokenPinkIcon size={14} />
               </span>
             </div>

@@ -339,7 +339,7 @@ export function MoneyAmount({ value, currency, centered = false, jetonIconSize =
     const n = Math.round(value * 10) / 10;
     const numPart = n % 1 === 0 ? n : n.toFixed(1);
     return (
-      <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}>
         {numPart} {jetonIcon === "pink" ? <TokenPinkIcon size={jetonIconSize} /> : jetonIcon === "cyan" ? <TokenCyanIcon size={jetonIconSize} /> : <NavIcon name="jeton-token" size={jetonIconSize} color="#0040ef" />}
       </span>
     );

@@ -1533,7 +1533,7 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
             <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons acquis</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "11px", fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>
               {ticketsPurchased}
               <TokenCyanIcon size={30} />
             </div>
