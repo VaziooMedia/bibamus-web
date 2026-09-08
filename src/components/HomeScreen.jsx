@@ -6,6 +6,8 @@ import React, { useState, useEffect } from "react";
 import { COLORS, APP_VERSION } from "../constants.js";
 import placeCheckIconUrl from "../assets/brand/place-check.svg";
 import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
+import loupeIconUrl from "../assets/brand/loupe.svg";
+import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
@@ -213,7 +215,7 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <NavIcon name="search" size={24} color={COLORS.amber} />
+            <img src={loupeIconUrl} alt="Search" style={{ width: "28px", height: "28px" }} />
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Search</span>
         </div>
@@ -232,7 +234,7 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <NavIcon name="bottle" size={24} color={COLORS.amber} />
+            <img src={bibaSoloIconUrl} alt="BibaSolo" style={{ width: "28px", height: "28px" }} />
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>BibaSolo</span>
         </div>
