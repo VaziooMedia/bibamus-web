@@ -58,14 +58,12 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
           <PageHeader onBack={onBack} />
         </div>
-        <div style={{ position: "absolute", bottom: "-64px", left: "12px", right: "12px", display: "flex", alignItems: "flex-end", gap: "12px" }}>
-          <div style={{ border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0, flexShrink: 0 }}>
-            <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
-          </div>
-          <div style={{ minWidth: 0, paddingBottom: "4px" }}>
-            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: 0, lineHeight: 1.2, color: COLORS.chalkWhite }}>{venue.name}</h1>
-            {venue.subtitle && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
-          </div>
+        <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
+          <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
+        </div>
+        <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
+          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: 0, lineHeight: 1.2, color: COLORS.chalkWhite }}>{venue.name}</h1>
+          {venue.subtitle && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
         </div>
       </div>
 
@@ -94,26 +92,62 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           Lieu suivi ponctuellement · ⭐ ajouter aux favoris
         </button>
       )}
-      {address && (
-        <a
-          href={mapsUrlFor(venue)}
-          target="_blank"
-          rel="noreferrer"
-          style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "4px", marginBottom: "4px", display: "inline-block", textDecoration: "none" }}
-        >
-          📍 {address}
-        </a>
-      )}
-      {venue.phone && (
-        <a href={`tel:${venue.phone.replace(/\s+/g, "")}`} style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "4px", display: "block", textDecoration: "none" }}>
-          📞 {venue.phone}
-        </a>
-      )}
-      {venue.email && (
-        <a href={`mailto:${venue.email}`} style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "4px", display: "block", textDecoration: "none" }}>
-          ✉️ {venue.email}
-        </a>
-      )}
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
+        {address && (
+          <a
+            href={mapsUrlFor(venue)}
+            target="_blank"
+            rel="noreferrer"
+            style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: COLORS.inkSoft, marginBottom: "10px", textDecoration: "none" }}
+          >
+            <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+            {address}
+          </a>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
+          {venue.phone && (
+            <a href={`tel:${venue.phone.replace(/\s+/g, "")}`} title={venue.phone} style={{ lineHeight: 0 }}>
+              <NavIcon name="phone" size={20} color={COLORS.amber} />
+            </a>
+          )}
+          {venue.email && (
+            <a href={`mailto:${venue.email}`} title={venue.email} style={{ lineHeight: 0 }}>
+              <NavIcon name="mail" size={20} color={COLORS.amber} />
+            </a>
+          )}
+          <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" title="Voir sur la carte" style={{ lineHeight: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="11" fill={COLORS.sage} />
+              <path d="M12 6c-2 0-3.6 1.6-3.6 3.6 0 2.7 3.6 6.4 3.6 6.4s3.6-3.7 3.6-6.4C15.6 7.6 14 6 12 6zm0 4.9a1.3 1.3 0 110-2.6 1.3 1.3 0 010 2.6z" fill="#fff" />
+            </svg>
+          </a>
+          {venue.website && (
+            <a href={normalizeUrl(venue.website)} target="_blank" rel="noreferrer" title="Site internet" style={{ lineHeight: 0 }}>
+              <WebsiteIcon />
+            </a>
+          )}
+          {venue.googleUrl && (
+            <a href={normalizeUrl(venue.googleUrl)} target="_blank" rel="noreferrer" title="Page Google" style={{ lineHeight: 0 }}>
+              <GoogleIcon />
+            </a>
+          )}
+          {venue.facebookUrl && (
+            <a href={normalizeUrl(venue.facebookUrl)} target="_blank" rel="noreferrer" title="Facebook" style={{ lineHeight: 0 }}>
+              <FacebookIcon />
+            </a>
+          )}
+          {venue.instagramUrl && (
+            <a href={normalizeUrl(venue.instagramUrl)} target="_blank" rel="noreferrer" title="Instagram" style={{ lineHeight: 0 }}>
+              <InstagramIcon />
+            </a>
+          )}
+          {venue.tiktokUrl && (
+            <a href={normalizeUrl(venue.tiktokUrl)} target="_blank" rel="noreferrer" title="TikTok" style={{ lineHeight: 0 }}>
+              <TiktokIcon />
+            </a>
+          )}
+        </div>
+      </div>
       {venue.hasFood && (
         <div style={{ display: "inline-block", background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 12px", fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>
           🍽️ Restauration possible
@@ -152,39 +186,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} noFixedHours={venue.noFixedHours} />
       </div>
 
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-        <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" title="Voir sur la carte" style={{ lineHeight: 0 }}>
-          <svg width="22" height="22" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="11" fill={COLORS.sage} />
-            <path d="M12 6c-2 0-3.6 1.6-3.6 3.6 0 2.7 3.6 6.4 3.6 6.4s3.6-3.7 3.6-6.4C15.6 7.6 14 6 12 6zm0 4.9a1.3 1.3 0 110-2.6 1.3 1.3 0 010 2.6z" fill="#fff" />
-          </svg>
-        </a>
-        {venue.website && (
-          <a href={normalizeUrl(venue.website)} target="_blank" rel="noreferrer" title="Site internet" style={{ lineHeight: 0 }}>
-            <WebsiteIcon />
-          </a>
-        )}
-        {venue.googleUrl && (
-          <a href={normalizeUrl(venue.googleUrl)} target="_blank" rel="noreferrer" title="Page Google" style={{ lineHeight: 0 }}>
-            <GoogleIcon />
-          </a>
-        )}
-        {venue.facebookUrl && (
-          <a href={normalizeUrl(venue.facebookUrl)} target="_blank" rel="noreferrer" title="Facebook" style={{ lineHeight: 0 }}>
-            <FacebookIcon />
-          </a>
-        )}
-        {venue.instagramUrl && (
-          <a href={normalizeUrl(venue.instagramUrl)} target="_blank" rel="noreferrer" title="Instagram" style={{ lineHeight: 0 }}>
-            <InstagramIcon />
-          </a>
-        )}
-        {venue.tiktokUrl && (
-          <a href={normalizeUrl(venue.tiktokUrl)} target="_blank" rel="noreferrer" title="TikTok" style={{ lineHeight: 0 }}>
-            <TiktokIcon />
-          </a>
-        )}
-      </div>
 
       <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "16px" }}>
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55, marginBottom: "10px" }}>
