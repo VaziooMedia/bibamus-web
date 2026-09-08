@@ -13,7 +13,7 @@ import { ClaimModal } from "./ClaimModal.jsx";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 
-export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
+export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [cleanupMessage, setCleanupMessage] = useState(null);
   const [claiming, setClaiming] = useState(false);
@@ -201,6 +201,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           onClick={onManageMenu}
           style={{
             flex: 1,
+            height: "51px",
             borderRadius: "12px",
             background: COLORS.surface,
             border: `2px solid ${COLORS.paperAlt}`,
@@ -283,7 +284,10 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       </button>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Prochains évènements</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Prochains évènements</span>
+        </div>
         <div style={{ textAlign: "center", padding: "16px 0" }}>
           <NavIcon name="calendar" size={26} color={COLORS.paperAlt} />
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
@@ -291,7 +295,10 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       </div>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Médias</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Médias</span>
+        </div>
         <div style={{ textAlign: "center", padding: "16px 0" }}>
           <NavIcon name="camera" size={26} color={COLORS.paperAlt} />
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
@@ -299,11 +306,38 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       </div>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Produits populaires ici</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Produits populaires ici</span>
+        </div>
         <div style={{ textAlign: "center", padding: "16px 0" }}>
           <NavIcon name="star" size={26} color={COLORS.paperAlt} />
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
         </div>
+      </div>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <button
+          onClick={onOpenCheckInsHistory}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", cursor: "pointer", padding: "6px 0", textAlign: "left" }}
+        >
+          <span style={{ fontSize: "13px", color: COLORS.ink }}>Check-ins ici</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{stats.visits || 0}</span>
+            <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
+          </span>
+        </button>
+        <div style={{ height: "1px", background: COLORS.paperAlt, margin: "4px 0" }} />
+        <button
+          onClick={onOpenDrinksHistory}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", cursor: "pointer", padding: "6px 0", textAlign: "left" }}
+        >
+          <span style={{ fontSize: "13px", color: COLORS.ink }}>Boissons bues ici</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{stats.drinksOrdered || 0}</span>
+            <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
+          </span>
+        </button>
       </div>
 
       <button
