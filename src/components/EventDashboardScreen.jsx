@@ -1245,50 +1245,82 @@ export function EventDashboardScreen({ event, venue, drinksDirectory, eventTotal
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
             <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>
-              Total général pour cette session <span style={{ fontSize: "12px", opacity: 0.7 }}>≈</span>
+              {event.finalTotal != null ? (
+                "NOTE FINALE DU BAR"
+              ) : (
+                <>
+                  Total général pour cette session <span style={{ fontSize: "12px", opacity: 0.7 }}>≈</span>
+                </>
+              )}
             </div>
           </div>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
-            <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips} currency={event.currency} centered jetonIconSize={34} jetonIcon="cyan" />
+            <MoneyAmount
+              value={event.finalTotal != null ? event.finalTotal + (event.tip || 0) : cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips}
+              currency={event.currency}
+              centered
+              jetonIconSize={34}
+              jetonIcon="cyan"
+            />
           </div>
-          <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-              <span>Payé par la cagnotte</span>
-              <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                <MoneyAmount value={cagnottePaidByPot} currency={event.currency} jetonIcon="cyan" />
-              </strong>
+          {event.finalTotal == null && (
+            <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                <span>Payé par la cagnotte</span>
+                <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                  <MoneyAmount value={cagnottePaidByPot} currency={event.currency} jetonIcon="cyan" />
+                </strong>
+              </div>
+              {cagnotteDirect > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                  <span>Payé directement</span>
+                  <strong style={{ color: "#00C8FF", fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                    <MoneyAmount value={cagnotteDirect} currency={event.currency} jetonIcon="cyan" />
+                  </strong>
+                </div>
+              )}
+              {cagnottePending > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                  <span>Sur la note</span>
+                  <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                    <MoneyAmount value={cagnottePending} currency={event.currency} jetonIcon="cyan" />
+                  </strong>
+                </div>
+              )}
+              {cagnotteTips > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                  <span>+ Pourboire</span>
+                  <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                    <MoneyAmount value={cagnotteTips} currency={event.currency} jetonIcon="cyan" />
+                  </strong>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                <span>Total</span>
+                <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                  <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips} currency={event.currency} jetonIcon="cyan" />
+                </strong>
+              </div>
             </div>
-            {cagnotteDirect > 0 && (
-              <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                <span>Payé directement</span>
-                <strong style={{ color: "#00C8FF", fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                  <MoneyAmount value={cagnotteDirect} currency={event.currency} jetonIcon="cyan" />
-                </strong>
-              </div>
-            )}
-            {cagnottePending > 0 && (
-              <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                <span>Sur la note</span>
-                <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                  <MoneyAmount value={cagnottePending} currency={event.currency} jetonIcon="cyan" />
-                </strong>
-              </div>
-            )}
-            {cagnotteTips > 0 && (
-              <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                <span>+ Pourboire</span>
-                <strong style={{ color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                  <MoneyAmount value={cagnotteTips} currency={event.currency} jetonIcon="cyan" />
-                </strong>
-              </div>
-            )}
-            <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-              <span>Total</span>
-              <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                <MoneyAmount value={cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips} currency={event.currency} jetonIcon="cyan" />
-              </strong>
+          )}
+          {event.finalTotal != null && (
+            <div style={{ fontSize: "12px", opacity: 0.75, marginTop: "2px", textAlign: "center" }}>
+              Sur la note (cagnotte) :{" "}
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.jetonFluo }}>
+                <MoneyAmount value={cagnottePending} currency={event.currency} jetonIcon="cyan" />
+              </span>
+              {Math.abs(event.finalTotal - cagnottePending) < 0.01 ? (
+                <span style={{ color: COLORS.amber, fontWeight: 700 }}> · OK ✓</span>
+              ) : (
+                <>
+                  {" · écart de "}
+                  <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.redFluo }}>
+                    <MoneyAmount value={Math.abs(event.finalTotal - cagnottePending)} currency={event.currency} jetonIcon="cyan" />
+                  </span>
+                </>
+              )}
             </div>
-          </div>
+          )}
         </div>
       )}
 
