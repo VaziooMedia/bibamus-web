@@ -9,7 +9,7 @@ import { loadMyMediaAssets, deleteMyMediaAsset, loadBibaxMediaAssets } from "../
 // consultables ici même après l'expiration de 24h de la Story elle-même.
 // Réutilisé aussi pour consulter les photos d'un Bibax (otherUserId fourni) — lecture seule,
 // pas de bouton supprimer, respecte la confidentialité (réservé aux Bibax confirmés) côté serveur.
-export function MyPhotosScreen({ onBack, otherUserId, otherName }) {
+export function MyPhotosScreen({ onBack, otherUserId, otherName, embedded = false }) {
   const [photos, setPhotos] = useState(null);
   const [viewedId, setViewedId] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -35,11 +35,13 @@ export function MyPhotosScreen({ onBack, otherUserId, otherName }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 18px 0", color: COLORS.ink }}>
-        {readOnly ? `Photos${otherName ? " de " + otherName : ""}` : "Mes Photos"}
-      </h1>
+    <div style={embedded ? {} : { padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      {!embedded && <PageHeader onBack={onBack} />}
+      {!embedded && (
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 18px 0", color: COLORS.ink }}>
+          {readOnly ? `Photos${otherName ? " de " + otherName : ""}` : "Mes Photos"}
+        </h1>
+      )}
 
       {photos === null ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>

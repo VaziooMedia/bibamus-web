@@ -1607,6 +1607,38 @@ export async function loadMyBlockedUsers() {
   return data.map((r) => ({ userId: r.blocked_id, name: r.name, lastName: r.last_name, avatarUrl: r.avatar_url, blockedAt: r.blocked_at }));
 }
 
+export async function loadBibaxPulseActivity(targetUserId, before = null) {
+  const { data, error } = await supabase.rpc("get_bibax_pulse_activity", { p_target_user_id: targetUserId, p_before: before });
+  if (error) {
+    console.error("loadBibaxPulseActivity:", error);
+    return [];
+  }
+  return data.map((e) => ({
+    id: e.id,
+    eventType: e.event_type,
+    actorId: e.actor_id,
+    actorName: e.actor_name,
+    actorLastName: e.actor_last_name,
+    actorAvatarUrl: e.actor_avatar_url,
+    actorBibroCode: e.actor_bibro_code,
+    objectType: e.object_type,
+    objectId: e.object_id,
+    venueId: e.venue_id,
+    roomSalonCode: e.room_salon_code,
+    visibility: e.visibility,
+    metadata: e.metadata,
+    bixCount: e.bix_count,
+    commentsCount: e.comments_count,
+    lastBixerName: e.last_bixer_name,
+    santeCount: e.sante_count,
+    iSaidSante: e.i_said_sante,
+    incomingCount: e.incoming_count,
+    iAmIncoming: e.i_am_incoming,
+    createdAt: e.created_at,
+    iBixed: e.i_bixed,
+  }));
+}
+
 export async function loadMutualBibaxList(otherUserId) {
   const { data, error } = await supabase.rpc("get_mutual_bibax", { p_target_user_id: otherUserId });
   if (error) {

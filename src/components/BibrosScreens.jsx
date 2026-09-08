@@ -6,10 +6,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName } from "./ui.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
+import { MyPhotosScreen } from "./MyPhotosScreen.jsx";
 import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
 import {
   loadPendingBibaxRequests,
@@ -24,6 +25,7 @@ import {
   searchBibaxByName,
   toggleNotifyPulse,
   loadPulseStories,
+  loadBibaxPulseActivity,
 } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -462,6 +464,13 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   const [notifyPulse, setNotifyPulse] = useState(bibro?.notifyPulse || false);
   const [togglingNotify, setTogglingNotify] = useState(false);
   const [activeStories, setActiveStories] = useState([]);
+  const [activeTab, setActiveTab] = useState("pulse");
+  const [pulseActivity, setPulseActivity] = useState(null);
+
+  useEffect(() => {
+    if (!bibro?.userId || activeTab !== "pulse") return;
+    loadBibaxPulseActivity(bibro.userId).then(setPulseActivity);
+  }, [bibro?.userId, activeTab]);
 
   const handleToggleNotify = async () => {
     setTogglingNotify(true);
@@ -829,21 +838,76 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
-        <StatCard icon={<img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Bibax" value={bibaxCount} />
-        <StatCard icon={<img src={drinkChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
-        <StatCard icon={<img src={placeChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
+      <div style={{ display: "flex", gap: "6px", marginBottom: "16px", borderBottom: `2px solid ${COLORS.paperAlt}` }}>
+        {[
+          { key: "pulse", label: "BibaPulse" },
+          { key: "stats", label: "Statistiques" },
+          { key: "media", label: "Médias" },
+          { key: "club", label: "BibaClub" },
+          { key: "history", label: "Historique" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            style={{
+              flex: 1,
+              background: "none",
+              border: "none",
+              borderBottom: `2px solid ${activeTab === tab.key ? COLORS.amber : "transparent"}`,
+              marginBottom: "-2px",
+              padding: "0 0 10px 0",
+              fontSize: "11px",
+              fontWeight: 700,
+              color: activeTab === tab.key ? COLORS.amber : COLORS.inkSoft,
+              cursor: "pointer",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-        <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title="BibaClub" disabled badge="Bientôt" />
-        <ActionCard icon={<NavIcon name="bar-chart" size={20} color={COLORS.amber} />} title="Statistiques" disabled badge="Bientôt" />
-      </div>
+      {activeTab === "pulse" &&
+        (pulseActivity === null ? (
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
+        ) : pulseActivity.length === 0 ? (
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>Aucune activité visible pour l'instant.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {pulseActivity.map((e) => (
+              <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
+                <div>
+                  {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType}
+                </div>
+                <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{formatMemberSince(e.createdAt)}</div>
+              </div>
+            ))}
+          </div>
+        ))}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-        <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title="Historique" disabled badge="Bientôt" />
-        <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title="Photos" onClick={() => goToBibaxPhotos && goToBibaxPhotos(bibro.userId, bibro.name)} />
-      </div>
+      {activeTab === "stats" && (
+        <div style={{ display: "flex", gap: "10px" }}>
+          <StatCard icon={<img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Bibax" value={bibaxCount} />
+          <StatCard icon={<img src={drinkChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
+          <StatCard icon={<img src={placeChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
+        </div>
+      )}
+
+      {activeTab === "media" && <MyPhotosScreen embedded otherUserId={bibro.userId} otherName={bibro.name} />}
+
+      {activeTab === "club" && (
+        <div style={{ textAlign: "center", padding: "30px 0" }}>
+          <NavIcon name="crown" size={28} color={COLORS.paperAlt} />
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "10px" }}>Bientôt disponible</p>
+        </div>
+      )}
+
+      {activeTab === "history" && (
+        <div style={{ textAlign: "center", padding: "30px 0" }}>
+          <NavIcon name="calendar" size={28} color={COLORS.paperAlt} />
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "10px" }}>Bientôt disponible</p>
+        </div>
+      )}
 
       {onBlock && confirmingBlock && (
         <div style={{ marginTop: "18px" }}>
