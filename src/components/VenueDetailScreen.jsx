@@ -35,9 +35,22 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const hoursBlockRef = useRef(null);
   const [hoursBlockHeight, setHoursBlockHeight] = useState(null);
   useLayoutEffect(() => {
-    if (hoursBlockRef.current) {
-      setHoursBlockHeight(hoursBlockRef.current.offsetHeight);
-    }
+    if (!hoursBlockRef.current) return undefined;
+    const measure = () => setHoursBlockHeight(hoursBlockRef.current.offsetHeight);
+    measure();
+    // Les horaires sont chargées de façon asynchrone (fetch Google) : le bloc affiche
+    // d'abord "Chargement des horaires..." (pas de bordure/fond, hauteur différente) avant
+    // le vrai contenu. On observe les changements de taille réels le temps que ce chargement
+    // se termine, puis on se déconnecte pour ne plus bouger — notamment quand l'utilisateur
+    // déroule manuellement les horaires plus tard, ce qui ne doit pas agrandir le bouton "Carte".
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(hoursBlockRef.current);
+    const timeout = setTimeout(() => observer.disconnect(), 4000);
+    return () => {
+      observer.disconnect();
+      clearTimeout(timeout);
+    };
   }, []);
   const hasSocials = !!(
     venue.website ||
