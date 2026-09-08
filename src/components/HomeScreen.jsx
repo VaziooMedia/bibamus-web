@@ -211,7 +211,7 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <NavIcon name="search" size={20} color={COLORS.amber} />
+            <NavIcon name="search" size={24} color={COLORS.amber} />
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Search</span>
         </div>
@@ -230,7 +230,7 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <NavIcon name="bottle" size={20} color={COLORS.amber} />
+            <NavIcon name="bottle" size={24} color={COLORS.amber} />
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>BibaSolo</span>
         </div>
@@ -249,13 +249,14 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <svg width="26" height="26" viewBox="0 0 24 24">
+            <svg width="30" height="30" viewBox="425 130 405 1070" fill="none">
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
-                d="M9.5 2h5v2.8l1.6 2.6c.25.4.4.9.4 1.4v9.7c0 1.9-1.5 3.5-3.5 3.5h-1c-1.9 0-3.5-1.6-3.5-3.5V8.8c0-.5.15-1 .4-1.4l1.6-2.6V2Z M8.6 13.5l2.3 2.3 4.1-4.4 1.2 1.2-5.3 5.6-3.5-3.5Z"
                 fill={COLORS.amber}
+                d="M 542 146 C 543 198, 538 276, 530 361 C 526 410, 516 445, 489 474 C 458 507, 443 548, 443 600 L 443 1083 C 443 1143, 487 1185, 547 1185 L 707 1185 C 767 1185, 811 1143, 811 1083 L 811 600 C 811 548, 796 507, 765 474 C 738 445, 728 410, 724 361 C 716 276, 711 198, 712 146 Z M 578 157 C 578 153, 581 151, 585 151 L 669 151 C 673 151, 676 153, 676 157 L 672 222 C 672 227, 669 230, 664 230 L 590 230 C 585 230, 582 227, 582 222 Z M 596 626 C 546 626, 518 657, 518 707 L 518 920 C 518 970, 546 1001, 596 1001 L 658 1001 C 708 1001, 736 970, 736 920 L 736 707 C 736 657, 708 626, 658 626 Z"
               />
+              <path d="M562 800l55 55 95-105" fill="none" stroke={COLORS.paper} strokeWidth="34" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Drink Check</span>
@@ -275,7 +276,7 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24">
+            <svg width="28" height="28" viewBox="0 0 24 24">
               <path d="M12 3.5c-3.3 0-6 2.7-6 6 0 4.5 6 11 6 11s6-6.5 6-11c0-3.3-2.7-6-6-6z" fill={COLORS.amber} />
               <path d="M9.3 9.4l1.9 1.9 3.5-3.7" fill="none" stroke={COLORS.paper} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
