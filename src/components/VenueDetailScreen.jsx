@@ -58,19 +58,24 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
           <PageHeader onBack={onBack} />
         </div>
-        <div style={{ position: "absolute", bottom: "-40px", left: "20px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
-          <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
+        <div style={{ position: "absolute", bottom: "-25px", left: "12px", right: "12px", display: "flex", alignItems: "flex-end", gap: "12px" }}>
+          <div style={{ border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0, flexShrink: 0 }}>
+            <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
+          </div>
+          <div style={{ minWidth: 0, paddingBottom: "4px" }}>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: 0, lineHeight: 1.2, color: COLORS.chalkWhite }}>{venue.name}</h1>
+            {venue.subtitle && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
+          </div>
         </div>
       </div>
 
-      <div style={{ marginTop: "48px" }}>
+      <div style={{ marginTop: "40px" }}>
         {venue.pendingContributionsCount > 0 && (
           <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: "#F2C94C" }}>
             📝 Une modification de la fiche est proposée, en attente de validation.
           </div>
         )}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: "0 0 2px 0", lineHeight: 1.2 }}>{venue.name}</h1>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
           <button
             onClick={() => onToggleLike(venue.sourcePublicVenueId)}
             style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", padding: "4px 6px", flexShrink: 0 }}
@@ -89,7 +94,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           Lieu suivi ponctuellement · ⭐ ajouter aux favoris
         </button>
       )}
-      {venue.subtitle && <p style={{ fontSize: "13.5px", color: COLORS.wine, fontWeight: 600, margin: "0 0 4px 0" }}>{venue.subtitle}</p>}
       {address && (
         <a
           href={mapsUrlFor(venue)}
