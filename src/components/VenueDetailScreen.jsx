@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { COLORS, VENUE_TYPES } from "../constants.js";
 import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, TokenPinkIcon, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx";
-import { formatAddress, formatCompactCount, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
+import { formatAddress, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
@@ -71,11 +71,27 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           {venue.subtitle && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
         </div>
         <button
-          onClick={() => onToggleLike(venue.sourcePublicVenueId)}
-          style={{ position: "absolute", bottom: "8px", right: "8px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", padding: "4px 6px" }}
+          onClick={handleCheckIn}
+          title={justCheckedIn ? "Tes Bibax peuvent te voir ici" : "Je suis ici !"}
+          style={{
+            position: "absolute",
+            bottom: "8px",
+            right: "8px",
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            background: justCheckedIn ? COLORS.sage : COLORS.amber,
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1px",
+          }}
         >
-          <NavIcon name="heart" size={24} color={iLike ? COLORS.redFluo : "#fff"} />
-          {likes.length > 0 && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.redFluo, marginTop: "2px" }}>{formatCompactCount(likes.length)}</span>}
+          <NavIcon name="map-pin" size={15} color={COLORS.ink} />
+          <NavIcon name="check" size={11} color={COLORS.ink} />
         </button>
       </div>
 
@@ -167,16 +183,17 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} noFixedHours={venue.noFixedHours} />
         </div>
         <button
-          onClick={handleCheckIn}
-          title={justCheckedIn ? "Tes Bibax peuvent te voir ici" : "Je suis ici !"}
+          disabled
+          title="Bientôt disponible"
           style={{
             flexShrink: 0,
             width: "58px",
             height: "58px",
             borderRadius: "50%",
-            background: justCheckedIn ? COLORS.sage : COLORS.amber,
-            border: "none",
-            cursor: "pointer",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            cursor: "not-allowed",
+            opacity: 0.5,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -184,8 +201,8 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             gap: "1px",
           }}
         >
-          <NavIcon name="map-pin" size={18} color={COLORS.ink} />
-          <NavIcon name="check" size={13} color={COLORS.ink} />
+          <NavIcon name="book-open" size={20} color={COLORS.inkSoft} />
+          <span style={{ fontSize: "8.5px", fontWeight: 700, color: COLORS.inkSoft }}>Carte</span>
         </button>
       </div>
 

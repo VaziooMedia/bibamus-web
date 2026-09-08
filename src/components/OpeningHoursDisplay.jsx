@@ -110,6 +110,14 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
   }
 
   const businessDays = hours?.days ? regroupIntoBusinessDays(hours.days) : hours?.days;
+  const DAY_ORDER_FR = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+  const sortedBusinessDays = businessDays
+    ? [...businessDays].sort((a, b) => {
+        const ia = DAY_ORDER_FR.findIndex((n) => a.dayLabel?.toLowerCase().startsWith(n));
+        const ib = DAY_ORDER_FR.findIndex((n) => b.dayLabel?.toLowerCase().startsWith(n));
+        return ia - ib;
+      })
+    : businessDays;
   const DAY_NAMES_FR = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
   const todayName = DAY_NAMES_FR[new Date().getDay()];
   const todayEntry = businessDays?.find((d) => d.dayLabel?.toLowerCase().startsWith(todayName)) || null;
@@ -126,7 +134,7 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
             <span style={{ fontWeight: 700, fontSize: "14px", color: hours.isOpenNow ? COLORS.amber : COLORS.redFluo }}>{hours.isOpenNow ? "Ouvert" : "Fermé"}</span>
             {!expanded && todayEntry && (
               <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>
-                — {todayEntry.closed ? "toute la journée" : todayEntry.periods.map((p) => `${p.open}–${p.close || "?"}`).join(", ")}
+                — {todayEntry.closed ? "toute la journée" : todayEntry.periods.map((p) => `${p.open} - ${p.close || "?"}`).join(", ")}
               </span>
             )}
           </div>
@@ -137,16 +145,19 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
       )}
       {expanded && (
         <>
-          {businessDays?.length > 0 ? (
+          {sortedBusinessDays?.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "10px" }}>
-              {businessDays.map((d) => (
-                <div key={d.dayLabel} style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px" }}>
-                  <span style={{ color: COLORS.ink }}>{d.dayLabel}</span>
-                  <span style={{ color: COLORS.inkSoft }}>
-                    {d.closed ? "Fermé" : d.periods.map((p) => `${p.open}–${p.close || "?"}`).join(", ")}
-                  </span>
-                </div>
-              ))}
+              {sortedBusinessDays.map((d) => {
+                const isToday = d.dayLabel?.toLowerCase().startsWith(todayName);
+                return (
+                  <div key={d.dayLabel} style={{ display: "flex", fontSize: "12.5px" }}>
+                    <span style={{ width: "78px", flexShrink: 0, color: isToday ? COLORS.amber : COLORS.ink, fontWeight: isToday ? 700 : 400 }}>{d.dayLabel}</span>
+                    <span style={{ color: isToday ? COLORS.amber : COLORS.inkSoft, fontWeight: isToday ? 700 : 400 }}>
+                      {d.closed ? "Fermé" : d.periods.map((p) => `${p.open} - ${p.close || "?"}`).join(", ")}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "10px 0 0" }}>Horaires non communiqués par l'établissement.</p>
