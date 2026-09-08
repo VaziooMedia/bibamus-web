@@ -1053,7 +1053,7 @@ export function GoogleIcon({ size = 22 }) {
 export function WebsiteIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill={COLORS.paper} />
+      <circle cx="12" cy="12" r="11.2" fill="#000" stroke={COLORS.paperAlt} strokeWidth="1" />
       <circle cx="12" cy="12" r="7.5" fill="none" stroke="#fff" strokeWidth="1.4" />
       <line x1="4.7" y1="12" x2="19.3" y2="12" stroke="#fff" strokeWidth="1.4" />
       <path d="M12 4.7c-2.1 2-2.1 12.6 0 14.6M12 4.7c2.1 2 2.1 12.6 0 14.6" fill="none" stroke="#fff" strokeWidth="1.4" />

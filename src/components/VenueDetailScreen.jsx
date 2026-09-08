@@ -86,10 +86,10 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           </div>
         )}
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 40px 1px 40px", gap: "10px", marginBottom: "12px", alignItems: "center" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 30px 1px 30px", gap: "8px", marginBottom: "12px", alignItems: "center" }}>
           <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <NavIcon name="map-pin" size={20} color={COLORS.amber} />
+              <NavIcon name="map-pin" size={18} color={COLORS.amber} />
               <span>
                 {addressLine1}
                 {addressLine1 && <br />}
@@ -100,7 +100,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />
           {venue.phone ? (
             <a href={`tel:${venue.phone.replace(/\s+/g, "")}`} title={venue.phone} style={{ lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <NavIcon name="phone" size={26} color={COLORS.amber} />
+              <NavIcon name="phone" size={22} color={COLORS.amber} />
             </a>
           ) : (
             <div />
@@ -108,7 +108,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />
           {venue.email ? (
             <a href={`mailto:${venue.email}`} title={venue.email} style={{ lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <NavIcon name="mail" size={26} color={COLORS.amber} />
+              <NavIcon name="mail" size={22} color={COLORS.amber} />
             </a>
           ) : (
             <div />
