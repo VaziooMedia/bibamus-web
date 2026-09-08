@@ -1268,6 +1268,7 @@ function rowToVenue(row) {
     googleUrl: row.google_url,
     googlePlaceId: row.google_place_id,
     facebookUrl: row.facebook_url,
+    whatsapp: row.whatsapp,
     instagramUrl: row.instagram_url,
     tiktokUrl: row.tiktok_url,
     snapchatUrl: row.snapchat_url,

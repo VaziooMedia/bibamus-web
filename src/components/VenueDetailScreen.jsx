@@ -167,13 +167,18 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           {venue.website && (
             <a href={normalizeUrl(venue.website)} target="_blank" rel="noreferrer" title="Site internet" style={{ lineHeight: 0 }}>
               <span style={{ display: "inline-flex", width: "20px", height: "20px", borderRadius: "50%", overflow: "hidden" }}>
-                <img src={internetIconUrl} alt="Site internet" width="20" height="20" style={{ display: "block", objectFit: "cover" }} />
+                <img src={internetIconUrl} alt="Site internet" width="20" height="20" style={{ display: "block", objectFit: "cover", filter: "invert(1)" }} />
               </span>
             </a>
           )}
           {venue.googleUrl && (
             <a href={normalizeUrl(venue.googleUrl)} target="_blank" rel="noreferrer" title="Page Google" style={{ lineHeight: 0 }}>
               <GoogleIcon size={20} />
+            </a>
+          )}
+          {venue.whatsapp && (
+            <a href={buildWhatsAppLink(venue.whatsapp)} target="_blank" rel="noreferrer" title="WhatsApp" style={{ lineHeight: 0 }}>
+              <WhatsappIcon size={20} />
             </a>
           )}
           {venue.facebookUrl && (
@@ -189,11 +194,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           {venue.tiktokUrl && (
             <a href={normalizeUrl(venue.tiktokUrl)} target="_blank" rel="noreferrer" title="TikTok" style={{ lineHeight: 0 }}>
               <TiktokIcon size={20} />
-            </a>
-          )}
-          {venue.whatsapp && (
-            <a href={buildWhatsAppLink(venue.whatsapp)} target="_blank" rel="noreferrer" title="WhatsApp" style={{ lineHeight: 0 }}>
-              <WhatsappIcon size={20} />
             </a>
           )}
           {venue.snapchatUrl && (
