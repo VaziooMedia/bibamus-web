@@ -133,7 +133,7 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: hours.isOpenNow ? COLORS.amber : COLORS.redFluo, display: "inline-block", flexShrink: 0 }} />
             <span style={{ fontWeight: 700, fontSize: "14px", color: hours.isOpenNow ? COLORS.amber : COLORS.redFluo }}>{hours.isOpenNow ? "Ouvert" : "Fermé"}</span>
             {!expanded && todayEntry && (
-              <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>
+              <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>
                 — {todayEntry.closed ? "toute la journée" : todayEntry.periods.map((p) => `${p.open} - ${p.close || "?"}`).join(", ")}
               </span>
             )}

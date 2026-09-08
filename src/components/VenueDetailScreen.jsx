@@ -11,6 +11,7 @@ import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
+import carteIconUrl from "../assets/brand/carte.svg";
 
 export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
   const [confirmReset, setConfirmReset] = useState(false);
@@ -186,24 +187,22 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} noFixedHours={venue.noFixedHours} />
         </div>
         <button
-          disabled
-          title="Bientôt disponible"
+          onClick={onManageMenu}
           style={{
             flex: 1,
             borderRadius: "12px",
             background: COLORS.surface,
             border: `2px solid ${COLORS.paperAlt}`,
-            cursor: "not-allowed",
-            opacity: 0.5,
+            cursor: "pointer",
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            gap: "4px",
+            gap: "8px",
           }}
         >
-          <NavIcon name="book-open" size={22} color={COLORS.inkSoft} />
-          <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>Carte</span>
+          <img src={carteIconUrl} alt="" style={{ width: "20px", height: "20px" }} />
+          <span style={{ fontSize: "12px", fontWeight: 700, color: COLORS.ink }}>Carte</span>
         </button>
       </div>
 
