@@ -10,7 +10,7 @@ import { formatAddress, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
-import placeCheckIconUrl from "../assets/brand/place-check.svg";
+import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 
 export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates }) {
   const [confirmReset, setConfirmReset] = useState(false);
