@@ -997,20 +997,36 @@ export function BibaBobModal({ friendName, storedPin, mode, onActivate, onDeacti
   const [code, setCode] = useState("");
   const [tolerance, setTolerance] = useState(null);
   const [error, setError] = useState("");
-  const codeInputRef = React.useRef(null);
+  const codeInputRef = React.useRef([]);
 
   // Ne force le clavier que si on est en désactivation (pas de choix à lire avant), ou une fois
   // qu'une option de tolérance a été choisie en activation — sinon le clavier s'ouvre trop tôt et
   // empêche de lire le texte au-dessus.
   React.useEffect(() => {
     if (mode !== "activate" || tolerance) {
-      codeInputRef.current?.focus();
+      codeInputRef.current[0]?.focus();
     }
   }, [mode, tolerance]);
 
+  const setDigit = (index, digit) => {
+    const chars = code.padEnd(4, " ").split("");
+    chars[index] = digit || " ";
+    setCode(chars.join(""));
+    setError("");
+    if (digit && index < 3) codeInputRef.current[index + 1]?.focus();
+  };
+
+  const handleDigitKeyDown = (index, e) => {
+    if (e.key === "Enter") {
+      submit();
+    } else if (e.key === "Backspace" && (!code[index] || code[index] === " ") && index > 0) {
+      codeInputRef.current[index - 1]?.focus();
+    }
+  };
+
   const submit = () => {
-    if (!code.trim()) {
-      setError("Entrez un code.");
+    if (!/^\d{4}$/.test(code)) {
+      setError("Entrez les 4 chiffres.");
       return;
     }
     if (mode === "activate") {
@@ -1087,25 +1103,40 @@ export function BibaBobModal({ friendName, storedPin, mode, onActivate, onDeacti
         )}
 
         <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>
-          {mode === "activate" ? "Code à 4 chiffres" : "Entre le même code utilisé lors de l'activation"}
+          {mode === "activate" ? "Code PIN" : "Entre le même code utilisé lors de l'activation"}
         </label>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={code}
-          onChange={(e) => {
-            setCode(e.target.value.replace(/[^0-9]/g, ""));
-            setError("");
-          }}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Ex. 1234"
-          ref={codeInputRef}
-          style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${error ? COLORS.wine : COLORS.paperAlt}`, fontSize: "15px", outline: "none", marginBottom: "6px", fontFamily: "'Urbanist', sans-serif" }}
-        />
+        <div style={{ display: "flex", gap: "10px", marginBottom: "6px" }}>
+          {[0, 1, 2, 3].map((i) => (
+            <input
+              key={i}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={code[i]?.trim() || ""}
+              onChange={(e) => {
+                const digit = e.target.value.replace(/[^0-9]/g, "").slice(-1);
+                setDigit(i, digit);
+              }}
+              onKeyDown={(e) => handleDigitKeyDown(i, e)}
+              ref={(el) => (codeInputRef.current[i] = el)}
+              style={{
+                flex: 1,
+                boxSizing: "border-box",
+                padding: "12px 0",
+                borderRadius: "10px",
+                border: `2px solid ${error ? COLORS.wine : COLORS.paperAlt}`,
+                fontSize: "20px",
+                textAlign: "center",
+                outline: "none",
+                fontFamily: "'Urbanist', sans-serif",
+              }}
+            />
+          ))}
+        </div>
         {error && <p style={{ fontSize: "12px", color: COLORS.wine, fontWeight: 600, margin: "0 0 10px 0" }}>{error}</p>}
         {mode === "activate" && (
           <p style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "-2px", marginBottom: "10px" }}>
-            Ce code sera nécessaire pour désactiver le mode.
+            Ce code PIN sera nécessaire pour désactiver le mode.
           </p>
         )}
 
