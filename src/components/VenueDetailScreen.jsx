@@ -24,6 +24,8 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [reportInitialReason, setReportInitialReason] = useState(null);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
   const stats = venue.stats || {};
   const address = formatAddress(venue);
   const addressLine1 = [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
@@ -359,32 +361,89 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         </button>
       </div>
 
-      <button
-        onClick={() => setReporting(true)}
-        style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
-      >
-        <ReportIcon /> Signaler cette fiche
-      </button>
-      {reporting && <ReportModal entityType="venue" entityId={venue.id} myBibroCode={myBibroCode} directory={venues} onClose={() => setReporting(false)} />}
-      <button
-        onClick={() => setClaiming(true)}
-        style={{
-          display: "inline-block",
-          background: "none",
-          border: `2px solid ${COLORS.paperAlt}`,
-          borderRadius: "8px",
-          padding: "7px 14px",
-          color: COLORS.inkSoft,
-          fontWeight: 600,
-          fontSize: "11.5px",
-          cursor: "pointer",
-          textAlign: "center",
-          marginTop: "16px",
-        }}
-      >
-        Revendiquer la gérance de ce lieu
-      </button>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px" }}>
+        <button
+          onClick={() => setClaiming(true)}
+          style={{
+            display: "inline-block",
+            background: "none",
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "8px",
+            padding: "7px 14px",
+            color: COLORS.inkSoft,
+            fontWeight: 600,
+            fontSize: "11.5px",
+            cursor: "pointer",
+            textAlign: "center",
+          }}
+        >
+          Revendiquer la gérance de ce lieu
+        </button>
+        <button
+          onClick={() => setShowActionsMenu(true)}
+          title="Plus d'options"
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center" }}
+        >
+          <NavIcon name="dots" size={18} color={COLORS.inkSoft} />
+        </button>
+      </div>
       {claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
+
+      {showActionsMenu && (
+        <div
+          onClick={() => setShowActionsMenu(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
+          >
+            <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                onEdit();
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <NavIcon name="pencil" size={20} color={COLORS.amber} />
+              Suggérer une modification
+            </button>
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                setReportInitialReason("wrong_info");
+                setReporting(true);
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <ReportIcon />
+              Signaler une erreur ou un changement
+            </button>
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                setReportInitialReason(null);
+                setReporting(true);
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <ReportIcon />
+              Signaler cette fiche
+            </button>
+          </div>
+        </div>
+      )}
+      {reporting && (
+        <ReportModal
+          entityType="venue"
+          entityId={venue.id}
+          myBibroCode={myBibroCode}
+          directory={venues}
+          initialReason={reportInitialReason}
+          onClose={() => setReporting(false)}
+        />
+      )}
       <BackFooterLink onClick={onBack} />
       </div>
     </div>
