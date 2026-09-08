@@ -1273,6 +1273,7 @@ function rowToVenue(row) {
     snapchatUrl: row.snapchat_url,
     tripadvisorUrl: row.tripadvisor_url,
     restaurantGuruUrl: row.restaurant_guru_url,
+    whatsapp: row.whatsapp,
     hasWifi: !!row.has_wifi,
     wheelchairAccessible: !!row.wheelchair_accessible,
     canDance: !!row.can_dance,

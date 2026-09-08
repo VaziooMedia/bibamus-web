@@ -235,6 +235,17 @@ export const formatDrinkFieldValue = (field, value) => {
   return String(value);
 };
 
+// Le champ WhatsApp est saisi côté plateforme de gestion comme un numéro de téléphone
+// (indicatif + numéro, ex. "+32 470123456"), pas comme une URL. On construit ici le vrai
+// lien wa.me en ne gardant que les chiffres, pour que le clic ouvre WhatsApp plutôt que
+// de tenter de charger "+32 470123456" comme une adresse web.
+export const buildWhatsAppLink = (value) => {
+  if (!value) return "";
+  const digitsOnly = value.replace(/\D/g, "");
+  if (!digitsOnly) return "";
+  return `https://wa.me/${digitsOnly}`;
+};
+
 export const normalizeUrl = (url) => {
   if (!url) return "";
   const trimmed = url.trim();

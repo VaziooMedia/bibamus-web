@@ -4,9 +4,9 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS, VENUE_TYPES } from "../constants.js";
-import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, CertificationIcon } from "./icons.jsx";
+import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { formatAddress, mapsUrlFor, normalizeUrl } from "../utils.js";
+import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
@@ -18,6 +18,7 @@ import restaurantGuruIconUrl from "../assets/brand/restaurant-guru.svg";
 import wifiIconUrl from "../assets/brand/wifi-free.svg";
 import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
+import internetIconUrl from "../assets/brand/internet.svg";
 
 export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
   const [claiming, setClaiming] = useState(false);
@@ -35,6 +36,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
     venue.facebookUrl ||
     venue.instagramUrl ||
     venue.tiktokUrl ||
+    venue.whatsapp ||
     venue.snapchatUrl ||
     venue.tripadvisorUrl ||
     venue.restaurantGuruUrl
@@ -164,7 +166,9 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "14px", marginLeft: "auto" }}>
           {venue.website && (
             <a href={normalizeUrl(venue.website)} target="_blank" rel="noreferrer" title="Site internet" style={{ lineHeight: 0 }}>
-              <WebsiteIcon size={20} />
+              <span style={{ display: "inline-flex", width: "20px", height: "20px", borderRadius: "50%", overflow: "hidden" }}>
+                <img src={internetIconUrl} alt="Site internet" width="20" height="20" style={{ display: "block", objectFit: "cover" }} />
+              </span>
             </a>
           )}
           {venue.googleUrl && (
@@ -185,6 +189,11 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           {venue.tiktokUrl && (
             <a href={normalizeUrl(venue.tiktokUrl)} target="_blank" rel="noreferrer" title="TikTok" style={{ lineHeight: 0 }}>
               <TiktokIcon size={20} />
+            </a>
+          )}
+          {venue.whatsapp && (
+            <a href={buildWhatsAppLink(venue.whatsapp)} target="_blank" rel="noreferrer" title="WhatsApp" style={{ lineHeight: 0 }}>
+              <WhatsappIcon size={20} />
             </a>
           )}
           {venue.snapchatUrl && (
