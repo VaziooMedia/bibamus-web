@@ -525,7 +525,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         </div>
       )}
 
-      <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "16px", marginTop: "4px", marginBottom: "10px" }}>
+      <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "10px 16px", marginTop: "4px", marginBottom: "10px" }}>
         <button
           onClick={handleToggleNotify}
           disabled={togglingNotify}
@@ -829,32 +829,41 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
       )}
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px" }} />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
-        {[
-          { key: "pulse", label: "BibaPulse" },
-          { key: "stats", label: "Statistiques" },
-          { key: "media", label: "Médias" },
-          { key: "club", label: "BibaClub" },
-          { key: "history", label: "Historique" },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            style={{
-              background: activeTab === tab.key ? COLORS.amber : COLORS.surface,
-              color: activeTab === tab.key ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${activeTab === tab.key ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontSize: "12.5px",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {(() => {
+        const tabButtonStyle = (key) => ({
+          background: activeTab === key ? COLORS.amber : COLORS.surface,
+          color: activeTab === key ? COLORS.paper : COLORS.ink,
+          border: `2px solid ${activeTab === key ? COLORS.amber : COLORS.paperAlt}`,
+          borderRadius: "999px",
+          padding: "8px 14px",
+          fontSize: "12.5px",
+          fontWeight: 700,
+          cursor: "pointer",
+        });
+        return (
+          <>
+            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "8px" }}>
+              <button onClick={() => setActiveTab("pulse")} style={tabButtonStyle("pulse")}>
+                BibaPulse
+              </button>
+              <button onClick={() => setActiveTab("stats")} style={tabButtonStyle("stats")}>
+                Statistiques
+              </button>
+              <button onClick={() => setActiveTab("media")} style={tabButtonStyle("media")}>
+                Médias
+              </button>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "14px" }}>
+              <button onClick={() => setActiveTab("club")} style={tabButtonStyle("club")}>
+                BibaClub
+              </button>
+              <button onClick={() => setActiveTab("history")} style={tabButtonStyle("history")}>
+                Historique
+              </button>
+            </div>
+          </>
+        );
+      })()}
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
 
       {activeTab === "stats" && (
