@@ -843,6 +843,12 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         </div>
       )}
 
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        <StatCard label="Bibax" value={bibaxCount} />
+        <StatCard label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
+        <StatCard label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
+      </div>
+
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px" }} />
       {(() => {
         const tabButtonStyle = (key) => ({
@@ -882,11 +888,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
 
       {activeTab === "stats" && (
-        <div style={{ display: "flex", gap: "6px" }}>
-          <StatCard label="Bibax" value={bibaxCount} />
-          <StatCard label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
-          <StatCard label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
-        </div>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>D'autres statistiques arriveront bientôt ici.</p>
       )}
 
       {activeTab === "pulse" &&
