@@ -30,8 +30,6 @@ import {
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
-import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
-import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
 
 // Demandes reçues (à confirmer/refuser) et suggestions (Bibax en commun, localisation
 // partagée) — façon Facebook : un simple "Confirmer" ou "Ajouter" suffit.
@@ -495,7 +493,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   const hasSocials = bibro.facebookUrl || bibro.instagramUrl || bibro.tiktokUrl || bibro.snapchatUrl || bibro.whatsappUrl || bibro.xUrl || bibro.threadsUrl || bibro.linkedinUrl || bibro.pinterestUrl || bibro.twitchUrl;
   const hasInfoBlock = bibro.bio || bibro.birthDate || bibro.city || bibro.registeredAt || hasSocials;
 
-  const StatCard = ({ icon, label, value, onClick }) => (
+  const StatCard = ({ label, value, onClick }) => (
     <button
       onClick={onClick}
       disabled={!onClick}
@@ -504,24 +502,16 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "6px",
+        gap: "4px",
         background: COLORS.surface,
         border: `2px solid ${COLORS.paperAlt}`,
-        borderRadius: "14px",
-        padding: "12px",
+        borderRadius: "12px",
+        padding: "8px",
         textAlign: "center",
         cursor: onClick ? "pointer" : "default",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-        {icon}
-        {onClick && (
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
-            <NavIcon name="chevron-right" size={10} color={COLORS.amber} />
-          </span>
-        )}
-      </div>
-      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2, height: "27px", display: "flex", alignItems: "center" }}>{label}</span>
+      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value != null ? value : "…"}</span>
     </button>
   );
@@ -838,10 +828,15 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "6px", marginBottom: "16px", borderBottom: `2px solid ${COLORS.paperAlt}` }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        <StatCard label="Bibax" value={bibaxCount} />
+        <StatCard label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
+        <StatCard label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
         {[
           { key: "pulse", label: "BibaPulse" },
-          { key: "stats", label: "Statistiques" },
           { key: "media", label: "Médias" },
           { key: "club", label: "BibaClub" },
           { key: "history", label: "Historique" },
@@ -850,15 +845,13 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             style={{
-              flex: 1,
-              background: "none",
-              border: "none",
-              borderBottom: `2px solid ${activeTab === tab.key ? COLORS.amber : "transparent"}`,
-              marginBottom: "-2px",
-              padding: "0 0 10px 0",
-              fontSize: "11px",
+              background: activeTab === tab.key ? COLORS.amber : COLORS.surface,
+              color: activeTab === tab.key ? COLORS.paper : COLORS.ink,
+              border: `2px solid ${activeTab === tab.key ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "8px 14px",
+              fontSize: "12.5px",
               fontWeight: 700,
-              color: activeTab === tab.key ? COLORS.amber : COLORS.inkSoft,
               cursor: "pointer",
             }}
           >
@@ -884,14 +877,6 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             ))}
           </div>
         ))}
-
-      {activeTab === "stats" && (
-        <div style={{ display: "flex", gap: "10px" }}>
-          <StatCard icon={<img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Bibax" value={bibaxCount} />
-          <StatCard icon={<img src={drinkChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
-          <StatCard icon={<img src={placeChecksIconUrl} alt="" style={{ width: "18px", height: "18px" }} />} label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
-        </div>
-      )}
 
       {activeTab === "media" && <MyPhotosScreen embedded otherUserId={bibro.userId} otherName={bibro.name} />}
 
