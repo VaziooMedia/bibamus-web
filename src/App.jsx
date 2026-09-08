@@ -1643,6 +1643,7 @@ export default function App() {
                 onOpenSettings={() => setScreen("eventSettings")}
                 onOpenVenue={(id) => {
                   setViewedVenueId(id);
+                  setScreenBeforeVenueDetail("eventDashboard");
                   setScreen("venueDetail");
                 }}
                 onOpenWaterAlertSettings={() => setScreen("waterAlertSettings")}
