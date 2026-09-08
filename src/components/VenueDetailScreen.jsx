@@ -77,21 +77,23 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             position: "absolute",
             bottom: "8px",
             right: "8px",
-            width: "44px",
-            height: "44px",
+            width: "52px",
+            height: "52px",
             borderRadius: "50%",
-            background: justCheckedIn ? COLORS.sage : COLORS.amber,
+            background: "none",
             border: "none",
+            padding: 0,
             cursor: "pointer",
             display: "flex",
-            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: "1px",
           }}
         >
-          <NavIcon name="map-pin" size={15} color={COLORS.ink} />
-          <NavIcon name="check" size={11} color={COLORS.ink} />
+          <svg width="52" height="52" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="11" fill={justCheckedIn ? COLORS.sage : COLORS.amber} stroke="#000" strokeWidth="1.5" />
+            <path d="M12 5.2c-2.7 0-4.9 2.2-4.9 4.9 0 3.4 4.9 8.6 4.9 8.6s4.9-5.2 4.9-8.6c0-2.7-2.2-4.9-4.9-4.9z" fill="#000" />
+            <path d="M9.6 9.9l1.7 1.7 3.1-3.3" fill="none" stroke={justCheckedIn ? COLORS.sage : COLORS.amber} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       </div>
 
@@ -178,18 +180,16 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "20px" }}>
-        <div style={{ flex: 1 }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "stretch", marginBottom: "20px" }}>
+        <div style={{ flex: 2 }}>
           <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} noFixedHours={venue.noFixedHours} />
         </div>
         <button
           disabled
           title="Bientôt disponible"
           style={{
-            flexShrink: 0,
-            width: "58px",
-            height: "58px",
-            borderRadius: "50%",
+            flex: 1,
+            borderRadius: "12px",
             background: COLORS.surface,
             border: `2px solid ${COLORS.paperAlt}`,
             cursor: "not-allowed",
@@ -198,11 +198,11 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: "1px",
+            gap: "4px",
           }}
         >
-          <NavIcon name="book-open" size={20} color={COLORS.inkSoft} />
-          <span style={{ fontSize: "8.5px", fontWeight: 700, color: COLORS.inkSoft }}>Carte</span>
+          <NavIcon name="book-open" size={22} color={COLORS.inkSoft} />
+          <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>Carte</span>
         </button>
       </div>
 

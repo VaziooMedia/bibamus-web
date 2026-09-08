@@ -151,7 +151,7 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
                 const isToday = d.dayLabel?.toLowerCase().startsWith(todayName);
                 return (
                   <div key={d.dayLabel} style={{ display: "flex", fontSize: "12.5px" }}>
-                    <span style={{ width: "78px", flexShrink: 0, color: isToday ? COLORS.amber : COLORS.ink, fontWeight: isToday ? 700 : 400 }}>{d.dayLabel}</span>
+                    <span style={{ width: "100px", flexShrink: 0, color: isToday ? COLORS.amber : COLORS.ink, fontWeight: isToday ? 700 : 400 }}>{d.dayLabel}</span>
                     <span style={{ color: isToday ? COLORS.amber : COLORS.inkSoft, fontWeight: isToday ? 700 : 400 }}>
                       {d.closed ? "Fermé" : d.periods.map((p) => `${p.open} - ${p.close || "?"}`).join(", ")}
                     </span>
