@@ -554,7 +554,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
               width: "112px",
               height: "112px",
               borderRadius: "50%",
-              border: `2px solid ${activeStories.length > 0 ? "#FF2C8F" : "transparent"}`,
+              border: `3px solid ${activeStories.length > 0 ? "#FF2C8F" : "transparent"}`,
               padding: "2px",
               flexShrink: 0,
               display: "flex",
@@ -828,7 +828,8 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         </div>
       )}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px" }} />
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
         {[
           { key: "pulse", label: "BibaPulse" },
           { key: "stats", label: "Statistiques" },
@@ -854,6 +855,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
           </button>
         ))}
       </div>
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
 
       {activeTab === "stats" && (
         <div style={{ display: "flex", gap: "6px" }}>
