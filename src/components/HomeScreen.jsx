@@ -5,8 +5,6 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, APP_VERSION } from "../constants.js";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
-import drinkChecksIconUrl from "../assets/brand/drink-checks-icon.png";
-import placeChecksIconUrl from "../assets/brand/place-checks-icon.png";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories } from "../data/sharedDirectories.js";
@@ -251,7 +249,13 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <img src={drinkChecksIconUrl} alt="Drink Check" style={{ width: "22px", height: "22px" }} />
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <path
+                d="M10 2h4v3.2l1.5 2.3c.3.5.5 1 .5 1.6v10.4c0 1.4-1.1 2.5-2.5 2.5h-3c-1.4 0-2.5-1.1-2.5-2.5V9.1c0-.6.2-1.1.5-1.6L10 5.2V2z"
+                fill={COLORS.amber}
+              />
+              <path d="M9.7 14.4l1.7 1.7 3-3.2" fill="none" stroke={COLORS.paper} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Drink Check</span>
         </div>
@@ -270,7 +274,10 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <img src={placeChecksIconUrl} alt="Place Check" style={{ width: "22px", height: "22px" }} />
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <path d="M12 3.5c-3.3 0-6 2.7-6 6 0 4.5 6 11 6 11s6-6.5 6-11c0-3.3-2.7-6-6-6z" fill={COLORS.amber} />
+              <path d="M9.3 9.4l1.9 1.9 3.5-3.7" fill="none" stroke={COLORS.paper} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
           <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Place Check</span>
         </div>
