@@ -464,6 +464,21 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   const [activeStories, setActiveStories] = useState([]);
   const [activeTab, setActiveTab] = useState("pulse");
   const [pulseActivity, setPulseActivity] = useState(null);
+  const row1TabsRef = useRef(null);
+  const [row2Gap, setRow2Gap] = useState(8);
+
+  useEffect(() => {
+    const measure = () => {
+      const row = row1TabsRef.current;
+      if (!row || row.children.length < 2) return;
+      const a = row.children[0].getBoundingClientRect();
+      const b = row.children[1].getBoundingClientRect();
+      setRow2Gap(Math.max(0, b.left - a.right));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   useEffect(() => {
     if (!bibro?.userId || activeTab !== "pulse") return;
@@ -842,7 +857,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         });
         return (
           <>
-            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "8px" }}>
+            <div ref={row1TabsRef} style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <button onClick={() => setActiveTab("pulse")} style={tabButtonStyle("pulse")}>
                 BibaPulse
               </button>
@@ -853,7 +868,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
                 Médias
               </button>
             </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "14px" }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: `${row2Gap}px`, marginBottom: "14px" }}>
               <button onClick={() => setActiveTab("club")} style={tabButtonStyle("club")}>
                 BibaClub
               </button>
