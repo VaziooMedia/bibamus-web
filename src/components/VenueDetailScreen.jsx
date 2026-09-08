@@ -3,7 +3,7 @@
 // depuis le prototype Claude.
 // ============================================================
 import React, { useState } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, VENUE_TYPES } from "../constants.js";
 import { NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, TokenPinkIcon, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, MoneyAmount } from "./ui.jsx";
 import { formatAddress, formatCompactCount, formatDate, mapsUrlFor, normalizeUrl } from "../utils.js";
@@ -23,7 +23,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const moneyJeton = moneySpent.jeton || 0;
   const drinkEntries = Object.entries(stats.personalDrinksByType || {}).filter(([, n]) => n > 0);
   const address = formatAddress(venue);
-  console.log("DIAGNOSTIC tags:", venue.id, venue.name, venue.tags);
   const addressLine1 = [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
   const addressLine2 = [venue.postalCode ? `B-${venue.postalCode}` : "", venue.city].filter(Boolean).join(" ") + (venue.village ? ` (${venue.village})` : "");
   const likes = venue.likes || [];
@@ -167,13 +166,13 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         {justCheckedIn ? "✓ Tes Bibax peuvent te voir ici" : "📍 Je suis ici !"}
       </button>
 
-      {venue.tags && venue.tags.length > 0 && (
+      {venue.venueTypes && venue.venueTypes.length > 0 && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
           <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Type d'établissement</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-            {venue.tags.map((tag) => (
+            {venue.venueTypes.map((code) => (
               <span
-                key={tag}
+                key={code}
                 style={{
                   padding: "6px 12px",
                   borderRadius: "999px",
@@ -184,7 +183,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
                   fontWeight: 700,
                 }}
               >
-                {tag}
+                {VENUE_TYPES.find((t) => t.code === code)?.fr || code}
               </span>
             ))}
           </div>

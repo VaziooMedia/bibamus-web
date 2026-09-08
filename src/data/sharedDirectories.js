@@ -1274,6 +1274,7 @@ function rowToVenue(row) {
     defaultCurrency: row.default_currency,
     jetonUnitValue: row.jeton_unit_value,
     tags: row.tags || [],
+    venueTypes: row.venue_types || [],
     lat: row.lat,
     lng: row.lng,
     avatarEmoji: row.avatar_emoji,
