@@ -2,7 +2,7 @@
 // Fiche détaillée d'un établissement — copiée telle quelle
 // depuis le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 import { COLORS, VENUE_TYPES } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
@@ -29,7 +29,16 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const addressLine1 = [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
   const addressLine2 = [venue.postalCode ? `B-${venue.postalCode}` : "", venue.city].filter(Boolean).join(" ") + (venue.village ? ` (${venue.village})` : "");
   const likes = venue.likes || [];
+  const hasPhone = !!venue.phone;
+  const hasEmail = !!venue.email;
   const hasAmenities = !!(venue.hasWifi || venue.wheelchairAccessible || venue.canDance);
+  const hoursBlockRef = useRef(null);
+  const [hoursBlockHeight, setHoursBlockHeight] = useState(null);
+  useLayoutEffect(() => {
+    if (hoursBlockRef.current) {
+      setHoursBlockHeight(hoursBlockRef.current.offsetHeight);
+    }
+  }, []);
   const hasSocials = !!(
     venue.website ||
     venue.googleUrl ||
@@ -116,7 +125,15 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           </div>
         )}
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 30px 1px 30px", gap: "8px", marginBottom: "12px", alignItems: "center" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: hasPhone && hasEmail ? "1fr 1px 30px 1px 30px" : hasPhone || hasEmail ? "1fr 1px 30px" : "1fr",
+            gap: "8px",
+            marginBottom: "12px",
+            alignItems: "center",
+          }}
+        >
           <a href={mapsUrlFor(venue)} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <NavIcon name="map-pin" size={18} color={COLORS.amber} />
@@ -127,21 +144,24 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
               </span>
             </div>
           </a>
-          <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />
-          {venue.phone ? (
+          {(hasPhone || hasEmail) && <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />}
+          {hasPhone && (
             <a href={`tel:${venue.phone.replace(/\s+/g, "")}`} title={venue.phone} style={{ lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
               <NavIcon name="phone" size={22} color={COLORS.amber} />
             </a>
-          ) : (
-            <div />
           )}
-          <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />
-          {venue.email ? (
+          {!hasPhone && hasEmail && (
             <a href={`mailto:${venue.email}`} title={venue.email} style={{ lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
               <NavIcon name="mail" size={22} color={COLORS.amber} />
             </a>
-          ) : (
-            <div />
+          )}
+          {hasPhone && hasEmail && (
+            <>
+              <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />
+              <a href={`mailto:${venue.email}`} title={venue.email} style={{ lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <NavIcon name="mail" size={22} color={COLORS.amber} />
+              </a>
+            </>
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
@@ -244,14 +264,14 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       </div>
 
       <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "20px" }}>
-        <div style={{ flex: 2 }}>
+        <div style={{ flex: 2 }} ref={hoursBlockRef}>
           <OpeningHoursDisplay googlePlaceId={venue.googlePlaceId} noGooglePresence={venue.noGooglePresence} noFixedHours={venue.noFixedHours} />
         </div>
         <button
           onClick={onManageMenu}
           style={{
             flex: 1,
-            height: "48px",
+            height: hoursBlockHeight ? `${hoursBlockHeight}px` : undefined,
             borderRadius: "12px",
             background: COLORS.surface,
             border: `2px solid ${COLORS.paperAlt}`,
@@ -336,13 +356,14 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       <button
         onClick={() => setClaiming(true)}
         style={{
+          display: "inline-block",
           background: "none",
           border: `2px solid ${COLORS.paperAlt}`,
-          borderRadius: "10px",
-          padding: "13px",
-          color: COLORS.ink,
+          borderRadius: "8px",
+          padding: "7px 14px",
+          color: COLORS.inkSoft,
           fontWeight: 600,
-          fontSize: "14px",
+          fontSize: "11.5px",
           cursor: "pointer",
           textAlign: "center",
           marginTop: "16px",
