@@ -34,6 +34,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const hasPhone = !!venue.phone;
   const hasEmail = !!venue.email;
   const hasAmenities = !!(venue.hasWifi || venue.wheelchairAccessible || venue.canDance);
+  const [activeAmenityTip, setActiveAmenityTip] = useState(null);
   const hoursBlockRef = useRef(null);
   const [hoursBlockHeight, setHoursBlockHeight] = useState(null);
   useLayoutEffect(() => {
@@ -182,18 +183,93 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             {venue.hasWifi && (
-              <span title="WiFi" style={{ lineHeight: 0 }}>
-                <img src={wifiIconUrl} alt="WiFi" style={{ width: "20px", height: "20px" }} />
+              <span style={{ position: "relative", lineHeight: 0 }}>
+                <button
+                  onClick={() => setActiveAmenityTip(activeAmenityTip === "wifi" ? null : "wifi")}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", lineHeight: 0 }}
+                >
+                  <img src={wifiIconUrl} alt="WiFi" style={{ width: "20px", height: "20px" }} />
+                </button>
+                {activeAmenityTip === "wifi" && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "28px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      background: COLORS.surface,
+                      border: `1.5px solid ${COLORS.paperAlt}`,
+                      borderRadius: "8px",
+                      padding: "6px 10px",
+                      fontSize: "11.5px",
+                      color: COLORS.ink,
+                      whiteSpace: "nowrap",
+                      zIndex: 20,
+                    }}
+                  >
+                    WiFi gratuit
+                  </div>
+                )}
               </span>
             )}
             {venue.wheelchairAccessible && (
-              <span title="Accès PMR" style={{ lineHeight: 0 }}>
-                <img src={pmrIconUrl} alt="Accès PMR" style={{ width: "20px", height: "20px" }} />
+              <span style={{ position: "relative", lineHeight: 0 }}>
+                <button
+                  onClick={() => setActiveAmenityTip(activeAmenityTip === "pmr" ? null : "pmr")}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", lineHeight: 0 }}
+                >
+                  <img src={pmrIconUrl} alt="Accès PMR" style={{ width: "20px", height: "20px" }} />
+                </button>
+                {activeAmenityTip === "pmr" && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "28px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      background: COLORS.surface,
+                      border: `1.5px solid ${COLORS.paperAlt}`,
+                      borderRadius: "8px",
+                      padding: "6px 10px",
+                      fontSize: "11.5px",
+                      color: COLORS.ink,
+                      whiteSpace: "nowrap",
+                      zIndex: 20,
+                    }}
+                  >
+                    Accès PMR
+                  </div>
+                )}
               </span>
             )}
             {venue.canDance && (
-              <span title="Danse" style={{ lineHeight: 0 }}>
-                <img src={danceIconUrl} alt="Danse" style={{ width: "20px", height: "20px" }} />
+              <span style={{ position: "relative", lineHeight: 0 }}>
+                <button
+                  onClick={() => setActiveAmenityTip(activeAmenityTip === "dance" ? null : "dance")}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", lineHeight: 0 }}
+                >
+                  <img src={danceIconUrl} alt="Danse" style={{ width: "20px", height: "20px" }} />
+                </button>
+                {activeAmenityTip === "dance" && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "28px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      background: COLORS.surface,
+                      border: `1.5px solid ${COLORS.paperAlt}`,
+                      borderRadius: "8px",
+                      padding: "6px 10px",
+                      fontSize: "11.5px",
+                      color: COLORS.ink,
+                      whiteSpace: "nowrap",
+                      zIndex: 20,
+                    }}
+                  >
+                    Musique dansante en soirée
+                  </div>
+                )}
               </span>
             )}
           </div>
@@ -361,7 +437,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         </button>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
         <button
           onClick={() => setClaiming(true)}
           style={{
@@ -444,7 +520,9 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           onClose={() => setReporting(false)}
         />
       )}
-      <BackFooterLink onClick={onBack} />
+      <div style={{ marginTop: "-14px" }}>
+        <BackFooterLink onClick={onBack} />
+      </div>
       </div>
     </div>
   );
