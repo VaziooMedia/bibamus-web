@@ -34,6 +34,7 @@ import { DrinkFormScreen } from "./components/DrinkFormScreen.jsx";
 import { DirectoryVenueFormScreen } from "./components/DirectoryVenueFormScreen.jsx";
 import { VenueDetailScreen } from "./components/VenueDetailScreen.jsx";
 import { VenueMenuCategoriesScreen } from "./components/VenueMenuCategoriesScreen.jsx";
+import { VenueCategoryDrinksScreen } from "./components/VenueCategoryDrinksScreen.jsx";
 import { DrinkDetailScreen } from "./components/DrinkDetailScreen.jsx";
 import { ProfileHubScreen } from "./components/ProfileHubScreen.jsx";
 import { BibaClubsListScreen } from "./components/BibaClubsListScreen.jsx";
@@ -860,6 +861,7 @@ export default function App() {
   };
 
   const [viewedVenueId, setViewedVenueId] = useState(null);
+  const [viewedMenuCategory, setViewedMenuCategory] = useState(null);
   const [viewedDrinkId, setViewedDrinkId] = useState(null);
   const [viewedHistoryEventId, setViewedHistoryEventId] = useState(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
@@ -1838,6 +1840,18 @@ export default function App() {
                 venue={resolveEntity(venues, viewedVenueId)}
                 drinksDirectory={drinksDirectory}
                 onBack={() => setScreen("venueDetail")}
+                onOpenCategory={(cat) => {
+                  setViewedMenuCategory(cat);
+                  setScreen("venueCategoryDrinks");
+                }}
+              />
+            )}
+            {screen === "venueCategoryDrinks" && (
+              <VenueCategoryDrinksScreen
+                venue={resolveEntity(venues, viewedVenueId)}
+                category={viewedMenuCategory}
+                drinksDirectory={drinksDirectory}
+                onBack={() => setScreen("venueMenuCategories")}
               />
             )}
             {screen === "drinkDetail" && (
@@ -2758,7 +2772,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
