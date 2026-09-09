@@ -175,7 +175,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
                 {addressLine1 && <br />}
                 {addressLine2}
                 {venue.country && (
-                  <CountryFlagImg country={venue.country} size={20} style={{ border: "1px solid #fff", verticalAlign: "-2px", marginLeft: "6px" }} />
+                  <CountryFlagImg country={venue.country} size={20} style={{ border: "1px solid rgba(255,255,255,0.8)", verticalAlign: "-2px", marginLeft: "6px" }} />
                 )}
               </span>
             </div>
