@@ -6,11 +6,14 @@ import React from "react";
 import { COLORS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard } from "./ui.jsx";
+import { resolveMenuItem } from "../utils.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
 
-export function VenueMenuCategoriesScreen({ venue, onBack, onOpenCategory }) {
-  const menu = venue?.menu || [];
+export function VenueMenuCategoriesScreen({ venue, drinksDirectory = [], onBack, onOpenCategory }) {
+  // Le menu tel que stocké ne contient que des références (sourceDrinkId, fromDirectory...),
+  // pas le nom/type réel — sans cette résolution, tout retombe dans "Non classé".
+  const menu = (venue?.menu || []).map((d) => resolveMenuItem(d, drinksDirectory));
   const categories = [...MENU_CATEGORIES, "Non classé"];
 
   return (

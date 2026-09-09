@@ -1836,6 +1836,7 @@ export default function App() {
             {screen === "venueMenuCategories" && (
               <VenueMenuCategoriesScreen
                 venue={resolveEntity(venues, viewedVenueId)}
+                drinksDirectory={drinksDirectory}
                 onBack={() => setScreen("venueDetail")}
               />
             )}
