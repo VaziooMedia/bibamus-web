@@ -157,7 +157,7 @@ const COUNTRY_ISO_CODES = {
   Vénézuéla: "ve",
 };
 
-export function CountryFlagImg({ country, size = 16 }) {
+export function CountryFlagImg({ country, size = 16, style }) {
   const code = COUNTRY_ISO_CODES[country];
   const url = code && FLAG_URLS_BY_CODE[code];
   if (!url) return null;
@@ -167,7 +167,16 @@ export function CountryFlagImg({ country, size = 16 }) {
     <img
       src={url}
       alt={country}
-      style={{ width: `${size}px`, height: `${Math.round((size * 3) / 4)}px`, display: "inline-block", verticalAlign: "middle", objectFit: "cover", borderRadius: "2px", border: `1px solid ${COLORS.paperAlt}` }}
+      style={{
+        width: `${size}px`,
+        height: `${Math.round((size * 3) / 4)}px`,
+        display: "inline-block",
+        verticalAlign: "middle",
+        objectFit: "cover",
+        borderRadius: "2px",
+        border: `1px solid ${COLORS.paperAlt}`,
+        ...style,
+      }}
     />
   );
 }
