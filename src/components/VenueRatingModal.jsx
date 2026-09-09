@@ -6,19 +6,9 @@
 // complète.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, RATING_LABELS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { submitVenueRating, removeVenueRating, loadMyVenueRating } from "../data/sharedDirectories.js";
-
-// L'ordre ici fixe aussi l'ordre affiché — échelle d'enthousiasme
-// croissant, jamais une échelle de qualité "mauvais → bon".
-const RATING_LEVELS = [
-  { value: 1, label: "Sympa" },
-  { value: 2, label: "Très bien" },
-  { value: 3, label: "Excellent" },
-  { value: 4, label: "Exceptionnel" },
-  { value: 5, label: "Incontournable" },
-];
 
 function FlameRow({ count }) {
   return (
@@ -114,7 +104,7 @@ export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
           <p style={{ fontSize: "13px", color: COLORS.inkSoft }}>Chargement...</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {RATING_LEVELS.map((level) => {
+            {RATING_LABELS.map((level) => {
               const isMine = myRating === level.value;
               const isBusy = submittingValue === level.value;
               return (
@@ -137,7 +127,7 @@ export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
                   }}
                 >
                   <span style={{ fontSize: "15px", fontWeight: 700, color: isMine ? COLORS.amber : COLORS.ink }}>
-                    {isBusy ? "..." : level.label}
+                    {isBusy ? "..." : level.fr}
                   </span>
                   <FlameRow count={level.value} />
                 </button>

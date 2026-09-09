@@ -460,6 +460,15 @@ export async function loadMyVenueRating(venueId) {
   return data?.[0]?.rating_value ?? null;
 }
 
+export async function loadVenueRatingSummary(venueId) {
+  const { data, error } = await supabase.rpc("get_venue_rating_summary", { p_venue_id: venueId });
+  if (error) {
+    console.error("loadVenueRatingSummary:", error);
+    return null;
+  }
+  return data?.[0] || null;
+}
+
 export async function lookupBibroCode(code) {
   const { data, error } = await supabase.rpc("lookup_bibro_code", { p_code: code });
   if (error) {

@@ -39,6 +39,17 @@ export const DRINK_TYPES = [
 
 export const MENU_CATEGORIES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Shots", "Cocktails / Mocktails", "Softs & Eaux", "Boissons chaudes", "Snacks"];
 
+// Système d'appréciation des lieux (5 paliers positifs, échelle d'enthousiasme croissant —
+// jamais "mauvais → bon"). Les clés (NICE, VERY_GOOD...) sont celles renvoyées par la base ;
+// "fr" est la seule chose que la base ne connaît pas, pour permettre une traduction future.
+export const RATING_LABELS = [
+  { code: "NICE", fr: "Sympa", value: 1 },
+  { code: "VERY_GOOD", fr: "Très bien", value: 2 },
+  { code: "EXCELLENT", fr: "Excellent", value: 3 },
+  { code: "EXCEPTIONAL", fr: "Exceptionnel", value: 4 },
+  { code: "MUST_VISIT", fr: "Incontournable", value: 5 },
+];
+
 export const RATABLE_DRINK_TYPES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Cocktails / Mocktails"];
 
 export const BEER_RATING_MODES = ["bouteille", "canette", "fut"];

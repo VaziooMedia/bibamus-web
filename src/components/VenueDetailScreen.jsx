@@ -11,6 +11,7 @@ import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { VenueRatingModal } from "./VenueRatingModal.jsx";
+import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import snapchatIconUrl from "../assets/brand/snapchat.svg";
@@ -143,6 +144,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             📝 Une modification de la fiche est proposée, en attente de validation.
           </div>
         )}
+      <VenueRatingDisplay venueId={venue.id} onOpenRatingModal={() => setShowRatingModal(true)} />
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
         <div
           style={{
