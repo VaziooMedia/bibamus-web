@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { WhatsappIcon } from "./icons.jsx";
-import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities } from "../data/sharedDirectories.js";
+import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities, loadVenueRatingSummary } from "../data/sharedDirectories.js";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
-import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES, COUNTRY_ISO_CODES } from "../constants.js";
+import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES, COUNTRY_ISO_CODES, RATING_LABELS } from "../constants.js";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -134,6 +134,14 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [certificationLevel, setCertificationLevel] = useState(venue?.certificationLevel || "utilisateur");
   const [duplicateOfId, setDuplicateOfId] = useState(venue?.duplicateOfId || null);
   const [otherVenueOptions, setOtherVenueOptions] = useState([]);
+  const [ratingSummary, setRatingSummary] = useState(null);
+
+  useEffect(() => {
+    if (venue?.id) {
+      loadVenueRatingSummary(venue.id).then(setRatingSummary);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [venue?.id]);
 
   useEffect(() => {
     if (status === "duplicate") {
@@ -352,6 +360,35 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         <label style={labelStyle}>Sous-titre</label>
         <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
+
+        {!isNew && ratingSummary && ratingSummary.rating_status !== "none" && (
+          <>
+            <div style={separatorStyle} />
+            <SectionTitle>Appréciations</SectionTitle>
+            <p style={{ fontSize: "13px", color: "#8792A6", marginBottom: "10px" }}>
+              {ratingSummary.rating_status === "early"
+                ? `Premières appréciations — ${ratingSummary.rating_count} avis`
+                : `${RATING_LABELS.find((l) => l.code === ratingSummary.rating_label)?.fr} — ${ratingSummary.rating_count} avis (moyenne ${ratingSummary.rating_average}/5)`}
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "14px" }}>
+              {[...RATING_LABELS].reverse().map((level) => {
+                const count = ratingSummary[`count_${level.value}`] || 0;
+                const pct = ratingSummary.rating_count > 0 ? Math.round((count / ratingSummary.rating_count) * 100) : 0;
+                return (
+                  <div key={level.code} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "11.5px", color: "#8792A6", width: "84px", flexShrink: 0 }}>{level.fr}</span>
+                    <div style={{ flex: 1, height: "6px", borderRadius: "3px", background: "#28405C", overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: "#39FF66", borderRadius: "3px" }} />
+                    </div>
+                    <span style={{ fontSize: "11.5px", color: "#8792A6", width: "60px", textAlign: "right", flexShrink: 0 }}>
+                      {count} ({pct}%)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         <div style={separatorStyle} />
         <SectionTitle>Adresse</SectionTitle>
