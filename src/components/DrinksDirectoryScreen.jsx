@@ -4,8 +4,8 @@
 // en place pour absorber un grand nombre de produits sans lenteur.
 // ============================================================
 import React, { useState } from "react";
-import { COLORS, COUNTRY_FLAGS, DRINK_TYPES, RATABLE_DRINK_TYPES } from "../constants.js";
-import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
+import { COLORS, DRINK_TYPES, RATABLE_DRINK_TYPES } from "../constants.js";
+import { NavIcon, CountryFlagImg, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, useInfiniteScroll, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
@@ -199,7 +199,7 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
           Filtré :{" "}
           {activeTagFilter.kind === "nationality" ? (
             <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
-              {COUNTRY_FLAGS[activeTagFilter.value] && <FlagIcon flag={COUNTRY_FLAGS[activeTagFilter.value]} size={13} />}
+              <CountryFlagImg country={activeTagFilter.value} size={13} style={{ border: "1px solid rgba(255,255,255,0.8)" }} />
               {activeTagFilter.value}
             </span>
           ) : activeTagFilter.kind === "zero" ? (

@@ -4,8 +4,8 @@
 // le prototype Claude.
 // ============================================================
 import React from "react";
-import { COLORS, COUNTRY_FLAGS, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, NON_ALCOHOLIC_DRINK_TYPES } from "../constants.js";
-import { FlagIcon } from "./icons.jsx";
+import { COLORS, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, NON_ALCOHOLIC_DRINK_TYPES } from "../constants.js";
+import { CountryFlagImg } from "./icons.jsx";
 
 export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "Sans gluten" }) {
   return (
@@ -26,10 +26,10 @@ export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "S
 export function DrinkBadges({ drink, onTagClick, size = 11 }) {
   const items = [];
   const isInherentlyNonAlcoholic = NON_ALCOHOLIC_DRINK_TYPES.includes(drink.type);
-  if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality && COUNTRY_FLAGS[drink.nationality]) {
+  if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality) {
     items.push({
       key: "country",
-      label: <FlagIcon flag={COUNTRY_FLAGS[drink.nationality]} size={size + 4} />,
+      label: <CountryFlagImg country={drink.nationality} size={size + 4} style={{ border: "1px solid rgba(255,255,255,0.8)" }} />,
       icon: true,
       title: drink.nationality,
       filter: { kind: "nationality", value: drink.nationality },
