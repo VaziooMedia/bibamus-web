@@ -161,7 +161,15 @@ export function CountryFlagImg({ country, size = 16 }) {
   const code = COUNTRY_ISO_CODES[country];
   const url = code && FLAG_URLS_BY_CODE[code];
   if (!url) return null;
-  return <img src={url} alt={country} style={{ width: `${size}px`, height: `${Math.round((size * 3) / 4)}px`, display: "inline-block", verticalAlign: "middle", objectFit: "cover", borderRadius: "2px" }} />;
+  // Bordure fine indispensable : certains drapeaux (Belgique, Allemagne...) ont une bande
+  // sombre qui se fond presque entièrement dans le fond très sombre de l'app sans elle.
+  return (
+    <img
+      src={url}
+      alt={country}
+      style={{ width: `${size}px`, height: `${Math.round((size * 3) / 4)}px`, display: "inline-block", verticalAlign: "middle", objectFit: "cover", borderRadius: "2px", border: `1px solid ${COLORS.paperAlt}` }}
+    />
+  );
 }
 
 export function TokenPinkIcon({ size = 22 }) {
