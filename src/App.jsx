@@ -110,6 +110,7 @@ import {
   linkSalonToClub,
   loadMutualBibaxList,
   recordVenueCheckIn,
+  publishVenueCheckInToPulse,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -1254,12 +1255,19 @@ export default function App() {
     setScreen("drinksDirectory");
   };
 
-  const checkInVenue = async (venueId) => {
+  const checkInVenue = async (venueId, { publishToPulse = true } = {}) => {
     // Marquage local existant, conservé tel quel (présence en temps réel sur cet appareil).
     setCheckedInVenueId(venueId);
-    emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId });
+    emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId, skipPulse: !publishToPulse });
     // Persistance réelle en base — c'est elle qui autorise ensuite à laisser un avis sur ce lieu.
     await recordVenueCheckIn(venueId);
+  };
+
+  // À partir du 2e check-in, la publication BibaPulse est confirmée séparément (case cochée
+  // par défaut dans le popup de check-in) plutôt qu'automatique — voir checkInVenue ci-dessus,
+  // appelé avec publishToPulse: false dans ce cas.
+  const publishCheckInPulse = (venueId) => {
+    publishVenueCheckInToPulse(venueId);
   };
 
   const handleLogout = async () => {
@@ -1809,7 +1817,8 @@ export default function App() {
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
-                onCheckIn={() => checkInVenue(viewedVenueId)}
+                onCheckIn={(opts) => checkInVenue(viewedVenueId, opts)}
+                onPublishCheckInPulse={() => publishCheckInPulse(viewedVenueId)}
                 onBack={() => setScreen(screenBeforeVenueDetail)}
                 onEdit={() => setScreen("editVenue")}
                 onDelete={() => {

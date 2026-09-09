@@ -1,12 +1,13 @@
 // ============================================================
 // Écran de notation d'un lieu — système Bibamus à 5 paliers
 // positifs (pas d'étoiles, pas de note négative). L'utilisateur
-// choisit un palier parmi 5, ou ne choisit rien : il n'y a pas
-// d'option "mauvais". Voir doc de specs pour la philosophie
-// complète.
+// choisit un palier parmi 5, ou "Pas d'avis" (non comptabilisé,
+// juste pour ne jamais donner l'impression d'obliger à répondre).
+// Voir doc de specs pour la philosophie complète.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
+import { NavIcon } from "./icons.jsx";
 import { submitVenueRating, removeVenueRating, loadMyVenueRating } from "../data/sharedDirectories.js";
 
 export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
@@ -78,15 +79,16 @@ export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
           <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.ink, margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-            Ton avis sur ce lieu
+            Donne ton avis sur ce lieu
           </h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
         </div>
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "20px" }}>
-          {venueName ? `Tu as aimé ${venueName} ? ` : "Tu as aimé cet endroit ? "}
-          Choisis un niveau si oui — sinon tu peux simplement fermer cette fenêtre.
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "20px", lineHeight: 1.5 }}>
+          Tu as aimé {venueName ? <span style={{ color: COLORS.amber, fontWeight: 700 }}>{venueName}</span> : "cet endroit"} ?
+          <br />
+          Choisis un niveau d'appréciation
         </p>
 
         {loading ? (
@@ -120,6 +122,24 @@ export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
                 </button>
               );
             })}
+
+            <button
+              onClick={onClose}
+              disabled={submittingValue !== null || removing}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                width: "100%",
+                background: "none",
+                border: "none",
+                borderRadius: "10px",
+                padding: "10px 16px",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Pas d'avis</span>
+            </button>
           </div>
         )}
 
@@ -129,8 +149,9 @@ export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
           <button
             onClick={handleRemove}
             disabled={submittingValue !== null || removing}
-            style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "16px 0 0 0", textAlign: "left" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "16px 0 0 0", textAlign: "left" }}
           >
+            <NavIcon name="x" size={13} color={COLORS.wine} />
             {removing ? "..." : "Retirer mon avis"}
           </button>
         )}

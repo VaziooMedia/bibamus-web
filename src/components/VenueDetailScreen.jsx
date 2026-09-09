@@ -12,6 +12,8 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { VenueRatingModal } from "./VenueRatingModal.jsx";
 import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
+import { VenueCheckInConfirmModal } from "./VenueCheckInConfirmModal.jsx";
+import { loadMyVenueRating } from "../data/sharedDirectories.js";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import snapchatIconUrl from "../assets/brand/snapchat.svg";
@@ -22,7 +24,7 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
+export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -70,11 +72,23 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   );
   const iLike = likes.includes(myBibroCode);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showCheckInConfirm, setShowCheckInConfirm] = useState(false);
+  const [checkInMyRating, setCheckInMyRating] = useState(null);
 
   const handleCheckIn = async () => {
     setJustCheckedIn(true);
-    await onCheckIn(venue);
-    setShowRatingModal(true);
+    // On ne pose la question complète ("donne ton avis") qu'une seule fois — si l'utilisateur
+    // a déjà une note sur ce lieu, ce check-in n'en redemande pas une, il propose juste un
+    // popup léger (publication BibaPulse + lien discret pour revenir sur l'avis déjà donné).
+    const existingRating = await loadMyVenueRating(venue.id);
+    if (existingRating == null) {
+      await onCheckIn(venue);
+      setShowRatingModal(true);
+    } else {
+      await onCheckIn(venue, { publishToPulse: false });
+      setCheckInMyRating(existingRating);
+      setShowCheckInConfirm(true);
+    }
   };
 
   return (
@@ -470,6 +484,20 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
       </div>
       {claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       {showRatingModal && <VenueRatingModal venueId={venue.id} venueName={venue.name} onClose={() => setShowRatingModal(false)} />}
+      {showCheckInConfirm && (
+        <VenueCheckInConfirmModal
+          venueName={venue.name}
+          myRating={checkInMyRating}
+          onClose={(publish) => {
+            setShowCheckInConfirm(false);
+            if (publish) onPublishCheckInPulse && onPublishCheckInPulse();
+          }}
+          onModifyRating={() => {
+            setShowCheckInConfirm(false);
+            setShowRatingModal(true);
+          }}
+        />
+      )}
 
       {showActionsMenu && (
         <div

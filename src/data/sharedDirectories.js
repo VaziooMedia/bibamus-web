@@ -136,7 +136,7 @@ export async function createPulseEvent(eventType, objectType, objectId, options 
   }
 }
 
-export async function emitEvent(type, { actorBibroCode, entityType, entityId, payload, version = 1 } = {}) {
+export async function emitEvent(type, { actorBibroCode, entityType, entityId, payload, version = 1, skipPulse = false } = {}) {
   try {
     await supabase.from("analytics_events").insert({
       id: `evt-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
@@ -150,6 +150,8 @@ export async function emitEvent(type, { actorBibroCode, entityType, entityId, pa
   } catch (e) {
     console.error("emitEvent:", e);
   }
+
+  if (skipPulse) return;
 
   const pulseType = PULSE_EVENT_MAP[type];
   if (pulseType && entityType && entityId) {
@@ -479,6 +481,14 @@ export async function recordVenueCheckIn(venueId) {
     return { error: error.message };
   }
   return { ok: true };
+}
+
+// À partir du 2e check-in sur un lieu, la publication BibaPulse n'est plus automatique —
+// l'utilisateur la confirme (case cochée par défaut) dans le popup de check-in. Cette fonction
+// publie l'activité correspondante seulement à ce moment-là, séparément de emitEvent (dont le
+// insert analytics_events, lui, a déjà eu lieu au moment du check-in).
+export async function publishVenueCheckInToPulse(venueId) {
+  await createPulseEvent("venue_visit", "venue", venueId);
 }
 
 export async function lookupBibroCode(code) {
