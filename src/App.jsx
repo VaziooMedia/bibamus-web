@@ -1852,6 +1852,11 @@ export default function App() {
                 category={viewedMenuCategory}
                 drinksDirectory={drinksDirectory}
                 onBack={() => setScreen("venueMenuCategories")}
+                onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("venueCategoryDrinks");
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
               />
             )}
             {screen === "drinkDetail" && (
