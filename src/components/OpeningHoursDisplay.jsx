@@ -72,7 +72,7 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
   if (noGooglePresence) {
     return (
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Horaires non disponibles — cet établissement n'a pas de fiche Google.</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Horaires indisponibles</p>
       </div>
     );
   }
@@ -104,7 +104,7 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
   if (hours?.closedTemporarily) {
     return (
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 700, margin: 0 }}>Cet établissement est indiqué comme fermé temporairement sur Google.</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 700, margin: 0 }}>Fermé temporairement</p>
       </div>
     );
   }
