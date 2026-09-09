@@ -7,6 +7,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { resolveMenuItem } from "../utils.js";
 import carteIconUrl from "../assets/brand/carte.svg";
+import pdfIconUrl from "../assets/brand/pdf-icone.svg";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
 
@@ -38,7 +39,28 @@ export function VenueMenuCategoriesScreen({ venue, drinksDirectory = [], onBack,
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1 }}>Carte</h1>
       </div>
-      {venue?.name && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 18px 0" }}>{venue.name}</p>}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 18px 0" }}>
+        {venue?.name ? <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>{venue.name}</p> : <span />}
+        <button
+          disabled
+          title="Carte PDF du lieu (bientôt disponible)"
+          style={{
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+            background: COLORS.paperAlt,
+            border: `2px solid ${COLORS.paperAlt}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            opacity: 0.45,
+            cursor: "default",
+          }}
+        >
+          <img src={pdfIconUrl} alt="" style={{ width: "20px", height: "20px", filter: "grayscale(1)" }} />
+        </button>
+      </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {categoriesWithCount.map(({ cat, count }) => (
