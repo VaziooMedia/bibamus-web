@@ -71,9 +71,9 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
   const iLike = likes.includes(myBibroCode);
   const [showRatingModal, setShowRatingModal] = useState(false);
 
-  const handleCheckIn = () => {
-    onCheckIn(venue);
+  const handleCheckIn = async () => {
     setJustCheckedIn(true);
+    await onCheckIn(venue);
     setShowRatingModal(true);
   };
 

@@ -469,6 +469,18 @@ export async function loadVenueRatingSummary(venueId) {
   return data?.[0] || null;
 }
 
+// Persiste le check-in en base (contrairement au marquage local existant) — c'est ce qui
+// permet ensuite à submit_venue_rating de vérifier qu'un avis n'est laissé qu'après un vrai
+// passage sur le lieu.
+export async function recordVenueCheckIn(venueId) {
+  const { error } = await supabase.rpc("check_in_venue", { p_venue_id: venueId });
+  if (error) {
+    console.error("recordVenueCheckIn:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
 export async function lookupBibroCode(code) {
   const { data, error } = await supabase.rpc("lookup_bibro_code", { p_code: code });
   if (error) {
