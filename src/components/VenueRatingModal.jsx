@@ -138,7 +138,7 @@ export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
                 textAlign: "left",
               }}
             >
-              <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Pas d'avis</span>
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "#ef007c" }}>Pas d'avis</span>
             </button>
           </div>
         )}

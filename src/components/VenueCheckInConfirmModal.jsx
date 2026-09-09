@@ -7,6 +7,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
+import { NavIcon } from "./icons.jsx";
 
 export function VenueCheckInConfirmModal({ venueName, myRating, onClose, onModifyRating }) {
   const [publishToPulse, setPublishToPulse] = useState(true);
@@ -34,19 +35,31 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose, onModif
       >
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.ink, margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          Tu es bien ici
+          Place Check-in
         </h2>
         {venueName && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 20px 0" }}>{venueName}</p>}
 
-        <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: "16px" }}>
-          <input
-            type="checkbox"
-            checked={publishToPulse}
-            onChange={(e) => setPublishToPulse(e.target.checked)}
-            style={{ width: "18px", height: "18px", accentColor: COLORS.amber, cursor: "pointer" }}
-          />
+        <button
+          onClick={() => setPublishToPulse((v) => !v)}
+          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: "16px", background: "none", border: "none", padding: 0, textAlign: "left" }}
+        >
+          <span
+            style={{
+              width: "18px",
+              height: "18px",
+              flexShrink: 0,
+              borderRadius: "4px",
+              background: publishToPulse ? COLORS.amber : "none",
+              border: `2px solid ${publishToPulse ? COLORS.amber : COLORS.paperAlt}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {publishToPulse && <NavIcon name="check" size={13} color="#000" />}
+          </span>
           Publier dans BibaPulse
-        </label>
+        </button>
 
         {onModifyRating && (
           <button
@@ -61,7 +74,7 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose, onModif
           onClick={handleConfirm}
           style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px", fontWeight: 700, color: COLORS.paper, cursor: "pointer" }}
         >
-          OK
+          Place Check-in
         </button>
       </div>
     </div>
