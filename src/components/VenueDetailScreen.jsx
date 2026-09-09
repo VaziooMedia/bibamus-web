@@ -10,6 +10,7 @@ import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink } from "../u
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
+import { VenueRatingModal } from "./VenueRatingModal.jsx";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import snapchatIconUrl from "../assets/brand/snapchat.svg";
@@ -67,10 +68,12 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
     venue.restaurantGuruUrl
   );
   const iLike = likes.includes(myBibroCode);
+  const [showRatingModal, setShowRatingModal] = useState(false);
 
   const handleCheckIn = () => {
     onCheckIn(venue);
     setJustCheckedIn(true);
+    setShowRatingModal(true);
   };
 
   return (
@@ -464,6 +467,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
         </button>
       </div>
       {claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
+      {showRatingModal && <VenueRatingModal venueId={venue.id} venueName={venue.name} onClose={() => setShowRatingModal(false)} />}
 
       {showActionsMenu && (
         <div

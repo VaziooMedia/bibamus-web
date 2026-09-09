@@ -431,6 +431,35 @@ export async function upsertPushSubscription(fcmToken, platform = "web") {
   return true;
 }
 
+// --- Appréciation d'un lieu (système 5 paliers positifs, pas d'étoiles) ---
+
+export async function submitVenueRating(venueId, ratingValue) {
+  const { error } = await supabase.rpc("submit_venue_rating", { p_venue_id: venueId, p_rating_value: ratingValue });
+  if (error) {
+    console.error("submitVenueRating:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
+export async function removeVenueRating(venueId) {
+  const { error } = await supabase.rpc("remove_venue_rating", { p_venue_id: venueId });
+  if (error) {
+    console.error("removeVenueRating:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
+export async function loadMyVenueRating(venueId) {
+  const { data, error } = await supabase.rpc("get_my_venue_rating", { p_venue_id: venueId });
+  if (error) {
+    console.error("loadMyVenueRating:", error);
+    return null;
+  }
+  return data?.[0]?.rating_value ?? null;
+}
+
 export async function lookupBibroCode(code) {
   const { data, error } = await supabase.rpc("lookup_bibro_code", { p_code: code });
   if (error) {
