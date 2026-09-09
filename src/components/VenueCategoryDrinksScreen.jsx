@@ -67,7 +67,11 @@ export function VenueCategoryDrinksScreen({ venue, category, drinksDirectory = [
                         <GlutenFreeIcon size={11} />
                       </span>
                     )}
-                    {d.nationality && <CountryFlagImg country={d.nationality} size={16} style={{ border: "1px solid rgba(255,255,255,0.8)" }} />}
+                    {d.nationality && (
+                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: COLORS.paperAlt, borderRadius: "5px", width: "20px", height: "20px", overflow: "hidden" }}>
+                        <CountryFlagImg country={d.nationality} size={20} />
+                      </span>
+                    )}
                     <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
                       <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber }}>
                         {priceNumber} <span style={{ fontSize: "10.5px", fontWeight: 600, color: COLORS.inkSoft }}>{priceSymbol}</span>
