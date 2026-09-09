@@ -80,7 +80,7 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
   if (!googlePlaceId || hours?.status === "LINK_REQUIRED" || hours?.status === "LINK_INVALID") {
     return (
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Horaires indisponibles — la fiche n'est pas encore reliée à Google.</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Horaires indisponibles</p>
       </div>
     );
   }
