@@ -116,7 +116,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           <button
             onClick={onToggleFavorite}
             title={venue.isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-            style={{ position: "absolute", top: "26px", right: "56px", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+            style={{ position: "absolute", top: "26px", right: "8px", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
           >
             <NavIcon name="star" size={28} color={COLORS.amber} filled={!!venue.isFavorite} />
           </button>
