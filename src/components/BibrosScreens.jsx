@@ -611,7 +611,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
           )}
           {bibro.registeredAt && <div>Sur Bibamus depuis {formatMemberSince(bibro.registeredAt)}</div>}
           {hasSocials && (
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px", marginTop: "6px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "8px", marginTop: "6px" }}>
               {bibro.whatsappUrl && (
                 <a href={normalizeUrl(bibro.whatsappUrl)} target="_blank" rel="noreferrer" style={{ lineHeight: 0 }}>
                   <WhatsappIcon size={24} />

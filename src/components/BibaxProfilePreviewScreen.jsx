@@ -43,7 +43,7 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
             identity.linkedinUrl ||
             identity.pinterestUrl ||
             identity.twitchUrl) && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "18px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "18px" }}>
               {identity.whatsappUrl && (
                 <a href={normalizeUrl(identity.whatsappUrl)} target="_blank" rel="noreferrer">
                   <WhatsappIcon size={26} color={COLORS.inkSoft} />

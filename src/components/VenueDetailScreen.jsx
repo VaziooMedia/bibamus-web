@@ -273,8 +273,8 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
               </span>
             )}
           </div>
-          {hasAmenities && hasSocials && <div style={{ width: "1px", height: "20px", background: COLORS.paperAlt }} />}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "14px", marginLeft: "auto" }}>
+          {hasAmenities && hasSocials && <div style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />}
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px", marginLeft: "auto" }}>
           {venue.website && (
             <a href={normalizeUrl(venue.website)} target="_blank" rel="noreferrer" title="Site internet" style={{ lineHeight: 0 }}>
               <span style={{ display: "inline-flex", width: "20px", height: "20px", borderRadius: "50%", overflow: "hidden" }}>
