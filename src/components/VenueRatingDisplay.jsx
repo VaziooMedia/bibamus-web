@@ -41,14 +41,14 @@ export function VenueRatingDisplay({ venueId }) {
         alignItems: "baseline",
         gap: "5px",
         background: "rgba(8,19,31,0.72)",
-        border: `1.5px solid ${COLORS.amber}`,
+        border: `2px solid ${COLORS.amber}`,
         borderRadius: "8px",
         padding: "5px 10px",
         maxWidth: "100%",
       }}
     >
       <span style={{ display: "flex", alignSelf: "center" }}>
-        <NavIcon name="flame" size={13} color={COLORS.amber} />
+        <NavIcon name="flame" size={17} color={COLORS.amber} filled />
       </span>
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {text}

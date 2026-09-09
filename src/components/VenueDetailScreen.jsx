@@ -112,16 +112,14 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{venue.name}</h1>
             <CertificationIcon level={venue.certificationLevel} size={17} />
           </div>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "10px" }}>
-            {venue.subtitle ? <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p> : <span />}
-            <button
-              onClick={onToggleFavorite}
-              title={venue.isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: "14px", flexShrink: 0, display: "flex" }}
-            >
-              <NavIcon name="star" size={20} color={COLORS.amber} filled={!!venue.isFavorite} />
-            </button>
-          </div>
+          {venue.subtitle && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
+          <button
+            onClick={onToggleFavorite}
+            title={venue.isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            style={{ position: "absolute", top: "26px", right: "56px", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+          >
+            <NavIcon name="star" size={28} color={COLORS.amber} filled={!!venue.isFavorite} />
+          </button>
         </div>
         <div style={{ position: "absolute", bottom: "8px", right: "68px", left: "108px" }}>
           <VenueRatingDisplay venueId={venue.id} />

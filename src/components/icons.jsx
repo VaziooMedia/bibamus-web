@@ -826,7 +826,7 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
       );
     case "flame":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : "none"}>
           <path
             d="M12 21.5c4 0 6.5-2.6 6.5-6 0-2.8-1.6-4.4-2.6-6.2-.6-1.1-.9-2.3-.7-3.8-2 1-3.5 3-3.7 5.2-1.4-1-2-2.7-1.9-4.7-2.3 1.6-4.1 4.6-4.1 7.5 0 3.4 2.5 8 6.5 8Z"
             stroke={color}
