@@ -199,7 +199,7 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
           Filtré :{" "}
           {activeTagFilter.kind === "nationality" ? (
             <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
-              <CountryFlagImg country={activeTagFilter.value} size={13} style={{ border: "1px solid rgba(255,255,255,0.8)" }} />
+              <CountryFlagImg country={activeTagFilter.value} size={13} />
               {activeTagFilter.value}
             </span>
           ) : activeTagFilter.kind === "zero" ? (
