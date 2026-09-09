@@ -6,6 +6,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
+import { NavIcon } from "./icons.jsx";
 import { loadVenueRatingSummary } from "../data/sharedDirectories.js";
 
 export function VenueRatingDisplay({ venueId }) {
@@ -40,12 +41,15 @@ export function VenueRatingDisplay({ venueId }) {
         alignItems: "baseline",
         gap: "5px",
         background: "rgba(8,19,31,0.72)",
-        border: `1.5px solid ${COLORS.paperAlt}`,
+        border: `1.5px solid ${COLORS.amber}`,
         borderRadius: "8px",
         padding: "5px 10px",
         maxWidth: "100%",
       }}
     >
+      <span style={{ display: "flex", alignSelf: "center" }}>
+        <NavIcon name="flame" size={13} color={COLORS.amber} />
+      </span>
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {text}
       </span>
