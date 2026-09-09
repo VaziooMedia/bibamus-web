@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState, useRef, useLayoutEffect } from "react";
 import { COLORS, VENUE_TYPES } from "../constants.js";
-import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon } from "./icons.jsx";
+import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
@@ -174,6 +174,11 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
                 {addressLine1}
                 {addressLine1 && <br />}
                 {addressLine2}
+                {venue.country && (
+                  <span style={{ marginLeft: "6px", display: "inline-block", verticalAlign: "middle" }}>
+                    <CountryFlagImg country={venue.country} size={14} />
+                  </span>
+                )}
               </span>
             </div>
           </a>
