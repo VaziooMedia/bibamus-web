@@ -102,18 +102,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           }}
         />
         <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
-          <PageHeader
-            onBack={onBack}
-            right={
-              <button
-                onClick={onEdit}
-                title="Modifier ce lieu"
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center" }}
-              >
-                <NavIcon name="pencil" size={20} color={COLORS.amber} />
-              </button>
-            }
-          />
+          <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
           <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
@@ -124,6 +113,9 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             <CertificationIcon level={venue.certificationLevel} size={17} />
           </div>
           {venue.subtitle && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
+        </div>
+        <div style={{ position: "absolute", bottom: "8px", right: "68px", left: "108px" }}>
+          <VenueRatingDisplay venueId={venue.id} />
         </div>
         <button
           onClick={handleCheckIn}
@@ -158,7 +150,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             📝 Une modification de la fiche est proposée, en attente de validation.
           </div>
         )}
-      <VenueRatingDisplay venueId={venue.id} />
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
         <div
           style={{
