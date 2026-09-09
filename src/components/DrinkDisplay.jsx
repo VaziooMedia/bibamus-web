@@ -29,7 +29,7 @@ export function DrinkBadges({ drink, onTagClick, size = 11 }) {
   if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality) {
     items.push({
       key: "country",
-      label: <CountryFlagImg country={drink.nationality} size={size + 9} />,
+      label: <CountryFlagImg country={drink.nationality} size={28} />,
       icon: true,
       title: drink.nationality,
       filter: { kind: "nationality", value: drink.nationality },
@@ -64,7 +64,9 @@ export function DrinkBadges({ drink, onTagClick, size = 11 }) {
     <>
       {items.map((it) => {
         const style = it.icon
-          ? { ...badgeStyle, padding: "3px", display: "inline-flex", alignItems: "center", justifyContent: "center" }
+          ? it.key === "country"
+            ? { ...badgeStyle, padding: 0, width: "20px", height: "20px", overflow: "hidden", display: "inline-flex", alignItems: "center", justifyContent: "center" }
+            : { ...badgeStyle, padding: "3px", display: "inline-flex", alignItems: "center", justifyContent: "center" }
           : it.key === "alcoholic"
           ? { ...badgeStyle, color: "#fff", background: COLORS.wine }
           : badgeStyle;
