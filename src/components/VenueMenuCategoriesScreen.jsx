@@ -36,7 +36,7 @@ export function VenueMenuCategoriesScreen({ venue, drinksDirectory = [], onBack,
         >
           <img src={carteIconUrl} alt="" style={{ width: "22px", height: "22px" }} />
         </span>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", margin: 0, lineHeight: 1 }}>Carte</h1>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1 }}>Carte</h1>
       </div>
       {venue?.name && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 18px 0" }}>{venue.name}</p>}
 

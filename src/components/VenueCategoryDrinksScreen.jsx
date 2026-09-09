@@ -50,12 +50,12 @@ export function VenueCategoryDrinksScreen({ venue, category, drinksDirectory = [
             const canOpenDrink = d.fromDirectory && d.sourceDrinkId && onOpenDrink;
 
             return (
-              <div key={d.id} style={{ display: "flex", gap: "12px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: "12px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
                 <EntityAvatar size={44} fallbackIcon="bottle" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
                     <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>{d.name || "Sans nom"}</span>
-                    {d.volumeCl && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{d.volumeCl}cl</span>}
+                    {d.volumeCl && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{d.volumeCl}cl.</span>}
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "5px", flexWrap: "wrap" }}>
@@ -69,7 +69,7 @@ export function VenueCategoryDrinksScreen({ venue, category, drinksDirectory = [
                     )}
                     {d.nationality && <CountryFlagImg country={d.nationality} size={16} style={{ border: "1px solid rgba(255,255,255,0.8)" }} />}
                     <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.ink }}>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber }}>
                         {priceNumber} <span style={{ fontSize: "10.5px", fontWeight: 600, color: COLORS.inkSoft }}>{priceSymbol}</span>
                       </span>
                       {canOpenDrink && (
@@ -81,8 +81,10 @@ export function VenueCategoryDrinksScreen({ venue, category, drinksDirectory = [
                   </div>
 
                   {(d.abv != null || d.brewery) && (
-                    <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "4px 0 0 0" }}>
-                      {[d.abv != null ? `${d.abv.toFixed(1)}% ABV` : null, d.brewery || null].filter(Boolean).join(" · ")}
+                    <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, margin: "4px 0 0 0" }}>
+                      {d.abv != null && <span>{d.abv.toFixed(1)}% ABV</span>}
+                      {d.abv != null && d.brewery && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                      {d.brewery && <span>{d.brewery}</span>}
                     </p>
                   )}
                 </div>
