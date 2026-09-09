@@ -68,8 +68,8 @@ export function VenueCategoryDrinksScreen({ venue, category, drinksDirectory = [
                       </span>
                     )}
                     {d.nationality && (
-                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: COLORS.paperAlt, borderRadius: "5px", width: "20px", height: "20px", overflow: "hidden" }}>
-                        <CountryFlagImg country={d.nationality} size={20} />
+                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: COLORS.paperAlt, borderRadius: "5px", width: "18.5px", height: "18.5px", overflow: "hidden" }}>
+                        <CountryFlagImg country={d.nationality} size={18.5} />
                       </span>
                     )}
                     <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
