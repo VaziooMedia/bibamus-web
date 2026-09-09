@@ -144,7 +144,7 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
             📝 Une modification de la fiche est proposée, en attente de validation.
           </div>
         )}
-      <VenueRatingDisplay venueId={venue.id} onOpenRatingModal={() => setShowRatingModal(true)} />
+      <VenueRatingDisplay venueId={venue.id} />
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
         <div
           style={{

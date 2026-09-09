@@ -7,18 +7,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
 import { submitVenueRating, removeVenueRating, loadMyVenueRating } from "../data/sharedDirectories.js";
-
-function FlameRow({ count }) {
-  return (
-    <span style={{ display: "flex", gap: "2px" }}>
-      {Array.from({ length: count }).map((_, i) => (
-        <NavIcon key={i} name="flame" size={13} color={COLORS.amber} />
-      ))}
-    </span>
-  );
-}
 
 export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
   const [loading, setLoading] = useState(true);
@@ -115,7 +104,6 @@ export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
                     width: "100%",
                     background: isMine ? `${COLORS.amber}1A` : "none",
                     border: `2px solid ${isMine ? COLORS.amber : COLORS.paperAlt}`,
@@ -129,7 +117,6 @@ export function VenueRatingModal({ venueId, venueName, onClose, onRated }) {
                   <span style={{ fontSize: "15px", fontWeight: 700, color: isMine ? COLORS.amber : COLORS.ink }}>
                     {isBusy ? "..." : level.fr}
                   </span>
-                  <FlameRow count={level.value} />
                 </button>
               );
             })}

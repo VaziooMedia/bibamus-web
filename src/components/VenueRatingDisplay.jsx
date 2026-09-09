@@ -1,24 +1,20 @@
 // ============================================================
-// Affichage de l'appréciation d'un lieu sur sa fiche — label +
-// nombre d'appréciations (jamais "4,1 / 5" en avant, le
-// qualificatif reste l'identité principale). Voir doc de specs.
+// Affichage de l'appréciation d'un lieu sur sa fiche — texte
+// seul (label + nombre d'avis), pas d'indicateur visuel gradué
+// (flammes, étoiles...) : un système à 1 palier sur 5 donnerait
+// l'impression fausse d'un avis faible, alors que tous les
+// paliers sont positifs. Voir doc de specs.
+//
+// Donner ou modifier son avis n'est plus accessible depuis ce
+// bloc — uniquement via un check-in sur le lieu (voir
+// VenueDetailScreen.jsx).
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { loadVenueRatingSummary } from "../data/sharedDirectories.js";
 
-function FlameRow({ count, size = 12 }) {
-  return (
-    <span style={{ display: "flex", gap: "1px" }}>
-      {Array.from({ length: count }).map((_, i) => (
-        <NavIcon key={i} name="flame" size={size} color={COLORS.amber} />
-      ))}
-    </span>
-  );
-}
-
-export function VenueRatingDisplay({ venueId, onOpenRatingModal }) {
+export function VenueRatingDisplay({ venueId }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -40,27 +36,15 @@ export function VenueRatingDisplay({ venueId, onOpenRatingModal }) {
   if (loading || !summary) return null;
 
   if (summary.rating_status === "none") {
-    return (
-      <button
-        onClick={onOpenRatingModal}
-        style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: 0, marginBottom: "16px", textAlign: "left" }}
-      >
-        <NavIcon name="flame" size={14} color={COLORS.inkSoft} />
-        Sois le premier à donner ton avis sur ce lieu
-      </button>
-    );
+    return <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "16px" }}>Aucun avis pour l'instant</p>;
   }
 
   if (summary.rating_status === "early") {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-        <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>
-          Premières appréciations <span style={{ color: COLORS.ink, fontWeight: 700 }}>· {summary.rating_count}</span>
-        </span>
-        <button onClick={onOpenRatingModal} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, fontSize: "12.5px", cursor: "pointer" }}>
-          Donner ton avis
-        </button>
-      </div>
+      <p style={{ fontSize: "15px", marginBottom: "16px" }}>
+        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.ink }}>Premières appréciations</span>
+        <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}> - {summary.rating_count} avis</span>
+      </p>
     );
   }
 
@@ -78,10 +62,9 @@ export function VenueRatingDisplay({ venueId, onOpenRatingModal }) {
         onClick={() => setExpanded((e) => !e)}
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer" }}
       >
-        <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <FlameRow count={labelInfo?.value || 0} size={14} />
+        <span>
           <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "16px", color: COLORS.ink }}>{labelInfo?.fr}</span>
-          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>· {summary.rating_count} appréciations</span>
+          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}> - {summary.rating_count} avis</span>
         </span>
         <span style={{ display: "flex", transform: expanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>
           <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
@@ -104,10 +87,6 @@ export function VenueRatingDisplay({ venueId, onOpenRatingModal }) {
           <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "12px", marginBottom: 0 }}>Moyenne : {summary.rating_average} / 5</p>
         </div>
       )}
-
-      <button onClick={onOpenRatingModal} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, fontSize: "12.5px", cursor: "pointer", padding: 0, marginTop: "10px" }}>
-        Donner ou modifier ton avis
-      </button>
     </div>
   );
 }
