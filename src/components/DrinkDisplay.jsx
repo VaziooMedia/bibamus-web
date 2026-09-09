@@ -29,7 +29,7 @@ export function DrinkBadges({ drink, onTagClick, size = 11 }) {
   if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality) {
     items.push({
       key: "country",
-      label: <CountryFlagImg country={drink.nationality} size={28} />,
+      label: <CountryFlagImg country={drink.nationality} size={20} />,
       icon: true,
       title: drink.nationality,
       filter: { kind: "nationality", value: drink.nationality },
