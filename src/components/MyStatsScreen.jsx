@@ -182,21 +182,55 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   // des événements (déjà borné à cet utilisateur) — sans lien avec le chantier statistiques
   // serveur, matché par nom/alias puisque les tournées suivent les participants par nom.
   const sharedRoundsByBibroCode = {};
+  const sharedVenuesByBibroCode = {};
+  const firstSharedDateByBibroCode = {};
   bibros.forEach((b) => {
     const namesToMatch = [b.name, b.alias].filter(Boolean).map((n) => n.toLowerCase());
     if (namesToMatch.length === 0) return;
     let count = 0;
-    eventsInPeriod.forEach((ev) => {
-      (ev.rounds || []).forEach((r) => {
-        if ((r.friends || []).some((f) => namesToMatch.includes((f.name || "").toLowerCase()))) count++;
-      });
+    const venueIds = new Set();
+    let firstDate = null;
+    // §7 — la "première fois" se cherche sur tout l'historique, pas seulement la période
+    // affichée, sinon un Bibax connu depuis longtemps ressortirait à tort comme "nouveau".
+    events.forEach((ev) => {
+      const sharesThisEvent = (ev.rounds || []).some((r) => (r.friends || []).some((f) => namesToMatch.includes((f.name || "").toLowerCase())));
+      if (sharesThisEvent && ev.venueId && !ev.isHome && ev.venueId !== "@event") venueIds.add(ev.venueId);
+      if (sharesThisEvent && (firstDate === null || ev.createdAt < firstDate)) firstDate = ev.createdAt;
+      if (eventsInPeriod.includes(ev)) {
+        (ev.rounds || []).forEach((r) => {
+          if ((r.friends || []).some((f) => namesToMatch.includes((f.name || "").toLowerCase()))) count++;
+        });
+      }
     });
     if (count > 0) sharedRoundsByBibroCode[b.code] = count;
+    if (venueIds.size > 0) sharedVenuesByBibroCode[b.code] = venueIds.size;
+    if (firstDate !== null) firstSharedDateByBibroCode[b.code] = firstDate;
   });
   const rankedBibrosBySharedRounds = Object.entries(sharedRoundsByBibroCode)
     .map(([code, count]) => ({ bibro: bibros.find((b) => b.code === code), count }))
     .filter((r) => r.bibro)
     .sort((a, b) => b.count - a.count);
+  const rankedBibrosBySharedVenues = Object.entries(sharedVenuesByBibroCode)
+    .map(([code, count]) => ({ bibro: bibros.find((b) => b.code === code), count }))
+    .filter((r) => r.bibro)
+    .sort((a, b) => b.count - a.count);
+  const newBibaxMetCount = Object.values(firstSharedDateByBibroCode).filter((d) => (!since || d >= since.getTime()) && d <= Date.now()).length;
+
+  // §7 — nombre moyen de Bibax présents dans un même salon (comptés par prénom, invités sans
+  // compte inclus — c'est le nombre de personnes réellement présentes qui compte ici).
+  const salonEventsInPeriod = eventsInPeriod.filter((e) => e.salonCode);
+  const avgBibaxPerSalon =
+    salonEventsInPeriod.length > 0
+      ? Math.round(
+          (salonEventsInPeriod.reduce((sum, ev) => {
+            const names = new Set();
+            (ev.rounds || []).forEach((r) => (r.friends || []).forEach((f) => names.add((f.name || "").toLowerCase())));
+            return sum + names.size;
+          }, 0) /
+            salonEventsInPeriod.length) *
+            10
+        ) / 10
+      : null;
 
   // Salons (BibaRoom) auxquels tu as participé — un même code de salon ne compte qu'une fois.
   const salonsCount = new Set(eventsInPeriod.filter((e) => e.salonCode).map((e) => e.salonCode)).size;
@@ -634,6 +668,51 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "social" && (
+          <>
+          {rankedBibrosBySharedRounds[0] && (
+            <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "14px" }}>
+              <span style={{ fontSize: "28px" }}>🍻</span>
+              <div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.6 }}>TON COMPAGNON DE SORTIE N°1</div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }}>{rankedBibrosBySharedRounds[0].bibro.alias || rankedBibrosBySharedRounds[0].bibro.name}</div>
+                <div style={{ fontSize: "12.5px", opacity: 0.7 }}>{rankedBibrosBySharedRounds[0].count} tournée{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""} commune{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""}</div>
+              </div>
+            </div>
+          )}
+
+          {(newBibaxMetCount > 0 || avgBibaxPerSalon != null) && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+              {[
+                newBibaxMetCount > 0 && { label: "Nouveaux Bibax rencontrés", value: newBibaxMetCount },
+                avgBibaxPerSalon != null && { label: "Bibax en moyenne par salon", value: avgBibaxPerSalon },
+              ]
+                .filter(Boolean)
+                .map((tile) => (
+                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "4px" }}>{tile.label}</div>
+                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px" }}>{tile.value}</div>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {rankedBibrosBySharedVenues.length > 0 && (
+            <StatSection title="Avec qui tu visites le plus de lieux différents">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {rankedBibrosBySharedVenues.map((r, i) => (
+                  <button
+                    key={r.bibro.code}
+                    onClick={() => openBibro && openBibro(r.bibro.code)}
+                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                  >
+                    <span><strong>{i + 1}.</strong> {r.bibro.alias || r.bibro.name}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.count} lieu{r.count > 1 ? "x" : ""}</span>
+                  </button>
+                ))}
+              </div>
+            </StatSection>
+          )}
+
           <StatSection title="Classement par Bibax">
             {rankedBibrosBySharedRounds.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien à afficher pour l'instant.</p>
@@ -652,6 +731,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
             )}
           </StatSection>
+          </>
           )}
         </>
       )}
