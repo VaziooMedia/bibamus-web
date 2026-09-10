@@ -215,6 +215,9 @@ export function DrinkCheckInModal({ drinkName, drinkType, venues = [], myRating,
               {filteredVenues.length === 0 && filteredSpecials.length === 0 && (
                 <div style={{ padding: "12px 14px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucun résultat.</div>
               )}
+              {!q && myPosition && filteredVenues.length > 0 && (
+                <div style={{ padding: "8px 14px 2px", fontSize: "10.5px", fontWeight: 700, color: COLORS.inkSoft, letterSpacing: "0.5px" }}>AUTOUR DE TOI</div>
+              )}
               {filteredVenues.slice(0, 8).map((v) => (
                 <button
                   key={v.id}
