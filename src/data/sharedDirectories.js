@@ -1842,7 +1842,7 @@ export async function loadGenericDrinks() {
 // parcourir la catégorie avant même de taper quoi que ce soit.
 export async function searchDrinksByType(type, query = "", limit = 30) {
   let request = supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES);
-  if (type) request = request.eq("type", type);
+  if (type) request = request.eq("type", DRINK_TYPE_LABEL_TO_CODE[type] || type);
   const q = (query || "").trim();
   if (q) request = request.ilike("name", `%${q}%`);
   const { data, error } = await request.order("name").limit(limit);
@@ -1875,11 +1875,13 @@ export async function loadDrinkCategoryCounts() {
     console.error("loadDrinkCategoryCounts:", error);
     return {};
   }
-  return Object.fromEntries(data.map((r) => [r.type, r.drink_count]));
+  // La colonne stocke un code technique stable (ex. "bieres_cidres"), pas le libellé français
+  // utilisé partout ailleurs dans l'app publique (DRINK_TYPES) — traduction indispensable ici.
+  return Object.fromEntries(data.map((r) => [DRINK_TYPE_CODE_TO_LABEL[r.type] || r.type, r.drink_count]));
 }
 
 export async function loadDrinkLetterCounts(type) {
-  const { data, error } = await supabase.rpc("get_drink_letter_counts", { p_type: type });
+  const { data, error } = await supabase.rpc("get_drink_letter_counts", { p_type: DRINK_TYPE_LABEL_TO_CODE[type] || type });
   if (error) {
     console.error("loadDrinkLetterCounts:", error);
     return [];
@@ -1889,7 +1891,7 @@ export async function loadDrinkLetterCounts(type) {
 
 export async function loadDrinksDirectoryPage({ type = null, letter = null, query = null, tagKind = null, tagValue = null, page = 0, pageSize = 40 } = {}) {
   const { data, error } = await supabase.rpc("get_drinks_page", {
-    p_type: type,
+    p_type: type ? DRINK_TYPE_LABEL_TO_CODE[type] || type : null,
     p_letter: letter,
     p_query: query,
     p_tag_kind: tagKind,
