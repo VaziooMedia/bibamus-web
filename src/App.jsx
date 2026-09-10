@@ -1798,7 +1798,7 @@ export default function App() {
                 }}
               />
             )}
-            {screen === "editVenue" && (
+            {screen === "editVenue" && viewedVenue && (
               <DirectoryVenueFormScreen
                 venue={viewedVenue}
                 breweriesDirectory={breweriesDirectory}
@@ -1823,7 +1823,7 @@ export default function App() {
                 onCancel={() => setScreen("venueDirectory")}
               />
             )}
-            {screen === "editDrink" && (
+            {screen === "editDrink" && viewedDrink && (
               <DrinkFormScreen
                 drink={viewedDrink}
                 breweriesDirectory={breweriesDirectory}
@@ -1854,7 +1854,10 @@ export default function App() {
                 onCancel={() => setScreen("drinksDirectory")}
               />
             )}
-            {screen === "venueDetail" && (
+            {screen === "venueDetail" && !viewedVenue && (
+              <div style={{ padding: "28px 20px", textAlign: "center", color: COLORS.inkSoft }}>Chargement...</div>
+            )}
+            {screen === "venueDetail" && viewedVenue && (
               <VenueDetailScreen
                 venue={(() => {
                   const v = viewedVenue;
@@ -1882,7 +1885,7 @@ export default function App() {
                 onCleanupDuplicates={() => cleanupDuplicates(viewedVenueId)}
               />
             )}
-            {screen === "venueMenuCategories" && (
+            {screen === "venueMenuCategories" && viewedVenue && (
               <VenueMenuCategoriesScreen
                 venue={viewedVenue}
                 onBack={() => setScreen("venueDetail")}
@@ -1892,7 +1895,7 @@ export default function App() {
                 }}
               />
             )}
-            {screen === "venueCategoryDrinks" && (
+            {screen === "venueCategoryDrinks" && viewedVenue && (
               <VenueCategoryDrinksScreen
                 venue={viewedVenue}
                 category={viewedMenuCategory}
@@ -1904,7 +1907,10 @@ export default function App() {
                 }}
               />
             )}
-            {screen === "drinkDetail" && (
+            {screen === "drinkDetail" && !viewedDrink && (
+              <div style={{ padding: "28px 20px", textAlign: "center", color: COLORS.inkSoft }}>Chargement...</div>
+            )}
+            {screen === "drinkDetail" && viewedDrink && (
               <DrinkDetailScreen
                 drink={viewedDrink}
                 isAdmin={!!profile.isAdmin}
