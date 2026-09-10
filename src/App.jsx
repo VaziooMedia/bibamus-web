@@ -389,8 +389,6 @@ export default function App() {
         loadBreweriesDirectory(),
         loadBrandsDirectory(),
       ]);
-      // eslint-disable-next-line no-console
-      console.log("[DIAGNOSTIC App.jsx] loadPublicVenues() a retourné :", v?.length, v);
       setVenues(v);
       setDrinksDirectory(d);
       setBreweriesDirectory(b);
@@ -1875,11 +1873,7 @@ export default function App() {
               <DrinkDetailScreen
                 drink={resolveEntity(drinksDirectory, viewedDrinkId)}
                 drinksDirectory={drinksDirectory}
-                venues={(() => {
-                  // eslint-disable-next-line no-console
-                  console.log("[DIAGNOSTIC App.jsx] venues au moment du rendu de DrinkDetailScreen :", venues?.length, venues);
-                  return venues;
-                })()}
+                venues={venues}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
