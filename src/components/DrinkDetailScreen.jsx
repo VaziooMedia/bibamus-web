@@ -13,7 +13,6 @@ import React, { useState, useEffect } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { StarsDisplay } from "./StarsDisplay.jsx";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { drinkTypeLabel, formatDrinkFieldValue } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
@@ -122,9 +121,9 @@ export function DrinkDetailScreen({
                 padding: "3px 8px",
               }}
             >
-              <StarsDisplay value={ratingAverage} size={13} />
+              <NavIcon name="star" size={14} color={COLORS.amber} filled />
               <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>
-                {ratingAverage.toFixed(2).replace(".", ",")} · {ratingValues.length} avis
+                {ratingAverage.toFixed(1).replace(".", ",")}/5 - {ratingValues.length} avis
               </span>
             </div>
           </div>
