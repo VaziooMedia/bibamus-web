@@ -4,13 +4,21 @@
 // tableau de bord d'un événement actif, celle-ci est en lecture
 // (avec réouverture et suppression possibles).
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
 import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink } from "../utils.js";
+import { loadVenuesByIds } from "../data/sharedDirectories.js";
 
-export function EventHistoryDetailScreen({ event, venues, displayTotal, roundsSum, onBack, openVenue, onReopen, onDelete, onDeleteRound }) {
-  const venue = event.venueId ? venues.find((v) => v.id === event.venueId) : null;
+export function EventHistoryDetailScreen({ event, displayTotal, roundsSum, onBack, openVenue, onReopen, onDelete, onDeleteRound }) {
+  const [venue, setVenue] = useState(null);
+  useEffect(() => {
+    if (!event.venueId) {
+      setVenue(null);
+      return;
+    }
+    loadVenuesByIds([event.venueId]).then((results) => setVenue(results[0] || null));
+  }, [event.venueId]);
   const isOpenBar = event.mode === "openbar";
   const isCagnotte = event.mode === "cagnotte";
   const isAddition = event.mode === "addition";

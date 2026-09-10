@@ -11,7 +11,7 @@ import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
-import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds } from "../data/sharedDirectories.js";
+import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
@@ -89,7 +89,6 @@ export function HomeScreen({
   myBibroCode,
   avatarUrl,
   lastName,
-  venues,
 }) {
   const [pulseEntries, setPulseEntries] = useState(null);
   // Aperçu borné (dernières entrées Pulse sur l'accueil) — les produits qu'il référence forment
@@ -101,6 +100,18 @@ export function HomeScreen({
     if (ids.size === 0) return;
     loadDrinksByIds([...ids]).then((results) => setDrinksDirectory((prev) => [...prev.filter((d) => !ids.has(d.id)), ...results]));
   }, [pulseEntries]);
+  // Même principe pour les lieux — référencés par les événements en cours (BibaLive) et par le
+  // fil Pulse, jamais besoin du répertoire complet.
+  const [venuesById, setVenuesById] = useState({});
+  useEffect(() => {
+    const ids = new Set();
+    events.forEach((ev) => ev.venueId && ids.add(ev.venueId));
+    (pulseEntries || []).forEach((e) => e.objectType === "venue" && e.objectId && ids.add(e.objectId));
+    if (ids.size === 0) return;
+    loadVenuesByIds([...ids]).then((results) =>
+      setVenuesById((prev) => ({ ...prev, ...Object.fromEntries(results.map((v) => [v.id, v])) }))
+    );
+  }, [events, pulseEntries]);
   const [stories, setStories] = useState([]);
   const [officialStories, setOfficialStories] = useState([]);
   useEffect(() => {
@@ -391,14 +402,14 @@ export function HomeScreen({
                     {ev.paused ? "EN PAUSE" : "EN COURS"}
                   </span>
                   <EntityAvatar
-                    photoUrl={ev.venueId ? venues.find((v) => v.id === ev.venueId)?.profilePhotoUrl : null}
-                    photoEmoji={ev.venueId ? venues.find((v) => v.id === ev.venueId)?.avatarEmoji : null}
+                    photoUrl={ev.venueId ? venuesById[ev.venueId]?.profilePhotoUrl : null}
+                    photoEmoji={ev.venueId ? venuesById[ev.venueId]?.avatarEmoji : null}
                     size={56}
                   />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: "16px", lineHeight: 1.25, whiteSpace: "normal", wordBreak: "break-word" }}>{ev.name}</div>
                     {(() => {
-                      const linkedVenue = ev.venueId ? venues.find((v) => v.id === ev.venueId) : null;
+                      const linkedVenue = ev.venueId ? venuesById[ev.venueId] : null;
                       // N'affiche le nom du lieu que si le titre personnalisé de la session s'en
                       // écarte — sinon, le titre suffit déjà. Dans ce second cas, l'adresse
                       // s'affiche à la place (en grisé), pour ne pas laisser un vide inutile.
@@ -454,9 +465,11 @@ export function HomeScreen({
         (() => {
           const entries = pulseEntries || [];
           const resolveObject = (entry) => {
-            const map = { venue: venues, drink: drinksDirectory, producer: breweriesDirectory, brand: brandsDirectory };
             const objType = entry.eventType === "venue_visit" ? "venue" : entry.objectType;
-            return (map[objType] || []).find((x) => x.id === (entry.venueId || entry.objectId)) || null;
+            const id = entry.venueId || entry.objectId;
+            if (objType === "venue") return venuesById[id] || null;
+            const map = { drink: drinksDirectory, producer: breweriesDirectory, brand: brandsDirectory };
+            return (map[objType] || []).find((x) => x.id === id) || null;
           };
           const actionFor = (entry) => ({ product_discovered: "Découverte", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité");
 

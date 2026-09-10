@@ -24,7 +24,7 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onResetStats, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -550,7 +550,6 @@ export function VenueDetailScreen({ venue, venues = [], myBibroCode, myUserId, o
           entityType="venue"
           entityId={venue.id}
           myBibroCode={myBibroCode}
-          directory={venues}
           initialReason={reportInitialReason}
           onClose={() => setReporting(false)}
         />

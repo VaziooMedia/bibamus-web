@@ -2,14 +2,15 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds } from "../data/sharedDirectories.js";
+import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
 // uniquement une référence (object_type/object_id) vers la vraie fiche.
 function resolveObject(entry, directories) {
   if (!entry.objectType || !entry.objectId) return null;
-  const map = { venue: directories.venues, drink: directories.drinksDirectory, producer: directories.breweriesDirectory, brand: directories.brandsDirectory };
+  if (entry.objectType === "venue") return directories.venuesById[entry.objectId] || null;
+  const map = { drink: directories.drinksDirectory, producer: directories.breweriesDirectory, brand: directories.brandsDirectory };
   return (map[entry.objectType] || []).find((x) => x.id === entry.objectId) || null;
 }
 
@@ -352,7 +353,6 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
 
 export function BibaPulseScreen({
   onBack,
-  venues = [],
   breweriesDirectory = [],
   brandsDirectory = [],
   myUserId,
@@ -376,8 +376,15 @@ export function BibaPulseScreen({
     if (ids.size === 0) return;
     loadDrinksByIds([...ids]).then((results) => setDrinksDirectory((prev) => [...prev.filter((d) => !ids.has(d.id)), ...results]));
   }, [entries]);
+  const [venuesById, setVenuesById] = useState({});
+  useEffect(() => {
+    const ids = new Set();
+    (entries || []).forEach((e) => e.objectType === "venue" && e.objectId && ids.add(e.objectId));
+    if (ids.size === 0) return;
+    loadVenuesByIds([...ids]).then((results) => setVenuesById((prev) => ({ ...prev, ...Object.fromEntries(results.map((v) => [v.id, v])) })));
+  }, [entries]);
 
-  const directories = { venues, drinksDirectory, breweriesDirectory, brandsDirectory };
+  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory };
 
   useEffect(() => {
     loadPulseFeed().then((data) => {

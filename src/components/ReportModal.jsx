@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { submitReport, trackEvent, searchDrinks } from "../data/sharedDirectories.js";
+import { submitReport, trackEvent, searchDrinks, searchVenues } from "../data/sharedDirectories.js";
 
 // Icône moderne (cercle + point d'exclamation), remplace l'ancien drapeau — cohérente avec le
 // style trait fin utilisé ailleurs dans l'app.
@@ -58,11 +58,26 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityType, isDuplicate, duplicateQuery]);
 
-  // Pour "venue"/"brand"/"producer" (pas encore migrés vers une recherche serveur), directory
+  const [venueDuplicateMatches, setVenueDuplicateMatches] = useState([]);
+  useEffect(() => {
+    if (entityType !== "venue" || !isDuplicate || duplicateQuery.trim().length < 2) {
+      setVenueDuplicateMatches([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchVenues(duplicateQuery.trim(), 5).then((results) => setVenueDuplicateMatches(results.filter((v) => v.id !== entityId)));
+    }, 350);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entityType, isDuplicate, duplicateQuery]);
+
+  // Pour "brand"/"producer" (pas encore migrés vers une recherche serveur), directory
   // reste la liste déjà chargée en mémoire par l'appelant.
   const duplicateMatches =
     entityType === "drink"
       ? drinkDuplicateMatches
+      : entityType === "venue"
+      ? venueDuplicateMatches
       : isDuplicate && duplicateQuery.trim().length >= 2
       ? directory.filter((d) => d.id !== entityId && d.name?.toLowerCase().includes(duplicateQuery.trim().toLowerCase())).slice(0, 5)
       : [];
