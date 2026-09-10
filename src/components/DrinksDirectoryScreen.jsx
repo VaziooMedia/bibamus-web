@@ -1,70 +1,133 @@
 // ============================================================
-// Écran "Produits" — copié tel quel depuis le prototype Claude,
-// avec le classement alphabétique et le défilement infini déjà
-// en place pour absorber un grand nombre de produits sans lenteur.
+// Écran "Produits" — catégories, groupement alphabétique,
+// recherche et pagination calculés côté serveur. Réécrit pour
+// tenir à l'échelle de plusieurs milliers de produits : rien
+// n'est plus chargé en bloc, chaque vue ne charge que ce dont
+// elle a besoin (comptages, page de résultats).
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, RATABLE_DRINK_TYPES } from "../constants.js";
 import { NavIcon, CountryFlagImg, VerifiedBadge } from "./icons.jsx";
-import { PageHeader, BackFooterLink, ScrollToTopButton, useInfiniteScroll, EntityAvatar } from "./ui.jsx";
+import { PageHeader, BackFooterLink, ScrollToTopButton } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
-import { normalizeForSearch, searchEntities, drinkTypeLabel, drinkSummaryLine } from "../utils.js";
+import { drinkTypeLabel, drinkSummaryLine } from "../utils.js";
+import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage } from "../data/sharedDirectories.js";
 
-export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, onOpenDrink, goToSubmit, onRefresh, initialCategory, initialTagFilter, onSeedConsumed }) {
+const PAGE_SIZE = 40;
+const LETTER_THRESHOLD = 20;
+
+export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrink, goToSubmit, initialCategory, initialTagFilter, onSeedConsumed }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState(initialCategory || null);
   const [activeTagFilter, setActiveTagFilter] = useState(initialTagFilter || null);
   const [activeLetter, setActiveLetter] = useState(null);
+  const [refreshTick, setRefreshTick] = useState(0);
 
-  React.useEffect(() => {
+  const [categoryCounts, setCategoryCounts] = useState({});
+  const [letterCounts, setLetterCounts] = useState([]);
+  const [items, setItems] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = React.useRef(null);
+
+  useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 150);
     return () => clearTimeout(t);
   }, [query]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialCategory && onSeedConsumed) onSeedConsumed();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const visible = drinks;
-  const q = normalizeForSearch(debouncedQuery.trim());
+
+  useEffect(() => {
+    loadDrinkCategoryCounts().then(setCategoryCounts);
+  }, [refreshTick]);
+
+  const q = debouncedQuery.trim();
   const searching = q.length > 0;
+  const countFor = (type) => categoryCounts[type] || 0;
+  const useLetterTier = !!activeCategory && !searching && countFor(activeCategory) > LETTER_THRESHOLD;
 
-  const matchesTagFilter = (d) => {
-    if (!activeTagFilter) return true;
-    if (activeTagFilter.kind === "nationality") return d.nationality === activeTagFilter.value;
-    if (activeTagFilter.kind === "zero") return d.abv != null && d.abv <= 0.5;
-    if (activeTagFilter.kind === "alcoholic") return d.abv != null && d.abv > 0.5;
-    if (activeTagFilter.kind === "glutenFree") return !!d.glutenFree;
-    if (activeTagFilter.kind === "bio") return !!d.bio;
-    return true;
+  // Regroupement alphabétique — chargé uniquement quand une catégorie assez fournie est
+  // sélectionnée, sans recherche active et sans lettre encore choisie.
+  useEffect(() => {
+    if (useLetterTier && !activeLetter) {
+      loadDrinkLetterCounts(activeCategory).then(setLetterCounts);
+    } else {
+      setLetterCounts([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useLetterTier, activeLetter, activeCategory, refreshTick]);
+
+  const countForLetter = (letter) => letterCounts.find((l) => l.letter === letter)?.count || 0;
+
+  // La page de résultats effectivement affichée — jamais chargée pour la simple vue "choisir une
+  // catégorie" ni pour la vue "choisir une lettre" (ces deux-là n'ont besoin que des comptages
+  // ci-dessus, pas des produits eux-mêmes).
+  const showingList = searching || (activeCategory && (!useLetterTier || activeLetter));
+
+  useEffect(() => {
+    if (!showingList) {
+      setItems([]);
+      setHasMore(true);
+      return;
+    }
+    let cancelled = false;
+    setItems([]);
+    setHasMore(true);
+    loadDrinksDirectoryPage({
+      type: activeCategory || null,
+      letter: useLetterTier && activeLetter ? activeLetter : null,
+      query: searching ? q : null,
+      tagKind: activeTagFilter?.kind || null,
+      tagValue: activeTagFilter?.value || null,
+      page: 0,
+      pageSize: PAGE_SIZE,
+    }).then((results) => {
+      if (cancelled) return;
+      setItems(results);
+      setHasMore(results.length === PAGE_SIZE);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showingList, activeCategory, activeLetter, useLetterTier, searching, q, activeTagFilter, refreshTick]);
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = Math.floor(items.length / PAGE_SIZE);
+    const results = await loadDrinksDirectoryPage({
+      type: activeCategory || null,
+      letter: useLetterTier && activeLetter ? activeLetter : null,
+      query: searching ? q : null,
+      tagKind: activeTagFilter?.kind || null,
+      tagValue: activeTagFilter?.value || null,
+      page: nextPage,
+      pageSize: PAGE_SIZE,
+    });
+    setItems((prev) => [...prev, ...results]);
+    setHasMore(results.length === PAGE_SIZE);
+    setLoadingMore(false);
   };
 
-  const letterOf = (name) => {
-    const stripped = (name || "").replace(/^(le|la|les)\s+/i, "");
-    const c = normalizeForSearch(stripped[0] || "");
-    return /[0-9]/.test(c) ? "0-9" : c ? c.toUpperCase() : "?";
-  };
-
-  const LETTER_THRESHOLD = 20;
-
-  const itemsInCategory = React.useMemo(
-    () => (activeCategory ? visible.filter((d) => d.type === activeCategory && matchesTagFilter(d)) : []),
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: "600px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [visible, activeCategory, activeTagFilter]
-  );
-
-  const useLetterTier = activeCategory && itemsInCategory.length > LETTER_THRESHOLD;
-
-  const lettersPresent = React.useMemo(() => {
-    if (!useLetterTier) return [];
-    const set = new Set(itemsInCategory.map((d) => letterOf(d.name)));
-    return Array.from(set).sort((a, b) => (a === "0-9" ? -1 : b === "0-9" ? 1 : a.localeCompare(b)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemsInCategory, useLetterTier]);
-
-  const countForLetter = (letter) => itemsInCategory.filter((d) => letterOf(d.name) === letter).length;
+  }, [sentinelRef.current, items.length, hasMore, loadingMore]);
 
   const goBackOneLevel = () => {
     if (searching) return onBack();
@@ -80,34 +143,6 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
     }
     onBack();
   };
-
-
-  const filtered = React.useMemo(
-    () =>
-      (searching
-        ? searchEntities(visible, debouncedQuery, ["brewery", "type"]).filter((d) => !activeCategory || d.type === activeCategory)
-        : visible.filter(
-            (d) => d.type === activeCategory && matchesTagFilter(d) && (!useLetterTier || !activeLetter || letterOf(d.name) === activeLetter)
-          )
-      ).sort((a, b) => a.name.replace(/^(le|la|les)\s+/i, "").localeCompare(b.name.replace(/^(le|la|les)\s+/i, ""))),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [visible, q, searching, activeCategory, activeTagFilter, activeLetter, useLetterTier]
-  );
-
-  const { visibleItems: visibleFiltered, hasMore, sentinelRef } = useInfiniteScroll(
-    filtered,
-    40,
-    `${searching ? "search:" + q : "cat:" + activeCategory + ":" + activeLetter}:${activeTagFilter ? JSON.stringify(activeTagFilter) : ""}`
-  );
-
-  const categoryCounts = React.useMemo(() => {
-    const counts = {};
-    visible.forEach((d) => {
-      counts[d.type] = (counts[d.type] || 0) + 1;
-    });
-    return counts;
-  }, [visible]);
-  const countFor = (type) => categoryCounts[type] || 0;
 
   const onTagClick = (type, filter) => {
     setActiveCategory(type);
@@ -132,17 +167,16 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flex: 1, minWidth: 0 }}>
-        <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={40} fallbackIcon="bottle" />
         <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-          {d.name}
-          {d.status === "to_process" && <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
-          {d.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-          <DrinkBadges drink={d} onTagClick={onTagClick} />
-        </div>
-        {drinkSummaryLine(d, searching) && <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{drinkSummaryLine(d, searching)}</div>}
+          <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+            {d.name}
+            {d.status === "to_process" && <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
+            {d.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
+            <DrinkBadges drink={d} onTagClick={onTagClick} />
+          </div>
+          {drinkSummaryLine(d, searching) && <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{drinkSummaryLine(d, searching)}</div>}
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", flexShrink: 0, marginLeft: "10px" }}>
@@ -165,32 +199,48 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
     </button>
   );
 
+  const addButton = (
+    <button
+      onClick={goToSubmit}
+      style={{
+        width: "56px",
+        height: "56px",
+        borderRadius: "50%",
+        background: COLORS.amber,
+        border: "none",
+        color: COLORS.paper,
+        fontSize: "32px",
+        fontWeight: 700,
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 0,
+        lineHeight: 1,
+        boxShadow: "0 4px 10px rgba(0,0,0,0.35)",
+      }}
+      title="Proposer une boisson"
+      aria-label="Proposer une boisson"
+    >
+      +
+    </button>
+  );
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={goBackOneLevel} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", margin: "4px 0 24px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-          <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: 0, lineHeight: 1 }}>
-            {!searching && activeCategory ? (
-              <>
-                {drinkTypeLabel(activeCategory)}
-                {useLetterTier && activeLetter && (
-                  <>
-                    {" — "}
-                    <span style={{ color: COLORS.amber }}>{activeLetter}</span>
-                  </>
-                )}
-              </>
-            ) : (
-              "Produits"
-            )}
+          <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>
+            {useLetterTier && activeLetter ? `${drinkTypeLabel(activeCategory)} — ${activeLetter}` : activeCategory ? drinkTypeLabel(activeCategory) : "Produits"}
           </h1>
         </div>
-        <button onClick={onRefresh} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} title="Actualiser" aria-label="Actualiser">
+        <button onClick={() => setRefreshTick((t) => t + 1)} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} title="Actualiser" aria-label="Actualiser">
           <NavIcon name="refresh" size={18} color={COLORS.redFluo} />
         </button>
       </div>
+
       {!searching && activeCategory && activeTagFilter && (
         <button
           onClick={() => setActiveTagFilter(null)}
@@ -215,18 +265,7 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
         </button>
       )}
 
-      {activeCategory && !searching && (
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
-          <button
-            onClick={goToSubmit}
-            style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-            title="Proposer une boisson"
-            aria-label="Proposer une boisson"
-          >
-            +
-          </button>
-        </div>
-      )}
+      {activeCategory && !searching && <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>{addButton}</div>}
 
       <input
         value={query}
@@ -237,27 +276,18 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
 
       {searching ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          {filtered.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson trouvée.</p>}
-          {visibleFiltered.map(renderDrinkRow)}
+          {items.length === 0 && !loadingMore && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson trouvée.</p>}
+          {items.map(renderDrinkRow)}
           {hasMore && (
             <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
               Chargement...
             </div>
           )}
-          <div style={{ display: "flex", justifyContent: "center", marginTop: "6px" }}>
-            <button
-              onClick={goToSubmit}
-              style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-              title="Proposer une boisson"
-              aria-label="Proposer une boisson"
-            >
-              +
-            </button>
-          </div>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: "6px" }}>{addButton}</div>
         </div>
       ) : activeCategory && useLetterTier && !activeLetter ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-          {lettersPresent.map((letter) => (
+          {letterCounts.map(({ letter }) => (
             <button
               key={letter}
               onClick={() => setActiveLetter(letter)}
@@ -283,10 +313,10 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
         </div>
       ) : activeCategory ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          {filtered.length === 0 && (
+          {items.length === 0 && !loadingMore && (
             <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson dans cette catégorie pour l'instant.</p>
           )}
-          {visibleFiltered.map(renderDrinkRow)}
+          {items.map(renderDrinkRow)}
           {hasMore && (
             <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
               Chargement...
@@ -295,16 +325,7 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>
-            <button
-              onClick={goToSubmit}
-              style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-              title="Proposer une boisson"
-              aria-label="Proposer une boisson"
-            >
-              +
-            </button>
-          </div>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>{addButton}</div>
           {DRINK_TYPES.map((cat) => (
             <button
               key={cat}
@@ -329,26 +350,13 @@ export function DrinksDirectoryScreen({ drinks, isAdmin, myBibroCode, onBack, on
                 <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
                 {drinkTypeLabel(cat)}
               </span>
-              <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>
-                {countFor(cat)} →
-              </span>
+              <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countFor(cat)} →</span>
             </button>
           ))}
         </div>
       )}
 
-      {activeCategory && !searching && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: "auto", paddingTop: "16px" }}>
-          <button
-            onClick={goToSubmit}
-            style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-            title="Proposer une boisson"
-            aria-label="Proposer une boisson"
-          >
-            +
-          </button>
-        </div>
-      )}
+      {activeCategory && !searching && <div style={{ display: "flex", justifyContent: "center", marginTop: "auto", paddingTop: "16px" }}>{addButton}</div>}
       {activeCategory && !searching && <ScrollToTopButton />}
       <BackFooterLink onClick={goBackOneLevel} />
     </div>

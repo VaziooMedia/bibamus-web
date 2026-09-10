@@ -1864,6 +1864,46 @@ export async function countMyRatedDrinks(myBibroCode) {
   return data || 0;
 }
 
+// --- Écran "Produits" (DrinksDirectoryScreen) — catégories, groupement alphabétique et
+// pagination, tout calculé côté serveur. C'est l'écran destiné à afficher potentiellement des
+// milliers de produits, donc le seul qui a vraiment besoin de tout ça plutôt que d'un simple
+// chargement ciblé par identifiants.
+
+export async function loadDrinkCategoryCounts() {
+  const { data, error } = await supabase.rpc("get_drink_category_counts");
+  if (error) {
+    console.error("loadDrinkCategoryCounts:", error);
+    return {};
+  }
+  return Object.fromEntries(data.map((r) => [r.type, r.drink_count]));
+}
+
+export async function loadDrinkLetterCounts(type) {
+  const { data, error } = await supabase.rpc("get_drink_letter_counts", { p_type: type });
+  if (error) {
+    console.error("loadDrinkLetterCounts:", error);
+    return [];
+  }
+  return data.map((r) => ({ letter: r.letter, count: r.drink_count }));
+}
+
+export async function loadDrinksDirectoryPage({ type = null, letter = null, query = null, tagKind = null, tagValue = null, page = 0, pageSize = 40 } = {}) {
+  const { data, error } = await supabase.rpc("get_drinks_page", {
+    p_type: type,
+    p_letter: letter,
+    p_query: query,
+    p_tag_kind: tagKind,
+    p_tag_value: tagValue,
+    p_page: page,
+    p_page_size: pageSize,
+  });
+  if (error) {
+    console.error("loadDrinksDirectoryPage:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
   if (error) {
