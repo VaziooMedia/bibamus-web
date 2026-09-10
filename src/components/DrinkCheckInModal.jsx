@@ -43,6 +43,8 @@ function distanceKm(lat1, lon1, lat2, lon2) {
 }
 
 export function DrinkCheckInModal({ drinkName, drinkType, venues = [], myRating, presetVenue = null, onRate, onUnrate, onClose }) {
+  // eslint-disable-next-line no-console
+  console.log("[DIAGNOSTIC DrinkCheckInModal] venues reçues :", venues?.length, venues);
   const hasRating = myRating != null;
   const [isEditingRating, setIsEditingRating] = useState(!hasRating);
   const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
