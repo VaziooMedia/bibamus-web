@@ -9,7 +9,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { WeekTracker } from "./ProfileParts.jsx";
-import { loadMyStatsOverview, loadMyVenueRanking, loadMyDrinkRanking, loadVenuesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
+import { loadMyStatsOverview, loadMyVenueRanking, loadMyDrinkRanking, loadVenuesByIds, loadDrinksByIds, loadMyHabits } from "../data/sharedDirectories.js";
 import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
 const PERIODS = [
@@ -39,6 +39,9 @@ const PERIODS = [
   { key: "6months", label: "Ces 6 derniers mois", since: () => { const d = new Date(); d.setMonth(d.getMonth() - 6); return d; } },
   { key: "year", label: "Cette année", since: () => new Date(new Date().getFullYear(), 0, 1) },
 ];
+
+const WEEKDAY_NAMES = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+const MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
 const CATEGORIES = [
   { key: "apercu", label: "Aperçu" },
@@ -77,6 +80,12 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   useEffect(() => {
     setOverview(null);
     loadMyStatsOverview(since, null).then(setOverview);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodKey]);
+
+  const [habits, setHabits] = useState(null);
+  useEffect(() => {
+    loadMyHabits(since, null).then(setHabits);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodKey]);
 
@@ -139,6 +148,15 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   // devises dans une moyenne. "Par mois" n'a de sens que pour une période avec un vrai début
   // (pas "Toujours", où on ne sait pas depuis quand compter).
   const monthsElapsed = since ? Math.max(1, (Date.now() - since.getTime()) / (1000 * 60 * 60 * 24 * 30.44)) : null;
+
+  // §4 — durée moyenne d'une sortie : seuls les événements fermés (avec un vrai début et une
+  // vraie fin) comptent — inclut @Home/@Event, ce n'est pas propre aux vraies tournées.
+  const closedEventsWithDuration = eventsInPeriod.filter((e) => e.closedAt && e.createdAt);
+  const avgOutingDurationMin =
+    closedEventsWithDuration.length > 0
+      ? Math.round(closedEventsWithDuration.reduce((sum, e) => sum + (e.closedAt - e.createdAt), 0) / closedEventsWithDuration.length / 60000)
+      : null;
+  const formatDuration = (min) => (min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}` : `${min} min`);
 
   const mostVisitedVenue = venuesByVisits[0];
   const mostSpentVenue = venuesBySpend[0];
@@ -251,6 +269,43 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                   </div>
                 ))}
             </div>
+          )}
+
+          {activeCategory === "apercu" && habits && (habits.topWeekday != null || habits.avgDrinksPerOuting != null || avgOutingDurationMin != null) && (
+            <StatSection title="Tes habitudes">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {habits.topWeekday != null && (
+                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span>Jour où tu sors le plus</span>
+                    <span style={{ fontWeight: 700, textTransform: "capitalize" }}>{WEEKDAY_NAMES[habits.topWeekday]}</span>
+                  </div>
+                )}
+                {habits.topHour != null && (
+                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span>Heure la plus active</span>
+                    <span style={{ fontWeight: 700 }}>{habits.topHour}h</span>
+                  </div>
+                )}
+                {habits.topMonth != null && (
+                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span>Mois le plus actif</span>
+                    <span style={{ fontWeight: 700, textTransform: "capitalize" }}>{MONTH_NAMES[habits.topMonth - 1]}</span>
+                  </div>
+                )}
+                {habits.avgDrinksPerOuting != null && (
+                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span>Boissons en moyenne par sortie</span>
+                    <span style={{ fontWeight: 700 }}>{Number(habits.avgDrinksPerOuting).toFixed(1)}</span>
+                  </div>
+                )}
+                {avgOutingDurationMin != null && (
+                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span>Durée moyenne d'une sortie</span>
+                    <span style={{ fontWeight: 700 }}>{formatDuration(avgOutingDurationMin)}</span>
+                  </div>
+                )}
+              </div>
+            </StatSection>
           )}
 
           {activeCategory === "depenses" && (overview.moneyEuro > 0 || overview.moneyJeton > 0) && (

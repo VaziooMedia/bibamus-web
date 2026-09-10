@@ -2051,6 +2051,21 @@ export async function loadMyStatsOverview(since = null, until = null) {
   };
 }
 
+// §4 — Tes habitudes. topWeekday suit la convention PostgreSQL (0 = dimanche), traduit côté
+// composant. Chaque champ peut être null si pas assez de données.
+export async function loadMyHabits(since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_habits", {
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+  });
+  if (error) {
+    console.error("loadMyHabits:", error);
+    return { topWeekday: null, topHour: null, topMonth: null, avgDrinksPerOuting: null };
+  }
+  const row = data[0] || {};
+  return { topWeekday: row.top_weekday, topHour: row.top_hour, topMonth: row.top_month, avgDrinksPerOuting: row.avg_drinks_per_outing };
+}
+
 // metric: "visits" | "spend_euro" | "spend_jeton" | "calories"
 export async function loadMyVenueRanking(metric, since = null, until = null, limit = 10) {
   const { data, error } = await supabase.rpc("get_my_venue_ranking", {
