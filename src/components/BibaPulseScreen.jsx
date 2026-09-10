@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment } from "../data/sharedDirectories.js";
+import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds } from "../data/sharedDirectories.js";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -353,7 +353,6 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
 export function BibaPulseScreen({
   onBack,
   venues = [],
-  drinksDirectory = [],
   breweriesDirectory = [],
   brandsDirectory = [],
   myUserId,
@@ -368,6 +367,15 @@ export function BibaPulseScreen({
   const [focusAttempts, setFocusAttempts] = useState(0);
   const focusedCardRef = React.useRef(null);
   const hasScrolledToFocus = React.useRef(false);
+  // Le fil ne charge jamais qu'une poignée d'entrées à la fois (pagination) — les produits qu'il
+  // référence forment donc un ensemble tout aussi borné, jamais besoin du répertoire complet.
+  const [drinksDirectory, setDrinksDirectory] = useState([]);
+  useEffect(() => {
+    const ids = new Set();
+    (entries || []).forEach((e) => e.objectType === "drink" && e.objectId && ids.add(e.objectId));
+    if (ids.size === 0) return;
+    loadDrinksByIds([...ids]).then((results) => setDrinksDirectory((prev) => [...prev.filter((d) => !ids.has(d.id)), ...results]));
+  }, [entries]);
 
   const directories = { venues, drinksDirectory, breweriesDirectory, brandsDirectory };
 

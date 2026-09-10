@@ -11,7 +11,7 @@ import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
-import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories } from "../data/sharedDirectories.js";
+import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
@@ -62,7 +62,6 @@ export function HomeScreen({
   onOpenBibaxProfile,
   onOpenVenue,
   onOpenDrink,
-  drinksDirectory = [],
   breweriesDirectory = [],
   brandsDirectory = [],
   pulseStoriesRefreshKey,
@@ -93,6 +92,15 @@ export function HomeScreen({
   venues,
 }) {
   const [pulseEntries, setPulseEntries] = useState(null);
+  // Aperçu borné (dernières entrées Pulse sur l'accueil) — les produits qu'il référence forment
+  // un ensemble tout aussi borné, jamais besoin du répertoire complet.
+  const [drinksDirectory, setDrinksDirectory] = useState([]);
+  useEffect(() => {
+    const ids = new Set();
+    (pulseEntries || []).forEach((e) => e.objectType === "drink" && e.objectId && ids.add(e.objectId));
+    if (ids.size === 0) return;
+    loadDrinksByIds([...ids]).then((results) => setDrinksDirectory((prev) => [...prev.filter((d) => !ids.has(d.id)), ...results]));
+  }, [pulseEntries]);
   const [stories, setStories] = useState([]);
   const [officialStories, setOfficialStories] = useState([]);
   useEffect(() => {

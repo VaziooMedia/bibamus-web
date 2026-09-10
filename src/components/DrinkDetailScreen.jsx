@@ -22,7 +22,6 @@ import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 export function DrinkDetailScreen({
   drink,
-  drinksDirectory = [],
   venues = [],
   isAdmin,
   myBibroCode,
@@ -302,7 +301,7 @@ export function DrinkDetailScreen({
           </div>
         )}
         {reporting && (
-          <ReportModal entityType="drink" entityId={drink.id} myBibroCode={myBibroCode} directory={drinksDirectory} initialReason={reportInitialReason} onClose={() => setReporting(false)} />
+          <ReportModal entityType="drink" entityId={drink.id} myBibroCode={myBibroCode} initialReason={reportInitialReason} onClose={() => setReporting(false)} />
         )}
         <div style={{ marginTop: "-14px" }}>
           <BackFooterLink onClick={onBack} />
