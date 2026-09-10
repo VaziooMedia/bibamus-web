@@ -17,7 +17,7 @@ import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { drinkTypeLabel, formatDrinkFieldValue } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
-import { loadMyDrinkCheckinCount } from "../data/sharedDirectories.js";
+import { loadMyDrinkCheckinCount, loadDrinkGlobalStats } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 export function DrinkDetailScreen({
@@ -62,6 +62,14 @@ export function DrinkDetailScreen({
     return () => {
       cancelled = true;
     };
+  }, [drink.id]);
+
+  // Consommé par tous les Bibax ce mois-ci — jamais d'argent ici (réservé propriétaire/admin),
+  // juste une quantité, publique.
+  const [globalMonthCount, setGlobalMonthCount] = useState(null);
+  useEffect(() => {
+    const since = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    loadDrinkGlobalStats(drink.id, since, null).then(setGlobalMonthCount);
   }, [drink.id]);
 
   const handleCheckConfirmed = async (result) => {
@@ -185,6 +193,15 @@ export function DrinkDetailScreen({
           <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Tes checks sur ce produit</span>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber, marginTop: "4px" }}>{myCheckCount ?? "—"}</div>
         </div>
+
+        {globalMonthCount > 0 && (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px", textAlign: "center" }}>
+            <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Consommé par tous les Bibax ce mois-ci</span>
+            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber, marginTop: "4px" }}>
+              {globalMonthCount} verre{globalMonthCount > 1 ? "s" : ""}
+            </div>
+          </div>
+        )}
 
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
