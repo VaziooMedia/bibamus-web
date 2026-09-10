@@ -9,7 +9,20 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { WeekTracker } from "./ProfileParts.jsx";
-import { loadMyStatsOverview, loadMyVenueRanking, loadMyDrinkRanking, loadVenuesByIds, loadDrinksByIds, loadMyHabits } from "../data/sharedDirectories.js";
+import {
+  loadMyStatsOverview,
+  loadMyVenueRanking,
+  loadMyDrinkRanking,
+  loadVenuesByIds,
+  loadDrinksByIds,
+  loadMyHabits,
+  loadMyCategoryRanking,
+  loadMyBeerStyleRanking,
+  loadMyBrandRanking,
+  loadMyBreweryRanking,
+  loadMyNewDrinksCount,
+  loadMyDrinkPriceStats,
+} from "../data/sharedDirectories.js";
 import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
 const PERIODS = [
@@ -88,6 +101,33 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     loadMyHabits(since, null).then(setHabits);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodKey]);
+
+  // §5 — Boissons.
+  const [categoryRanking, setCategoryRanking] = useState([]);
+  const [beerStyleRanking, setBeerStyleRanking] = useState([]);
+  const [brandRanking, setBrandRanking] = useState([]);
+  const [breweryRanking, setBreweryRanking] = useState([]);
+  const [newDrinksCount, setNewDrinksCount] = useState(0);
+  const [priceStats, setPriceStats] = useState(null);
+  useEffect(() => {
+    loadMyCategoryRanking(since, null, 10).then(setCategoryRanking);
+    loadMyBeerStyleRanking(since, null, 10).then(setBeerStyleRanking);
+    loadMyBrandRanking(since, null, 10).then(setBrandRanking);
+    loadMyBreweryRanking(since, null, 10).then(setBreweryRanking);
+    loadMyNewDrinksCount(since, null).then(setNewDrinksCount);
+    loadMyDrinkPriceStats(since, null).then(setPriceStats);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodKey]);
+
+  // Résolution du nom de la boisson la plus chère — bornée à ce seul identifiant.
+  const [maxPriceDrinkName, setMaxPriceDrinkName] = useState(null);
+  useEffect(() => {
+    if (!priceStats?.maxPriceDrinkId) {
+      setMaxPriceDrinkName(null);
+      return;
+    }
+    loadDrinksByIds([priceStats.maxPriceDrinkId]).then((results) => setMaxPriceDrinkName(results[0]?.name || null));
+  }, [priceStats]);
 
   const [venuesByVisits, setVenuesByVisits] = useState([]);
   const [venuesBySpend, setVenuesBySpend] = useState([]);
@@ -351,6 +391,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "boissons" && (
+          <>
           <StatSection title="Tes produits préférés">
             {drinksByCount.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien pour cette période.</p>
@@ -369,6 +410,79 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
             )}
           </StatSection>
+
+          {(newDrinksCount > 0 || priceStats?.avgPrice != null) && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+              {[
+                newDrinksCount > 0 && { label: "Nouveaux produits découverts", value: newDrinksCount },
+                priceStats?.avgPrice != null && { label: "Prix moyen payé", value: formatMoney(priceStats.avgPrice, "euro") },
+                priceStats?.maxPrice != null && maxPriceDrinkName && { label: "Boisson la plus chère", value: maxPriceDrinkName, sub: formatMoney(priceStats.maxPrice, "euro") },
+              ]
+                .filter(Boolean)
+                .map((tile) => (
+                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "4px" }}>{tile.label}</div>
+                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px" }}>{tile.value}</div>
+                    {tile.sub && <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", color: COLORS.amberDark, fontWeight: 700, marginTop: "2px" }}>{tile.sub}</div>}
+                  </div>
+                ))}
+            </div>
+          )}
+
+          <StatSection title="Répartition par catégorie">
+            {categoryRanking.length === 0 ? (
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien pour cette période.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {categoryRanking.map((r, i) => (
+                  <div key={r.category} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span><strong>{i + 1}.</strong> {r.category}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </StatSection>
+
+          {beerStyleRanking.length > 0 && (
+            <StatSection title="Ton style de bière préféré">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {beerStyleRanking.map((r, i) => (
+                  <div key={r.style} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span><strong>{i + 1}.</strong> {r.style}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
+                  </div>
+                ))}
+              </div>
+            </StatSection>
+          )}
+
+          {brandRanking.length > 0 && (
+            <StatSection title="Marques les plus consommées">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {brandRanking.map((r, i) => (
+                  <div key={r.brand} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span><strong>{i + 1}.</strong> {r.brand}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
+                  </div>
+                ))}
+              </div>
+            </StatSection>
+          )}
+
+          {breweryRanking.length > 0 && (
+            <StatSection title="Producteurs les plus consommés">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {breweryRanking.map((r, i) => (
+                  <div key={r.brewery} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span><strong>{i + 1}.</strong> {r.brewery}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
+                  </div>
+                ))}
+              </div>
+            </StatSection>
+          )}
+          </>
           )}
 
           {activeCategory === "depenses" && (

@@ -2066,6 +2066,63 @@ export async function loadMyHabits(since = null, until = null) {
   return { topWeekday: row.top_weekday, topHour: row.top_hour, topMonth: row.top_month, avgDrinksPerOuting: row.avg_drinks_per_outing };
 }
 
+// §5 — Boissons.
+export async function loadMyCategoryRanking(since = null, until = null, limit = 10) {
+  const { data, error } = await supabase.rpc("get_my_category_ranking", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null, p_limit: limit });
+  if (error) {
+    console.error("loadMyCategoryRanking:", error);
+    return [];
+  }
+  return data.map((r) => ({ category: r.category, quantity: r.quantity }));
+}
+
+export async function loadMyBeerStyleRanking(since = null, until = null, limit = 10) {
+  const { data, error } = await supabase.rpc("get_my_beer_style_ranking", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null, p_limit: limit });
+  if (error) {
+    console.error("loadMyBeerStyleRanking:", error);
+    return [];
+  }
+  return data.map((r) => ({ style: r.style, quantity: r.quantity }));
+}
+
+export async function loadMyBrandRanking(since = null, until = null, limit = 10) {
+  const { data, error } = await supabase.rpc("get_my_brand_ranking", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null, p_limit: limit });
+  if (error) {
+    console.error("loadMyBrandRanking:", error);
+    return [];
+  }
+  return data.map((r) => ({ brand: r.brand, quantity: r.quantity }));
+}
+
+export async function loadMyBreweryRanking(since = null, until = null, limit = 10) {
+  const { data, error } = await supabase.rpc("get_my_brewery_ranking", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null, p_limit: limit });
+  if (error) {
+    console.error("loadMyBreweryRanking:", error);
+    return [];
+  }
+  return data.map((r) => ({ brewery: r.brewery, quantity: r.quantity }));
+}
+
+export async function loadMyNewDrinksCount(since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_new_drinks_count", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadMyNewDrinksCount:", error);
+    return 0;
+  }
+  return data || 0;
+}
+
+export async function loadMyDrinkPriceStats(since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_drink_price_stats", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadMyDrinkPriceStats:", error);
+    return { avgPrice: null, maxPrice: null, maxPriceDrinkId: null };
+  }
+  const row = data[0] || {};
+  return { avgPrice: row.avg_price, maxPrice: row.max_price, maxPriceDrinkId: row.max_price_drink_id };
+}
+
+
 // metric: "visits" | "spend_euro" | "spend_jeton" | "calories"
 export async function loadMyVenueRanking(metric, since = null, until = null, limit = 10) {
   const { data, error } = await supabase.rpc("get_my_venue_ranking", {
