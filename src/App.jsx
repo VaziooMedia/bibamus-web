@@ -1801,6 +1801,7 @@ export default function App() {
                   return v ? { ...v, isFavorite: favoriteVenueIds.includes(v.id) } : v;
                 })()}
                 myBibroCode={profile.myBibroCode}
+                isAdmin={!!profile.isAdmin}
                 myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
                 onCheckIn={(opts) => checkInVenue(viewedVenueId, opts)}

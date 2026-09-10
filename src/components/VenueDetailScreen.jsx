@@ -6,13 +6,13 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { COLORS, VENUE_TYPES } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink } from "../utils.js";
+import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink, formatMoney } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { VenueRatingModal } from "./VenueRatingModal.jsx";
 import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
-import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue } from "../data/sharedDirectories.js";
+import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, loadVenueRevenueStats } from "../data/sharedDirectories.js";
 import { VenueCheckInConfirmModal } from "./VenueCheckInConfirmModal.jsx";
 import { loadMyVenueRating } from "../data/sharedDirectories.js";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
@@ -25,7 +25,7 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -48,6 +48,13 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
       }
     });
   }, [venue.id]);
+  // Chiffre d'affaires — réservé aux admins pour l'instant, en attendant la future plateforme
+  // Business (voir bibamus-schema-owner-stats.sql).
+  const [revenueStats, setRevenueStats] = useState(null);
+  useEffect(() => {
+    if (!isAdmin) return;
+    loadVenueRevenueStats(venue.id).then(setRevenueStats);
+  }, [venue.id, isAdmin]);
   const address = formatAddress(venue);
   const addressLine1 = [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
   const addressLine2 = [venue.postalCode ? `B-${venue.postalCode}` : "", venue.city].filter(Boolean).join(" ") + (venue.village ? ` (${venue.village})` : "");
@@ -430,6 +437,35 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
                 <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {isAdmin && revenueStats && revenueStats.orderCount > 0 && (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.wine}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+            <span style={{ width: "4px", height: "18px", background: COLORS.wine, borderRadius: "2px", display: "inline-block" }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Admin — Chiffre d'affaires (tous utilisateurs)</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px" }}>
+            {revenueStats.totalEuro > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: COLORS.inkSoft }}>Total en euros</span>
+                <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(revenueStats.totalEuro, "euro")}</span>
+              </div>
+            )}
+            {revenueStats.totalJeton > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: COLORS.inkSoft }}>Total en jetons</span>
+                <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(revenueStats.totalJeton, "jeton")}</span>
+              </div>
+            )}
+            {revenueStats.avgPriceEuro != null && (
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: COLORS.inkSoft }}>Prix moyen payé</span>
+                <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(revenueStats.avgPriceEuro, "euro")}</span>
+              </div>
+            )}
           </div>
         </div>
       )}

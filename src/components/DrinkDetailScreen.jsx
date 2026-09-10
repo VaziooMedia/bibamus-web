@@ -14,10 +14,10 @@ import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { drinkTypeLabel, formatDrinkFieldValue } from "../utils.js";
+import { drinkTypeLabel, formatDrinkFieldValue, formatMoney } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
-import { loadMyDrinkCheckinCount, loadDrinkGlobalStats } from "../data/sharedDirectories.js";
+import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 export function DrinkDetailScreen({
@@ -71,6 +71,14 @@ export function DrinkDetailScreen({
     const since = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     loadDrinkGlobalStats(drink.id, since, null).then(setGlobalMonthCount);
   }, [drink.id]);
+
+  // Chiffre d'affaires — réservé aux admins pour l'instant, en attendant la future plateforme
+  // Business (voir bibamus-schema-owner-stats.sql).
+  const [revenueStats, setRevenueStats] = useState(null);
+  useEffect(() => {
+    if (!isAdmin) return;
+    loadDrinkRevenueStats(drink.id).then(setRevenueStats);
+  }, [drink.id, isAdmin]);
 
   const handleCheckConfirmed = async (result) => {
     setShowCheckModal(false);
@@ -199,6 +207,29 @@ export function DrinkDetailScreen({
             <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Consommé par tous les Bibax ce mois-ci</span>
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber, marginTop: "4px" }}>
               {globalMonthCount} verre{globalMonthCount > 1 ? "s" : ""}
+            </div>
+          </div>
+        )}
+
+        {isAdmin && revenueStats && revenueStats.orderCount > 0 && (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.wine}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+              <span style={{ width: "4px", height: "18px", background: COLORS.wine, borderRadius: "2px", display: "inline-block" }} />
+              <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Admin — Chiffre d'affaires (tous utilisateurs)</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px" }}>
+              {revenueStats.totalEuro > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: COLORS.inkSoft }}>Total en euros</span>
+                  <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(revenueStats.totalEuro, "euro")}</span>
+                </div>
+              )}
+              {revenueStats.avgPriceEuro != null && (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: COLORS.inkSoft }}>Prix moyen payé</span>
+                  <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(revenueStats.avgPriceEuro, "euro")}</span>
+                </div>
+              )}
             </div>
           </div>
         )}

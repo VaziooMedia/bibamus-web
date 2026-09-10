@@ -2117,6 +2117,68 @@ export async function loadMyStatsForVenue(venueId, since = null, until = null) {
   return { visits: row.visits || 0, drinksOrdered: row.drinks_ordered || 0 };
 }
 
+// --- Chiffre d'affaires / prix moyen — réservé aux admins pour l'instant (vérifié aussi côté
+// base, pas seulement ici). Retourne null si la personne n'est pas admin ou si rien à afficher —
+// jamais une erreur bruyante, ces écrans doivent rester silencieux pour un utilisateur normal.
+
+function parseRevenueRow(data) {
+  const row = data?.[0];
+  if (!row) return null;
+  return { totalEuro: row.total_euro || 0, totalJeton: row.total_jeton || 0, avgPriceEuro: row.avg_price_euro, orderCount: row.order_count || 0 };
+}
+
+export async function loadVenueRevenueStats(venueId, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_venue_revenue_stats", {
+    p_venue_id: venueId,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+  });
+  if (error) {
+    console.error("loadVenueRevenueStats:", error);
+    return null;
+  }
+  return parseRevenueRow(data);
+}
+
+export async function loadDrinkRevenueStats(drinkId, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_drink_revenue_stats", {
+    p_drink_id: drinkId,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+  });
+  if (error) {
+    console.error("loadDrinkRevenueStats:", error);
+    return null;
+  }
+  return parseRevenueRow(data);
+}
+
+export async function loadBrandRevenueStats(brand, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_brand_revenue_stats", {
+    p_brand: brand,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+  });
+  if (error) {
+    console.error("loadBrandRevenueStats:", error);
+    return null;
+  }
+  return parseRevenueRow(data);
+}
+
+export async function loadBreweryRevenueStats(brewery, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_brewery_revenue_stats", {
+    p_brewery: brewery,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+  });
+  if (error) {
+    console.error("loadBreweryRevenueStats:", error);
+    return null;
+  }
+  return parseRevenueRow(data);
+}
+
 
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
