@@ -2021,6 +2021,11 @@ export async function deleteRoundOrders(roundId) {
   if (error) console.error("deleteRoundOrders:", error);
 }
 
+export async function deleteRoundOrdersByEvent(eventId) {
+  const { error } = await supabase.rpc("delete_round_orders_by_event", { p_event_id: eventId });
+  if (error) console.error("deleteRoundOrdersByEvent:", error);
+}
+
 // --- Mes Statistiques — reconstruites sur la vraie consommation (round_orders +
 // solo_checkins + drink_checkins), avec une période libre (since/until en Date, ou null = depuis
 // toujours).
@@ -2066,6 +2071,50 @@ export async function loadMyDrinkRanking(metric, since = null, until = null, lim
     return [];
   }
   return data.map((r) => ({ drinkId: r.drink_id, value: r.value }));
+}
+
+// --- Stats publiques sur les fiches — jamais d'argent ici (réservé propriétaire/admin),
+// uniquement des quantités, tous utilisateurs confondus.
+
+export async function loadVenueTopDrinks(venueId, since = null, until = null, limit = 5) {
+  const { data, error } = await supabase.rpc("get_venue_top_drinks", {
+    p_venue_id: venueId,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+    p_limit: limit,
+  });
+  if (error) {
+    console.error("loadVenueTopDrinks:", error);
+    return [];
+  }
+  return data.map((r) => ({ drinkId: r.drink_id, quantity: r.quantity }));
+}
+
+export async function loadDrinkGlobalStats(drinkId, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_drink_global_stats", {
+    p_drink_id: drinkId,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+  });
+  if (error) {
+    console.error("loadDrinkGlobalStats:", error);
+    return 0;
+  }
+  return data[0]?.quantity || 0;
+}
+
+export async function loadMyStatsForVenue(venueId, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_stats_for_venue", {
+    p_venue_id: venueId,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+  });
+  if (error) {
+    console.error("loadMyStatsForVenue:", error);
+    return { visits: 0, drinksOrdered: 0 };
+  }
+  const row = data[0] || {};
+  return { visits: row.visits || 0, drinksOrdered: row.drinks_ordered || 0 };
 }
 
 

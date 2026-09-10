@@ -118,10 +118,11 @@ import {
   loadVenuesByIds,
   recordRoundOrders,
   deleteRoundOrders,
+  deleteRoundOrdersByEvent,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, kcalForDrink } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -692,21 +693,6 @@ export default function App() {
     });
     recordRoundOrders(ordersForLog, { venueId: realVenueId, eventId: activeEventId, roundId: round.id, currency: currentEvent?.currency });
 
-    if (currentEvent && currentEvent.venueId && !currentEvent.isHome && currentEvent.venueId !== "@event") {
-      const venue = venuesById[currentEvent.venueId];
-      if (venue) {
-        const prevStats = venue.stats || {};
-        const prevMoney = prevStats.moneySpent || { euro: 0, jeton: 0 };
-        const amount = offeredBy ? 0 : finalAmount || 0;
-        const newStats = {
-          ...prevStats,
-          drinksOrdered: (prevStats.drinksOrdered || 0) + draftOrders.length,
-          moneySpent: { ...prevMoney, [currentEvent.currency]: (prevMoney[currentEvent.currency] || 0) + amount },
-        };
-        updatePublicVenue(venue.id, { stats: newStats });
-        setVenuesById((prev) => ({ ...prev, [venue.id]: { ...prev[venue.id], stats: newStats } }));
-      }
-    }
     setScreen("eventDashboard");
   };
 
@@ -768,12 +754,6 @@ export default function App() {
       await createSalon(code, newEvent);
       if (clubId) await linkSalonToClub(clubId, code, session.user.id);
       emitEvent(EVENT_TYPES.BIBAROOM_CREATED, { actorBibroCode: profile.myBibroCode, entityType: "salon", entityId: newEvent.id, payload: { salonCode: code } });
-    }
-
-    if (venue) {
-      const newStats = { ...(venue.stats || {}), visits: (venue.stats?.visits || 0) + 1 };
-      updatePublicVenue(venue.id, { stats: newStats });
-      setVenuesById((prev) => ({ ...prev, [venue.id]: { ...prev[venue.id], stats: newStats } }));
     }
 
     setEvents((prev) => [...prev, normalizeEvent(newEvent)]);
@@ -1263,21 +1243,6 @@ export default function App() {
     setBrandsDirectory((prev) => prev.map((x) => (x.id === id ? { ...x, pendingContributionsCount: (x.pendingContributionsCount || 0) + 1 } : x)));
   };
 
-  const adjustVenuePersonalDrink = (venueId, drinkNameLabel, delta, kcalPerServing) => {
-    if (!venueId) return;
-    const venue = venuesById[venueId];
-    if (!venue) return;
-    const stats = venue.stats || {};
-    const personalDrinksByType = stats.personalDrinksByType || {};
-    const current = personalDrinksByType[drinkNameLabel] || 0;
-    const next = Math.max(0, current + delta);
-    const actualDelta = next - current;
-    const caloriesTotal = Math.max(0, (stats.caloriesTotal || 0) + actualDelta * (kcalPerServing || 0));
-    const newStats = { ...stats, personalDrinksByType: { ...personalDrinksByType, [drinkNameLabel]: next }, caloriesTotal };
-    updatePublicVenue(venueId, { stats: newStats });
-    setVenuesById((prev) => ({ ...prev, [venueId]: { ...prev[venueId], stats: newStats } }));
-  };
-
   const [viewedBreweryContributions, setViewedBreweryContributions] = useState([]);
   const [viewedBrandContributions, setViewedBrandContributions] = useState([]);
 
@@ -1315,12 +1280,6 @@ export default function App() {
     await rejectContribution(contribution, profile.myBibroCode || null);
     setBrandsDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
     await refreshViewedBrandContributions(contribution.entityId);
-  };
-
-  const resetVenueStats = (id) => {
-    const emptyStats = { visits: 0, drinksOrdered: 0, moneySpent: { euro: 0, jeton: 0 }, personalDrinksByType: {}, caloriesTotal: 0 };
-    updatePublicVenue(id, { stats: emptyStats });
-    setVenuesById((prev) => ({ ...prev, [id]: { ...prev[id], stats: emptyStats, trackingStartDate: todayISO() } }));
   };
 
   const openTagFilter = (type, filter) => {
@@ -1413,42 +1372,7 @@ export default function App() {
   // personnels — pour que les totaux du lieu restent justes plutôt que de garder une trace
   // fantôme d'un événement qui n'existe plus.
   const deleteEvent = (id) => {
-    const ev = events.find((e) => e.id === id);
-    try {
-      if (ev && ev.venueId && !ev.isHome && ev.venueId !== "@event") {
-        const venue = venuesById[ev.venueId];
-        if (venue) {
-          const stats = venue.stats || {};
-          const rounds = ev.rounds || [];
-          const totalDrinks = rounds.reduce((sum, r) => sum + (r.orders || []).length, 0);
-          const totalMoney = rounds.reduce((sum, r) => sum + (r.total || 0), 0);
-          const prevMoney = stats.moneySpent || { euro: 0, jeton: 0 };
-          const personalDrinksByType = { ...(stats.personalDrinksByType || {}) };
-          let caloriesTotal = stats.caloriesTotal || 0;
-          (ev.personalOrders || []).forEach((o) => {
-            const drink = (ev.menu || []).find((d) => d.id === o.drinkId);
-            if (!drink) return;
-            const key = drink.name;
-            personalDrinksByType[key] = Math.max(0, (personalDrinksByType[key] || 0) - 1);
-            const kcal = kcalForDrink(drink);
-            if (kcal != null) caloriesTotal = Math.max(0, caloriesTotal - kcal);
-          });
-          const newStats = {
-            ...stats,
-            visits: Math.max(0, (stats.visits || 0) - 1),
-            drinksOrdered: Math.max(0, (stats.drinksOrdered || 0) - totalDrinks),
-            moneySpent: { ...prevMoney, [ev.currency]: Math.max(0, (prevMoney[ev.currency] || 0) - totalMoney) },
-            personalDrinksByType,
-            caloriesTotal,
-          };
-          updatePublicVenue(venue.id, { stats: newStats });
-          setVenuesById((prev) => ({ ...prev, [venue.id]: { ...prev[venue.id], stats: newStats } }));
-        }
-      }
-    } catch (e) {
-      // Même si l'annulation des statistiques échoue pour une raison ou une autre, la
-      // suppression de l'événement lui-même doit quand même avoir lieu.
-    }
+    deleteRoundOrdersByEvent(id);
     setEvents((prev) => prev.filter((e) => e.id !== id));
   };
 
@@ -1892,7 +1816,6 @@ export default function App() {
                   });
                   setScreen("venueDirectory");
                 }}
-                onResetStats={() => resetVenueStats(viewedVenueId)}
                 onManageMenu={() => setScreen("venueMenuCategories")}
                 onToggleFavorite={() => toggleVenueFavorite(viewedVenueId)}
                 onCleanupDuplicates={() => cleanupDuplicates(viewedVenueId)}
