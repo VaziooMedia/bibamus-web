@@ -113,6 +113,8 @@ import {
   loadMutualBibaxList,
   recordVenueCheckIn,
   publishVenueCheckInToPulse,
+  recordDrinkCheckIn,
+  publishDrinkCheckInToPulse,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -387,6 +389,8 @@ export default function App() {
         loadBreweriesDirectory(),
         loadBrandsDirectory(),
       ]);
+      // eslint-disable-next-line no-console
+      console.log("[DIAGNOSTIC App.jsx] loadPublicVenues() a retourné :", v?.length, v);
       setVenues(v);
       setDrinksDirectory(d);
       setBreweriesDirectory(b);
@@ -1273,6 +1277,14 @@ export default function App() {
     publishVenueCheckInToPulse(venueId);
   };
 
+  // Miroir de checkInVenue, mais pour un produit — répétable (pas de marquage local "présence
+  // en temps réel" comme pour un lieu), et venueId optionnel.
+  const checkInDrink = async (drinkId, venueId, { publishToPulse = true } = {}) => {
+    emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: !publishToPulse });
+    await recordDrinkCheckIn(drinkId, venueId);
+    if (publishToPulse) publishDrinkCheckInToPulse(drinkId, venueId);
+  };
+
   const handleLogout = async () => {
     await signOut();
     setSession(null);
@@ -1863,6 +1875,11 @@ export default function App() {
               <DrinkDetailScreen
                 drink={resolveEntity(drinksDirectory, viewedDrinkId)}
                 drinksDirectory={drinksDirectory}
+                venues={(() => {
+                  // eslint-disable-next-line no-console
+                  console.log("[DIAGNOSTIC App.jsx] venues au moment du rendu de DrinkDetailScreen :", venues?.length, venues);
+                  return venues;
+                })()}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
@@ -1873,6 +1890,7 @@ export default function App() {
                 onRate={(value) => rateDrink(viewedDrinkId, value)}
                 onUnrate={() => unrateDrink(viewedDrinkId)}
                 onToggleMode={(mode) => toggleTastedServingMode(viewedDrinkId, mode)}
+                onCheckDrink={(drinkId, venueId, opts) => checkInDrink(drinkId, venueId, opts)}
                 onBack={() => setScreen(screenBeforeDrinkDetail)}
                 onEdit={() => setScreen("editDrink")}
                 onCertify={() => certifyDrink(viewedDrinkId)}
