@@ -2001,6 +2001,26 @@ export async function loadVenuesWithStats() {
   return data.map(rowToVenue);
 }
 
+// --- Fondation statistiques — une vraie ligne par produit commandé, à côté du JSON de
+// l'événement (inchangé). Voir bibamus-schema-round-orders.sql.
+
+export async function recordRoundOrders(orders, { venueId, eventId, roundId, currency }) {
+  if (!orders || orders.length === 0) return;
+  const { error } = await supabase.rpc("record_round_orders", {
+    p_orders: orders,
+    p_venue_id: venueId || null,
+    p_event_id: eventId,
+    p_round_id: roundId,
+    p_currency: currency,
+  });
+  if (error) console.error("recordRoundOrders:", error);
+}
+
+export async function deleteRoundOrders(roundId) {
+  const { error } = await supabase.rpc("delete_round_orders", { p_round_id: roundId });
+  if (error) console.error("deleteRoundOrders:", error);
+}
+
 
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();

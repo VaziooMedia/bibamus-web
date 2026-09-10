@@ -116,6 +116,8 @@ import {
   loadDrinksByIds,
   countMyRatedDrinks,
   loadVenuesByIds,
+  recordRoundOrders,
+  deleteRoundOrders,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -672,6 +674,22 @@ export default function App() {
       personalOrders: [...(e.personalOrders || []), ...selfOrders],
     }));
 
+    // Fondation statistiques — une vraie ligne par produit commandé, à côté du JSON de
+    // l'événement ci-dessus (inchangé). Chaque participant est résolu vers son vrai compte
+    // Bibax quand il en a un (via son code), sinon juste son prénom (invité sans compte).
+    const realVenueId = currentEvent && currentEvent.venueId && !currentEvent.isHome && currentEvent.venueId !== "@event" ? currentEvent.venueId : null;
+    const ordersForLog = draftOrders.map((o) => {
+      const friend = draftFriends.find((f) => f.id === o.friendId);
+      const drink = (currentEvent?.menu || []).find((d) => d.id === o.drinkId);
+      return {
+        bibro_code: friend?.code || null,
+        guest_name: friend?.code ? null : friend?.name || null,
+        drink_id: o.drinkId,
+        unit_price: drink?.price ?? null,
+      };
+    });
+    recordRoundOrders(ordersForLog, { venueId: realVenueId, eventId: activeEventId, roundId: round.id, currency: currentEvent?.currency });
+
     if (currentEvent && currentEvent.venueId && !currentEvent.isHome && currentEvent.venueId !== "@event") {
       const venue = venuesById[currentEvent.venueId];
       if (venue) {
@@ -1153,6 +1171,7 @@ export default function App() {
       rounds: e.rounds.filter((r) => r.id !== roundId),
       personalOrders: (e.personalOrders || []).filter((o) => o.roundId !== roundId),
     }));
+    deleteRoundOrders(roundId);
   };
 
   const editRound = (eventId, roundId, updates) => {
