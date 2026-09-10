@@ -40,6 +40,15 @@ const PERIODS = [
   { key: "year", label: "Cette année", since: () => new Date(new Date().getFullYear(), 0, 1) },
 ];
 
+const CATEGORIES = [
+  { key: "apercu", label: "Aperçu" },
+  { key: "records", label: "Records" },
+  { key: "boissons", label: "Boissons" },
+  { key: "lieux", label: "Lieux" },
+  { key: "depenses", label: "Dépenses" },
+  { key: "social", label: "Social" },
+];
+
 function StatSection({ title, children }) {
   const [open, setOpen] = useState(true);
   return (
@@ -61,6 +70,8 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const [periodKey, setPeriodKey] = useState("all");
   const period = PERIODS.find((p) => p.key === periodKey);
   const since = period.since ? period.since() : null;
+
+  const [activeCategory, setActiveCategory] = useState("apercu");
 
   const [overview, setOverview] = useState(null);
   useEffect(() => {
@@ -159,6 +170,27 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
         ))}
       </div>
 
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "20px" }}>
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.key}
+            onClick={() => setActiveCategory(c.key)}
+            style={{
+              background: activeCategory === c.key ? COLORS.amber : "none",
+              color: activeCategory === c.key ? COLORS.paper : COLORS.inkSoft,
+              border: `2px solid ${activeCategory === c.key ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "7px 14px",
+              fontSize: "13px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
       {!overview ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Chargement...</p>
       ) : !hasAnyData ? (
@@ -167,27 +199,29 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
         </p>
       ) : (
         <>
-          <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "20px" }}>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55, marginBottom: "12px" }}>TOUS LIEUX CONFONDUS</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "12px" }}>
-              <div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>VISITES</div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.visits}</div>
+          {activeCategory === "apercu" && (
+            <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "20px" }}>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55, marginBottom: "12px" }}>TOUS LIEUX CONFONDUS</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "12px" }}>
+                <div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>VISITES</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.visits}</div>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>BOISSONS COMMANDÉES</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.drinksOrdered}</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>BOISSONS COMMANDÉES</div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.drinksOrdered}</div>
-              </div>
+              {overview.calories > 0 && (
+                <div style={{ paddingTop: "12px", borderTop: `2px solid ${COLORS.chalkWhite}30` }}>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>CALORIES BUES</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>≈ {Math.round(overview.calories)} kcal</div>
+                </div>
+              )}
             </div>
-            {overview.calories > 0 && (
-              <div style={{ paddingTop: "12px", borderTop: `2px solid ${COLORS.chalkWhite}30` }}>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>CALORIES BUES</div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>≈ {Math.round(overview.calories)} kcal</div>
-              </div>
-            )}
-          </div>
+          )}
 
-          {(overview.moneyEuro > 0 || overview.moneyJeton > 0) && (
+          {activeCategory === "depenses" && (overview.moneyEuro > 0 || overview.moneyJeton > 0) && (
             <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
               <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Argent dépensé — {period.label.toLowerCase()}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -207,9 +241,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             </div>
           )}
 
-          <WeekTracker alcoholDaysMap={buildAlcoholDaysMap(events, alcoholFreeDays)} onToggleDay={onToggleAlcoholFreeDay} />
+          {activeCategory === "apercu" && <WeekTracker alcoholDaysMap={buildAlcoholDaysMap(events, alcoholFreeDays)} onToggleDay={onToggleAlcoholFreeDay} />}
 
-          {recordCards.length > 0 && (
+          {activeCategory === "records" && recordCards.length > 0 && (
             <StatSection title="Tes records">
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {recordCards.map((r) => (
@@ -229,6 +263,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             </StatSection>
           )}
 
+          {activeCategory === "boissons" && (
           <StatSection title="Tes produits préférés">
             {drinksByCount.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien pour cette période.</p>
@@ -247,7 +282,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
             )}
           </StatSection>
+          )}
 
+          {activeCategory === "depenses" && (
           <StatSection title="Produits pour lesquels tu as le plus dépensé">
             {drinksBySpend.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien pour cette période.</p>
@@ -266,7 +303,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
             )}
           </StatSection>
+          )}
 
+          {activeCategory === "lieux" && (
           <StatSection title="Classement par visites">
             {venuesByVisits.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucune visite enregistrée pour cette période.</p>
@@ -285,7 +324,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
             )}
           </StatSection>
+          )}
 
+          {activeCategory === "depenses" && (
           <StatSection title="Classement par argent dépensé">
             {venuesBySpend.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien à afficher pour cette période.</p>
@@ -304,7 +345,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
             )}
           </StatSection>
+          )}
 
+          {activeCategory === "social" && (
           <StatSection title="Classement par Bibax">
             {rankedBibrosBySharedRounds.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien à afficher pour l'instant.</p>
@@ -323,6 +366,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
             )}
           </StatSection>
+          )}
         </>
       )}
       <BackFooterLink onClick={onBack} />
