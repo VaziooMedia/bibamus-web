@@ -24,10 +24,13 @@ export function DrinkDirectoryPicker({ type, onPick }) {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // Recherche côté serveur, bornée à ce type — se déclenche aussi à l'ouverture (query encore
-  // vide) pour montrer d'emblée quelques produits de la catégorie, comme avant.
+  // Recherche côté serveur, bornée à ce type — rien tant qu'on n'a pas tapé au moins 2 lettres
+  // (montrer d'emblée les premiers produits de la catégorie n'apportait rien d'utile).
   useEffect(() => {
-    if (!open) return;
+    if (!open || query.trim().length < 2) {
+      setFiltered([]);
+      return;
+    }
     const timer = setTimeout(() => {
       searchDrinksByType(type, query.trim()).then(setFiltered);
     }, 300);
@@ -88,7 +91,7 @@ export function DrinkDirectoryPicker({ type, onPick }) {
           <div style={{ overflowY: "auto", flex: 1 }}>
             {filtered.length === 0 && (
               <div style={{ padding: "10px 14px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>
-                {query.trim() ? "Aucun résultat." : "Aucun produit dans cette catégorie pour l'instant."}
+                {query.trim().length === 0 ? "Tapez au moins 2 lettres pour chercher." : query.trim().length === 1 ? "Encore une lettre..." : "Aucun résultat."}
               </div>
             )}
             {filtered.map((d) => (
