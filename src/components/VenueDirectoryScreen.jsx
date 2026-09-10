@@ -1,22 +1,40 @@
 // ============================================================
-// Écran "Établissements & Lieux" — copié tel quel depuis le
-// prototype Claude. C'est ici que la connexion à Supabase se
-// voit concrètement : `publicVenues` vient maintenant de la
-// vraie base de données, partagée entre tous les Bibax connectés.
+// Écran "Établissements & Lieux" — pays, villes, recherche et
+// pagination calculés côté serveur, pour tenir à l'échelle de
+// plusieurs milliers de lieux. myVenues (mes favoris) reste une
+// petite liste passée telle quelle — seul le répertoire public
+// complet est concerné par cette réécriture.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton } from "./ui.jsx";
-import { normalizeForSearch, searchEntities, formatCompactCount, sameVenueByNameCity, formatAddress } from "../utils.js";
+import { formatCompactCount, sameVenueByNameCity, formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
-import { loadNearbyVenues } from "../data/sharedDirectories.js";
+import { loadNearbyVenues, loadVenueCountryCounts, loadVenueCityCounts, loadVenuesDirectoryPage, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 
-export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAdmin, addIntent, onBack, onOpenVenue, goToSubmit, goToMap, onRefresh, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
+const PAGE_SIZE = 40;
+const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
+
+export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent, onBack, onOpenVenue, goToSubmit, goToMap, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const { status: geoStatus, position, requestPosition } = useGeolocation();
   const [nearbyVenues, setNearbyVenues] = useState(null);
   const [loadingNearby, setLoadingNearby] = useState(false);
+
+  const [countryCounts, setCountryCounts] = useState({});
+  const [cityCounts, setCityCounts] = useState({});
+  const [items, setItems] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const sentinelRef = React.useRef(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 150);
+    return () => clearTimeout(t);
+  }, [query]);
 
   const fetchNearby = async (pos) => {
     setLoadingNearby(true);
@@ -40,30 +58,85 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
     requestPosition();
   };
 
-  const visible = publicVenues;
-  const q = normalizeForSearch(query.trim());
+  const q = debouncedQuery.trim();
   const searching = q.length > 0;
 
-  const countries = Array.from(new Set(visible.map((v) => v.country || "Non précisé"))).sort((a, b) => a.localeCompare(b));
-  // Always show the country step, even with just one country today — keeps the browsing structure
-  // stable as more countries get added, rather than restructuring the flow later.
-  const skipCountryLevel = false;
+  useEffect(() => {
+    loadVenueCountryCounts().then(setCountryCounts);
+  }, [refreshTick]);
 
-  const citiesFor = (country) =>
-    Array.from(new Set(visible.filter((v) => (v.country || "Non précisé") === country).map((v) => v.city || "Non précisée"))).sort((a, b) => a.localeCompare(b));
+  const countFor = (country, city) => (city ? cityCounts[city] || 0 : countryCounts[country] || 0);
 
-  const countFor = (country, city) =>
-    visible.filter((v) => (v.country || "Non précisé") === country && (city ? (v.city || "Non précisée") === city : true)).length;
+  useEffect(() => {
+    if (activeCountry && !activeCity) {
+      loadVenueCityCounts(activeCountry).then(setCityCounts);
+    } else {
+      setCityCounts({});
+    }
+  }, [activeCountry, activeCity, refreshTick]);
 
-  const searchResults = searching ? searchEntities(visible, query, ["city", "streetName", "postalCode"]).sort((a, b) => a.name.localeCompare(b.name)) : [];
+  const countries = Object.keys(countryCounts).sort((a, b) => countryLabel(a).localeCompare(countryLabel(b)));
+  const cities = Object.keys(cityCounts).sort((a, b) => a.localeCompare(b));
 
-  const effectiveCountry = skipCountryLevel ? countries[0] : activeCountry;
-  const cityResults =
-    effectiveCountry && activeCity
-      ? visible
-          .filter((v) => (v.country || "Non précisé") === effectiveCountry && (v.city || "Non précisée") === activeCity)
-          .sort((a, b) => a.name.localeCompare(b.name))
-      : [];
+  // La page de résultats effectivement affichée — jamais chargée pour la simple vue "choisir un
+  // pays" ni "choisir une ville" (celles-là n'ont besoin que des comptages ci-dessus).
+  const showingList = searching || activeCity;
+
+  useEffect(() => {
+    if (!showingList) {
+      setItems([]);
+      setHasMore(true);
+      return;
+    }
+    let cancelled = false;
+    setItems([]);
+    setHasMore(true);
+    loadVenuesDirectoryPage({
+      country: !searching ? activeCountry : null,
+      city: !searching ? activeCity : null,
+      query: searching ? q : null,
+      page: 0,
+      pageSize: PAGE_SIZE,
+    }).then((results) => {
+      if (cancelled) return;
+      setItems(results);
+      setHasMore(results.length === PAGE_SIZE);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showingList, activeCountry, activeCity, searching, q, refreshTick]);
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = Math.floor(items.length / PAGE_SIZE);
+    const results = await loadVenuesDirectoryPage({
+      country: !searching ? activeCountry : null,
+      city: !searching ? activeCity : null,
+      query: searching ? q : null,
+      page: nextPage,
+      pageSize: PAGE_SIZE,
+    });
+    setItems((prev) => [...prev, ...results]);
+    setHasMore(results.length === PAGE_SIZE);
+    setLoadingMore(false);
+  };
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: "600px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sentinelRef.current, items.length, hasMore, loadingMore]);
 
   const alreadyAdded = (v) =>
     myVenues.some((mv) => mv.isFavorite && mv.sourcePublicVenueId === v.id) ||
@@ -113,11 +186,11 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
   const handleBack = () => {
     if (searching) return onBack();
     if (activeCity) return setActiveCity(null);
-    if (!skipCountryLevel && activeCountry) return setActiveCountry(null);
+    if (activeCountry) return setActiveCountry(null);
     return onBack();
   };
 
-  const title = searching ? "Établissements & Lieux" : activeCity || effectiveCountry || "Établissements & Lieux";
+  const title = searching ? "Établissements & Lieux" : activeCity || (activeCountry ? countryLabel(activeCountry) : "Établissements & Lieux");
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -131,7 +204,7 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: 0, lineHeight: 1 }}>{title}</h1>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, marginTop: "4px" }}>
-          <button onClick={onRefresh} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0 }} title="Actualiser" aria-label="Actualiser">
+          <button onClick={() => setRefreshTick((t) => t + 1)} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0 }} title="Actualiser" aria-label="Actualiser">
             <NavIcon name="refresh" size={18} color={COLORS.redFluo} />
           </button>
         </div>
@@ -161,7 +234,7 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
         </div>
       )}
 
-      {!addIntent && !activeCity && !activeCountry && !searching && (
+      {!addIntent && !activeCity && !activeCountry && !searching && goToMap && (
         <button
           onClick={goToMap}
           style={{
@@ -240,15 +313,25 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
 
       {searching ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          {searchResults.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun établissement trouvé.</p>}
-          {searchResults.map(renderVenueRow)}
+          {items.length === 0 && !loadingMore && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun établissement trouvé.</p>}
+          {items.map(renderVenueRow)}
+          {hasMore && (
+            <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
+              Chargement...
+            </div>
+          )}
         </div>
       ) : activeCity ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          {cityResults.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun établissement pour l'instant.</p>}
-          {cityResults.map(renderVenueRow)}
+          {items.length === 0 && !loadingMore && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun établissement pour l'instant.</p>}
+          {items.map(renderVenueRow)}
+          {hasMore && (
+            <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
+              Chargement...
+            </div>
+          )}
         </div>
-      ) : !skipCountryLevel && !activeCountry ? (
+      ) : !activeCountry ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {countries.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun établissement enregistré pour l'instant.</p>}
           {countries.map((country) => (
@@ -268,8 +351,8 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
               }}
             >
               <span style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
-                {COUNTRY_FLAGS[country] ? <FlagIcon flag={COUNTRY_FLAGS[country]} size={17} /> : <span>🌍</span>}
-                {country}
+                {COUNTRY_FLAGS[countryLabel(country)] ? <FlagIcon flag={COUNTRY_FLAGS[countryLabel(country)]} size={17} /> : <span>🌍</span>}
+                {countryLabel(country)}
               </span>
               <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countFor(country)} →</span>
             </button>
@@ -277,32 +360,30 @@ export function VenueDirectoryScreen({ publicVenues, myVenues, myBibroCode, isAd
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          {effectiveCountry &&
-            citiesFor(effectiveCountry).length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun établissement enregistré pour l'instant.</p>}
-          {effectiveCountry &&
-            citiesFor(effectiveCountry).map((city) => (
-              <button
-                key={city}
-                onClick={() => setActiveCity(city)}
-                style={{
-                  textAlign: "left",
-                  background: COLORS.surface,
-                  border: `2px solid ${COLORS.paperAlt}`,
-                  borderRadius: "12px",
-                  padding: "14px 16px",
-                  cursor: "pointer",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <span style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-                  {city}
-                </span>
-                <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countFor(effectiveCountry, city)} →</span>
-              </button>
-            ))}
+          {cities.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun établissement enregistré pour l'instant.</p>}
+          {cities.map((city) => (
+            <button
+              key={city}
+              onClick={() => setActiveCity(city)}
+              style={{
+                textAlign: "left",
+                background: COLORS.surface,
+                border: `2px solid ${COLORS.paperAlt}`,
+                borderRadius: "12px",
+                padding: "14px 16px",
+                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+                {city}
+              </span>
+              <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countFor(activeCountry, city)} →</span>
+            </button>
+          ))}
         </div>
       )}
 

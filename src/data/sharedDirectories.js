@@ -1937,6 +1937,57 @@ export async function loadBrandDominantNationalities() {
   return Object.fromEntries(data.map((r) => [r.brand, r.nationality]));
 }
 
+// --- Répertoire des lieux côté serveur — même principe que le chantier "Produits". ---
+
+export async function searchVenues(query, limit = 30) {
+  const q = (query || "").trim();
+  if (!q) return [];
+  const { data, error } = await supabase.rpc("search_venues", { p_query: q, p_limit: limit });
+  if (error) {
+    console.error("searchVenues:", error);
+    return [];
+  }
+  return data.map(rowToVenue);
+}
+
+export async function loadVenuesByIds(ids) {
+  const uniqueIds = [...new Set((ids || []).filter(Boolean))];
+  if (uniqueIds.length === 0) return [];
+  const { data, error } = await supabase.rpc("get_venues_by_ids", { p_ids: uniqueIds });
+  if (error) {
+    console.error("loadVenuesByIds:", error);
+    return [];
+  }
+  return data.map(rowToVenue);
+}
+
+export async function loadVenueCountryCounts() {
+  const { data, error } = await supabase.rpc("get_venue_country_counts");
+  if (error) {
+    console.error("loadVenueCountryCounts:", error);
+    return {};
+  }
+  return Object.fromEntries(data.map((r) => [r.country, r.venue_count]));
+}
+
+export async function loadVenueCityCounts(country) {
+  const { data, error } = await supabase.rpc("get_venue_city_counts", { p_country: country });
+  if (error) {
+    console.error("loadVenueCityCounts:", error);
+    return {};
+  }
+  return Object.fromEntries(data.map((r) => [r.city, r.venue_count]));
+}
+
+export async function loadVenuesDirectoryPage({ country = null, city = null, query = null, page = 0, pageSize = 40 } = {}) {
+  const { data, error } = await supabase.rpc("get_venues_page", { p_country: country, p_city: city, p_query: query, p_page: page, p_page_size: pageSize });
+  if (error) {
+    console.error("loadVenuesDirectoryPage:", error);
+    return [];
+  }
+  return data.map(rowToVenue);
+}
+
 
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
@@ -2128,7 +2179,7 @@ export async function deleteBrewery(id) {
 // Même logique de frontière que pour le type de produit — bibamus-admin stocke le pays sous
 // forme de code technique (ex. "belgique"), l'app grand public affiche et compare encore sur
 // le libellé français.
-const COUNTRY_CODE_TO_LABEL = {
+export const COUNTRY_CODE_TO_LABEL = {
   belgique: "Belgique",
   france: "France",
   pays_bas: "Pays-Bas",
