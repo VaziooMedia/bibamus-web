@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
-import { ProfileHeader, WeekTracker } from "./ProfileParts.jsx";
+import { WeekTracker } from "./ProfileParts.jsx";
 import { loadMyStatsOverview, loadMyVenueRanking, loadMyDrinkRanking, loadVenuesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
@@ -18,7 +18,7 @@ const PERIODS = [
   { key: "year", label: "Cette année", since: () => new Date(new Date().getFullYear(), 0, 1) },
 ];
 
-export function MyStatsScreen({ events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, onBack, openVenue, openBibro, openDrink }) {
+export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcoholFreeDay, onBack, openVenue, openBibro, openDrink }) {
   const [periodKey, setPeriodKey] = useState("all");
   const period = PERIODS.find((p) => p.key === periodKey);
   const since = period.since ? period.since() : null;
@@ -93,11 +93,11 @@ export function MyStatsScreen({ events, myName, profile, bibros, checkIns, alcoh
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>MES STATISTIQUES</span>
 
-      <ProfileHeader myName={myName} profile={profile} bibros={bibros} checkIns={checkIns} />
-
-      <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "34px", margin: "0 0 14px 0", lineHeight: 1 }}>Tous lieux confondus</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 14px 0" }}>
+        <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Mes Statistiques</h1>
+      </div>
 
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
         {PERIODS.map((p) => (
