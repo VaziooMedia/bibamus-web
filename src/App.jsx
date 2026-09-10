@@ -686,6 +686,8 @@ export default function App() {
         guest_name: friend?.code ? null : friend?.name || null,
         drink_id: o.drinkId,
         unit_price: drink?.price ?? null,
+        unit_volume_cl: drink?.volumeCl ?? null,
+        unit_kcal_per_100ml: drink?.kcalPer100ml ?? null,
       };
     });
     recordRoundOrders(ordersForLog, { venueId: realVenueId, eventId: activeEventId, roundId: round.id, currency: currentEvent?.currency });

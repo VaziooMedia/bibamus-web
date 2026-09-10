@@ -2021,6 +2021,53 @@ export async function deleteRoundOrders(roundId) {
   if (error) console.error("deleteRoundOrders:", error);
 }
 
+// --- Mes Statistiques — reconstruites sur la vraie consommation (round_orders +
+// solo_checkins + drink_checkins), avec une période libre (since/until en Date, ou null = depuis
+// toujours).
+
+export async function loadMyStatsOverview(since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_stats_overview", {
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+  });
+  if (error) {
+    console.error("loadMyStatsOverview:", error);
+    return { visits: 0, drinksOrdered: 0, moneyEuro: 0, moneyJeton: 0, calories: 0 };
+  }
+  const row = data[0] || {};
+  return { visits: row.visits || 0, drinksOrdered: row.drinks_ordered || 0, moneyEuro: row.money_euro || 0, moneyJeton: row.money_jeton || 0, calories: row.calories || 0 };
+}
+
+// metric: "visits" | "spend_euro" | "spend_jeton" | "calories"
+export async function loadMyVenueRanking(metric, since = null, until = null, limit = 10) {
+  const { data, error } = await supabase.rpc("get_my_venue_ranking", {
+    p_metric: metric,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+    p_limit: limit,
+  });
+  if (error) {
+    console.error("loadMyVenueRanking:", error);
+    return [];
+  }
+  return data.map((r) => ({ venueId: r.venue_id, value: r.value }));
+}
+
+// metric: "count" | "spend_euro" | "spend_jeton" | "calories"
+export async function loadMyDrinkRanking(metric, since = null, until = null, limit = 10) {
+  const { data, error } = await supabase.rpc("get_my_drink_ranking", {
+    p_metric: metric,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+    p_limit: limit,
+  });
+  if (error) {
+    console.error("loadMyDrinkRanking:", error);
+    return [];
+  }
+  return data.map((r) => ({ drinkId: r.drink_id, value: r.value }));
+}
+
 
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
