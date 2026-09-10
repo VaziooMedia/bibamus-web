@@ -26,6 +26,7 @@ import {
   loadMyCityCountryStats,
   loadMyNewVenuesCount,
   loadMyVenueSpendAvg,
+  loadMyMonthlySpending,
 } from "../data/sharedDirectories.js";
 import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
@@ -134,6 +135,13 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   }, [priceStats]);
 
   // §6 — Lieux.
+  // §8 — évolution des dépenses, toujours sur les 6 derniers mois glissants, sans lien avec la
+  // période sélectionnée par ailleurs sur cet écran.
+  const [monthlySpending, setMonthlySpending] = useState([]);
+  useEffect(() => {
+    loadMyMonthlySpending(6).then(setMonthlySpending);
+  }, []);
+
   const [venueTypeRanking, setVenueTypeRanking] = useState([]);
   const [cityCountryStats, setCityCountryStats] = useState({ distinctCities: 0, distinctCountries: 0 });
   const [newVenuesCount, setNewVenuesCount] = useState(0);
@@ -261,6 +269,14 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     .map(([venueId, durations]) => ({ venueId, avgMin: Math.round(durations.reduce((s, d) => s + d, 0) / durations.length / 60000) }))
     .sort((a, b) => b.avgMin - a.avgMin);
   const longestVenue = venueDurationRanking[0];
+
+  // §8 — plus grosse dépense en une seule sortie (somme des tournées non offertes d'un même
+  // événement, en euros — les jetons ne sont pas mélangés dans cette comparaison).
+  const biggestOutingSpend = eventsInPeriod.reduce((max, ev) => {
+    if (ev.currency !== "euro") return max;
+    const total = (ev.rounds || []).filter((r) => !r.offeredBy).reduce((s, r) => s + (r.total || 0), 0);
+    return total > max ? total : max;
+  }, 0);
 
   const [longestVenueName, setLongestVenueName] = useState(null);
   useEffect(() => {
@@ -439,6 +455,35 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 )}
               </div>
             </div>
+          )}
+
+          {activeCategory === "depenses" && (biggestOutingSpend > 0 || priceStats?.avgPrice != null) && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+              {[
+                biggestOutingSpend > 0 && { label: "Plus grosse dépense en une sortie", value: formatMoney(biggestOutingSpend, "euro") },
+                priceStats?.avgPrice != null && { label: "Dépense moyenne par boisson", value: formatMoney(priceStats.avgPrice, "euro") },
+              ]
+                .filter(Boolean)
+                .map((tile) => (
+                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "4px" }}>{tile.label}</div>
+                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px" }}>{tile.value}</div>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {activeCategory === "depenses" && monthlySpending.some((m) => m.totalEuro > 0) && (
+            <StatSection title="Évolution des dépenses (6 derniers mois)">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {monthlySpending.map((m) => (
+                  <div key={`${m.year}-${m.month}`} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span style={{ textTransform: "capitalize" }}>{MONTH_NAMES[m.month - 1]} {m.year}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700 }}>{formatMoney(m.totalEuro, "euro")}</span>
+                  </div>
+                ))}
+              </div>
+            </StatSection>
           )}
 
           {activeCategory === "apercu" && <WeekTracker alcoholDaysMap={buildAlcoholDaysMap(events, alcoholFreeDays)} onToggleDay={onToggleAlcoholFreeDay} />}

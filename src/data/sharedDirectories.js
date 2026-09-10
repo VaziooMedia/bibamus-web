@@ -2160,6 +2160,17 @@ export async function loadMyVenueSpendAvg(since = null, until = null) {
   return data;
 }
 
+// §8 — Dépenses. Toujours les p_months derniers mois, sans lien avec la période sélectionnée
+// dans l'écran (l'évolution a besoin de sa propre fenêtre temporelle glissante).
+export async function loadMyMonthlySpending(months = 6) {
+  const { data, error } = await supabase.rpc("get_my_monthly_spending", { p_months: months });
+  if (error) {
+    console.error("loadMyMonthlySpending:", error);
+    return [];
+  }
+  return data.map((r) => ({ year: r.year, month: r.month, totalEuro: r.total_euro }));
+}
+
 
 
 // metric: "visits" | "spend_euro" | "spend_jeton" | "calories"
