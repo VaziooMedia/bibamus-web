@@ -1656,7 +1656,6 @@ export default function App() {
             )}
             {screen === "venueDirectory" && (
               <VenueDirectoryScreen
-                publicVenues={venues}
                 myVenues={[]}
                 myBibroCode={profile.myBibroCode}
                 isAdmin={!!profile.isAdmin}
@@ -1668,7 +1667,6 @@ export default function App() {
                 }}
                 goToSubmit={() => setScreen("submitVenue")}
                 goToMap={() => console.log("TODO: carte")}
-                onRefresh={refreshVenues}
                 activeCountry={activeCountry}
                 setActiveCountry={setActiveCountry}
                 activeCity={activeCity}
