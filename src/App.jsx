@@ -1837,7 +1837,6 @@ export default function App() {
                   const v = resolveEntity(venues, viewedVenueId);
                   return v ? { ...v, isFavorite: favoriteVenueIds.includes(v.id) } : v;
                 })()}
-                venues={venues}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
@@ -2043,7 +2042,6 @@ export default function App() {
             {screen === "appearance" && <AppearanceScreen onBack={() => setScreen("settings")} />}
             {screen === "search" && (
               <SearchScreen
-                venues={venues}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 onOpenVenue={(id) => {
@@ -2390,7 +2388,6 @@ export default function App() {
             {screen === "eventHistoryDetail" && (
               <EventHistoryDetailScreen
                 event={events.find((e) => e.id === viewedHistoryEventId)}
-                venues={venues}
                 displayTotal={0}
                 roundsSum={(events.find((e) => e.id === viewedHistoryEventId)?.rounds || []).reduce((s, r) => s + (r.total || 0), 0)}
                 onBack={() => setScreen("eventHistory")}
@@ -2728,7 +2725,6 @@ export default function App() {
                 venues={venues}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
-                myUserId={session.user.id}
                 focusEntryId={focusPulseEntry?.id}
                 openCommentsOnFocus={focusPulseEntry?.openComments}
                 onOpenVenue={(id) => {
@@ -2754,7 +2750,6 @@ export default function App() {
             )}
             {screen === "bibaSolo" && (
               <BibaSoloScreen
-                venues={venues}
                 myUserId={session.user.id}
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail("bibaSolo");
