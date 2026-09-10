@@ -312,6 +312,7 @@ export function DrinkDetailScreen({
       {showCheckModal && (
         <DrinkCheckInModal
           drinkName={drink.name}
+          drinkType={drink.type}
           venues={venues}
           myRating={myRating}
           onRate={onRate}
