@@ -1317,14 +1317,6 @@ export default function App() {
     await refreshViewedBrandContributions(contribution.entityId);
   };
 
-  const resetStatField = (field) => {
-    setProfile((p) => ({ ...p, statsResetDates: { ...(p.statsResetDates || {}), [field]: Date.now() } }));
-  };
-
-  const resetMoneyStats = () => {
-    setProfile((p) => ({ ...p, statsResetDates: { ...(p.statsResetDates || {}), money: Date.now() } }));
-  };
-
   const resetVenueStats = (id) => {
     const emptyStats = { visits: 0, drinksOrdered: 0, moneySpent: { euro: 0, jeton: 0 }, personalDrinksByType: {}, caloriesTotal: 0 };
     updatePublicVenue(id, { stats: emptyStats });
@@ -2026,12 +2018,14 @@ export default function App() {
                 checkIns={checkIns}
                 alcoholFreeDays={alcoholFreeDays}
                 onToggleAlcoholFreeDay={toggleAlcoholFreeDay}
-                onResetStatField={resetStatField}
-                onResetMoney={resetMoneyStats}
                 onBack={() => setScreen("profile")}
                 openVenue={(id) => {
                   setViewedVenueId(id);
                   setScreen("venueDetail");
+                }}
+                openDrink={(id) => {
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
                 }}
                 openBibro={(code) => {
                   setViewedBibroId(code);

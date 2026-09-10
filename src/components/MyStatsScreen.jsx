@@ -1,139 +1,66 @@
 // ============================================================
-// Écran "Mes Statistiques" — copié tel quel depuis le prototype
-// Claude.
+// Écran "Mes Statistiques" — reconstruit sur la vraie
+// consommation (round_orders + solo_checkins + drink_checkins),
+// avec un vrai sélecteur de période plutôt que l'ancien système
+// de réinitialisation irréversible par compteur.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { EyeOffIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
-import { ProfileHeader, WeekTracker, StatResetControl } from "./ProfileParts.jsx";
-import { loadDrinksByIds, loadVenuesWithStats } from "../data/sharedDirectories.js";
-import { formatMoney, kcalForDrink, isAlcoholicDrink, realMoneySpentFor, realMoneySpentSince, buildAlcoholDaysMap } from "../utils.js";
+import { ProfileHeader, WeekTracker } from "./ProfileParts.jsx";
+import { loadMyStatsOverview, loadMyVenueRanking, loadMyDrinkRanking, loadVenuesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
+import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
-export function MyStatsScreen({ events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, onResetStatField, onResetMoney, onBack, openVenue, openBibro }) {
-  // Ne charge que les lieux ayant déjà des statistiques (visits > 0) — jamais le répertoire
-  // complet, quelle que soit sa taille.
-  const [rawVenues, setRawVenues] = useState([]);
+const PERIODS = [
+  { key: "all", label: "Toujours", since: null },
+  { key: "month", label: "Ce mois-ci", since: () => new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
+  { key: "6months", label: "6 derniers mois", since: () => { const d = new Date(); d.setMonth(d.getMonth() - 6); return d; } },
+  { key: "year", label: "Cette année", since: () => new Date(new Date().getFullYear(), 0, 1) },
+];
+
+export function MyStatsScreen({ events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, onBack, openVenue, openBibro, openDrink }) {
+  const [periodKey, setPeriodKey] = useState("all");
+  const period = PERIODS.find((p) => p.key === periodKey);
+  const since = period.since ? period.since() : null;
+
+  const [overview, setOverview] = useState(null);
   useEffect(() => {
-    loadVenuesWithStats().then(setRawVenues);
-  }, []);
-  // "countsAsDrinkId" ne référence jamais qu'une poignée de produits ("mixes" comme le Mazout) —
-  // on ne charge que ceux-là, jamais le répertoire complet, quelle que soit sa taille.
-  const [countsAsNameById, setCountsAsNameById] = useState({});
+    setOverview(null);
+    loadMyStatsOverview(since, null).then(setOverview);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodKey]);
+
+  const [venuesByVisits, setVenuesByVisits] = useState([]);
+  const [venuesBySpend, setVenuesBySpend] = useState([]);
+  const [drinksByCount, setDrinksByCount] = useState([]);
+  const [drinksBySpend, setDrinksBySpend] = useState([]);
   useEffect(() => {
-    const ids = new Set();
-    events.forEach((ev) => (ev.menu || []).forEach((d) => d.countsAsDrinkId && ids.add(d.countsAsDrinkId)));
+    loadMyVenueRanking("visits", since, null, 10).then(setVenuesByVisits);
+    loadMyVenueRanking("spend_euro", since, null, 10).then(setVenuesBySpend);
+    loadMyDrinkRanking("count", since, null, 10).then(setDrinksByCount);
+    loadMyDrinkRanking("spend_euro", since, null, 10).then(setDrinksBySpend);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodKey]);
+
+  // Résolution des noms — bornée aux identifiants présents dans les classements ci-dessus,
+  // jamais le répertoire complet.
+  const [venueNames, setVenueNames] = useState({});
+  useEffect(() => {
+    const ids = new Set([...venuesByVisits, ...venuesBySpend].map((r) => r.venueId));
     if (ids.size === 0) return;
-    loadDrinksByIds([...ids]).then((results) => setCountsAsNameById(Object.fromEntries(results.map((d) => [d.id, d.name]))));
-  }, [events]);
-  const [confirmingReset, setConfirmingReset] = useState(null); // which field is pending confirmation
+    loadVenuesByIds([...ids]).then((results) => setVenueNames((prev) => ({ ...prev, ...Object.fromEntries(results.map((v) => [v.id, v.name])) })));
+  }, [venuesByVisits, venuesBySpend]);
 
-  // Un établissement fraîchement créé (ou jamais visité) peut avoir des statistiques
-  // incomplètes ou absentes — on garantit ici une forme complète avant tout calcul, pour
-  // éviter le même plantage que sur la fiche détaillée d'un établissement.
-  const venues = (rawVenues || []).map((v) => ({
-    ...v,
-    stats: {
-      visits: 0,
-      drinksOrdered: 0,
-      caloriesTotal: 0,
-      personalDrinksByType: {},
-      ...(v.stats || {}),
-      moneySpent: { euro: 0, jeton: 0, ...((v.stats && v.stats.moneySpent) || {}) },
-    },
-  }));
+  const [drinkNames, setDrinkNames] = useState({});
+  useEffect(() => {
+    const ids = new Set([...drinksByCount, ...drinksBySpend].map((r) => r.drinkId));
+    if (ids.size === 0) return;
+    loadDrinksByIds([...ids]).then((results) => setDrinkNames((prev) => ({ ...prev, ...Object.fromEntries(results.map((d) => [d.id, d.name])) })));
+  }, [drinksByCount, drinksBySpend]);
 
-  // "counts as" resolution mirrors the app-level tallyNameFor — a mix (e.g. Mazout) tallies under
-  // its linked base drink's name if one is set, otherwise under its own.
-  const tallyNameFor = (drink) => {
-    if (drink.countsAsDrinkId) {
-      const linkedName = countsAsNameById[drink.countsAsDrinkId];
-      if (linkedName) return linkedName;
-    }
-    return drink.name;
-  };
-
-  const resetDates = profile.statsResetDates || {};
-
-  // Venues carry their own running stats, updated live as rounds happen — but @Home and @Event
-  // sessions have no venueId to attach stats to, so their personal orders are recomputed here
-  // directly from the event's own data instead of being silently invisible. Each poste respects
-  // its own reset cutoff independently, using the timestamps already stored on rounds/orders.
-  const noVenueEvents = events.filter((e) => !e.venueId);
-  const noVenueTotals = noVenueEvents.reduce(
-    (acc, ev) => {
-      const rounds = ev.rounds || [];
-      const orders = ev.personalOrders || [];
-      const hasVisit = rounds.some((r) => !resetDates.visits || r.timestamp >= resetDates.visits) || orders.some((o) => !resetDates.visits || o.timestamp >= resetDates.visits);
-      if (hasVisit) acc.visits += 1;
-      acc.drinksOrdered += rounds
-        .filter((r) => !resetDates.drinksOrdered || r.timestamp >= resetDates.drinksOrdered)
-        .reduce((s, r) => s + (r.orders || []).length, 0);
-      rounds
-        .filter((r) => !r.offeredBy && (!resetDates.money || (r.createdAt || r.timestamp) >= resetDates.money))
-        .forEach((r) => {
-          const key = ev.currency === "jeton" ? "moneyJeton" : "moneyEuro";
-          acc[key] += r.total || 0;
-        });
-      orders.forEach((o) => {
-        const drink = (ev.menu || []).find((d) => d.id === o.drinkId);
-        if (!drink) return;
-        if (!resetDates.calories || o.timestamp >= resetDates.calories) acc.calories += kcalForDrink(drink);
-        if (!resetDates.personalDrinks || o.timestamp >= resetDates.personalDrinks) {
-          const key = tallyNameFor(drink);
-          acc.drinksByName[key] = (acc.drinksByName[key] || 0) + 1;
-        }
-      });
-      return acc;
-    },
-    { visits: 0, drinksOrdered: 0, calories: 0, drinksByName: {}, moneyEuro: 0, moneyJeton: 0 }
-  );
-
-  const totals = venues.reduce(
-    (acc, v) => {
-      acc.visits += v.stats.visits;
-      acc.drinksOrdered += v.stats.drinksOrdered;
-      acc.moneyEuro += v.stats.moneySpent.euro || 0;
-      acc.moneyJeton += v.stats.moneySpent.jeton || 0;
-      acc.calories += v.stats.caloriesTotal || 0;
-      acc.personalDrinks += Object.values(v.stats.personalDrinksByType || {}).reduce((s, n) => s + n, 0);
-      return acc;
-    },
-    { visits: noVenueTotals.visits, drinksOrdered: noVenueTotals.drinksOrdered, moneyEuro: noVenueTotals.moneyEuro, moneyJeton: noVenueTotals.moneyJeton, calories: noVenueTotals.calories, personalDrinks: 0 }
-  );
-  totals.personalDrinks += Object.values(noVenueTotals.drinksByName).reduce((s, n) => s + n, 0);
-
-  const withVisits = venues.filter((v) => v.stats.visits > 0);
-  const mostVisited = withVisits.length ? [...withVisits].sort((a, b) => b.stats.visits - a.stats.visits)[0] : null;
-  const withCalories = venues.filter((v) => (v.stats.caloriesTotal || 0) > 0);
-  const mostCaloric = withCalories.length ? [...withCalories].sort((a, b) => b.stats.caloriesTotal - a.stats.caloriesTotal)[0] : null;
-
-  // Same breakdown as a venue's own "par boisson" list, just summed across every venue (plus
-  // @Home/@Event sessions, computed above) — includes anything counted via "Compte comme".
-  const drinksByNameAllVenues = { ...noVenueTotals.drinksByName };
-  venues.forEach((v) => {
-    Object.entries(v.stats.personalDrinksByType || {}).forEach(([name, n]) => {
-      if (n > 0) drinksByNameAllVenues[name] = (drinksByNameAllVenues[name] || 0) + n;
-    });
-  });
-  const rankedDrinksByName = Object.entries(drinksByNameAllVenues).sort((a, b) => b[1] - a[1]);
-
-  const rankedVenues = venues.filter((v) => v.stats.visits > 0).sort((a, b) => b.stats.visits - a.stats.visits);
-
-  // Real money spent per venue, computed from event history (includes jeton purchases converted to €).
-  const venueMoneyMap = {};
-  events.forEach((ev) => {
-    if (!ev.venueId) return;
-    venueMoneyMap[ev.venueId] = (venueMoneyMap[ev.venueId] || 0) + realMoneySpentFor(ev);
-  });
-  const rankedVenuesByMoney = venues
-    .map((v) => ({ ...v, _realMoney: venueMoneyMap[v.id] || 0 }))
-    .filter((v) => v._realMoney > 0)
-    .sort((a, b) => b._realMoney - a._realMoney);
-  const mostSpentVenue = rankedVenuesByMoney.length ? rankedVenuesByMoney[0] : null;
-
-  // Shared rounds per Bibax — matched by name/alias against each round's participant list,
-  // since rounds track participants by name, not by Bibax code.
+  // Classement par Bibax — partagé le plus de tournées avec. Reste basé sur l'historique local
+  // des événements (déjà borné à cet utilisateur) — sans lien avec le chantier statistiques
+  // serveur, matché par nom/alias puisque les tournées suivent les participants par nom.
   const sharedRoundsByBibroCode = {};
   bibros.forEach((b) => {
     const namesToMatch = [b.name, b.alias].filter(Boolean).map((n) => n.toLowerCase());
@@ -146,65 +73,22 @@ export function MyStatsScreen({ events, myName, profile, bibros, checkIns, alcoh
     });
     if (count > 0) sharedRoundsByBibroCode[b.code] = count;
   });
-  const topBibroEntry = Object.entries(sharedRoundsByBibroCode).sort((a, b) => b[1] - a[1])[0];
-  const topBibro = topBibroEntry ? bibros.find((b) => b.code === topBibroEntry[0]) : null;
-  const topBibroCount = topBibroEntry ? topBibroEntry[1] : 0;
   const rankedBibrosBySharedRounds = Object.entries(sharedRoundsByBibroCode)
     .map(([code, count]) => ({ bibro: bibros.find((b) => b.code === code), count }))
     .filter((r) => r.bibro)
     .sort((a, b) => b.count - a.count);
 
-  const now = new Date();
-  const curYear = now.getFullYear();
-  const curMonth = now.getMonth();
-  const lastMonthRef = new Date(curYear, curMonth - 1, 1);
-  const lastMonthYear = lastMonthRef.getFullYear();
-  const lastMonthNum = lastMonthRef.getMonth();
-  const lastYear = curYear - 1;
-  const moneyBuckets = { total: 0, thisMonth: 0, lastMonth: 0, thisYear: 0, lastYear: 0 };
-  const totalTips = events.reduce((sum, ev) => {
-    const passes = (ts) => !resetDates.money || (ts != null && ts >= resetDates.money);
-    const eventTip = passes(ev.createdAt) ? ev.tip || 0 : 0;
-    const roundTips = (ev.rounds || []).filter((r) => passes(r.timestamp)).reduce((s, r) => s + (r.tip || 0), 0);
-    return sum + eventTip + roundTips;
-  }, 0);
-
-  events.forEach((ev) => {
-    const amount = realMoneySpentSince(ev, resetDates.money);
-    if (!amount) return;
-    moneyBuckets.total += amount;
-    if (!ev.date) return;
-    const d = new Date(ev.date + "T00:00:00");
-    const y = d.getFullYear();
-    const m = d.getMonth();
-    if (y === curYear) {
-      moneyBuckets.thisYear += amount;
-      if (m === curMonth) moneyBuckets.thisMonth += amount;
-    }
-    if (y === lastMonthYear && m === lastMonthNum) moneyBuckets.lastMonth += amount;
-    if (y === lastYear) moneyBuckets.lastYear += amount;
-  });
-
-  const moneyPeriodRows = [
-    { label: "Total", value: moneyBuckets.total },
-    { label: "Mois en cours", value: moneyBuckets.thisMonth },
-    { label: "Mois passé", value: moneyBuckets.lastMonth },
-    { label: "Année en cours", value: moneyBuckets.thisYear },
-    { label: "Année passée", value: moneyBuckets.lastYear },
-  ];
+  const mostVisitedVenue = venuesByVisits[0];
+  const mostSpentVenue = venuesBySpend[0];
+  const topBibro = rankedBibrosBySharedRounds[0];
 
   const recordCards = [
-    mostVisited && { icon: "🏆", label: "Le plus visité", value: mostVisited.name, sub: `${mostVisited.stats.visits} visite${mostVisited.stats.visits > 1 ? "s" : ""}` },
-    topBibro && {
-      icon: "🍻",
-      label: "Bu le plus de verres avec",
-      value: topBibro.alias || topBibro.name,
-      sub: `${topBibroCount} tournée${topBibroCount > 1 ? "s" : ""} commune${topBibroCount > 1 ? "s" : ""}`,
-      private: true,
-    },
-    mostSpentVenue && { icon: "💶", label: "Le plus dépensé", value: mostSpentVenue.name, sub: formatMoney(mostSpentVenue._realMoney, "euro"), private: true },
-    mostCaloric && { icon: "🔥", label: "Le plus calorique", value: mostCaloric.name, sub: `≈ ${Math.round(mostCaloric.stats.caloriesTotal)} kcal`, private: true },
+    mostVisitedVenue && { icon: "🏆", label: "Le plus visité", value: venueNames[mostVisitedVenue.venueId] || "…", sub: `${mostVisitedVenue.value} visite${mostVisitedVenue.value > 1 ? "s" : ""}` },
+    topBibro && { icon: "🍻", label: "Bu le plus de verres avec", value: topBibro.bibro.alias || topBibro.bibro.name, sub: `${topBibro.count} tournée${topBibro.count > 1 ? "s" : ""} commune${topBibro.count > 1 ? "s" : ""}` },
+    mostSpentVenue && { icon: "💶", label: "Le plus dépensé", value: venueNames[mostSpentVenue.venueId] || "…", sub: formatMoney(mostSpentVenue.value, "euro") },
   ].filter(Boolean);
+
+  const hasAnyData = overview && (overview.visits > 0 || overview.drinksOrdered > 0);
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -215,9 +99,32 @@ export function MyStatsScreen({ events, myName, profile, bibros, checkIns, alcoh
 
       <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "34px", margin: "0 0 14px 0", lineHeight: 1 }}>Tous lieux confondus</h2>
 
-      {venues.length === 0 ? (
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
+        {PERIODS.map((p) => (
+          <button
+            key={p.key}
+            onClick={() => setPeriodKey(p.key)}
+            style={{
+              background: periodKey === p.key ? COLORS.amber : COLORS.surface,
+              color: periodKey === p.key ? COLORS.paper : COLORS.ink,
+              border: `2px solid ${periodKey === p.key ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "6px 12px",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {!overview ? (
+        <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Chargement...</p>
+      ) : !hasAnyData ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>
-          Pas encore de lieu enregistré — tes statistiques apparaîtront ici une fois que tu en auras ajouté.
+          Rien pour cette période — tes statistiques apparaîtront ici après tes premières sorties.
         </p>
       ) : (
         <>
@@ -226,241 +133,131 @@ export function MyStatsScreen({ events, myName, profile, bibros, checkIns, alcoh
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "12px" }}>
               <div>
                 <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>VISITES</div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{totals.visits}</div>
-                <StatResetControl
-                  field="visits"
-                  resetDate={resetDates.visits}
-                  isConfirming={confirmingReset === "visits"}
-                  onRequestConfirm={setConfirmingReset}
-                  onConfirm={(f) => {
-                    onResetStatField(f);
-                    setConfirmingReset(null);
-                  }}
-                  onCancel={() => setConfirmingReset(null)}
-                  dark
-                />
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.visits}</div>
               </div>
               <div>
                 <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>BOISSONS COMMANDÉES</div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{totals.drinksOrdered}</div>
-                <StatResetControl
-                  field="drinksOrdered"
-                  resetDate={resetDates.drinksOrdered}
-                  isConfirming={confirmingReset === "drinksOrdered"}
-                  onRequestConfirm={setConfirmingReset}
-                  onConfirm={(f) => {
-                    onResetStatField(f);
-                    setConfirmingReset(null);
-                  }}
-                  onCancel={() => setConfirmingReset(null)}
-                  dark
-                />
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.drinksOrdered}</div>
               </div>
             </div>
-            {(totals.calories > 0 || totals.personalDrinks > 0 || resetDates.calories || resetDates.personalDrinks) && (
+            {overview.calories > 0 && (
               <div style={{ paddingTop: "12px", borderTop: `2px solid ${COLORS.chalkWhite}30` }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                  <div>
-                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>VERRES PERSONNELS</div>
-                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>{totals.personalDrinks}</div>
-                    <StatResetControl
-                      field="personalDrinks"
-                      resetDate={resetDates.personalDrinks}
-                      isConfirming={confirmingReset === "personalDrinks"}
-                      onRequestConfirm={setConfirmingReset}
-                      onConfirm={(f) => {
-                        onResetStatField(f);
-                        setConfirmingReset(null);
-                      }}
-                      onCancel={() => setConfirmingReset(null)}
-                      dark
-                    />
-                  </div>
-                  {totals.calories > 0 && (
-                    <div>
-                      <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>CALORIES BUES</div>
-                      <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>≈ {Math.round(totals.calories)} kcal</div>
-                      <StatResetControl
-                        field="calories"
-                        resetDate={resetDates.calories}
-                        isConfirming={confirmingReset === "calories"}
-                        onRequestConfirm={setConfirmingReset}
-                        onConfirm={(f) => {
-                          onResetStatField(f);
-                          setConfirmingReset(null);
-                        }}
-                        onCancel={() => setConfirmingReset(null)}
-                        dark
-                      />
-                    </div>
-                  )}
-                </div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>CALORIES BUES</div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>≈ {Math.round(overview.calories)} kcal</div>
               </div>
             )}
           </div>
 
-          {(rankedDrinksByName.length > 0 || resetDates.personalDrinks) && (
+          {(overview.moneyEuro > 0 || overview.moneyJeton > 0) && (
             <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Tes verres, par boisson — tous lieux confondus</div>
-              {rankedDrinksByName.length === 0 ? (
-                <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", marginTop: 0, marginBottom: "8px" }}>Rien depuis la réinitialisation.</p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "8px" }}>
-                  {rankedDrinksByName.map(([name, n]) => (
-                    <div key={name} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                      <span>{name}</span>
-                      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700 }}>{n}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p style={{ fontSize: "10.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "6px" }}>Partage le même compteur que "Verres personnels" ci-dessus.</p>
-              <StatResetControl
-                field="personalDrinks"
-                resetDate={resetDates.personalDrinks}
-                isConfirming={confirmingReset === "personalDrinks-list"}
-                onRequestConfirm={() => setConfirmingReset("personalDrinks-list")}
-                onConfirm={(f) => {
-                  onResetStatField(f);
-                  setConfirmingReset(null);
-                }}
-                onCancel={() => setConfirmingReset(null)}
-              />
-            </div>
-          )}
-
-          {(moneyBuckets.total > 0 || resetDates.money) && (
-            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "4px" }}>Argent dépensé</div>
-              <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Jetons convertis en € au moment de l'achat. Pourboires inclus dans le total.</p>
-              {moneyBuckets.total === 0 ? (
-                <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", marginTop: 0, marginBottom: "8px" }}>Rien depuis la réinitialisation.</p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {moneyPeriodRows.map((row) => (
-                    <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                      <span style={{ color: COLORS.inkSoft }}>{row.label}</span>
-                      <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(row.value, "euro")}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {totalTips > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
-                  <span style={{ color: COLORS.inkSoft }}>💶 Dont pourboires donnés</span>
-                  <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark }}>{formatMoney(totalTips, "euro")}</span>
-                </div>
-              )}
-              <div style={{ marginTop: "10px" }}>
-                <StatResetControl
-                  field="money"
-                  resetDate={resetDates.money}
-                  isConfirming={confirmingReset === "money"}
-                  onRequestConfirm={setConfirmingReset}
-                  onConfirm={() => {
-                    onResetMoney();
-                    setConfirmingReset(null);
-                  }}
-                  onCancel={() => setConfirmingReset(null)}
-                />
+              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Argent dépensé — {period.label.toLowerCase()}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {overview.moneyEuro > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span style={{ color: COLORS.inkSoft }}>En euros</span>
+                    <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(overview.moneyEuro, "euro")}</span>
+                  </div>
+                )}
+                {overview.moneyJeton > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span style={{ color: COLORS.inkSoft }}>En jetons</span>
+                    <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(overview.moneyJeton, "jeton")}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           <WeekTracker alcoholDaysMap={buildAlcoholDaysMap(events, alcoholFreeDays)} onToggleDay={onToggleAlcoholFreeDay} />
 
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>TES RECORDS</div>
-          {recordCards.some((r) => r.private) && (
-            <p style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "-4px", marginBottom: "10px", display: "flex", alignItems: "center", gap: "4px" }}>
-              <EyeOffIcon size={12} /> = privé, jamais visible par tes Bibax
-            </p>
-          )}
-          {recordCards.length === 0 ? (
-            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Rien pour l'instant — ça viendra après tes premières sorties !</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-              {recordCards.map((r) => (
-                <div
-                  key={r.label}
-                  style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", display: "flex", alignItems: "center", gap: "12px" }}
-                >
-                  <span style={{ fontSize: "22px" }}>{r.icon}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, fontWeight: 600, display: "flex", alignItems: "center", gap: "5px" }}>
-                      {r.label}
-                      {r.private && <EyeOffIcon size={13} />}
+          {recordCards.length > 0 && (
+            <>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>TES RECORDS</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+                {recordCards.map((r) => (
+                  <div
+                    key={r.label}
+                    style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", display: "flex", alignItems: "center", gap: "12px" }}
+                  >
+                    <span style={{ fontSize: "22px" }}>{r.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, fontWeight: 600 }}>{r.label}</div>
+                      <div style={{ fontSize: "15px", fontWeight: 700 }}>{r.value}</div>
                     </div>
-                    <div style={{ fontSize: "15px", fontWeight: 700 }}>{r.value}</div>
+                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", color: COLORS.amberDark, fontWeight: 700 }}>{r.sub}</div>
                   </div>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", color: COLORS.amberDark, fontWeight: 700 }}>{r.sub}</div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
 
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>CLASSEMENT PAR VISITES</div>
-          {rankedVenues.length === 0 ? (
-            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Aucune visite enregistrée pour l'instant.</p>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>TES PRODUITS PRÉFÉRÉS</div>
+          {drinksByCount.length === 0 ? (
+            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Rien pour cette période.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-              {rankedVenues.map((v, i) => (
+              {drinksByCount.map((r, i) => (
                 <button
-                  key={v.id}
-                  onClick={() => openVenue(v.id)}
-                  style={{
-                    textAlign: "left",
-                    background: COLORS.surface,
-                    border: `2px solid ${COLORS.paperAlt}`,
-                    borderRadius: "10px",
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontSize: "14px",
-                  }}
+                  key={r.drinkId}
+                  onClick={() => openDrink && openDrink(r.drinkId)}
+                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
                 >
-                  <span>
-                    <strong>{i + 1}.</strong> {v.name}
-                  </span>
-                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>
-                    {v.stats.visits} visite{v.stats.visits > 1 ? "s" : ""}
-                  </span>
+                  <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
+                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.value} verre{r.value > 1 ? "s" : ""}</span>
                 </button>
               ))}
             </div>
           )}
 
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-            CLASSEMENT PAR ARGENT DÉPENSÉ
-          </div>
-          {rankedVenuesByMoney.length === 0 ? (
-            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Rien à afficher pour l'instant.</p>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>PRODUITS POUR LESQUELS TU AS LE PLUS DÉPENSÉ</div>
+          {drinksBySpend.length === 0 ? (
+            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Rien pour cette période.</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {rankedVenuesByMoney.map((v, i) => (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+              {drinksBySpend.map((r, i) => (
                 <button
-                  key={v.id}
-                  onClick={() => openVenue(v.id)}
-                  style={{
-                    textAlign: "left",
-                    background: COLORS.surface,
-                    border: `2px solid ${COLORS.paperAlt}`,
-                    borderRadius: "10px",
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontSize: "14px",
-                  }}
+                  key={r.drinkId}
+                  onClick={() => openDrink && openDrink(r.drinkId)}
+                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
                 >
-                  <span>
-                    <strong>{i + 1}.</strong> {v.name}
-                  </span>
-                <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px" }}>
-                    {formatMoney(v._realMoney, "euro")}
-                  </span>
+                  <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
+                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px" }}>{formatMoney(r.value, "euro")}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>CLASSEMENT PAR VISITES</div>
+          {venuesByVisits.length === 0 ? (
+            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Aucune visite enregistrée pour cette période.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+              {venuesByVisits.map((r, i) => (
+                <button
+                  key={r.venueId}
+                  onClick={() => openVenue(r.venueId)}
+                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                >
+                  <span><strong>{i + 1}.</strong> {venueNames[r.venueId] || "…"}</span>
+                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.value} visite{r.value > 1 ? "s" : ""}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>CLASSEMENT PAR ARGENT DÉPENSÉ</div>
+          {venuesBySpend.length === 0 ? (
+            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Rien à afficher pour cette période.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+              {venuesBySpend.map((r, i) => (
+                <button
+                  key={r.venueId}
+                  onClick={() => openVenue(r.venueId)}
+                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                >
+                  <span><strong>{i + 1}.</strong> {venueNames[r.venueId] || "…"}</span>
+                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px" }}>{formatMoney(r.value, "euro")}</span>
                 </button>
               ))}
             </div>
@@ -475,25 +272,10 @@ export function MyStatsScreen({ events, myName, profile, bibros, checkIns, alcoh
                 <button
                   key={r.bibro.code}
                   onClick={() => openBibro && openBibro(r.bibro.code)}
-                  style={{
-                    textAlign: "left",
-                    background: COLORS.surface,
-                    border: `2px solid ${COLORS.paperAlt}`,
-                    borderRadius: "10px",
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontSize: "14px",
-                  }}
+                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
                 >
-                  <span>
-                    <strong>{i + 1}.</strong> {r.bibro.alias || r.bibro.name}
-                  </span>
-                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>
-                    {r.count} tournée{r.count > 1 ? "s" : ""}
-                  </span>
+                  <span><strong>{i + 1}.</strong> {r.bibro.alias || r.bibro.name}</span>
+                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.count} tournée{r.count > 1 ? "s" : ""}</span>
                 </button>
               ))}
             </div>
