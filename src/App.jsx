@@ -115,6 +115,8 @@ import {
   publishVenueCheckInToPulse,
   recordDrinkCheckIn,
   publishDrinkCheckInToPulse,
+  loadDrinksByIds,
+  countMyRatedDrinks,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -703,9 +705,11 @@ export default function App() {
     const isHome = venueId === "@home";
     const isEventPlace = venueId === "@event";
     const venue = venueId && !isHome && !isEventPlace ? venues.find((v) => v.id === venueId) : null;
+    const venueDrinkIds = [...new Set((venue?.menu || []).filter((d) => d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId))];
+    const venueDrinks = venueDrinkIds.length > 0 ? await loadDrinksByIds(venueDrinkIds) : [];
     const menu =
       venue && venue.menu && venue.menu.length
-        ? venue.menu.map((d) => ({ ...resolveMenuItem(d, drinksDirectory), id: `local-${Date.now()}-${Math.random()}` }))
+        ? venue.menu.map((d) => ({ ...resolveMenuItem(d, venueDrinks), id: `local-${Date.now()}-${Math.random()}` }))
         : [];
 
     const newEvent = {
@@ -865,6 +869,34 @@ export default function App() {
   const [viewedVenueId, setViewedVenueId] = useState(null);
   const [viewedMenuCategory, setViewedMenuCategory] = useState(null);
   const [viewedDrinkId, setViewedDrinkId] = useState(null);
+  const [myRatedCount, setMyRatedCount] = useState(0);
+  useEffect(() => {
+    if (screen === "myProducts" && profile.myBibroCode) {
+      countMyRatedDrinks(profile.myBibroCode).then(setMyRatedCount);
+    }
+  }, [screen, profile.myBibroCode]);
+  // Charge uniquement le produit consulté (avec résolution de doublon, comme le faisait
+  // resolveEntity sur le répertoire complet) — jamais besoin du répertoire entier pour ça.
+  const [viewedDrink, setViewedDrink] = useState(null);
+  useEffect(() => {
+    if (!viewedDrinkId) {
+      setViewedDrink(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      let current = (await loadDrinksByIds([viewedDrinkId]))[0] || null;
+      let hops = 0;
+      while (current && current.status === "duplicate" && current.duplicateOfId && hops < 5) {
+        current = (await loadDrinksByIds([current.duplicateOfId]))[0] || null;
+        hops++;
+      }
+      if (!cancelled) setViewedDrink(current || null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [viewedDrinkId]);
   const [viewedHistoryEventId, setViewedHistoryEventId] = useState(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [searchInitialTab, setSearchInitialTab] = useState("lieux");
@@ -932,7 +964,7 @@ export default function App() {
           : d
       )
     );
-    const drink = drinksDirectory.find((d) => d.id === drinkId);
+    const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
     if (drink) {
       updateDrink(drinkId, {
         ratings: { ...(drink.ratings || {}), [profile.myBibroCode]: value },
@@ -959,7 +991,7 @@ export default function App() {
         return { ...d, ratings, ratingDates, ratedServingModes };
       })
     );
-    const drink = drinksDirectory.find((d) => d.id === drinkId);
+    const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
     if (drink) {
       const ratings = { ...(drink.ratings || {}) };
       const ratingDates = { ...(drink.ratingDates || {}) };
@@ -972,7 +1004,7 @@ export default function App() {
   };
 
   const toggleTastedServingMode = (drinkId, mode) => {
-    const drink = drinksDirectory.find((d) => d.id === drinkId);
+    const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
     if (!drink) return;
     const current = (drink.ratedServingModes && drink.ratedServingModes[profile.myBibroCode]) || [];
     const next = current.includes(mode) ? current.filter((m) => m !== mode) : [...current, mode];
@@ -1037,7 +1069,7 @@ export default function App() {
   }, [viewedDrinkId, profile.isAdmin]);
 
   const suggestDrinkEdit = async (id, submittedData) => {
-    const drink = drinksDirectory.find((d) => d.id === id);
+    const drink = viewedDrink?.id === id ? viewedDrink : null;
     if (!drink) return;
     const fields = computeDrinkDiff(drink, submittedData);
     if (Object.keys(fields).length === 0) return;
@@ -1789,15 +1821,15 @@ export default function App() {
             )}
             {screen === "editDrink" && (
               <DrinkFormScreen
-                drink={resolveEntity(drinksDirectory, viewedDrinkId)}
+                drink={viewedDrink}
                 breweriesDirectory={breweriesDirectory}
                 onRegisterBrewery={registerBrewery}
                 brandsDirectory={brandsDirectory}
                 onRegisterBrand={registerBrand}
                 drinksDirectory={drinksDirectory}
-                suggestMode={!profile.isAdmin && resolveEntity(drinksDirectory, viewedDrinkId)?.status === "complete"}
+                suggestMode={!profile.isAdmin && viewedDrink?.status === "complete"}
                 onSave={(patch) => {
-                  if (!profile.isAdmin && resolveEntity(drinksDirectory, viewedDrinkId)?.status === "complete") {
+                  if (!profile.isAdmin && viewedDrink?.status === "complete") {
                     suggestDrinkEdit(viewedDrinkId, patch);
                   } else {
                     updateDrink(viewedDrinkId, patch);
@@ -1871,7 +1903,7 @@ export default function App() {
             )}
             {screen === "drinkDetail" && (
               <DrinkDetailScreen
-                drink={resolveEntity(drinksDirectory, viewedDrinkId)}
+                drink={viewedDrink}
                 drinksDirectory={drinksDirectory}
                 venues={venues}
                 isAdmin={!!profile.isAdmin}
@@ -2407,7 +2439,7 @@ export default function App() {
             )}
             {screen === "myProducts" && (
               <MyProductsHubScreen
-                ratedCount={drinksDirectory.filter((d) => d.ratings && d.ratings[profile.myBibroCode] != null).length}
+                ratedCount={myRatedCount}
                 toTryCount={wishlistDrinkIds.length}
                 onBack={() => setScreen("profile")}
                 goToRated={() => setScreen("drinksDirectory")}
@@ -2424,9 +2456,17 @@ export default function App() {
                     ? venues.find((v) => v.id === publicVenueOrDraft.id) || publicVenueOrDraft
                     : publicVenueOrDraft
                 }
-                onSave={(mode, currency, jetonUnitValue, selectedVenueId) => {
+                onSave={async (mode, currency, jetonUnitValue, selectedVenueId) => {
+                  const currentVenueRef = currentEvent.isHome ? "@home" : currentEvent.venueId === "@event" ? "@event" : currentEvent.venueId || null;
+                  let venueDrinks = [];
+                  if (selectedVenueId !== currentVenueRef) {
+                    const isHome = selectedVenueId === "@home";
+                    const isEventPlace = selectedVenueId === "@event";
+                    const venue = selectedVenueId && !isHome && !isEventPlace ? venues.find((v) => v.id === selectedVenueId) : null;
+                    const venueDrinkIds = [...new Set((venue?.menu || []).filter((d) => d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId))];
+                    venueDrinks = venueDrinkIds.length > 0 ? await loadDrinksByIds(venueDrinkIds) : [];
+                  }
                   updateEvent(activeEventId, (e) => {
-                    const currentVenueRef = e.isHome ? "@home" : e.venueId === "@event" ? "@event" : e.venueId || null;
                     if (selectedVenueId === currentVenueRef) {
                       // Lieu inchangé — on ne touche pas à la carte déjà en place.
                       return { ...e, mode, currency, jetonUnitValue };
@@ -2436,7 +2476,7 @@ export default function App() {
                     const venue = selectedVenueId && !isHome && !isEventPlace ? venues.find((v) => v.id === selectedVenueId) : null;
                     const menu =
                       venue && venue.menu && venue.menu.length
-                        ? venue.menu.map((d) => ({ ...resolveMenuItem(d, drinksDirectory), id: `local-${Date.now()}-${Math.random()}` }))
+                        ? venue.menu.map((d) => ({ ...resolveMenuItem(d, venueDrinks), id: `local-${Date.now()}-${Math.random()}` }))
                         : [];
                     return {
                       ...e,
