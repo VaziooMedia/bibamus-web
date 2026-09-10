@@ -15,9 +15,9 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { normalizeForSearch } from "../utils.js";
 import { RatingSlider } from "./RatingSlider.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
+import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
 
 const TITLE_BY_TYPE = {
   "Bières & Cidres": "Check cette bière",
@@ -34,15 +34,7 @@ const SPECIAL_VENUES = [
   { id: "@event", name: "@Event" },
 ];
 
-function distanceKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-export function DrinkCheckInModal({ drinkName, drinkType, venues = [], myRating, presetVenue = null, onRate, onUnrate, onClose }) {
+export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue = null, onRate, onUnrate, onClose }) {
   const hasRating = myRating != null;
   const [isEditingRating, setIsEditingRating] = useState(!hasRating);
   const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
@@ -50,28 +42,34 @@ export function DrinkCheckInModal({ drinkName, drinkType, venues = [], myRating,
   const [query, setQuery] = useState("");
   const [selectedVenue, setSelectedVenue] = useState(presetVenue);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [myPosition, setMyPosition] = useState(null);
+  const [nearbyVenues, setNearbyVenues] = useState([]);
+  const [searchedVenues, setSearchedVenues] = useState([]);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setMyPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => {
+        loadNearbyVenues(pos.coords.latitude, pos.coords.longitude, 5000, 8).then(setNearbyVenues);
+      },
       () => {},
       { timeout: 5000 }
     );
   }, []);
 
-  const sortedVenues = myPosition
-    ? [...venues].sort((a, b) => {
-        const da = a.lat != null && a.lng != null ? distanceKm(myPosition.lat, myPosition.lng, a.lat, a.lng) : Infinity;
-        const db = b.lat != null && b.lng != null ? distanceKm(myPosition.lat, myPosition.lng, b.lat, b.lng) : Infinity;
-        return da - db;
-      })
-    : venues;
+  const q = query.trim();
+  useEffect(() => {
+    if (!q) {
+      setSearchedVenues([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchVenues(q, 8).then(setSearchedVenues);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [q]);
 
-  const q = normalizeForSearch(query.trim());
-  const filteredVenues = q ? sortedVenues.filter((v) => normalizeForSearch(v.name).includes(q) || normalizeForSearch(v.city).includes(q)) : sortedVenues;
-  const filteredSpecials = q ? SPECIAL_VENUES.filter((v) => normalizeForSearch(v.name).includes(q)) : SPECIAL_VENUES;
+  const filteredVenues = q ? searchedVenues : nearbyVenues;
+  const filteredSpecials = q ? SPECIAL_VENUES.filter((v) => v.name.toLowerCase().includes(q.toLowerCase())) : SPECIAL_VENUES;
 
   const title = TITLE_BY_TYPE[drinkType] || "Check ce produit";
 
@@ -215,7 +213,7 @@ export function DrinkCheckInModal({ drinkName, drinkType, venues = [], myRating,
               {filteredVenues.length === 0 && filteredSpecials.length === 0 && (
                 <div style={{ padding: "12px 14px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucun résultat.</div>
               )}
-              {!q && myPosition && filteredVenues.length > 0 && (
+              {!q && filteredVenues.length > 0 && (
                 <div style={{ padding: "8px 14px 2px", fontSize: "10.5px", fontWeight: 700, color: COLORS.inkSoft, letterSpacing: "0.5px" }}>AUTOUR DE TOI</div>
               )}
               {filteredVenues.slice(0, 8).map((v) => (

@@ -9,7 +9,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { COLORS, COUNTRY_FLAGS, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { NavIcon, FlagIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
-import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
+import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds, searchVenues, loadVenuesByIds } from "../data/sharedDirectories.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 
 function normalize(str) {
@@ -41,7 +41,7 @@ function drinkCalories(drink, volumeCl) {
 }
 
 // Écran d'ajout — recherche une boisson, prix obligatoire, lieu optionnel.
-function AddSoloCheckinScreen({ venues, myUserId, recentDrinks = [], onDone, onBack }) {
+function AddSoloCheckinScreen({ myUserId, recentDrinks = [], onDone, onBack }) {
   const [query, setQuery] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
   const [volume, setVolume] = useState("");
@@ -64,7 +64,17 @@ function AddSoloCheckinScreen({ venues, myUserId, recentDrinks = [], onDone, onB
   }, [q, query]);
 
   const vq = normalize(venueQuery);
-  const venueResults = useMemo(() => (vq.length < 2 ? [] : venues.filter((v) => normalize(v.name).includes(vq)).slice(0, 6)), [venues, vq]);
+  const [venueResults, setVenueResults] = useState([]);
+  useEffect(() => {
+    if (vq.length < 2) {
+      setVenueResults([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchVenues(venueQuery.trim(), 6).then(setVenueResults);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [vq, venueQuery]);
 
   const selectDrink = (d) => {
     setSelectedDrink(d);
@@ -268,11 +278,12 @@ function AddSoloCheckinScreen({ venues, myUserId, recentDrinks = [], onDone, onB
   );
 }
 
-export function BibaSoloScreen({ venues = [], myUserId, onOpenDrink, onBack }) {
+export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
   const [checkins, setCheckins] = useState(null);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
   const [drinksById, setDrinksById] = useState({});
+  const [venuesById, setVenuesById] = useState({});
 
   const refresh = () => loadMySoloCheckins(startOfTodayIso()).then(setCheckins);
 
@@ -308,7 +319,15 @@ export function BibaSoloScreen({ venues = [], myUserId, onOpenDrink, onBack }) {
     }
     loadDrinksByIds([...ids]).then((results) => setDrinksById(Object.fromEntries(results.map((d) => [String(d.id), d]))));
   }, [checkins, recentDrinkIds]);
-  const venuesById = useMemo(() => Object.fromEntries(venues.map((v) => [String(v.id), v])), [venues]);
+
+  useEffect(() => {
+    const venueIds = new Set((checkins || []).filter((c) => c.venueId).map((c) => String(c.venueId)));
+    if (venueIds.size === 0) {
+      setVenuesById({});
+      return;
+    }
+    loadVenuesByIds([...venueIds]).then((results) => setVenuesById(Object.fromEntries(results.map((v) => [String(v.id), v]))));
+  }, [checkins, recentDrinkIds]);
 
   const totals = useMemo(() => {
     if (!checkins) return { count: 0, price: 0, kcal: 0 };
@@ -341,7 +360,6 @@ export function BibaSoloScreen({ venues = [], myUserId, onOpenDrink, onBack }) {
   if (adding) {
     return (
       <AddSoloCheckinScreen
-        venues={venues}
         myUserId={myUserId}
         recentDrinks={recentDrinkIds.map((id) => drinksById[id]).filter(Boolean)}
         onBack={() => setAdding(false)}

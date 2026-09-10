@@ -10,7 +10,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
-import { searchBibax, searchDrinks } from "../data/sharedDirectories.js";
+import { searchBibax, searchDrinks, searchVenues } from "../data/sharedDirectories.js";
 
 function normalize(str) {
   return (str || "")
@@ -90,7 +90,6 @@ const TABS = [
 ];
 
 export function SearchScreen({
-  venues = [],
   breweriesDirectory = [],
   brandsDirectory = [],
   onOpenVenue,
@@ -113,10 +112,7 @@ export function SearchScreen({
   const q = normalize(trimmed);
   const hasQuery = trimmed.length >= 2;
 
-  const venueResults = useMemo(
-    () => (q.length < 2 ? [] : venues.filter((v) => normalize(v.name).includes(q) || (v.aliases || []).some((a) => normalize(a).includes(q)))),
-    [venues, q]
-  );
+  const [venueResults, setVenueResults] = useState([]);
   const [drinkResults, setDrinkResults] = useState([]);
   const [drinksLoading, setDrinksLoading] = useState(false);
   const brandResults = useMemo(
@@ -157,6 +153,18 @@ export function SearchScreen({
         setDrinkResults(results);
         setDrinksLoading(false);
       });
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [trimmed]);
+
+  // Même principe côté serveur pour les lieux.
+  useEffect(() => {
+    if (trimmed.length < 2) {
+      setVenueResults([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchVenues(trimmed).then(setVenueResults);
     }, 350);
     return () => clearTimeout(timer);
   }, [trimmed]);

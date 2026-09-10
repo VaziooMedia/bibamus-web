@@ -22,7 +22,6 @@ import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 export function DrinkDetailScreen({
   drink,
-  venues = [],
   isAdmin,
   myBibroCode,
   myUserId,
@@ -312,7 +311,6 @@ export function DrinkDetailScreen({
         <DrinkCheckInModal
           drinkName={drink.name}
           drinkType={drink.type}
-          venues={venues}
           myRating={myRating}
           onRate={onRate}
           onUnrate={() => onUnrate(drink.id)}
