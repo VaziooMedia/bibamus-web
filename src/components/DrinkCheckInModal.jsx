@@ -3,16 +3,22 @@
 // mais pour une boisson. Contrairement au check-in lieu, il
 // n'est pas géolocalisé : le lieu associé est optionnel, choisi
 // à la main dans la liste (goûté "quelque part" ou "ici").
-// Le système de notation (étoiles) reste celui déjà affiché en
-// permanence sur la fiche produit (StarRating) — ce popup ne
-// fait qu'enregistrer le check lui-même.
+// Contrairement au lieu (dont la notation se fait dans son
+// propre popup séparé, VenueRatingModal), la note d'un produit
+// est intégrée ici même, dans ce popup de check — c'est le seul
+// endroit où on peut désormais donner ou modifier sa note.
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { normalizeForSearch } from "../utils.js";
+import { RatingSlider } from "./RatingSlider.jsx";
+import { StarsDisplay } from "./StarsDisplay.jsx";
 
-export function DrinkCheckInModal({ drinkName, venues = [], onClose }) {
+export function DrinkCheckInModal({ drinkName, venues = [], myRating, onRate, onUnrate, onClose }) {
+  const hasRating = myRating != null;
+  const [isEditingRating, setIsEditingRating] = useState(!hasRating);
+  const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
   const [publishToPulse, setPublishToPulse] = useState(true);
   const [query, setQuery] = useState("");
   const [selectedVenue, setSelectedVenue] = useState(null);
@@ -22,6 +28,7 @@ export function DrinkCheckInModal({ drinkName, venues = [], onClose }) {
   const filtered = q ? venues.filter((v) => normalizeForSearch(v.name).includes(q) || normalizeForSearch(v.city).includes(q)) : venues;
 
   const handleConfirm = () => {
+    if (isEditingRating) onRate(pendingValue);
     onClose({ publishToPulse, venueId: selectedVenue?.id || null });
   };
 
@@ -46,6 +53,58 @@ export function DrinkCheckInModal({ drinkName, venues = [], onClose }) {
           Check ce produit
         </h2>
         {drinkName && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 18px 0" }}>{drinkName}</p>}
+
+        <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px", display: "block" }}>Ta note</label>
+        {isEditingRating ? (
+          <>
+            <RatingSlider value={hasRating ? myRating : 0} onLocalChange={setPendingValue} />
+            {hasRating && (
+              <button
+                onClick={() => {
+                  setPendingValue(myRating);
+                  setIsEditingRating(false);
+                }}
+                style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0, marginTop: "10px" }}
+              >
+                Annuler
+              </button>
+            )}
+          </>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <StarsDisplay value={myRating} size={22} />
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }}>
+                <span style={{ color: COLORS.amber }}>{String(myRating).replace(".", ",")}</span>
+                <span style={{ color: COLORS.ink }}>/5</span>
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setPendingValue(myRating);
+                setIsEditingRating(true);
+              }}
+              title="Modifier ma note"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex" }}
+            >
+              <NavIcon name="pencil" size={19} color={COLORS.amber} />
+            </button>
+          </div>
+        )}
+        {!isEditingRating && (
+          <button
+            onClick={() => {
+              onUnrate();
+              setIsEditingRating(true);
+              setPendingValue(0.25);
+            }}
+            style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0, marginBottom: "10px" }}
+          >
+            Retirer ma note
+          </button>
+        )}
+
+        <div style={{ borderBottom: `1px dashed ${COLORS.paperAlt}`, margin: "16px 0" }} />
 
         <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Lieu (facultatif)</label>
         <div style={{ position: "relative", marginBottom: "18px" }}>
