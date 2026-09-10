@@ -1853,6 +1853,17 @@ export async function searchDrinksByType(type, query = "", limit = 30) {
   return data.map(rowToDrink);
 }
 
+// Combien de produits ce Bibro a-t-il notés au total — compte côté serveur, jamais besoin de
+// charger le répertoire complet pour ça (utilisé par le hub "Mes produits").
+export async function countMyRatedDrinks(myBibroCode) {
+  const { data, error } = await supabase.rpc("count_my_rated_drinks", { p_bibro_code: myBibroCode });
+  if (error) {
+    console.error("countMyRatedDrinks:", error);
+    return 0;
+  }
+  return data || 0;
+}
+
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
   if (error) {
