@@ -91,7 +91,7 @@ export function DrinkDirectoryPicker({ type, onPick }) {
           <div style={{ overflowY: "auto", flex: 1 }}>
             {filtered.length === 0 && (
               <div style={{ padding: "10px 14px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>
-                {query.trim().length === 0 ? "Tapez au moins 2 lettres pour chercher." : query.trim().length === 1 ? "Encore une lettre..." : "Aucun résultat."}
+                {query.trim().length === 0 ? "Tape au moins 2 caractères" : query.trim().length === 1 ? "Encore un caractère..." : "Aucun résultat."}
               </div>
             )}
             {filtered.map((d) => (
