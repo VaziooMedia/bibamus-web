@@ -1571,7 +1571,6 @@ export default function App() {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
-                drinksDirectory={drinksDirectory}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 openEvent={(id) => {
@@ -1690,7 +1689,6 @@ export default function App() {
               <EventDashboardScreen
                 event={events.find((e) => e.id === activeEventId)}
                 venue={venues.find((v) => v.id === events.find((e) => e.id === activeEventId)?.venueId) || null}
-                drinksDirectory={drinksDirectory}
                 eventTotal={(currentEvent?.rounds || []).reduce((sum, r) => sum + (r.total || 0), 0) + (currentEvent?.tip || 0) + (currentEvent?.tipsCollected || 0)}
                 onNewRound={startNewRound}
                 onManageMenu={() => setScreen("menuSetup")}
@@ -1768,13 +1766,11 @@ export default function App() {
                 onBack={() => setScreen("eventDashboard")}
                 breweriesDirectory={breweriesDirectory}
                 onRegisterBrewery={registerBrewery}
-                drinksDirectory={drinksDirectory}
                 onCleanupDuplicates={() => cleanupDuplicates(currentEvent.venueId)}
               />
             )}
             {screen === "drinksDirectory" && (
               <DrinksDirectoryScreen
-                drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 onBack={() => setScreen(screenBeforeDrinksDirectory)}
@@ -1783,7 +1779,6 @@ export default function App() {
                   setScreen("drinkDetail");
                 }}
                 goToSubmit={() => setScreen("submitDrink")}
-                onRefresh={async () => setDrinksDirectory(await loadDrinksDirectory())}
                 initialCategory={initialDrinksCategory}
                 initialTagFilter={initialDrinksTagFilter}
                 onSeedConsumed={() => {
@@ -1795,7 +1790,6 @@ export default function App() {
             {screen === "editVenue" && (
               <DirectoryVenueFormScreen
                 venue={resolveEntity(venues, viewedVenueId)}
-                drinksDirectory={drinksDirectory}
                 breweriesDirectory={breweriesDirectory}
                 onRegisterBrewery={registerBrewery}
                 addIntent={false}
@@ -1811,7 +1805,6 @@ export default function App() {
             {screen === "submitVenue" && (
               <DirectoryVenueFormScreen
                 venue={null}
-                drinksDirectory={drinksDirectory}
                 breweriesDirectory={breweriesDirectory}
                 onRegisterBrewery={registerBrewery}
                 addIntent={false}
@@ -1826,7 +1819,6 @@ export default function App() {
                 onRegisterBrewery={registerBrewery}
                 brandsDirectory={brandsDirectory}
                 onRegisterBrand={registerBrand}
-                drinksDirectory={drinksDirectory}
                 suggestMode={!profile.isAdmin && viewedDrink?.status === "complete"}
                 onSave={(patch) => {
                   if (!profile.isAdmin && viewedDrink?.status === "complete") {
@@ -1847,7 +1839,6 @@ export default function App() {
                 onRegisterBrewery={registerBrewery}
                 brandsDirectory={brandsDirectory}
                 onRegisterBrand={registerBrand}
-                drinksDirectory={drinksDirectory}
                 onSave={submitDrink}
                 onCancel={() => setScreen("drinksDirectory")}
               />
@@ -1880,7 +1871,6 @@ export default function App() {
             {screen === "venueMenuCategories" && (
               <VenueMenuCategoriesScreen
                 venue={resolveEntity(venues, viewedVenueId)}
-                drinksDirectory={drinksDirectory}
                 onBack={() => setScreen("venueDetail")}
                 onOpenCategory={(cat) => {
                   setViewedMenuCategory(cat);
@@ -1892,7 +1882,6 @@ export default function App() {
               <VenueCategoryDrinksScreen
                 venue={resolveEntity(venues, viewedVenueId)}
                 category={viewedMenuCategory}
-                drinksDirectory={drinksDirectory}
                 onBack={() => setScreen("venueMenuCategories")}
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail("venueCategoryDrinks");
@@ -1904,7 +1893,6 @@ export default function App() {
             {screen === "drinkDetail" && (
               <DrinkDetailScreen
                 drink={viewedDrink}
-                drinksDirectory={drinksDirectory}
                 venues={venues}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
@@ -1999,7 +1987,6 @@ export default function App() {
                 checkIns={checkIns}
                 alcoholFreeDays={alcoholFreeDays}
                 onToggleAlcoholFreeDay={toggleAlcoholFreeDay}
-                drinksDirectory={drinksDirectory}
                 onResetStatField={resetStatField}
                 onResetMoney={resetMoneyStats}
                 onBack={() => setScreen("profile")}
@@ -2069,7 +2056,6 @@ export default function App() {
             {screen === "search" && (
               <SearchScreen
                 venues={venues}
-                drinksDirectory={drinksDirectory}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 onOpenVenue={(id) => {
@@ -2756,7 +2742,6 @@ export default function App() {
                   setScreen("home");
                 }}
                 venues={venues}
-                drinksDirectory={drinksDirectory}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 myUserId={session.user.id}
@@ -2785,7 +2770,6 @@ export default function App() {
             )}
             {screen === "bibaSolo" && (
               <BibaSoloScreen
-                drinksDirectory={drinksDirectory}
                 venues={venues}
                 myUserId={session.user.id}
                 onOpenDrink={(id) => {
@@ -2845,7 +2829,6 @@ export default function App() {
       </ProfileNavContext.Provider>
       {showBarcodeScanner && (
         <BarcodeScannerModal
-          drinksDirectory={drinksDirectory}
           myBibroCode={profile.myBibroCode}
           onClose={() => setShowBarcodeScanner(false)}
           onFoundDrink={(drinkId) => {
