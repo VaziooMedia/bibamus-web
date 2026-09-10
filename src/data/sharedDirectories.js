@@ -2122,6 +2122,45 @@ export async function loadMyDrinkPriceStats(since = null, until = null) {
   return { avgPrice: row.avg_price, maxPrice: row.max_price, maxPriceDrinkId: row.max_price_drink_id };
 }
 
+// §6 — Lieux.
+export async function loadMyVenueTypeRanking(since = null, until = null, limit = 10) {
+  const { data, error } = await supabase.rpc("get_my_venue_type_ranking", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null, p_limit: limit });
+  if (error) {
+    console.error("loadMyVenueTypeRanking:", error);
+    return [];
+  }
+  return data.map((r) => ({ venueType: r.venue_type, quantity: r.quantity }));
+}
+
+export async function loadMyCityCountryStats(since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_city_country_stats", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadMyCityCountryStats:", error);
+    return { distinctCities: 0, distinctCountries: 0 };
+  }
+  const row = data[0] || {};
+  return { distinctCities: row.distinct_cities || 0, distinctCountries: row.distinct_countries || 0 };
+}
+
+export async function loadMyNewVenuesCount(since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_new_venues_count", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadMyNewVenuesCount:", error);
+    return 0;
+  }
+  return data || 0;
+}
+
+export async function loadMyVenueSpendAvg(since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_venue_spend_avg", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadMyVenueSpendAvg:", error);
+    return null;
+  }
+  return data;
+}
+
+
 
 // metric: "visits" | "spend_euro" | "spend_jeton" | "calories"
 export async function loadMyVenueRanking(metric, since = null, until = null, limit = 10) {

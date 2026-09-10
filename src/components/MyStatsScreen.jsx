@@ -22,6 +22,10 @@ import {
   loadMyBreweryRanking,
   loadMyNewDrinksCount,
   loadMyDrinkPriceStats,
+  loadMyVenueTypeRanking,
+  loadMyCityCountryStats,
+  loadMyNewVenuesCount,
+  loadMyVenueSpendAvg,
 } from "../data/sharedDirectories.js";
 import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
@@ -129,6 +133,19 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     loadDrinksByIds([priceStats.maxPriceDrinkId]).then((results) => setMaxPriceDrinkName(results[0]?.name || null));
   }, [priceStats]);
 
+  // §6 — Lieux.
+  const [venueTypeRanking, setVenueTypeRanking] = useState([]);
+  const [cityCountryStats, setCityCountryStats] = useState({ distinctCities: 0, distinctCountries: 0 });
+  const [newVenuesCount, setNewVenuesCount] = useState(0);
+  const [venueSpendAvg, setVenueSpendAvg] = useState(null);
+  useEffect(() => {
+    loadMyVenueTypeRanking(since, null, 10).then(setVenueTypeRanking);
+    loadMyCityCountryStats(since, null).then(setCityCountryStats);
+    loadMyNewVenuesCount(since, null).then(setNewVenuesCount);
+    loadMyVenueSpendAvg(since, null).then(setVenueSpendAvg);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodKey]);
+
   const [venuesByVisits, setVenuesByVisits] = useState([]);
   const [venuesBySpend, setVenuesBySpend] = useState([]);
   const [drinksByCount, setDrinksByCount] = useState([]);
@@ -197,6 +214,28 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
       ? Math.round(closedEventsWithDuration.reduce((sum, e) => sum + (e.closedAt - e.createdAt), 0) / closedEventsWithDuration.length / 60000)
       : null;
   const formatDuration = (min) => (min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}` : `${min} min`);
+
+  // §6 — "Lieu où tu restes le plus longtemps" — durée moyenne par lieu, depuis les mêmes
+  // événements fermés que ci-dessus, groupés par lieu cette fois.
+  const durationsByVenue = {};
+  closedEventsWithDuration.forEach((e) => {
+    if (!e.venueId || e.isHome || e.venueId === "@event") return;
+    if (!durationsByVenue[e.venueId]) durationsByVenue[e.venueId] = [];
+    durationsByVenue[e.venueId].push(e.closedAt - e.createdAt);
+  });
+  const venueDurationRanking = Object.entries(durationsByVenue)
+    .map(([venueId, durations]) => ({ venueId, avgMin: Math.round(durations.reduce((s, d) => s + d, 0) / durations.length / 60000) }))
+    .sort((a, b) => b.avgMin - a.avgMin);
+  const longestVenue = venueDurationRanking[0];
+
+  const [longestVenueName, setLongestVenueName] = useState(null);
+  useEffect(() => {
+    if (!longestVenue?.venueId) {
+      setLongestVenueName(null);
+      return;
+    }
+    loadVenuesByIds([longestVenue.venueId]).then((results) => setLongestVenueName(results[0]?.name || null));
+  }, [longestVenue?.venueId]);
 
   const mostVisitedVenue = venuesByVisits[0];
   const mostSpentVenue = venuesBySpend[0];
@@ -507,6 +546,51 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "lieux" && (
+          <>
+          {venuesByVisits[0] && (
+            <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "14px" }}>
+              <span style={{ fontSize: "28px" }}>🏠</span>
+              <div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.6 }}>TON QG</div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }}>{venueNames[venuesByVisits[0].venueId] || "…"}</div>
+                <div style={{ fontSize: "12.5px", opacity: 0.7 }}>{venuesByVisits[0].value} visite{venuesByVisits[0].value > 1 ? "s" : ""}</div>
+              </div>
+            </div>
+          )}
+
+          {(newVenuesCount > 0 || cityCountryStats.distinctCities > 0 || venueSpendAvg != null || longestVenue) && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+              {[
+                newVenuesCount > 0 && { label: "Nouveaux établissements découverts", value: newVenuesCount },
+                cityCountryStats.distinctCities > 0 && { label: "Villes différentes visitées", value: cityCountryStats.distinctCities },
+                cityCountryStats.distinctCountries > 0 && { label: "Pays différents visités", value: cityCountryStats.distinctCountries },
+                venueSpendAvg != null && { label: "Dépense moyenne / établissement", value: formatMoney(venueSpendAvg, "euro") },
+                longestVenue && longestVenueName && { label: "Où tu restes le plus longtemps", value: longestVenueName, sub: formatDuration(longestVenue.avgMin) },
+              ]
+                .filter(Boolean)
+                .map((tile) => (
+                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "4px" }}>{tile.label}</div>
+                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px" }}>{tile.value}</div>
+                    {tile.sub && <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", color: COLORS.amberDark, fontWeight: 700, marginTop: "2px" }}>{tile.sub}</div>}
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {venueTypeRanking.length > 0 && (
+            <StatSection title="Type de lieu le plus fréquenté">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {venueTypeRanking.map((r, i) => (
+                  <div key={r.venueType} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span><strong>{i + 1}.</strong> {r.venueType}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} visite{r.quantity > 1 ? "s" : ""}</span>
+                  </div>
+                ))}
+              </div>
+            </StatSection>
+          )}
+
           <StatSection title="Classement par visites">
             {venuesByVisits.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucune visite enregistrée pour cette période.</p>
@@ -525,6 +609,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
             )}
           </StatSection>
+          </>
           )}
 
           {activeCategory === "depenses" && (
