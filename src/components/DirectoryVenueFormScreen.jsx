@@ -10,8 +10,9 @@ import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { DrinkRow } from "./DrinkRow.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
 import { capitalizeFirst, drinkTypeLabel, nextId, isValidVenuePhone, resolveMenuItem } from "../utils.js";
+import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 
-export function DirectoryVenueFormScreen({ venue, drinksDirectory, breweriesDirectory, onRegisterBrewery, addIntent, suggestMode, menuOnly, onSave, onCancel }) {
+export function DirectoryVenueFormScreen({ venue, breweriesDirectory, onRegisterBrewery, addIntent, suggestMode, menuOnly, onSave, onCancel }) {
   const [name, setName] = useState(venue?.name || "");
   const [subtitle, setSubtitle] = useState(venue?.subtitle || "");
   const [streetName, setStreetName] = useState(venue?.streetName || "");
@@ -34,6 +35,7 @@ export function DirectoryVenueFormScreen({ venue, drinksDirectory, breweriesDire
   const [lat, setLat] = useState(venue?.lat ?? null);
   const [lng, setLng] = useState(venue?.lng ?? null);
   const [menu, setMenu] = useState(venue?.menu || []);
+  const drinksDirectory = useTargetedDrinks(menu);
   const [activeMenuCategory, setActiveMenuCategory] = useState(null);
 
   const incompleteMenuItems = menu
@@ -305,18 +307,13 @@ export function DirectoryVenueFormScreen({ venue, drinksDirectory, breweriesDire
         const itemsIn = (cat) => resolvedMenu.filter((d) => categoryOf(d) === cat);
         const uncategorizedCount = countFor("Non classé");
 
-        const directoryPoolFor = (cat) =>
-          !cat
-            ? drinksDirectory || []
-            : cat === "Shots"
-            ? (drinksDirectory || []).filter((d) => d.type === "Spiritueux")
-            : (drinksDirectory || []).filter((d) => d.type === cat);
+        const typeFor = (cat) => (!cat ? null : cat === "Shots" ? "Spiritueux" : cat);
 
         const addControls = (
           <>
             <div style={{ marginBottom: "10px" }}>
               <DrinkDirectoryPicker
-                drinks={directoryPoolFor(activeMenuCategory)}
+                type={typeFor(activeMenuCategory)}
                 onPick={(source) => (source.type === "Spiritueux" && !activeMenuCategory ? handlePickFromDirectory(source) : addDrinkFromDirectory(source, activeMenuCategory || undefined))}
               />
             </div>

@@ -1836,6 +1836,23 @@ export async function loadGenericDrinks() {
   return data.map(rowToDrink);
 }
 
+// Comme searchDrinks, mais bornée à un type précis — pour les sélecteurs "ajouter un produit à
+// cette catégorie" (carte d'un lieu, menu d'un événement). Sans terme de recherche, retourne les
+// premiers produits de ce type par ordre alphabétique plutôt qu'une liste vide, pour qu'on puisse
+// parcourir la catégorie avant même de taper quoi que ce soit.
+export async function searchDrinksByType(type, query = "", limit = 30) {
+  let request = supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES);
+  if (type) request = request.eq("type", type);
+  const q = (query || "").trim();
+  if (q) request = request.ilike("name", `%${q}%`);
+  const { data, error } = await request.order("name").limit(limit);
+  if (error) {
+    console.error("searchDrinksByType:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
   if (error) {

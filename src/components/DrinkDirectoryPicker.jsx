@@ -2,15 +2,17 @@
 // Sélecteur "Ajouter depuis le répertoire" — copié tel quel
 // depuis le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { VerifiedBadge } from "./icons.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
-import { normalizeForSearch, drinkSummaryLine } from "../utils.js";
+import { drinkSummaryLine } from "../utils.js";
+import { searchDrinksByType } from "../data/sharedDirectories.js";
 
-export function DrinkDirectoryPicker({ drinks, onPick }) {
+export function DrinkDirectoryPicker({ type, onPick }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [filtered, setFiltered] = useState([]);
   const containerRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -22,10 +24,15 @@ export function DrinkDirectoryPicker({ drinks, onPick }) {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const q = normalizeForSearch(query.trim());
-  const filtered = q
-    ? drinks.filter((d) => normalizeForSearch(d.name).includes(q) || normalizeForSearch(d.brewery).includes(q) || normalizeForSearch(d.type).includes(q))
-    : drinks;
+  // Recherche côté serveur, bornée à ce type — se déclenche aussi à l'ouverture (query encore
+  // vide) pour montrer d'emblée quelques produits de la catégorie, comme avant.
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => {
+      searchDrinksByType(type, query.trim()).then(setFiltered);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [open, type, query]);
 
   const pick = (d) => {
     onPick(d);
@@ -81,7 +88,7 @@ export function DrinkDirectoryPicker({ drinks, onPick }) {
           <div style={{ overflowY: "auto", flex: 1 }}>
             {filtered.length === 0 && (
               <div style={{ padding: "10px 14px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>
-                {drinks.length === 0 ? "Le répertoire de boissons est vide pour l'instant." : "Aucun résultat."}
+                {query.trim() ? "Aucun résultat." : "Aucun produit dans cette catégorie pour l'instant."}
               </div>
             )}
             {filtered.map((d) => (

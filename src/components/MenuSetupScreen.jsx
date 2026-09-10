@@ -2,15 +2,22 @@
 // Écran "Carte boissons" d'un événement — copié tel quel depuis
 // le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { DrinkRow } from "./DrinkRow.jsx";
 import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems } from "../utils.js";
+import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
+import { loadGenericDrinks } from "../data/sharedDirectories.js";
 
-export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDirectory, onRegisterBrewery, drinksDirectory, onCleanupDuplicates }) {
+export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDirectory, onRegisterBrewery, onCleanupDuplicates }) {
+  const drinksDirectory = useTargetedDrinks(venue?.menu);
+  const [genericDrinks, setGenericDrinks] = useState([]);
+  useEffect(() => {
+    loadGenericDrinks().then(setGenericDrinks);
+  }, []);
   const [cleanupMessage, setCleanupMessage] = useState(null);
   const [query, setQuery] = useState("");
   const [openCategory, setOpenCategory] = useState(null);
@@ -105,7 +112,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   // checking it copies the product in (frozen snapshot, like any other item here), unchecking
   // removes it. Sorted alphabetically, and only shown when there's at least one generic product
   // to offer — only really makes sense for events not tied to one specific venue.
-  const genericDirectoryItems = [...drinksDirectory.filter((d) => d.isGeneric)].sort((a, b) => a.name.localeCompare(b.name));
+  const genericDirectoryItems = [...genericDrinks].sort((a, b) => a.name.localeCompare(b.name));
 
   const genericItemToEventItem = (g) => ({
     id: nextId(),
@@ -386,7 +393,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
       </div>
 
       <div style={{ marginBottom: "10px" }}>
-        <DrinkDirectoryPicker drinks={drinksDirectory || []} onPick={handlePickFromDirectory} />
+        <DrinkDirectoryPicker type={null} onPick={handlePickFromDirectory} />
       </div>
       {pendingSpiritSource && (
         <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "12px 14px", marginBottom: "10px" }}>

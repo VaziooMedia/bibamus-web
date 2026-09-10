@@ -6,12 +6,14 @@ import { COLORS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { resolveMenuItem } from "../utils.js";
+import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import carteIconUrl from "../assets/brand/carte.svg";
 import pdfIconUrl from "../assets/brand/pdf-icone.svg";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
 
-export function VenueMenuCategoriesScreen({ venue, drinksDirectory = [], onBack, onOpenCategory }) {
+export function VenueMenuCategoriesScreen({ venue, onBack, onOpenCategory }) {
+  const drinksDirectory = useTargetedDrinks(venue?.menu);
   // Le menu tel que stocké ne contient que des références (sourceDrinkId, fromDirectory...),
   // pas le nom/type réel — sans cette résolution, tout retombe dans "Non classé".
   const menu = (venue?.menu || []).map((d) => resolveMenuItem(d, drinksDirectory));

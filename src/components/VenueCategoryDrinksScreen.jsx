@@ -8,6 +8,7 @@ import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
 import { resolveMenuItem, formatMoney } from "../utils.js";
+import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
 
@@ -22,7 +23,8 @@ const badgeStyle = {
   whiteSpace: "nowrap",
 };
 
-export function VenueCategoryDrinksScreen({ venue, category, drinksDirectory = [], onBack, onOpenDrink }) {
+export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink }) {
+  const drinksDirectory = useTargetedDrinks(venue?.menu);
   const items = (venue?.menu || [])
     .map((d) => resolveMenuItem(d, drinksDirectory))
     .filter((d) => categoryOf(d) === category);
