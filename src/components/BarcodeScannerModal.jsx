@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { lookupBarcode, associateBarcode } from "../data/sharedDirectories.js";
+import { lookupBarcode, associateBarcode, searchDrinks } from "../data/sharedDirectories.js";
 
 // Scanner de code-barres — un code-barres n'est qu'un raccourci vers une fiche existante,
 // jamais un déclencheur de création automatique. Code connu → direction directe vers la fiche.
 // Code inconnu → recherche manuelle dans le répertoire, puis association du code à la fiche
 // choisie, pour que le prochain scan de ce même conditionnement soit immédiat.
-export function BarcodeScannerModal({ drinksDirectory, myBibroCode, onClose, onFoundDrink }) {
+export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
   const streamRef = useRef(null);
@@ -94,9 +94,18 @@ export function BarcodeScannerModal({ drinksDirectory, myBibroCode, onClose, onF
     }
   };
 
-  const filtered = query.trim()
-    ? drinksDirectory.filter((d) => d.name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 30)
-    : [];
+  const [filtered, setFiltered] = useState([]);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setFiltered([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchDrinks(query.trim()).then(setFiltered);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const associate = async (drink) => {
     setAssociating(true);

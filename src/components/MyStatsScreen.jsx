@@ -2,14 +2,24 @@
 // Écran "Mes Statistiques" — copié tel quel depuis le prototype
 // Claude.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { EyeOffIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { ProfileHeader, WeekTracker, StatResetControl } from "./ProfileParts.jsx";
+import { loadDrinksByIds } from "../data/sharedDirectories.js";
 import { formatMoney, kcalForDrink, isAlcoholicDrink, realMoneySpentFor, realMoneySpentSince, buildAlcoholDaysMap } from "../utils.js";
 
-export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, drinksDirectory, onResetStatField, onResetMoney, onBack, openVenue, openBibro }) {
+export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, onResetStatField, onResetMoney, onBack, openVenue, openBibro }) {
+  // "countsAsDrinkId" ne référence jamais qu'une poignée de produits ("mixes" comme le Mazout) —
+  // on ne charge que ceux-là, jamais le répertoire complet, quelle que soit sa taille.
+  const [countsAsNameById, setCountsAsNameById] = useState({});
+  useEffect(() => {
+    const ids = new Set();
+    events.forEach((ev) => (ev.menu || []).forEach((d) => d.countsAsDrinkId && ids.add(d.countsAsDrinkId)));
+    if (ids.size === 0) return;
+    loadDrinksByIds([...ids]).then((results) => setCountsAsNameById(Object.fromEntries(results.map((d) => [d.id, d.name]))));
+  }, [events]);
   const [confirmingReset, setConfirmingReset] = useState(null); // which field is pending confirmation
 
   // Un établissement fraîchement créé (ou jamais visité) peut avoir des statistiques
@@ -31,8 +41,8 @@ export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibr
   // its linked base drink's name if one is set, otherwise under its own.
   const tallyNameFor = (drink) => {
     if (drink.countsAsDrinkId) {
-      const linked = (drinksDirectory || []).find((d) => d.id === drink.countsAsDrinkId);
-      if (linked) return linked.name;
+      const linkedName = countsAsNameById[drink.countsAsDrinkId];
+      if (linkedName) return linkedName;
     }
     return drink.name;
   };

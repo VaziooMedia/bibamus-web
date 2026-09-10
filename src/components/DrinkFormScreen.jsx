@@ -2,15 +2,16 @@
 // Formulaire "Proposer une boisson" — copié tel quel depuis
 // le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, DRINK_VOLUMES_CL, SNACK_WEIGHTS_G, SERVING_MODE_LABELS, BEER_STYLE_TAGS, SOFT_DRINK_TAGS, SPIRIT_TAGS, WINE_TAGS, SNACK_TYPES, BEER_TYPES, COUNTRIES } from "../constants.js";
 import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { BrewerySearchSelect } from "./BrewerySearchSelect.jsx";
 import { BrandSearchSelect, DrinkLinkPicker } from "./MoreSearchPickers.jsx";
 import { capitalizeFirst, drinkTypeLabel } from "../utils.js";
+import { loadDrinksByIds } from "../data/sharedDirectories.js";
 
-export function DrinkFormScreen({ drink, breweriesDirectory, onRegisterBrewery, brandsDirectory, onRegisterBrand, drinksDirectory = [], suggestMode, onSave, onCancel }) {
+export function DrinkFormScreen({ drink, breweriesDirectory, onRegisterBrewery, brandsDirectory, onRegisterBrand, suggestMode, onSave, onCancel }) {
   const [name, setName] = useState(drink?.name || "");
   const [type, setType] = useState(drink?.type || "");
   const [abv, setAbv] = useState(drink?.abv != null ? String(drink.abv) : "");
@@ -30,6 +31,15 @@ export function DrinkFormScreen({ drink, breweriesDirectory, onRegisterBrewery, 
   const [averagePrice, setAveragePrice] = useState(drink?.averagePrice != null ? String(drink.averagePrice).replace(".", ",") : "");
   const [averageJetonValue, setAverageJetonValue] = useState(drink?.averageJetonValue != null ? String(drink.averageJetonValue) : "");
   const [countsAsDrinkId, setCountsAsDrinkId] = useState(drink?.countsAsDrinkId || null);
+  const [countsAsDrinkName, setCountsAsDrinkName] = useState(null);
+
+  useEffect(() => {
+    if (!countsAsDrinkId) {
+      setCountsAsDrinkName(null);
+      return;
+    }
+    loadDrinksByIds([countsAsDrinkId]).then((results) => setCountsAsDrinkName(results[0]?.name || null));
+  }, [countsAsDrinkId]);
 
   const isBeer = BEER_TYPES.includes(type);
   const isSoft = type === "Softs & Eaux";
@@ -289,13 +299,13 @@ export function DrinkFormScreen({ drink, breweriesDirectory, onRegisterBrewery, 
         </p>
         {countsAsDrinkId ? (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: COLORS.surface, borderRadius: "8px", padding: "10px 12px" }}>
-            <span style={{ fontSize: "14px", fontWeight: 600 }}>{drinksDirectory.find((d) => d.id === countsAsDrinkId)?.name || "Produit introuvable"}</span>
+            <span style={{ fontSize: "14px", fontWeight: 600 }}>{countsAsDrinkName || "Produit introuvable"}</span>
             <button onClick={() => setCountsAsDrinkId(null)} style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "13px", fontWeight: 700, cursor: "pointer", padding: 0 }}>
               Retirer
             </button>
           </div>
         ) : (
-          <DrinkLinkPicker drinksDirectory={drinksDirectory.filter((d) => d.id !== drink?.id)} onPick={(d) => setCountsAsDrinkId(d.id)} />
+          <DrinkLinkPicker excludeId={drink?.id} onPick={(d) => setCountsAsDrinkId(d.id)} />
         )}
       </div>
 

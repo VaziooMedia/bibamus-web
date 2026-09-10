@@ -8,10 +8,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { COLORS, GENERIC_BRAND_LABEL } from "../constants.js";
 import { VerifiedBadge } from "./icons.jsx";
 import { normalizeForSearch, normalizeForDuplicateCheck, drinkTypeLabel, ensureLeafletLoaded } from "../utils.js";
+import { searchDrinks } from "../data/sharedDirectories.js";
 
-export function DrinkLinkPicker({ drinksDirectory, onPick, placeholder = "Rechercher une boisson..." }) {
+export function DrinkLinkPicker({ onPick, excludeId = null, placeholder = "Rechercher une boisson..." }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [filtered, setFiltered] = useState([]);
   const containerRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -23,10 +25,20 @@ export function DrinkLinkPicker({ drinksDirectory, onPick, placeholder = "Recher
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const q = normalizeForSearch(query.trim());
-  const filtered = (q ? drinksDirectory.filter((d) => normalizeForSearch(d.name).includes(q)) : drinksDirectory)
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 30);
+  // Recherche côté serveur — contrairement à l'ancien comportement, la liste reste vide tant
+  // qu'aucun terme n'est tapé (au lieu de montrer les 30 premiers produits par ordre alphabétique,
+  // peu utile de toute façon dans ce contexte de recherche précise).
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setFiltered([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchDrinks(q).then((results) => setFiltered(results.filter((d) => d.id !== excludeId).sort((a, b) => a.name.localeCompare(b.name))));
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [query, excludeId]);
 
   const pick = (d) => {
     onPick(d);
