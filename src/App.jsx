@@ -61,7 +61,6 @@ import { ImportDataScreen } from "./components/ImportDataScreen.jsx";
 import { BibrosListScreen, BibroDetailScreen, AddBibroScreen, AdminUnlockScreen, MutualBibaxScreen } from "./components/BibrosScreens.jsx";
 import { DeleteAccountScreen } from "./components/DeleteAccountScreen.jsx";
 import {
-  loadPublicVenues,
   loadMyTastedDrinkIds,
   setDrinkTastedServer,
   loadBreweriesDirectory,
@@ -116,6 +115,7 @@ import {
   publishDrinkCheckInToPulse,
   loadDrinksByIds,
   countMyRatedDrinks,
+  loadVenuesByIds,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -188,7 +188,6 @@ export default function App() {
   });
 
   // Répertoires partagés (Supabase)
-  const [venues, setVenues] = useState([]);
   const [breweriesDirectory, setBreweriesDirectory] = useState([]);
   const [brandsDirectory, setBrandsDirectory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -383,8 +382,7 @@ export default function App() {
   useEffect(() => {
     if (!session) return;
     (async () => {
-      const [v, b, m] = await Promise.all([loadPublicVenues(), loadBreweriesDirectory(), loadBrandsDirectory()]);
-      setVenues(v);
+      const [b, m] = await Promise.all([loadBreweriesDirectory(), loadBrandsDirectory()]);
       setBreweriesDirectory(b);
       setBrandsDirectory(m);
       setLoading(false);
@@ -675,7 +673,7 @@ export default function App() {
     }));
 
     if (currentEvent && currentEvent.venueId && !currentEvent.isHome && currentEvent.venueId !== "@event") {
-      const venue = venues.find((v) => v.id === currentEvent.venueId);
+      const venue = venuesById[currentEvent.venueId];
       if (venue) {
         const prevStats = venue.stats || {};
         const prevMoney = prevStats.moneySpent || { euro: 0, jeton: 0 };
@@ -686,7 +684,7 @@ export default function App() {
           moneySpent: { ...prevMoney, [currentEvent.currency]: (prevMoney[currentEvent.currency] || 0) + amount },
         };
         updatePublicVenue(venue.id, { stats: newStats });
-        setVenues((prev) => prev.map((v) => (v.id === venue.id ? { ...v, stats: newStats } : v)));
+        setVenuesById((prev) => ({ ...prev, [venue.id]: { ...prev[venue.id], stats: newStats } }));
       }
     }
     setScreen("eventDashboard");
@@ -696,7 +694,7 @@ export default function App() {
     const isSalon = screen === "newSalonEvent";
     const isHome = venueId === "@home";
     const isEventPlace = venueId === "@event";
-    const venue = venueId && !isHome && !isEventPlace ? venues.find((v) => v.id === venueId) : null;
+    const venue = venueId && !isHome && !isEventPlace ? (await loadVenuesByIds([venueId]))[0] || null : null;
     const venueDrinkIds = [...new Set((venue?.menu || []).filter((d) => d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId))];
     const venueDrinks = venueDrinkIds.length > 0 ? await loadDrinksByIds(venueDrinkIds) : [];
     const menu =
@@ -755,7 +753,7 @@ export default function App() {
     if (venue) {
       const newStats = { ...(venue.stats || {}), visits: (venue.stats?.visits || 0) + 1 };
       updatePublicVenue(venue.id, { stats: newStats });
-      setVenues((prev) => prev.map((v) => (v.id === venue.id ? { ...v, stats: newStats } : v)));
+      setVenuesById((prev) => ({ ...prev, [venue.id]: { ...prev[venue.id], stats: newStats } }));
     }
 
     setEvents((prev) => [...prev, normalizeEvent(newEvent)]);
@@ -822,7 +820,6 @@ export default function App() {
       likes: [],
     });
     if (created) {
-      setVenues((prev) => [...prev, created]);
       emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: created.id });
     } else {
       alert("La création de l'établissement a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
@@ -858,6 +855,45 @@ export default function App() {
   };
 
   const [viewedVenueId, setViewedVenueId] = useState(null);
+  // Charge le lieu consulté (avec résolution de doublon, comme le faisait resolveEntity sur le
+  // répertoire complet) — même principe que viewedDrink.
+  const [viewedVenue, setViewedVenue] = useState(null);
+  useEffect(() => {
+    if (!viewedVenueId) {
+      setViewedVenue(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      let current = (await loadVenuesByIds([viewedVenueId]))[0] || null;
+      let hops = 0;
+      while (current && current.status === "duplicate" && current.duplicateOfId && hops < 5) {
+        current = (await loadVenuesByIds([current.duplicateOfId]))[0] || null;
+        hops++;
+      }
+      if (!cancelled) setViewedVenue(current || null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [viewedVenueId]);
+  // Cache ciblé — un lieu n'y entre que s'il est vraiment référencé quelque part (fiche
+  // consultée, événements en cours), jamais le répertoire complet.
+  const [venuesById, setVenuesById] = useState({});
+  useEffect(() => {
+    const ids = new Set();
+    if (viewedVenueId) ids.add(viewedVenueId);
+    events.forEach((ev) => ev.venueId && ids.add(ev.venueId));
+    const missing = [...ids].filter((id) => !venuesById[id]);
+    if (missing.length === 0) return;
+    loadVenuesByIds(missing).then((results) =>
+      setVenuesById((prev) => ({ ...prev, ...Object.fromEntries(results.map((v) => [v.id, v])) }))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewedVenueId, events]);
+
+  // Mes favoris — ensemble toujours restreint, chargé séparément du cache ci-dessus.
+  const [myFavoriteVenues, setMyFavoriteVenues] = useState([]);
   const [viewedMenuCategory, setViewedMenuCategory] = useState(null);
   const [viewedDrinkId, setViewedDrinkId] = useState(null);
   const [myRatedCount, setMyRatedCount] = useState(0);
@@ -1002,17 +1038,25 @@ export default function App() {
 
   const [favoriteVenueIds, setFavoriteVenueIds] = useState(() => loadLocal("bibamus-favorite-venues", []));
   useEffect(() => saveLocal("bibamus-favorite-venues", favoriteVenueIds), [favoriteVenueIds]);
+  useEffect(() => {
+    if (favoriteVenueIds.length === 0) {
+      setMyFavoriteVenues([]);
+      return;
+    }
+    loadVenuesByIds(favoriteVenueIds).then(setMyFavoriteVenues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [favoriteVenueIds]);
   const toggleVenueFavorite = (venueId) =>
     setFavoriteVenueIds((prev) => (prev.includes(venueId) ? prev.filter((id) => id !== venueId) : [...prev, venueId]));
 
   const toggleVenueLike = (venueId) => {
-    const venue = venues.find((v) => v.id === venueId);
+    const venue = venuesById[venueId];
     if (!venue) return;
     const likes = venue.likes || [];
     const alreadyLiked = likes.includes(profile.myBibroCode);
     const nextLikes = alreadyLiked ? likes.filter((c) => c !== profile.myBibroCode) : [...likes, profile.myBibroCode];
     if (!alreadyLiked) emitEvent(EVENT_TYPES.PRODUCT_LIKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId });
-    setVenues((prev) => prev.map((v) => (v.id === venueId ? { ...v, likes: nextLikes } : v)));
+    setVenuesById((prev) => ({ ...prev, [venueId]: { ...prev[venueId], likes: nextLikes } }));
     updatePublicVenue(venueId, { likes: nextLikes });
   };
 
@@ -1143,7 +1187,7 @@ export default function App() {
   // Version simplifiée : dans l'app web, "venues" EST déjà le répertoire partagé (pas de couche
   // "mes lieux personnels" séparée comme dans le prototype) — donc ça opère directement dessus.
   const cleanupDuplicates = (venueId) => {
-    const venue = venues.find((v) => v.id === venueId);
+    const venue = venuesById[venueId];
     if (!venue) return 0;
     const groups = new Map();
     (venue.menu || []).forEach((d) => {
@@ -1168,7 +1212,7 @@ export default function App() {
     });
     if (removed > 0) {
       updatePublicVenue(venueId, { menu: kept });
-      setVenues((prev) => prev.map((v) => (v.id === venueId ? { ...v, menu: kept } : v)));
+      setVenuesById((prev) => ({ ...prev, [venueId]: { ...prev[venueId], menu: kept } }));
     }
     return removed;
   };
@@ -1200,7 +1244,7 @@ export default function App() {
 
   const adjustVenuePersonalDrink = (venueId, drinkNameLabel, delta, kcalPerServing) => {
     if (!venueId) return;
-    const venue = venues.find((v) => v.id === venueId);
+    const venue = venuesById[venueId];
     if (!venue) return;
     const stats = venue.stats || {};
     const personalDrinksByType = stats.personalDrinksByType || {};
@@ -1210,7 +1254,7 @@ export default function App() {
     const caloriesTotal = Math.max(0, (stats.caloriesTotal || 0) + actualDelta * (kcalPerServing || 0));
     const newStats = { ...stats, personalDrinksByType: { ...personalDrinksByType, [drinkNameLabel]: next }, caloriesTotal };
     updatePublicVenue(venueId, { stats: newStats });
-    setVenues((prev) => prev.map((v) => (v.id === venueId ? { ...v, stats: newStats } : v)));
+    setVenuesById((prev) => ({ ...prev, [venueId]: { ...prev[venueId], stats: newStats } }));
   };
 
   const [viewedBreweryContributions, setViewedBreweryContributions] = useState([]);
@@ -1253,16 +1297,6 @@ export default function App() {
   };
 
   const resetStatField = (field) => {
-    setVenues((prev) =>
-      prev.map((v) => {
-        const stats = { ...(v.stats || {}) };
-        if (field === "visits") stats.visits = 0;
-        if (field === "drinksOrdered") stats.drinksOrdered = 0;
-        if (field === "personalDrinks") stats.personalDrinksByType = {};
-        if (field === "calories") stats.caloriesTotal = 0;
-        return { ...v, stats };
-      })
-    );
     setProfile((p) => ({ ...p, statsResetDates: { ...(p.statsResetDates || {}), [field]: Date.now() } }));
   };
 
@@ -1273,7 +1307,7 @@ export default function App() {
   const resetVenueStats = (id) => {
     const emptyStats = { visits: 0, drinksOrdered: 0, moneySpent: { euro: 0, jeton: 0 }, personalDrinksByType: {}, caloriesTotal: 0 };
     updatePublicVenue(id, { stats: emptyStats });
-    setVenues((prev) => prev.map((v) => (v.id === id ? { ...v, stats: emptyStats, trackingStartDate: todayISO() } : v)));
+    setVenuesById((prev) => ({ ...prev, [id]: { ...prev[id], stats: emptyStats, trackingStartDate: todayISO() } }));
   };
 
   const openTagFilter = (type, filter) => {
@@ -1353,11 +1387,6 @@ export default function App() {
   const toggleBibroFavorite = (code) =>
     setBibros((prev) => prev.map((b) => (b.code === code ? { ...b, isFavorite: !b.isFavorite } : b)));
 
-  const refreshVenues = async () => {
-    const v = await loadPublicVenues();
-    setVenues(v);
-  };
-
   // Synchrone en apparence (comme dans le prototype Claude) : vérifie d'abord si une brasserie
   // très proche existe déjà en mémoire et renvoie son nom canonique immédiatement — sinon, l'ajoute
   // optimistiquement en local tout de suite (pour un retour visuel instantané) et la persiste dans
@@ -1374,7 +1403,7 @@ export default function App() {
     const ev = events.find((e) => e.id === id);
     try {
       if (ev && ev.venueId && !ev.isHome && ev.venueId !== "@event") {
-        const venue = venues.find((v) => v.id === ev.venueId);
+        const venue = venuesById[ev.venueId];
         if (venue) {
           const stats = venue.stats || {};
           const rounds = ev.rounds || [];
@@ -1400,7 +1429,7 @@ export default function App() {
             caloriesTotal,
           };
           updatePublicVenue(venue.id, { stats: newStats });
-          setVenues((prev) => prev.map((v) => (v.id === venue.id ? { ...v, stats: newStats } : v)));
+          setVenuesById((prev) => ({ ...prev, [venue.id]: { ...prev[venue.id], stats: newStats } }));
         }
       }
     } catch (e) {
@@ -1600,7 +1629,6 @@ export default function App() {
                 myBibroCode={profile.myBibroCode}
                 avatarUrl={profile.avatarUrl}
                 lastName={profile.lastName}
-                venues={venues}
               />
             )}
             {screen === "sessionHub" && (
@@ -1636,7 +1664,7 @@ export default function App() {
                 mode={screen === "newSalonEvent" ? "salon" : "solo"}
                 onCreate={createEvent}
                 onCancel={() => setScreen("sessionHub")}
-                venues={venues.filter((v) => favoriteVenueIds.includes(v.id))}
+                venues={myFavoriteVenues}
                 onResolvePublicVenue={(publicVenueOrDraft) => publicVenueOrDraft}
                 bibros={bibros}
                 myUserId={session.user.id}
@@ -1671,7 +1699,7 @@ export default function App() {
             {screen === "eventDashboard" && activeEventId && (
               <EventDashboardScreen
                 event={events.find((e) => e.id === activeEventId)}
-                venue={venues.find((v) => v.id === events.find((e) => e.id === activeEventId)?.venueId) || null}
+                venue={venuesById[events.find((e) => e.id === activeEventId)?.venueId] || null}
                 eventTotal={(currentEvent?.rounds || []).reduce((sum, r) => sum + (r.total || 0), 0) + (currentEvent?.tip || 0) + (currentEvent?.tipsCollected || 0)}
                 onNewRound={startNewRound}
                 onManageMenu={() => setScreen("menuSetup")}
@@ -1744,7 +1772,7 @@ export default function App() {
             {screen === "menuSetup" && currentEvent && (
               <MenuSetupScreen
                 event={currentEvent}
-                venue={venues.find((v) => v.id === currentEvent.venueId) || null}
+                venue={venuesById[currentEvent.venueId] || null}
                 updateEvent={updateEvent}
                 onBack={() => setScreen("eventDashboard")}
                 breweriesDirectory={breweriesDirectory}
@@ -1772,14 +1800,14 @@ export default function App() {
             )}
             {screen === "editVenue" && (
               <DirectoryVenueFormScreen
-                venue={resolveEntity(venues, viewedVenueId)}
+                venue={viewedVenue}
                 breweriesDirectory={breweriesDirectory}
                 onRegisterBrewery={registerBrewery}
                 addIntent={false}
-                suggestMode={!profile.isAdmin && resolveEntity(venues, viewedVenueId)?.status === "complete"}
+                suggestMode={!profile.isAdmin && viewedVenue?.status === "complete"}
                 onSave={(patch) => {
                   updatePublicVenue(viewedVenueId, patch);
-                  setVenues((prev) => prev.map((v) => (v.id === viewedVenueId ? { ...v, ...patch } : v)));
+                  setVenuesById((prev) => ({ ...prev, [viewedVenueId]: { ...prev[viewedVenueId], ...patch } }));
                   setScreen("venueDetail");
                 }}
                 onCancel={() => setScreen("venueDetail")}
@@ -1829,7 +1857,7 @@ export default function App() {
             {screen === "venueDetail" && (
               <VenueDetailScreen
                 venue={(() => {
-                  const v = resolveEntity(venues, viewedVenueId);
+                  const v = viewedVenue;
                   return v ? { ...v, isFavorite: favoriteVenueIds.includes(v.id) } : v;
                 })()}
                 myBibroCode={profile.myBibroCode}
@@ -1841,7 +1869,11 @@ export default function App() {
                 onEdit={() => setScreen("editVenue")}
                 onDelete={() => {
                   deletePublicVenue(viewedVenueId);
-                  setVenues((prev) => prev.filter((v) => v.id !== viewedVenueId));
+                  setVenuesById((prev) => {
+                    const next = { ...prev };
+                    delete next[viewedVenueId];
+                    return next;
+                  });
                   setScreen("venueDirectory");
                 }}
                 onResetStats={() => resetVenueStats(viewedVenueId)}
@@ -1852,7 +1884,7 @@ export default function App() {
             )}
             {screen === "venueMenuCategories" && (
               <VenueMenuCategoriesScreen
-                venue={resolveEntity(venues, viewedVenueId)}
+                venue={viewedVenue}
                 onBack={() => setScreen("venueDetail")}
                 onOpenCategory={(cat) => {
                   setViewedMenuCategory(cat);
@@ -1862,7 +1894,7 @@ export default function App() {
             )}
             {screen === "venueCategoryDrinks" && (
               <VenueCategoryDrinksScreen
-                venue={resolveEntity(venues, viewedVenueId)}
+                venue={viewedVenue}
                 category={viewedMenuCategory}
                 onBack={() => setScreen("venueMenuCategories")}
                 onOpenDrink={(id) => {
@@ -1875,7 +1907,6 @@ export default function App() {
             {screen === "drinkDetail" && (
               <DrinkDetailScreen
                 drink={viewedDrink}
-                venues={venues}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
@@ -2356,7 +2387,6 @@ export default function App() {
             {screen === "importData" && (
               <ImportDataScreen
                 onBack={async () => {
-                  setVenues(await loadPublicVenues());
                   setBreweriesDirectory(await loadBreweriesDirectory());
                   setBrandsDirectory(await loadBrandsDirectory());
                   setScreen("settings");
@@ -2413,15 +2443,16 @@ export default function App() {
             {screen === "eventSettings" && currentEvent && (
               <EventSettingsScreen
                 event={currentEvent}
-                venues={venues.filter((v) => favoriteVenueIds.includes(v.id))}
+                venues={myFavoriteVenues}
                 onResolvePublicVenue={(publicVenueOrDraft) => publicVenueOrDraft}
                 onSave={async (mode, currency, jetonUnitValue, selectedVenueId) => {
                   const currentVenueRef = currentEvent.isHome ? "@home" : currentEvent.venueId === "@event" ? "@event" : currentEvent.venueId || null;
+                  const isHome = selectedVenueId === "@home";
+                  const isEventPlace = selectedVenueId === "@event";
+                  let venue = null;
                   let venueDrinks = [];
                   if (selectedVenueId !== currentVenueRef) {
-                    const isHome = selectedVenueId === "@home";
-                    const isEventPlace = selectedVenueId === "@event";
-                    const venue = selectedVenueId && !isHome && !isEventPlace ? venues.find((v) => v.id === selectedVenueId) : null;
+                    venue = selectedVenueId && !isHome && !isEventPlace ? (await loadVenuesByIds([selectedVenueId]))[0] || null : null;
                     const venueDrinkIds = [...new Set((venue?.menu || []).filter((d) => d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId))];
                     venueDrinks = venueDrinkIds.length > 0 ? await loadDrinksByIds(venueDrinkIds) : [];
                   }
@@ -2430,9 +2461,6 @@ export default function App() {
                       // Lieu inchangé — on ne touche pas à la carte déjà en place.
                       return { ...e, mode, currency, jetonUnitValue };
                     }
-                    const isHome = selectedVenueId === "@home";
-                    const isEventPlace = selectedVenueId === "@event";
-                    const venue = selectedVenueId && !isHome && !isEventPlace ? venues.find((v) => v.id === selectedVenueId) : null;
                     const menu =
                       venue && venue.menu && venue.menu.length
                         ? venue.menu.map((d) => ({ ...resolveMenuItem(d, venueDrinks), id: `local-${Date.now()}-${Math.random()}` }))
@@ -2711,7 +2739,6 @@ export default function App() {
                   setFocusPulseEntry(null);
                   setScreen("home");
                 }}
-                venues={venues}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 focusEntryId={focusPulseEntry?.id}
@@ -2770,7 +2797,7 @@ export default function App() {
                 contextId={storyCreateContext.contextId}
                 venueName={
                   storyCreateContext.contextType === "room"
-                    ? venues.find((v) => v.id === events.find((e) => e.salonCode === storyCreateContext.contextId)?.venueId)?.name || null
+                    ? venuesById[events.find((e) => e.salonCode === storyCreateContext.contextId)?.venueId]?.name || null
                     : null
                 }
                 myUserId={session.user.id}
