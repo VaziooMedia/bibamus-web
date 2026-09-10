@@ -63,8 +63,8 @@ export function DrinkCheckInModal({ drinkName, drinkType, venues = [], myRating,
 
   const sortedVenues = myPosition
     ? [...venues].sort((a, b) => {
-        const da = a.latitude != null && a.longitude != null ? distanceKm(myPosition.lat, myPosition.lng, a.latitude, a.longitude) : Infinity;
-        const db = b.latitude != null && b.longitude != null ? distanceKm(myPosition.lat, myPosition.lng, b.latitude, b.longitude) : Infinity;
+        const da = a.lat != null && a.lng != null ? distanceKm(myPosition.lat, myPosition.lng, a.lat, a.lng) : Infinity;
+        const db = b.lat != null && b.lng != null ? distanceKm(myPosition.lat, myPosition.lng, b.lat, b.lng) : Infinity;
         return da - db;
       })
     : venues;
