@@ -6,6 +6,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
+import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { WeekTracker } from "./ProfileParts.jsx";
 import { loadMyStatsOverview, loadMyVenueRanking, loadMyDrinkRanking, loadVenuesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
@@ -13,8 +14,20 @@ import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
 const PERIODS = [
   { key: "all", label: "Toujours", since: null },
-  { key: "month", label: "Ce mois-ci", since: () => new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
-  { key: "6months", label: "6 derniers mois", since: () => { const d = new Date(); d.setMonth(d.getMonth() - 6); return d; } },
+  {
+    key: "week",
+    label: "Cette semaine",
+    since: () => {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = day === 0 ? 6 : day - 1; // jours écoulés depuis lundi
+      d.setDate(d.getDate() - diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    },
+  },
+  { key: "month", label: "Ce mois", since: () => new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
+  { key: "6months", label: "Ces 6 derniers mois", since: () => { const d = new Date(); d.setMonth(d.getMonth() - 6); return d; } },
   { key: "year", label: "Cette année", since: () => new Date(new Date().getFullYear(), 0, 1) },
 ];
 
@@ -95,7 +108,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
       <PageHeader onBack={onBack} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 14px 0" }}>
-        <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+        <NavIcon name="bar-chart" size={20} color={COLORS.amber} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Mes Statistiques</h1>
       </div>
 
