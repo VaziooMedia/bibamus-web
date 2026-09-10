@@ -1793,6 +1793,49 @@ export async function loadDrinksDirectory() {
   return data.map(rowToDrink);
 }
 
+// --- Chargement à la demande, pensé pour un répertoire de plusieurs milliers de produits ---
+// Ces 3 fonctions remplacent progressivement loadDrinksDirectory() (qui rapatrie tout en mémoire
+// d'un coup) dans les écrans qui n'ont besoin que d'une recherche ou d'identifiants précis.
+
+// Recherche par nom, limitée — pour toute barre de recherche ou sélecteur de produit. Nécessite
+// l'index trigram idx_drinks_name_trgm (voir bibamus-schema-drinks-search-index.sql) pour rester
+// rapide à grande échelle.
+export async function searchDrinks(query, limit = 30) {
+  const q = (query || "").trim();
+  if (!q) return [];
+  const { data, error } = await supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES).ilike("name", `%${q}%`).order("name").limit(limit);
+  if (error) {
+    console.error("searchDrinks:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
+// Lot d'identifiants précis — pour résoudre les produits déjà référencés quelque part (carte d'un
+// lieu, historique de checks...) sans jamais charger le répertoire entier. ids vide → tableau vide,
+// pas d'aller-retour réseau inutile.
+export async function loadDrinksByIds(ids) {
+  const uniqueIds = [...new Set((ids || []).filter(Boolean))];
+  if (uniqueIds.length === 0) return [];
+  const { data, error } = await supabase.from("drinks_directory").select("*").in("id", uniqueIds);
+  if (error) {
+    console.error("loadDrinksByIds:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
+// Produits génériques (ex. "1 bière au choix") — sous-ensemble volontairement non paginé : par
+// nature il n'y en a jamais qu'une poignée, quelle que soit la taille du répertoire complet.
+export async function loadGenericDrinks() {
+  const { data, error } = await supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES).eq("is_generic", true).order("name");
+  if (error) {
+    console.error("loadGenericDrinks:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
   if (error) {

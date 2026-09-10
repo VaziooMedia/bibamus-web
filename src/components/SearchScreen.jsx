@@ -10,7 +10,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
-import { searchBibax } from "../data/sharedDirectories.js";
+import { searchBibax, searchDrinks } from "../data/sharedDirectories.js";
 
 function normalize(str) {
   return (str || "")
@@ -91,7 +91,6 @@ const TABS = [
 
 export function SearchScreen({
   venues = [],
-  drinksDirectory = [],
   breweriesDirectory = [],
   brandsDirectory = [],
   onOpenVenue,
@@ -118,10 +117,8 @@ export function SearchScreen({
     () => (q.length < 2 ? [] : venues.filter((v) => normalize(v.name).includes(q) || (v.aliases || []).some((a) => normalize(a).includes(q)))),
     [venues, q]
   );
-  const drinkResults = useMemo(
-    () => (q.length < 2 ? [] : drinksDirectory.filter((d) => normalize(d.name).includes(q) || (d.aliases || []).some((a) => normalize(a).includes(q)))),
-    [drinksDirectory, q]
-  );
+  const [drinkResults, setDrinkResults] = useState([]);
+  const [drinksLoading, setDrinksLoading] = useState(false);
   const brandResults = useMemo(
     () => (q.length < 2 ? [] : brandsDirectory.filter((b) => normalize(b.name).includes(q) || (b.aliases || []).some((a) => normalize(a).includes(q)))),
     [brandsDirectory, q]
@@ -141,6 +138,24 @@ export function SearchScreen({
       searchBibax(trimmed).then((results) => {
         setBibaxResults(results);
         setBibaxLoading(false);
+      });
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [trimmed]);
+
+  // Recherche produits côté serveur plutôt qu'un filtre sur tout le répertoire en mémoire — seule
+  // différence avec le comportement précédent : les alias ne sont pas (encore) inclus dans cette
+  // recherche serveur, contrairement à l'ancien filtre en mémoire.
+  useEffect(() => {
+    if (trimmed.length < 2) {
+      setDrinkResults([]);
+      return;
+    }
+    setDrinksLoading(true);
+    const timer = setTimeout(() => {
+      searchDrinks(trimmed).then((results) => {
+        setDrinkResults(results);
+        setDrinksLoading(false);
       });
     }, 350);
     return () => clearTimeout(timer);
@@ -245,11 +260,15 @@ export function SearchScreen({
           </div>
 
           <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto" }}>
-            {totalResults === 0 && !bibaxLoading ? (
+            {totalResults === 0 && !bibaxLoading && !drinksLoading ? (
               <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
             ) : counts[activeTab] === 0 ? (
               <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>
-                {activeTab === "bibax" && bibaxLoading ? "Recherche des Bibax..." : "Aucun résultat dans cette catégorie."}
+                {activeTab === "bibax" && bibaxLoading
+                  ? "Recherche des Bibax..."
+                  : activeTab === "produits" && drinksLoading
+                  ? "Recherche des produits..."
+                  : "Aucun résultat dans cette catégorie."}
               </p>
             ) : (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
