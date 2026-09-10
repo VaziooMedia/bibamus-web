@@ -1637,12 +1637,7 @@ export default function App() {
                 onCreate={createEvent}
                 onCancel={() => setScreen("sessionHub")}
                 venues={venues.filter((v) => favoriteVenueIds.includes(v.id))}
-                publicVenues={venues}
-                onResolvePublicVenue={(publicVenueOrDraft) =>
-                  publicVenueOrDraft && publicVenueOrDraft.id
-                    ? venues.find((v) => v.id === publicVenueOrDraft.id) || publicVenueOrDraft
-                    : publicVenueOrDraft
-                }
+                onResolvePublicVenue={(publicVenueOrDraft) => publicVenueOrDraft}
                 bibros={bibros}
                 myUserId={session.user.id}
               />
@@ -2420,12 +2415,7 @@ export default function App() {
               <EventSettingsScreen
                 event={currentEvent}
                 venues={venues.filter((v) => favoriteVenueIds.includes(v.id))}
-                publicVenues={venues}
-                onResolvePublicVenue={(publicVenueOrDraft) =>
-                  publicVenueOrDraft && publicVenueOrDraft.id
-                    ? venues.find((v) => v.id === publicVenueOrDraft.id) || publicVenueOrDraft
-                    : publicVenueOrDraft
-                }
+                onResolvePublicVenue={(publicVenueOrDraft) => publicVenueOrDraft}
                 onSave={async (mode, currency, jetonUnitValue, selectedVenueId) => {
                   const currentVenueRef = currentEvent.isHome ? "@home" : currentEvent.venueId === "@event" ? "@event" : currentEvent.venueId || null;
                   let venueDrinks = [];

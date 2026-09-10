@@ -11,7 +11,7 @@ import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { capitalizeFirst, todayISO } from "../utils.js";
 import { loadMyClubs } from "../data/sharedDirectories.js";
 
-export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, venues = [], publicVenues = [], onResolvePublicVenue, bibros = [], myUserId }) {
+export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, venues = [], onResolvePublicVenue, bibros = [], myUserId }) {
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("euro");
   const [date, setDate] = useState(todayISO());
@@ -191,7 +191,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
           {venues.length > 0 ? "Autres lieux" : "Un lieu déjà répertorié ?"}
         </label>
         <NearbyVenueSuggestions onPick={pickFromDirectory} selectedVenueId={selectedVenueId} forceCollapseKey={directoryOpenCount} />
-        <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} onOpen={() => setDirectoryOpenCount((n) => n + 1)} />
+        <PublicVenueSearchPicker myVenues={venues} onPick={pickFromDirectory} onOpen={() => setDirectoryOpenCount((n) => n + 1)} />
       </div>
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />

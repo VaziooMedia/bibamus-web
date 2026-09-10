@@ -223,7 +223,7 @@ export function MyProductsHubScreen({ ratedCount, toTryCount, onBack, goToRated,
 }
 
 
-export function EventSettingsScreen({ event, onSave, onBack, venues = [], publicVenues = [], onResolvePublicVenue }) {
+export function EventSettingsScreen({ event, onSave, onBack, venues = [], onResolvePublicVenue }) {
   const [eventMode, setEventMode] = useState(event.mode || "tournees");
   const [currency, setCurrency] = useState(event.currency || "euro");
   const [selectedVenueId, setSelectedVenueId] = useState(event.isHome ? "@home" : event.venueId === "@event" ? "@event" : event.venueId || null);
@@ -312,7 +312,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], public
           {venues.length > 0 ? "Autres lieux" : "Un lieu déjà répertorié ?"}
         </label>
         <NearbyVenueSuggestions onPick={pickFromDirectory} selectedVenueId={selectedVenueId} forceCollapseKey={directoryOpenCount} />
-        <PublicVenueSearchPicker publicVenues={publicVenues} myVenues={venues} onPick={pickFromDirectory} onOpen={() => setDirectoryOpenCount((n) => n + 1)} />
+        <PublicVenueSearchPicker myVenues={venues} onPick={pickFromDirectory} onOpen={() => setDirectoryOpenCount((n) => n + 1)} />
       </div>
 
       {linkedVenueLabel && (

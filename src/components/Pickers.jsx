@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, VerifiedBadge } from "./icons.jsx";
 import { normalizeForSearch, capitalizeFirst, sameVenueByNameCity } from "../utils.js";
+import { searchVenues } from "../data/sharedDirectories.js";
 
 export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placeholder = "Rechercher un Bibax..." }) {
   const [open, setOpen] = useState(false);
@@ -191,12 +192,13 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
   );
 }
 
-export function PublicVenueSearchPicker({ publicVenues, myVenues, onPick, onOpen }) {
+export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newCity, setNewCity] = useState("");
+  const [filtered, setFiltered] = useState([]);
   const containerRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -211,10 +213,19 @@ export function PublicVenueSearchPicker({ publicVenues, myVenues, onPick, onOpen
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const q = normalizeForSearch(query.trim());
-  const filtered = q
-    ? publicVenues.filter((v) => normalizeForSearch(v.name).includes(q) || normalizeForSearch(v.city).includes(q) || normalizeForSearch(v.postalCode).includes(q))
-    : publicVenues;
+  // Recherche côté serveur — contrairement à l'ancien comportement, la liste reste vide tant
+  // qu'aucun terme n'est tapé (au lieu de montrer tout le répertoire par défaut).
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setFiltered([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchVenues(q).then(setFiltered);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const alreadyTracked = (v) =>
     myVenues.some((mv) => mv.sourcePublicVenueId === v.id) ||
