@@ -44,6 +44,8 @@ export function DrinkDetailScreen({
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [reportInitialReason, setReportInitialReason] = useState(null);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [showCheckModal, setShowCheckModal] = useState(false);
   const [justChecked, setJustChecked] = useState(false);
@@ -199,18 +201,6 @@ export function DrinkDetailScreen({
           </div>
         </div>
 
-        <button
-          onClick={onEdit}
-          style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: "16px" }}
-        >
-          {isLockedForMe ? "📝 Suggérer une modification" : "✏️ Modifier cette fiche"}
-        </button>
-        {isLockedForMe && (
-          <p style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "-10px", marginBottom: "16px" }}>
-            Ce produit est certifié — tes changements seront soumis à validation plutôt qu'appliqués directement.
-          </p>
-        )}
-
         {isAdmin && (
           <div style={{ marginTop: "auto", paddingTop: "20px" }}>
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>ADMINISTRATION</div>
@@ -239,21 +229,86 @@ export function DrinkDetailScreen({
             </div>
           </div>
         )}
-        <button
-          onClick={() => setReporting(true)}
-          style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
-        >
-          <ReportIcon /> Signaler cette fiche
-        </button>
-        {reporting && <ReportModal entityType="drink" entityId={drink.id} myBibroCode={myBibroCode} directory={drinksDirectory} onClose={() => setReporting(false)} />}
-        <button
-          onClick={() => setClaiming(true)}
-          style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "10px 0 0 0", textAlign: "left" }}
-        >
-          Ce produit vous appartient ? Revendiquez cette fiche
-        </button>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
+          <button
+            onClick={() => setClaiming(true)}
+            style={{
+              display: "inline-block",
+              background: "none",
+              border: `1.5px solid ${COLORS.paperAlt}`,
+              borderRadius: "7px",
+              padding: "5px 10px",
+              color: COLORS.inkSoft,
+              fontWeight: 600,
+              fontSize: "10px",
+              cursor: "pointer",
+              textAlign: "center",
+            }}
+          >
+            Revendiquer cette fiche
+          </button>
+          <button
+            onClick={() => setShowActionsMenu(true)}
+            title="Plus d'options"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center" }}
+          >
+            <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
+          </button>
+        </div>
         {claiming && <ClaimModal entityType="drink" entityId={drink.id} entityName={drink.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
-        <BackFooterLink onClick={onBack} />
+
+        {showActionsMenu && (
+          <div
+            onClick={() => setShowActionsMenu(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
+            >
+              <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
+              <button
+                onClick={() => {
+                  setShowActionsMenu(false);
+                  onEdit();
+                }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+              >
+                <NavIcon name="pencil" size={20} color={COLORS.amber} />
+                {isLockedForMe ? "Suggérer une modification" : "Modifier cette fiche"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowActionsMenu(false);
+                  setReportInitialReason("wrong_info");
+                  setReporting(true);
+                }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+              >
+                <ReportIcon />
+                Signaler une erreur ou un changement
+              </button>
+              <button
+                onClick={() => {
+                  setShowActionsMenu(false);
+                  setReportInitialReason(null);
+                  setReporting(true);
+                }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+              >
+                <ReportIcon />
+                Signaler cette fiche
+              </button>
+            </div>
+          </div>
+        )}
+        {reporting && (
+          <ReportModal entityType="drink" entityId={drink.id} myBibroCode={myBibroCode} directory={drinksDirectory} initialReason={reportInitialReason} onClose={() => setReporting(false)} />
+        )}
+        <div style={{ marginTop: "-14px" }}>
+          <BackFooterLink onClick={onBack} />
+        </div>
       </div>
 
       {showCheckModal && (
