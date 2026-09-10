@@ -62,7 +62,6 @@ import { BibrosListScreen, BibroDetailScreen, AddBibroScreen, AdminUnlockScreen,
 import { DeleteAccountScreen } from "./components/DeleteAccountScreen.jsx";
 import {
   loadPublicVenues,
-  loadDrinksDirectory,
   loadMyTastedDrinkIds,
   setDrinkTastedServer,
   loadBreweriesDirectory,
@@ -190,7 +189,6 @@ export default function App() {
 
   // Répertoires partagés (Supabase)
   const [venues, setVenues] = useState([]);
-  const [drinksDirectory, setDrinksDirectory] = useState([]);
   const [breweriesDirectory, setBreweriesDirectory] = useState([]);
   const [brandsDirectory, setBrandsDirectory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -385,14 +383,8 @@ export default function App() {
   useEffect(() => {
     if (!session) return;
     (async () => {
-      const [v, d, b, m] = await Promise.all([
-        loadPublicVenues(),
-        loadDrinksDirectory(),
-        loadBreweriesDirectory(),
-        loadBrandsDirectory(),
-      ]);
+      const [v, b, m] = await Promise.all([loadPublicVenues(), loadBreweriesDirectory(), loadBrandsDirectory()]);
       setVenues(v);
-      setDrinksDirectory(d);
       setBreweriesDirectory(b);
       setBrandsDirectory(m);
       setLoading(false);
@@ -846,18 +838,17 @@ export default function App() {
       return;
     }
     updateDrink(drinkId, { photoUrl: result.url });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === drinkId ? { ...d, photoUrl: result.url } : d)));
+    setViewedDrink((prev) => (prev && prev.id === drinkId ? { ...prev, photoUrl: result.url } : prev));
   };
 
   const deletePhotoForDrink = (drinkId) => {
     updateDrink(drinkId, { photoUrl: null });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === drinkId ? { ...d, photoUrl: null } : d)));
+    setViewedDrink((prev) => (prev && prev.id === drinkId ? { ...prev, photoUrl: null } : prev));
   };
 
   const submitDrink = async (drinkData) => {
     const created = await createDrink({ id: `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`, ...drinkData, status: "to_process" });
     if (created) {
-      setDrinksDirectory((prev) => [...prev, created]);
       emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: created.id });
     } else {
       alert("La création du produit a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
@@ -953,16 +944,14 @@ export default function App() {
   // Note et modes goûtés : partagés sur la fiche du produit elle-même (comme dans le prototype
   // Claude) — chaque Bibax y ajoute sa propre entrée, indexée par son code personnel.
   const rateDrink = (drinkId, value) => {
-    setDrinksDirectory((prev) =>
-      prev.map((d) =>
-        d.id === drinkId
-          ? {
-              ...d,
-              ratings: { ...(d.ratings || {}), [profile.myBibroCode]: value },
-              ratingDates: { ...(d.ratingDates || {}), [profile.myBibroCode]: Date.now() },
-            }
-          : d
-      )
+    setViewedDrink((prev) =>
+      prev && prev.id === drinkId
+        ? {
+            ...prev,
+            ratings: { ...(prev.ratings || {}), [profile.myBibroCode]: value },
+            ratingDates: { ...(prev.ratingDates || {}), [profile.myBibroCode]: Date.now() },
+          }
+        : prev
     );
     const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
     if (drink) {
@@ -979,18 +968,16 @@ export default function App() {
   };
 
   const unrateDrink = (drinkId) => {
-    setDrinksDirectory((prev) =>
-      prev.map((d) => {
-        if (d.id !== drinkId) return d;
-        const ratings = { ...(d.ratings || {}) };
-        const ratingDates = { ...(d.ratingDates || {}) };
-        const ratedServingModes = { ...(d.ratedServingModes || {}) };
-        delete ratings[profile.myBibroCode];
-        delete ratingDates[profile.myBibroCode];
-        delete ratedServingModes[profile.myBibroCode];
-        return { ...d, ratings, ratingDates, ratedServingModes };
-      })
-    );
+    setViewedDrink((prev) => {
+      if (!prev || prev.id !== drinkId) return prev;
+      const ratings = { ...(prev.ratings || {}) };
+      const ratingDates = { ...(prev.ratingDates || {}) };
+      const ratedServingModes = { ...(prev.ratedServingModes || {}) };
+      delete ratings[profile.myBibroCode];
+      delete ratingDates[profile.myBibroCode];
+      delete ratedServingModes[profile.myBibroCode];
+      return { ...prev, ratings, ratingDates, ratedServingModes };
+    });
     const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
     if (drink) {
       const ratings = { ...(drink.ratings || {}) };
@@ -1009,7 +996,7 @@ export default function App() {
     const current = (drink.ratedServingModes && drink.ratedServingModes[profile.myBibroCode]) || [];
     const next = current.includes(mode) ? current.filter((m) => m !== mode) : [...current, mode];
     const ratedServingModes = { ...(drink.ratedServingModes || {}), [profile.myBibroCode]: next };
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === drinkId ? { ...d, ratedServingModes } : d)));
+    setViewedDrink((prev) => (prev && prev.id === drinkId ? { ...prev, ratedServingModes } : prev));
     updateDrink(drinkId, { ratedServingModes });
   };
 
@@ -1074,7 +1061,7 @@ export default function App() {
     const fields = computeDrinkDiff(drink, submittedData);
     if (Object.keys(fields).length === 0) return;
     await proposeContribution("drink", id, fields, drink, profile.myBibroCode || null);
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, pendingContributionsCount: (d.pendingContributionsCount || 0) + Object.keys(fields).length } : d)));
+    setViewedDrink((prev) => (prev && prev.id === id ? { ...prev, pendingContributionsCount: (prev.pendingContributionsCount || 0) + Object.keys(fields).length } : prev));
   };
 
   const refreshViewedDrinkContributions = async (id) => {
@@ -1085,27 +1072,30 @@ export default function App() {
   const approveDrinkContribution = async (contribution) => {
     await approveContribution(contribution, profile.myBibroCode || null);
     emitEvent(EVENT_TYPES.CONTRIBUTION_APPROVED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: contribution.entityId, payload: { fieldPath: contribution.fieldPath } });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === contribution.entityId ? { ...d, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (d.pendingContributionsCount || 0) - 1) } : d)));
+    setViewedDrink((prev) =>
+      prev && prev.id === contribution.entityId
+        ? { ...prev, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (prev.pendingContributionsCount || 0) - 1) }
+        : prev
+    );
     await refreshViewedDrinkContributions(contribution.entityId);
   };
 
   const rejectDrinkContribution = async (contribution) => {
     await rejectContribution(contribution, profile.myBibroCode || null);
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === contribution.entityId ? { ...d, pendingContributionsCount: Math.max(0, (d.pendingContributionsCount || 0) - 1) } : d)));
+    setViewedDrink((prev) => (prev && prev.id === contribution.entityId ? { ...prev, pendingContributionsCount: Math.max(0, (prev.pendingContributionsCount || 0) - 1) } : prev));
     await refreshViewedDrinkContributions(contribution.entityId);
   };
 
   const certifyDrink = (id) => {
     updateDrink(id, { status: "complete" });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, status: "complete" } : d)));
+    setViewedDrink((prev) => (prev && prev.id === id ? { ...prev, status: "complete" } : prev));
   };
   const decertifyDrink = (id) => {
     updateDrink(id, { status: "to_process" });
-    setDrinksDirectory((prev) => prev.map((d) => (d.id === id ? { ...d, status: "to_process" } : d)));
+    setViewedDrink((prev) => (prev && prev.id === id ? { ...prev, status: "to_process" } : prev));
   };
   const removeDrinkFromDirectory = (id) => {
     deleteDrink(id);
-    setDrinksDirectory((prev) => prev.filter((d) => d.id !== id));
     setScreen("drinksDirectory");
   };
 
@@ -1825,7 +1815,7 @@ export default function App() {
                     suggestDrinkEdit(viewedDrinkId, patch);
                   } else {
                     updateDrink(viewedDrinkId, patch);
-                    setDrinksDirectory((prev) => prev.map((d) => (d.id === viewedDrinkId ? { ...d, ...patch } : d)));
+                    setViewedDrink((prev) => (prev && prev.id === viewedDrinkId ? { ...prev, ...patch } : prev));
                   }
                   setScreen("drinkDetail");
                 }}
@@ -2377,7 +2367,6 @@ export default function App() {
               <ImportDataScreen
                 onBack={async () => {
                   setVenues(await loadPublicVenues());
-                  setDrinksDirectory(await loadDrinksDirectory());
                   setBreweriesDirectory(await loadBreweriesDirectory());
                   setBrandsDirectory(await loadBrandsDirectory());
                   setScreen("settings");
@@ -2522,7 +2511,6 @@ export default function App() {
             {screen === "brands" && (
               <BrandsAdminScreen
                 brands={brandsDirectory}
-                drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 onBack={() => setScreen("repertoireHub")}
                 onOpenBrand={(id) => {
@@ -2550,7 +2538,6 @@ export default function App() {
               <BreweryDetailScreen
                 brewery={resolveEntity(breweriesDirectory, viewedBreweryId)}
                 breweriesDirectory={breweriesDirectory}
-                drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
@@ -2586,7 +2573,6 @@ export default function App() {
               <BrandDetailScreen
                 brand={resolveEntity(brandsDirectory, viewedBrandId)}
                 brandsDirectory={brandsDirectory}
-                drinks={drinksDirectory}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
