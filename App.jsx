@@ -34,6 +34,7 @@ import { DrinkFormScreen } from "./components/DrinkFormScreen.jsx";
 import { DirectoryVenueFormScreen } from "./components/DirectoryVenueFormScreen.jsx";
 import { VenueDetailScreen } from "./components/VenueDetailScreen.jsx";
 import { VenueMenuCategoriesScreen } from "./components/VenueMenuCategoriesScreen.jsx";
+import { VenueCategoryDrinksScreen } from "./components/VenueCategoryDrinksScreen.jsx";
 import { DrinkDetailScreen } from "./components/DrinkDetailScreen.jsx";
 import { ProfileHubScreen } from "./components/ProfileHubScreen.jsx";
 import { BibaClubsListScreen } from "./components/BibaClubsListScreen.jsx";
@@ -110,6 +111,10 @@ import {
   loadClubMembers,
   linkSalonToClub,
   loadMutualBibaxList,
+  recordVenueCheckIn,
+  publishVenueCheckInToPulse,
+  recordDrinkCheckIn,
+  publishDrinkCheckInToPulse,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -858,6 +863,7 @@ export default function App() {
   };
 
   const [viewedVenueId, setViewedVenueId] = useState(null);
+  const [viewedMenuCategory, setViewedMenuCategory] = useState(null);
   const [viewedDrinkId, setViewedDrinkId] = useState(null);
   const [viewedHistoryEventId, setViewedHistoryEventId] = useState(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
@@ -1254,10 +1260,27 @@ export default function App() {
     setScreen("drinksDirectory");
   };
 
-  const checkInVenue = (venueId) => {
-    // Personnel, pour l'instant : marque simplement où vous êtes en ce moment, sur cet appareil.
+  const checkInVenue = async (venueId, { publishToPulse = true } = {}) => {
+    // Marquage local existant, conservé tel quel (présence en temps réel sur cet appareil).
     setCheckedInVenueId(venueId);
-    emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId });
+    emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId, skipPulse: !publishToPulse });
+    // Persistance réelle en base — c'est elle qui autorise ensuite à laisser un avis sur ce lieu.
+    await recordVenueCheckIn(venueId);
+  };
+
+  // À partir du 2e check-in, la publication BibaPulse est confirmée séparément (case cochée
+  // par défaut dans le popup de check-in) plutôt qu'automatique — voir checkInVenue ci-dessus,
+  // appelé avec publishToPulse: false dans ce cas.
+  const publishCheckInPulse = (venueId) => {
+    publishVenueCheckInToPulse(venueId);
+  };
+
+  // Miroir de checkInVenue, mais pour un produit — répétable (pas de marquage local "présence
+  // en temps réel" comme pour un lieu), et venueId optionnel.
+  const checkInDrink = async (drinkId, venueId, { publishToPulse = true } = {}) => {
+    emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: !publishToPulse });
+    await recordDrinkCheckIn(drinkId, venueId);
+    if (publishToPulse) publishDrinkCheckInToPulse(drinkId, venueId);
   };
 
   const handleLogout = async () => {
@@ -1807,7 +1830,8 @@ export default function App() {
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
-                onCheckIn={() => checkInVenue(viewedVenueId)}
+                onCheckIn={(opts) => checkInVenue(viewedVenueId, opts)}
+                onPublishCheckInPulse={() => publishCheckInPulse(viewedVenueId)}
                 onBack={() => setScreen(screenBeforeVenueDetail)}
                 onEdit={() => setScreen("editVenue")}
                 onDelete={() => {
@@ -1824,13 +1848,32 @@ export default function App() {
             {screen === "venueMenuCategories" && (
               <VenueMenuCategoriesScreen
                 venue={resolveEntity(venues, viewedVenueId)}
+                drinksDirectory={drinksDirectory}
                 onBack={() => setScreen("venueDetail")}
+                onOpenCategory={(cat) => {
+                  setViewedMenuCategory(cat);
+                  setScreen("venueCategoryDrinks");
+                }}
+              />
+            )}
+            {screen === "venueCategoryDrinks" && (
+              <VenueCategoryDrinksScreen
+                venue={resolveEntity(venues, viewedVenueId)}
+                category={viewedMenuCategory}
+                drinksDirectory={drinksDirectory}
+                onBack={() => setScreen("venueMenuCategories")}
+                onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("venueCategoryDrinks");
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
               />
             )}
             {screen === "drinkDetail" && (
               <DrinkDetailScreen
                 drink={resolveEntity(drinksDirectory, viewedDrinkId)}
                 drinksDirectory={drinksDirectory}
+                venues={venues}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
@@ -1841,6 +1884,7 @@ export default function App() {
                 onRate={(value) => rateDrink(viewedDrinkId, value)}
                 onUnrate={() => unrateDrink(viewedDrinkId)}
                 onToggleMode={(mode) => toggleTastedServingMode(viewedDrinkId, mode)}
+                onCheckDrink={(drinkId, venueId, opts) => checkInDrink(drinkId, venueId, opts)}
                 onBack={() => setScreen(screenBeforeDrinkDetail)}
                 onEdit={() => setScreen("editDrink")}
                 onCertify={() => certifyDrink(viewedDrinkId)}
@@ -2264,7 +2308,7 @@ export default function App() {
                 onBack={() => setScreen("settings")}
                 goToField={(field) => {
                   setViewedAccountField(field);
-                  const socialKeys = ["facebook", "instagram", "tiktok", "snapchat", "x", "threads", "linkedin", "pinterest", "twitch"];
+                  const socialKeys = ["whatsapp", "facebook", "instagram", "tiktok", "snapchat", "x", "threads", "linkedin", "pinterest", "twitch"];
                   setScreen(
                     field === "location"
                       ? "accountLocation"
@@ -2745,7 +2789,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

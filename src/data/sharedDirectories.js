@@ -491,6 +491,30 @@ export async function publishVenueCheckInToPulse(venueId) {
   await createPulseEvent("venue_visit", "venue", venueId);
 }
 
+// Même principe que recordVenueCheckIn/publishVenueCheckInToPulse, mais pour un produit —
+// répétable, et venueId optionnel (un check n'est pas forcément associé à un lieu).
+export async function recordDrinkCheckIn(drinkId, venueId = null) {
+  const { error } = await supabase.rpc("check_in_drink", { p_drink_id: drinkId, p_venue_id: venueId });
+  if (error) {
+    console.error("recordDrinkCheckIn:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
+export async function loadMyDrinkCheckinCount(drinkId) {
+  const { data, error } = await supabase.rpc("get_my_drink_checkin_count", { p_drink_id: drinkId });
+  if (error) {
+    console.error("loadMyDrinkCheckinCount:", error);
+    return 0;
+  }
+  return data || 0;
+}
+
+export async function publishDrinkCheckInToPulse(drinkId, venueId = null) {
+  await createPulseEvent("drink_checked", "drink", drinkId, { venueId });
+}
+
 export async function lookupBibroCode(code) {
   const { data, error } = await supabase.rpc("lookup_bibro_code", { p_code: code });
   if (error) {
