@@ -2,7 +2,7 @@
 // Fiches détaillées d'une brasserie/producteur et d'une marque
 // — copiées telles quelles depuis le prototype Claude.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS } from "../constants.js";
 import { VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
@@ -10,8 +10,9 @@ import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
+import { loadDrinksByBrewery, loadDrinksByBrand } from "../data/sharedDirectories.js";
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], drinks, isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
@@ -20,7 +21,10 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], drinks, 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isLocked = !isAdmin && brewery.status === "complete";
 
-  const relatedDrinks = drinks.filter((d) => d.brewery && d.brewery.toLowerCase() === brewery.name.toLowerCase());
+  const [relatedDrinks, setRelatedDrinks] = useState([]);
+  useEffect(() => {
+    loadDrinksByBrewery(brewery.name).then(setRelatedDrinks);
+  }, [brewery.name]);
 
   const submitEdit = () => {
     if (isLocked) {
@@ -173,7 +177,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], drinks, 
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], drinks, isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brand.name || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -181,7 +185,10 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], drinks, isAdmin
   const [claiming, setClaiming] = useState(false);
   const isLocked = !isAdmin && brand.status === "complete";
 
-  const relatedDrinks = drinks.filter((d) => d.brand && d.brand.toLowerCase() === brand.name.toLowerCase());
+  const [relatedDrinks, setRelatedDrinks] = useState([]);
+  useEffect(() => {
+    loadDrinksByBrand(brand.name).then(setRelatedDrinks);
+  }, [brand.name]);
 
   const submitEdit = () => {
     if (isLocked) {

@@ -3,11 +3,12 @@
 // quels depuis le prototype Claude (classement par pays,
 // fusion de doublons, création à la volée).
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, COUNTRY_FLAGS } from "../constants.js";
 import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton } from "./ui.jsx";
 import { normalizeForSearch, searchEntities } from "../utils.js";
+import { loadBrandDominantNationalities } from "../data/sharedDirectories.js";
 
 export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery, onRename, onSetCountry, onSuggestEdit, onCreate, onCertify, onDelete, onRefresh }) {
   const [editingId, setEditingId] = useState(null);
@@ -316,7 +317,7 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
   );
 }
 
-export function BrandsAdminScreen({ brands, drinks, isAdmin, onBack, onOpenBrand, onRename, onSuggestEdit, onCreate, onCertify, onDelete, onRefresh }) {
+export function BrandsAdminScreen({ brands, isAdmin, onBack, onOpenBrand, onRename, onSuggestEdit, onCreate, onCertify, onDelete, onRefresh }) {
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -325,16 +326,17 @@ export function BrandsAdminScreen({ brands, drinks, isAdmin, onBack, onOpenBrand
   const [query, setQuery] = useState("");
   const [activeCountry, setActiveCountry] = useState(null);
 
+  // Une seule requête pour toutes les marques, plutôt qu'un filtre sur le répertoire complet
+  // relancé pour chacune d'elles.
+  const [nationalityByBrand, setNationalityByBrand] = useState({});
+  useEffect(() => {
+    loadBrandDominantNationalities().then(setNationalityByBrand);
+  }, []);
+
   // Brands don't carry their own country field (a product's own nationality already covers that —
   // no need to duplicate it). So a brand's "country" here is derived from whichever nationality its
   // linked products most commonly use, falling back to "Non renseigné" if none is set yet.
-  const countryOf = (b) => {
-    const linked = drinks.filter((d) => d.brand === b.name && d.nationality);
-    if (linked.length === 0) return "Non renseigné";
-    const counts = {};
-    linked.forEach((d) => (counts[d.nationality] = (counts[d.nationality] || 0) + 1));
-    return Object.entries(counts).sort((a, b2) => b2[1] - a[1])[0][0];
-  };
+  const countryOf = (b) => nationalityByBrand[b.name] || "Non renseigné";
 
   const countries = Array.from(new Set(brands.map(countryOf))).sort((a, b) => a.localeCompare(b));
   const skipCountryLevel = countries.length <= 1;

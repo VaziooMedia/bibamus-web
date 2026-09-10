@@ -1904,6 +1904,40 @@ export async function loadDrinksDirectoryPage({ type = null, letter = null, quer
   return data.map(rowToDrink);
 }
 
+// Fiche producteur/marque — tous les produits d'une brasserie ou d'une marque donnée, jamais le
+// répertoire complet pour ça.
+export async function loadDrinksByBrewery(breweryName) {
+  if (!breweryName) return [];
+  const { data, error } = await supabase.rpc("get_drinks_by_brewery", { p_brewery_name: breweryName });
+  if (error) {
+    console.error("loadDrinksByBrewery:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
+export async function loadDrinksByBrand(brandName) {
+  if (!brandName) return [];
+  const { data, error } = await supabase.rpc("get_drinks_by_brand", { p_brand_name: brandName });
+  if (error) {
+    console.error("loadDrinksByBrand:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
+// Pour chaque marque, sa nationalité la plus fréquente parmi ses produits liés — une seule
+// requête pour toutes les marques, au lieu de filtrer le répertoire complet marque par marque.
+export async function loadBrandDominantNationalities() {
+  const { data, error } = await supabase.rpc("get_brand_dominant_nationalities");
+  if (error) {
+    console.error("loadBrandDominantNationalities:", error);
+    return {};
+  }
+  return Object.fromEntries(data.map((r) => [r.brand, r.nationality]));
+}
+
+
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
   if (error) {
