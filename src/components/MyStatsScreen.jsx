@@ -108,6 +108,10 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     loadDrinksByIds([...ids]).then((results) => setDrinkNames((prev) => ({ ...prev, ...Object.fromEntries(results.map((d) => [d.id, d.name])) })));
   }, [drinksByCount, drinksBySpend]);
 
+  // Événements de la période sélectionnée — pour rester cohérent avec le reste de la page, qui
+  // filtre déjà tout par période côté serveur.
+  const eventsInPeriod = since ? events.filter((e) => e.createdAt >= since.getTime()) : events;
+
   // Classement par Bibax — partagé le plus de tournées avec. Reste basé sur l'historique local
   // des événements (déjà borné à cet utilisateur) — sans lien avec le chantier statistiques
   // serveur, matché par nom/alias puisque les tournées suivent les participants par nom.
@@ -116,7 +120,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     const namesToMatch = [b.name, b.alias].filter(Boolean).map((n) => n.toLowerCase());
     if (namesToMatch.length === 0) return;
     let count = 0;
-    events.forEach((ev) => {
+    eventsInPeriod.forEach((ev) => {
       (ev.rounds || []).forEach((r) => {
         if ((r.friends || []).some((f) => namesToMatch.includes((f.name || "").toLowerCase()))) count++;
       });
@@ -127,6 +131,14 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     .map(([code, count]) => ({ bibro: bibros.find((b) => b.code === code), count }))
     .filter((r) => r.bibro)
     .sort((a, b) => b.count - a.count);
+
+  // Salons (BibaRoom) auxquels tu as participé — un même code de salon ne compte qu'une fois.
+  const salonsCount = new Set(eventsInPeriod.filter((e) => e.salonCode).map((e) => e.salonCode)).size;
+
+  // Dépense moyenne par sortie et par mois — seulement en euros, pour ne pas mélanger les
+  // devises dans une moyenne. "Par mois" n'a de sens que pour une période avec un vrai début
+  // (pas "Toujours", où on ne sait pas depuis quand compter).
+  const monthsElapsed = since ? Math.max(1, (Date.now() - since.getTime()) / (1000 * 60 * 60 * 24 * 30.44)) : null;
 
   const mostVisitedVenue = venuesByVisits[0];
   const mostSpentVenue = venuesBySpend[0];
@@ -218,6 +230,26 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>≈ {Math.round(overview.calories)} kcal</div>
                 </div>
               )}
+            </div>
+          )}
+
+          {activeCategory === "apercu" && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+              {[
+                { label: "Produits différents testés", value: overview.distinctDrinks },
+                { label: "Lieux différents visités", value: overview.distinctVenues },
+                { label: "Salons partagés", value: salonsCount },
+                { label: "Bibax rencontrés", value: rankedBibrosBySharedRounds.length },
+                overview.moneyEuro > 0 && overview.visits > 0 && { label: "Dépense moyenne / sortie", value: formatMoney(overview.moneyEuro / overview.visits, "euro") },
+                overview.moneyEuro > 0 && monthsElapsed && { label: "Dépense moyenne / mois", value: formatMoney(overview.moneyEuro / monthsElapsed, "euro") },
+              ]
+                .filter(Boolean)
+                .map((tile) => (
+                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "4px" }}>{tile.label}</div>
+                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px" }}>{tile.value}</div>
+                  </div>
+                ))}
             </div>
           )}
 

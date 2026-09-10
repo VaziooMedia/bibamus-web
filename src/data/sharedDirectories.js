@@ -2037,10 +2037,18 @@ export async function loadMyStatsOverview(since = null, until = null) {
   });
   if (error) {
     console.error("loadMyStatsOverview:", error);
-    return { visits: 0, drinksOrdered: 0, moneyEuro: 0, moneyJeton: 0, calories: 0 };
+    return { visits: 0, drinksOrdered: 0, moneyEuro: 0, moneyJeton: 0, calories: 0, distinctDrinks: 0, distinctVenues: 0 };
   }
   const row = data[0] || {};
-  return { visits: row.visits || 0, drinksOrdered: row.drinks_ordered || 0, moneyEuro: row.money_euro || 0, moneyJeton: row.money_jeton || 0, calories: row.calories || 0 };
+  return {
+    visits: row.visits || 0,
+    drinksOrdered: row.drinks_ordered || 0,
+    moneyEuro: row.money_euro || 0,
+    moneyJeton: row.money_jeton || 0,
+    calories: row.calories || 0,
+    distinctDrinks: row.distinct_drinks || 0,
+    distinctVenues: row.distinct_venues || 0,
+  };
 }
 
 // metric: "visits" | "spend_euro" | "spend_jeton" | "calories"
