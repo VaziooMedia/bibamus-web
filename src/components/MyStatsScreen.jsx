@@ -40,6 +40,23 @@ const PERIODS = [
   { key: "year", label: "Cette année", since: () => new Date(new Date().getFullYear(), 0, 1) },
 ];
 
+function StatSection({ title, children }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div style={{ marginBottom: "20px" }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", cursor: "pointer", padding: 0, width: "100%", marginBottom: open ? "8px" : 0 }}
+      >
+        <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+        <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "14px", fontWeight: 700, color: COLORS.chalkWhite, flex: 1, textAlign: "left" }}>{title}</span>
+        <span style={{ color: COLORS.chalkWhite, fontSize: "11px", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
+      </button>
+      {open && children}
+    </div>
+  );
+}
+
 export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcoholFreeDay, onBack, openVenue, openBibro, openDrink }) {
   const [periodKey, setPeriodKey] = useState("all");
   const period = PERIODS.find((p) => p.key === periodKey);
@@ -193,9 +210,8 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           <WeekTracker alcoholDaysMap={buildAlcoholDaysMap(events, alcoholFreeDays)} onToggleDay={onToggleAlcoholFreeDay} />
 
           {recordCards.length > 0 && (
-            <>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>TES RECORDS</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+            <StatSection title="Tes records">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {recordCards.map((r) => (
                   <div
                     key={r.label}
@@ -210,98 +226,103 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                   </div>
                 ))}
               </div>
-            </>
+            </StatSection>
           )}
 
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>TES PRODUITS PRÉFÉRÉS</div>
-          {drinksByCount.length === 0 ? (
-            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Rien pour cette période.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-              {drinksByCount.map((r, i) => (
-                <button
-                  key={r.drinkId}
-                  onClick={() => openDrink && openDrink(r.drinkId)}
-                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
-                >
-                  <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
-                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.value} verre{r.value > 1 ? "s" : ""}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <StatSection title="Tes produits préférés">
+            {drinksByCount.length === 0 ? (
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien pour cette période.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {drinksByCount.map((r, i) => (
+                  <button
+                    key={r.drinkId}
+                    onClick={() => openDrink && openDrink(r.drinkId)}
+                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                  >
+                    <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.value} verre{r.value > 1 ? "s" : ""}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </StatSection>
 
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>PRODUITS POUR LESQUELS TU AS LE PLUS DÉPENSÉ</div>
-          {drinksBySpend.length === 0 ? (
-            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Rien pour cette période.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-              {drinksBySpend.map((r, i) => (
-                <button
-                  key={r.drinkId}
-                  onClick={() => openDrink && openDrink(r.drinkId)}
-                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
-                >
-                  <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
-                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px" }}>{formatMoney(r.value, "euro")}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <StatSection title="Produits pour lesquels tu as le plus dépensé">
+            {drinksBySpend.length === 0 ? (
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien pour cette période.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {drinksBySpend.map((r, i) => (
+                  <button
+                    key={r.drinkId}
+                    onClick={() => openDrink && openDrink(r.drinkId)}
+                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                  >
+                    <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px" }}>{formatMoney(r.value, "euro")}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </StatSection>
 
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>CLASSEMENT PAR VISITES</div>
-          {venuesByVisits.length === 0 ? (
-            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Aucune visite enregistrée pour cette période.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-              {venuesByVisits.map((r, i) => (
-                <button
-                  key={r.venueId}
-                  onClick={() => openVenue(r.venueId)}
-                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
-                >
-                  <span><strong>{i + 1}.</strong> {venueNames[r.venueId] || "…"}</span>
-                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.value} visite{r.value > 1 ? "s" : ""}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <StatSection title="Classement par visites">
+            {venuesByVisits.length === 0 ? (
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucune visite enregistrée pour cette période.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {venuesByVisits.map((r, i) => (
+                  <button
+                    key={r.venueId}
+                    onClick={() => openVenue(r.venueId)}
+                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                  >
+                    <span><strong>{i + 1}.</strong> {venueNames[r.venueId] || "…"}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.value} visite{r.value > 1 ? "s" : ""}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </StatSection>
 
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>CLASSEMENT PAR ARGENT DÉPENSÉ</div>
-          {venuesBySpend.length === 0 ? (
-            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", marginBottom: "20px" }}>Rien à afficher pour cette période.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-              {venuesBySpend.map((r, i) => (
-                <button
-                  key={r.venueId}
-                  onClick={() => openVenue(r.venueId)}
-                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
-                >
-                  <span><strong>{i + 1}.</strong> {venueNames[r.venueId] || "…"}</span>
-                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px" }}>{formatMoney(r.value, "euro")}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <StatSection title="Classement par argent dépensé">
+            {venuesBySpend.length === 0 ? (
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien à afficher pour cette période.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {venuesBySpend.map((r, i) => (
+                  <button
+                    key={r.venueId}
+                    onClick={() => openVenue(r.venueId)}
+                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                  >
+                    <span><strong>{i + 1}.</strong> {venueNames[r.venueId] || "…"}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px" }}>{formatMoney(r.value, "euro")}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </StatSection>
 
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>CLASSEMENT PAR BIBAX</div>
-          {rankedBibrosBySharedRounds.length === 0 ? (
-            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien à afficher pour l'instant.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {rankedBibrosBySharedRounds.map((r, i) => (
-                <button
-                  key={r.bibro.code}
-                  onClick={() => openBibro && openBibro(r.bibro.code)}
-                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
-                >
-                  <span><strong>{i + 1}.</strong> {r.bibro.alias || r.bibro.name}</span>
-                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.count} tournée{r.count > 1 ? "s" : ""}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <StatSection title="Classement par Bibax">
+            {rankedBibrosBySharedRounds.length === 0 ? (
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien à afficher pour l'instant.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {rankedBibrosBySharedRounds.map((r, i) => (
+                  <button
+                    key={r.bibro.code}
+                    onClick={() => openBibro && openBibro(r.bibro.code)}
+                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                  >
+                    <span><strong>{i + 1}.</strong> {r.bibro.alias || r.bibro.name}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.count} tournée{r.count > 1 ? "s" : ""}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </StatSection>
         </>
       )}
       <BackFooterLink onClick={onBack} />
