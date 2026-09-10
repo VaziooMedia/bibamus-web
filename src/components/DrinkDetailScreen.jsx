@@ -51,7 +51,6 @@ export function DrinkDetailScreen({
   const [justChecked, setJustChecked] = useState(false);
   const [myCheckCount, setMyCheckCount] = useState(null);
   const isBeer = BEER_TYPES.includes(drink.type);
-  const isLockedForMe = !isAdmin && drink.status === "complete";
 
   const ratingValues = Object.values(drink.ratings || {}).filter((v) => typeof v === "number" && isFinite(v));
   const ratingAverage = ratingValues.length > 0 ? ratingValues.reduce((s, v) => s + v, 0) / ratingValues.length : null;
@@ -246,7 +245,7 @@ export function DrinkDetailScreen({
               textAlign: "center",
             }}
           >
-            Revendiquer cette fiche
+            Revendiquer la gestion de ce produit
           </button>
           <button
             onClick={() => setShowActionsMenu(true)}
@@ -276,7 +275,7 @@ export function DrinkDetailScreen({
                 style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
               >
                 <NavIcon name="pencil" size={20} color={COLORS.amber} />
-                {isLockedForMe ? "Suggérer une modification" : "Modifier cette fiche"}
+                Suggérer une modification
               </button>
               <button
                 onClick={() => {
