@@ -1990,6 +1990,17 @@ export async function loadVenuesDirectoryPage({ country = null, city = null, que
   return data.map(rowToVenue);
 }
 
+// "Mes Statistiques" — seuls les lieux ayant déjà des stats (visits > 0) nous intéressent ici,
+// jamais besoin du répertoire complet pour ça.
+export async function loadVenuesWithStats() {
+  const { data, error } = await supabase.rpc("get_venues_with_stats");
+  if (error) {
+    console.error("loadVenuesWithStats:", error);
+    return [];
+  }
+  return data.map(rowToVenue);
+}
+
 
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();

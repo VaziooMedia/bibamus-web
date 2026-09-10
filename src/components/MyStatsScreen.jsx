@@ -7,10 +7,16 @@ import { COLORS } from "../constants.js";
 import { EyeOffIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { ProfileHeader, WeekTracker, StatResetControl } from "./ProfileParts.jsx";
-import { loadDrinksByIds } from "../data/sharedDirectories.js";
+import { loadDrinksByIds, loadVenuesWithStats } from "../data/sharedDirectories.js";
 import { formatMoney, kcalForDrink, isAlcoholicDrink, realMoneySpentFor, realMoneySpentSince, buildAlcoholDaysMap } from "../utils.js";
 
-export function MyStatsScreen({ venues: rawVenues, events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, onResetStatField, onResetMoney, onBack, openVenue, openBibro }) {
+export function MyStatsScreen({ events, myName, profile, bibros, checkIns, alcoholFreeDays, onToggleAlcoholFreeDay, onResetStatField, onResetMoney, onBack, openVenue, openBibro }) {
+  // Ne charge que les lieux ayant déjà des statistiques (visits > 0) — jamais le répertoire
+  // complet, quelle que soit sa taille.
+  const [rawVenues, setRawVenues] = useState([]);
+  useEffect(() => {
+    loadVenuesWithStats().then(setRawVenues);
+  }, []);
   // "countsAsDrinkId" ne référence jamais qu'une poignée de produits ("mixes" comme le Mazout) —
   // on ne charge que ceux-là, jamais le répertoire complet, quelle que soit sa taille.
   const [countsAsNameById, setCountsAsNameById] = useState({});

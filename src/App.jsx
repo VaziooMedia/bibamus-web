@@ -1961,7 +1961,6 @@ export default function App() {
             )}
             {screen === "myStats" && (
               <MyStatsScreen
-                venues={venues}
                 events={events}
                 myName={profile.name}
                 profile={profile}
