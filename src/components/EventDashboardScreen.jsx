@@ -24,7 +24,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onAdjustVenuePersonalDrink, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
+export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -267,10 +267,6 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
       ...e,
       personalOrders: [...e.personalOrders, { id: nextId(), drinkId, timestamp: Date.now() }],
     }));
-    if (event.venueId) {
-      const drink = event.menu.find((d) => d.id === drinkId);
-      if (drink) onAdjustVenuePersonalDrink(event.venueId, drink.name, 1, kcalForDrink(drink));
-    }
   };
 
   const removeLastPersonalFor = (drinkId) => {
@@ -280,10 +276,6 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
       const realIdx = e.personalOrders.length - 1 - idx;
       return { ...e, personalOrders: e.personalOrders.filter((_, i) => i !== realIdx) };
     });
-    if (event.venueId) {
-      const drink = event.menu.find((d) => d.id === drinkId);
-      if (drink) onAdjustVenuePersonalDrink(event.venueId, drink.name, -1, kcalForDrink(drink));
-    }
   };
 
   const countPersonal = (drinkId) => event.personalOrders.filter((o) => o.drinkId === drinkId).length;

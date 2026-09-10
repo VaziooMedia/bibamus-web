@@ -1647,7 +1647,6 @@ export default function App() {
                 myUserId={session.user.id}
                 myBibroCode={profile.myBibroCode}
                 bibros={bibros}
-                onAdjustVenuePersonalDrink={adjustVenuePersonalDrink}
                 onCloseEvent={() => {
                   updateEvent(activeEventId, (e) => ({ ...e, closed: true, closedAt: Date.now() }));
                   setScreen("home");
