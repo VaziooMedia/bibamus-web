@@ -27,6 +27,15 @@ const PERIODS = [
     },
   },
   { key: "month", label: "Ce mois", since: () => new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
+  {
+    key: "quarter",
+    label: "Ce trimestre",
+    since: () => {
+      const now = new Date();
+      const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
+      return new Date(now.getFullYear(), quarterStartMonth, 1);
+    },
+  },
   { key: "6months", label: "Ces 6 derniers mois", since: () => { const d = new Date(); d.setMonth(d.getMonth() - 6); return d; } },
   { key: "year", label: "Cette année", since: () => new Date(new Date().getFullYear(), 0, 1) },
 ];
