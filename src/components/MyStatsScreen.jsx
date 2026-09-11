@@ -108,7 +108,11 @@ function StatSection({ title, children, arrowColor = COLORS.chalkWhite }) {
       >
         <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "14px", fontWeight: 700, color: COLORS.chalkWhite, flex: 1, textAlign: "left" }}>{title}</span>
-        <span style={{ color: arrowColor, fontSize: "11px", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
+        <span style={{ display: "inline-flex", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+            <path d="M4 2.5L8.5 6L4 9.5" stroke={arrowColor} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
       </button>
       {open && children}
     </div>
