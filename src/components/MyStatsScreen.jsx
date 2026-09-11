@@ -527,7 +527,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
         <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Chargement...</p>
       ) : !hasAnyData ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>
-          Rien pour cette période — tes statistiques apparaîtront ici après tes premières sorties.
+          Tes statistiques prendront vie après tes premières sorties — reviens vite les découvrir ! 🍻
         </p>
       ) : (
         <>
@@ -725,7 +725,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           <>
           <StatSection title="Tes produits préférés">
             {drinksByCount.length === 0 ? (
-              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien pour cette période.</p>
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Commande quelques boissons et on te dira vite lesquelles tu préfères !</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {drinksByCount.map((r, i) => (
@@ -762,7 +762,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           <StatSection title="Répartition par catégorie">
             {categoryRanking.length === 0 ? (
-              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien pour cette période.</p>
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Bières, vins, cocktails... plus tu enregistres de boissons, plus cette répartition prend forme.</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {categoryRanking.map((r, i) => (
@@ -819,7 +819,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           {activeCategory === "depenses" && (
           <StatSection title="Produits pour lesquels tu as le plus dépensé">
             {drinksBySpend.length === 0 ? (
-              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien pour cette période.</p>
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Reviens ici après quelques tournées pour voir où part ton argent.</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {drinksBySpend.map((r, i) => (
@@ -885,7 +885,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           <StatSection title="Classement par visites">
             {venuesByVisits.length === 0 ? (
-              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucune visite enregistrée pour cette période.</p>
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Check-in dans un lieu et il apparaîtra ici.</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {venuesByVisits.map((r, i) => (
@@ -907,7 +907,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           {activeCategory === "depenses" && (
           <StatSection title="Classement par argent dépensé">
             {venuesBySpend.length === 0 ? (
-              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien à afficher pour cette période.</p>
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Tes dépenses par lieu s'afficheront ici dès ta première tournée.</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {venuesBySpend.map((r, i) => (
@@ -973,7 +973,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           <StatSection title="Classement par Bibax">
             {rankedBibrosBySharedRounds.length === 0 ? (
-              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Rien à afficher pour l'instant.</p>
+              <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Partage une tournée avec un Bibax et il apparaîtra ici.</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {rankedBibrosBySharedRounds.map((r, i) => (

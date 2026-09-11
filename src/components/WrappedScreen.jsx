@@ -123,7 +123,7 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
       {loading ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", textAlign: "center" }}>Chargement...</p>
       ) : !hasAnyData ? (
-        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", textAlign: "center" }}>Rien à raconter pour {year} — essaie une autre année, ou reviens plus tard !</p>
+        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", textAlign: "center" }}>Pas encore assez de souvenirs pour {year} — essaie une autre année, ou reviens quand tu auras fait quelques sorties de plus !</p>
       ) : (
         <>
           <button
