@@ -661,8 +661,11 @@ export async function loadMyProfile(userId) {
     shareLinkedin: data.share_linkedin,
     sharePinterest: data.share_pinterest,
     shareTwitch: data.share_twitch,
-    shareRecords: data.share_records,
-    shareVisitRanking: data.share_visit_ranking,
+    shareStatsOverview: data.share_stats_overview,
+    shareStatsRecords: data.share_stats_records,
+    shareStatsDrinks: data.share_stats_drinks,
+    shareStatsVenues: data.share_stats_venues,
+    shareStatsSocial: data.share_stats_social,
     avatarUrl: data.avatar_url || null,
     // isAdmin vient désormais du vrai rôle vérifié côté base de données, plus d'une passphrase
     // locale — cohérent avec les règles RLS qui vérifient ce même rôle.
@@ -755,8 +758,11 @@ export async function updateMyProfile(
     shareLinkedin,
     sharePinterest,
     shareTwitch,
-    shareRecords,
-    shareVisitRanking,
+    shareStatsOverview,
+    shareStatsRecords,
+    shareStatsDrinks,
+    shareStatsVenues,
+    shareStatsSocial,
     avatarUrl,
   }
 ) {
@@ -840,8 +846,11 @@ export async function updateMyProfile(
     share_linkedin: shareLinkedin,
     share_pinterest: sharePinterest,
     share_twitch: shareTwitch,
-    share_records: shareRecords,
-    share_visit_ranking: shareVisitRanking,
+    share_stats_overview: shareStatsOverview,
+    share_stats_records: shareStatsRecords,
+    share_stats_drinks: shareStatsDrinks,
+    share_stats_venues: shareStatsVenues,
+    share_stats_social: shareStatsSocial,
     avatar_url: avatarUrl,
   };
   // Ne transmet que les champs réellement fournis — un appel partiel (ex. juste avatarUrl
@@ -2131,6 +2140,75 @@ export async function loadMyDrinkCalorieStats(since = null, until = null) {
   const row = data[0] || {};
   return { avgCalories: row.avg_calories, maxCalories: row.max_calories, maxCaloriesDrinkId: row.max_calories_drink_id };
 }
+
+// Stats d'un AUTRE Bibax (réglage "Mes Statistiques" dans Confidentialité) — chaque fonction
+// renvoie un objet vide si la personne n'a pas activé le partage de cette catégorie, jamais une
+// erreur : l'absence de données ici veut dire "rien à montrer", pas "ça a échoué".
+export async function loadBibaxStatsOverview(userId, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_bibax_stats_overview", { p_user_id: userId, p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadBibaxStatsOverview:", error);
+    return null;
+  }
+  const row = data[0];
+  if (!row) return null;
+  return { visits: row.visits, drinksOrdered: row.drinks_ordered, distinctDrinks: row.distinct_drinks, distinctVenues: row.distinct_venues };
+}
+
+export async function loadBibaxStatsRecords(userId) {
+  const { data, error } = await supabase.rpc("get_bibax_stats_records", { p_user_id: userId });
+  if (error) {
+    console.error("loadBibaxStatsRecords:", error);
+    return null;
+  }
+  const row = data[0];
+  if (!row) return null;
+  return {
+    mostVisitedVenueId: row.most_visited_venue_id,
+    mostVisitedVenueCount: row.most_visited_venue_count,
+    maxDrinksPerOuting: row.max_drinks_per_outing,
+    maxDistinctDrinksPerOuting: row.max_distinct_drinks_per_outing,
+    maxVenuesPerDay: row.max_venues_per_day,
+    bestMonthYear: row.best_month_year,
+    bestMonthMonth: row.best_month_month,
+    bestMonthDrinks: row.best_month_drinks,
+    longestStreakDays: row.longest_streak_days,
+  };
+}
+
+export async function loadBibaxStatsDrinks(userId, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_bibax_stats_drinks", { p_user_id: userId, p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadBibaxStatsDrinks:", error);
+    return null;
+  }
+  const row = data[0];
+  if (!row) return null;
+  return { topDrinkId: row.top_drink_id, topDrinkCount: row.top_drink_count, topCategory: row.top_category, topCategoryCount: row.top_category_count };
+}
+
+export async function loadBibaxStatsVenues(userId, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_bibax_stats_venues", { p_user_id: userId, p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadBibaxStatsVenues:", error);
+    return null;
+  }
+  const row = data[0];
+  if (!row) return null;
+  return { topVenueId: row.top_venue_id, topVenueCount: row.top_venue_count, distinctCities: row.distinct_cities, topVenueType: row.top_venue_type, topVenueTypeCount: row.top_venue_type_count };
+}
+
+export async function loadBibaxStatsSocial(userId, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_bibax_stats_social", { p_user_id: userId, p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadBibaxStatsSocial:", error);
+    return null;
+  }
+  const row = data[0];
+  if (!row) return null;
+  return { distinctBibaxCount: row.distinct_bibax_count, avgPeoplePerOuting: row.avg_people_per_outing };
+}
+
 
 
 // §6 — Lieux.

@@ -32,7 +32,7 @@ import {
 } from "../data/sharedDirectories.js";
 import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
-const PERIODS = [
+export const PERIODS = [
   { key: "all", label: "Toujours", since: null, prevSince: null },
   {
     key: "week",
@@ -87,7 +87,7 @@ const PERIODS = [
 ];
 
 const WEEKDAY_NAMES = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
-const MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+export const MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
 const CATEGORIES = [
   { key: "apercu", label: "Aperçu" },

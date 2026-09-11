@@ -26,7 +26,15 @@ import {
   toggleNotifyPulse,
   loadPulseStories,
   loadBibaxPulseActivity,
+  loadBibaxStatsOverview,
+  loadBibaxStatsRecords,
+  loadBibaxStatsDrinks,
+  loadBibaxStatsVenues,
+  loadBibaxStatsSocial,
+  loadVenuesByIds,
+  loadDrinksByIds,
 } from "../data/sharedDirectories.js";
+import { PERIODS, MONTH_NAMES } from "./MyStatsScreen.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
@@ -470,6 +478,48 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
     loadBibaxPulseActivity(bibro.userId).then(setPulseActivity);
   }, [bibro?.userId, activeTab]);
 
+  // Onglet Statistiques — ce que bibro.userId a choisi de montrer, catégorie par catégorie
+  // (réglage "Mes Statistiques" dans Confidentialité). Une catégorie à null veut dire "pas
+  // partagée", pas une erreur de chargement.
+  const [statsPeriodKey, setStatsPeriodKey] = useState("all");
+  const statsPeriod = PERIODS.find((p) => p.key === statsPeriodKey);
+  const statsSince = statsPeriod.since ? statsPeriod.since() : null;
+  const [sharedOverview, setSharedOverview] = useState(undefined);
+  const [sharedRecords, setSharedRecords] = useState(undefined);
+  const [sharedDrinks, setSharedDrinks] = useState(undefined);
+  const [sharedVenues, setSharedVenues] = useState(undefined);
+  const [sharedSocial, setSharedSocial] = useState(undefined);
+  const [sharedNames, setSharedNames] = useState({});
+
+  useEffect(() => {
+    if (!bibro?.userId || activeTab !== "stats") return;
+    loadBibaxStatsOverview(bibro.userId, statsSince, null).then(setSharedOverview);
+    loadBibaxStatsDrinks(bibro.userId, statsSince, null).then(setSharedDrinks);
+    loadBibaxStatsVenues(bibro.userId, statsSince, null).then(setSharedVenues);
+    loadBibaxStatsSocial(bibro.userId, statsSince, null).then(setSharedSocial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bibro?.userId, activeTab, statsPeriodKey]);
+
+  // Records : toujours tout l'historique, sans lien avec le sélecteur de période ci-dessus —
+  // même comportement que dans Mes Statistiques.
+  useEffect(() => {
+    if (!bibro?.userId || activeTab !== "stats") return;
+    loadBibaxStatsRecords(bibro.userId).then(setSharedRecords);
+  }, [bibro?.userId, activeTab]);
+
+  useEffect(() => {
+    const venueIds = [sharedRecords?.mostVisitedVenueId, sharedVenues?.topVenueId].filter(Boolean);
+    const drinkIds = [sharedDrinks?.topDrinkId].filter(Boolean);
+    if (venueIds.length === 0 && drinkIds.length === 0) return;
+    Promise.all([venueIds.length ? loadVenuesByIds(venueIds) : [], drinkIds.length ? loadDrinksByIds(drinkIds) : []]).then(([venues, drinks]) => {
+      setSharedNames((prev) => ({
+        ...prev,
+        ...Object.fromEntries(venues.map((v) => [v.id, v.name])),
+        ...Object.fromEntries(drinks.map((d) => [d.id, d.name])),
+      }));
+    });
+  }, [sharedRecords, sharedVenues, sharedDrinks]);
+
   const handleToggleNotify = async () => {
     setTogglingNotify(true);
     const result = await toggleNotifyPulse(bibro.code);
@@ -874,7 +924,128 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
 
       {activeTab === "stats" && (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>D'autres statistiques arriveront bientôt ici.</p>
+        <>
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "center", marginBottom: "16px" }}>
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setStatsPeriodKey(p.key)}
+                style={{
+                  background: statsPeriodKey === p.key ? COLORS.amber : COLORS.surface,
+                  color: statsPeriodKey === p.key ? COLORS.paper : COLORS.ink,
+                  border: `2px solid ${statsPeriodKey === p.key ? COLORS.amber : COLORS.paperAlt}`,
+                  borderRadius: "999px",
+                  padding: "6px 12px",
+                  fontSize: "11.5px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {[sharedOverview, sharedRecords, sharedDrinks, sharedVenues, sharedSocial].every((s) => s === null) && (
+            <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>
+              {(bibro.alias || bibro.name)} ne partage pas encore ses statistiques.
+            </p>
+          )}
+
+          {sharedOverview && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
+              {[
+                { label: "Visites", value: sharedOverview.visits },
+                { label: "Boissons commandées", value: sharedOverview.drinksOrdered },
+                { label: "Produits différents", value: sharedOverview.distinctDrinks },
+                { label: "Lieux différents", value: sharedOverview.distinctVenues },
+              ].map((t) => (
+                <div key={t.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px" }}>
+                  <div style={{ fontSize: "10.5px", color: COLORS.inkSoft }}>{t.label}</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px" }}>{t.value}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {sharedVenues && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+              {sharedVenues.topVenueId && (
+                <div style={{ background: COLORS.surfaceAlt, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", color: COLORS.chalkWhite, fontSize: "13px" }}>
+                  <span>🏠 Son QG</span>
+                  <strong>{sharedNames[sharedVenues.topVenueId] || "…"}</strong>
+                </div>
+              )}
+              {sharedVenues.distinctCities > 0 && (
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                  <span>Villes différentes visitées</span>
+                  <strong>{sharedVenues.distinctCities}</strong>
+                </div>
+              )}
+              {sharedVenues.topVenueType && (
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                  <span>Type de lieu préféré</span>
+                  <strong>{sharedVenues.topVenueType}</strong>
+                </div>
+              )}
+            </div>
+          )}
+
+          {sharedDrinks && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+              {sharedDrinks.topDrinkId && (
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                  <span>🍺 Boisson préférée</span>
+                  <strong>{sharedNames[sharedDrinks.topDrinkId] || "…"}</strong>
+                </div>
+              )}
+              {sharedDrinks.topCategory && (
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                  <span>Catégorie la plus consommée</span>
+                  <strong>{sharedDrinks.topCategory}</strong>
+                </div>
+              )}
+            </div>
+          )}
+
+          {sharedSocial && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+              {sharedSocial.distinctBibaxCount > 0 && (
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                  <span>👥 Bibax différents rencontrés</span>
+                  <strong>{sharedSocial.distinctBibaxCount}</strong>
+                </div>
+              )}
+              {sharedSocial.avgPeoplePerOuting != null && (
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                  <span>Taille moyenne d'une sortie</span>
+                  <strong>{Math.round(sharedSocial.avgPeoplePerOuting * 10) / 10}</strong>
+                </div>
+              )}
+            </div>
+          )}
+
+          {sharedRecords && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {[
+                sharedRecords.mostVisitedVenueId && { icon: "🏆", label: "Le plus visité", value: sharedNames[sharedRecords.mostVisitedVenueId] || "…" },
+                sharedRecords.maxDrinksPerOuting > 0 && { icon: "🍺", label: "Le plus de boissons en une sortie", value: sharedRecords.maxDrinksPerOuting },
+                sharedRecords.maxDistinctDrinksPerOuting > 1 && { icon: "🎲", label: "Le plus de produits différents en une sortie", value: sharedRecords.maxDistinctDrinksPerOuting },
+                sharedRecords.maxVenuesPerDay > 1 && { icon: "🗺️", label: "Le plus de lieux en une journée", value: sharedRecords.maxVenuesPerDay },
+                sharedRecords.bestMonthYear && { icon: "📅", label: "Mois le plus actif", value: `${MONTH_NAMES[sharedRecords.bestMonthMonth - 1]} ${sharedRecords.bestMonthYear}` },
+                sharedRecords.longestStreakDays > 1 && { icon: "🔥", label: "Plus longue série", value: `${sharedRecords.longestStreakDays} jours` },
+              ]
+                .filter(Boolean)
+                .map((r) => (
+                  <div key={r.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
+                    <span style={{ fontSize: "18px" }}>{r.icon}</span>
+                    <span style={{ flex: 1 }}>{r.label}</span>
+                    <strong>{r.value}</strong>
+                  </div>
+                ))}
+            </div>
+          )}
+        </>
       )}
 
       {activeTab === "pulse" &&

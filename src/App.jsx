@@ -46,7 +46,7 @@ import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { WrappedScreen } from "./components/WrappedScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen, WaterAlertSettingsScreen } from "./components/MinorScreens.jsx";
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
-import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
+import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen, MyStatsPrivacyScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
 import { PreferencesScreen, StorySettingsScreen, ChoiceScreen, VolumeWeightScreen } from "./components/PreferencesScreen.jsx";
 import { AppearanceScreen } from "./components/AppearanceScreen.jsx";
@@ -475,8 +475,11 @@ export default function App() {
       shareLinkedin: profile.shareLinkedin,
       sharePinterest: profile.sharePinterest,
       shareTwitch: profile.shareTwitch,
-      shareRecords: profile.shareRecords,
-      shareVisitRanking: profile.shareVisitRanking,
+      shareStatsOverview: profile.shareStatsOverview,
+      shareStatsRecords: profile.shareStatsRecords,
+      shareStatsDrinks: profile.shareStatsDrinks,
+      shareStatsVenues: profile.shareStatsVenues,
+      shareStatsSocial: profile.shareStatsSocial,
       avatarUrl: profile.avatarUrl,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -559,8 +562,11 @@ export default function App() {
     profile.shareLinkedin,
     profile.sharePinterest,
     profile.shareTwitch,
-    profile.shareRecords,
-    profile.shareVisitRanking,
+    profile.shareStatsOverview,
+    profile.shareStatsRecords,
+    profile.shareStatsDrinks,
+    profile.shareStatsVenues,
+    profile.shareStatsSocial,
     profile.avatarUrl,
   ]);
 
@@ -2195,6 +2201,7 @@ export default function App() {
                     emailVerify: "securityEmailVerify",
                     resetSessions: "securityResetSessions",
                     publicProfile: "securityPublicProfile",
+                    myStats: "securityMyStats",
                     blockedUsers: "securityBlockedUsers",
                     permissions: "securityPermissions",
                   };
@@ -2213,6 +2220,9 @@ export default function App() {
             {screen === "securityDataExport" && <DataExportScreen profile={profile} onBack={() => setScreen("securityPermissions")} />}
             {screen === "securityPublicProfile" && (
               <PublicProfileScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("security")} />
+            )}
+            {screen === "securityMyStats" && (
+              <MyStatsPrivacyScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("security")} />
             )}
             {screen === "securityBlockedUsers" && <BlockedUsersScreen onBack={() => setScreen("security")} />}
             {screen === "securityPermissions" && (

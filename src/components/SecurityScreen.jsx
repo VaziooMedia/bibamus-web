@@ -89,6 +89,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
 
       <SecurityGroup title="Confidentialité">
         <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir ce qui est visible" onClick={() => goToSubScreen("publicProfile")} />
+        <SecurityRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Mes Statistiques" subtitle="Choisir ce que tes Bibax voient" onClick={() => goToSubScreen("myStats")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow icon={<NavIcon name="no-entry" size={17} color={COLORS.amber} />} title="Utilisateurs bloqués" subtitle="Gérer les comptes bloqués" onClick={() => goToSubScreen("blockedUsers")} />
         </div>
@@ -112,6 +113,59 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
     </div>
   );
 }
+
+// Mes Statistiques — 3e sous-section de Confidentialité. Ce que la personne montre aux autres
+// Bibax sur sa propre fiche (onglet Statistiques). Financier et calories toujours privés, quel
+// que soit ce choix — pas un réglage, une règle.
+export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
+  const [p, setP] = useState(profile);
+  const update = (patch) => {
+    setP((prev) => ({ ...prev, ...patch }));
+    onSaveProfile(patch);
+  };
+
+  const ShareToggle = ({ checked, onChange }) => (
+    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, cursor: "pointer" }}>
+      <input type="checkbox" checked={checked === true} onChange={(e) => onChange(e.target.checked)} style={{ width: "15px", height: "15px", accentColor: COLORS.amber }} />
+      Visible par mes Bibax
+    </label>
+  );
+
+  const CategoryRow = ({ icon, title, description, field }) => (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0, marginTop: "2px" }}>{icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "2px" }}>{title}</div>
+        <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>{description}</div>
+        <ShareToggle checked={p[field]} onChange={(v) => update({ [field]: v })} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="bar-chart" size={22} color={COLORS.amber} />}>Mes Statistiques</PageTitleWithBar>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "10px" }}>Choisissez ce que vos Bibax peuvent voir de vos statistiques, par catégorie.</p>
+      <div style={{ background: COLORS.surfaceAlt, borderRadius: "10px", padding: "10px 14px", marginBottom: "18px", fontSize: "12px", color: COLORS.chalkWhite }}>
+        💶 L'argent dépensé et les calories restent toujours privés, uniquement visibles par vous — quel que soit votre choix ci-dessous.
+      </div>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+        <CategoryRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Aperçu" description="Visites, boissons commandées, produits et lieux différents." field="shareStatsOverview" />
+        <CategoryRow icon={<NavIcon name="crown" size={17} color={COLORS.amber} />} title="Records" description="Ton lieu le plus visité, tes plus grosses sorties, ta plus longue série." field="shareStatsRecords" />
+        <CategoryRow icon={<NavIcon name="bottle" size={17} color={COLORS.amber} />} title="Boissons" description="Ta boisson préférée et ta catégorie la plus consommée." field="shareStatsDrinks" />
+        <CategoryRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Lieux" description="Ton QG, tes villes visitées, ton type de lieu préféré." field="shareStatsVenues" />
+        <div style={{ borderBottom: "none" }}>
+          <CategoryRow icon={<NavIcon name="users" size={17} color={COLORS.amber} />} title="Social" description="Nombre de Bibax rencontrés et taille moyenne de tes sorties — jamais de nom." field="shareStatsSocial" />
+        </div>
+      </div>
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
 
 // Utilisateurs bloqués — liste réelle, avec déblocage.
 export function BlockedUsersScreen({ onBack }) {

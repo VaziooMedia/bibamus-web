@@ -56,8 +56,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [shareX, setShareX] = useState(profile.shareX !== false);
   const [shareThreads, setShareThreads] = useState(profile.shareThreads !== false);
   const [shareLinkedin, setShareLinkedin] = useState(profile.shareLinkedin !== false);
-  const [shareRecords, setShareRecords] = useState(profile.shareRecords !== false);
-  const [shareVisitRanking, setShareVisitRanking] = useState(profile.shareVisitRanking !== false);
   const [saved, setSaved] = useState(false);
 
   const fieldStyle = {
@@ -123,8 +121,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       shareX,
       shareThreads,
       shareLinkedin,
-      shareRecords,
-      shareVisitRanking,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
@@ -402,13 +398,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
         <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="Lien LinkedIn" style={{ ...fieldStyle, marginBottom: 0, flex: 1 }} />
       </div>
       <ShareToggle checked={shareLinkedin} onChange={setShareLinkedin} />
-
-      <label style={{ ...labelStyle, marginTop: "4px" }}>Statistiques visibles par tes Bibax</label>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-2px", marginBottom: "10px" }}>
-        Tout ce qui touche à l'argent dépensé reste toujours privé, quel que soit ce choix.
-      </p>
-      <ShareToggle checked={shareRecords} onChange={setShareRecords} label="Mes records (lieu le plus visité)" />
-      <ShareToggle checked={shareVisitRanking} onChange={setShareVisitRanking} label="Mon classement de lieux par visites" />
 
       <label style={labelStyle}>Langue préférée</label>
       <select value={profile.language || "fr"} disabled style={{ ...fieldStyle, background: COLORS.paperAlt, color: COLORS.inkSoft, cursor: "not-allowed" }}>
