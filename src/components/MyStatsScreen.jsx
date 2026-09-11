@@ -98,7 +98,7 @@ const CATEGORIES = [
   { key: "social", label: "Social" },
 ];
 
-function StatSection({ title, children, arrowColor = COLORS.chalkWhite }) {
+function StatSection({ title, children, arrowColor = COLORS.chalkWhite, showBottomDivider = false }) {
   const [open, setOpen] = useState(true);
   return (
     <div style={{ marginBottom: "20px" }}>
@@ -115,6 +115,7 @@ function StatSection({ title, children, arrowColor = COLORS.chalkWhite }) {
         </span>
       </button>
       {open && children}
+      {showBottomDivider && <div style={{ height: "1px", background: COLORS.paperAlt, marginTop: "20px" }} />}
     </div>
   );
 }
@@ -770,14 +771,17 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           {activeCategory === "depenses" && (biggestOutingSpend > 0 || priceStats?.avgPrice != null) && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
               {[
-                biggestOutingSpend > 0 && { label: "Plus grosse dépense en une sortie", value: formatMoney(biggestOutingSpend, "euro") },
-                priceStats?.avgPrice != null && { label: "Dépense moyenne par boisson", value: formatMoney(priceStats.avgPrice, "euro") },
+                biggestOutingSpend > 0 && { label: "Plus grosse dépense en une sortie", value: formatMoney(biggestOutingSpend, "euro"), isMoney: true },
+                priceStats?.avgPrice != null && { label: "Dépense moyenne par boisson", value: formatMoney(priceStats.avgPrice, "euro"), isMoney: true },
               ]
                 .filter(Boolean)
                 .map((tile) => (
-                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
+                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", textAlign: "center" }}>
                     <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "4px" }}>{tile.label}</div>
-                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px" }}>{tile.value}</div>
+                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.amber }}>
+                      {tile.value.replace(" €", "")}
+                      <span style={{ fontSize: "12px", color: COLORS.inkSoft, fontWeight: 700 }}> €</span>
+                    </div>
                   </div>
                 ))}
             </div>
@@ -805,7 +809,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           {activeCategory === "apercu" && <WeekTracker alcoholDaysMap={buildAlcoholDaysMap(events, alcoholFreeDays)} onToggleDay={onToggleAlcoholFreeDay} />}
 
           {activeCategory === "records" && recordCards.length > 0 && (
-            <StatSection title="Tes records">
+            <StatSection title="Tes records" arrowColor={COLORS.amber}>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {recordCards.map((r) => (
                   <div
@@ -826,7 +830,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {activeCategory === "boissons" && (
           <>
-          <StatSection title="Tes produits préférés">
+          <StatSection title="Tes produits préférés" arrowColor={COLORS.amber} showBottomDivider>
             {drinksByCount.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Commande quelques boissons et on te dira vite lesquelles tu préfères !</p>
             ) : (
@@ -896,7 +900,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             </div>
           )}
 
-          <StatSection title="Répartition par catégorie">
+          <StatSection title="Répartition par catégorie" arrowColor={COLORS.amber} showBottomDivider>
             {categoryRanking.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Bières, vins, cocktails... plus tu enregistres de boissons, plus cette répartition prend forme.</p>
             ) : (
@@ -912,7 +916,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           </StatSection>
 
           {beerStyleRanking.length > 0 && (
-            <StatSection title="Ton style de bière préféré">
+            <StatSection title="Ton style de bière préféré" arrowColor={COLORS.amber} showBottomDivider>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {beerStyleRanking.map((r, i, arr) => (
                   <div key={r.style} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
@@ -925,7 +929,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {brandRanking.length > 0 && (
-            <StatSection title="Marques les plus consommées">
+            <StatSection title="Marques les plus consommées" arrowColor={COLORS.amber} showBottomDivider>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {brandRanking.map((r, i, arr) => (
                   <div key={r.brand} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
@@ -938,7 +942,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {breweryRanking.length > 0 && (
-            <StatSection title="Producteurs les plus consommés">
+            <StatSection title="Producteurs les plus consommés" arrowColor={COLORS.amber} showBottomDivider>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {breweryRanking.map((r, i, arr) => (
                   <div key={r.brewery} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
@@ -951,7 +955,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {drinksByCalories.length > 0 && (
-            <StatSection title="Boissons les plus caloriques">
+            <StatSection title="Boissons les plus caloriques" arrowColor={COLORS.amber} showBottomDivider>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {drinksByCalories.map((r, i, arr) => (
                   <button
@@ -1041,11 +1045,10 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           {(newVenuesCount > 0 || cityCountryStats.distinctCities > 0 || venueSpendAvg != null || longestVenue) && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
               {[
-                newVenuesCount > 0 && { label: "Nouveaux établissements découverts", value: newVenuesCount },
+                newVenuesCount > 0 && { label: "Lieux découverts", value: newVenuesCount },
                 cityCountryStats.distinctCities > 0 && { label: "Villes différentes visitées", value: cityCountryStats.distinctCities },
                 cityCountryStats.distinctCountries > 0 && { label: "Pays différents visités", value: cityCountryStats.distinctCountries },
-                venueSpendAvg != null && { label: "Dépense moyenne / établissement", value: formatMoney(venueSpendAvg, "euro"), isMoney: true },
-                longestVenue && longestVenueName && { label: "Où tu restes le plus longtemps", value: longestVenueName, subMin: longestVenue.avgMin },
+                venueSpendAvg != null && { label: "Dépense moy. / lieu", value: formatMoney(venueSpendAvg, "euro"), isMoney: true },
               ]
                 .filter(Boolean)
                 .map((tile) => (
