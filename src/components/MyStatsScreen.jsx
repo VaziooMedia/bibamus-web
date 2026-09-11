@@ -513,7 +513,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
         </button>
       )}
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
+      <div style={{ height: "1px", background: COLORS.amber, margin: "0 0 16px" }} />
 
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
         {PERIODS.map((p) => (
@@ -536,7 +536,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
         ))}
       </div>
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
+      <div style={{ height: "1px", background: COLORS.amber, margin: "0 0 16px" }} />
 
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "20px" }}>
         {CATEGORIES.map((c) => (
@@ -559,7 +559,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
         ))}
       </div>
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
+      <div style={{ height: "1px", background: COLORS.amber, margin: "0 0 20px" }} />
 
       {!overview ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Chargement...</p>
@@ -570,6 +570,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
       ) : (
         <>
           {activeCategory === "apercu" && behaviorProfile && (
+            <>
             <div style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.amber}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
                 <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
@@ -578,9 +579,12 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, margin: "6px 0" }}>{behaviorProfile.label}</div>
               <div style={{ fontSize: "12.5px", color: COLORS.chalkWhite, opacity: 0.7 }}>{behaviorProfile.description}</div>
             </div>
+            <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
+            </>
           )}
 
           {activeCategory === "apercu" && (
+            <>
             <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
                 <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
@@ -607,9 +611,12 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 </div>
               )}
             </div>
+            <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
+            </>
           )}
 
           {activeCategory === "apercu" && (
+            <>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
               {[
                 { label: "Produits différents testés", value: overview.distinctDrinks },
@@ -634,10 +641,12 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                   </div>
                 ))}
             </div>
+            <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
+            </>
           )}
 
           {activeCategory === "apercu" && previousOverview && (
-            <StatSection title={`Évolution vs. ${period.prevLabel || "la période précédente"}`}>
+            <StatSection title={`Évolution vs. ${period.prevLabel || "la période précédente"}`} showBottomDivider>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {[
                   { label: "Boissons commandées", current: overview.drinksOrdered, previous: previousOverview.drinksOrdered },
@@ -745,6 +754,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 )}
               </div>
               </div>
+              <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
             </>
           )}
 
