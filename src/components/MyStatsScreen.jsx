@@ -32,7 +32,7 @@ import {
 import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
 const PERIODS = [
-  { key: "all", label: "Toujours", since: null },
+  { key: "all", label: "Toujours", since: null, prevSince: null },
   {
     key: "week",
     label: "Cette semaine",
@@ -44,8 +44,20 @@ const PERIODS = [
       d.setHours(0, 0, 0, 0);
       return d;
     },
+    prevSince: (s) => {
+      const d = new Date(s);
+      d.setDate(d.getDate() - 7);
+      return d;
+    },
+    prevLabel: "la semaine dernière",
   },
-  { key: "month", label: "Ce mois", since: () => new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
+  {
+    key: "month",
+    label: "Ce mois",
+    since: () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    prevSince: (s) => new Date(s.getFullYear(), s.getMonth() - 1, 1),
+    prevLabel: "le mois dernier",
+  },
   {
     key: "quarter",
     label: "Ce trimestre",
@@ -54,9 +66,23 @@ const PERIODS = [
       const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
       return new Date(now.getFullYear(), quarterStartMonth, 1);
     },
+    prevSince: (s) => new Date(s.getFullYear(), s.getMonth() - 3, 1),
+    prevLabel: "le trimestre dernier",
   },
-  { key: "6months", label: "Ces 6 derniers mois", since: () => { const d = new Date(); d.setMonth(d.getMonth() - 6); return d; } },
-  { key: "year", label: "Cette année", since: () => new Date(new Date().getFullYear(), 0, 1) },
+  {
+    key: "6months",
+    label: "Ces 6 derniers mois",
+    since: () => { const d = new Date(); d.setMonth(d.getMonth() - 6); return d; },
+    prevSince: (s) => { const d = new Date(s); d.setMonth(d.getMonth() - 6); return d; },
+    prevLabel: "les 6 mois précédents",
+  },
+  {
+    key: "year",
+    label: "Cette année",
+    since: () => new Date(new Date().getFullYear(), 0, 1),
+    prevSince: (s) => new Date(s.getFullYear() - 1, 0, 1),
+    prevLabel: "l'année dernière",
+  },
 ];
 
 const WEEKDAY_NAMES = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
@@ -92,6 +118,10 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const [periodKey, setPeriodKey] = useState("all");
   const period = PERIODS.find((p) => p.key === periodKey);
   const since = period.since ? period.since() : null;
+  // §10 — période équivalente précédente, pour la comparaison. Pas de comparaison possible pour
+  // "Toujours" (pas de point de départ à décaler).
+  const prevSince = period.prevSince && since ? period.prevSince(since) : null;
+  const prevUntil = since;
 
   const [activeCategory, setActiveCategory] = useState("apercu");
 
@@ -99,6 +129,21 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   useEffect(() => {
     setOverview(null);
     loadMyStatsOverview(since, null).then(setOverview);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodKey]);
+
+  // §10 — mêmes indicateurs, mais sur la période précédente équivalente, pour la comparaison.
+  const [previousOverview, setPreviousOverview] = useState(null);
+  const [previousNewDrinksCount, setPreviousNewDrinksCount] = useState(0);
+  const [previousNewVenuesCount, setPreviousNewVenuesCount] = useState(0);
+  useEffect(() => {
+    if (!prevSince) {
+      setPreviousOverview(null);
+      return;
+    }
+    loadMyStatsOverview(prevSince, prevUntil).then(setPreviousOverview);
+    loadMyNewDrinksCount(prevSince, prevUntil).then(setPreviousNewDrinksCount);
+    loadMyNewVenuesCount(prevSince, prevUntil).then(setPreviousNewVenuesCount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodKey]);
 
@@ -264,6 +309,14 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
       ? Math.round(closedEventsWithDuration.reduce((sum, e) => sum + (e.closedAt - e.createdAt), 0) / closedEventsWithDuration.length / 60000)
       : null;
   const formatDuration = (min) => (min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}` : `${min} min`);
+
+  // §10 — variation par rapport à la période équivalente précédente. "Nouveau" si rien avant et
+  // quelque chose maintenant ; rien affiché si les deux valent zéro (comparaison sans intérêt).
+  const formatChange = (current, previous) => {
+    if (previous === 0) return current > 0 ? "nouveau" : null;
+    const pct = Math.round(((current - previous) / previous) * 100);
+    return `${pct >= 0 ? "+" : ""}${pct}%`;
+  };
 
   // §9 — ces deux records se battent sur tout l'historique (pas la période affichée par
   // ailleurs), comme extraRecords côté serveur.
@@ -436,6 +489,35 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                   </div>
                 ))}
             </div>
+          )}
+
+          {activeCategory === "apercu" && previousOverview && (
+            <StatSection title={`Évolution vs ${period.prevLabel || "la période précédente"}`}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {[
+                  { label: "Boissons commandées", current: overview.drinksOrdered, previous: previousOverview.drinksOrdered },
+                  { label: "Visites", current: overview.visits, previous: previousOverview.visits },
+                  { label: "Argent dépensé", current: overview.moneyEuro, previous: previousOverview.moneyEuro },
+                  { label: "Nouveaux produits découverts", current: newDrinksCount, previous: previousNewDrinksCount },
+                  { label: "Nouveaux lieux découverts", current: newVenuesCount, previous: previousNewVenuesCount },
+                ]
+                  .map((m) => ({ ...m, change: formatChange(m.current, m.previous) }))
+                  .filter((m) => m.current > 0 || m.previous > 0)
+                  .map((m) => (
+                    <div key={m.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}>
+                      <span>{m.label}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700 }}>{Math.round(m.current)}</span>
+                        {m.change && (
+                          <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", fontWeight: 700, color: m.change.startsWith("+") || m.change === "nouveau" ? COLORS.amber : COLORS.inkSoft }}>
+                            {m.change}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </StatSection>
           )}
 
           {activeCategory === "apercu" && habits && (habits.topWeekday != null || habits.avgDrinksPerOuting != null || avgOutingDurationMin != null) && (
