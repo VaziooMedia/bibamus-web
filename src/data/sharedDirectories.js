@@ -2171,6 +2171,26 @@ export async function loadMyMonthlySpending(months = 6) {
   return data.map((r) => ({ year: r.year, month: r.month, totalEuro: r.total_euro }));
 }
 
+// §9 — Tes records. Toujours sur tout l'historique (pas lié à la période sélectionnée sur
+// l'écran) — un record se bat sur la durée, pas sur une fenêtre de temps arbitraire.
+export async function loadMyExtraRecords() {
+  const { data, error } = await supabase.rpc("get_my_extra_records");
+  if (error) {
+    console.error("loadMyExtraRecords:", error);
+    return { maxDrinksPerOuting: null, maxDistinctDrinksPerOuting: null, maxVenuesPerDay: null, bestMonthYear: null, bestMonthMonth: null, bestMonthDrinks: null, longestStreakDays: null };
+  }
+  const row = data[0] || {};
+  return {
+    maxDrinksPerOuting: row.max_drinks_per_outing,
+    maxDistinctDrinksPerOuting: row.max_distinct_drinks_per_outing,
+    maxVenuesPerDay: row.max_venues_per_day,
+    bestMonthYear: row.best_month_year,
+    bestMonthMonth: row.best_month_month,
+    bestMonthDrinks: row.best_month_drinks,
+    longestStreakDays: row.longest_streak_days,
+  };
+}
+
 
 
 // metric: "visits" | "spend_euro" | "spend_jeton" | "calories"

@@ -27,6 +27,7 @@ import {
   loadMyNewVenuesCount,
   loadMyVenueSpendAvg,
   loadMyMonthlySpending,
+  loadMyExtraRecords,
 } from "../data/sharedDirectories.js";
 import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
 
@@ -140,6 +141,13 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const [monthlySpending, setMonthlySpending] = useState([]);
   useEffect(() => {
     loadMyMonthlySpending(6).then(setMonthlySpending);
+  }, []);
+
+  // §9 — records supplémentaires, toujours sur tout l'historique (un record se bat sur la
+  // durée, pas sur la période affichée par ailleurs).
+  const [extraRecords, setExtraRecords] = useState(null);
+  useEffect(() => {
+    loadMyExtraRecords().then(setExtraRecords);
   }, []);
 
   const [venueTypeRanking, setVenueTypeRanking] = useState([]);
@@ -257,6 +265,22 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
       : null;
   const formatDuration = (min) => (min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}` : `${min} min`);
 
+  // §9 — ces deux records se battent sur tout l'historique (pas la période affichée par
+  // ailleurs), comme extraRecords côté serveur.
+  const allSalonEvents = events.filter((e) => e.salonCode);
+  const maxBibaxInOneOuting =
+    allSalonEvents.length > 0
+      ? Math.max(
+          ...allSalonEvents.map((ev) => {
+            const names = new Set();
+            (ev.rounds || []).forEach((r) => (r.friends || []).forEach((f) => names.add((f.name || "").toLowerCase())));
+            return names.size;
+          })
+        )
+      : null;
+  const allClosedEvents = events.filter((e) => e.closedAt && e.createdAt);
+  const longestOutingDurationMin = allClosedEvents.length > 0 ? Math.round(Math.max(...allClosedEvents.map((e) => e.closedAt - e.createdAt)) / 60000) : null;
+
   // §6 — "Lieu où tu restes le plus longtemps" — durée moyenne par lieu, depuis les mêmes
   // événements fermés que ci-dessus, groupés par lieu cette fois.
   const durationsByVenue = {};
@@ -273,6 +297,12 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   // §8 — plus grosse dépense en une seule sortie (somme des tournées non offertes d'un même
   // événement, en euros — les jetons ne sont pas mélangés dans cette comparaison).
   const biggestOutingSpend = eventsInPeriod.reduce((max, ev) => {
+    if (ev.currency !== "euro") return max;
+    const total = (ev.rounds || []).filter((r) => !r.offeredBy).reduce((s, r) => s + (r.total || 0), 0);
+    return total > max ? total : max;
+  }, 0);
+  // §9 — même calcul, mais sur tout l'historique, pour le record (pas la période affichée).
+  const biggestOutingSpendAllTime = events.reduce((max, ev) => {
     if (ev.currency !== "euro") return max;
     const total = (ev.rounds || []).filter((r) => !r.offeredBy).reduce((s, r) => s + (r.total || 0), 0);
     return total > max ? total : max;
@@ -295,6 +325,14 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     mostVisitedVenue && { icon: "🏆", label: "Le plus visité", value: venueNames[mostVisitedVenue.venueId] || "…", sub: `${mostVisitedVenue.value} visite${mostVisitedVenue.value > 1 ? "s" : ""}` },
     topBibro && { icon: "🍻", label: "Bu le plus de verres avec", value: topBibro.bibro.alias || topBibro.bibro.name, sub: `${topBibro.count} tournée${topBibro.count > 1 ? "s" : ""} commune${topBibro.count > 1 ? "s" : ""}` },
     mostSpentVenue && { icon: "💶", label: "Le plus dépensé", value: venueNames[mostSpentVenue.venueId] || "…", sub: formatMoney(mostSpentVenue.value, "euro") },
+    extraRecords?.maxDrinksPerOuting && { icon: "🍺", label: "Le plus de boissons en une sortie", value: extraRecords.maxDrinksPerOuting, sub: "verres" },
+    extraRecords?.maxDistinctDrinksPerOuting > 1 && { icon: "🎲", label: "Le plus de produits différents en une sortie", value: extraRecords.maxDistinctDrinksPerOuting, sub: "produits" },
+    extraRecords?.maxVenuesPerDay > 1 && { icon: "🗺️", label: "Le plus de lieux en une journée", value: extraRecords.maxVenuesPerDay, sub: "lieux" },
+    biggestOutingSpendAllTime > 0 && { icon: "💸", label: "Plus grosse dépense en une sortie", value: formatMoney(biggestOutingSpendAllTime, "euro") },
+    longestOutingDurationMin != null && { icon: "⏱️", label: "Sortie la plus longue", value: formatDuration(longestOutingDurationMin) },
+    maxBibaxInOneOuting > 1 && { icon: "👥", label: "Le plus de monde réuni en une sortie", value: maxBibaxInOneOuting, sub: "personnes" },
+    extraRecords?.bestMonthYear && { icon: "📅", label: "Ton mois le plus actif", value: `${MONTH_NAMES[extraRecords.bestMonthMonth - 1]} ${extraRecords.bestMonthYear}`, sub: `${extraRecords.bestMonthDrinks} verres` },
+    extraRecords?.longestStreakDays > 1 && { icon: "🔥", label: "Ta plus longue série", value: `${extraRecords.longestStreakDays} jours`, sub: "d'affilée" },
   ].filter(Boolean);
 
   const hasAnyData = overview && (overview.visits > 0 || overview.drinksOrdered > 0);
