@@ -387,7 +387,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     aventurier: { emoji: "✈️", label: "Aventurier", description: "Tu aimes explorer différentes villes, pas juste différents bars." },
     social: { emoji: "🤝", label: "Social", description: "Ton réseau de Bibax est large — tu sors avec plein de monde différent." },
     habitue: { emoji: "🏠", label: "Habitué", description: "Tu as tes lieux de prédilection, et tu y reviens fidèlement." },
-    explorateur: { emoji: "🧭", label: "Explorateur", description: "Tu adores découvrir de nouveaux endroits plutôt que revenir toujours au même." },
+    explorateur: { emoji: "🧭", label: "Explorateur", description: "Tu adores découvrir de nouveaux lieux plutôt que revenir toujours au même." },
     degustateur: { emoji: "🍷", label: "Dégustateur", description: "Tu aimes varier les plaisirs et goûter à tout ce qui passe." },
     curieux: { emoji: "🔍", label: "Curieux", description: "En ce moment, tu es du genre à tester plein de nouveaux produits." },
     decouvreur: { emoji: "🆕", label: "Découvreur", description: "Tu es du genre à dénicher régulièrement de nouveaux lieux." },
@@ -565,13 +565,13 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
       ) : (
         <>
           {activeCategory === "apercu" && behaviorProfile && (
-            <div style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.amber}`, borderRadius: "14px", padding: "16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "14px" }}>
-              <span style={{ fontSize: "28px" }}>{behaviorProfile.emoji}</span>
-              <div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite, opacity: 0.6 }}>TON PROFIL</div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.chalkWhite }}>{behaviorProfile.label}</div>
-                <div style={{ fontSize: "12.5px", color: COLORS.chalkWhite, opacity: 0.7 }}>{behaviorProfile.description}</div>
+            <div style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.amber}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite, opacity: 0.6 }}>MON PROFIL</span>
               </div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, margin: "6px 0" }}>{behaviorProfile.label}</div>
+              <div style={{ fontSize: "12.5px", color: COLORS.chalkWhite, opacity: 0.7 }}>{behaviorProfile.description}</div>
             </div>
           )}
 
