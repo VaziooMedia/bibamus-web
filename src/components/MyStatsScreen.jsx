@@ -632,7 +632,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "apercu" && previousOverview && (
-            <StatSection title={`Évolution vs ${period.prevLabel || "la période précédente"}`}>
+            <StatSection title={`Évolution vs. ${period.prevLabel || "la période précédente"}`}>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {[
                   { label: "Boissons commandées", current: overview.drinksOrdered, previous: previousOverview.drinksOrdered },
@@ -656,13 +656,23 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                         fontSize: "14px",
                       }}
                     >
-                      <span>{m.label}</span>
+                      <span><span style={{ color: COLORS.amber }}>– </span>{m.label}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700 }}>{Math.round(m.current)}</span>
                         {m.change && (
-                          <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", fontWeight: 700, color: m.change.startsWith("+") || m.change.startsWith("nouveau") ? COLORS.amber : COLORS.inkSoft }}>
-                            {m.change}
-                          </span>
+                          <>
+                            <span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />
+                            <span
+                              style={{
+                                fontFamily: "'Urbanist', sans-serif",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                color: m.change === "+0%" ? COLORS.inkSoft : m.change.startsWith("+") || m.change.startsWith("nouveau") ? COLORS.amber : m.change.startsWith("-") ? COLORS.redFluo : COLORS.inkSoft,
+                              }}
+                            >
+                              {m.change}
+                            </span>
+                          </>
                         )}
                       </span>
                     </div>
@@ -872,9 +882,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {brandRanking.length > 0 && (
             <StatSection title="Marques les plus consommées">
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {brandRanking.map((r, i) => (
-                  <div key={r.brand} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {brandRanking.map((r, i, arr) => (
+                  <div key={r.brand} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{r.brand}</span>
                     <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "92px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" , textAlign: "left" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span></span>
                   </div>
@@ -885,9 +895,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {breweryRanking.length > 0 && (
             <StatSection title="Producteurs les plus consommés">
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {breweryRanking.map((r, i) => (
-                  <div key={r.brewery} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {breweryRanking.map((r, i, arr) => (
+                  <div key={r.brewery} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{r.brewery}</span>
                     <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "92px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" , textAlign: "left" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span></span>
                   </div>
