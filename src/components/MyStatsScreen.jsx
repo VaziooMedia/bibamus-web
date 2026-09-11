@@ -487,6 +487,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             border: `2px solid ${COLORS.amber}`,
             borderRadius: "12px",
             padding: "13px 16px",
+            marginTop: "14px",
             marginBottom: "16px",
             display: "flex",
             alignItems: "center",
@@ -495,10 +496,19 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             width: "100%",
           }}
         >
-          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>🎉 Voir ton année Bibamus</span>
-          <span style={{ color: COLORS.amber, fontSize: "13px" }}>→</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{new Date().getFullYear()}</span>
+            <span style={{ width: "1px", height: "16px", background: COLORS.paperAlt }} />
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>Voir ton année Bibamus</span>
+          </span>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="11" r="9.5" stroke={COLORS.amber} strokeWidth="1.5" />
+            <path d="M8 11H14M14 11L11.5 8.5M14 11L11.5 13.5" stroke={COLORS.amber} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       )}
+
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
 
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
         {PERIODS.map((p) => (
@@ -521,6 +531,8 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
         ))}
       </div>
 
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
+
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "20px" }}>
         {CATEGORIES.map((c) => (
           <button
@@ -541,6 +553,8 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           </button>
         ))}
       </div>
+
+      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
 
       {!overview ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Chargement...</p>
