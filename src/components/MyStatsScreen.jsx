@@ -348,7 +348,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   // §10 — variation par rapport à la période équivalente précédente. "Nouveau" si rien avant et
   // quelque chose maintenant ; rien affiché si les deux valent zéro (comparaison sans intérêt).
   const formatChange = (current, previous) => {
-    if (previous === 0) return current > 0 ? "nouveau" : null;
+    if (previous === 0) return current > 0 ? (current <= 1 ? "nouveau" : "nouveaux") : null;
     const pct = Math.round(((current - previous) / previous) * 100);
     return `${pct >= 0 ? "+" : ""}${pct}%`;
   };
@@ -633,7 +633,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {activeCategory === "apercu" && previousOverview && (
             <StatSection title={`Évolution vs ${period.prevLabel || "la période précédente"}`}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {[
                   { label: "Boissons commandées", current: overview.drinksOrdered, previous: previousOverview.drinksOrdered },
                   { label: "Visites", current: overview.visits, previous: previousOverview.visits },
@@ -644,13 +644,23 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 ]
                   .map((m) => ({ ...m, change: formatChange(m.current, m.previous) }))
                   .filter((m) => m.current > 0 || m.previous > 0)
-                  .map((m) => (
-                    <div key={m.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}>
+                  .map((m, i, arr) => (
+                    <div
+                      key={m.label}
+                      style={{
+                        padding: "10px 0",
+                        borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        fontSize: "14px",
+                      }}
+                    >
                       <span>{m.label}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700 }}>{Math.round(m.current)}</span>
                         {m.change && (
-                          <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", fontWeight: 700, color: m.change.startsWith("+") || m.change === "nouveau" ? COLORS.amber : COLORS.inkSoft }}>
+                          <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", fontWeight: 700, color: m.change.startsWith("+") || m.change.startsWith("nouveau") ? COLORS.amber : COLORS.inkSoft }}>
                             {m.change}
                           </span>
                         )}
@@ -744,9 +754,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {activeCategory === "depenses" && monthlySpending.some((m) => m.totalEuro > 0) && (
             <StatSection title="Évolution des dépenses (6 derniers mois)">
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {monthlySpending.map((m) => (
-                  <div key={`${m.year}-${m.month}`} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {monthlySpending.map((m, i, arr) => (
+                  <div key={`${m.year}-${m.month}`} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span style={{ textTransform: "capitalize" }}>{MONTH_NAMES[m.month - 1]} {m.year}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700 }}>{formatMoney(m.totalEuro, "euro")}</span>
                   </div>
@@ -765,7 +775,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                     key={r.label}
                     style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", display: "flex", alignItems: "center", gap: "12px" }}
                   >
-                    <span style={{ fontSize: "22px" }}>{r.icon}</span>
+                    <span style={{ width: "4px", height: "28px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, fontWeight: 600 }}>{r.label}</div>
                       <div style={{ fontSize: "15px", fontWeight: 700 }}>{r.value}</div>
@@ -783,12 +793,25 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             {drinksByCount.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Commande quelques boissons et on te dira vite lesquelles tu préfères !</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {drinksByCount.map((r, i) => (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {drinksByCount.map((r, i, arr) => (
                   <button
                     key={r.drinkId}
                     onClick={() => openDrink && openDrink(r.drinkId)}
-                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      background: "none",
+                      border: "none",
+                      borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
+                      padding: "10px 0",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "14px",
+                      color: COLORS.ink,
+                    }}
                   >
                     <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.value} verre{r.value > 1 ? "s" : ""}</span>
@@ -820,9 +843,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             {categoryRanking.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Bières, vins, cocktails... plus tu enregistres de boissons, plus cette répartition prend forme.</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {categoryRanking.map((r, i) => (
-                  <div key={r.category} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {categoryRanking.map((r, i, arr) => (
+                  <div key={r.category} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span><strong>{i + 1}.</strong> {r.category}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
                   </div>
@@ -833,9 +856,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {beerStyleRanking.length > 0 && (
             <StatSection title="Ton style de bière préféré">
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {beerStyleRanking.map((r, i) => (
-                  <div key={r.style} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {beerStyleRanking.map((r, i, arr) => (
+                  <div key={r.style} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span><strong>{i + 1}.</strong> {r.style}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
                   </div>
@@ -872,12 +895,25 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {drinksByCalories.length > 0 && (
             <StatSection title="Boissons les plus caloriques">
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {drinksByCalories.map((r, i) => (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {drinksByCalories.map((r, i, arr) => (
                   <button
                     key={r.drinkId}
                     onClick={() => openDrink && openDrink(r.drinkId)}
-                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      background: "none",
+                      border: "none",
+                      borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
+                      padding: "10px 0",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "14px",
+                      color: COLORS.ink,
+                    }}
                   >
                     <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>≈ {Math.round(r.value)} kcal</span>
@@ -894,12 +930,25 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             {drinksBySpend.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Reviens ici après quelques tournées pour voir où part ton argent.</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {drinksBySpend.map((r, i) => (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {drinksBySpend.map((r, i, arr) => (
                   <button
                     key={r.drinkId}
                     onClick={() => openDrink && openDrink(r.drinkId)}
-                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      background: "none",
+                      border: "none",
+                      borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
+                      padding: "10px 0",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "14px",
+                      color: COLORS.ink,
+                    }}
                   >
                     <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px" }}>{formatMoney(r.value, "euro")}</span>
@@ -913,14 +962,17 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           {activeCategory === "lieux" && (
           <>
           {venuesByVisits[0] && (
-            <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "14px" }}>
-              <span style={{ fontSize: "28px" }}>🏠</span>
+            <button
+              onClick={() => openVenue(venuesByVisits[0].venueId)}
+              style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}
+            >
+              <span style={{ width: "4px", height: "36px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
               <div>
                 <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.6 }}>TON QG</div>
                 <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }}>{venueNames[venuesByVisits[0].venueId] || "…"}</div>
                 <div style={{ fontSize: "12.5px", opacity: 0.7 }}>{venuesByVisits[0].value} visite{venuesByVisits[0].value > 1 ? "s" : ""}</div>
               </div>
-            </div>
+            </button>
           )}
 
           {(newVenuesCount > 0 || cityCountryStats.distinctCities > 0 || venueSpendAvg != null || longestVenue) && (
@@ -929,15 +981,26 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 newVenuesCount > 0 && { label: "Nouveaux établissements découverts", value: newVenuesCount },
                 cityCountryStats.distinctCities > 0 && { label: "Villes différentes visitées", value: cityCountryStats.distinctCities },
                 cityCountryStats.distinctCountries > 0 && { label: "Pays différents visités", value: cityCountryStats.distinctCountries },
-                venueSpendAvg != null && { label: "Dépense moyenne / établissement", value: formatMoney(venueSpendAvg, "euro") },
-                longestVenue && longestVenueName && { label: "Où tu restes le plus longtemps", value: longestVenueName, sub: formatDuration(longestVenue.avgMin) },
+                venueSpendAvg != null && { label: "Dépense moyenne / établissement", value: formatMoney(venueSpendAvg, "euro"), isMoney: true },
+                longestVenue && longestVenueName && { label: "Où tu restes le plus longtemps", value: longestVenueName, subMin: longestVenue.avgMin },
               ]
                 .filter(Boolean)
                 .map((tile) => (
-                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
+                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", textAlign: "center" }}>
                     <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "4px" }}>{tile.label}</div>
-                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px" }}>{tile.value}</div>
-                    {tile.sub && <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", color: COLORS.amberDark, fontWeight: 700, marginTop: "2px" }}>{tile.sub}</div>}
+                    {tile.isMoney ? (
+                      <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.amber }}>
+                        {tile.value.replace(" €", "")}
+                        <span style={{ fontSize: "12px", color: COLORS.inkSoft, fontWeight: 700 }}> €</span>
+                      </div>
+                    ) : (
+                      <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.amber }}>{tile.value}</div>
+                    )}
+                    {tile.subMin != null && (
+                      <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", color: COLORS.amber, fontWeight: 700, marginTop: "2px" }}>
+                        {String(Math.floor(tile.subMin / 60)).padStart(2, "0")} <span style={{ color: COLORS.ink }}>H</span> {String(tile.subMin % 60).padStart(2, "0")}
+                      </div>
+                    )}
                   </div>
                 ))}
             </div>
@@ -945,9 +1008,9 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {venueTypeRanking.length > 0 && (
             <StatSection title="Type de lieu le plus fréquenté">
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {venueTypeRanking.map((r, i) => (
-                  <div key={r.venueType} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {venueTypeRanking.map((r, i, arr) => (
+                  <div key={r.venueType} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span><strong>{i + 1}.</strong> {r.venueType}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} visite{r.quantity > 1 ? "s" : ""}</span>
                   </div>
@@ -960,12 +1023,25 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             {venuesByVisits.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Check-in dans un lieu et il apparaîtra ici.</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {venuesByVisits.map((r, i) => (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {venuesByVisits.map((r, i, arr) => (
                   <button
                     key={r.venueId}
                     onClick={() => openVenue(r.venueId)}
-                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      background: "none",
+                      border: "none",
+                      borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
+                      padding: "10px 0",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "14px",
+                      color: COLORS.ink,
+                    }}
                   >
                     <span><strong>{i + 1}.</strong> {venueNames[r.venueId] || "…"}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.value} visite{r.value > 1 ? "s" : ""}</span>
@@ -982,12 +1058,25 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             {venuesBySpend.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Tes dépenses par lieu s'afficheront ici dès ta première tournée.</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {venuesBySpend.map((r, i) => (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {venuesBySpend.map((r, i, arr) => (
                   <button
                     key={r.venueId}
                     onClick={() => openVenue(r.venueId)}
-                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      background: "none",
+                      border: "none",
+                      borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
+                      padding: "10px 0",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "14px",
+                      color: COLORS.ink,
+                    }}
                   >
                     <span><strong>{i + 1}.</strong> {venueNames[r.venueId] || "…"}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.amberDark, fontWeight: 700, fontSize: "13px" }}>{formatMoney(r.value, "euro")}</span>
@@ -1029,12 +1118,25 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {rankedBibrosBySharedVenues.length > 0 && (
             <StatSection title="Avec qui tu visites le plus de lieux différents">
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {rankedBibrosBySharedVenues.map((r, i) => (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {rankedBibrosBySharedVenues.map((r, i, arr) => (
                   <button
                     key={r.bibro.code}
                     onClick={() => openBibro && openBibro(r.bibro.code)}
-                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      background: "none",
+                      border: "none",
+                      borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
+                      padding: "10px 0",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "14px",
+                      color: COLORS.ink,
+                    }}
                   >
                     <span><strong>{i + 1}.</strong> {r.bibro.alias || r.bibro.name}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.count} lieu{r.count > 1 ? "x" : ""}</span>
@@ -1048,12 +1150,25 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             {rankedBibrosBySharedRounds.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Partage une tournée avec un Bibax et il apparaîtra ici.</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {rankedBibrosBySharedRounds.map((r, i) => (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {rankedBibrosBySharedRounds.map((r, i, arr) => (
                   <button
                     key={r.bibro.code}
                     onClick={() => openBibro && openBibro(r.bibro.code)}
-                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      background: "none",
+                      border: "none",
+                      borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
+                      padding: "10px 0",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "14px",
+                      color: COLORS.ink,
+                    }}
                   >
                     <span><strong>{i + 1}.</strong> {r.bibro.alias || r.bibro.name}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.count} tournée{r.count > 1 ? "s" : ""}</span>
