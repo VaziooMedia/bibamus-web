@@ -759,6 +759,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "depenses" && (overview.moneyEuro > 0 || overview.moneyJeton > 0) && (
+            <>
             <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
               <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Argent dépensé — {period.label.toLowerCase()}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -776,9 +777,12 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 )}
               </div>
             </div>
+            <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
+            </>
           )}
 
           {activeCategory === "depenses" && (biggestOutingSpend > 0 || priceStats?.avgPrice != null) && (
+            <>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
               {[
                 biggestOutingSpend > 0 && { label: "Plus grosse dépense en une sortie", value: formatMoney(biggestOutingSpend, "euro"), isMoney: true },
@@ -795,10 +799,12 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                   </div>
                 ))}
             </div>
+            <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
+            </>
           )}
 
           {activeCategory === "depenses" && monthlySpending.some((m) => m.totalEuro > 0) && (
-            <StatSection title="Évolution des dépenses (6 derniers mois)" arrowColor={COLORS.amber}>
+            <StatSection title="Évolution des dépenses (6 derniers mois)" arrowColor={COLORS.amber} showBottomDivider>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {monthlySpending.map((m, i, arr) => (
                   <div key={`${m.year}-${m.month}`} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
@@ -965,7 +971,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {drinksByCalories.length > 0 && (
-            <StatSection title="Boissons les plus caloriques" arrowColor={COLORS.amber} showBottomDivider>
+            <StatSection title="Boissons les plus caloriques" arrowColor={COLORS.amber}>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {drinksByCalories.map((r, i, arr) => (
                   <button
@@ -997,7 +1003,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "depenses" && (
-          <StatSection title="Produits pour lesquels tu as le plus dépensé" arrowColor={COLORS.amber}>
+          <StatSection title="Produits pour lesquels tu as le plus dépensé" arrowColor={COLORS.amber} showBottomDivider>
             {drinksBySpend.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Reviens ici après quelques tournées pour voir où part ton argent.</p>
             ) : (
@@ -1080,19 +1086,6 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                   </div>
                 ))}
             </div>
-          )}
-
-          {venueTypeRanking.length > 0 && (
-            <StatSection title="Type de lieu le plus fréquenté" arrowColor={COLORS.amber}>
-              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
-                {venueTypeRanking.map((r, i, arr) => (
-                  <div key={r.venueType} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{r.venueType}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", textAlign: "right", flex: 1 }}><span style={{ color: COLORS.amber }}>{r.quantity}</span> <span style={{ color: COLORS.inkSoft }}>visite{r.quantity > 1 ? "s" : ""}</span></span></span>
-                  </div>
-                ))}
-              </div>
-            </StatSection>
           )}
 
           <StatSection title="Classement par visites" arrowColor={COLORS.amber}>
@@ -1185,8 +1178,8 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           {(newBibaxMetCount > 0 || avgBibaxPerSalon != null) && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
               {[
-                newBibaxMetCount > 0 && { label: "Nouveaux Bibax rencontrés", value: newBibaxMetCount },
-                avgBibaxPerSalon != null && { label: "Bibax en moyenne par salon", value: avgBibaxPerSalon },
+                newBibaxMetCount > 0 && { label: "Bibax rencontrés", value: newBibaxMetCount },
+                avgBibaxPerSalon != null && { label: "Bibax en moy. par salon", value: avgBibaxPerSalon },
               ]
                 .filter(Boolean)
                 .map((tile) => (
