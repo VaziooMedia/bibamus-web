@@ -568,7 +568,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             <div style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.amber}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
                 <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite }}>Mon Profil</span>
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "14px", color: COLORS.chalkWhite }}>Mon Profil</span>
               </div>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, margin: "6px 0" }}>{behaviorProfile.label}</div>
               <div style={{ fontSize: "12.5px", color: COLORS.chalkWhite, opacity: 0.7 }}>{behaviorProfile.description}</div>
@@ -579,7 +579,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
                 <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite }}>Tous lieux confondus</span>
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "14px", color: COLORS.chalkWhite }}>Tous lieux confondus</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "12px" }}>
                 <div style={{ textAlign: "center" }}>
@@ -665,37 +665,41 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
                 <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite }}>Tes Habitudes</span>
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "14px", color: COLORS.chalkWhite }}>Tes Habitudes</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {habits.topWeekday != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                    <span>Jour où tu sors le plus</span>
+                    <span><span style={{ color: COLORS.amber }}>– </span>Jour où tu sors le plus</span>
                     <span style={{ fontWeight: 700, textTransform: "capitalize", color: COLORS.amber }}>{WEEKDAY_NAMES[habits.topWeekday]}</span>
                   </div>
                 )}
                 {habits.topHour != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                    <span>Heure la plus active</span>
-                    <span style={{ fontWeight: 700, color: COLORS.amber }}>{String(habits.topHour).padStart(2, "0")} H 00</span>
+                    <span><span style={{ color: COLORS.amber }}>– </span>Heure la plus active</span>
+                    <span style={{ fontWeight: 700, color: COLORS.amber }}>
+                      {String(habits.topHour).padStart(2, "0")} <span style={{ color: COLORS.ink }}>H</span> 00
+                    </span>
                   </div>
                 )}
                 {habits.topMonth != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                    <span>Mois le plus actif</span>
+                    <span><span style={{ color: COLORS.amber }}>– </span>Mois le plus actif</span>
                     <span style={{ fontWeight: 700, textTransform: "capitalize", color: COLORS.amber }}>{MONTH_NAMES[habits.topMonth - 1]}</span>
                   </div>
                 )}
                 {habits.avgDrinksPerOuting != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                    <span>Boissons en moyenne par sortie</span>
+                    <span><span style={{ color: COLORS.amber }}>– </span>Boissons en moyenne par sortie</span>
                     <span style={{ fontWeight: 700, color: COLORS.amber }}>{Number(habits.avgDrinksPerOuting).toFixed(1)}</span>
                   </div>
                 )}
                 {avgOutingDurationMin != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                    <span>Durée moyenne d'une sortie</span>
-                    <span style={{ fontWeight: 700, color: COLORS.amber }}>{String(Math.floor(avgOutingDurationMin / 60)).padStart(2, "0")} H {String(avgOutingDurationMin % 60).padStart(2, "0")}</span>
+                    <span><span style={{ color: COLORS.amber }}>– </span>Durée moyenne d'une sortie</span>
+                    <span style={{ fontWeight: 700, color: COLORS.amber }}>
+                      {String(Math.floor(avgOutingDurationMin / 60)).padStart(2, "0")} <span style={{ color: COLORS.ink }}>H</span> {String(avgOutingDurationMin % 60).padStart(2, "0")}
+                    </span>
                   </div>
                 )}
               </div>

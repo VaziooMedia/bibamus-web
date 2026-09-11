@@ -9,6 +9,7 @@ import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, Whatsap
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
 import cupIconUrl from "../assets/brand/cup.svg";
+import beerIconUrl from "../assets/brand/beer.svg";
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, formatSharedBirthDate, computeAgeFromBirthDate, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
 import { loadMyProfileStats, loadMyStories } from "../data/sharedDirectories.js";
 
@@ -332,7 +333,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "10px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.ink }}>Tes jours avec et sans alcool</div>
+        <div style={{ fontSize: "14px", fontWeight: 600, color: COLORS.ink }}>Tes jours avec et sans alcool</div>
         <span style={{ marginLeft: "auto", fontSize: "16px", fontWeight: 800, color: COLORS.amber, fontFamily: "'Urbanist', sans-serif" }}>{today.getFullYear()}</span>
       </div>
 
@@ -352,7 +353,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
                 <img src={cupIconUrl} alt="" style={{ width: "22px", height: "22px" }} />
                 {longestFreeStreak}
               </div>
-              <div style={{ fontSize: "10.5px", color: COLORS.inkSoft, fontWeight: 700 }}>record — plus longue série</div>
+              <div style={{ fontSize: "10.5px", color: COLORS.inkSoft, fontWeight: 700 }}>Record de la plus longue série</div>
             </div>
           )}
         </div>
@@ -385,11 +386,9 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
 
       {isGridMode && (
         <>
-          {mode === "currentMonth" && (
-            <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>
-              Touchez un jour non renseigné pour le marquer sans alcool.
-            </p>
-          )}
+          <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>
+            Touche un jour non renseigné pour le marquer sans alcool.
+          </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "6px" }}>
             {gridDays.map((d, i) => {
               if (!d) return <div key={`blank-${i}`} />;
@@ -421,7 +420,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
                   ) : !hasData ? (
                     "·"
                   ) : hadAlcohol ? (
-                    "🍺"
+                    <img src={beerIconUrl} alt="" style={{ width: "16px", height: "16px" }} />
                   ) : (
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path d="M3 8.5L6.2 11.5L13 4.5" stroke={COLORS.sage} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
