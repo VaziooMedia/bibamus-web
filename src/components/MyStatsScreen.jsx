@@ -568,7 +568,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             <div style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.amber}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
                 <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite, opacity: 0.6 }}>MON PROFIL</span>
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite }}>Mon Profil</span>
               </div>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, margin: "6px 0" }}>{behaviorProfile.label}</div>
               <div style={{ fontSize: "12.5px", color: COLORS.chalkWhite, opacity: 0.7 }}>{behaviorProfile.description}</div>
@@ -577,21 +577,28 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {activeCategory === "apercu" && (
             <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "20px" }}>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55, marginBottom: "12px" }}>TOUS LIEUX CONFONDUS</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite }}>Tous lieux confondus</span>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "12px" }}>
-                <div>
+                <div style={{ textAlign: "center" }}>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>VISITES</div>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.visits}</div>
                 </div>
-                <div>
+                <div style={{ textAlign: "center" }}>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>BOISSONS COMMANDÉES</div>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.drinksOrdered}</div>
                 </div>
               </div>
               {overview.calories > 0 && (
-                <div style={{ paddingTop: "12px", borderTop: `2px solid ${COLORS.chalkWhite}30` }}>
+                <div style={{ paddingTop: "12px", borderTop: `2px solid ${COLORS.chalkWhite}30`, textAlign: "center" }}>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>CALORIES BUES</div>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>≈ {Math.round(overview.calories)} kcal</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>
+                    <span style={{ fontSize: "16px", color: COLORS.inkSoft, fontWeight: 600 }}>≈ </span>
+                    {Math.round(overview.calories)}
+                    <span style={{ fontSize: "16px", color: COLORS.inkSoft, fontWeight: 600 }}> kcal</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -656,7 +663,10 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
           {activeCategory === "apercu" && habits && (habits.topWeekday != null || habits.avgDrinksPerOuting != null || avgOutingDurationMin != null) && (
             <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>TES HABITUDES</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite }}>Tes Habitudes</span>
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {habits.topWeekday != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
@@ -667,7 +677,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 {habits.topHour != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span>Heure la plus active</span>
-                    <span style={{ fontWeight: 700, color: COLORS.amber }}>{habits.topHour}h</span>
+                    <span style={{ fontWeight: 700, color: COLORS.amber }}>{String(habits.topHour).padStart(2, "0")} H 00</span>
                   </div>
                 )}
                 {habits.topMonth != null && (
@@ -685,7 +695,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 {avgOutingDurationMin != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span>Durée moyenne d'une sortie</span>
-                    <span style={{ fontWeight: 700, color: COLORS.amber }}>{formatDuration(avgOutingDurationMin)}</span>
+                    <span style={{ fontWeight: 700, color: COLORS.amber }}>{String(Math.floor(avgOutingDurationMin / 60)).padStart(2, "0")} H {String(avgOutingDurationMin % 60).padStart(2, "0")}</span>
                   </div>
                 )}
               </div>

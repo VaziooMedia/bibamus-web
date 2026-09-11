@@ -8,6 +8,7 @@ import { COLORS, WEEKDAY_SHORT_MON_FIRST } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
+import cupIconUrl from "../assets/brand/cup.svg";
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, formatSharedBirthDate, computeAgeFromBirthDate, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
 import { loadMyProfileStats, loadMyStories } from "../data/sharedDirectories.js";
 
@@ -332,7 +333,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
       <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "10px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.ink }}>Tes jours avec et sans alcool</div>
-        <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{today.getFullYear()}</span>
+        <span style={{ marginLeft: "auto", fontSize: "16px", fontWeight: 800, color: COLORS.amber, fontFamily: "'Urbanist', sans-serif" }}>{today.getFullYear()}</span>
       </div>
 
       {(currentFreeStreak > 0 || longestFreeStreak > 0) && (
@@ -347,8 +348,9 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
           )}
           {longestFreeStreak > currentFreeStreak && (
             <div style={{ flex: 1, background: COLORS.paperAlt, borderRadius: "12px", padding: "10px", textAlign: "center" }}>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.inkSoft, lineHeight: 1 }}>
-                🏆 {longestFreeStreak}
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.inkSoft, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                <img src={cupIconUrl} alt="" style={{ width: "22px", height: "22px" }} />
+                {longestFreeStreak}
               </div>
               <div style={{ fontSize: "10.5px", color: COLORS.inkSoft, fontWeight: 700 }}>record — plus longue série</div>
             </div>
@@ -414,7 +416,17 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
                     cursor: isManuallyEditable && onToggleDay ? "pointer" : "default",
                   }}
                 >
-                  {isFuture ? "" : !hasData ? "·" : hadAlcohol ? "🍺" : "✅"}
+                  {isFuture ? (
+                    ""
+                  ) : !hasData ? (
+                    "·"
+                  ) : hadAlcohol ? (
+                    "🍺"
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 8.5L6.2 11.5L13 4.5" stroke={COLORS.sage} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
                 </div>
               );
               return (
