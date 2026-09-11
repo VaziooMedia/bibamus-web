@@ -615,8 +615,8 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 { label: "Lieux différents visités", value: overview.distinctVenues },
                 { label: "Salons partagés", value: salonsCount },
                 { label: "Bibax rencontrés", value: rankedBibrosBySharedRounds.length },
-                overview.moneyEuro > 0 && overview.visits > 0 && { label: "Dépense moyenne / sortie", value: formatMoney(overview.moneyEuro / overview.visits, "euro"), isMoney: true },
-                overview.moneyEuro > 0 && monthsElapsed && { label: "Dépense moyenne / mois", value: formatMoney(overview.moneyEuro / monthsElapsed, "euro"), isMoney: true },
+                overview.moneyEuro > 0 && overview.visits > 0 && { label: "Dépense moy. / sortie", value: formatMoney(overview.moneyEuro / overview.visits, "euro"), isMoney: true },
+                overview.moneyEuro > 0 && monthsElapsed && { label: "Dépense moy. / mois", value: formatMoney(overview.moneyEuro / monthsElapsed, "euro"), isMoney: true },
               ]
                 .filter(Boolean)
                 .map((tile) => (
@@ -662,7 +662,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                     >
                       <span><span style={{ color: COLORS.amber }}>– </span>{m.label}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700 }}>{Math.round(m.current)}</span>
+                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amber, width: "40px", textAlign: "right" }}>{Math.round(m.current)}</span>
                         {m.change && (
                           <>
                             <span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />
@@ -686,11 +686,12 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "apercu" && habits && (habits.topWeekday != null || habits.avgDrinksPerOuting != null || avgOutingDurationMin != null) && (
-            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                 <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
                 <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "14px", color: COLORS.chalkWhite }}>Tes habitudes</span>
               </div>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {habits.topWeekday != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
@@ -742,7 +743,8 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                   </div>
                 )}
               </div>
-            </div>
+              </div>
+            </>
           )}
 
           {activeCategory === "depenses" && (overview.moneyEuro > 0 || overview.moneyJeton > 0) && (

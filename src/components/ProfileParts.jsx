@@ -330,12 +330,13 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
   };
 
   return (
-    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
+    <>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <div style={{ fontSize: "14px", fontWeight: 600, color: COLORS.ink }}>Tes jours avec et sans alcool</div>
         <span style={{ marginLeft: "auto", fontSize: "16px", fontWeight: 800, color: COLORS.amber, fontFamily: "'Urbanist', sans-serif" }}>{today.getFullYear()}</span>
       </div>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
 
       {(currentFreeStreak > 0 || longestFreeStreak > 0) && (
         <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
@@ -351,7 +352,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
             <div style={{ flex: 1, background: COLORS.paperAlt, borderRadius: "12px", padding: "10px", textAlign: "center" }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.inkSoft, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                 <img src={cupIconUrl} alt="" style={{ width: "22px", height: "22px" }} />
-                {longestFreeStreak}
+                <span style={{ color: COLORS.ink }}>{longestFreeStreak}</span>
               </div>
               <div style={{ fontSize: "10.5px", color: COLORS.inkSoft, fontWeight: 700 }}>Record de la plus longue série</div>
             </div>
@@ -446,6 +447,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
         </>
       )}
     </div>
+    </>
   );
 }
 
