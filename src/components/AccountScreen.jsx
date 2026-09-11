@@ -588,11 +588,27 @@ export function SettingsComingSoonScreen({ title, icon, onBack }) {
 }
 
 function ShareToggle({ checked, onChange }) {
+  const isOn = checked !== false;
   return (
-    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, cursor: "pointer" }}>
-      <input type="checkbox" checked={checked !== false} onChange={(e) => onChange(e.target.checked)} style={{ width: "15px", height: "15px", accentColor: COLORS.amber }} />
-      Visible
-    </label>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <button
+        onClick={() => onChange(!isOn)}
+        style={{
+          width: "42px",
+          height: "24px",
+          borderRadius: "999px",
+          border: "none",
+          background: isOn ? COLORS.amber : COLORS.paperAlt,
+          position: "relative",
+          cursor: "pointer",
+          padding: 0,
+          flexShrink: 0,
+        }}
+      >
+        <span style={{ position: "absolute", top: "3px", left: isOn ? "21px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+      </button>
+      <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Visible</span>
+    </div>
   );
 }
 
@@ -658,11 +674,24 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
             </div>
           )}
           {p.shareBirthDate !== false && (p.birthDateSharePrecision || "full") === "full" && (
-            <div style={{ marginTop: "8px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, cursor: "pointer" }}>
-                <input type="checkbox" checked={p.shareAge !== false} onChange={(e) => update({ shareAge: e.target.checked })} style={{ width: "15px", height: "15px", accentColor: COLORS.amber }} />
-                Afficher mon âge calculé
-              </label>
+            <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <button
+                onClick={() => update({ shareAge: p.shareAge === false })}
+                style={{
+                  width: "42px",
+                  height: "24px",
+                  borderRadius: "999px",
+                  border: "none",
+                  background: p.shareAge !== false ? COLORS.amber : COLORS.paperAlt,
+                  position: "relative",
+                  cursor: "pointer",
+                  padding: 0,
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ position: "absolute", top: "3px", left: p.shareAge !== false ? "21px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+              </button>
+              <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Afficher mon âge calculé</span>
             </div>
           )}
         </VisibilityRow>
