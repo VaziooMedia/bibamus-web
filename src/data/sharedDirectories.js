@@ -2122,6 +2122,17 @@ export async function loadMyDrinkPriceStats(since = null, until = null) {
   return { avgPrice: row.avg_price, maxPrice: row.max_price, maxPriceDrinkId: row.max_price_drink_id };
 }
 
+export async function loadMyDrinkCalorieStats(since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_drink_calorie_stats", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadMyDrinkCalorieStats:", error);
+    return { avgCalories: null, maxCalories: null, maxCaloriesDrinkId: null };
+  }
+  const row = data[0] || {};
+  return { avgCalories: row.avg_calories, maxCalories: row.max_calories, maxCaloriesDrinkId: row.max_calories_drink_id };
+}
+
+
 // §6 — Lieux.
 export async function loadMyVenueTypeRanking(since = null, until = null, limit = 10) {
   const { data, error } = await supabase.rpc("get_my_venue_type_ranking", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null, p_limit: limit });

@@ -22,6 +22,7 @@ import {
   loadMyBreweryRanking,
   loadMyNewDrinksCount,
   loadMyDrinkPriceStats,
+  loadMyDrinkCalorieStats,
   loadMyVenueTypeRanking,
   loadMyCityCountryStats,
   loadMyNewVenuesCount,
@@ -160,6 +161,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const [breweryRanking, setBreweryRanking] = useState([]);
   const [newDrinksCount, setNewDrinksCount] = useState(0);
   const [priceStats, setPriceStats] = useState(null);
+  const [drinksByCalories, setDrinksByCalories] = useState([]);
   useEffect(() => {
     loadMyCategoryRanking(since, null, 10).then(setCategoryRanking);
     loadMyBeerStyleRanking(since, null, 10).then(setBeerStyleRanking);
@@ -167,6 +169,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     loadMyBreweryRanking(since, null, 10).then(setBreweryRanking);
     loadMyNewDrinksCount(since, null).then(setNewDrinksCount);
     loadMyDrinkPriceStats(since, null).then(setPriceStats);
+    loadMyDrinkRanking("calories", since, null, 10).then(setDrinksByCalories);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodKey]);
 
@@ -194,6 +197,21 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   useEffect(() => {
     loadMyExtraRecords().then(setExtraRecords);
   }, []);
+
+  // Record "boisson la plus calorique" — tout l'historique, comme les autres records (pas la
+  // période sélectionnée sur l'écran).
+  const [calorieStatsAllTime, setCalorieStatsAllTime] = useState(null);
+  useEffect(() => {
+    loadMyDrinkCalorieStats(null, null).then(setCalorieStatsAllTime);
+  }, []);
+  const [maxCaloriesDrinkName, setMaxCaloriesDrinkName] = useState(null);
+  useEffect(() => {
+    if (!calorieStatsAllTime?.maxCaloriesDrinkId) {
+      setMaxCaloriesDrinkName(null);
+      return;
+    }
+    loadDrinksByIds([calorieStatsAllTime.maxCaloriesDrinkId]).then((results) => setMaxCaloriesDrinkName(results[0]?.name || null));
+  }, [calorieStatsAllTime]);
 
   // §12 — profil comportemental, calculé sur tout l'historique (identité, pas une photo de la
   // période affichée) — sauf les deux signaux "récents" (curiosité/découverte), volontairement
@@ -247,10 +265,10 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
 
   const [drinkNames, setDrinkNames] = useState({});
   useEffect(() => {
-    const ids = new Set([...drinksByCount, ...drinksBySpend].map((r) => r.drinkId));
+    const ids = new Set([...drinksByCount, ...drinksBySpend, ...drinksByCalories].map((r) => r.drinkId));
     if (ids.size === 0) return;
     loadDrinksByIds([...ids]).then((results) => setDrinkNames((prev) => ({ ...prev, ...Object.fromEntries(results.map((d) => [d.id, d.name])) })));
-  }, [drinksByCount, drinksBySpend]);
+  }, [drinksByCount, drinksBySpend, drinksByCalories]);
 
   // Événements de la période sélectionnée — pour rester cohérent avec le reste de la page, qui
   // filtre déjà tout par période côté serveur.
@@ -447,6 +465,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     maxBibaxInOneOuting > 1 && { icon: "👥", label: "Le plus de monde réuni en une sortie", value: maxBibaxInOneOuting, sub: "personnes" },
     extraRecords?.bestMonthYear && { icon: "📅", label: "Ton mois le plus actif", value: `${MONTH_NAMES[extraRecords.bestMonthMonth - 1]} ${extraRecords.bestMonthYear}`, sub: `${extraRecords.bestMonthDrinks} verres` },
     extraRecords?.longestStreakDays > 1 && { icon: "🔥", label: "Ta plus longue série", value: `${extraRecords.longestStreakDays} jours`, sub: "d'affilée" },
+    calorieStatsAllTime?.maxCalories > 0 && maxCaloriesDrinkName && { icon: "🍔", label: "Boisson la plus calorique", value: maxCaloriesDrinkName, sub: `≈ ${Math.round(calorieStatsAllTime.maxCalories)} kcal` },
   ].filter(Boolean);
 
   const hasAnyData = overview && (overview.visits > 0 || overview.drinksOrdered > 0);
@@ -591,6 +610,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                   { label: "Boissons commandées", current: overview.drinksOrdered, previous: previousOverview.drinksOrdered },
                   { label: "Visites", current: overview.visits, previous: previousOverview.visits },
                   { label: "Argent dépensé", current: overview.moneyEuro, previous: previousOverview.moneyEuro },
+                  { label: "Calories bues", current: overview.calories, previous: previousOverview.calories },
                   { label: "Nouveaux produits découverts", current: newDrinksCount, previous: previousNewDrinksCount },
                   { label: "Nouveaux lieux découverts", current: newVenuesCount, previous: previousNewVenuesCount },
                 ]
@@ -809,6 +829,23 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                     <span><strong>{i + 1}.</strong> {r.brewery}</span>
                     <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
                   </div>
+                ))}
+              </div>
+            </StatSection>
+          )}
+
+          {drinksByCalories.length > 0 && (
+            <StatSection title="Boissons les plus caloriques">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {drinksByCalories.map((r, i) => (
+                  <button
+                    key={r.drinkId}
+                    onClick={() => openDrink && openDrink(r.drinkId)}
+                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}
+                  >
+                    <span><strong>{i + 1}.</strong> {drinkNames[r.drinkId] || "…"}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>≈ {Math.round(r.value)} kcal</span>
+                  </button>
                 ))}
               </div>
             </StatSection>
