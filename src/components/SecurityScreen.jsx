@@ -134,11 +134,13 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   );
 
   const CategoryRow = ({ title, description, field }) => (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
-      <span style={{ width: "4px", alignSelf: "stretch", borderRadius: "2px", background: COLORS.amber, flexShrink: 0, marginTop: "2px" }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "2px" }}>{title}</div>
-        <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>{description}</div>
+    <div style={{ padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <span style={{ fontWeight: 700, fontSize: "14px" }}>{title}</span>
+      </div>
+      <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px", marginLeft: "12px" }}>{description}</div>
+      <div style={{ marginLeft: "12px" }}>
         <ShareToggle checked={p[field]} onChange={(v) => update({ [field]: v })} />
       </div>
     </div>
