@@ -1017,21 +1017,23 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           {activeCategory === "lieux" && (
           <>
           {venuesByVisits[0] && (
-            <button
-              onClick={() => openVenue(venuesByVisits[0].venueId)}
-              style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "16px", marginBottom: "20px", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                 <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
                 <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "14px", color: COLORS.chalkWhite }}>Ton QG</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{venueNames[venuesByVisits[0].venueId] || "…"}</div>
-                <span style={{ fontSize: "12.5px" }}>
-                  <span style={{ color: COLORS.amber, fontWeight: 700 }}>{venuesByVisits[0].value}</span> <span style={{ color: COLORS.inkSoft }}>visite{venuesByVisits[0].value > 1 ? "s" : ""}</span>
-                </span>
-              </div>
-            </button>
+              <button
+                onClick={() => openVenue(venuesByVisits[0].venueId)}
+                style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "16px", marginBottom: "20px", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{venueNames[venuesByVisits[0].venueId] || "…"}</div>
+                  <span style={{ fontSize: "12.5px" }}>
+                    <span style={{ color: COLORS.amber, fontWeight: 700 }}>{venuesByVisits[0].value}</span> <span style={{ color: COLORS.inkSoft }}>visite{venuesByVisits[0].value > 1 ? "s" : ""}</span>
+                  </span>
+                </div>
+              </button>
+            </>
           )}
 
           {(newVenuesCount > 0 || cityCountryStats.distinctCities > 0 || venueSpendAvg != null || longestVenue) && (
@@ -1149,18 +1151,20 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           {activeCategory === "social" && (
           <>
           {rankedBibrosBySharedRounds[0] && (
-            <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                 <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
                 <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "14px", color: COLORS.chalkWhite }}>Ton compagnon de sortie n°1</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{rankedBibrosBySharedRounds[0].bibro.alias || rankedBibrosBySharedRounds[0].bibro.name}</div>
-                <span style={{ fontSize: "12.5px" }}>
-                  <span style={{ color: COLORS.amber, fontWeight: 700 }}>{rankedBibrosBySharedRounds[0].count}</span> <span style={{ color: COLORS.inkSoft }}>tournée{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""} commune{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""}</span>
-                </span>
+              <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{rankedBibrosBySharedRounds[0].bibro.alias || rankedBibrosBySharedRounds[0].bibro.name}</div>
+                  <span style={{ fontSize: "12.5px" }}>
+                    <span style={{ color: COLORS.amber, fontWeight: 700 }}>{rankedBibrosBySharedRounds[0].count}</span> <span style={{ color: COLORS.inkSoft }}>tournée{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""} commune{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""}</span>
+                  </span>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {(newBibaxMetCount > 0 || avgBibaxPerSalon != null) && (
