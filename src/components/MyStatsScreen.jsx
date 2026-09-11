@@ -195,6 +195,23 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     loadMyExtraRecords().then(setExtraRecords);
   }, []);
 
+  // §12 — profil comportemental, calculé sur tout l'historique (identité, pas une photo de la
+  // période affichée) — sauf les deux signaux "récents" (curiosité/découverte), volontairement
+  // bornés aux 90 derniers jours pour refléter un comportement actuel, pas un exploit ponctuel
+  // d'il y a 2 ans.
+  const [allTimeOverview, setAllTimeOverview] = useState(null);
+  const [allTimeCityStats, setAllTimeCityStats] = useState(null);
+  const [recentNewDrinks, setRecentNewDrinks] = useState(0);
+  const [recentNewVenues, setRecentNewVenues] = useState(0);
+  useEffect(() => {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    loadMyStatsOverview(null, null).then(setAllTimeOverview);
+    loadMyCityCountryStats(null, null).then(setAllTimeCityStats);
+    loadMyNewDrinksCount(ninetyDaysAgo, null).then(setRecentNewDrinks);
+    loadMyNewVenuesCount(ninetyDaysAgo, null).then(setRecentNewVenues);
+  }, []);
+
   const [venueTypeRanking, setVenueTypeRanking] = useState([]);
   const [cityCountryStats, setCityCountryStats] = useState({ distinctCities: 0, distinctCountries: 0 });
   const [newVenuesCount, setNewVenuesCount] = useState(0);
@@ -334,6 +351,50 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const allClosedEvents = events.filter((e) => e.closedAt && e.createdAt);
   const longestOutingDurationMin = allClosedEvents.length > 0 ? Math.round(Math.max(...allClosedEvents.map((e) => e.closedAt - e.createdAt)) / 60000) : null;
 
+  // §12 — profil comportemental : une seule étiquette à la fois, la première règle qui
+  // s'applique dans cet ordre l'emporte. Seuil volontairement prudent partout (assez de
+  // données avant de conclure quoi que ce soit) — sans quoi profileKey reste null (voir §14,
+  // pas assez de données pour se prononcer).
+  const bibaxCountAllTime = Object.keys(firstSharedDateByBibroCode).length;
+  const avgBibaxAllTime =
+    allSalonEvents.length > 0
+      ? allSalonEvents.reduce((sum, ev) => {
+          const names = new Set();
+          (ev.rounds || []).forEach((r) => (r.friends || []).forEach((f) => names.add((f.name || "").toLowerCase())));
+          return sum + names.size;
+        }, 0) / allSalonEvents.length
+      : 0;
+
+  const BEHAVIOR_PROFILES = {
+    aventurier: { emoji: "✈️", label: "Aventurier", description: "Tu aimes explorer différentes villes, pas juste différents bars." },
+    social: { emoji: "🤝", label: "Social", description: "Ton réseau de Bibax est large — tu sors avec plein de monde différent." },
+    habitue: { emoji: "🏠", label: "Habitué", description: "Tu as tes lieux de prédilection, et tu y reviens fidèlement." },
+    explorateur: { emoji: "🧭", label: "Explorateur", description: "Tu adores découvrir de nouveaux endroits plutôt que revenir toujours au même." },
+    degustateur: { emoji: "🍷", label: "Dégustateur", description: "Tu aimes varier les plaisirs et goûter à tout ce qui passe." },
+    curieux: { emoji: "🔍", label: "Curieux", description: "En ce moment, tu es du genre à tester plein de nouveaux produits." },
+    decouvreur: { emoji: "🆕", label: "Découvreur", description: "Tu es du genre à dénicher régulièrement de nouveaux lieux." },
+    fetard: { emoji: "🎉", label: "Fêtard", description: "Tu sors souvent, et tu ne t'arrêtes pas en si bon chemin." },
+    local: { emoji: "📍", label: "Local", description: "Tu restes fidèle à ta ville — pas besoin d'aller loin pour bien s'amuser." },
+  };
+
+  let profileKey = null;
+  if (allTimeOverview && allTimeCityStats) {
+    const v = allTimeOverview.visits;
+    const dv = allTimeOverview.distinctVenues;
+    const d = allTimeOverview.drinksOrdered;
+    const dd = allTimeOverview.distinctDrinks;
+    if (allTimeCityStats.distinctCities >= 3) profileKey = "aventurier";
+    else if (bibaxCountAllTime >= 8 || avgBibaxAllTime >= 5) profileKey = "social";
+    else if (v >= 3 && dv / v <= 0.4) profileKey = "habitue";
+    else if (v >= 3 && dv / v >= 0.8) profileKey = "explorateur";
+    else if (d >= 5 && dd / d >= 0.7) profileKey = "degustateur";
+    else if (recentNewDrinks >= 5) profileKey = "curieux";
+    else if (recentNewVenues >= 3) profileKey = "decouvreur";
+    else if (v >= 8) profileKey = "fetard";
+    else if (allTimeCityStats.distinctCities <= 1 && v >= 3) profileKey = "local";
+  }
+  const behaviorProfile = profileKey ? BEHAVIOR_PROFILES[profileKey] : null;
+
   // §6 — "Lieu où tu restes le plus longtemps" — durée moyenne par lieu, depuis les mêmes
   // événements fermés que ci-dessus, groupés par lieu cette fois.
   const durationsByVenue = {};
@@ -470,6 +531,17 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
         </p>
       ) : (
         <>
+          {activeCategory === "apercu" && behaviorProfile && (
+            <div style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.amber}`, borderRadius: "14px", padding: "16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "14px" }}>
+              <span style={{ fontSize: "28px" }}>{behaviorProfile.emoji}</span>
+              <div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.chalkWhite, opacity: 0.6 }}>TON PROFIL</div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.chalkWhite }}>{behaviorProfile.label}</div>
+                <div style={{ fontSize: "12.5px", color: COLORS.chalkWhite, opacity: 0.7 }}>{behaviorProfile.description}</div>
+              </div>
+            </div>
+          )}
+
           {activeCategory === "apercu" && (
             <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "20px" }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55, marginBottom: "12px" }}>TOUS LIEUX CONFONDUS</div>
