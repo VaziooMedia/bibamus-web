@@ -331,7 +331,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
 
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <div style={{ fontSize: "14px", fontWeight: 600, color: COLORS.ink }}>Tes jours avec et sans alcool</div>
         <span style={{ marginLeft: "auto", fontSize: "16px", fontWeight: 800, color: COLORS.amber, fontFamily: "'Urbanist', sans-serif" }}>{today.getFullYear()}</span>
