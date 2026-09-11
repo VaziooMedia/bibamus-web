@@ -604,14 +604,21 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 { label: "Lieux différents visités", value: overview.distinctVenues },
                 { label: "Salons partagés", value: salonsCount },
                 { label: "Bibax rencontrés", value: rankedBibrosBySharedRounds.length },
-                overview.moneyEuro > 0 && overview.visits > 0 && { label: "Dépense moyenne / sortie", value: formatMoney(overview.moneyEuro / overview.visits, "euro") },
-                overview.moneyEuro > 0 && monthsElapsed && { label: "Dépense moyenne / mois", value: formatMoney(overview.moneyEuro / monthsElapsed, "euro") },
+                overview.moneyEuro > 0 && overview.visits > 0 && { label: "Dépense moyenne / sortie", value: formatMoney(overview.moneyEuro / overview.visits, "euro"), isMoney: true },
+                overview.moneyEuro > 0 && monthsElapsed && { label: "Dépense moyenne / mois", value: formatMoney(overview.moneyEuro / monthsElapsed, "euro"), isMoney: true },
               ]
                 .filter(Boolean)
                 .map((tile) => (
-                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
+                  <div key={tile.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", textAlign: "center" }}>
                     <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "4px" }}>{tile.label}</div>
-                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px" }}>{tile.value}</div>
+                    {tile.isMoney ? (
+                      <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.amber }}>
+                        {tile.value.replace(" €", "")}
+                        <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 700 }}> €</span>
+                      </div>
+                    ) : (
+                      <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.amber }}>{tile.value}</div>
+                    )}
                   </div>
                 ))}
             </div>
@@ -648,40 +655,41 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "apercu" && habits && (habits.topWeekday != null || habits.avgDrinksPerOuting != null || avgOutingDurationMin != null) && (
-            <StatSection title="Tes habitudes">
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>TES HABITUDES</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {habits.topWeekday != null && (
-                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span>Jour où tu sors le plus</span>
-                    <span style={{ fontWeight: 700, textTransform: "capitalize" }}>{WEEKDAY_NAMES[habits.topWeekday]}</span>
+                    <span style={{ fontWeight: 700, textTransform: "capitalize", color: COLORS.amber }}>{WEEKDAY_NAMES[habits.topWeekday]}</span>
                   </div>
                 )}
                 {habits.topHour != null && (
-                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span>Heure la plus active</span>
-                    <span style={{ fontWeight: 700 }}>{habits.topHour}h</span>
+                    <span style={{ fontWeight: 700, color: COLORS.amber }}>{habits.topHour}h</span>
                   </div>
                 )}
                 {habits.topMonth != null && (
-                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span>Mois le plus actif</span>
-                    <span style={{ fontWeight: 700, textTransform: "capitalize" }}>{MONTH_NAMES[habits.topMonth - 1]}</span>
+                    <span style={{ fontWeight: 700, textTransform: "capitalize", color: COLORS.amber }}>{MONTH_NAMES[habits.topMonth - 1]}</span>
                   </div>
                 )}
                 {habits.avgDrinksPerOuting != null && (
-                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span>Boissons en moyenne par sortie</span>
-                    <span style={{ fontWeight: 700 }}>{Number(habits.avgDrinksPerOuting).toFixed(1)}</span>
+                    <span style={{ fontWeight: 700, color: COLORS.amber }}>{Number(habits.avgDrinksPerOuting).toFixed(1)}</span>
                   </div>
                 )}
                 {avgOutingDurationMin != null && (
-                  <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span>Durée moyenne d'une sortie</span>
-                    <span style={{ fontWeight: 700 }}>{formatDuration(avgOutingDurationMin)}</span>
+                    <span style={{ fontWeight: 700, color: COLORS.amber }}>{formatDuration(avgOutingDurationMin)}</span>
                   </div>
                 )}
               </div>
-            </StatSection>
+            </div>
           )}
 
           {activeCategory === "depenses" && (overview.moneyEuro > 0 || overview.moneyJeton > 0) && (

@@ -330,7 +330,8 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "10px" }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Tes jours avec et sans alcool</div>
+        <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.ink }}>Tes jours avec et sans alcool</div>
         <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{today.getFullYear()}</span>
       </div>
 
@@ -363,7 +364,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
             style={{
               background: mode === m.key ? COLORS.amber : "transparent",
               color: mode === m.key ? COLORS.paper : COLORS.inkSoft,
-              border: `2px solid ${mode === m.key ? COLORS.ink : COLORS.paperAlt}`,
+              border: `2px solid ${mode === m.key ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "6px 12px",
               fontSize: "12px",
@@ -409,7 +410,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
                     justifyContent: "center",
                     fontSize: "15px",
                     background: isFuture ? "transparent" : !hasData ? COLORS.paperAlt : hadAlcohol ? "#3D2C14" : "#16301F",
-                    border: isToday ? `2px solid ${COLORS.wine}` : "none",
+                    border: isToday ? `2px solid ${COLORS.amber}` : "none",
                     cursor: isManuallyEditable && onToggleDay ? "pointer" : "default",
                   }}
                 >
@@ -418,7 +419,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
               );
               return (
                 <div key={key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
-                  <span style={{ fontSize: "10.5px", fontWeight: 700, color: isToday ? COLORS.wine : COLORS.inkSoft }}>{dayLetter}</span>
+                  <span style={{ fontSize: "10.5px", fontWeight: 700, color: isToday ? COLORS.amber : COLORS.inkSoft }}>{dayLetter}</span>
                   <span style={{ fontSize: "10px", color: COLORS.inkSoft }}>{d.getDate()}</span>
                   {isManuallyEditable && onToggleDay ? (
                     <button onClick={() => onToggleDay(key)} style={{ background: "none", border: "none", padding: 0 }} title="Marquer/démarquer comme sans alcool">
