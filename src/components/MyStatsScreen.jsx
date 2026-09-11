@@ -98,7 +98,7 @@ const CATEGORIES = [
   { key: "social", label: "Social" },
 ];
 
-function StatSection({ title, children }) {
+function StatSection({ title, children, arrowColor = COLORS.chalkWhite }) {
   const [open, setOpen] = useState(true);
   return (
     <div style={{ marginBottom: "20px" }}>
@@ -108,7 +108,7 @@ function StatSection({ title, children }) {
       >
         <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "14px", fontWeight: 700, color: COLORS.chalkWhite, flex: 1, textAlign: "left" }}>{title}</span>
-        <span style={{ color: COLORS.chalkWhite, fontSize: "11px", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
+        <span style={{ color: arrowColor, fontSize: "11px", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
       </button>
       {open && children}
     </div>
@@ -691,18 +691,18 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 {habits.topWeekday != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span><span style={{ color: COLORS.amber }}>– </span>Jour où tu sors le plus</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}>
                       <span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />
-                      <span style={{ fontWeight: 700, textTransform: "capitalize", color: COLORS.amber }}>{WEEKDAY_NAMES[habits.topWeekday]}</span>
+                      <span style={{ fontWeight: 700, textTransform: "capitalize", color: COLORS.amber, flex: 1, textAlign: "right" }}>{WEEKDAY_NAMES[habits.topWeekday]}</span>
                     </span>
                   </div>
                 )}
                 {habits.topHour != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span><span style={{ color: COLORS.amber }}>– </span>Heure la plus active</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}>
                       <span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />
-                      <span style={{ fontWeight: 700, color: COLORS.amber }}>
+                      <span style={{ fontWeight: 700, color: COLORS.amber, flex: 1, textAlign: "right" }}>
                         {String(habits.topHour).padStart(2, "0")} <span style={{ color: COLORS.ink }}>H</span> 00
                       </span>
                     </span>
@@ -711,27 +711,27 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                 {habits.topMonth != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span><span style={{ color: COLORS.amber }}>– </span>Mois le plus actif</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}>
                       <span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />
-                      <span style={{ fontWeight: 700, textTransform: "capitalize", color: COLORS.amber }}>{MONTH_NAMES[habits.topMonth - 1]}</span>
+                      <span style={{ fontWeight: 700, textTransform: "capitalize", color: COLORS.amber, flex: 1, textAlign: "right" }}>{MONTH_NAMES[habits.topMonth - 1]}</span>
                     </span>
                   </div>
                 )}
                 {habits.avgDrinksPerOuting != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span><span style={{ color: COLORS.amber }}>– </span>Boissons en moyenne par sortie</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}>
                       <span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />
-                      <span style={{ fontWeight: 700, color: COLORS.amber }}>{Number(habits.avgDrinksPerOuting).toFixed(1)}</span>
+                      <span style={{ fontWeight: 700, color: COLORS.amber, flex: 1, textAlign: "right" }}>{Number(habits.avgDrinksPerOuting).toFixed(1)}</span>
                     </span>
                   </div>
                 )}
                 {avgOutingDurationMin != null && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                     <span><span style={{ color: COLORS.amber }}>– </span>Durée moyenne d'une sortie</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}>
                       <span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />
-                      <span style={{ fontWeight: 700, color: COLORS.amber }}>
+                      <span style={{ fontWeight: 700, color: COLORS.amber, flex: 1, textAlign: "right" }}>
                         {String(Math.floor(avgOutingDurationMin / 60)).padStart(2, "0")} <span style={{ color: COLORS.ink }}>H</span> {String(avgOutingDurationMin % 60).padStart(2, "0")}
                       </span>
                     </span>
@@ -778,7 +778,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "depenses" && monthlySpending.some((m) => m.totalEuro > 0) && (
-            <StatSection title="Évolution des dépenses (6 derniers mois)">
+            <StatSection title="Évolution des dépenses (6 derniers mois)" arrowColor={COLORS.amber}>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {monthlySpending.map((m, i, arr) => (
                   <div key={`${m.year}-${m.month}`} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
@@ -977,7 +977,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "depenses" && (
-          <StatSection title="Produits pour lesquels tu as le plus dépensé">
+          <StatSection title="Produits pour lesquels tu as le plus dépensé" arrowColor={COLORS.amber}>
             {drinksBySpend.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Reviens ici après quelques tournées pour voir où part ton argent.</p>
             ) : (
@@ -1062,7 +1062,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {venueTypeRanking.length > 0 && (
-            <StatSection title="Type de lieu le plus fréquenté">
+            <StatSection title="Type de lieu le plus fréquenté" arrowColor={COLORS.amber}>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {venueTypeRanking.map((r, i, arr) => (
                   <div key={r.venueType} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
@@ -1074,7 +1074,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             </StatSection>
           )}
 
-          <StatSection title="Classement par visites">
+          <StatSection title="Classement par visites" arrowColor={COLORS.amber}>
             {venuesByVisits.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Check-in dans un lieu et il apparaîtra ici.</p>
             ) : (
@@ -1109,7 +1109,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {activeCategory === "depenses" && (
-          <StatSection title="Classement par argent dépensé">
+          <StatSection title="Classement par argent dépensé" arrowColor={COLORS.amber}>
             {venuesBySpend.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Tes dépenses par lieu s'afficheront ici dès ta première tournée.</p>
             ) : (
@@ -1176,7 +1176,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           {rankedBibrosBySharedVenues.length > 0 && (
-            <StatSection title="Avec qui tu visites le plus de lieux différents">
+            <StatSection title="Avec qui tu visites le plus de lieux différents" arrowColor={COLORS.amber}>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {rankedBibrosBySharedVenues.map((r, i, arr) => (
                   <button
@@ -1205,7 +1205,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             </StatSection>
           )}
 
-          <StatSection title="Classement par Bibax">
+          <StatSection title="Classement par Bibax" arrowColor={COLORS.amber}>
             {rankedBibrosBySharedRounds.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Partage une tournée avec un Bibax et il apparaîtra ici.</p>
             ) : (
