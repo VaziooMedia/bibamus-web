@@ -43,6 +43,7 @@ import { ClubDetailScreen } from "./components/ClubDetailScreen.jsx";
 import { MyProfileScreen } from "./components/MyProfileScreen.jsx";
 import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
+import { WrappedScreen } from "./components/WrappedScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen, WaterAlertSettingsScreen } from "./components/MinorScreens.jsx";
 import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen } from "./components/SecurityScreen.jsx";
@@ -1942,6 +1943,26 @@ export default function App() {
                 alcoholFreeDays={alcoholFreeDays}
                 onToggleAlcoholFreeDay={toggleAlcoholFreeDay}
                 onBack={() => setScreen("profile")}
+                openVenue={(id) => {
+                  setViewedVenueId(id);
+                  setScreen("venueDetail");
+                }}
+                openDrink={(id) => {
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
+                openBibro={(code) => {
+                  setViewedBibroId(code);
+                  setScreen("bibroDetail");
+                }}
+                onOpenWrapped={() => setScreen("myStatsWrapped")}
+              />
+            )}
+            {screen === "myStatsWrapped" && (
+              <WrappedScreen
+                onBack={() => setScreen("myStats")}
+                bibros={bibros}
+                events={events}
                 openVenue={(id) => {
                   setViewedVenueId(id);
                   setScreen("venueDetail");

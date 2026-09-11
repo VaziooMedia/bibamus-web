@@ -114,7 +114,7 @@ function StatSection({ title, children }) {
   );
 }
 
-export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcoholFreeDay, onBack, openVenue, openBibro, openDrink }) {
+export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcoholFreeDay, onBack, openVenue, openBibro, openDrink, onOpenWrapped }) {
   const [periodKey, setPeriodKey] = useState("all");
   const period = PERIODS.find((p) => p.key === periodKey);
   const since = period.since ? period.since() : null;
@@ -398,6 +398,27 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
         <NavIcon name="bar-chart" size={20} color={COLORS.amber} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Mes Statistiques</h1>
       </div>
+
+      {onOpenWrapped && (
+        <button
+          onClick={onOpenWrapped}
+          style={{
+            background: COLORS.surfaceAlt,
+            border: `2px solid ${COLORS.amber}`,
+            borderRadius: "12px",
+            padding: "13px 16px",
+            marginBottom: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            cursor: "pointer",
+            width: "100%",
+          }}
+        >
+          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>🎉 Voir ton année Bibamus</span>
+          <span style={{ color: COLORS.amber, fontSize: "13px" }}>→</span>
+        </button>
+      )}
 
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
         {PERIODS.map((p) => (

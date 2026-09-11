@@ -2191,6 +2191,17 @@ export async function loadMyExtraRecords() {
   };
 }
 
+// §11 — "Ton année Bibamus" (Wrapped) — le détail mois par mois d'une année précise choisie par
+// la personne, pour trouver son "mois de folie" dans CETTE année-là (pas tout temps).
+export async function loadMyMonthlyDrinks(year) {
+  const { data, error } = await supabase.rpc("get_my_monthly_drinks", { p_year: year });
+  if (error) {
+    console.error("loadMyMonthlyDrinks:", error);
+    return [];
+  }
+  return data.map((r) => ({ month: r.month, quantity: r.quantity }));
+}
+
 
 
 // metric: "visits" | "spend_euro" | "spend_jeton" | "calories"
