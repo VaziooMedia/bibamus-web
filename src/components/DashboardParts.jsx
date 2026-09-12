@@ -557,55 +557,63 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab })
         <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Note finale du bar</span>
       </div>
-      <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "10px" }}>
-        Facultatif.
-        <br />
-        Encode le montant de l'addition finale réelle pour le comparer à tes tournées sur la note ({formatMoney(roundsSum, "euro")}).
-        <br />
-        Les tournées déjà réglées n'y comptent pas.
-      </p>
-      <style>{`
+      {roundsSum <= 0 ? (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", margin: "6px 0 0" }}>Toutes vos tournées ont déjà été réglées.</p>
+      ) : (
+        <>
+          <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "10px" }}>
+            Facultatif.
+            <br />
+            Encode le montant de l'addition finale réelle pour le comparer à tes tournées sur la note ({formatMoney(roundsSum, "euro")}).
+            <br />
+            Les tournées déjà réglées n'y comptent pas.
+          </p>
+          <style>{`
         .final-total-input::placeholder { font-size: 11px; }
       `}</style>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
-            <input
-              className="final-total-input"
-              type="number"
-              min="0"
-              step="0.10"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder="Addition"
-              style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
-            />
-            {value && <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>}
+          <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
+                <input
+                  className="final-total-input"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.10"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  placeholder="Addition"
+                  style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none", textAlign: "center" }}
+                />
+                {value && <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>}
+              </div>
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
+                <input
+                  className="final-total-input"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.10"
+                  value={tipValue}
+                  onChange={(e) => setTipValue(e.target.value)}
+                  placeholder="Pourboire"
+                  style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none", textAlign: "center" }}
+                />
+                {tipValue && <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>}
+              </div>
+            </div>
+            <button onClick={pay} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "11px 16px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper, flexShrink: 0 }}>
+              Payer
+            </button>
           </div>
-        </div>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
-            <input
-              className="final-total-input"
-              type="number"
-              min="0"
-              step="0.10"
-              value={tipValue}
-              onChange={(e) => setTipValue(e.target.value)}
-              placeholder="Pourboire"
-              style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
-            />
-            {tipValue && <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>}
-          </div>
-        </div>
-        <button onClick={pay} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "11px 16px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper, flexShrink: 0 }}>
-          Payer
-        </button>
-      </div>
-      {event.finalTotal != null && (
-        <button onClick={clear} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12px", cursor: "pointer", padding: "8px 0 0 0" }}>
-          Effacer la note finale
-        </button>
+          {event.finalTotal != null && (
+            <button onClick={clear} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12px", cursor: "pointer", padding: "8px 0 0 0" }}>
+              Effacer la note finale
+            </button>
+          )}
+        </>
       )}
     </div>
   );
