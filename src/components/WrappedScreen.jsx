@@ -8,8 +8,8 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
+import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { loadMyStatsOverview, loadMyVenueRanking, loadMyDrinkRanking, loadMyMonthlyDrinks, loadVenuesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { formatMoney } from "../utils.js";
 
@@ -21,6 +21,15 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [cardIndex, setCardIndex] = useState(0);
+  const [prevYearHasData, setPrevYearHasData] = useState(true);
+
+  useEffect(() => {
+    // Vérification légère de l'année précédente — juste de quoi savoir si la flèche "précédent"
+    // doit rester active, sans charger tout son détail.
+    const prevSince = new Date(year - 1, 0, 1);
+    const prevUntil = new Date(year, 0, 1);
+    loadMyStatsOverview(prevSince, prevUntil).then((prevOverview) => setPrevYearHasData(prevOverview.drinksOrdered > 0));
+  }, [year]);
 
   useEffect(() => {
     setLoading(true);
@@ -70,17 +79,17 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
 
   const cards = data
     ? [
-        { key: "intro", bg: COLORS.surfaceAlt, accent: COLORS.amber, emoji: "🎉", title: `Ton année Bibamus`, big: String(year), sub: null },
-        data.bestMonth && { key: "month", bg: COLORS.surfaceAlt, accent: COLORS.bobYellow, emoji: "📅", title: "Ton mois de folie", big: `${MONTH_NAMES[data.bestMonth.month - 1]}`, sub: `${data.bestMonth.quantity} boisson${data.bestMonth.quantity > 1 ? "s" : ""}` },
-        data.topVenue && { key: "venue", bg: COLORS.surfaceAlt, accent: COLORS.amber, emoji: "🏠", title: "Ton QG", big: data.topVenue.name, sub: `${data.topVenue.value} visite${data.topVenue.value > 1 ? "s" : ""}`, onClick: () => openVenue(data.topVenue.venueId) },
-        data.topDrink && { key: "drink", bg: COLORS.surfaceAlt, accent: COLORS.jetonFluo, emoji: "🍺", title: "Ta boisson de l'année", big: data.topDrink.name, sub: `${data.topDrink.value} verre${data.topDrink.value > 1 ? "s" : ""}`, onClick: () => openDrink(data.topDrink.drinkId) },
-        data.topBibro && { key: "bibro", bg: COLORS.surfaceAlt, accent: COLORS.wine, emoji: "🍻", title: "Ton Bibax de l'année", big: data.topBibro.bibro.alias || data.topBibro.bibro.name, sub: `${data.topBibro.count} sortie${data.topBibro.count > 1 ? "s" : ""} ensemble`, onClick: () => openBibro && openBibro(data.topBibro.bibro.code) },
-        data.overview.distinctVenues > 0 && { key: "explorer", bg: COLORS.surfaceAlt, accent: COLORS.sage, emoji: "🗺️", title: "Explorateur", big: String(data.overview.distinctVenues), sub: `établissement${data.overview.distinctVenues > 1 ? "s" : ""} différent${data.overview.distinctVenues > 1 ? "s" : ""} visité${data.overview.distinctVenues > 1 ? "s" : ""}` },
+        { key: "intro", bg: COLORS.surfaceAlt, accent: COLORS.amber, icon: "star", title: `Ton année Bibamus`, big: String(year), sub: null },
+        data.bestMonth && { key: "month", bg: COLORS.surfaceAlt, accent: COLORS.bobYellow, icon: "calendar", title: "Ton mois de folie", big: `${MONTH_NAMES[data.bestMonth.month - 1]}`, sub: `${data.bestMonth.quantity} boisson${data.bestMonth.quantity > 1 ? "s" : ""}` },
+        data.topVenue && { key: "venue", bg: COLORS.surfaceAlt, accent: COLORS.amber, icon: "home", title: "Ton QG", big: data.topVenue.name, sub: `${data.topVenue.value} visite${data.topVenue.value > 1 ? "s" : ""}`, onClick: () => openVenue(data.topVenue.venueId) },
+        data.topDrink && { key: "drink", bg: COLORS.surfaceAlt, accent: COLORS.jetonFluo, icon: "glass", title: "Ta boisson de l'année", big: data.topDrink.name, sub: `${data.topDrink.value} verre${data.topDrink.value > 1 ? "s" : ""}`, onClick: () => openDrink(data.topDrink.drinkId) },
+        data.topBibro && { key: "bibro", bg: COLORS.surfaceAlt, accent: COLORS.wine, icon: "users", title: "Ton Bibax de l'année", big: data.topBibro.bibro.alias || data.topBibro.bibro.name, sub: `${data.topBibro.count} sortie${data.topBibro.count > 1 ? "s" : ""} ensemble`, onClick: () => openBibro && openBibro(data.topBibro.bibro.code) },
+        data.overview.distinctVenues > 0 && { key: "explorer", bg: COLORS.surfaceAlt, accent: COLORS.sage, icon: "map", title: "Explorateur", big: String(data.overview.distinctVenues), sub: `établissement${data.overview.distinctVenues > 1 ? "s" : ""} différent${data.overview.distinctVenues > 1 ? "s" : ""} visité${data.overview.distinctVenues > 1 ? "s" : ""}` },
         {
           key: "recap",
           bg: COLORS.surfaceAlt,
           accent: COLORS.amber,
-          emoji: "✨",
+          icon: "bar-chart",
           title: "En résumé",
           big: null,
           recap: [
@@ -99,12 +108,19 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
       <PageHeader onBack={onBack} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 14px 0" }}>
-        <span style={{ fontSize: "20px" }}>🎉</span>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Ton année Bibamus</h1>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+          Ton année <BibamusLogoFull height={18} />
+        </h1>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", marginBottom: "20px" }}>
-        <button onClick={() => setYear((y) => y - 1)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }} aria-label="Année précédente">
+        <button
+          onClick={() => setYear((y) => y - 1)}
+          disabled={!prevYearHasData}
+          style={{ background: "none", border: "none", cursor: prevYearHasData ? "pointer" : "default", padding: "4px", opacity: prevYearHasData ? 1 : 0.3 }}
+          aria-label="Année précédente"
+        >
           <span style={{ display: "inline-flex", transform: "rotate(180deg)" }}>
             <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
           </span>
@@ -145,7 +161,9 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
               marginBottom: "16px",
             }}
           >
-            <span style={{ fontSize: "44px", marginBottom: "16px" }}>{card.emoji}</span>
+            <span style={{ display: "inline-flex", marginBottom: "16px" }}>
+              <NavIcon name={card.icon} size={44} color={card.accent} />
+            </span>
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12.5px", letterSpacing: "1.5px", color: COLORS.chalkWhite, opacity: 0.6, marginBottom: "10px" }}>{card.title.toUpperCase()}</span>
             {card.recap ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
