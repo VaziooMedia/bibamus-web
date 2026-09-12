@@ -2048,6 +2048,33 @@ export async function deleteRoundOrdersByEvent(eventId) {
   if (error) console.error("deleteRoundOrdersByEvent:", error);
 }
 
+// Pourboires — n'existent (côté UI) que sur une tournée déjà réglée directement, jamais sur une
+// tournée sur la note.
+export async function recordRoundTip(roundId, venueId, eventId, bibroCode, amount) {
+  if (!amount || amount <= 0) return;
+  const { error } = await supabase.rpc("record_round_tip", { p_round_id: roundId, p_venue_id: venueId || null, p_event_id: eventId, p_bibro_code: bibroCode, p_amount: amount });
+  if (error) console.error("recordRoundTip:", error);
+}
+
+export async function deleteRoundTip(roundId) {
+  const { error } = await supabase.rpc("delete_round_tip", { p_round_id: roundId });
+  if (error) console.error("deleteRoundTip:", error);
+}
+
+export async function deleteRoundTipsByEvent(eventId) {
+  const { error } = await supabase.rpc("delete_round_tips_by_event", { p_event_id: eventId });
+  if (error) console.error("deleteRoundTipsByEvent:", error);
+}
+
+export async function loadMyTipsTotal(since, until) {
+  const { data, error } = await supabase.rpc("get_my_tips_total", { p_since: since ? since.toISOString() : null, p_until: until ? until.toISOString() : null });
+  if (error) {
+    console.error("loadMyTipsTotal:", error);
+    return 0;
+  }
+  return data || 0;
+}
+
 // --- Mes Statistiques — reconstruites sur la vraie consommation (round_orders +
 // solo_checkins + drink_checkins), avec une période libre (since/until en Date, ou null = depuis
 // toujours).

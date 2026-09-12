@@ -120,6 +120,8 @@ import {
   recordRoundOrders,
   markRoundPaid,
   markEventTabPaid,
+  recordRoundTip,
+  deleteRoundTip,
   deleteRoundOrders,
   deleteRoundOrdersByEvent,
 } from "./data/sharedDirectories.js";
@@ -710,6 +712,13 @@ export default function App() {
     });
     recordRoundOrders(ordersForLog, { venueId: realVenueId, eventId: activeEventId, roundId: round.id, currency: currentEvent?.currency, paid: round.settledDirectly !== false });
 
+    // Pourboire — n'existe que sur une tournée déjà réglée directement (tip vaut toujours 0
+    // sinon, imposé côté écran de fermeture de tournée), toujours attribué à celui qui paie.
+    if (tip > 0 && currentEvent?.currency === "euro") {
+      const buyer = draftFriends.find((f) => f.name === buyerName);
+      if (buyer?.code) recordRoundTip(round.id, realVenueId, activeEventId, buyer.code, tip);
+    }
+
     setScreen("eventDashboard");
   };
 
@@ -1171,6 +1180,7 @@ export default function App() {
       personalOrders: (e.personalOrders || []).filter((o) => o.roundId !== roundId),
     }));
     deleteRoundOrders(roundId);
+    deleteRoundTip(roundId);
   };
 
   const editRound = (eventId, roundId, updates) => {

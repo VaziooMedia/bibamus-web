@@ -22,6 +22,7 @@ import {
   loadMyBreweryRanking,
   loadMyNewDrinksCount,
   loadMyDrinkPriceStats,
+  loadMyTipsTotal,
   loadMyDrinkCalorieStats,
   loadMyVenueTypeRanking,
   loadMyCityCountryStats,
@@ -167,6 +168,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const [newDrinksCount, setNewDrinksCount] = useState(0);
   const [priceStats, setPriceStats] = useState(null);
   const [drinksByCalories, setDrinksByCalories] = useState([]);
+  const [tipsTotal, setTipsTotal] = useState(0);
   useEffect(() => {
     loadMyCategoryRanking(since, null, 10).then(setCategoryRanking);
     loadMyBeerStyleRanking(since, null, 10).then(setBeerStyleRanking);
@@ -175,6 +177,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     loadMyNewDrinksCount(since, null).then(setNewDrinksCount);
     loadMyDrinkPriceStats(since, null).then(setPriceStats);
     loadMyDrinkRanking("calories", since, null, 10).then(setDrinksByCalories);
+    loadMyTipsTotal(since, null).then(setTipsTotal);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodKey]);
 
@@ -798,6 +801,22 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                     </div>
                   </div>
                 ))}
+            </div>
+            <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
+            </>
+          )}
+
+          {activeCategory === "depenses" && tipsTotal > 0 && (
+            <>
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "20px" }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Pourboires — {period.label.toLowerCase()}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                <span style={{ color: COLORS.inkSoft }}>Total donné</span>
+                <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif", color: COLORS.amber }}>
+                  {formatMoney(tipsTotal, "euro").replace(" €", "")}
+                  <span style={{ color: COLORS.inkSoft, fontWeight: 600 }}> €</span>
+                </span>
+              </div>
             </div>
             <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 20px" }} />
             </>
