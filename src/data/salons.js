@@ -28,8 +28,15 @@ export async function loadMyActiveSalons(bibroCode) {
 export async function loadSalon(code) {
   const { data, error } = await supabase.from("salons").select("data").eq("code", code).maybeSingle();
   if (error) {
-    console.error("loadSalon:", error);
-    return null;
+    // Un second essai avant d'abandonner — un couac réseau ponctuel (observé sur Safari juste
+    // après un rechargement de page) ne doit pas obliger la personne à recliquer elle-même.
+    console.error("loadSalon (1ère tentative):", error);
+    const retry = await supabase.from("salons").select("data").eq("code", code).maybeSingle();
+    if (retry.error) {
+      console.error("loadSalon (2ème tentative):", retry.error);
+      return null;
+    }
+    return retry.data ? retry.data.data : null;
   }
   return data ? data.data : null;
 }
