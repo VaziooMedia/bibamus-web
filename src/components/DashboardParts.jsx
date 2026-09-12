@@ -543,7 +543,12 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab })
     }));
     // Encoder puis payer la note, en un seul geste — les tournées encore sur la note (en rouge)
     // passent en réglé (vert) d'un coup, plutôt que de les éditer une par une.
-    if (roundsSum > 0) onPayEventTab();
+    onPayEventTab();
+    // Vide juste l'affichage du formulaire — la vraie donnée (finalTotal/tip) reste sauvegardée
+    // pour l'écart affiché dans l'historique de la sortie. Sans ça, une nouvelle tournée sur la
+    // note plus tard réafficherait par erreur le montant du paiement précédent.
+    setValue("");
+    setTipValue("");
   };
 
   const clear = () => {
@@ -562,18 +567,22 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab })
       ) : (
         <>
           <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "10px" }}>
-            Facultatif.
+            Le montant total sur ta note est de{" "}
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber }}>
+              {formatMoney(roundsSum, "euro").replace(" €", "")}
+            </span>{" "}
+            €.
             <br />
-            Encode le montant de l'addition finale réelle pour le comparer à tes tournées sur la note ({formatMoney(roundsSum, "euro")}).
+            Encode le montant réel annoncé.
             <br />
-            Les tournées déjà réglées n'y comptent pas.
+            Les tournées déjà réglées sont déjà traitées.
           </p>
           <style>{`
         .final-total-input::placeholder { font-size: 11px; }
       `}</style>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div>
-              <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
+              <div style={{ display: "flex", alignItems: "center", height: "42px", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px", boxSizing: "border-box" }}>
                 <input
                   className="final-total-input"
                   type="number"
@@ -583,13 +592,13 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab })
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
                   placeholder="Addition"
-                  style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none", textAlign: "center" }}
+                  style={{ width: "100%", minWidth: 0, border: "none", padding: 0, fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none", textAlign: "center" }}
                 />
                 {value && <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>}
               </div>
             </div>
             <div>
-              <div style={{ display: "flex", alignItems: "center", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px" }}>
+              <div style={{ display: "flex", alignItems: "center", height: "42px", width: "88px", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 8px", boxSizing: "border-box" }}>
                 <input
                   className="final-total-input"
                   type="number"
@@ -599,12 +608,12 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab })
                   value={tipValue}
                   onChange={(e) => setTipValue(e.target.value)}
                   placeholder="Pourboire"
-                  style={{ width: "100%", minWidth: 0, border: "none", padding: "10px 0", fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none", textAlign: "center" }}
+                  style={{ width: "100%", minWidth: 0, border: "none", padding: 0, fontSize: "14px", fontFamily: "'Urbanist', sans-serif", outline: "none", textAlign: "center" }}
                 />
                 {tipValue && <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>}
               </div>
             </div>
-            <button onClick={pay} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "11px 16px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper, flexShrink: 0 }}>
+            <button onClick={pay} style={{ height: "42px", boxSizing: "border-box", background: COLORS.amber, border: "none", borderRadius: "8px", padding: "0 16px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper, flexShrink: 0 }}>
               Payer
             </button>
           </div>
