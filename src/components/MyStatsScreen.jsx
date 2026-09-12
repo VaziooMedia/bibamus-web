@@ -681,7 +681,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                                 fontFamily: "'Urbanist', sans-serif",
                                 fontSize: "12px",
                                 fontWeight: 700,
-                                color: m.change === "+0%" ? COLORS.inkSoft : m.change.startsWith("+") || m.change.startsWith("nouveau") ? COLORS.amber : m.change.startsWith("-") ? COLORS.redFluo : COLORS.inkSoft,
+                                color: m.change === "+0%" ? COLORS.inkSoft : m.change.startsWith("+") || m.change.startsWith("nouveau") ? COLORS.amber : m.change.startsWith("-") ? COLORS.pinkFluo : COLORS.inkSoft,
                               }}
                             >
                               {m.change}

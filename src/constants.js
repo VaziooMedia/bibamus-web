@@ -22,6 +22,7 @@ export const COLORS = {
   bobYellow: "#F2C94C",
   jetonFluo: "#00C8FF",
   redFluo: "#FF3B4E",
+  pinkFluo: "#ef007c",
   tabPending: "#FF7A45",
   burgundy: "#6B1F2A",
 };
