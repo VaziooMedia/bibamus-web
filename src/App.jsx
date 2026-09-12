@@ -685,6 +685,10 @@ export default function App() {
     // Fondation statistiques — une vraie ligne par produit commandé, à côté du JSON de
     // l'événement ci-dessus (inchangé). Chaque participant est résolu vers son vrai compte
     // Bibax quand il en a un (via son code), sinon juste son prénom (invité sans compte).
+    // drink_id doit être le vrai identifiant du catalogue (drinks_directory), jamais l'id local
+    // du menu de cet événement (régénéré à chaque création d'événement, donc toujours absent du
+    // catalogue) — sinon chaque insertion échoue silencieusement sur la contrainte de clé
+    // étrangère, et round_orders reste vide malgré des tournées bien fermées.
     const realVenueId = currentEvent && currentEvent.venueId && !currentEvent.isHome && currentEvent.venueId !== "@event" ? currentEvent.venueId : null;
     const ordersForLog = draftOrders.map((o) => {
       const friend = draftFriends.find((f) => f.id === o.friendId);
@@ -692,7 +696,7 @@ export default function App() {
       return {
         bibro_code: friend?.code || null,
         guest_name: friend?.code ? null : friend?.name || null,
-        drink_id: o.drinkId,
+        drink_id: drink?.fromDirectory && drink?.sourceDrinkId ? drink.sourceDrinkId : null,
         unit_price: drink?.price ?? null,
         unit_volume_cl: drink?.volumeCl ?? null,
         unit_kcal_per_100ml: drink?.kcalPer100ml ?? null,
