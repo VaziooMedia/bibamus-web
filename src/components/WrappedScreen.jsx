@@ -84,7 +84,7 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
         data.topVenue && { key: "venue", bg: COLORS.surfaceAlt, accent: COLORS.amber, icon: "home", title: "Ton QG", big: data.topVenue.name, sub: `${data.topVenue.value} visite${data.topVenue.value > 1 ? "s" : ""}`, onClick: () => openVenue(data.topVenue.venueId) },
         data.topDrink && { key: "drink", bg: COLORS.surfaceAlt, accent: COLORS.jetonFluo, icon: "glass", title: "Ta boisson de l'année", big: data.topDrink.name, sub: `${data.topDrink.value} verre${data.topDrink.value > 1 ? "s" : ""}`, onClick: () => openDrink(data.topDrink.drinkId) },
         data.topBibro && { key: "bibro", bg: COLORS.surfaceAlt, accent: COLORS.wine, icon: "users", title: "Ton Bibax de l'année", big: data.topBibro.bibro.alias || data.topBibro.bibro.name, sub: `${data.topBibro.count} sortie${data.topBibro.count > 1 ? "s" : ""} ensemble`, onClick: () => openBibro && openBibro(data.topBibro.bibro.code) },
-        data.overview.distinctVenues > 0 && { key: "explorer", bg: COLORS.surfaceAlt, accent: COLORS.sage, icon: "map", title: "Explorateur", big: String(data.overview.distinctVenues), sub: `établissement${data.overview.distinctVenues > 1 ? "s" : ""} différent${data.overview.distinctVenues > 1 ? "s" : ""} visité${data.overview.distinctVenues > 1 ? "s" : ""}` },
+        data.overview.distinctVenues > 0 && { key: "explorer", bg: COLORS.surfaceAlt, accent: COLORS.redFluo, icon: "map", title: "Explorateur", big: String(data.overview.distinctVenues), sub: `établissement${data.overview.distinctVenues > 1 ? "s" : ""} différent${data.overview.distinctVenues > 1 ? "s" : ""} visité${data.overview.distinctVenues > 1 ? "s" : ""}` },
         {
           key: "recap",
           bg: COLORS.surfaceAlt,
@@ -110,7 +110,7 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 14px 0" }}>
         <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-          Ton année <span style={{ display: "inline-flex", marginTop: "-4px" }}><BibamusLogoFull height={18} /></span>
+          Ton année <span style={{ display: "inline-flex", marginTop: "-4px" }}><BibamusLogoFull height={21} /></span>
         </h1>
       </div>
 
