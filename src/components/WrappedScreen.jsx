@@ -95,7 +95,7 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
           recap: [
             { label: "Boissons commandées", value: data.overview.drinksOrdered },
             { label: "Visites", value: data.overview.visits },
-            data.overview.moneyEuro > 0 && { label: "Dépensé", value: formatMoney(data.overview.moneyEuro, "euro") },
+            data.overview.moneyEuro > 0 && { label: "Dépensé", value: formatMoney(data.overview.moneyEuro, "euro"), isMoney: true },
           ].filter(Boolean),
         },
       ].filter(Boolean)
@@ -110,7 +110,7 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 14px 0" }}>
         <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-          Ton année <BibamusLogoFull height={18} />
+          Ton année <span style={{ display: "inline-flex", marginTop: "-4px" }}><BibamusLogoFull height={18} /></span>
         </h1>
       </div>
 
@@ -170,7 +170,16 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
                 {card.recap.map((r) => (
                   <div key={r.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "16px", color: COLORS.chalkWhite }}>
                     <span style={{ opacity: 0.7 }}>{r.label}</span>
-                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: card.accent }}>{r.value}</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: card.accent }}>
+                      {r.isMoney ? (
+                        <>
+                          {r.value.replace(" €", "")}
+                          <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 700 }}> €</span>
+                        </>
+                      ) : (
+                        r.value
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>
