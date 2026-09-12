@@ -682,6 +682,10 @@ export default function App() {
       rounds: [...e.rounds, round],
       knownFriends: Array.from(new Set([...(e.knownFriends || []), ...otherFriends.map((f) => f.name)])),
       personalOrders: [...(e.personalOrders || []), ...selfOrders],
+      // Une nouvelle dette qui démarre rend caduque toute "note finale" encodée précédemment —
+      // sinon ce montant, qui concernait un paiement déjà réglé, resterait affiché comme si il
+      // concernait cette nouvelle note en cours.
+      ...(settledDirectly === false && e.finalTotal != null ? { finalTotal: null, tip: 0 } : {}),
     }));
 
     // Fondation statistiques — une vraie ligne par produit commandé, à côté du JSON de
@@ -1173,6 +1177,9 @@ export default function App() {
     updateEvent(eventId, (e) => ({
       ...e,
       rounds: e.rounds.map((r) => (r.id === roundId ? { ...r, ...updates } : r)),
+      // Même logique que finishRound — remettre une tournée sur la note rend caduque une note
+      // finale déjà encodée.
+      ...(updates.settledDirectly === false && e.finalTotal != null ? { finalTotal: null, tip: 0 } : {}),
     }));
     // "Argent dépensé" ne doit compter que ce qui est réellement payé — répercuter le nouveau
     // statut de règlement côté serveur, sans quoi cette édition ne change rien aux vraies stats.

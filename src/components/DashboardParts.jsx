@@ -10,7 +10,7 @@
 // brut — le vrai générateur de QR code sera porté dans un bloc
 // dédié plus tard (c'est un module autonome assez conséquent).
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, TokenPinkIcon, TokenCyanIcon, TokenGreenIcon, WaterAlertIcon } from "./icons.jsx";
 import { MoneyAmount, PrimaryButton } from "./ui.jsx";
@@ -532,6 +532,14 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
 export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab }) {
   const [value, setValue] = useState(event.finalTotal != null ? String(event.finalTotal) : "");
   const [tipValue, setTipValue] = useState(event.tip ? String(event.tip) : "");
+
+  // Le composant reste monté tout au long de la session — sans ceci, un finalTotal remis à null
+  // depuis l'extérieur (nouvelle tournée sur la note après un paiement) ne rafraîchirait jamais
+  // le formulaire, et l'ancien montant resterait affiché indéfiniment.
+  useEffect(() => {
+    setValue(event.finalTotal != null ? String(event.finalTotal) : "");
+    setTipValue(event.tip ? String(event.tip) : "");
+  }, [event.finalTotal, event.tip]);
 
   const pay = () => {
     const parsedTotal = parseFloat(value);
