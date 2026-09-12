@@ -592,17 +592,17 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "12px" }}>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>VISITES</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>SORTIES</div>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.visits}</div>
                 </div>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>BOISSONS COMMANDÉES</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>BOISSONS BUES</div>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.amber }}>{overview.drinksOrdered}</div>
                 </div>
               </div>
               {overview.calories > 0 && (
                 <div style={{ paddingTop: "12px", borderTop: `2px solid ${COLORS.chalkWhite}30`, textAlign: "center" }}>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>CALORIES BUES</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>CALORIES TOTALES</div>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>
                     <span style={{ fontSize: "16px", color: COLORS.inkSoft, fontWeight: 600 }}>≈ </span>
                     {Math.round(overview.calories)}
@@ -649,10 +649,10 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             <StatSection title={`Évolution vs. ${period.prevLabel || "la période précédente"}`} showBottomDivider>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
                 {[
-                  { label: "Boissons commandées", current: overview.drinksOrdered, previous: previousOverview.drinksOrdered },
-                  { label: "Visites", current: overview.visits, previous: previousOverview.visits },
+                  { label: "Boissons bues", current: overview.drinksOrdered, previous: previousOverview.drinksOrdered },
+                  { label: "Sorties", current: overview.visits, previous: previousOverview.visits },
                   { label: "Argent dépensé", current: overview.moneyEuro, previous: previousOverview.moneyEuro },
-                  { label: "Calories bues", current: overview.calories, previous: previousOverview.calories },
+                  { label: "Calories totales", current: overview.calories, previous: previousOverview.calories },
                   { label: "Nouveaux produits découverts", current: newDrinksCount, previous: previousNewDrinksCount },
                   { label: "Nouveaux lieux découverts", current: newVenuesCount, previous: previousNewVenuesCount },
                 ]
