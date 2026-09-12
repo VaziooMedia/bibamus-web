@@ -529,7 +529,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   );
 }
 
-export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab }) {
+export function FinalTotalCard({ event, updateEvent, roundsSum, onPayTabAmount }) {
   const [value, setValue] = useState(event.finalTotal != null ? String(event.finalTotal) : "");
   const [tipValue, setTipValue] = useState(event.tip ? String(event.tip) : "");
 
@@ -549,9 +549,11 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab })
       finalTotal: isNaN(parsedTotal) ? null : parsedTotal,
       tip: isNaN(parsedTip) ? 0 : parsedTip,
     }));
-    // Encoder puis payer la note, en un seul geste — les tournées encore sur la note (en rouge)
-    // passent en réglé (vert) d'un coup, plutôt que de les éditer une par une.
-    onPayEventTab();
+    // Le montant encodé est celui réellement payé — un paiement partiel (ex. 1€ sur 18€) ne
+    // règle que ce montant-là ; la tournée reste sur la note pour le solde restant. Champ vide
+    // = payer tout le solde actuel, comme avant.
+    const amountPaid = isNaN(parsedTotal) ? roundsSum : Math.min(parsedTotal, roundsSum);
+    if (amountPaid > 0) onPayTabAmount(amountPaid);
     // Vide juste l'affichage du formulaire — la vraie donnée (finalTotal/tip) reste sauvegardée
     // pour l'écart affiché dans l'historique de la sortie. Sans ça, une nouvelle tournée sur la
     // note plus tard réafficherait par erreur le montant du paiement précédent.

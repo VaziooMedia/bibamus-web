@@ -119,7 +119,7 @@ import {
   loadVenuesByIds,
   recordRoundOrders,
   markRoundPaid,
-  markEventTabPaid,
+  recordPartialPayment,
   recordRoundTip,
   deleteRoundTip,
   deleteRoundOrders,
@@ -668,6 +668,10 @@ export default function App() {
       orders: draftOrders,
       total: finalAmount,
       settledDirectly,
+      // Suivi du montant réellement payé sur cette tournée — jamais tout-ou-rien : une tournée
+      // sur la note peut être soldée progressivement (ex. un paiement partiel en quittant le
+      // lieu), pas seulement marquée payée d'un coup.
+      amountPaid: settledDirectly !== false ? finalAmount : 0,
       paidByPot: currentEvent?.mode === "cagnotte" && settledDirectly,
       createdInMode: currentEvent?.mode,
       buyerName,
@@ -1186,7 +1190,11 @@ export default function App() {
   const editRound = (eventId, roundId, updates) => {
     updateEvent(eventId, (e) => ({
       ...e,
-      rounds: e.rounds.map((r) => (r.id === roundId ? { ...r, ...updates } : r)),
+      rounds: e.rounds.map((r) =>
+        r.id === roundId
+          ? { ...r, ...updates, ...(updates.settledDirectly !== undefined ? { amountPaid: updates.settledDirectly ? r.total : 0 } : {}) }
+          : r
+      ),
       // Même logique que finishRound — remettre une tournée sur la note rend caduque une note
       // finale déjà encodée.
       ...(updates.settledDirectly === false && e.finalTotal != null ? { finalTotal: null, tip: 0 } : {}),
@@ -1198,12 +1206,31 @@ export default function App() {
 
   // "Note finale du bar" — régler d'un coup toutes les tournées encore sur la note de cet
   // événement, plutôt que de devoir éditer chaque tournée une par une en quittant le lieu.
-  const payEventTab = (eventId) => {
-    updateEvent(eventId, (e) => ({
-      ...e,
-      rounds: e.rounds.map((r) => (r.settledDirectly === false ? { ...r, settledDirectly: true } : r)),
-    }));
-    markEventTabPaid(eventId);
+  // "Note finale du bar" — applique un montant (partiel ou total) contre les tournées encore
+  // ouvertes de cet événement, la plus ancienne en premier, jusqu'à épuisement du montant. Une
+  // tournée ne repasse en "réglée" (verte) qu'une fois entièrement soldée — un paiement partiel
+  // réduit juste ce qu'il lui reste à devoir, elle reste sur la note pour le solde.
+  const payTabAmount = (eventId, amount) => {
+    updateEvent(eventId, (e) => {
+      let remaining = amount;
+      const updates = new Map();
+      [...e.rounds]
+        .sort((a, b) => a.createdAt - b.createdAt)
+        .forEach((r) => {
+          const paidSoFar = r.amountPaid ?? (r.settledDirectly !== false ? r.total : 0);
+          const owed = r.total - paidSoFar;
+          if (remaining <= 0 || owed <= 0) return;
+          const applied = Math.min(remaining, owed);
+          remaining -= applied;
+          const newPaid = paidSoFar + applied;
+          updates.set(r.id, { amountPaid: newPaid, settledDirectly: newPaid >= r.total - 0.01 });
+        });
+      return {
+        ...e,
+        rounds: e.rounds.map((r) => (updates.has(r.id) ? { ...r, ...updates.get(r.id) } : r)),
+      };
+    });
+    recordPartialPayment(eventId, amount);
   };
 
   const activateBibaBob = (eventId, code, name, tolerance, pin) => {
@@ -1703,7 +1730,7 @@ export default function App() {
                 onOpenWaterAlertSettings={() => setScreen("waterAlertSettings")}
                 onDeleteRound={(roundId) => deleteRound(activeEventId, roundId)}
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
-                onPayEventTab={() => payEventTab(activeEventId)}
+                onPayTabAmount={(amount) => payTabAmount(activeEventId, amount)}
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
                 onDeactivateBibaBob={(code) => deactivateBibaBob(activeEventId, code)}
                 onGoToBibaMusic={() => setScreen("bibaMusic")}

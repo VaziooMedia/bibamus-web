@@ -2033,9 +2033,9 @@ export async function markRoundPaid(roundId, paid = true) {
   if (error) console.error("markRoundPaid:", error);
 }
 
-export async function markEventTabPaid(eventId) {
-  const { error } = await supabase.rpc("mark_event_tab_paid", { p_event_id: eventId });
-  if (error) console.error("markEventTabPaid:", error);
+export async function recordPartialPayment(eventId, amount) {
+  const { error } = await supabase.rpc("record_partial_payment", { p_event_id: eventId, p_amount: amount });
+  if (error) console.error("recordPartialPayment:", error);
 }
 
 export async function deleteRoundOrders(roundId) {

@@ -24,7 +24,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor, onPayEventTab }) {
+export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor, onPayTabAmount }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -155,7 +155,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
   const purchasedTicketsCount = (event.ticketPurchases || []).filter((p) => !p.carriedOver && !p.given).reduce((sum, p) => sum + p.quantity, 0);
   const freeTicketsCount = (event.ticketPurchases || []).filter((p) => p.carriedOver).reduce((sum, p) => sum + p.quantity, 0);
   const givenTicketsCount = (event.ticketPurchases || []).filter((p) => p.given).reduce((sum, p) => sum - p.quantity, 0);
-  const tabTotal = event.rounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + r.total, 0);
+  const tabTotal = event.rounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
   // Jetons are personal — each participant buys their own stack. So only rounds I actually paid
   // for (as the buyer) should come out of my own jeton balance; a round someone else bought for
   // the group is covered by their jetons, not mine. Jetons I've put into a shared cagnotte pot
@@ -246,17 +246,17 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
   );
 
   const myRounds = event.rounds.filter((r) => r.buyerName === myName);
-  const myPending = myRounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + r.total, 0);
+  const myPending = myRounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
   const myTips = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0);
-  const myPaid = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + r.total, 0);
+  const myPaid = myRounds.reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
   const myRoundsTotal = myPending + myPaid;
-  const sessionPending = event.rounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + r.total, 0);
+  const sessionPending = event.rounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
   const sessionTips = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0);
-  const sessionPaid = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + r.total, 0);
+  const sessionPaid = event.rounds.reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
   const sessionRoundsTotal = sessionPending + sessionPaid;
   const cagnottePaidByPot = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
-  const cagnotteDirect = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy && r.settledDirectly !== false).reduce((sum, r) => sum + r.total, 0);
-  const cagnottePending = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy && r.settledDirectly === false).reduce((sum, r) => sum + r.total, 0);
+  const cagnotteDirect = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
+  const cagnottePending = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy && r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
   const cagnotteTips = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + (r.tip || 0), 0);
   const additionPending = event.rounds.filter((r) => !r.offeredBy && !isRoundPaidInAddition(r)).reduce((sum, r) => sum + r.total, 0);
   const additionPaid = event.rounds.filter((r) => !r.offeredBy && isRoundPaidInAddition(r)).reduce((sum, r) => sum + r.total, 0);
@@ -1644,7 +1644,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
           {isAddition ? (
             <SplitBillCard event={event} updateEvent={updateEvent} />
           ) : (
-            (tabTotal >= 0.01 || event.finalTotal != null) && <FinalTotalCard event={event} updateEvent={updateEvent} roundsSum={tabTotal} onPayEventTab={onPayEventTab} />
+            (tabTotal >= 0.01 || event.finalTotal != null) && <FinalTotalCard event={event} updateEvent={updateEvent} roundsSum={tabTotal} onPayTabAmount={onPayTabAmount} />
           )}
         </div>
       )}
