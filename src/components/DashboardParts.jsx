@@ -532,9 +532,8 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
 export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab }) {
   const [value, setValue] = useState(event.finalTotal != null ? String(event.finalTotal) : "");
   const [tipValue, setTipValue] = useState(event.tip ? String(event.tip) : "");
-  const [paying, setPaying] = useState(false);
 
-  const save = () => {
+  const pay = () => {
     const parsedTotal = parseFloat(value);
     const parsedTip = parseFloat(tipValue);
     updateEvent(event.id, (e) => ({
@@ -542,16 +541,14 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab })
       finalTotal: isNaN(parsedTotal) ? null : parsedTotal,
       tip: isNaN(parsedTip) ? 0 : parsedTip,
     }));
+    // Encoder puis payer la note, en un seul geste — les tournées encore sur la note (en rouge)
+    // passent en réglé (vert) d'un coup, plutôt que de les éditer une par une.
+    if (roundsSum > 0) onPayEventTab();
   };
 
   const clear = () => {
     setValue("");
     updateEvent(event.id, (e) => ({ ...e, finalTotal: null }));
-  };
-
-  const payTab = () => {
-    setPaying(true);
-    onPayEventTab();
   };
 
   return (
@@ -560,17 +557,6 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab })
         <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Note finale du bar</span>
       </div>
-      {roundsSum > 0 && !paying && (
-        <button
-          onClick={payTab}
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", background: COLORS.amber, border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper, marginBottom: "12px" }}
-        >
-          Marquer les {formatMoney(roundsSum, "euro")} de la note comme payés
-        </button>
-      )}
-      {paying && (
-        <div style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, marginBottom: "12px" }}>Note marquée comme payée ✓</div>
-      )}
       <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "10px" }}>
         Facultatif.
         <br />
@@ -612,8 +598,8 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab })
             {tipValue && <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>€</span>}
           </div>
         </div>
-        <button onClick={save} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "11px 16px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper, flexShrink: 0 }}>
-          Valider
+        <button onClick={pay} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "11px 16px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper, flexShrink: 0 }}>
+          Payer
         </button>
       </div>
       {event.finalTotal != null && (
