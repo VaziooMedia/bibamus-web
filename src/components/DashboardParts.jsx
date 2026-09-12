@@ -529,9 +529,10 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   );
 }
 
-export function FinalTotalCard({ event, updateEvent, roundsSum }) {
+export function FinalTotalCard({ event, updateEvent, roundsSum, onPayEventTab }) {
   const [value, setValue] = useState(event.finalTotal != null ? String(event.finalTotal) : "");
   const [tipValue, setTipValue] = useState(event.tip ? String(event.tip) : "");
+  const [paying, setPaying] = useState(false);
 
   const save = () => {
     const parsedTotal = parseFloat(value);
@@ -548,12 +549,28 @@ export function FinalTotalCard({ event, updateEvent, roundsSum }) {
     updateEvent(event.id, (e) => ({ ...e, finalTotal: null }));
   };
 
+  const payTab = () => {
+    setPaying(true);
+    onPayEventTab();
+  };
+
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
         <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Note finale du bar</span>
       </div>
+      {roundsSum > 0 && !paying && (
+        <button
+          onClick={payTab}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", background: COLORS.amber, border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper, marginBottom: "12px" }}
+        >
+          Marquer les {formatMoney(roundsSum, "euro")} de la note comme payés
+        </button>
+      )}
+      {paying && (
+        <div style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, marginBottom: "12px" }}>Note marquée comme payée ✓</div>
+      )}
       <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "10px" }}>
         Facultatif.
         <br />

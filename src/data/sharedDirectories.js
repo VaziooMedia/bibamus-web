@@ -2013,7 +2013,7 @@ export async function loadVenuesWithStats() {
 // --- Fondation statistiques — une vraie ligne par produit commandé, à côté du JSON de
 // l'événement (inchangé). Voir bibamus-schema-round-orders.sql.
 
-export async function recordRoundOrders(orders, { venueId, eventId, roundId, currency }) {
+export async function recordRoundOrders(orders, { venueId, eventId, roundId, currency, paid = true }) {
   if (!orders || orders.length === 0) return;
   const { error } = await supabase.rpc("record_round_orders", {
     p_orders: orders,
@@ -2021,8 +2021,21 @@ export async function recordRoundOrders(orders, { venueId, eventId, roundId, cur
     p_event_id: eventId,
     p_round_id: roundId,
     p_currency: currency,
+    p_paid: paid,
   });
   if (error) console.error("recordRoundOrders:", error);
+}
+
+// Système "Payé" — une tournée "sur la note" ne compte comme dépense réelle qu'une fois
+// effectivement réglée (par vous ou par un tiers), pas dès la commande.
+export async function markRoundPaid(roundId, paid = true) {
+  const { error } = await supabase.rpc("mark_round_paid", { p_round_id: roundId, p_paid: paid });
+  if (error) console.error("markRoundPaid:", error);
+}
+
+export async function markEventTabPaid(eventId) {
+  const { error } = await supabase.rpc("mark_event_tab_paid", { p_event_id: eventId });
+  if (error) console.error("markEventTabPaid:", error);
 }
 
 export async function deleteRoundOrders(roundId) {

@@ -24,7 +24,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor }) {
+export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor, onPayEventTab }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -1644,7 +1644,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
           {isAddition ? (
             <SplitBillCard event={event} updateEvent={updateEvent} />
           ) : (
-            (tabTotal >= 0.01 || event.finalTotal != null) && <FinalTotalCard event={event} updateEvent={updateEvent} roundsSum={tabTotal} />
+            (tabTotal >= 0.01 || event.finalTotal != null) && <FinalTotalCard event={event} updateEvent={updateEvent} roundsSum={tabTotal} onPayEventTab={onPayEventTab} />
           )}
         </div>
       )}

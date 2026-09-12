@@ -118,6 +118,8 @@ import {
   countMyRatedDrinks,
   loadVenuesByIds,
   recordRoundOrders,
+  markRoundPaid,
+  markEventTabPaid,
   deleteRoundOrders,
   deleteRoundOrdersByEvent,
 } from "./data/sharedDirectories.js";
@@ -702,7 +704,7 @@ export default function App() {
         unit_kcal_per_100ml: drink?.kcalPer100ml ?? null,
       };
     });
-    recordRoundOrders(ordersForLog, { venueId: realVenueId, eventId: activeEventId, roundId: round.id, currency: currentEvent?.currency });
+    recordRoundOrders(ordersForLog, { venueId: realVenueId, eventId: activeEventId, roundId: round.id, currency: currentEvent?.currency, paid: round.settledDirectly !== false });
 
     setScreen("eventDashboard");
   };
@@ -1172,6 +1174,19 @@ export default function App() {
       ...e,
       rounds: e.rounds.map((r) => (r.id === roundId ? { ...r, ...updates } : r)),
     }));
+    // "Argent dépensé" ne doit compter que ce qui est réellement payé — répercuter le nouveau
+    // statut de règlement côté serveur, sans quoi cette édition ne change rien aux vraies stats.
+    if (updates.settledDirectly !== undefined) markRoundPaid(roundId, updates.settledDirectly);
+  };
+
+  // "Note finale du bar" — régler d'un coup toutes les tournées encore sur la note de cet
+  // événement, plutôt que de devoir éditer chaque tournée une par une en quittant le lieu.
+  const payEventTab = (eventId) => {
+    updateEvent(eventId, (e) => ({
+      ...e,
+      rounds: e.rounds.map((r) => (r.settledDirectly === false ? { ...r, settledDirectly: true } : r)),
+    }));
+    markEventTabPaid(eventId);
   };
 
   const activateBibaBob = (eventId, code, name, tolerance, pin) => {
@@ -1671,6 +1686,7 @@ export default function App() {
                 onOpenWaterAlertSettings={() => setScreen("waterAlertSettings")}
                 onDeleteRound={(roundId) => deleteRound(activeEventId, roundId)}
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
+                onPayEventTab={() => payEventTab(activeEventId)}
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
                 onDeactivateBibaBob={(code) => deactivateBibaBob(activeEventId, code)}
                 onGoToBibaMusic={() => setScreen("bibaMusic")}
