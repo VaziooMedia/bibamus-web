@@ -493,8 +493,8 @@ export async function publishVenueCheckInToPulse(venueId) {
 
 // Même principe que recordVenueCheckIn/publishVenueCheckInToPulse, mais pour un produit —
 // répétable, et venueId optionnel (un check n'est pas forcément associé à un lieu).
-export async function recordDrinkCheckIn(drinkId, venueId = null) {
-  const { error } = await supabase.rpc("check_in_drink", { p_drink_id: drinkId, p_venue_id: venueId });
+export async function recordDrinkCheckIn(drinkId, venueId = null, volumeCl = null) {
+  const { error } = await supabase.rpc("check_in_drink", { p_drink_id: drinkId, p_venue_id: venueId, p_volume_cl: volumeCl });
   if (error) {
     console.error("recordDrinkCheckIn:", error);
     return { error: error.message };

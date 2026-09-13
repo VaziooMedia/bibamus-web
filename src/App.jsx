@@ -1379,9 +1379,9 @@ export default function App() {
 
   // Miroir de checkInVenue, mais pour un produit — répétable (pas de marquage local "présence
   // en temps réel" comme pour un lieu), et venueId optionnel.
-  const checkInDrink = async (drinkId, venueId, { publishToPulse = true } = {}) => {
+  const checkInDrink = async (drinkId, venueId, { publishToPulse = true, volumeCl = null } = {}) => {
     emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: !publishToPulse });
-    await recordDrinkCheckIn(drinkId, venueId);
+    await recordDrinkCheckIn(drinkId, venueId, volumeCl);
     if (publishToPulse) publishDrinkCheckInToPulse(drinkId, venueId);
   };
 
@@ -1735,6 +1735,7 @@ export default function App() {
                 onDeleteRound={(roundId) => deleteRound(activeEventId, roundId)}
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
                 onPayTabAmount={(amount) => payTabAmount(activeEventId, amount)}
+                onCheckDrink={(drinkId, venueId, opts) => checkInDrink(drinkId, venueId, opts)}
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
                 onDeactivateBibaBob={(code) => deactivateBibaBob(activeEventId, code)}
                 onGoToBibaMusic={() => setScreen("bibaMusic")}

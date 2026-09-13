@@ -24,7 +24,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor, onPayTabAmount }) {
+export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -267,6 +267,14 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
       ...e,
       personalOrders: [...e.personalOrders, { id: nextId(), drinkId, timestamp: Date.now() }],
     }));
+    // Alimente vraiment les stats (calories, nombre de verres) — reçue gratuitement, donc sans
+    // prix, mais elle compte comme une vraie consommation. drink_id doit être le vrai identifiant
+    // du catalogue (jamais l'id local du menu de l'événement), sinon l'enregistrement échoue en
+    // silence, comme pour les tournées BibaRoom.
+    const drink = (event.menu || []).find((d) => d.id === drinkId);
+    const realVenueId = event.venueId && !event.isHome && event.venueId !== "@event" ? event.venueId : null;
+    const realDrinkId = drink?.fromDirectory && drink?.sourceDrinkId ? drink.sourceDrinkId : null;
+    if (realDrinkId) onCheckDrink(realDrinkId, realVenueId, { volumeCl: drink?.volumeCl ?? null });
   };
 
   const removeLastPersonalFor = (drinkId) => {
@@ -959,7 +967,10 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
                       key={drink.id}
                       style={{ background: count > 0 ? COLORS.paperAlt : "transparent", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}
                     >
-                      <span style={{ fontSize: "13px", fontWeight: 600 }}>{drink.name}</span>
+                      <span style={{ fontSize: "13px", fontWeight: 600 }}>
+                        {drink.name}
+                        {drink.volumeCl && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {drink.volumeCl}cl</span>}
+                      </span>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         <button
                           onClick={() => removeLastPersonalFor(drink.id)}
