@@ -645,7 +645,7 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
       );
     case "bell":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : "none"}>
           <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
           <path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
         </svg>
