@@ -445,6 +445,17 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
         )}
       </div>
 
+      <div style={{ background: COLORS.surface, border: `2px dashed ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px 16px", marginTop: "18px", opacity: 0.55 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+          <span style={{ width: "4px", height: "16px", background: COLORS.inkSoft, borderRadius: "2px", flexShrink: 0 }} />
+          <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>BibaCare</span>
+          <span style={{ fontSize: "10.5px", fontWeight: 700, color: COLORS.inkSoft, border: `1.5px solid ${COLORS.paperAlt}`, borderRadius: "6px", padding: "2px 7px", marginLeft: "auto" }}>Bientôt</span>
+        </div>
+        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>
+          Fonctionnalités santé — dans l'esprit de BibaZERO, mais sur une plus longue période, et des statistiques liées à tes périodes sans alcool.
+        </p>
+      </div>
+
       {profile.isAdmin ? (
         <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "18px", textAlign: "center" }}>🛡️ Mode administrateur actif</p>
       ) : (
