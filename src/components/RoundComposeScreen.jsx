@@ -13,7 +13,7 @@ import { BobBadge, DrinkBadges } from "./DrinkDisplay.jsx";
 import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 
-export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draftOrders, setDraftOrders, activeFriendId, setActiveFriendId, bibros, myBibroCode, onBack, onSeeTicket, onUseBibaBobJoker }) {
+export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraftFriends, draftOrders, setDraftOrders, activeFriendId, setActiveFriendId, bibros, myBibroCode, onBack, onSeeTicket, onUseBibaBobJoker }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [query, setQuery] = useState("");
   const [showBibazard, setShowBibazard] = useState(false);
@@ -101,7 +101,9 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
   const goToCategory = (cat) => {
     setQuery("");
     setActiveCategory(cat);
-    window.scrollTo(0, 0);
+    // Le vrai défilement se passe dans le conteneur dédié de l'app, jamais la fenêtre elle-même
+    // — window.scrollTo n'avait donc aucun effet réel ici.
+    mainScrollRef?.current?.scrollTo(0, 0);
   };
 
   const addOrder = (drinkId) => {
@@ -366,6 +368,15 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
         </div>
       )}
 
+      {!activeCategory && !searching && event.menu.length > 4 && (
+        <>
+          <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} style={{ width: "100%" }}>
+            {isOpenBar ? "Valider la tournée →" : "Valider la commande →"}
+          </PrimaryButton>
+          <div style={{ marginBottom: "16px" }} />
+        </>
+      )}
+
       {!activeCategory && !searching && !event.isHome && event.menu.length > 0 && (
         <button
           onClick={() => setShowBibazard(true)}
@@ -398,15 +409,6 @@ export function RoundComposeScreen({ event, draftFriends, setDraftFriends, draft
           onConfirm={(drinkId) => addOrder(drinkId)}
           onClose={() => setShowBibazard(false)}
         />
-      )}
-
-      {!activeCategory && !searching && event.menu.length > 4 && (
-        <>
-          <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} style={{ width: "100%" }}>
-            {isOpenBar ? "Valider la tournée →" : "Valider la commande →"}
-          </PrimaryButton>
-          <div style={{ marginBottom: "16px" }} />
-        </>
       )}
 
       {favoriteDrinks.length > 0 && !activeCategory && !searching && (

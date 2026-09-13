@@ -1759,6 +1759,7 @@ export default function App() {
             {screen === "roundCompose" && currentEvent && (
               <RoundComposeScreen
                 event={currentEvent}
+                mainScrollRef={mainScrollRef}
                 draftFriends={draftFriends}
                 setDraftFriends={setDraftFriends}
                 draftOrders={draftOrders}
