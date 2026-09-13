@@ -39,6 +39,7 @@ export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, 
         <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title={<>Mes<br />Favoris</>} onClick={goToVenues} />
         <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title={<>Mon<br />Historique</>} onClick={goToHistory} />
         <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title={<>Mes<br />Photos</>} onClick={goToPhotos} />
+        <ActionCard icon={<NavIcon name="activity" size={20} color={COLORS.inkSoft} />} title="BibaCare" disabled badge="Bientôt" />
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
