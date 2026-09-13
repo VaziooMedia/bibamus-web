@@ -1,7 +1,7 @@
 // ============================================================
 // Composants icônes — copiés tels quels depuis le prototype Claude.
 // ============================================================
-import React from "react";
+import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import tokenPinkUrl from "../assets/brand/Bibamus App - Icon UI - Token Pink.svg";
 import tokenCyanUrl from "../assets/brand/Bibamus App - Icon UI - Token Cyan.svg";
@@ -1218,9 +1218,9 @@ export function TwitchIcon({ size = 22 }) {
 // niveaux et le même rendu que la plateforme de gestion (CertificationIcon.jsx), pour rester
 // cohérent avec ce qui a déjà été choisi côté admin.
 const CERTIFICATION_TOOLTIP = {
-  utilisateur: "Fiche créée par un Bibax (non vérifiée)",
+  utilisateur: "Fiche ajoutée par un utilisateur - Non vérifiée",
   bibamus: "Fiche vérifiée par Bibamus",
-  producteur: "Fiche contrôlée par le propriétaire",
+  producteur: "Fiche gérée par le propriétaire",
 };
 
 function RosetteBadge({ size, color, innerColor }) {
@@ -1245,24 +1245,41 @@ function BibaMeIcon({ size, color }) {
 }
 
 export function CertificationIcon({ level, size = 20 }) {
+  const [open, setOpen] = useState(false);
   const title = CERTIFICATION_TOOLTIP[level] || CERTIFICATION_TOOLTIP.utilisateur;
-  if (level === "bibamus") {
-    return (
-      <span title={title}>
-        <RosetteBadge size={size} color="#39FF66" innerColor="#1E7A38" />
-      </span>
-    );
-  }
-  if (level === "producteur") {
-    return (
-      <span title={title}>
-        <RosetteBadge size={size} color="#FFC145" innerColor="#8A6A1E" />
-      </span>
-    );
-  }
-  return (
-    <span title={title}>
+  const badge =
+    level === "bibamus" ? (
+      <RosetteBadge size={size} color="#39FF66" innerColor="#1E7A38" />
+    ) : level === "producteur" ? (
+      <RosetteBadge size={size} color="#FFC145" innerColor="#8A6A1E" />
+    ) : (
       <BibaMeIcon size={size} color="#FF2C8F" />
+    );
+  return (
+    <span style={{ position: "relative", lineHeight: 0 }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", lineHeight: 0 }}>
+        {badge}
+      </button>
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "28px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: COLORS.surface,
+            border: `1.5px solid ${COLORS.paperAlt}`,
+            borderRadius: "8px",
+            padding: "6px 10px",
+            fontSize: "11.5px",
+            color: COLORS.ink,
+            whiteSpace: "nowrap",
+            zIndex: 20,
+          }}
+        >
+          {title}
+        </div>
+      )}
     </span>
   );
 }
