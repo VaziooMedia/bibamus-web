@@ -609,6 +609,10 @@ export default function App() {
       setEvents((prev) =>
         prev.map((e) => {
           if (e.id !== currentEvent.id) return e;
+          // Un écho de notre propre écriture (ou une mise à jour arrivée en retard) ne doit
+          // jamais écraser un état local déjà plus récent — sinon une action peut sembler "ne
+          // pas marcher" alors qu'elle a bien été appliquée localement, juste réécrasée aussitôt.
+          if ((updatedData.updatedAt || 0) < (e.updatedAt || 0)) return e;
           // Fusionne les participants par union plutôt que d'écraser — une mise à jour arrivée
           // dans le mauvais ordre (course entre deux appareils qui rejoignent en même temps) ne
           // peut alors plus faire "disparaître" quelqu'un qui vient vraiment de rejoindre.
@@ -817,7 +821,7 @@ export default function App() {
     setEvents((prev) =>
       prev.map((e) => {
         if (e.id !== id) return e;
-        const updated = updater(e);
+        const updated = { ...updater(e), updatedAt: Date.now() };
         if (updated.salonCode) saveSalon(updated.salonCode, updated);
         return updated;
       })

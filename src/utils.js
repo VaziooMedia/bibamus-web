@@ -424,6 +424,10 @@ export const normalizeEvent = (e) => ({
   paused: !!e.paused,
   isHome: !!e.isHome,
   salonCode: e.salonCode || null,
+  // Rejette les échos temps réel plus anciens que ce qu'on a déjà en local — sans ça, notre
+  // propre écriture qui revient via l'abonnement au salon peut écraser une action plus récente
+  // encore en train de se propager (ex. cliquer "Payer" ne marche pas du premier coup).
+  updatedAt: e.updatedAt || 0,
 });
 
 export const formatDuration = (startMs, endMs) => {
