@@ -12,6 +12,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
   const readerRef = useRef(null);
   const streamRef = useRef(null);
   const pollRef = useRef(null);
+  const cropCanvasRef = useRef(null);
   const [phase, setPhase] = useState("scanning"); // scanning | notFound | associating | error | manualEntry
   const [scannedCode, setScannedCode] = useState(null);
   const [manualCode, setManualCode] = useState("");
@@ -67,7 +68,28 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
           pollRef.current = setInterval(async () => {
             if (cancelled || !videoRef.current) return;
             try {
-              const results = await detector.detect(videoRef.current);
+              const video = videoRef.current;
+              const vw = video.videoWidth;
+              const vh = video.videoHeight;
+              if (!vw || !vh) return;
+              // Zone de lecture réduite au centre (là où le cadre affiché à l'écran pointe),
+              // agrandie x2 avant analyse — un code-barres photographié loin n'occupe qu'une
+              // petite portion de l'image entière, avec trop peu de pixels réels pour que le
+              // décodeur distingue ses barres fines. Rogner puis agrandir ne donne pas plus de
+              // détail qui n'existait pas, mais présente le même détail réel à une résolution
+              // relative bien plus grande, ce qui aide concrètement le décodeur.
+              const cropWidthRatio = 0.75;
+              const cropHeightRatio = 0.28;
+              const sw = vw * cropWidthRatio;
+              const sh = vh * cropHeightRatio;
+              const sx = (vw - sw) / 2;
+              const sy = (vh - sh) / 2;
+              const canvas = cropCanvasRef.current;
+              canvas.width = sw * 2;
+              canvas.height = sh * 2;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+              const results = await detector.detect(canvas);
               if (results.length > 0) {
                 const code = results[0].rawValue;
                 setScannedCode(code);
@@ -144,8 +166,23 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 20px" }}>
           <div style={{ width: "100%", maxWidth: "360px", borderRadius: "16px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, position: "relative" }}>
             <video ref={videoRef} style={{ width: "100%", display: "block", background: "#000" }} muted playsInline />
+            {/* Zone visée par la détection — mêmes proportions que le rognage réellement analysé,
+                pour que le cadre affiché corresponde à la vraie zone lue. */}
+            <div
+              style={{
+                position: "absolute",
+                top: "36%",
+                left: "12.5%",
+                width: "75%",
+                height: "28%",
+                border: `2px solid ${COLORS.amber}`,
+                borderRadius: "8px",
+                pointerEvents: "none",
+              }}
+            />
+            <canvas ref={cropCanvasRef} style={{ display: "none" }} />
           </div>
-          <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", marginTop: "16px", textAlign: "center" }}>Visez le code-barres sur la bouteille ou la canette</p>
+          <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", marginTop: "16px", textAlign: "center" }}>Aligne le code-barres dans le cadre</p>
           <button
             onClick={() => setPhase("manualEntry")}
             style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "6px" }}
