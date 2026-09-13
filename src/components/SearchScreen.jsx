@@ -170,7 +170,10 @@ export function SearchScreen({
   }, [trimmed]);
 
   // Bascule automatiquement sur le premier onglet qui a des résultats, dès qu'une recherche
-  // commence — évite de rester sur un onglet vide par défaut.
+  // commence — évite de rester sur un onglet vide par défaut. Doit réagir aux vrais résultats
+  // une fois arrivés, pas seulement à la frappe : les recherches sont asynchrones (debounce +
+  // aller-retour serveur), donc au moment où la requête change, les résultats affichés sont
+  // encore ceux de la frappe précédente.
   useEffect(() => {
     if (!hasQuery) return;
     const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
@@ -179,7 +182,7 @@ export function SearchScreen({
       if (firstWithResults) setActiveTab(firstWithResults.key);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasQuery, trimmed]);
+  }, [hasQuery, trimmed, venueResults, drinkResults, brandResults, breweryResults, bibaxResults]);
 
   const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
