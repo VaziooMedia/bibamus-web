@@ -162,7 +162,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
               title={isFollowed ? "Suivi sur Pulse — ses activités apparaissent" : "Suivre sur Pulse"}
               style={{ background: "none", border: "none", cursor: togglingFollow ? "default" : "pointer", padding: 0, display: "flex" }}
             >
-              <NavIcon name="bell" size={24} color={isFollowed ? COLORS.amber : COLORS.chalkWhite} filled={isFollowed} />
+              <NavIcon name="bell" size={28} color={COLORS.amber} filled={isFollowed} />
             </button>
             <span style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />
             <button
