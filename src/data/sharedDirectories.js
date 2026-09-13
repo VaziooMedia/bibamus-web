@@ -2746,8 +2746,17 @@ export async function lookupBarcode(barcode) {
     console.error("lookupBarcode:", error);
     return null;
   }
-  if (!data) return null;
-  return { productId: data.product_id, container: data.container, volumeMl: data.volume_ml, verified: data.verified };
+  if (data) return { productId: data.product_id, container: data.container, volumeMl: data.volume_ml, verified: data.verified };
+
+  // Repli — codes saisis depuis "Ajout rapide" côté plateforme de gestion, stockés directement
+  // sur la fiche produit plutôt que dans drink_barcodes.
+  const { data: drinkId, error: fallbackError } = await supabase.rpc("find_drink_by_json_barcode", { p_code: barcode });
+  if (fallbackError) {
+    console.error("lookupBarcode (repli):", fallbackError);
+    return null;
+  }
+  if (!drinkId) return null;
+  return { productId: drinkId, container: null, volumeMl: null, verified: true };
 }
 
 export async function associateBarcode({ barcode, productId, format, container, volumeMl, addedBy }) {
