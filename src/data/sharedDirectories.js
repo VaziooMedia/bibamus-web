@@ -2886,6 +2886,24 @@ export async function toggleFollow(targetBibroCode) {
   return data;
 }
 
+// Cloche de notification sur une fiche lieu — même principe que "Suivre sur Pulse" pour un
+// Bibax, mais pour un lieu : ses activités (aujourd'hui les check-ins de tes Bibax, demain ses
+// événements/nouveaux produits) apparaissent dans ton fil Pulse.
+export async function toggleFollowVenue(venueId) {
+  const { data, error } = await supabase.rpc("toggle_follow_venue", { p_venue_id: venueId });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function loadVenueFollowStatus(venueId) {
+  const { data, error } = await supabase.rpc("get_venue_follow_status", { p_venue_id: venueId });
+  if (error) {
+    console.error("loadVenueFollowStatus:", error);
+    return false;
+  }
+  return !!data;
+}
+
 export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
   const {
     data: { user },

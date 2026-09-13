@@ -12,7 +12,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { VenueRatingModal } from "./VenueRatingModal.jsx";
 import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
-import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, loadVenueRevenueStats } from "../data/sharedDirectories.js";
+import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, loadVenueRevenueStats, toggleFollowVenue, loadVenueFollowStatus } from "../data/sharedDirectories.js";
 import { VenueCheckInConfirmModal } from "./VenueCheckInConfirmModal.jsx";
 import { loadMyVenueRating } from "../data/sharedDirectories.js";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
@@ -31,6 +31,24 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  // Cloche de notification — ses activités (check-ins de tes Bibax, plus tard ses événements et
+  // nouveaux produits) apparaissent dans ton fil Pulse.
+  const [isFollowed, setIsFollowed] = useState(false);
+  const [togglingFollow, setTogglingFollow] = useState(false);
+  useEffect(() => {
+    if (!venue?.id) return;
+    loadVenueFollowStatus(venue.id).then(setIsFollowed);
+  }, [venue?.id]);
+  const handleToggleFollow = async () => {
+    setTogglingFollow(true);
+    const result = await toggleFollowVenue(venue.id);
+    setTogglingFollow(false);
+    if (result?.error) {
+      alert(result.error);
+      return;
+    }
+    setIsFollowed(result.following);
+  };
   // Mes propres visites/boissons dans ce lieu — plus le champ partagé stats de la ligne du lieu.
   const [stats, setStats] = useState({ visits: 0, drinksOrdered: 0 });
   useEffect(() => {
@@ -137,13 +155,24 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
             <CertificationIcon level={venue.certificationLevel} size={17} />
           </div>
           {venue.subtitle && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
-          <button
-            onClick={onToggleFavorite}
-            title={venue.isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-            style={{ position: "absolute", top: "26px", right: "8px", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
-          >
-            <NavIcon name="star" size={28} color={COLORS.amber} filled={!!venue.isFavorite} />
-          </button>
+          <div style={{ position: "absolute", top: "26px", right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={handleToggleFollow}
+              disabled={togglingFollow}
+              title={isFollowed ? "Suivi sur Pulse — ses activités apparaissent" : "Suivre sur Pulse"}
+              style={{ background: "none", border: "none", cursor: togglingFollow ? "default" : "pointer", padding: 0, display: "flex" }}
+            >
+              <NavIcon name="bell" size={24} color={isFollowed ? COLORS.amber : COLORS.chalkWhite} filled={isFollowed} />
+            </button>
+            <span style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />
+            <button
+              onClick={onToggleFavorite}
+              title={venue.isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+            >
+              <NavIcon name="star" size={28} color={COLORS.amber} filled={!!venue.isFavorite} />
+            </button>
+          </div>
         </div>
         <div style={{ position: "absolute", bottom: "8px", right: "68px", left: "108px" }}>
           <VenueRatingDisplay venueId={venue.id} />
