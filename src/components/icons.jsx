@@ -1265,15 +1265,15 @@ export function CertificationIcon({ level, size = 20 }) {
           style={{
             position: "absolute",
             bottom: "28px",
-            left: "50%",
-            transform: "translateX(-50%)",
+            right: 0,
             background: COLORS.surface,
             border: `1.5px solid ${COLORS.paperAlt}`,
             borderRadius: "8px",
-            padding: "6px 10px",
+            padding: "8px 10px",
             fontSize: "11.5px",
             color: COLORS.ink,
-            whiteSpace: "nowrap",
+            width: "170px",
+            lineHeight: 1.35,
             zIndex: 20,
           }}
         >
