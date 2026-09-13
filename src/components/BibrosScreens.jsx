@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard } from "./ui.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
@@ -460,27 +460,7 @@ export function MutualBibaxScreen({ bibros, bibroName, onBack, onViewBibro, onOp
   );
 }
 
-export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRemove, goToBibaxPhotos, onBlock, onOpenStoryAuthor, onViewMutualBibax }) {
-  const [mutualCount, setMutualCount] = useState(null);
-  const [bibaxCount, setBibaxCount] = useState(null);
-  const [stats, setStats] = useState(null);
-  const [confirmingBlock, setConfirmingBlock] = useState(false);
-  const [blocking, setBlocking] = useState(false);
-  const [showRemoveSheet, setShowRemoveSheet] = useState(false);
-  const [notifyPulse, setNotifyPulse] = useState(bibro?.notifyPulse || false);
-  const [togglingNotify, setTogglingNotify] = useState(false);
-  const [activeStories, setActiveStories] = useState([]);
-  const [activeTab, setActiveTab] = useState("pulse");
-  const [pulseActivity, setPulseActivity] = useState(null);
-
-  useEffect(() => {
-    if (!bibro?.userId || activeTab !== "pulse") return;
-    loadBibaxPulseActivity(bibro.userId).then(setPulseActivity);
-  }, [bibro?.userId, activeTab]);
-
-  // Onglet Statistiques — ce que bibro.userId a choisi de montrer, catégorie par catégorie
-  // (réglage "Mes Statistiques" dans Confidentialité). Une catégorie à null veut dire "pas
-  // partagée", pas une erreur de chargement.
+export function BibroStatsScreen({ bibro, onBack }) {
   const [statsPeriodKey, setStatsPeriodKey] = useState("all");
   const statsPeriod = PERIODS.find((p) => p.key === statsPeriodKey);
   const statsSince = statsPeriod.since ? statsPeriod.since() : null;
@@ -492,20 +472,20 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   const [sharedNames, setSharedNames] = useState({});
 
   useEffect(() => {
-    if (!bibro?.userId || activeTab !== "stats") return;
+    if (!bibro?.userId) return;
     loadBibaxStatsOverview(bibro.userId, statsSince, null).then(setSharedOverview);
     loadBibaxStatsDrinks(bibro.userId, statsSince, null).then(setSharedDrinks);
     loadBibaxStatsVenues(bibro.userId, statsSince, null).then(setSharedVenues);
     loadBibaxStatsSocial(bibro.userId, statsSince, null).then(setSharedSocial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bibro?.userId, activeTab, statsPeriodKey]);
+  }, [bibro?.userId, statsPeriodKey]);
 
   // Records : toujours tout l'historique, sans lien avec le sélecteur de période ci-dessus —
   // même comportement que dans Mes Statistiques.
   useEffect(() => {
-    if (!bibro?.userId || activeTab !== "stats") return;
+    if (!bibro?.userId) return;
     loadBibaxStatsRecords(bibro.userId).then(setSharedRecords);
-  }, [bibro?.userId, activeTab]);
+  }, [bibro?.userId]);
 
   useEffect(() => {
     const venueIds = [sharedRecords?.mostVisitedVenueId, sharedVenues?.topVenueId].filter(Boolean);
@@ -519,6 +499,191 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
       }));
     });
   }, [sharedRecords, sharedVenues, sharedDrinks]);
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: "4px 0 18px 0" }}>
+        Statistiques de {bibro.alias || bibro.name}
+      </h1>
+
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "center", marginBottom: "16px" }}>
+        {PERIODS.map((p) => (
+          <button
+            key={p.key}
+            onClick={() => setStatsPeriodKey(p.key)}
+            style={{
+              background: statsPeriodKey === p.key ? COLORS.amber : COLORS.surface,
+              color: statsPeriodKey === p.key ? COLORS.paper : COLORS.ink,
+              border: `2px solid ${statsPeriodKey === p.key ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "6px 12px",
+              fontSize: "11.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {[sharedOverview, sharedRecords, sharedDrinks, sharedVenues, sharedSocial].every((s) => s === null) && (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>
+          {(bibro.alias || bibro.name)} ne partage pas encore ses statistiques.
+        </p>
+      )}
+
+      {sharedOverview && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
+          {[
+            { label: "Visites", value: sharedOverview.visits },
+            { label: "Boissons commandées", value: sharedOverview.drinksOrdered },
+            { label: "Produits différents", value: sharedOverview.distinctDrinks },
+            { label: "Lieux différents", value: sharedOverview.distinctVenues },
+          ].map((t) => (
+            <div key={t.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px" }}>
+              <div style={{ fontSize: "10.5px", color: COLORS.inkSoft }}>{t.label}</div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px" }}>{t.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {sharedVenues && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+          {sharedVenues.topVenueId && (
+            <div style={{ background: COLORS.surfaceAlt, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", color: COLORS.chalkWhite, fontSize: "13px" }}>
+              <span>🏠 Son QG</span>
+              <strong>{sharedNames[sharedVenues.topVenueId] || "…"}</strong>
+            </div>
+          )}
+          {sharedVenues.distinctCities > 0 && (
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+              <span>Villes différentes visitées</span>
+              <strong>{sharedVenues.distinctCities}</strong>
+            </div>
+          )}
+          {sharedVenues.topVenueType && (
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+              <span>Type de lieu préféré</span>
+              <strong>{sharedVenues.topVenueType}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {sharedDrinks && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+          {sharedDrinks.topDrinkId && (
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+              <span>🍺 Boisson préférée</span>
+              <strong>{sharedNames[sharedDrinks.topDrinkId] || "…"}</strong>
+            </div>
+          )}
+          {sharedDrinks.topCategory && (
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+              <span>Catégorie la plus consommée</span>
+              <strong>{sharedDrinks.topCategory}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {sharedSocial && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+          {sharedSocial.distinctBibaxCount > 0 && (
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+              <span>👥 Bibax différents rencontrés</span>
+              <strong>{sharedSocial.distinctBibaxCount}</strong>
+            </div>
+          )}
+          {sharedSocial.avgPeoplePerOuting != null && (
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+              <span>Taille moyenne d'une sortie</span>
+              <strong>{Math.round(sharedSocial.avgPeoplePerOuting * 10) / 10}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {sharedRecords && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {[
+            sharedRecords.mostVisitedVenueId && { icon: "🏆", label: "Le plus visité", value: sharedNames[sharedRecords.mostVisitedVenueId] || "…" },
+            sharedRecords.maxDrinksPerOuting > 0 && { icon: "🍺", label: "Le plus de boissons en une sortie", value: sharedRecords.maxDrinksPerOuting },
+            sharedRecords.maxDistinctDrinksPerOuting > 1 && { icon: "🎲", label: "Le plus de produits différents en une sortie", value: sharedRecords.maxDistinctDrinksPerOuting },
+            sharedRecords.maxVenuesPerDay > 1 && { icon: "🗺️", label: "Le plus de lieux en une journée", value: sharedRecords.maxVenuesPerDay },
+            sharedRecords.bestMonthYear && { icon: "📅", label: "Mois le plus actif", value: `${MONTH_NAMES[sharedRecords.bestMonthMonth - 1]} ${sharedRecords.bestMonthYear}` },
+            sharedRecords.longestStreakDays > 1 && { icon: "🔥", label: "Plus longue série", value: `${sharedRecords.longestStreakDays} jours` },
+          ]
+            .filter(Boolean)
+            .map((r) => (
+              <div key={r.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
+                <span style={{ fontSize: "18px" }}>{r.icon}</span>
+                <span style={{ flex: 1 }}>{r.label}</span>
+                <strong>{r.value}</strong>
+              </div>
+            ))}
+        </div>
+      )}
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+export function BibroPulseScreen({ bibro, onBack }) {
+  const [pulseActivity, setPulseActivity] = useState(null);
+
+  useEffect(() => {
+    if (!bibro?.userId) return;
+    loadBibaxPulseActivity(bibro.userId).then(setPulseActivity);
+  }, [bibro?.userId]);
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: "4px 0 18px 0" }}>
+        Activité de {bibro.alias || bibro.name}
+      </h1>
+      {pulseActivity === null ? (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
+      ) : pulseActivity.length === 0 ? (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>Aucune activité visible pour l'instant.</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {pulseActivity.map((e) => (
+            <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
+              <div>
+                {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType}
+              </div>
+              <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{formatMemberSince(e.createdAt)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRemove, goToBibaxPhotos, onBlock, onOpenStoryAuthor, onViewMutualBibax, goToBibroStats, goToBibroMedia, goToBibroClub, goToBibroHistory, goToBibroPulse }) {
+  const [mutualCount, setMutualCount] = useState(null);
+  const [bibaxCount, setBibaxCount] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [confirmingBlock, setConfirmingBlock] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+  const [showRemoveSheet, setShowRemoveSheet] = useState(false);
+  const [notifyPulse, setNotifyPulse] = useState(bibro?.notifyPulse || false);
+  const [togglingNotify, setTogglingNotify] = useState(false);
+  const [activeStories, setActiveStories] = useState([]);
+  // Extrait — seulement les 3 dernières, la page complète (BibroPulseScreen) charge le reste.
+  const [pulseExcerpt, setPulseExcerpt] = useState(null);
+
+  useEffect(() => {
+    if (!bibro?.userId) return;
+    loadBibaxPulseActivity(bibro.userId).then((entries) => setPulseExcerpt(entries.slice(0, 3)));
+  }, [bibro?.userId]);
 
   const handleToggleNotify = async () => {
     setTogglingNotify(true);
@@ -886,199 +1051,57 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
       </div>
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px" }} />
-      {(() => {
-        const tabButtonStyle = (key) => ({
-          background: activeTab === key ? COLORS.amber : COLORS.surface,
-          color: activeTab === key ? COLORS.paper : COLORS.ink,
-          border: `2px solid ${activeTab === key ? COLORS.amber : COLORS.paperAlt}`,
-          borderRadius: "999px",
-          padding: "8px 14px",
-          fontSize: "12.5px",
-          fontWeight: 700,
-          cursor: "pointer",
-        });
-        return (
-          <>
-            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "8px" }}>
-              <button onClick={() => setActiveTab("pulse")} style={tabButtonStyle("pulse")}>
-                BibaPulse
-              </button>
-              <button onClick={() => setActiveTab("stats")} style={tabButtonStyle("stats")}>
-                Statistiques
-              </button>
-              <button onClick={() => setActiveTab("media")} style={tabButtonStyle("media")}>
-                Médias
-              </button>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "14px" }}>
-              <button onClick={() => setActiveTab("club")} style={tabButtonStyle("club")}>
-                BibaClub
-              </button>
-              <button onClick={() => setActiveTab("history")} style={tabButtonStyle("history")}>
-                Historique
-              </button>
-            </div>
-          </>
-        );
-      })()}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
+        <ActionCard icon={<NavIcon name="bar-chart" size={20} color={COLORS.amber} />} title="Statistiques" onClick={goToBibroStats} />
+        <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title="Médias" onClick={goToBibroMedia} />
+        <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title="BibaClub" onClick={goToBibroClub} />
+        <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title="Historique" onClick={goToBibroHistory} />
+      </div>
+
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 16px" }} />
 
-      {activeTab === "stats" && (
-        <>
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "center", marginBottom: "16px" }}>
-            {PERIODS.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => setStatsPeriodKey(p.key)}
-                style={{
-                  background: statsPeriodKey === p.key ? COLORS.amber : COLORS.surface,
-                  color: statsPeriodKey === p.key ? COLORS.paper : COLORS.ink,
-                  border: `2px solid ${statsPeriodKey === p.key ? COLORS.amber : COLORS.paperAlt}`,
-                  borderRadius: "999px",
-                  padding: "6px 12px",
-                  fontSize: "11.5px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
+      <button
+        onClick={goToBibroPulse}
+        style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer", marginBottom: "8px" }}
+      >
+        <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+        <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>
+          <span style={{ color: COLORS.ink }}>Biba</span>
+          <span style={{ color: COLORS.amber }}>Pulse</span>
+        </span>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginLeft: "auto",
+            width: "22px",
+            height: "22px",
+            borderRadius: "50%",
+            border: `2px solid ${COLORS.amber}`,
+          }}
+        >
+          <NavIcon name="chevron-right" size={12} color={COLORS.amber} />
+        </span>
+      </button>
 
-          {[sharedOverview, sharedRecords, sharedDrinks, sharedVenues, sharedSocial].every((s) => s === null) && (
-            <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>
-              {(bibro.alias || bibro.name)} ne partage pas encore ses statistiques.
-            </p>
-          )}
-
-          {sharedOverview && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-              {[
-                { label: "Visites", value: sharedOverview.visits },
-                { label: "Boissons commandées", value: sharedOverview.drinksOrdered },
-                { label: "Produits différents", value: sharedOverview.distinctDrinks },
-                { label: "Lieux différents", value: sharedOverview.distinctVenues },
-              ].map((t) => (
-                <div key={t.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px" }}>
-                  <div style={{ fontSize: "10.5px", color: COLORS.inkSoft }}>{t.label}</div>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px" }}>{t.value}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {sharedVenues && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-              {sharedVenues.topVenueId && (
-                <div style={{ background: COLORS.surfaceAlt, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", color: COLORS.chalkWhite, fontSize: "13px" }}>
-                  <span>🏠 Son QG</span>
-                  <strong>{sharedNames[sharedVenues.topVenueId] || "…"}</strong>
-                </div>
-              )}
-              {sharedVenues.distinctCities > 0 && (
-                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
-                  <span>Villes différentes visitées</span>
-                  <strong>{sharedVenues.distinctCities}</strong>
-                </div>
-              )}
-              {sharedVenues.topVenueType && (
-                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
-                  <span>Type de lieu préféré</span>
-                  <strong>{sharedVenues.topVenueType}</strong>
-                </div>
-              )}
-            </div>
-          )}
-
-          {sharedDrinks && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-              {sharedDrinks.topDrinkId && (
-                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
-                  <span>🍺 Boisson préférée</span>
-                  <strong>{sharedNames[sharedDrinks.topDrinkId] || "…"}</strong>
-                </div>
-              )}
-              {sharedDrinks.topCategory && (
-                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
-                  <span>Catégorie la plus consommée</span>
-                  <strong>{sharedDrinks.topCategory}</strong>
-                </div>
-              )}
-            </div>
-          )}
-
-          {sharedSocial && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-              {sharedSocial.distinctBibaxCount > 0 && (
-                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
-                  <span>👥 Bibax différents rencontrés</span>
-                  <strong>{sharedSocial.distinctBibaxCount}</strong>
-                </div>
-              )}
-              {sharedSocial.avgPeoplePerOuting != null && (
-                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
-                  <span>Taille moyenne d'une sortie</span>
-                  <strong>{Math.round(sharedSocial.avgPeoplePerOuting * 10) / 10}</strong>
-                </div>
-              )}
-            </div>
-          )}
-
-          {sharedRecords && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {[
-                sharedRecords.mostVisitedVenueId && { icon: "🏆", label: "Le plus visité", value: sharedNames[sharedRecords.mostVisitedVenueId] || "…" },
-                sharedRecords.maxDrinksPerOuting > 0 && { icon: "🍺", label: "Le plus de boissons en une sortie", value: sharedRecords.maxDrinksPerOuting },
-                sharedRecords.maxDistinctDrinksPerOuting > 1 && { icon: "🎲", label: "Le plus de produits différents en une sortie", value: sharedRecords.maxDistinctDrinksPerOuting },
-                sharedRecords.maxVenuesPerDay > 1 && { icon: "🗺️", label: "Le plus de lieux en une journée", value: sharedRecords.maxVenuesPerDay },
-                sharedRecords.bestMonthYear && { icon: "📅", label: "Mois le plus actif", value: `${MONTH_NAMES[sharedRecords.bestMonthMonth - 1]} ${sharedRecords.bestMonthYear}` },
-                sharedRecords.longestStreakDays > 1 && { icon: "🔥", label: "Plus longue série", value: `${sharedRecords.longestStreakDays} jours` },
-              ]
-                .filter(Boolean)
-                .map((r) => (
-                  <div key={r.label} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
-                    <span style={{ fontSize: "18px" }}>{r.icon}</span>
-                    <span style={{ flex: 1 }}>{r.label}</span>
-                    <strong>{r.value}</strong>
-                  </div>
-                ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {activeTab === "pulse" &&
-        (pulseActivity === null ? (
-          <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
-        ) : pulseActivity.length === 0 ? (
-          <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>Aucune activité visible pour l'instant.</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {pulseActivity.map((e) => (
-              <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
-                <div>
-                  {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType}
-                </div>
-                <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{formatMemberSince(e.createdAt)}</div>
-              </div>
-            ))}
-          </div>
-        ))}
-
-      {activeTab === "media" && <MyPhotosScreen embedded otherUserId={bibro.userId} otherName={bibro.name} />}
-
-      {activeTab === "club" && (
-        <div style={{ textAlign: "center", padding: "30px 0" }}>
-          <NavIcon name="crown" size={28} color={COLORS.paperAlt} />
-          <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "10px" }}>Bientôt disponible</p>
+      {pulseExcerpt === null ? (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
+      ) : pulseExcerpt.length === 0 ? (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+          <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>Aucune activité visible pour l'instant.</p>
         </div>
-      )}
-
-      {activeTab === "history" && (
-        <div style={{ textAlign: "center", padding: "30px 0" }}>
-          <NavIcon name="calendar" size={28} color={COLORS.paperAlt} />
-          <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "10px" }}>Bientôt disponible</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {pulseExcerpt.map((e) => (
+            <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
+              <div>
+                {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType}
+              </div>
+              <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{formatMemberSince(e.createdAt)}</div>
+            </div>
+          ))}
         </div>
       )}
 

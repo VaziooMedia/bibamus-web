@@ -59,7 +59,7 @@ import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
 import { ImportDataScreen } from "./components/ImportDataScreen.jsx";
-import { BibrosListScreen, BibroDetailScreen, AddBibroScreen, AdminUnlockScreen, MutualBibaxScreen } from "./components/BibrosScreens.jsx";
+import { BibrosListScreen, BibroDetailScreen, BibroStatsScreen, BibroPulseScreen, AddBibroScreen, AdminUnlockScreen, MutualBibaxScreen } from "./components/BibrosScreens.jsx";
 import { DeleteAccountScreen } from "./components/DeleteAccountScreen.jsx";
 import {
   loadMyTastedDrinkIds,
@@ -2739,7 +2739,28 @@ export default function App() {
                   setMutualBibaxData({ list, name });
                   setScreen("mutualBibax");
                 }}
+                goToBibroStats={() => setScreen("bibroStats")}
+                goToBibroMedia={() => {
+                  const bibro = bibros.find((b) => b.code === viewedBibroId);
+                  setViewedBibaxPhotos({ userId: bibro?.userId, name: bibro?.name });
+                  setScreen("bibaxPhotos");
+                }}
+                goToBibroClub={() => setScreen("bibroClub")}
+                goToBibroHistory={() => setScreen("bibroHistory")}
+                goToBibroPulse={() => setScreen("bibroPulse")}
               />
+            )}
+            {screen === "bibroStats" && (
+              <BibroStatsScreen bibro={bibros.find((b) => b.code === viewedBibroId)} onBack={() => setScreen("bibroDetail")} />
+            )}
+            {screen === "bibroPulse" && (
+              <BibroPulseScreen bibro={bibros.find((b) => b.code === viewedBibroId)} onBack={() => setScreen("bibroDetail")} />
+            )}
+            {screen === "bibroClub" && (
+              <SettingsComingSoonScreen title="BibaClub" onBack={() => setScreen("bibroDetail")} />
+            )}
+            {screen === "bibroHistory" && (
+              <SettingsComingSoonScreen title="Historique" onBack={() => setScreen("bibroDetail")} />
             )}
             {screen === "mutualBibax" && (
               <MutualBibaxScreen
@@ -2853,7 +2874,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "bibroStats", "bibroPulse", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
