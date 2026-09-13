@@ -210,12 +210,18 @@ export function MyProductsHubScreen({ ratedCount, toTryCount, onBack, goToRated,
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>MES PRODUITS</span>
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", margin: "4px 0 18px 0", lineHeight: 1 }}>Bières, vins & spiritueux</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
+        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "46px", height: "46px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+          <NavIcon name="bottle" size={22} color={COLORS.amber} />
+        </span>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Mes Produits</h1>
+      </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <ActionCard icon="⭐" title="Mes produits notés" subtitle={`${ratedCount} produit${ratedCount > 1 ? "s" : ""} — visible par tes Bibax`} onClick={goToRated} />
-        <ActionCard icon="🎯" title="Mes produits à goûter" subtitle={`${toTryCount} produit${toTryCount > 1 ? "s" : ""} mis de côté`} onClick={goToToTry} />
+        <ActionCard icon="⭐" title="Mes bières déjà notées" subtitle={`${ratedCount} produit${ratedCount > 1 ? "s" : ""} — visible par tes Bibax`} onClick={goToRated} />
+        <ActionCard icon="🎯" title="Mes bières à goûter" subtitle={`${toTryCount} produit${toTryCount > 1 ? "s" : ""} mis de côté`} onClick={goToToTry} />
+        <ActionCard icon="⭐" title="Mes vins déjà notés" subtitle="0 produit — visible par tes Bibax" onClick={goToRated} />
+        <ActionCard icon="🎯" title="Mes vins à goûter" subtitle="0 produit mis de côté" onClick={goToToTry} />
       </div>
       <PageFooterNav onBack={onBack} />
     </div>

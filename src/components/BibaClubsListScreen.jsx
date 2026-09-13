@@ -52,7 +52,7 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub
           <NavIcon name="crown" size={22} color={COLORS.amber} />
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>
-          <span style={{ color: COLORS.ink }}>Mes</span> <span style={{ color: COLORS.amber }}>BibaClub</span>
+          <span style={{ color: COLORS.ink }}>Mes</span> <span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Club</span>
         </h1>
       </div>
 
@@ -64,7 +64,6 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Chargement...</p>
       ) : myClubs.length > 0 ? (
         <div style={{ marginBottom: "24px" }}>
-          <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "4px", display: "block" }}>Mes clubs</label>
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
             {myClubs.map((c, i) => (
               <div key={c.id} style={{ borderBottom: i === myClubs.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}` }}>
