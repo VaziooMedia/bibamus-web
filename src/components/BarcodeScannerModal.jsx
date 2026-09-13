@@ -37,7 +37,24 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         // et Chrome récents, sans dépendre d'une bibliothèque externe. Repli sur ZXing
         // uniquement si cette API native n'existe pas sur l'appareil.
         if ("BarcodeDetector" in window) {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+          // Un premier flux générique (facingMode) sert uniquement à obtenir la permission —
+          // sans elle, les labels de caméra restent vides et enumerateDevices ne peut pas
+          // distinguer les objectifs. iOS choisit parfois l'ultra grand-angle par défaut pour
+          // "caméra arrière", qui fait une mise au point bien plus mauvaise de près qu'un
+          // objectif standard — d'où le flou constaté à faible distance.
+          let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const backCameras = devices.filter((d) => d.kind === "videoinput" && /back|arrière|rear|environment/i.test(d.label));
+            const nonUltraWide = backCameras.find((d) => !/ultra|wide angle|grand.?angle|0\.5/i.test(d.label));
+            if (nonUltraWide && backCameras.length > 1) {
+              stream.getTracks().forEach((t) => t.stop());
+              stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: nonUltraWide.deviceId } } });
+            }
+          } catch (e) {
+            // Sélection d'un objectif précis non disponible sur cet appareil — le flux
+            // générique déjà obtenu reste utilisable tel quel.
+          }
           if (cancelled) {
             stream.getTracks().forEach((t) => t.stop());
             return;
