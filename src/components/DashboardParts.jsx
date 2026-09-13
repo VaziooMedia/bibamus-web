@@ -535,11 +535,15 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayTabAmount }
 
   // Le composant reste monté tout au long de la session — sans ceci, un finalTotal remis à null
   // depuis l'extérieur (nouvelle tournée sur la note après un paiement) ne rafraîchirait jamais
-  // le formulaire, et l'ancien montant resterait affiché indéfiniment.
+  // le formulaire, et l'ancien montant resterait affiché indéfiniment. Ne réagit qu'à cette
+  // remise à zéro précise (pas à toute mise à jour) — sinon, notre propre sauvegarde du montant
+  // qu'on vient de payer réécrirait aussitôt le champ qu'on cherche justement à vider.
   useEffect(() => {
-    setValue(event.finalTotal != null ? String(event.finalTotal) : "");
-    setTipValue(event.tip ? String(event.tip) : "");
-  }, [event.finalTotal, event.tip]);
+    if (event.finalTotal == null) {
+      setValue("");
+      setTipValue("");
+    }
+  }, [event.finalTotal]);
 
   const pay = () => {
     const parsedTotal = parseFloat(value);
