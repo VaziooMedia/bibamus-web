@@ -969,7 +969,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
                     >
                       <span style={{ fontSize: "13px", fontWeight: 600 }}>
                         {drink.name}
-                        {drink.volumeCl && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {drink.volumeCl}cl</span>}
+                        {drink.volumeCl && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {drink.volumeCl}cl.</span>}
                       </span>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         <button
