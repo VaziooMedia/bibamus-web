@@ -1812,7 +1812,7 @@ export async function loadDrinksDirectory() {
 export async function searchDrinks(query, limit = 30) {
   const q = (query || "").trim();
   if (!q) return [];
-  const { data, error } = await supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES).ilike("name", `%${q}%`).order("name").limit(limit);
+  const { data, error } = await supabase.rpc("search_drinks", { p_query: q, p_limit: limit });
   if (error) {
     console.error("searchDrinks:", error);
     return [];
