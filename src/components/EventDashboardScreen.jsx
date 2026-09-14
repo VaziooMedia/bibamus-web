@@ -1326,7 +1326,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
           {event.currency !== "jeton" && (
             <>
-              {event.finalTotal == null && event.rounds.length > 0 && (
+              {event.finalTotal == null && event.rounds.length > 0 && (isAddition ? additionPending + additionPaid + additionTips > 0 : sessionRoundsTotal > 0) && (
                 <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>
                   {!isCagnotte && !isAddition && (
                     <>
