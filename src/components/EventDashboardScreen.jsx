@@ -33,6 +33,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
   const [showRoundsList, setShowRoundsList] = usePersistedToggle(event.id, "tournees", false);
   const [showMyStats, setShowMyStats] = usePersistedToggle(event.id, "mesStats", true);
   const [showSessionStats, setShowSessionStats] = usePersistedToggle(event.id, "statsGenerales", true);
+  const [showMyJetons, setShowMyJetons] = usePersistedToggle(event.id, "mesJetons", false);
   const [roomStories, setRoomStories] = useState([]);
   useEffect(() => {
     if (!event.salonCode) return;
@@ -934,6 +935,127 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
       {isCagnotte && <PotCard event={event} updateEvent={updateEvent} myName={myName} />}
 
+      {event.currency === "jeton" && (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px", textAlign: "center", position: "relative" }}>
+          <button
+            onClick={() => setShowMyJetons((s) => !s)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+              <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons</span>
+            </span>
+            <span style={{ display: "inline-flex", transform: `rotate(${showMyJetons ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+              <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+            </span>
+          </button>
+
+          {showMyJetons && (
+          <>
+          {event.jetonUnitValue > 0 && (
+            <div style={{ position: "absolute", bottom: "10px", right: "14px", fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>
+              {formatEuroTrim(event.jetonUnitValue)} / jeton
+            </div>
+          )}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap", marginTop: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "11px", fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>
+              {ticketsPurchased}
+              <TokenCyanIcon size={30} />
+            </div>
+            {event.jetonUnitValue > 0 && purchasedTicketsCount > 0 && (
+              <>
+                <span style={{ fontSize: "18px", color: COLORS.paperAlt }}>|</span>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+                  <span style={{ fontSize: "36px", fontWeight: 800, color: "#ef007c" }}>
+                    {formatEuroTrim(purchasedTicketsCount * event.jetonUnitValue).replace(" €", "")}
+                    <span style={{ fontSize: "20px", color: COLORS.ink }}> €</span>
+                  </span>
+                  <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>dépensés</span>
+                </div>
+              </>
+            )}
+          </div>
+          {event.jetonUnitValue <= 0 && (
+            <button
+              onClick={onManageMenu}
+              style={{ background: "none", border: "none", color: "#ef007c", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0 }}
+            >
+              Valeur du jeton non définie — la renseigner
+            </button>
+          )}
+
+          <div style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "center", marginTop: "12px", flexWrap: "wrap" }}>
+            <input
+              type="number"
+              min="1"
+              value={purchaseQty}
+              onChange={(e) => setPurchaseQty(e.target.value)}
+              style={{ width: "60px", padding: "9px 6px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", textAlign: "center", fontFamily: "'Urbanist', sans-serif" }}
+            />
+            <button
+              onClick={() => addPurchase(false)}
+              style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: COLORS.paper }}
+            >
+              Acheter
+            </button>
+            <button
+              onClick={() => addPurchase(true)}
+              title="Jetons obtenus sans les payer — reportés, donnés par un autre Bibax, trouvés par terre... peu importe la source"
+              style={{ background: "#00C8FF", border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: "#000" }}
+            >
+              Gratuit
+            </button>
+            <button
+              onClick={addGivenAway}
+              title="Jeton donné à quelqu'un, ou perdu"
+              style={{ background: "#ef007c", border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: "#fff" }}
+            >
+              Donner
+            </button>
+          </div>
+
+          {event.ticketPurchases.length > 0 && (
+            <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "10px", marginBottom: "10px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber, background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "999px", padding: "3px 9px" }}>
+                Achetés : {purchasedTicketsCount}
+              </span>
+              {freeTicketsCount > 0 && (
+                <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.paper, background: COLORS.jetonFluo, borderRadius: "999px", padding: "3px 9px" }}>
+                  Gratuits : {freeTicketsCount}
+                </span>
+              )}
+              {givenTicketsCount > 0 && (
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#000", background: COLORS.redFluo, borderRadius: "999px", padding: "3px 9px" }}>
+                  Donnés : {givenTicketsCount}
+                </span>
+              )}
+            </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-evenly", marginTop: "14px", paddingTop: "14px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <NavIcon name="jeton-token" size={28} color="#39FF14" />
+              </div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.ink, lineHeight: 1.3 }}>{ticketsPurchased - myJetonSpend}</div>
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
+                RESTANT{ticketsPurchased - myJetonSpend > 1 ? "S" : ""}
+              </div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <TokenPinkIcon size={28} />
+              </div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.ink, lineHeight: 1.3 }}>{myJetonSpend}</div>
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
+                DÉPENSÉ{myJetonSpend > 1 ? "S" : ""}
+              </div>
+            </div>
+          </div>
+          </>
+          )}
+        </div>
+      )}
+
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <button
           onClick={() => setShowMyStats((s) => !s)}
@@ -1321,113 +1443,6 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
           )}
         </>
         )}
-        </div>
-      )}
-      {event.currency === "jeton" && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px", textAlign: "center", position: "relative" }}>
-          {event.jetonUnitValue > 0 && (
-            <div style={{ position: "absolute", bottom: "10px", right: "14px", fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>
-              {formatEuroTrim(event.jetonUnitValue)} / jeton
-            </div>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", marginBottom: "2px" }}>
-            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "11px", fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>
-              {ticketsPurchased}
-              <TokenCyanIcon size={30} />
-            </div>
-            {event.jetonUnitValue > 0 && purchasedTicketsCount > 0 && (
-              <>
-                <span style={{ fontSize: "18px", color: COLORS.paperAlt }}>|</span>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-                  <span style={{ fontSize: "36px", fontWeight: 800, color: "#ef007c" }}>
-                    {formatEuroTrim(purchasedTicketsCount * event.jetonUnitValue).replace(" €", "")}
-                    <span style={{ fontSize: "20px", color: COLORS.ink }}> €</span>
-                  </span>
-                  <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>dépensés</span>
-                </div>
-              </>
-            )}
-          </div>
-          {event.jetonUnitValue <= 0 && (
-            <button
-              onClick={onManageMenu}
-              style={{ background: "none", border: "none", color: "#ef007c", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0 }}
-            >
-              Valeur du jeton non définie — la renseigner
-            </button>
-          )}
-
-          <div style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "center", marginTop: "12px", flexWrap: "wrap" }}>
-            <input
-              type="number"
-              min="1"
-              value={purchaseQty}
-              onChange={(e) => setPurchaseQty(e.target.value)}
-              style={{ width: "60px", padding: "9px 6px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", textAlign: "center", fontFamily: "'Urbanist', sans-serif" }}
-            />
-            <button
-              onClick={() => addPurchase(false)}
-              style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: COLORS.paper }}
-            >
-              Acheter
-            </button>
-            <button
-              onClick={() => addPurchase(true)}
-              title="Jetons obtenus sans les payer — reportés, donnés par un autre Bibax, trouvés par terre... peu importe la source"
-              style={{ background: "#00C8FF", border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: "#000" }}
-            >
-              Gratuit
-            </button>
-            <button
-              onClick={addGivenAway}
-              title="Jeton donné à quelqu'un, ou perdu"
-              style={{ background: "#ef007c", border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: "#fff" }}
-            >
-              Donner
-            </button>
-          </div>
-
-          {event.ticketPurchases.length > 0 && (
-            <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "10px", marginBottom: "10px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber, background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "999px", padding: "3px 9px" }}>
-                Achetés : {purchasedTicketsCount}
-              </span>
-              {freeTicketsCount > 0 && (
-                <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.paper, background: COLORS.jetonFluo, borderRadius: "999px", padding: "3px 9px" }}>
-                  Gratuits : {freeTicketsCount}
-                </span>
-              )}
-              {givenTicketsCount > 0 && (
-                <span style={{ fontSize: "11px", fontWeight: 700, color: "#000", background: COLORS.redFluo, borderRadius: "999px", padding: "3px 9px" }}>
-                  Donnés : {givenTicketsCount}
-                </span>
-              )}
-            </div>
-          )}
-          <div style={{ display: "flex", justifyContent: "space-evenly", marginTop: "14px", paddingTop: "14px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <NavIcon name="jeton-token" size={28} color="#39FF14" />
-              </div>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.ink, lineHeight: 1.3 }}>{ticketsPurchased - myJetonSpend}</div>
-              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
-                RESTANT{ticketsPurchased - myJetonSpend > 1 ? "S" : ""}
-              </div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <TokenPinkIcon size={28} />
-              </div>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.ink, lineHeight: 1.3 }}>{myJetonSpend}</div>
-              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
-                DÉPENSÉ{myJetonSpend > 1 ? "S" : ""}
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
