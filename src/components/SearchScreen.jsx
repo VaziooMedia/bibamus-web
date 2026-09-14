@@ -214,7 +214,7 @@ export function SearchScreen({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Établissements, produits, marques, producteurs, Bibax..."
+              placeholder="Lieux, produits, marques, producteurs, Bibax..."
               autoFocus
               style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
             />
@@ -233,7 +233,7 @@ export function SearchScreen({
               <NavIcon name="x" size={15} color={COLORS.inkSoft} />
             </button>
             <button onClick={goToScan} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
-              <NavIcon name="scan-line" size={18} color={COLORS.inkSoft} />
+              <NavIcon name="scan-line" size={18} color={COLORS.amber} />
             </button>
           </div>
         </div>
