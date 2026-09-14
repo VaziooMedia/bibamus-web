@@ -392,7 +392,12 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
     );
   }
 
-  const order = [...participants].sort((a, b) => a.joinedAt - b.joinedAt);
+  // Deux sources de personnes : les vrais comptes Bibax ayant rejoint le salon (participants,
+  // avec un code) et les invités sans compte ajoutés manuellement (knownFriends, de simples
+  // noms) — une tournée achetée par l'un ou l'autre compte de la même façon, donc les deux
+  // doivent apparaître ici, pas seulement les vrais comptes.
+  const guestNames = (event.knownFriends || []).filter((n) => !participants.some((p) => p.name === n));
+  const order = [...[...participants].sort((a, b) => a.joinedAt - b.joinedAt), ...guestNames.map((name) => ({ code: null, name }))];
   const activeOrder = order.filter((p) => !p.paused);
   const rounds = event.rounds || [];
   // Se base sur qui a réellement acheté la dernière tournée, puis suggère la personne suivante
@@ -412,7 +417,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   const roundsBought = (p) => rounds.filter((r) => r.buyerName === p.name).length;
 
   const resolvedName = (p) => {
-    const bibro = (bibros || []).find((b) => b.code === p.code);
+    const bibro = p.code ? (bibros || []).find((b) => b.code === p.code) : null;
     return bibro && bibro.alias ? bibro.alias : p.name;
   };
 
@@ -430,8 +435,11 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   return (
     <>
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+        <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Suggestion pour la prochaine tournée</span>
+      </div>
       <div style={{ background: COLORS.paperAlt, borderRadius: "10px", padding: "12px 14px", marginBottom: "12px", textAlign: "center" }}>
-        <div style={{ fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600 }}>Suggestion pour la prochaine tournée</div>
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.amber }}>
           {currentParticipant ? labelFor(currentParticipant) : "?"}
           {currentParticipant && currentParticipant.code === myBibroCode ? (
@@ -445,7 +453,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
       <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
         {order.map((p, i) => {
           const isMe = p.code === myBibroCode;
-          const isCurrent = currentParticipant && p.code === currentParticipant.code;
+          const isCurrent = currentParticipant && (p.code ? p.code === currentParticipant.code : !currentParticipant.code && p.name === currentParticipant.name);
           return (
             <div
               key={p.code || p.name}
