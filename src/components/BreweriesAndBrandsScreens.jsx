@@ -160,7 +160,7 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
           </h1>
         </div>
         <button onClick={onRefresh} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} title="Actualiser" aria-label="Actualiser">
-          <NavIcon name="refresh" size={18} color={COLORS.redFluo} />
+          <NavIcon name="refresh" size={18} color={COLORS.amber} />
         </button>
       </div>
 
@@ -508,7 +508,7 @@ export function BrandsAdminScreen({ brands, isAdmin, onBack, onOpenBrand, onRena
           </h1>
         </div>
         <button onClick={onRefresh} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} title="Actualiser" aria-label="Actualiser">
-          <NavIcon name="refresh" size={18} color={COLORS.redFluo} />
+          <NavIcon name="refresh" size={18} color={COLORS.amber} />
         </button>
       </div>
 

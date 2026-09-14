@@ -237,7 +237,7 @@ export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrin
           </h1>
         </div>
         <button onClick={() => setRefreshTick((t) => t + 1)} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} title="Actualiser" aria-label="Actualiser">
-          <NavIcon name="refresh" size={18} color={COLORS.redFluo} />
+          <NavIcon name="refresh" size={18} color={COLORS.amber} />
         </button>
       </div>
 

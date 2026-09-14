@@ -9,7 +9,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
-import { formatCompactCount, sameVenueByNameCity, formatAddress } from "../utils.js";
+import { sameVenueByNameCity, formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { loadNearbyVenues, loadVenueCountryCounts, loadVenueCityCounts, loadVenuesDirectoryPage, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 
@@ -179,12 +179,6 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
         {alreadyAdded(v) && <span style={{ fontSize: "14px", color: COLORS.amber }}>★</span>}
-        {(v.likes || []).length > 0 && (
-          <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1px" }}>
-            <NavIcon name="heart" size={14} color={COLORS.redFluo} />
-            <span style={{ fontSize: "10px", color: COLORS.redFluo, fontWeight: 700 }}>{formatCompactCount(v.likes.length)}</span>
-          </span>
-        )}
         {v.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
       </div>
     </button>
@@ -213,7 +207,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, marginTop: "4px" }}>
           <button onClick={() => setRefreshTick((t) => t + 1)} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0 }} title="Actualiser" aria-label="Actualiser">
-            <NavIcon name="refresh" size={18} color={COLORS.redFluo} />
+            <NavIcon name="refresh" size={18} color={COLORS.amber} />
           </button>
         </div>
       </div>
