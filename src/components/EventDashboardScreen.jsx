@@ -1329,7 +1329,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
                   {!isCagnotte && !isAddition && (
                     <>
                       <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                        <span>Sur ma note</span>
+                        <span>Sur la note</span>
                         <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
                           <MoneyAmount value={sessionPending} currency={event.currency} jetonIcon="cyan" />
                         </strong>
