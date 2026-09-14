@@ -1332,7 +1332,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
           )}
           <div style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", marginBottom: "2px" }}>
             <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons acquis</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "11px", fontSize: "36px", fontWeight: 800, color: COLORS.ink }}>
