@@ -53,6 +53,7 @@ export function PotCard({ event, updateEvent, myName }) {
   const [contribName, setContribName] = useState(myName || "");
   const [contribAmount, setContribAmount] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showPot, setShowPot] = usePersistedToggle(event.id, "cagnottePot", false);
 
   const contributions = event.pot?.contributions || [];
   const potTotal = contributions.reduce((sum, c) => sum + c.amount, 0);
@@ -76,11 +77,21 @@ export function PotCard({ event, updateEvent, myName }) {
   };
 
   return (
-    <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-        <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-        <span style={{ fontSize: "13px", fontWeight: 600, opacity: 0.7 }}>Solde de la cagnotte</span>
-      </div>
+    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
+      <button
+        onClick={() => setShowPot((s) => !s)}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: showPot ? "4px" : 0 }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, opacity: 0.7 }}>Solde de la cagnotte</span>
+        </span>
+        <span style={{ display: "inline-flex", transform: `rotate(${showPot ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+          <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+        </span>
+      </button>
+      {showPot && (
+      <>
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: balance < 0 ? "#e08585" : COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
         <MoneyAmount value={balance} currency={unit} jetonIcon="cyan" jetonIconSize={34} />
       </div>
@@ -98,25 +109,6 @@ export function PotCard({ event, updateEvent, myName }) {
       {balance < potTotal * 0.15 && potTotal > 0 && (
         <div style={{ fontSize: "12px", color: balance <= 0 ? "#e08585" : "#ef007c", fontWeight: 700, marginTop: "8px" }}>
           {balance <= 0 ? "⚠️ La cagnotte est à sec — pensez à remettre au pot !" : "Cagnotte presque vide"}
-        </div>
-      )}
-
-      {event.rounds.length > 0 && (
-        <div style={{ display: "flex", justifyContent: "space-evenly", marginTop: "14px", paddingTop: "14px", borderTop: `1px solid ${COLORS.chalkWhite}25` }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.chalkWhite, lineHeight: 1 }}>{event.rounds.length}</div>
-            <div style={{ fontSize: "10.5px", opacity: 0.65, fontWeight: 600, marginTop: "2px", lineHeight: 1.4 }}>
-              TOURNÉE{event.rounds.length > 1 ? "S" : ""}
-              <br />
-              OFFERTE{event.rounds.length > 1 ? "S" : ""}
-            </div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.chalkWhite, lineHeight: 1 }}>{attendeesCount}</div>
-            <div style={{ fontSize: "10.5px", opacity: 0.65, fontWeight: 600, marginTop: "2px", lineHeight: 1.4 }}>
-              BIBAX
-            </div>
-          </div>
         </div>
       )}
 
@@ -158,7 +150,7 @@ export function PotCard({ event, updateEvent, myName }) {
 
       {showAddForm ? (
         <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.chalkWhite}25` }}>
-          <div style={{ fontSize: "12px", opacity: 0.75, marginBottom: "8px" }}>Qui verse ?</div>
+          <div style={{ fontSize: "12px", opacity: 0.75, marginBottom: "8px" }}>Participants à la cagnotte</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
             {[myName, ...(event.knownFriends || [])].filter(Boolean).map((n) => (
               <button
@@ -182,10 +174,10 @@ export function PotCard({ event, updateEvent, myName }) {
           <input
             value={contribAmount}
             onChange={(e) => setContribAmount(e.target.value.replace(",", "."))}
-            placeholder={unit === "jeton" ? "Nombre de jetons" : "Montant en €"}
+            placeholder={unit === "jeton" ? "Nombre de jetons" : "Montant"}
             inputMode="decimal"
             style={{
-              width: "100%",
+              width: "140px",
               padding: "9px 10px",
               borderRadius: "8px",
               border: "none",
@@ -193,7 +185,7 @@ export function PotCard({ event, updateEvent, myName }) {
               outline: "none",
               marginBottom: "10px",
               boxSizing: "border-box",
-              background: COLORS.surface,
+              background: COLORS.surfaceAlt,
               color: COLORS.ink,
             }}
           />
@@ -216,10 +208,12 @@ export function PotCard({ event, updateEvent, myName }) {
       ) : (
         <button
           onClick={() => setShowAddForm(true)}
-          style={{ marginTop: "12px", width: "100%", padding: "10px", borderRadius: "9px", border: `2px dashed ${COLORS.chalkWhite}50`, background: "none", color: COLORS.chalkWhite, fontWeight: 700, fontSize: "13.5px", cursor: "pointer" }}
+          style={{ marginTop: "12px", width: "100%", padding: "10px", borderRadius: "9px", border: `2px solid ${COLORS.chalkWhite}50`, background: "none", color: COLORS.amber, fontWeight: 700, fontSize: "13.5px", cursor: "pointer" }}
         >
           + Remettre dans la cagnotte
         </button>
+      )}
+      </>
       )}
     </div>
   );
@@ -243,7 +237,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   const [mode, setMode] = useState(null); // null | 'join'
   const [codeInput, setCodeInput] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
-  const [showSuggestion, setShowSuggestion] = usePersistedToggle(event.id, "suggestionTournee", true);
+  const [showSuggestion, setShowSuggestion] = usePersistedToggle(event.id, "suggestionTournee", false);
 
   const salonCode = event.salonCode;
   const participants = event.participants || [];
