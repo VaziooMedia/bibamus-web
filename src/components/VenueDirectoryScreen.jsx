@@ -291,7 +291,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
                   <span style={{ width: "36px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <NavIcon name="map-pin" size={24} color={COLORS.amber} />
                   </span>
-                  {geoStatus === "loading" || loadingNearby ? "Recherche..." : "Lieux près de moi"}
+                  {geoStatus === "loading" || loadingNearby ? "Recherche..." : "Lieux proche de moi"}
                 </span>
                 {geoStatus !== "loading" && !loadingNearby && (
                   <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -313,7 +313,10 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
           ) : (
             <>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-                <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>📍 Près de vous</span>
+                <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>
+                  <NavIcon name="map-pin" size={15} color={COLORS.amber} />
+                  Lieux proches de toi
+                </span>
                 <button onClick={() => setNearbyVenues(null)} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12px", textDecoration: "underline", cursor: "pointer" }}>
                   Masquer
                 </button>
