@@ -1834,6 +1834,26 @@ export async function loadDrinksByIds(ids) {
   return data.map(rowToDrink);
 }
 
+// Scan depuis BibAtlas — contrairement au scan standard qui va directement à la fiche produit,
+// celui-ci ramène aussi la marque et le(s) producteur(s) liés, pour laisser la personne choisir
+// quelle fiche consulter. Retourne un tableau { kind: 'drink'|'brand'|'producer', id, name },
+// toujours avec le produit en premier.
+export async function loadDrinkLinkedEntities(drinkId) {
+  const { data, error } = await supabase.rpc("get_drink_linked_entities", { p_drink_id: drinkId });
+  if (error) {
+    console.error("loadDrinkLinkedEntities:", error);
+    return [];
+  }
+  const row = data?.[0];
+  if (!row) return [];
+  const results = [{ kind: "drink", id: row.drink_id, name: row.drink_name }];
+  if (row.brand_id) results.push({ kind: "brand", id: row.brand_id, name: row.brand_name });
+  (row.producers || []).forEach((p) => {
+    results.push({ kind: "producer", id: p.id, name: p.name });
+  });
+  return results;
+}
+
 // Produits génériques (ex. "1 bière au choix") — sous-ensemble volontairement non paginé : par
 // nature il n'y en a jamais qu'une poignée, quelle que soit la taille du répertoire complet.
 export async function loadGenericDrinks() {

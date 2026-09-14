@@ -232,6 +232,7 @@ export function SearchScreen({
             >
               <NavIcon name="x" size={15} color={COLORS.inkSoft} />
             </button>
+            <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />
             <button onClick={goToScan} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
               <NavIcon name="scan-line" size={18} color={COLORS.amber} />
             </button>

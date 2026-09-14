@@ -113,7 +113,7 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibA
   );
 }
 
-export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToManageBreweries, goToManageBrands, goToScanBarcode }) {
+export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToManageBreweries, goToManageBrands, goToSearch, goToScanLinked }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -138,13 +138,36 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
         </h1>
       </div>
 
+      <button
+        onClick={goToSearch}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "13px 14px",
+          borderRadius: "10px",
+          border: `2px solid ${COLORS.paperAlt}`,
+          background: "none",
+          cursor: "pointer",
+          marginBottom: "18px",
+          textAlign: "left",
+        }}
+      >
+        <NavIcon name="search" size={17} color={COLORS.inkSoft} />
+        <span style={{ flex: 1, minWidth: 0, color: COLORS.inkSoft, fontSize: "14px" }}>Lieux, produits, marques, producteurs...</span>
+        <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            goToScanLinked();
+          }}
+          style={{ display: "flex", flexShrink: 0 }}
+        >
+          <NavIcon name="scan-line" size={18} color={COLORS.amber} />
+        </span>
+      </button>
+
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <ActionCard
-          icon={<NavIcon name="camera" size={18} color={COLORS.amber} />}
-          title="Scanner un code-barres"
-          subtitle="Retrouve un produit directement depuis sa bouteille ou sa canette"
-          onClick={goToScanBarcode}
-        />
         <ActionCard
           icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
           title="Établissements & lieux"

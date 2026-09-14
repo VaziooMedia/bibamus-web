@@ -11,6 +11,7 @@ import { BottomNav } from "./components/ui.jsx";
 import { ErrorBoundary, installGlobalCrashReporting } from "./components/ErrorBoundary.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
 import { BarcodeScannerModal } from "./components/BarcodeScannerModal.jsx";
+import { LinkedScanResultsModal } from "./components/LinkedScanResultsModal.jsx";
 import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
 import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
@@ -124,6 +125,7 @@ import {
   deleteRoundTip,
   deleteRoundOrders,
   deleteRoundOrdersByEvent,
+  loadDrinkLinkedEntities,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
@@ -960,6 +962,8 @@ export default function App() {
   }, [viewedDrinkId]);
   const [viewedHistoryEventId, setViewedHistoryEventId] = useState(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [scanMode, setScanMode] = useState("direct"); // "direct" | "linked" — "linked" affiche produit+marque+producteur au lieu d'aller directement à la fiche
+  const [linkedScanResults, setLinkedScanResults] = useState(null);
   const [searchInitialTab, setSearchInitialTab] = useState("lieux");
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [focusPulseEntry, setFocusPulseEntry] = useState(null);
@@ -1667,7 +1671,11 @@ export default function App() {
                 }}
                 goToManageBreweries={() => setScreen("breweries")}
                 goToManageBrands={() => setScreen("brands")}
-                goToScanBarcode={() => setShowBarcodeScanner(true)}
+                goToSearch={() => setScreen("search")}
+                goToScanLinked={() => {
+                  setScanMode("linked");
+                  setShowBarcodeScanner(true);
+                }}
               />
             )}
             {screen === "newSalonEvent" && (
@@ -1803,6 +1811,7 @@ export default function App() {
                   setScreen("drinkDetail");
                 }}
                 goToSubmit={() => setScreen("submitDrink")}
+                goToScanBarcode={() => setShowBarcodeScanner(true)}
                 initialCategory={initialDrinksCategory}
                 initialTagFilter={initialDrinksTagFilter}
                 onSeedConsumed={() => {
@@ -2891,11 +2900,39 @@ export default function App() {
       {showBarcodeScanner && (
         <BarcodeScannerModal
           myBibroCode={profile.myBibroCode}
-          onClose={() => setShowBarcodeScanner(false)}
-          onFoundDrink={(drinkId) => {
+          onClose={() => {
             setShowBarcodeScanner(false);
-            setViewedDrinkId(drinkId);
-            setScreen("drinkDetail");
+            setScanMode("direct");
+          }}
+          onFoundDrink={async (drinkId) => {
+            setShowBarcodeScanner(false);
+            if (scanMode === "linked") {
+              setScanMode("direct");
+              const linked = await loadDrinkLinkedEntities(drinkId);
+              setLinkedScanResults(linked);
+            } else {
+              setViewedDrinkId(drinkId);
+              setScreen("drinkDetail");
+            }
+          }}
+        />
+      )}
+      {linkedScanResults && (
+        <LinkedScanResultsModal
+          results={linkedScanResults}
+          onClose={() => setLinkedScanResults(null)}
+          onSelect={(kind, id) => {
+            setLinkedScanResults(null);
+            if (kind === "drink") {
+              setViewedDrinkId(id);
+              setScreen("drinkDetail");
+            } else if (kind === "brand") {
+              setViewedBrandId(id);
+              setScreen("brandDetail");
+            } else if (kind === "producer") {
+              setViewedBreweryId(id);
+              setScreen("breweryDetail");
+            }
           }}
         />
       )}

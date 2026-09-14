@@ -17,7 +17,7 @@ import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage
 const PAGE_SIZE = 40;
 const LETTER_THRESHOLD = 20;
 
-export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrink, goToSubmit, initialCategory, initialTagFilter, onSeedConsumed }) {
+export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrink, goToSubmit, goToScanBarcode, initialCategory, initialTagFilter, onSeedConsumed }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState(initialCategory || null);
@@ -267,12 +267,29 @@ export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrin
 
       {activeCategory && !searching && <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>{addButton}</div>}
 
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={activeCategory ? `Rechercher dans ${drinkTypeLabel(activeCategory)}` : "Rechercher dans toutes les catégories"}
-        style={{ padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "15px", outline: "none", marginBottom: "16px" }}
-      />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "13px 14px",
+          borderRadius: "10px",
+          border: `2px solid ${COLORS.paperAlt}`,
+          marginBottom: "16px",
+        }}
+      >
+        <NavIcon name="search" size={17} color={COLORS.inkSoft} />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={activeCategory ? `Rechercher dans ${drinkTypeLabel(activeCategory)}` : "Rechercher dans toutes les catégories"}
+          style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "15px", outline: "none" }}
+        />
+        <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />
+        <button onClick={goToScanBarcode} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
+          <NavIcon name="scan-line" size={18} color={COLORS.amber} />
+        </button>
+      </div>
 
       {searching ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
