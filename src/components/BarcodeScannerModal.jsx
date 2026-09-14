@@ -126,10 +126,24 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             const sx = (vw - sw) / 2;
             const sy = (vh - sh) / 2;
             const canvas = cropCanvasRef.current;
-            canvas.width = sw * 2;
-            canvas.height = sh * 2;
             const ctx = canvas.getContext("2d");
-            ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            if (isVertical) {
+              // Changer seulement la forme du cadrage ne suffit pas : un code-barres tourné à
+              // 90° sur l'emballage a ses barres devenues horizontales dans l'image, alors que
+              // le décodeur s'attend toujours à des barres verticales, quelle que soit la forme
+              // de la zone qu'on lui donne. Il faut vraiment pivoter les pixels eux-mêmes.
+              canvas.width = sh * 2;
+              canvas.height = sw * 2;
+              ctx.save();
+              ctx.translate(canvas.width / 2, canvas.height / 2);
+              ctx.rotate(Math.PI / 2);
+              ctx.drawImage(video, sx, sy, sw, sh, -sw, -sh, sw * 2, sh * 2);
+              ctx.restore();
+            } else {
+              canvas.width = sw * 2;
+              canvas.height = sh * 2;
+              ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            }
             const result = await reader.decodeFromCanvas(canvas);
             if (result) {
               const code = result.getText();
