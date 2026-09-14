@@ -1167,7 +1167,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
       </div>
 
-      {isCagnotte && event.rounds.length > 0 && (
+      {isCagnotte && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
           <button
             onClick={() => setShowSessionStats((s) => !s)}
