@@ -547,6 +547,12 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M20 5.5V11H14.5" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       );
+    case "flash":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" fill={color === "none" ? "none" : color} fillOpacity="0.15" />
+        </svg>
+      );
     case "sliders":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

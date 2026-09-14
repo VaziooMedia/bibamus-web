@@ -11,12 +11,15 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
   const streamRef = useRef(null);
+  const trackRef = useRef(null);
   const pollRef = useRef(null);
   const cropCanvasRef = useRef(null);
   const orientationRef = useRef("horizontal");
   const [phase, setPhase] = useState("scanning"); // scanning | notFound | associating | error | manualEntry
   const [scannedCode, setScannedCode] = useState(null);
   const [orientation, setOrientation] = useState("horizontal"); // horizontal | vertical — sens du code-barres sur l'emballage
+  const [flashOn, setFlashOn] = useState(false);
+  const [flashSupported, setFlashSupported] = useState(false);
   const [manualCode, setManualCode] = useState("");
   const [query, setQuery] = useState("");
   const [associating, setAssociating] = useState(false);
@@ -32,6 +35,9 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
     readerRef.current?.reset?.();
     streamRef.current?.getTracks()?.forEach((t) => t.stop());
     streamRef.current = null;
+    trackRef.current = null;
+    setFlashOn(false);
+    setFlashSupported(false);
   };
 
   useEffect(() => {
@@ -84,6 +90,18 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         streamRef.current = stream;
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
+
+        // Capacité "torch" — supportée sur Safari iOS depuis 17.5+ (longtemps absente avant),
+        // et déjà bien établie sur Chrome Android. Un appareil plus ancien ou sans flash
+        // n'expose simplement pas cette capacité — le bouton reste alors masqué.
+        const track = stream.getVideoTracks()[0];
+        trackRef.current = track;
+        setFlashOn(false);
+        try {
+          setFlashSupported(!!track.getCapabilities?.().torch);
+        } catch (e) {
+          setFlashSupported(false);
+        }
 
         pollRef.current = setInterval(async () => {
           if (cancelled || !videoRef.current) return;
@@ -145,6 +163,20 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
     }
   };
 
+  // L'état affiché (flashOn) est géré ici, jamais relu depuis l'appareil après coup — un bug
+  // connu de Safari sur iOS 18 fait que getSettings() renvoie une valeur fausse pour "torch"
+  // juste après l'avoir changée.
+  const toggleFlash = async () => {
+    if (!trackRef.current) return;
+    const next = !flashOn;
+    try {
+      await trackRef.current.applyConstraints({ advanced: [{ torch: next }] });
+      setFlashOn(next);
+    } catch (e) {
+      console.error("toggleFlash:", e);
+    }
+  };
+
   const [filtered, setFiltered] = useState([]);
 
   useEffect(() => {
@@ -181,6 +213,27 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 20px" }}>
           <div style={{ width: "100%", maxWidth: "360px", borderRadius: "16px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, position: "relative" }}>
             <video ref={videoRef} style={{ width: "100%", display: "block", background: "#000" }} muted playsInline />
+            {flashSupported && (
+              <button
+                onClick={toggleFlash}
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "50%",
+                  background: flashOn ? COLORS.amber : "rgba(0,0,0,0.5)",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <NavIcon name="flash" size={18} color={flashOn ? COLORS.paper : COLORS.chalkWhite} />
+              </button>
+            )}
             {/* Zone visée par la détection — mêmes proportions que le rognage réellement analysé,
                 pour que le cadre affiché corresponde à la vraie zone lue. Pivote selon le sens
                 du code-barres sur l'emballage. */}
