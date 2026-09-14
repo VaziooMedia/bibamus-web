@@ -25,7 +25,7 @@ export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "S
   );
 }
 
-export function DrinkBadges({ drink, onTagClick, size = 11, hideCountry = false }) {
+export function getDrinkBadgeItems(drink, { hideCountry = false, size = 11 } = {}) {
   const items = [];
   const isInherentlyNonAlcoholic = NON_ALCOHOLIC_DRINK_TYPES.includes(drink.type);
   if (!hideCountry && NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality) {
@@ -49,8 +49,10 @@ export function DrinkBadges({ drink, onTagClick, size = 11, hideCountry = false 
   if (GLUTEN_BIO_ELIGIBLE_TYPES.includes(drink.type) && drink.bio) {
     items.push({ key: "bio", label: <img src={bioIconUrl} alt="Bio" style={{ width: `${size + 3}px`, height: `${size + 3}px`, display: "block" }} />, icon: true, title: "Bio", filter: { kind: "bio" } });
   }
-  if (items.length === 0) return null;
+  return items;
+}
 
+export function renderDrinkBadgeItem(it, { drink, onTagClick, size = 11 }) {
   const badgeStyle = {
     fontSize: `${size}px`,
     fontWeight: 700,
@@ -61,37 +63,36 @@ export function DrinkBadges({ drink, onTagClick, size = 11, hideCountry = false 
     lineHeight: 1.5,
     whiteSpace: "nowrap",
   };
-
-  return (
-    <>
-      {items.map((it) => {
-        const style = it.icon
-          ? it.key === "country"
-            ? { ...badgeStyle, background: "none", padding: 0, width: "18.5px", height: "18.5px", overflow: "hidden", display: "inline-flex", alignItems: "center", justifyContent: "center" }
-            : { ...badgeStyle, padding: "3px", display: "inline-flex", alignItems: "center", justifyContent: "center" }
-          : it.key === "alcoholic"
-          ? { ...badgeStyle, color: "#fff", background: COLORS.wine }
-          : badgeStyle;
-        return onTagClick ? (
-          <button
-            key={it.key}
-            onClick={(e) => {
-              e.stopPropagation();
-              onTagClick(drink.type, it.filter);
-            }}
-            title={it.title}
-            style={{ ...style, border: "none", cursor: "pointer" }}
-          >
-            {it.label}
-          </button>
-        ) : (
-          <span key={it.key} title={it.title} style={style}>
-            {it.label}
-          </span>
-        );
-      })}
-    </>
+  const style = it.icon
+    ? it.key === "country"
+      ? { ...badgeStyle, background: "none", padding: 0, width: "18.5px", height: "18.5px", overflow: "hidden", display: "inline-flex", alignItems: "center", justifyContent: "center" }
+      : { ...badgeStyle, padding: "3px", display: "inline-flex", alignItems: "center", justifyContent: "center" }
+    : it.key === "alcoholic"
+    ? { ...badgeStyle, color: "#fff", background: COLORS.wine }
+    : badgeStyle;
+  return onTagClick ? (
+    <button
+      key={it.key}
+      onClick={(e) => {
+        e.stopPropagation();
+        onTagClick(drink.type, it.filter);
+      }}
+      title={it.title}
+      style={{ ...style, border: "none", cursor: "pointer" }}
+    >
+      {it.label}
+    </button>
+  ) : (
+    <span key={it.key} title={it.title} style={style}>
+      {it.label}
+    </span>
   );
+}
+
+export function DrinkBadges({ drink, onTagClick, size = 11, hideCountry = false }) {
+  const items = getDrinkBadgeItems(drink, { hideCountry, size });
+  if (items.length === 0) return null;
+  return <>{items.map((it) => renderDrinkBadgeItem(it, { drink, onTagClick, size }))}</>;
 }
 
 export const BobBadge = () => (

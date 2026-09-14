@@ -9,7 +9,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES } from "../constants.js";
 import { NavIcon, CountryFlagImg, VerifiedBadge, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
-import { DrinkBadges } from "./DrinkDisplay.jsx";
+import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { drinkTypeLabel, drinkSummaryParts } from "../utils.js";
 import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage } from "../data/sharedDirectories.js";
 
@@ -183,16 +183,13 @@ export function DrinksDirectoryScreen({
             {d.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-            {React.Children.toArray(
-              d.type === "Bières & Cidres" ? (
-                <>
-                  {d.nationality && <CountryFlagImg country={d.nationality} size={18.5} />}
-                  {d.abv != null && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span>}
-                  <DrinkBadges drink={d} onTagClick={onTagClick} hideCountry />
-                </>
-              ) : (
-                <DrinkBadges drink={d} onTagClick={onTagClick} />
-              )
+            {(d.type === "Bières & Cidres"
+              ? [
+                  d.nationality ? <CountryFlagImg country={d.nationality} size={18.5} /> : null,
+                  d.abv != null ? <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span> : null,
+                  ...getDrinkBadgeItems(d, { hideCountry: true }).map((it) => renderDrinkBadgeItem(it, { drink: d, onTagClick, size: 11 })),
+                ]
+              : getDrinkBadgeItems(d).map((it) => renderDrinkBadgeItem(it, { drink: d, onTagClick, size: 11 }))
             )
               .filter(Boolean)
               .map((part, i) => (
