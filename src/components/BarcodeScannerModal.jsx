@@ -34,82 +34,85 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
 
     (async () => {
       try {
-        // Priorité à l'API native du navigateur (BarcodeDetector) — disponible sur Safari iOS
-        // et Chrome récents, sans dépendre d'une bibliothèque externe. Repli sur ZXing
-        // uniquement si cette API native n'existe pas sur l'appareil.
-        if ("BarcodeDetector" in window) {
-          // Un premier flux générique (facingMode) sert uniquement à obtenir la permission —
-          // sans elle, les labels de caméra restent vides et enumerateDevices ne peut pas
-          // distinguer les objectifs. iOS choisit parfois l'ultra grand-angle par défaut pour
-          // "caméra arrière", qui fait une mise au point bien plus mauvaise de près qu'un
-          // objectif standard — d'où le flou constaté à faible distance.
-          let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+        // ZXing (bibliothèque JS) plutôt que l'API native BarcodeDetector — celle-ci est
+        // expérimentale sur Safari (drapeau développeur, pas activée par défaut) et surtout
+        // confirmée cassée par Apple/WebKit depuis iOS 18 (bug ouvert, non résolu) : l'objet
+        // existe techniquement dans window, mais ne détecte plus rien de fiable. ZXing ne
+        // dépend d'aucune API navigateur expérimentale et fonctionne de façon identique
+        // partout.
+        const { BrowserMultiFormatReader } = await import("@zxing/browser");
+        const { DecodeHintType, BarcodeFormat } = await import("@zxing/library");
+        const hints = new Map();
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+          BarcodeFormat.EAN_13,
+          BarcodeFormat.EAN_8,
+          BarcodeFormat.UPC_A,
+          BarcodeFormat.UPC_E,
+          BarcodeFormat.CODE_128,
+        ]);
+        const reader = new BrowserMultiFormatReader(hints);
+        readerRef.current = reader;
+
+        // Un premier flux générique (facingMode) sert uniquement à obtenir la permission —
+        // sans elle, les labels de caméra restent vides et enumerateDevices ne peut pas
+        // distinguer les objectifs. iOS choisit parfois l'ultra grand-angle par défaut pour
+        // "caméra arrière", qui fait une mise au point bien plus mauvaise de près qu'un
+        // objectif standard — d'où le flou constaté à faible distance.
+        let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const backCameras = devices.filter((d) => d.kind === "videoinput" && /back|arrière|rear|environment/i.test(d.label));
+          const nonUltraWide = backCameras.find((d) => !/ultra|wide angle|grand.?angle|0\.5/i.test(d.label));
+          if (nonUltraWide && backCameras.length > 1) {
+            stream.getTracks().forEach((t) => t.stop());
+            stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: nonUltraWide.deviceId } } });
+          }
+        } catch (e) {
+          // Sélection d'un objectif précis non disponible sur cet appareil — le flux
+          // générique déjà obtenu reste utilisable tel quel.
+        }
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+
+        pollRef.current = setInterval(async () => {
+          if (cancelled || !videoRef.current) return;
           try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const backCameras = devices.filter((d) => d.kind === "videoinput" && /back|arrière|rear|environment/i.test(d.label));
-            const nonUltraWide = backCameras.find((d) => !/ultra|wide angle|grand.?angle|0\.5/i.test(d.label));
-            if (nonUltraWide && backCameras.length > 1) {
-              stream.getTracks().forEach((t) => t.stop());
-              stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: nonUltraWide.deviceId } } });
+            const video = videoRef.current;
+            const vw = video.videoWidth;
+            const vh = video.videoHeight;
+            if (!vw || !vh) return;
+            // Zone de lecture réduite au centre (là où le cadre affiché à l'écran pointe),
+            // agrandie x2 avant analyse — un code-barres photographié loin n'occupe qu'une
+            // petite portion de l'image entière, avec trop peu de pixels réels pour que le
+            // décodeur distingue ses barres fines. Rogner puis agrandir ne donne pas plus de
+            // détail qui n'existait pas, mais présente le même détail réel à une résolution
+            // relative bien plus grande, ce qui aide concrètement le décodeur.
+            const cropWidthRatio = 0.75;
+            const cropHeightRatio = 0.28;
+            const sw = vw * cropWidthRatio;
+            const sh = vh * cropHeightRatio;
+            const sx = (vw - sw) / 2;
+            const sy = (vh - sh) / 2;
+            const canvas = cropCanvasRef.current;
+            canvas.width = sw * 2;
+            canvas.height = sh * 2;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            const result = await reader.decodeFromCanvas(canvas);
+            if (result) {
+              const code = result.getText();
+              setScannedCode(code);
+              handleScan(code);
             }
           } catch (e) {
-            // Sélection d'un objectif précis non disponible sur cet appareil — le flux
-            // générique déjà obtenu reste utilisable tel quel.
+            // une frame sans code lisible n'est pas une erreur — on continue simplement
           }
-          if (cancelled) {
-            stream.getTracks().forEach((t) => t.stop());
-            return;
-          }
-          streamRef.current = stream;
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-
-          const detector = new window.BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"] });
-          pollRef.current = setInterval(async () => {
-            if (cancelled || !videoRef.current) return;
-            try {
-              const video = videoRef.current;
-              const vw = video.videoWidth;
-              const vh = video.videoHeight;
-              if (!vw || !vh) return;
-              // Zone de lecture réduite au centre (là où le cadre affiché à l'écran pointe),
-              // agrandie x2 avant analyse — un code-barres photographié loin n'occupe qu'une
-              // petite portion de l'image entière, avec trop peu de pixels réels pour que le
-              // décodeur distingue ses barres fines. Rogner puis agrandir ne donne pas plus de
-              // détail qui n'existait pas, mais présente le même détail réel à une résolution
-              // relative bien plus grande, ce qui aide concrètement le décodeur.
-              const cropWidthRatio = 0.75;
-              const cropHeightRatio = 0.28;
-              const sw = vw * cropWidthRatio;
-              const sh = vh * cropHeightRatio;
-              const sx = (vw - sw) / 2;
-              const sy = (vh - sh) / 2;
-              const canvas = cropCanvasRef.current;
-              canvas.width = sw * 2;
-              canvas.height = sh * 2;
-              const ctx = canvas.getContext("2d");
-              ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-              const results = await detector.detect(canvas);
-              if (results.length > 0) {
-                const code = results[0].rawValue;
-                setScannedCode(code);
-                handleScan(code);
-              }
-            } catch (e) {
-              // une image ponctuellement illisible n'est pas une erreur — on continue simplement
-            }
-          }, 400);
-        } else {
-          const { BrowserMultiFormatReader } = await import("@zxing/browser");
-          const reader = new BrowserMultiFormatReader();
-          readerRef.current = reader;
-          await reader.decodeFromConstraints({ video: { facingMode: { ideal: "environment" } } }, videoRef.current, (result) => {
-            if (cancelled || !result) return;
-            const code = result.getText();
-            setScannedCode(code);
-            handleScan(code);
-          });
-        }
+        }, 400);
       } catch (e) {
         console.error("Barcode scanner:", e);
         if (!cancelled) setPhase("error");
