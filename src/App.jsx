@@ -30,6 +30,7 @@ import { RoundComposeScreen } from "./components/RoundComposeScreen.jsx";
 import { RoundTicketScreen } from "./components/RoundTicketScreen.jsx";
 import { NewEventScreen } from "./components/NewEventScreen.jsx";
 import { JoinSalonScreen } from "./components/JoinSalonScreen.jsx";
+import { BibaPlayHubScreen, BibaPlayGameScreen } from "./components/BibaPlayScreens.jsx";
 import { MenuSetupScreen } from "./components/MenuSetupScreen.jsx";
 import { DrinksDirectoryScreen } from "./components/DrinksDirectoryScreen.jsx";
 import { DrinkFormScreen } from "./components/DrinkFormScreen.jsx";
@@ -129,6 +130,7 @@ import {
   loadDrinkLinkedEntities,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
+import { loadBibaPlayGame, createBibaPlayGame, saveBibaPlayGame, subscribeToBibaPlayGame, generateBibaPlayGameCode } from "./data/bibaplayGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
@@ -599,6 +601,8 @@ export default function App() {
   const [activeCity, setActiveCity] = useState(null);
 
   const [activeEventId, setActiveEventId] = useState(null);
+  const [activeBibaPlayGame, setActiveBibaPlayGame] = useState(null);
+  const [screenBeforeBibaPlay, setScreenBeforeBibaPlay] = useState("home");
   const [draftFriends, setDraftFriends] = useState([]);
   const [draftOrders, setDraftOrders] = useState([]);
   const [activeFriendId, setActiveFriendId] = useState(null);
@@ -633,6 +637,17 @@ export default function App() {
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentEvent?.salonCode]);
+
+  // Même principe pour une partie BibaPlay en cours — les autres joueurs (et les autres
+  // participants du salon, si la partie y est liée) voient les changements en direct.
+  React.useEffect(() => {
+    if (!activeBibaPlayGame?.code) return;
+    const unsubscribe = subscribeToBibaPlayGame(activeBibaPlayGame.code, (updatedData) => {
+      setActiveBibaPlayGame((prev) => (prev && prev.code === updatedData.code ? updatedData : prev));
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBibaPlayGame?.code]);
 
   const startNewRound = () => {
     const selfEntry = { id: "self", name: profile.name, isSelf: true, code: profile.myBibroCode };
@@ -817,6 +832,60 @@ export default function App() {
     setEvents((prev) => (prev.some((e) => e.salonCode === code) ? prev : [...prev, withMe]));
     setActiveEventId(withMe.id);
     setScreen("eventDashboard");
+  };
+
+  // Jalon 1 BibaPlay — pas encore de vraie logique de jeu, juste créer/rejoindre/démarrer.
+  // linkedSalonCode est fourni quand la partie est lancée depuis un salon déjà ouvert ; sinon
+  // elle est indépendante (créée depuis la tuile Home) et se rejoint avec son propre code.
+  const createBibaPlayGameFn = async (linkedSalonCode) => {
+    const code = await generateBibaPlayGameCode();
+    const gameData = {
+      code,
+      linkedSalonCode: linkedSalonCode || null,
+      hostBibroCode: profile.myBibroCode,
+      status: "waiting",
+      participants: [{ code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }],
+      createdAt: Date.now(),
+    };
+    await createBibaPlayGame(code, gameData, linkedSalonCode);
+    setActiveBibaPlayGame(gameData);
+    setScreenBeforeBibaPlay(screen);
+    setScreen("bibaPlayGame");
+    return code;
+  };
+
+  const joinBibaPlayGameFn = async (code) => {
+    const gameData = await loadBibaPlayGame(code);
+    if (!gameData) throw new Error("Partie introuvable — vérifie le code.");
+    const participants = gameData.participants || [];
+    const alreadyIn = participants.some((p) => p.code === profile.myBibroCode);
+    const withMe = alreadyIn
+      ? gameData
+      : { ...gameData, participants: [...participants, { code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }] };
+    if (!alreadyIn) await saveBibaPlayGame(code, withMe);
+    setActiveBibaPlayGame(withMe);
+    setScreenBeforeBibaPlay(screen);
+    setScreen("bibaPlayGame");
+  };
+
+  const startBibaPlayGameFn = async () => {
+    if (!activeBibaPlayGame) return;
+    const updated = { ...activeBibaPlayGame, status: "active", startedAt: Date.now() };
+    await saveBibaPlayGame(activeBibaPlayGame.code, updated);
+    setActiveBibaPlayGame(updated);
+  };
+
+  // Depuis un salon déjà ouvert : rejoint la partie déjà en cours si quelqu'un d'autre l'a
+  // lancée, sinon en crée une nouvelle liée à ce salon (les autres participants la verront
+  // apparaître automatiquement, sans code à taper).
+  const goToBibaPlayFromSalonFn = async () => {
+    if (!currentEvent) return;
+    if (currentEvent.activeBibaPlayCode) {
+      await joinBibaPlayGameFn(currentEvent.activeBibaPlayCode);
+      return;
+    }
+    const code = await createBibaPlayGameFn(currentEvent.salonCode);
+    updateEvent(currentEvent.id, (e) => ({ ...e, activeBibaPlayCode: code }));
   };
 
   // Met à jour un événement localement, et — si c'est un salon partagé — répercute aussi le
@@ -1766,6 +1835,7 @@ export default function App() {
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
                 onDeactivateBibaBob={(code) => deactivateBibaBob(activeEventId, code)}
                 onGoToBibaMusic={() => setScreen("bibaMusic")}
+                onGoToBibaPlay={goToBibaPlayFromSalonFn}
                 onAddStory={(contextType, contextId) => {
                   setStoryCreateContext({ contextType, contextId, returnScreen: "eventDashboard" });
                   setScreen("storyCreate");
@@ -2823,12 +2893,30 @@ export default function App() {
                 onCancel={() => setScreen("myInfo")}
               />
             )}
-            {["games", "bibaMeet"].includes(screen) && (
+            {screen === "bibaMeet" && (
               <ComingSoonScreen
                 onBack={() => setScreen("home")}
                 title={screen}
                 icon="bibamusic"
                 description="Cette fonctionnalité arrive dans un prochain bloc de la migration."
+              />
+            )}
+            {screen === "games" && (
+              <BibaPlayHubScreen
+                onBack={() => setScreen("home")}
+                onCreate={() => createBibaPlayGameFn(null)}
+                onJoin={joinBibaPlayGameFn}
+              />
+            )}
+            {screen === "bibaPlayGame" && activeBibaPlayGame && (
+              <BibaPlayGameScreen
+                game={activeBibaPlayGame}
+                myBibroCode={profile.myBibroCode}
+                onBack={() => {
+                  setActiveBibaPlayGame(null);
+                  setScreen(screenBeforeBibaPlay);
+                }}
+                onStart={startBibaPlayGameFn}
               />
             )}
             {screen === "bibaPulse" && (
@@ -2906,7 +2994,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "bibroStats", "bibroPulse", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "bibaPulse", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "bibaPlayGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityPublicProfile", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "bibroStats", "bibroPulse", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
