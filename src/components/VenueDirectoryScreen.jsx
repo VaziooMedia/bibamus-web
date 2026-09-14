@@ -291,7 +291,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
                   <span style={{ width: "36px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <NavIcon name="map-pin" size={24} color={COLORS.amber} />
                   </span>
-                  {geoStatus === "loading" || loadingNearby ? "Recherche..." : "Lieux proche de moi"}
+                  {geoStatus === "loading" || loadingNearby ? "Recherche..." : "Lieux proches de moi"}
                 </span>
                 {geoStatus !== "loading" && !loadingNearby && (
                   <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
