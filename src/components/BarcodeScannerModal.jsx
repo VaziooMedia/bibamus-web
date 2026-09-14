@@ -116,35 +116,43 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             // décodeur distingue ses barres fines. Rogner puis agrandir ne donne pas plus de
             // détail qui n'existait pas, mais présente le même détail réel à une résolution
             // relative bien plus grande, ce qui aide concrètement le décodeur. Les deux ratios
-            // s'inversent en orientation verticale — même zone en surface, tournée à 90°, pour
-            // suivre un code-barres imprimé debout sur l'emballage.
+            // s'inversent en orientation verticale — même zone en surface, pour suivre un
+            // code-barres imprimé debout sur l'emballage.
             const isVertical = orientationRef.current === "vertical";
-            const cropWidthRatio = isVertical ? 0.28 : 0.75;
-            const cropHeightRatio = isVertical ? 0.75 : 0.28;
+            const cropWidthRatio = isVertical ? 0.32 : 0.75;
+            const cropHeightRatio = isVertical ? 0.85 : 0.28;
             const sw = vw * cropWidthRatio;
             const sh = vh * cropHeightRatio;
             const sx = (vw - sw) / 2;
             const sy = (vh - sh) / 2;
             const canvas = cropCanvasRef.current;
             const ctx = canvas.getContext("2d");
-            if (isVertical) {
-              // Changer seulement la forme du cadrage ne suffit pas : un code-barres tourné à
-              // 90° sur l'emballage a ses barres devenues horizontales dans l'image, alors que
-              // le décodeur s'attend toujours à des barres verticales, quelle que soit la forme
-              // de la zone qu'on lui donne. Il faut vraiment pivoter les pixels eux-mêmes.
-              canvas.width = sh * 2;
-              canvas.height = sw * 2;
-              ctx.save();
-              ctx.translate(canvas.width / 2, canvas.height / 2);
-              ctx.rotate(Math.PI / 2);
-              ctx.drawImage(video, sx, sy, sw, sh, -sw, -sh, sw * 2, sh * 2);
-              ctx.restore();
-            } else {
-              canvas.width = sw * 2;
-              canvas.height = sh * 2;
-              ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            canvas.width = sw * 2;
+            canvas.height = sh * 2;
+            ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+            // Le flux caméra brut d'un mobile ne rapporte pas toujours ses pixels dans le même
+            // sens que l'aperçu affiché à l'écran — cela varie selon l'appareil. Plutôt que de
+            // parier sur un sens de rotation précis, on essaie systématiquement les deux : le
+            // cadrage tel quel, puis pivoté à 90°. Peu importe lequel correspond réellement au
+            // sens du code sur l'emballage, l'un des deux le lira.
+            let result = null;
+            try {
+              result = await reader.decodeFromCanvas(canvas);
+            } catch (e) {
+              const rotated = document.createElement("canvas");
+              rotated.width = canvas.height;
+              rotated.height = canvas.width;
+              const rctx = rotated.getContext("2d");
+              rctx.translate(rotated.width / 2, rotated.height / 2);
+              rctx.rotate(Math.PI / 2);
+              rctx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+              try {
+                result = await reader.decodeFromCanvas(rotated);
+              } catch (e2) {
+                // toujours rien de lisible dans cette image, dans aucun des deux sens
+              }
             }
-            const result = await reader.decodeFromCanvas(canvas);
             if (result) {
               const code = result.getText();
               setScannedCode(code);
@@ -274,7 +282,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             <div
               style={
                 orientation === "vertical"
-                  ? { position: "absolute", top: "12.5%", left: "36%", width: "28%", height: "75%", border: `4px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
+                  ? { position: "absolute", top: "7.5%", left: "34%", width: "32%", height: "85%", border: `4px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
                   : { position: "absolute", top: "36%", left: "12.5%", width: "75%", height: "28%", border: `4px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
               }
             />
