@@ -718,6 +718,7 @@ export function SplitBillCard({ event, updateEvent }) {
   const [editingAmountName, setEditingAmountName] = useState(null);
   const [editingAmountValue, setEditingAmountValue] = useState("");
   const [splitMethod, setSplitMethod] = useState(null); // null | "equal" | "proportional"
+  const [showSplitBill, setShowSplitBill] = usePersistedToggle(event.id, "additionPartagee", false);
 
   // Seules les tournées pas encore validées comptent ici — une fois "Valider l'addition"
   // cliqué, elles passent en vert et ne doivent plus alourdir ce qui reste à répartir. Idem
@@ -863,16 +864,26 @@ export function SplitBillCard({ event, updateEvent }) {
 
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "14px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <button
+        onClick={() => setShowSplitBill((s) => !s)}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: showSplitBill ? "14px" : 0 }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
           <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Addition partagée</span>
-        </div>
-        <strong style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber }}>
-          <MoneyAmount value={totalWithTip} currency="euro" />
-        </strong>
-      </div>
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <strong style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber }}>
+            <MoneyAmount value={totalWithTip} currency="euro" />
+          </strong>
+          <span style={{ display: "inline-flex", transform: `rotate(${showSplitBill ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+          </span>
+        </span>
+      </button>
 
+      {showSplitBill && (
+      <>
       {participants.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
           {participants.map((p) => (
@@ -1059,6 +1070,8 @@ export function SplitBillCard({ event, updateEvent }) {
             </button>
           )}
         </>
+      )}
+      </>
       )}
     </div>
   );
