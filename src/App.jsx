@@ -1586,7 +1586,6 @@ export default function App() {
                 profile={profile}
                 events={events}
                 updateEvent={updateEvent}
-                eventTotal={() => 0}
                 myUserId={session.user.id}
                 pulseStoriesRefreshKey={pulseStoriesRefreshKey}
                 onAddStory={(contextType, contextId) => {
@@ -1740,7 +1739,6 @@ export default function App() {
               <EventDashboardScreen
                 event={events.find((e) => e.id === activeEventId)}
                 venue={venuesById[events.find((e) => e.id === activeEventId)?.venueId] || null}
-                eventTotal={(currentEvent?.rounds || []).reduce((sum, r) => sum + (r.total || 0), 0) + (currentEvent?.tip || 0) + (currentEvent?.tipsCollected || 0)}
                 onNewRound={startNewRound}
                 onManageMenu={() => setScreen("menuSetup")}
                 onBack={() => setScreen("home")}

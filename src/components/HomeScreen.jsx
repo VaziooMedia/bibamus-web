@@ -55,7 +55,6 @@ const formatTime = (timestamp) => {
 export function HomeScreen({
   profile,
   events,
-  eventTotal,
   openEvent,
   updateEvent,
   goToBibaxAllSuggestions,

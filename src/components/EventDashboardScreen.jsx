@@ -24,7 +24,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink }) {
+export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -259,7 +259,6 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
   const myPending = myRounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
   const myTips = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) + (event.tabTipsByBuyer?.[myName] || 0);
   const myPaid = myRounds.reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
-  const myRoundsTotal = myPending + myPaid + myTips;
   const myContribution = (event.pot?.contributions || []).filter((c) => c.name === myName).reduce((sum, c) => sum + c.amount, 0);
   const myCagnotteTotal = myPending + myPaid + myContribution + myTips;
   const sessionPending = event.rounds.filter((r) => !r.offeredBy && r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
