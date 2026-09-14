@@ -923,6 +923,8 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
         )}
       </div>
 
+      {isAddition && <SplitBillCard event={event} updateEvent={updateEvent} />}
+
       {isCagnotte && <PotCard event={event} updateEvent={updateEvent} myName={myName} />}
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
@@ -1430,13 +1432,9 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
       )}
 
 
-      {event.currency === "euro" && !isOpenBar && (
+      {event.currency === "euro" && !isOpenBar && !isAddition && (
         <div style={{ marginBottom: "0" }}>
-          {isAddition ? (
-            <SplitBillCard event={event} updateEvent={updateEvent} />
-          ) : (
-            (tabTotal >= 0.01 || event.finalTotal != null) && <FinalTotalCard event={event} updateEvent={updateEvent} roundsSum={tabTotal} onPayTabAmount={onPayTabAmount} buyerName={myName} />
-          )}
+          {(tabTotal >= 0.01 || event.finalTotal != null) && <FinalTotalCard event={event} updateEvent={updateEvent} roundsSum={tabTotal} onPayTabAmount={onPayTabAmount} buyerName={myName} />}
         </div>
       )}
 
