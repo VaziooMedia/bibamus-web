@@ -923,6 +923,9 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
           </div>
         )}
 
+      </div>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <button
           onClick={() => setShowPersonalDetail((s) => !s)}
           style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: "10px 0 0 0" }}
@@ -1137,7 +1140,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
               </div>
 
               {!isOpenBar && event.finalTotal == null && event.rounds.length > 0 && (
-                <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px dashed ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>
+                <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>
                   {!isCagnotte && !isAddition && (
                     <>
                       <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
