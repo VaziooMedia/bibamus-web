@@ -307,6 +307,12 @@ export function NavIcon({ name, size = 20, color = "currentColor", filled = fals
           <path d="M12 5v14M5 12h14" />
         </svg>
       );
+    case "minus":
+      return (
+        <svg {...common}>
+          <path d="M5 12h14" />
+        </svg>
+      );
     case "map-pin":
       return (
         <svg {...common}>

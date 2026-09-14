@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { COLORS } from "../constants.js";
@@ -23,6 +23,37 @@ const DEFAULT_CENTER = [50.5039, 4.4699];
 // Niveau de zoom volontairement pas trop serré une fois centré sur la position — le but est de
 // voir les lieux alentour, pas seulement la rue où l'on se trouve.
 const MY_LOCATION_ZOOM = 13;
+
+const floatingButtonStyle = {
+  width: "44px",
+  height: "44px",
+  borderRadius: "50%",
+  background: COLORS.surfaceAlt,
+  border: `2px solid ${COLORS.paperAlt}`,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+  padding: 0,
+};
+
+// Remplace le contrôle de zoom par défaut de Leaflet (carré, blanc) par des boutons ronds au
+// style de l'app — nécessite useMap(), donc doit être un composant enfant rendu à l'intérieur
+// du MapContainer plutôt qu'un simple bouton dans le parent.
+function ZoomButtons() {
+  const map = useMap();
+  return (
+    <>
+      <button onClick={() => map.zoomIn()} title="Zoomer" aria-label="Zoomer" style={floatingButtonStyle}>
+        <NavIcon name="plus" size={20} color={COLORS.amber} />
+      </button>
+      <button onClick={() => map.zoomOut()} title="Dézoomer" aria-label="Dézoomer" style={floatingButtonStyle}>
+        <NavIcon name="minus" size={20} color={COLORS.amber} />
+      </button>
+    </>
+  );
+}
 
 export function VenueMapScreen({ onBack, onOpenVenue }) {
   const [pins, setPins] = useState(null);
@@ -65,7 +96,7 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Chargement...</p>
       ) : (
         <div style={{ flex: 1, minHeight: "300px", borderRadius: "16px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, position: "relative" }}>
-          <MapContainer ref={mapRef} center={center} zoom={pins.length > 0 ? 7 : 6} style={{ width: "100%", height: "100%" }}>
+          <MapContainer ref={mapRef} center={center} zoom={pins.length > 0 ? 7 : 6} zoomControl={false} style={{ width: "100%", height: "100%" }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -86,30 +117,18 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
               </Marker>
             ))}
           </MapContainer>
-          <button
-            onClick={centerOnMyLocation}
-            disabled={locating}
-            title="Centrer sur ma position"
-            aria-label="Centrer sur ma position"
-            style={{
-              position: "absolute",
-              bottom: "16px",
-              right: "16px",
-              width: "44px",
-              height: "44px",
-              borderRadius: "50%",
-              background: COLORS.surfaceAlt,
-              border: `2px solid ${COLORS.paperAlt}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: locating ? "default" : "pointer",
-              zIndex: 1000,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
-            }}
-          >
-            <NavIcon name="crosshair" size={20} color={locating ? COLORS.inkSoft : COLORS.amber} />
-          </button>
+          <div style={{ position: "absolute", bottom: "16px", right: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", zIndex: 1000 }}>
+            <ZoomButtons />
+            <button
+              onClick={centerOnMyLocation}
+              disabled={locating}
+              title="Centrer sur ma position"
+              aria-label="Centrer sur ma position"
+              style={{ ...floatingButtonStyle, width: "52px", height: "52px", cursor: locating ? "default" : "pointer" }}
+            >
+              <NavIcon name="crosshair" size={24} color={locating ? COLORS.inkSoft : COLORS.amber} />
+            </button>
+          </div>
         </div>
       )}
     </div>
