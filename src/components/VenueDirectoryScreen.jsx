@@ -307,7 +307,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder={activeCity ? "Rechercher par nom" : activeCountry ? "Rechercher par ville, code postal, nom" : "Rechercher par pays, ville, code postal, nom"}
+        placeholder={activeCity ? "Rechercher par nom" : activeCountry ? "Rechercher par ville, code postal, nom" : "Nom, ville, code postal"}
         style={{ padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "15px", outline: "none", marginBottom: "16px" }}
       />
 
