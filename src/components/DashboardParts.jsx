@@ -872,18 +872,16 @@ export function SplitBillCard({ event, updateEvent }) {
           <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
           <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Addition partagée</span>
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <strong style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber }}>
-            <MoneyAmount value={totalWithTip} currency="euro" />
-          </strong>
-          <span style={{ display: "inline-flex", transform: `rotate(${showSplitBill ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
-            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
-          </span>
+        <span style={{ display: "inline-flex", transform: `rotate(${showSplitBill ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+          <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
         </span>
       </button>
 
       {showSplitBill && (
       <>
+      <strong style={{ display: "block", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, marginBottom: "14px" }}>
+        <MoneyAmount value={totalWithTip} currency="euro" />
+      </strong>
       {participants.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
           {participants.map((p) => (
