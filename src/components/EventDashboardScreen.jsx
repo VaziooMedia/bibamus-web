@@ -169,6 +169,13 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
       if (r.buyerName === myName) return sum + r.total + (r.tip || 0);
       return sum;
     }, 0) + myPotContributions;
+  // Même logique que myJetonSpend, mais tous participants confondus — pour la vraie vue
+  // "Statistiques générales" (session entière), distincte de "Mes jetons" qui reste personnel.
+  const sessionJetonSpend =
+    event.rounds.reduce((sum, r) => {
+      if (r.offeredBy || r.paidByPot) return sum;
+      return sum + r.total + (r.tip || 0);
+    }, 0) + (event.pot?.contributions || []).reduce((sum, c) => sum + c.amount, 0);
 
   const startEditRound = (r) => {
     setEditingRoundId(r.id);
@@ -1171,7 +1178,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
         >
           <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>{event.currency === "jeton" ? "Mes jetons" : "Statistiques générales pour ce BibaRoom"}</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Statistiques générales pour ce BibaRoom</span>
           </span>
           <span style={{ display: "inline-flex", transform: `rotate(${showSessionStats ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
             <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
@@ -1180,45 +1187,21 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
         {showSessionStats && (
         <>
-          {event.currency === "jeton" ? (
-            <>
-              <div style={{ display: "flex", justifyContent: "space-evenly", marginTop: "10px" }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ display: "flex", justifyContent: "center" }}>
-                    <NavIcon name="jeton-token" size={28} color="#39FF14" />
-                  </div>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.chalkWhite, lineHeight: 1.3 }}>{ticketsPurchased - myJetonSpend}</div>
-                  <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
-                    RESTANT{ticketsPurchased - myJetonSpend > 1 ? "S" : ""}
-                  </div>
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ display: "flex", justifyContent: "center" }}>
-                    <TokenPinkIcon size={28} />
-                  </div>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.chalkWhite, lineHeight: 1.3 }}>{myJetonSpend}</div>
-                  <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
-                    DÉPENSÉ{myJetonSpend > 1 ? "S" : ""}
-                  </div>
-                </div>
+          <div style={{ display: "flex", marginTop: "10px" }}>
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal > 1 ? "S" : ""}</div>
+            </div>
+            <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
+                <MoneyAmount value={event.currency === "jeton" ? sessionJetonSpend : sessionRoundsTotal} currency={event.currency} centered jetonIconSize={28} jetonIcon="cyan" />
               </div>
-            </>
-          ) : (
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>{(event.currency === "jeton" ? sessionJetonSpend : sessionRoundsTotal) > 0 ? "DÉPENSÉS" : "DÉPENSÉ"}</div>
+            </div>
+          </div>
+
+          {event.currency !== "jeton" && (
             <>
-
-              <div style={{ display: "flex", marginTop: "10px" }}>
-                <div style={{ flex: 1, textAlign: "center" }}>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
-                  <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal > 1 ? "S" : ""}</div>
-                </div>
-                <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
-                    <MoneyAmount value={sessionRoundsTotal} currency={event.currency} centered jetonIconSize={28} jetonIcon="cyan" />
-                  </div>
-                  <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>{sessionRoundsTotal > 0 ? "DÉPENSÉS" : "DÉPENSÉ"}</div>
-                </div>
-              </div>
-
               {event.finalTotal == null && event.rounds.length > 0 && (
                 <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>
                   {!isCagnotte && !isAddition && (
