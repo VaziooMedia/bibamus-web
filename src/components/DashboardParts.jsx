@@ -879,9 +879,12 @@ export function SplitBillCard({ event, updateEvent }) {
 
       {showSplitBill && (
       <>
-      <strong style={{ display: "block", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, marginBottom: "14px" }}>
-        <MoneyAmount value={totalWithTip} currency="euro" />
-      </strong>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+        <span style={{ flex: 1 }} />
+        <strong style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber }}>
+          <MoneyAmount value={totalWithTip} currency="euro" />
+        </strong>
+      </div>
       {participants.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
           {participants.map((p) => (
