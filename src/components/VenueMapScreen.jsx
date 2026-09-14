@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -20,9 +20,14 @@ const pinIcon = L.divIcon({
 
 // Centre par défaut si aucun lieu n'a encore de coordonnées (Belgique, cœur du réseau actuel).
 const DEFAULT_CENTER = [50.5039, 4.4699];
+// Niveau de zoom volontairement pas trop serré une fois centré sur la position — le but est de
+// voir les lieux alentour, pas seulement la rue où l'on se trouve.
+const MY_LOCATION_ZOOM = 13;
 
 export function VenueMapScreen({ onBack, onOpenVenue }) {
   const [pins, setPins] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const mapRef = useRef(null);
 
   useEffect(() => {
     loadVenueMapPins().then(setPins);
@@ -35,6 +40,19 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
     return [avgLat, avgLng];
   }, [pins]);
 
+  const centerOnMyLocation = () => {
+    if (!navigator.geolocation || locating) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        mapRef.current?.setView([pos.coords.latitude, pos.coords.longitude], MY_LOCATION_ZOOM);
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { timeout: 8000 }
+    );
+  };
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -46,8 +64,8 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
       {pins === null ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Chargement...</p>
       ) : (
-        <div style={{ flex: 1, minHeight: "300px", borderRadius: "16px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}` }}>
-          <MapContainer center={center} zoom={pins.length > 0 ? 7 : 6} style={{ width: "100%", height: "100%" }}>
+        <div style={{ flex: 1, minHeight: "300px", borderRadius: "16px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, position: "relative" }}>
+          <MapContainer ref={mapRef} center={center} zoom={pins.length > 0 ? 7 : 6} style={{ width: "100%", height: "100%" }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -68,6 +86,30 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
               </Marker>
             ))}
           </MapContainer>
+          <button
+            onClick={centerOnMyLocation}
+            disabled={locating}
+            title="Centrer sur ma position"
+            aria-label="Centrer sur ma position"
+            style={{
+              position: "absolute",
+              bottom: "16px",
+              right: "16px",
+              width: "44px",
+              height: "44px",
+              borderRadius: "50%",
+              background: COLORS.surfaceAlt,
+              border: `2px solid ${COLORS.paperAlt}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: locating ? "default" : "pointer",
+              zIndex: 1000,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+            }}
+          >
+            <NavIcon name="crosshair" size={20} color={locating ? COLORS.inkSoft : COLORS.amber} />
+          </button>
         </div>
       )}
     </div>

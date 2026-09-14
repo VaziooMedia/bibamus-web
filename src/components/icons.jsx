@@ -702,6 +702,14 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M10.3 8.5l3.5 3.5-3.5 3.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       );
+    case "crosshair":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="7" stroke={color} strokeWidth="1.8" />
+          <circle cx="12" cy="12" r="1.6" fill={color} />
+          <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+      );
     case "info":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
