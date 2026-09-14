@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { COLORS } from "../constants.js";
@@ -37,23 +37,6 @@ const floatingButtonStyle = {
   boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
   padding: 0,
 };
-
-// Remplace le contrôle de zoom par défaut de Leaflet (carré, blanc) par des boutons ronds au
-// style de l'app — nécessite useMap(), donc doit être un composant enfant rendu à l'intérieur
-// du MapContainer plutôt qu'un simple bouton dans le parent.
-function ZoomButtons() {
-  const map = useMap();
-  return (
-    <>
-      <button onClick={() => map.zoomIn()} title="Zoomer" aria-label="Zoomer" style={floatingButtonStyle}>
-        <NavIcon name="plus" size={20} color={COLORS.amber} />
-      </button>
-      <button onClick={() => map.zoomOut()} title="Dézoomer" aria-label="Dézoomer" style={floatingButtonStyle}>
-        <NavIcon name="minus" size={20} color={COLORS.amber} />
-      </button>
-    </>
-  );
-}
 
 export function VenueMapScreen({ onBack, onOpenVenue }) {
   const [pins, setPins] = useState(null);
@@ -118,7 +101,12 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
             ))}
           </MapContainer>
           <div style={{ position: "absolute", bottom: "16px", right: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", zIndex: 1000 }}>
-            <ZoomButtons />
+            <button onClick={() => mapRef.current?.zoomIn()} title="Zoomer" aria-label="Zoomer" style={floatingButtonStyle}>
+              <NavIcon name="plus" size={20} color={COLORS.amber} />
+            </button>
+            <button onClick={() => mapRef.current?.zoomOut()} title="Dézoomer" aria-label="Dézoomer" style={floatingButtonStyle}>
+              <NavIcon name="minus" size={20} color={COLORS.amber} />
+            </button>
             <button
               onClick={centerOnMyLocation}
               disabled={locating}
