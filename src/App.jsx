@@ -1298,8 +1298,10 @@ export default function App() {
     return removed;
   };
 
-  const [initialDrinksCategory, setInitialDrinksCategory] = useState(null);
-  const [initialDrinksTagFilter, setInitialDrinksTagFilter] = useState(null);
+  const [drinksDirQuery, setDrinksDirQuery] = useState("");
+  const [drinksDirCategory, setDrinksDirCategory] = useState(null);
+  const [drinksDirTagFilter, setDrinksDirTagFilter] = useState(null);
+  const [drinksDirLetter, setDrinksDirLetter] = useState(null);
 
   const suggestBreweryEdit = async (id, name, country) => {
     const b = breweriesDirectory.find((x) => x.id === id);
@@ -1363,8 +1365,10 @@ export default function App() {
   };
 
   const openTagFilter = (type, filter) => {
-    setInitialDrinksCategory(type);
-    setInitialDrinksTagFilter(filter);
+    setDrinksDirCategory(type);
+    setDrinksDirTagFilter(filter);
+    setDrinksDirLetter(null);
+    setDrinksDirQuery("");
     setScreen("drinksDirectory");
   };
 
@@ -1823,17 +1827,20 @@ export default function App() {
                 myBibroCode={profile.myBibroCode}
                 onBack={() => setScreen(screenBeforeDrinksDirectory)}
                 onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("drinksDirectory");
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
                 goToSubmit={() => setScreen("submitDrink")}
                 goToScanBarcode={() => setShowBarcodeScanner(true)}
-                initialCategory={initialDrinksCategory}
-                initialTagFilter={initialDrinksTagFilter}
-                onSeedConsumed={() => {
-                  setInitialDrinksCategory(null);
-                  setInitialDrinksTagFilter(null);
-                }}
+                query={drinksDirQuery}
+                setQuery={setDrinksDirQuery}
+                activeCategory={drinksDirCategory}
+                setActiveCategory={setDrinksDirCategory}
+                activeTagFilter={drinksDirTagFilter}
+                setActiveTagFilter={setDrinksDirTagFilter}
+                activeLetter={drinksDirLetter}
+                setActiveLetter={setDrinksDirLetter}
               />
             )}
             {screen === "editVenue" && viewedVenue && (

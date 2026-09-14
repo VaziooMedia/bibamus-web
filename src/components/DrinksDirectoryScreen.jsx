@@ -17,12 +17,23 @@ import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage
 const PAGE_SIZE = 40;
 const LETTER_THRESHOLD = 20;
 
-export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrink, goToSubmit, goToScanBarcode, initialCategory, initialTagFilter, onSeedConsumed }) {
-  const [query, setQuery] = useState("");
+export function DrinksDirectoryScreen({
+  isAdmin,
+  myBibroCode,
+  onBack,
+  onOpenDrink,
+  goToSubmit,
+  goToScanBarcode,
+  query,
+  setQuery,
+  activeCategory,
+  setActiveCategory,
+  activeTagFilter,
+  setActiveTagFilter,
+  activeLetter,
+  setActiveLetter,
+}) {
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState(initialCategory || null);
-  const [activeTagFilter, setActiveTagFilter] = useState(initialTagFilter || null);
-  const [activeLetter, setActiveLetter] = useState(null);
   const [refreshTick, setRefreshTick] = useState(0);
 
   const [categoryCounts, setCategoryCounts] = useState({});
@@ -36,11 +47,6 @@ export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrin
     const t = setTimeout(() => setDebouncedQuery(query), 150);
     return () => clearTimeout(t);
   }, [query]);
-
-  useEffect(() => {
-    if (initialCategory && onSeedConsumed) onSeedConsumed();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     loadDrinkCategoryCounts().then(setCategoryCounts);
@@ -164,14 +170,17 @@ export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrin
         display: "flex",
         justifyContent: "space-between",
         alignItems: "flex-start",
+        position: "relative",
       }}
     >
+      <span style={{ position: "absolute", top: "10px", right: "12px" }}>
+        <CertificationIcon level={d.certificationLevel} size={15} />
+      </span>
       <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flex: 1, minWidth: 0 }}>
         <EntityAvatar photoUrl={d.photoUrl} size={44} />
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
             {d.name}
-            <CertificationIcon level={d.certificationLevel} size={15} />
             {d.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>

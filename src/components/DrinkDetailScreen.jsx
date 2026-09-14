@@ -103,6 +103,9 @@ export function DrinkDetailScreen({
         <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
           <PageHeader onBack={onBack} />
         </div>
+        <div style={{ position: "absolute", top: "20px", right: "20px" }}>
+          <CertificationIcon level={drink.certificationLevel} size={20} />
+        </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
           <EntityAvatar photoUrl={drink.photoUrl} size={90} />
         </div>
@@ -110,7 +113,6 @@ export function DrinkDetailScreen({
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{drink.name}</h1>
             {drink.status === "complete" && <VerifiedBadge size={17} />}
-            <CertificationIcon level={drink.certificationLevel} size={17} />
           </div>
           {drink.type && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{drinkTypeLabel(drink.type)}</p>}
           {(isBeer || drink.type === "Vins & Bulles" || drink.type === "Spiritueux") && !drink.isGeneric && (

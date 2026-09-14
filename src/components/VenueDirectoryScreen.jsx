@@ -7,7 +7,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, CountryFlagImg, VerifiedBadge } from "./icons.jsx";
+import { NavIcon, CountryFlagImg, VerifiedBadge, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { sameVenueByNameCity, formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
@@ -156,8 +156,12 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        position: "relative",
       }}
     >
+      <span style={{ position: "absolute", top: "10px", right: "12px" }}>
+        <CertificationIcon level={v.certificationLevel} size={15} />
+      </span>
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={44} />
         <div>
