@@ -4,8 +4,8 @@
 // fusion de doublons, création à la volée).
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, COUNTRY_FLAGS } from "../constants.js";
-import { NavIcon, FlagIcon, VerifiedBadge, CountryFlagImg } from "./icons.jsx";
+import { COLORS } from "../constants.js";
+import { NavIcon, VerifiedBadge, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton } from "./ui.jsx";
 import { normalizeForSearch, searchEntities } from "../utils.js";
 import { loadBrandDominantNationalities } from "../data/sharedDirectories.js";
@@ -561,10 +561,13 @@ export function BrandsAdminScreen({ brands, isAdmin, onBack, onOpenBrand, onRena
                   }}
                 >
                   <span style={{ fontWeight: 700, fontSize: "14.5px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    {COUNTRY_FLAGS[country] ? <FlagIcon flag={COUNTRY_FLAGS[country]} size={16} /> : <span>🌍</span>}
+                    <CountryFlagImg country={country} size={22} />
                     {country}
                   </span>
-                  <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countFor(country)} →</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>
+                    {countFor(country)}
+                    <NavIcon name="arrow-right-circle" size={18} color={COLORS.amber} />
+                  </span>
                 </button>
               ))}
             </div>

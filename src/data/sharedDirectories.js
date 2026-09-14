@@ -1976,7 +1976,7 @@ export async function loadBrandDominantNationalities() {
     console.error("loadBrandDominantNationalities:", error);
     return {};
   }
-  return Object.fromEntries(data.map((r) => [r.brand, r.nationality]));
+  return Object.fromEntries(data.map((r) => [r.brand, COUNTRY_CODE_TO_LABEL[r.nationality] || r.nationality]));
 }
 
 // --- Répertoire des lieux côté serveur — même principe que le chantier "Produits". ---
