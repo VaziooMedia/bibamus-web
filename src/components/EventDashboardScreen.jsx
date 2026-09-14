@@ -924,6 +924,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
                     </strong>
                   </div>
                 )}
+                {myTips > 0 && <div style={{ maxWidth: "180px", borderTop: `1px solid ${COLORS.paperAlt}`, margin: "3px 0" }} />}
                 <div style={{ display: "flex", justifyContent: "space-between", maxWidth: "180px" }}>
                   <span>Total</span>
                   <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
