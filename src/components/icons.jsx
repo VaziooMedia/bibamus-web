@@ -158,6 +158,36 @@ const COUNTRY_ISO_CODES = {
 };
 
 export function CountryFlagImg({ country, size = 16, style }) {
+  const flagWidth = `${size}px`;
+  const flagHeight = `${Math.round((size * 3) / 4)}px`;
+  if (country === "International") {
+    return (
+      <span style={{ width: flagWidth, height: flagHeight, display: "inline-flex", alignItems: "center", justifyContent: "center", verticalAlign: "middle", ...style }}>
+        <NavIcon name="world" size={Math.round(size * 0.85)} color={COLORS.inkSoft} />
+      </span>
+    );
+  }
+  if (country === "Non renseigné") {
+    return (
+      <span
+        style={{
+          width: flagWidth,
+          height: flagHeight,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          verticalAlign: "middle",
+          fontSize: `${Math.round(size * 0.85)}px`,
+          fontWeight: 800,
+          color: COLORS.amber,
+          lineHeight: 1,
+          ...style,
+        }}
+      >
+        ?
+      </span>
+    );
+  }
   const code = COUNTRY_ISO_CODES[country];
   const url = code && FLAG_URLS_BY_CODE[code];
   if (!url) return null;
@@ -168,8 +198,8 @@ export function CountryFlagImg({ country, size = 16, style }) {
       src={url}
       alt={country}
       style={{
-        width: `${size}px`,
-        height: `${Math.round((size * 3) / 4)}px`,
+        width: flagWidth,
+        height: flagHeight,
         display: "inline-block",
         verticalAlign: "middle",
         objectFit: "cover",
