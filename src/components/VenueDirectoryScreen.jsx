@@ -251,7 +251,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
-              <span style={{ width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span style={{ minWidth: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <NavIcon name="map" size={24} color={COLORS.amber} />
               </span>
               Voir sur la carte
@@ -282,7 +282,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
-                  <span style={{ width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ minWidth: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <NavIcon name="map-pin" size={24} color={COLORS.amber} />
                   </span>
                   {geoStatus === "loading" || loadingNearby ? "Recherche..." : "Lieux près de moi"}
