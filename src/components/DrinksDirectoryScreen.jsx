@@ -7,8 +7,8 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, RATABLE_DRINK_TYPES } from "../constants.js";
-import { NavIcon, CountryFlagImg, VerifiedBadge } from "./icons.jsx";
-import { PageHeader, BackFooterLink, ScrollToTopButton } from "./ui.jsx";
+import { NavIcon, CountryFlagImg, VerifiedBadge, CertificationIcon } from "./icons.jsx";
+import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { drinkTypeLabel, drinkSummaryLine } from "../utils.js";
@@ -167,10 +167,11 @@ export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrin
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flex: 1, minWidth: 0 }}>
+        <EntityAvatar photoUrl={d.photoUrl} size={44} />
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
             {d.name}
-            {d.status === "to_process" && <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
+            <CertificationIcon level={d.certificationLevel} size={15} />
             {d.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>

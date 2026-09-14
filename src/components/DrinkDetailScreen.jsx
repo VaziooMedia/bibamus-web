@@ -11,7 +11,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
-import { NavIcon, VerifiedBadge } from "./icons.jsx";
+import { NavIcon, VerifiedBadge, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { drinkTypeLabel, formatDrinkFieldValue, formatMoney } from "../utils.js";
@@ -110,6 +110,7 @@ export function DrinkDetailScreen({
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{drink.name}</h1>
             {drink.status === "complete" && <VerifiedBadge size={17} />}
+            <CertificationIcon level={drink.certificationLevel} size={17} />
           </div>
           {drink.type && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{drinkTypeLabel(drink.type)}</p>}
           {(isBeer || drink.type === "Vins & Bulles" || drink.type === "Spiritueux") && !drink.isGeneric && (

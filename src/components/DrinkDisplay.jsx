@@ -65,7 +65,7 @@ export function DrinkBadges({ drink, onTagClick, size = 11 }) {
       {items.map((it) => {
         const style = it.icon
           ? it.key === "country"
-            ? { ...badgeStyle, padding: 0, width: "18.5px", height: "18.5px", overflow: "hidden", display: "inline-flex", alignItems: "center", justifyContent: "center" }
+            ? { ...badgeStyle, background: "none", padding: 0, width: "18.5px", height: "18.5px", overflow: "hidden", display: "inline-flex", alignItems: "center", justifyContent: "center" }
             : { ...badgeStyle, padding: "3px", display: "inline-flex", alignItems: "center", justifyContent: "center" }
           : it.key === "alcoholic"
           ? { ...badgeStyle, color: "#fff", background: COLORS.wine }
