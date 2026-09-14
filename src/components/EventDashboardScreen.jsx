@@ -1276,7 +1276,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
               <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
                 BIBAX
                 <br />
-                PRÉSENTS
+                EN DIRECT
               </div>
             </div>
             <div style={{ textAlign: "center", flex: 1, borderLeft: `1px solid ${COLORS.chalkWhite}25` }}>
