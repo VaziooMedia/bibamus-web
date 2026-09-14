@@ -250,11 +250,11 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
             width: "100%",
           }}
         >
-          <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
-            <NavIcon name="map" size={16} color={COLORS.chalkWhite} />
-            Voir sur une carte
+          <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
+            <NavIcon name="map" size={24} color={COLORS.amber} />
+            Voir sur la carte
           </span>
-          <span style={{ fontSize: "13px", color: COLORS.chalkWhite, opacity: 0.7 }}>→</span>
+          <NavIcon name="arrow-right-circle" size={20} color={COLORS.chalkWhite} />
         </button>
       )}
 
@@ -265,18 +265,23 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
               onClick={handleNearbyClick}
               disabled={geoStatus === "loading" || loadingNearby}
               style={{
-                background: "none",
-                border: `2px dashed ${COLORS.paperAlt}`,
+                background: COLORS.surfaceAlt,
+                border: "none",
                 borderRadius: "12px",
-                padding: "13px 16px",
+                padding: "14px 16px",
                 cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
                 width: "100%",
-                color: COLORS.amber,
-                fontWeight: 700,
-                fontSize: "14px",
               }}
             >
-              {geoStatus === "loading" || loadingNearby ? "Recherche..." : "📍 Lieux près de moi"}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
+                  <NavIcon name="map-pin" size={24} color={COLORS.amber} />
+                  {geoStatus === "loading" || loadingNearby ? "Recherche..." : "Lieux près de moi"}
+                </span>
+                {geoStatus !== "loading" && !loadingNearby && <NavIcon name="arrow-right-circle" size={20} color={COLORS.chalkWhite} />}
+              </div>
               {geoStatus === "denied" && (
                 <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
                   Position refusée — activez-la dans les réglages de votre navigateur pour réessayer.
