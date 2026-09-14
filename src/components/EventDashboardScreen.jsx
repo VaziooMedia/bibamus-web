@@ -923,6 +923,8 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
         )}
       </div>
 
+      {isCagnotte && <PotCard event={event} updateEvent={updateEvent} myName={myName} />}
+
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <button
           onClick={() => setShowMyStats((s) => !s)}
@@ -1065,8 +1067,6 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
         )}
 
       </div>
-
-      {isCagnotte && <PotCard event={event} updateEvent={updateEvent} myName={myName} />}
 
       {isCagnotte && event.rounds.length > 0 && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>

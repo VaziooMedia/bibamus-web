@@ -84,7 +84,7 @@ export function PotCard({ event, updateEvent, myName }) {
       >
         <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, opacity: 0.7 }}>Solde de la cagnotte</span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Solde de la cagnotte</span>
         </span>
         <span style={{ display: "inline-flex", transform: `rotate(${showPot ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
           <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
@@ -392,7 +392,13 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   // noms) — une tournée achetée par l'un ou l'autre compte de la même façon, donc les deux
   // doivent apparaître ici, pas seulement les vrais comptes.
   const guestNames = (event.knownFriends || []).filter((n) => !participants.some((p) => p.name === n));
-  const order = [...[...participants].sort((a, b) => a.joinedAt - b.joinedAt), ...guestNames.map((name) => ({ code: null, name }))];
+  const isCagnotte = event.mode === "cagnotte";
+  const isAddition = event.mode === "addition";
+  // En Cagnotte ou Addition partagée, personne n'achète individuellement — c'est le pot commun
+  // (ou le partage final) qui règle chaque tournée, donc la rotation entre Bibax n'a pas de sens
+  // ici. On l'affiche comme un participant à part entière dans le classement.
+  const potEntry = isCagnotte ? { code: "__pot__", name: "Cagnotte", isPot: true } : isAddition ? { code: "__addition__", name: "Addition partagée", isPot: true } : null;
+  const order = [...[...participants].sort((a, b) => a.joinedAt - b.joinedAt), ...guestNames.map((name) => ({ code: null, name })), ...(potEntry ? [potEntry] : [])];
   const activeOrder = order.filter((p) => !p.paused);
   const rounds = event.rounds || [];
   // Se base sur qui a réellement acheté la dernière tournée, puis suggère la personne suivante
@@ -400,7 +406,9 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   // dès que quelqu'un rejoint, se met en pause, ou que l'ordre change entre deux tournées.
   const lastRound = rounds.length > 0 ? rounds[rounds.length - 1] : null;
   let currentParticipant = null;
-  if (activeOrder.length > 0) {
+  if (potEntry) {
+    currentParticipant = potEntry;
+  } else if (activeOrder.length > 0) {
     if (lastRound && lastRound.buyerName) {
       const lastBuyerIndex = activeOrder.findIndex((p) => (p.name || "").trim().toLowerCase() === (lastRound.buyerName || "").trim().toLowerCase());
       currentParticipant = lastBuyerIndex === -1 ? activeOrder[0] : activeOrder[(lastBuyerIndex + 1) % activeOrder.length];
@@ -409,10 +417,10 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
     }
   }
   const myEntry = participants.find((p) => p.code === myBibroCode);
-  const roundsBought = (p) => rounds.filter((r) => r.buyerName === p.name).length;
+  const roundsBought = (p) => (p.isPot ? rounds.filter((r) => !r.buyerName).length : rounds.filter((r) => r.buyerName === p.name).length);
 
   const resolvedName = (p) => {
-    const bibro = p.code ? (bibros || []).find((b) => b.code === p.code) : null;
+    const bibro = p.code && !p.isPot ? (bibros || []).find((b) => b.code === p.code) : null;
     return bibro && bibro.alias ? bibro.alias : p.name;
   };
 
@@ -424,7 +432,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   });
   const labelFor = (p) => {
     const base = resolvedName(p);
-    return nameCounts[base.toLowerCase()] > 1 && p.code ? `${base} ·${p.code.slice(-2)}` : base;
+    return nameCounts[base.toLowerCase()] > 1 && p.code && !p.isPot ? `${base} ·${p.code.slice(-2)}` : base;
   };
 
   return (
