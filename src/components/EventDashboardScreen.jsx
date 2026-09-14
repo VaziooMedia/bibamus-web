@@ -999,251 +999,6 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
         )}
       </div>
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-        <button
-          onClick={() => setShowRoundsList((s) => !s)}
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: showRoundsList ? "8px" : 0 }}
-        >
-          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Tournées</span>
-          </span>
-          <span style={{ display: "inline-flex", transform: `rotate(${showRoundsList ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
-            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
-          </span>
-        </button>
-        {showRoundsList && (
-          <>
-        {event.rounds.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune tournée offerte pour l'instant.</p>}
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {[...event.rounds].reverse().map((r, i) => {
-            const expanded = expandedRoundIds.has(r.id);
-            const isEditing = editingRoundId === r.id;
-            return (
-              <div key={r.id} style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", fontSize: "14px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>
-                    <strong>
-                      Tournée <span style={{ color: COLORS.amber }}>{event.rounds.length - i}</span>
-                    </strong>
-                  </span>
-                  {!isOpenBar && (
-                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: r.offeredBy ? COLORS.amber : isAddition ? (isRoundPaidInAddition(r) ? COLORS.amber : COLORS.redFluo) : r.settledDirectly === false ? COLORS.redFluo : COLORS.amber }}>
-                      <MoneyAmount value={r.total} currency={event.currency} jetonIcon="pink" />
-                    </span>
-                  )}
-                </div>
-                <div style={{ marginTop: "6px" }}>
-                  <button
-                    onClick={() => toggleRoundExpanded(r.id)}
-                    style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                    title={expanded ? "Cacher les participants" : "Voir les participants"}
-                  >
-                    <span style={{ display: "inline-flex", transform: `rotate(${expanded ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
-                      <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
-                    </span>
-                  </button>
-                </div>
-                {expanded && (
-                  <div style={{ marginTop: "6px", paddingTop: "6px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
-                    {/* 1. Offert par X */}
-                    <div style={{ fontSize: "12.5px", color: COLORS.ink, marginBottom: "8px" }}>
-                      {r.offeredBy
-                        ? r.offeredBy.type === "venue"
-                          ? "Offert par la maison"
-                          : "Offert par un tiers"
-                        : r.buyerName
-                        ? `Offert par ${r.buyerName}`
-                        : r.paidByPot
-                        ? "Payée par la cagnotte"
-                        : "Free"}
-                    </div>
-
-                    {/* 2. Précision */}
-                    {r.offeredBy && r.offeredBy.label && (
-                      <p style={{ fontSize: "12px", color: COLORS.ink, fontStyle: "italic", marginBottom: "8px" }}>"{r.offeredBy.label}"</p>
-                    )}
-
-                    {/* 3. Participants */}
-                    <div style={{ marginBottom: "8px" }}>
-                      {r.friends
-                        .filter((f) => r.orders.some((o) => o.friendId === f.id))
-                        .map((f) => (
-                          <div key={f.id} style={{ fontSize: "13px", color: COLORS.inkSoft, padding: "2px 0" }}>
-                            {f.name}
-                          </div>
-                        ))}
-                    </div>
-
-                    {/* 4. Réglé directement / dérivé — même ligne que les icônes modifier/supprimer */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 600, flex: 1, minWidth: 0 }}>
-                        {event.currency === "euro" && !isOpenBar && !r.offeredBy ? (
-                          <span style={{ color: isAddition ? (isRoundPaidInAddition(r) ? COLORS.amber : COLORS.redFluo) : r.settledDirectly === false ? COLORS.redFluo : COLORS.amber }}>
-                            {isAddition ? (isRoundPaidInAddition(r) ? "Payée" : "En attente du partage") : r.settledDirectly === false ? "Sur la note" : "Réglée directement"}
-                          </span>
-                        ) : r.offeredBy ? (
-                          <span style={{ color: COLORS.inkSoft, fontWeight: 400 }}>Montant informatif — ne compte dans aucun total d'argent dépensé.</span>
-                        ) : null}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-                        {!isAddition && (
-                          <button
-                            onClick={() => (isEditing ? setEditingRoundId(null) : startEditRound(r))}
-                            style={{ display: "flex", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                            title={isEditing ? "Annuler" : "Modifier"}
-                          >
-                            <NavIcon name={isEditing ? "x" : "pencil"} size={16} color={isEditing ? COLORS.amber : COLORS.ink} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => (confirmDeleteRoundId === r.id ? onDeleteRound(r.id) : setConfirmDeleteRoundId(r.id))}
-                          style={{ display: "flex", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                          title={confirmDeleteRoundId === r.id ? "Confirmer la suppression" : "Supprimer"}
-                        >
-                          <NavIcon name="x" size={16} color={COLORS.redFluo} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {isEditing && (
-                  <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>QUI OFFRE ?</div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                      {r.friends.length > 1 &&
-                        r.friends.map((f) => {
-                          const isPaused = f.code && pausedCodes.has(f.code);
-                          return (
-                            <button
-                              key={f.id}
-                              disabled={isPaused}
-                              onClick={() => {
-                                setEditBuyerId(f.id);
-                                setEditOfferedByType(null);
-                              }}
-                              title={isPaused ? "En pause — ne peut pas se voir attribuer une tournée" : undefined}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "5px",
-                                background: !editOfferedByType && editBuyerId === f.id && !isPaused ? COLORS.amber : "transparent",
-                                color: !editOfferedByType && editBuyerId === f.id && !isPaused ? COLORS.paper : COLORS.ink,
-                                border: `2px solid ${!editOfferedByType && editBuyerId === f.id && !isPaused ? COLORS.amber : COLORS.paperAlt}`,
-                                borderRadius: "999px",
-                                padding: "5px 11px",
-                                fontSize: "12.5px",
-                                fontWeight: 600,
-                                cursor: isPaused ? "default" : "pointer",
-                                opacity: isPaused ? 0.5 : 1,
-                              }}
-                            >
-                              {isPaused && <NavIcon name="pause" size={11} color={COLORS.ink} />}
-                              {f.isSelf ? "Moi" : f.name}
-                            </button>
-                          );
-                        })}
-                      <button
-                        onClick={() => {
-                          setEditBuyerId(editBuyerId === "pot" ? null : "pot");
-                          setEditOfferedByType(null);
-                        }}
-                        style={{
-                          background: !editOfferedByType && editBuyerId === "pot" ? COLORS.amber : "transparent",
-                          color: !editOfferedByType && editBuyerId === "pot" ? COLORS.paper : COLORS.ink,
-                          border: `2px solid ${!editOfferedByType && editBuyerId === "pot" ? COLORS.amber : COLORS.paperAlt}`,
-                          borderRadius: "999px",
-                          padding: "5px 11px",
-                          fontSize: "12.5px",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Payé par la cagnotte
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditOfferedByType(editOfferedByType === "venue" ? null : "venue");
-                          setEditBuyerId(null);
-                        }}
-                        style={{
-                          background: editOfferedByType === "venue" ? COLORS.amber : "transparent",
-                          color: editOfferedByType === "venue" ? COLORS.paper : COLORS.ink,
-                          border: `2px solid ${editOfferedByType === "venue" ? COLORS.amber : COLORS.paperAlt}`,
-                          borderRadius: "999px",
-                          padding: "5px 11px",
-                          fontSize: "12.5px",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Offert par la maison
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditOfferedByType(editOfferedByType === "thirdParty" ? null : "thirdParty");
-                          setEditBuyerId(null);
-                        }}
-                        style={{
-                          background: editOfferedByType === "thirdParty" ? COLORS.amber : "transparent",
-                          color: editOfferedByType === "thirdParty" ? COLORS.paper : COLORS.ink,
-                          border: `2px solid ${editOfferedByType === "thirdParty" ? COLORS.amber : COLORS.paperAlt}`,
-                          borderRadius: "999px",
-                          padding: "5px 11px",
-                          fontSize: "12.5px",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Un tiers
-                      </button>
-                    </div>
-                    {editOfferedByType && (
-                      <input
-                        value={editOfferedByLabel}
-                        onChange={(e) => setEditOfferedByLabel(e.target.value)}
-                        placeholder="Précision (facultatif)"
-                        style={{ padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "12.5px", outline: "none" }}
-                      />
-                    )}
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft, flexShrink: 0 }}>MONTANT</div>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.10"
-                        value={editAmount}
-                        onChange={(e) => setEditAmount(e.target.value)}
-                        style={{ width: "90px", padding: "7px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
-                      />
-                      <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>€</span>
-                    </div>
-                    {!editOfferedByType && editBuyerId !== "pot" && (
-                      <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", cursor: "pointer" }}>
-                        <input
-                          type="checkbox"
-                          checked={!editSettledDirectly}
-                          onChange={(e) => setEditSettledDirectly(!e.target.checked)}
-                          style={{ width: "15px", height: "15px", accentColor: COLORS.amber }}
-                        />
-                        Réglée plus tard, sur la note
-                      </label>
-                    )}
-                    <button
-                      onClick={() => submitEditRound(r)}
-                      style={{ background: COLORS.amber, color: COLORS.paper, border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "4px" }}
-                    >
-                      Enregistrer
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-          </>
-        )}
-      </div>
 
       {isCagnotte && <PotCard event={event} updateEvent={updateEvent} myName={myName} />}
 
@@ -1366,13 +1121,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
                 <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>
-                  {event.finalTotal != null ? (
-                    "NOTE FINALE DU BAR"
-                  ) : (
-                    <>
-                      Total général pour cette session <span style={{ fontSize: "12px", opacity: 0.7 }}>≈</span>
-                    </>
-                  )}
+                  Total général pour cette session <span style={{ fontSize: "12px", opacity: 0.7 }}>≈</span>
                 </div>
               </div>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: COLORS.amber, lineHeight: 1.3, textAlign: "center" }}>
@@ -1684,6 +1433,252 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
         />
       )}
 
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
+        <button
+          onClick={() => setShowRoundsList((s) => !s)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: showRoundsList ? "8px" : 0 }}
+        >
+          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Tournées</span>
+          </span>
+          <span style={{ display: "inline-flex", transform: `rotate(${showRoundsList ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+          </span>
+        </button>
+        {showRoundsList && (
+          <>
+        {event.rounds.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune tournée offerte pour l'instant.</p>}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {[...event.rounds].reverse().map((r, i) => {
+            const expanded = expandedRoundIds.has(r.id);
+            const isEditing = editingRoundId === r.id;
+            return (
+              <div key={r.id} style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", fontSize: "14px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>
+                    <strong>
+                      Tournée <span style={{ color: COLORS.amber }}>{event.rounds.length - i}</span>
+                    </strong>
+                  </span>
+                  {!isOpenBar && (
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: r.offeredBy ? COLORS.amber : isAddition ? (isRoundPaidInAddition(r) ? COLORS.amber : COLORS.redFluo) : r.settledDirectly === false ? COLORS.redFluo : COLORS.amber }}>
+                      <MoneyAmount value={r.total} currency={event.currency} jetonIcon="pink" />
+                    </span>
+                  )}
+                </div>
+                <div style={{ marginTop: "6px" }}>
+                  <button
+                    onClick={() => toggleRoundExpanded(r.id)}
+                    style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    title={expanded ? "Cacher les participants" : "Voir les participants"}
+                  >
+                    <span style={{ display: "inline-flex", transform: `rotate(${expanded ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+                      <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+                    </span>
+                  </button>
+                </div>
+                {expanded && (
+                  <div style={{ marginTop: "6px", paddingTop: "6px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
+                    {/* 1. Offert par X */}
+                    <div style={{ fontSize: "12.5px", color: COLORS.ink, marginBottom: "8px" }}>
+                      {r.offeredBy
+                        ? r.offeredBy.type === "venue"
+                          ? "Offert par la maison"
+                          : "Offert par un tiers"
+                        : r.buyerName
+                        ? `Offert par ${r.buyerName}`
+                        : r.paidByPot
+                        ? "Payée par la cagnotte"
+                        : "Free"}
+                    </div>
+
+                    {/* 2. Précision */}
+                    {r.offeredBy && r.offeredBy.label && (
+                      <p style={{ fontSize: "12px", color: COLORS.ink, fontStyle: "italic", marginBottom: "8px" }}>"{r.offeredBy.label}"</p>
+                    )}
+
+                    {/* 3. Participants */}
+                    <div style={{ marginBottom: "8px" }}>
+                      {r.friends
+                        .filter((f) => r.orders.some((o) => o.friendId === f.id))
+                        .map((f) => (
+                          <div key={f.id} style={{ fontSize: "13px", color: COLORS.inkSoft, padding: "2px 0" }}>
+                            {f.name}
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* 4. Réglé directement / dérivé — même ligne que les icônes modifier/supprimer */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 600, flex: 1, minWidth: 0 }}>
+                        {event.currency === "euro" && !isOpenBar && !r.offeredBy ? (
+                          <span style={{ color: isAddition ? (isRoundPaidInAddition(r) ? COLORS.amber : COLORS.redFluo) : r.settledDirectly === false ? COLORS.redFluo : COLORS.amber }}>
+                            {isAddition ? (isRoundPaidInAddition(r) ? "Payée" : "En attente du partage") : r.settledDirectly === false ? "Sur la note" : "Réglée directement"}
+                          </span>
+                        ) : r.offeredBy ? (
+                          <span style={{ color: COLORS.inkSoft, fontWeight: 400 }}>Montant informatif — ne compte dans aucun total d'argent dépensé.</span>
+                        ) : null}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                        {!isAddition && (
+                          <button
+                            onClick={() => (isEditing ? setEditingRoundId(null) : startEditRound(r))}
+                            style={{ display: "flex", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                            title={isEditing ? "Annuler" : "Modifier"}
+                          >
+                            <NavIcon name={isEditing ? "x" : "pencil"} size={16} color={isEditing ? COLORS.amber : COLORS.ink} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => (confirmDeleteRoundId === r.id ? onDeleteRound(r.id) : setConfirmDeleteRoundId(r.id))}
+                          style={{ display: "flex", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                          title={confirmDeleteRoundId === r.id ? "Confirmer la suppression" : "Supprimer"}
+                        >
+                          <NavIcon name="x" size={16} color={COLORS.redFluo} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {isEditing && (
+                  <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>QUI OFFRE ?</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {r.friends.length > 1 &&
+                        r.friends.map((f) => {
+                          const isPaused = f.code && pausedCodes.has(f.code);
+                          return (
+                            <button
+                              key={f.id}
+                              disabled={isPaused}
+                              onClick={() => {
+                                setEditBuyerId(f.id);
+                                setEditOfferedByType(null);
+                              }}
+                              title={isPaused ? "En pause — ne peut pas se voir attribuer une tournée" : undefined}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "5px",
+                                background: !editOfferedByType && editBuyerId === f.id && !isPaused ? COLORS.amber : "transparent",
+                                color: !editOfferedByType && editBuyerId === f.id && !isPaused ? COLORS.paper : COLORS.ink,
+                                border: `2px solid ${!editOfferedByType && editBuyerId === f.id && !isPaused ? COLORS.amber : COLORS.paperAlt}`,
+                                borderRadius: "999px",
+                                padding: "5px 11px",
+                                fontSize: "12.5px",
+                                fontWeight: 600,
+                                cursor: isPaused ? "default" : "pointer",
+                                opacity: isPaused ? 0.5 : 1,
+                              }}
+                            >
+                              {isPaused && <NavIcon name="pause" size={11} color={COLORS.ink} />}
+                              {f.isSelf ? "Moi" : f.name}
+                            </button>
+                          );
+                        })}
+                      <button
+                        onClick={() => {
+                          setEditBuyerId(editBuyerId === "pot" ? null : "pot");
+                          setEditOfferedByType(null);
+                        }}
+                        style={{
+                          background: !editOfferedByType && editBuyerId === "pot" ? COLORS.amber : "transparent",
+                          color: !editOfferedByType && editBuyerId === "pot" ? COLORS.paper : COLORS.ink,
+                          border: `2px solid ${!editOfferedByType && editBuyerId === "pot" ? COLORS.amber : COLORS.paperAlt}`,
+                          borderRadius: "999px",
+                          padding: "5px 11px",
+                          fontSize: "12.5px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Payé par la cagnotte
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditOfferedByType(editOfferedByType === "venue" ? null : "venue");
+                          setEditBuyerId(null);
+                        }}
+                        style={{
+                          background: editOfferedByType === "venue" ? COLORS.amber : "transparent",
+                          color: editOfferedByType === "venue" ? COLORS.paper : COLORS.ink,
+                          border: `2px solid ${editOfferedByType === "venue" ? COLORS.amber : COLORS.paperAlt}`,
+                          borderRadius: "999px",
+                          padding: "5px 11px",
+                          fontSize: "12.5px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Offert par la maison
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditOfferedByType(editOfferedByType === "thirdParty" ? null : "thirdParty");
+                          setEditBuyerId(null);
+                        }}
+                        style={{
+                          background: editOfferedByType === "thirdParty" ? COLORS.amber : "transparent",
+                          color: editOfferedByType === "thirdParty" ? COLORS.paper : COLORS.ink,
+                          border: `2px solid ${editOfferedByType === "thirdParty" ? COLORS.amber : COLORS.paperAlt}`,
+                          borderRadius: "999px",
+                          padding: "5px 11px",
+                          fontSize: "12.5px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Un tiers
+                      </button>
+                    </div>
+                    {editOfferedByType && (
+                      <input
+                        value={editOfferedByLabel}
+                        onChange={(e) => setEditOfferedByLabel(e.target.value)}
+                        placeholder="Précision (facultatif)"
+                        style={{ padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "12.5px", outline: "none" }}
+                      />
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft, flexShrink: 0 }}>MONTANT</div>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.10"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        style={{ width: "90px", padding: "7px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13px", fontFamily: "'Urbanist', sans-serif", outline: "none" }}
+                      />
+                      <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>€</span>
+                    </div>
+                    {!editOfferedByType && editBuyerId !== "pot" && (
+                      <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={!editSettledDirectly}
+                          onChange={(e) => setEditSettledDirectly(!e.target.checked)}
+                          style={{ width: "15px", height: "15px", accentColor: COLORS.amber }}
+                        />
+                        Réglée plus tard, sur la note
+                      </label>
+                    )}
+                    <button
+                      onClick={() => submitEditRound(r)}
+                      style={{ background: COLORS.amber, color: COLORS.paper, border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "4px" }}
+                    >
+                      Enregistrer
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+          </>
+        )}
+      </div>
 
       <SalonSection event={event} updateEvent={updateEvent} myName={myName} profile={profile} myBibroCode={myBibroCode} bibros={bibros} />
 
