@@ -1201,14 +1201,16 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
               <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>DÉPENSÉS</div>
             </div>
           </div>
-          {event.finalTotal == null && (
+          {event.finalTotal == null && cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips > 0 && (
             <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                <span>Payé par la cagnotte</span>
-                <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                  <MoneyAmount value={cagnottePaidByPot} currency={event.currency} jetonIcon="cyan" />
-                </strong>
-              </div>
+              {cagnottePaidByPot > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                  <span>Payé par la cagnotte</span>
+                  <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                    <MoneyAmount value={cagnottePaidByPot} currency={event.currency} jetonIcon="cyan" />
+                  </strong>
+                </div>
+              )}
               {cagnotteDirect > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                   <span>Payé directement</span>
