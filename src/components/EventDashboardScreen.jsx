@@ -946,7 +946,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
             <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal > 1 ? "S" : ""}</div>
           </div>
-          {!isOpenBar && (
+          {(
             <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
                 <MoneyAmount value={myCagnotteTotal} currency={event.currency} centered jetonIconSize={28} jetonIcon="pink" />
@@ -983,7 +983,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
           </div>
         </div>
 
-        {!isOpenBar && (event.rounds.length > 0 || myContribution > 0) && (
+        {(event.rounds.length > 0 || myContribution > 0) && (
           <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, fontSize: "12.5px", color: COLORS.inkSoft }}>
             {event.rounds.length > 0 && !isCagnotte && !isAddition && (
               <div style={{ marginBottom: myRounds.length > 0 || myContribution > 0 ? "8px" : 0 }}>
