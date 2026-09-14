@@ -6,8 +6,8 @@
 // complet est concerné par cette réécriture.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, COUNTRY_FLAGS } from "../constants.js";
-import { NavIcon, FlagIcon, VerifiedBadge } from "./icons.jsx";
+import { COLORS } from "../constants.js";
+import { NavIcon, CountryFlagImg, VerifiedBadge } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton } from "./ui.jsx";
 import { formatCompactCount, sameVenueByNameCity, formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
@@ -370,10 +370,13 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
               }}
             >
               <span style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
-                {COUNTRY_FLAGS[countryLabel(country)] ? <FlagIcon flag={COUNTRY_FLAGS[countryLabel(country)]} size={17} /> : <span>🌍</span>}
+                <CountryFlagImg country={countryLabel(country)} size={22} />
                 {countryLabel(country)}
               </span>
-              <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countFor(country)} →</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>
+                {countFor(country)}
+                <NavIcon name="arrow-right-circle" size={18} color={COLORS.amber} />
+              </span>
             </button>
           ))}
         </div>
@@ -400,7 +403,10 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
                 <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
                 {city}
               </span>
-              <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countFor(activeCountry, city)} →</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>
+                {countFor(activeCountry, city)}
+                <NavIcon name="arrow-right-circle" size={18} color={COLORS.amber} />
+              </span>
             </button>
           ))}
         </div>
