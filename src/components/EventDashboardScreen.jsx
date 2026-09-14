@@ -155,7 +155,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
   const purchasedTicketsCount = (event.ticketPurchases || []).filter((p) => !p.carriedOver && !p.given).reduce((sum, p) => sum + p.quantity, 0);
   const freeTicketsCount = (event.ticketPurchases || []).filter((p) => p.carriedOver).reduce((sum, p) => sum + p.quantity, 0);
   const givenTicketsCount = (event.ticketPurchases || []).filter((p) => p.given).reduce((sum, p) => sum - p.quantity, 0);
-  const tabTotal = event.rounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
+  const tabTotal = event.rounds.filter((r) => r.settledDirectly === false && r.buyerName === myName).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
   // Jetons are personal — each participant buys their own stack. So only rounds I actually paid
   // for (as the buyer) should come out of my own jeton balance; a round someone else bought for
   // the group is covered by their jetons, not mine. Jetons I've put into a shared cagnotte pot
@@ -247,11 +247,11 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
   const myRounds = event.rounds.filter((r) => r.buyerName === myName);
   const myPending = myRounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
-  const myTips = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0);
+  const myTips = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) + (event.tip || 0);
   const myPaid = myRounds.reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
   const myRoundsTotal = myPending + myPaid + myTips;
   const sessionPending = event.rounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
-  const sessionTips = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0);
+  const sessionTips = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) + (event.tip || 0);
   const sessionPaid = event.rounds.reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
   const sessionRoundsTotal = sessionPending + sessionPaid + sessionTips;
   const cagnottePaidByPot = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);

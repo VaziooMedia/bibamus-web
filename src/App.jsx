@@ -1220,11 +1220,12 @@ export default function App() {
   // ouvertes de cet événement, la plus ancienne en premier, jusqu'à épuisement du montant. Une
   // tournée ne repasse en "réglée" (verte) qu'une fois entièrement soldée — un paiement partiel
   // réduit juste ce qu'il lui reste à devoir, elle reste sur la note pour le solde.
-  const payTabAmount = (eventId, amount) => {
+  const payTabAmount = (eventId, amount, buyerName) => {
     updateEvent(eventId, (e) => {
       let remaining = amount;
       const updates = new Map();
       [...e.rounds]
+        .filter((r) => r.buyerName === buyerName)
         .sort((a, b) => a.createdAt - b.createdAt)
         .forEach((r) => {
           const paidSoFar = r.amountPaid ?? (r.settledDirectly !== false ? r.total : 0);
@@ -1762,7 +1763,7 @@ export default function App() {
                 onOpenWaterAlertSettings={() => setScreen("waterAlertSettings")}
                 onDeleteRound={(roundId) => deleteRound(activeEventId, roundId)}
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
-                onPayTabAmount={(amount) => payTabAmount(activeEventId, amount)}
+                onPayTabAmount={(amount) => payTabAmount(activeEventId, amount, profile.name)}
                 onCheckDrink={(drinkId, venueId, opts) => checkInDrink(drinkId, venueId, opts)}
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
                 onDeactivateBibaBob={(code) => deactivateBibaBob(activeEventId, code)}
