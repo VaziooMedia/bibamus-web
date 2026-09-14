@@ -108,6 +108,10 @@ export function SearchScreen({
   const [bibaxResults, setBibaxResults] = useState([]);
   const [bibaxLoading, setBibaxLoading] = useState(false);
   const inputRef = useRef(null);
+  // Tant que la personne n'a pas cliqué elle-même sur un onglet pour cette recherche, l'onglet
+  // affiché suit automatiquement celui qui a le plus de résultats. Un clic manuel arrête ce
+  // suivi jusqu'à la prochaine requête tapée.
+  const userPickedTabRef = useRef(false);
 
   const trimmed = query.trim();
   const q = normalize(trimmed);
@@ -170,27 +174,29 @@ export function SearchScreen({
     return () => clearTimeout(timer);
   }, [trimmed]);
 
-  // Bascule automatiquement sur le premier onglet qui a des résultats, dès qu'une recherche
-  // commence — évite de rester sur un onglet vide par défaut. Doit réagir aux vrais résultats
-  // une fois arrivés, pas seulement à la frappe : les recherches sont asynchrones (debounce +
-  // aller-retour serveur), donc au moment où la requête change, les résultats affichés sont
-  // encore ceux de la frappe précédente.
+  // Réinitialise le suivi automatique dès qu'une nouvelle requête est tapée — un clic manuel ne
+  // vaut que pour la recherche en cours, pas pour toute la session.
   useEffect(() => {
-    if (!hasQuery) return;
+    userPickedTabRef.current = false;
+  }, [trimmed]);
+
+  // Suit automatiquement l'onglet qui a le plus de résultats, tant que la personne n'a pas
+  // choisi elle-même un onglet pour cette recherche — recalculé à chaque arrivée de résultats
+  // (les recherches sont asynchrones : produits peut arriver après marques, par exemple), pas
+  // seulement une fois au démarrage, pour ne jamais rester bloqué sur un onglet qui n'a plus
+  // le plus de résultats.
+  useEffect(() => {
+    if (!hasQuery || userPickedTabRef.current) return;
     const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
-    if (counts[activeTab] === 0) {
-      const firstWithResults = TABS.find((t) => (!hideBibaxAndAtlas || t.key !== "bibax") && counts[t.key] > 0);
-      if (firstWithResults) setActiveTab(firstWithResults.key);
-    }
+    const candidates = TABS.filter((t) => !hideBibaxAndAtlas || t.key !== "bibax");
+    const leader = candidates.reduce((best, t) => (counts[t.key] > (counts[best] || 0) ? t.key : best), null);
+    if (leader && counts[leader] > 0 && leader !== activeTab) setActiveTab(leader);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasQuery, trimmed, venueResults, drinkResults, brandResults, breweryResults, bibaxResults]);
 
   const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
   const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;
-  // L'onglet rempli en vert indique celui qui a le plus de résultats — indépendant de l'onglet
-  // actuellement affiché (activeTab), qui change librement au clic sans changer ce repère.
-  const leaderKey = visibleTabs.reduce((best, t) => (counts[t.key] > (counts[best] || 0) ? t.key : best), null);
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1, boxSizing: "border-box" }}>
@@ -251,7 +257,16 @@ export function SearchScreen({
         <>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px", marginBottom: "16px" }}>
             {visibleTabs.map((t) => (
-              <TagButton key={t.key} label={t.label} count={counts[t.key]} filled={t.key === leaderKey} onClick={() => setActiveTab(t.key)} />
+              <TagButton
+                key={t.key}
+                label={t.label}
+                count={counts[t.key]}
+                filled={activeTab === t.key}
+                onClick={() => {
+                  userPickedTabRef.current = true;
+                  setActiveTab(t.key);
+                }}
+              />
             ))}
             {!hideBibaxAndAtlas && (
               <button
