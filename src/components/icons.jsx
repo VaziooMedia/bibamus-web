@@ -163,7 +163,7 @@ export function CountryFlagImg({ country, size = 16, style }) {
   if (country === "International") {
     return (
       <span style={{ width: flagWidth, height: flagHeight, display: "inline-flex", alignItems: "center", justifyContent: "center", verticalAlign: "middle", ...style }}>
-        <NavIcon name="world" size={Math.round(size * 0.85)} color={COLORS.inkSoft} />
+        <NavIcon name="world" size={Math.round(size * 0.85)} color={COLORS.amber} />
       </span>
     );
   }

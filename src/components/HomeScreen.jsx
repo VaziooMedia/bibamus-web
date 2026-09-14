@@ -562,6 +562,12 @@ export function HomeScreen({
           badge="Soon"
           disabled
         />
+        <CategoryTile
+          title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Ping</span></>}
+          subtitle="Messagerie Bibamus"
+          badge="Soon"
+          disabled
+        />
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>
