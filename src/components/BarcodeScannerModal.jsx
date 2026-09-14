@@ -213,6 +213,26 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 20px" }}>
           <div style={{ width: "100%", maxWidth: "360px", borderRadius: "16px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, position: "relative" }}>
             <video ref={videoRef} style={{ width: "100%", display: "block", background: "#000" }} muted playsInline />
+            <button
+              onClick={() => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))}
+              title="Basculer l'orientation du cadre"
+              style={{
+                position: "absolute",
+                top: "10px",
+                left: "10px",
+                width: "38px",
+                height: "38px",
+                borderRadius: "50%",
+                background: "rgba(0,0,0,0.5)",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              <NavIcon name="repeat" size={18} color={COLORS.chalkWhite} />
+            </button>
             {flashSupported && (
               <button
                 onClick={toggleFlash}
@@ -240,19 +260,13 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             <div
               style={
                 orientation === "vertical"
-                  ? { position: "absolute", top: "12.5%", left: "36%", width: "28%", height: "75%", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
-                  : { position: "absolute", top: "36%", left: "12.5%", width: "75%", height: "28%", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
+                  ? { position: "absolute", top: "12.5%", left: "36%", width: "28%", height: "75%", border: `4px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
+                  : { position: "absolute", top: "36%", left: "12.5%", width: "75%", height: "28%", border: `4px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
               }
             />
             <canvas ref={cropCanvasRef} style={{ display: "none" }} />
           </div>
           <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", marginTop: "16px", textAlign: "center" }}>Aligne le code-barres dans le cadre</p>
-          <button
-            onClick={() => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))}
-            style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "10px" }}
-          >
-            {orientation === "horizontal" ? "Code-barres à la verticale ?" : "Code-barres à l'horizontale ?"}
-          </button>
           <button
             onClick={() => setPhase("manualEntry")}
             style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "6px" }}
