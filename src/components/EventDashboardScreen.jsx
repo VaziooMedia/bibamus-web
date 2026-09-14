@@ -1037,21 +1037,26 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
           </button>
           {showSessionStats && (
           <>
-          <div style={{ textAlign: "center", marginTop: "10px" }}>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
-            <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal > 1 ? "S" : ""}</div>
-          </div>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: COLORS.amber, lineHeight: 1.3, textAlign: "center", marginTop: "10px" }}>
-            <MoneyAmount
-              value={event.finalTotal != null ? event.finalTotal + (event.tip || 0) : cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips}
-              currency={event.currency}
-              centered
-              jetonIconSize={34}
-              jetonIcon="cyan"
-            />
+          <div style={{ display: "flex", marginTop: "10px" }}>
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal > 1 ? "S" : ""}</div>
+            </div>
+            <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
+                <MoneyAmount
+                  value={event.finalTotal != null ? event.finalTotal + (event.tip || 0) : cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips}
+                  currency={event.currency}
+                  centered
+                  jetonIconSize={28}
+                  jetonIcon="cyan"
+                />
+              </div>
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>DÉPENSÉS</div>
+            </div>
           </div>
           {event.finalTotal == null && (
-            <div style={{ marginTop: "8px", display: "flex", flexDirection: "column" }}>
+            <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                 <span>Payé par la cagnotte</span>
                 <strong style={{ color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
@@ -1082,6 +1087,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
                   </strong>
                 </div>
               )}
+              {cagnotteTips > 0 && <div style={{ width: "180px", borderTop: `1px solid ${COLORS.chalkWhite}25`, margin: "3px 0" }} />}
               <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                 <span>Total</span>
                 <strong style={{ color: COLORS.ink, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
