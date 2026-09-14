@@ -168,8 +168,13 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
               <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700, verticalAlign: "middle" }}>EN ATTENTE</span>
             )}
           </div>
-          {v.subtitle && <div style={{ fontSize: "12px", color: COLORS.chalkWhite, fontStyle: "italic", fontWeight: 600, marginTop: "1px" }}>{v.subtitle}</div>}
-          <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>{formatAddress(v)}</div>
+          {v.subtitle && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.chalkWhite, fontStyle: "italic", fontWeight: 600, marginTop: "1px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
+              {v.subtitle}
+            </div>
+          )}
+          <div style={{ fontSize: "9.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{formatAddress(v)}</div>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
