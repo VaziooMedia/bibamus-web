@@ -244,17 +244,22 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
             padding: "14px 16px",
             cursor: "pointer",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            flexDirection: "column",
             marginBottom: "16px",
             width: "100%",
           }}
         >
-          <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
-            <NavIcon name="map" size={24} color={COLORS.amber} />
-            Voir sur la carte
-          </span>
-          <NavIcon name="arrow-right-circle" size={20} color={COLORS.chalkWhite} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
+              <span style={{ width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <NavIcon name="map" size={24} color={COLORS.amber} />
+              </span>
+              Voir sur la carte
+            </span>
+            <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <NavIcon name="arrow-right-circle" size={20} color={COLORS.amber} />
+            </span>
+          </div>
         </button>
       )}
 
@@ -277,10 +282,16 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
-                  <NavIcon name="map-pin" size={24} color={COLORS.amber} />
+                  <span style={{ width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <NavIcon name="map-pin" size={24} color={COLORS.amber} />
+                  </span>
                   {geoStatus === "loading" || loadingNearby ? "Recherche..." : "Lieux près de moi"}
                 </span>
-                {geoStatus !== "loading" && !loadingNearby && <NavIcon name="arrow-right-circle" size={20} color={COLORS.chalkWhite} />}
+                {geoStatus !== "loading" && !loadingNearby && (
+                  <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <NavIcon name="arrow-right-circle" size={20} color={COLORS.amber} />
+                  </span>
+                )}
               </div>
               {geoStatus === "denied" && (
                 <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
