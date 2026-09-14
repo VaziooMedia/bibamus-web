@@ -1161,7 +1161,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
       )}
 
 
-      {!isOpenBar && !isCagnotte && (
+      {!isCagnotte && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <button
           onClick={() => setShowSessionStats((s) => !s)}
@@ -1217,7 +1217,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
                 </div>
               </div>
 
-              {!isOpenBar && event.finalTotal == null && event.rounds.length > 0 && (
+              {event.finalTotal == null && event.rounds.length > 0 && (
                 <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>
                   {!isCagnotte && !isAddition && (
                     <>
@@ -1338,51 +1338,6 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
         )}
         </div>
       )}
-
-
-      {isOpenBar && event.rounds.length > 0 && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-          <button
-            onClick={() => setShowSessionStats((s) => !s)}
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
-          >
-            <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-              <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Statistiques générales pour ce BibaRoom</span>
-            </span>
-            <span style={{ display: "inline-flex", transform: `rotate(${showSessionStats ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
-              <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
-            </span>
-          </button>
-          {showSessionStats && (
-          <div style={{ display: "flex", marginTop: "10px" }}>
-            <div style={{ textAlign: "center", flex: 1 }}>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber, lineHeight: 1 }}>{event.rounds.length}</div>
-              <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
-                TOURNÉE{event.rounds.length > 1 ? "S" : ""}
-              </div>
-            </div>
-            <div style={{ textAlign: "center", flex: 1, borderLeft: `1px solid ${COLORS.chalkWhite}25` }}>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber, lineHeight: 1 }}>{currentAttendeesCount}</div>
-              <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
-                BIBAX
-                <br />
-                PRÉSENTS
-              </div>
-            </div>
-            <div style={{ textAlign: "center", flex: 1, borderLeft: `1px solid ${COLORS.chalkWhite}25` }}>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber, lineHeight: 1 }}>{attendeesCount}</div>
-              <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
-                BIBAX
-                <br />
-                TOTAL
-              </div>
-            </div>
-          </div>
-          )}
-        </div>
-      )}
-
       {event.currency === "jeton" && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px", textAlign: "center", position: "relative" }}>
           {event.jetonUnitValue > 0 && (
