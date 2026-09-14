@@ -512,7 +512,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
           onFinish(
             finalAmount,
             isEuro || isCagnotte ? settledDirectly : true,
-            isCagnotte || isAddition || offeredByType ? null : buyerName,
+            (isCagnotte && settledDirectly) || isAddition || offeredByType ? null : buyerName,
             isEuro && settledDirectly && !offeredByType ? tip : 0,
             offeredByType ? { type: offeredByType, label: offeredByLabel.trim() } : null
           )
