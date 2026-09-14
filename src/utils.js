@@ -148,7 +148,7 @@ export const isAlcoholicDrink = (drink) => {
 };
 
 
-export function drinkSummaryLine(d, includeType = true) {
+export function drinkSummaryParts(d, includeType = true) {
   const abvText = d.abv != null ? `${d.abv.toFixed(1)}% ABV` : null;
   const producer = d.brewery || null; // brasserie/producteur specifically — not the brand, usually already in the title
 
@@ -183,7 +183,11 @@ export function drinkSummaryLine(d, includeType = true) {
     }
   }
 
-  return [includeType && d.type ? drinkTypeLabel(d.type) : null, ...parts].filter(Boolean).join(" · ");
+  return [includeType && d.type ? drinkTypeLabel(d.type) : null, ...parts].filter(Boolean);
+}
+
+export function drinkSummaryLine(d, includeType = true) {
+  return drinkSummaryParts(d, includeType).join(" · ");
 }
 
 export const normalizeForDuplicateCheck = (name) => (name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");

@@ -6,12 +6,11 @@
 // elle a besoin (comptages, page de résultats).
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, DRINK_TYPES, RATABLE_DRINK_TYPES } from "../constants.js";
+import { COLORS, DRINK_TYPES } from "../constants.js";
 import { NavIcon, CountryFlagImg, VerifiedBadge, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
-import { StarsDisplay } from "./StarsDisplay.jsx";
-import { drinkTypeLabel, drinkSummaryLine } from "../utils.js";
+import { drinkTypeLabel, drinkSummaryParts } from "../utils.js";
 import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage } from "../data/sharedDirectories.js";
 
 const PAGE_SIZE = 40;
@@ -176,7 +175,7 @@ export function DrinksDirectoryScreen({
       <span style={{ position: "absolute", top: "10px", right: "12px" }}>
         <CertificationIcon level={d.certificationLevel} size={15} />
       </span>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flex: 1, minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
         <EntityAvatar photoUrl={d.photoUrl} size={44} />
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
@@ -186,25 +185,20 @@ export function DrinksDirectoryScreen({
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
             <DrinkBadges drink={d} onTagClick={onTagClick} />
           </div>
-          {drinkSummaryLine(d, searching) && <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{drinkSummaryLine(d, searching)}</div>}
+          {drinkSummaryParts(d, searching).length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>
+              {drinkSummaryParts(d, searching).map((part, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+                  {part}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", flexShrink: 0, marginLeft: "10px" }}>
         {d.status === "complete" && <VerifiedBadge size={15} />}
-        {RATABLE_DRINK_TYPES.includes(d.type) &&
-          !d.isGeneric &&
-          d.ratings &&
-          Object.keys(d.ratings).length > 0 &&
-          (() => {
-            const values = Object.values(d.ratings).filter((v) => typeof v === "number" && isFinite(v));
-            if (values.length === 0) return null;
-            const avg = values.reduce((s, v) => s + v, 0) / values.length;
-            return (
-              <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12.5px", color: COLORS.amber, fontWeight: 700, whiteSpace: "nowrap" }}>
-                <StarsDisplay value={1} max={1} size={13} /> {avg.toFixed(2).replace(".", ",")}
-              </span>
-            );
-          })()}
       </div>
     </button>
   );
