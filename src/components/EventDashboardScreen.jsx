@@ -1088,7 +1088,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
 
       {!isOpenBar && !isCagnotte && (
-        <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
           {event.currency === "jeton" ? (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -1136,22 +1136,10 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
                 </div>
               </div>
 
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "42px", color: COLORS.amber, lineHeight: 1.3, textAlign: "center", marginTop: "10px" }}>
-                <MoneyAmount
-                  value={event.finalTotal != null ? event.finalTotal + (event.tip || 0) + event.rounds.reduce((s, r) => s + (r.tip || 0), 0) : eventTotal}
-                  currency={event.currency}
-                  centered
-                  jetonIconSize={34}
-                  jetonIcon="cyan"
-                />
-              </div>
               {!isOpenBar && event.finalTotal == null && event.rounds.length > 0 && (
-                <div style={{ marginTop: "8px", display: "flex", flexDirection: "column" }}>
+                <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px dashed ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>
                   {!isCagnotte && !isAddition && (
                     <>
-                      <div style={{ marginBottom: "8px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                        Tournées offertes : <strong style={{ color: COLORS.amber }}>{event.rounds.length}</strong>
-                      </div>
                       <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
                         <span>Sur ma note</span>
                         <strong style={{ color: COLORS.redFluo, fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
@@ -1235,7 +1223,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
           {event.rounds.length > 0 && (
             <div style={{ display: "flex", justifyContent: "space-evenly", marginTop: "14px", paddingTop: "14px", borderTop: `1px solid ${COLORS.chalkWhite}25` }}>
               <div style={{ textAlign: "center", flex: 1 }}>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.chalkWhite, lineHeight: 1 }}>{event.rounds.length}</div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber, lineHeight: 1 }}>{event.rounds.length}</div>
                 <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
                   TOURNÉE{event.rounds.length > 1 ? "S" : ""}
                   {!isAddition && (
@@ -1247,7 +1235,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
                 </div>
               </div>
               <div style={{ textAlign: "center", flex: 1, borderLeft: `1px solid ${COLORS.chalkWhite}25` }}>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.chalkWhite, lineHeight: 1 }}>{currentAttendeesCount}</div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber, lineHeight: 1 }}>{currentAttendeesCount}</div>
                 <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
                   BIBAX
                   <br />
@@ -1255,7 +1243,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
                 </div>
               </div>
               <div style={{ textAlign: "center", flex: 1, borderLeft: `1px solid ${COLORS.chalkWhite}25` }}>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.chalkWhite, lineHeight: 1 }}>{attendeesCount}</div>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber, lineHeight: 1 }}>{attendeesCount}</div>
                 <div style={{ fontSize: "10px", opacity: 0.65, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px", lineHeight: 1.4 }}>
                   BIBAX
                   <br />
