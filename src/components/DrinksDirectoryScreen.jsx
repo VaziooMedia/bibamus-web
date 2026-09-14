@@ -183,9 +183,14 @@ export function DrinksDirectoryScreen({
             {d.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-            <DrinkBadges drink={d} onTagClick={onTagClick} />
-            {d.type === "Bières & Cidres" && d.abv != null && (
-              <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span>
+            {d.type === "Bières & Cidres" ? (
+              <>
+                {d.nationality && <CountryFlagImg country={d.nationality} size={18.5} />}
+                {d.abv != null && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span>}
+                <DrinkBadges drink={d} onTagClick={onTagClick} hideCountry />
+              </>
+            ) : (
+              <DrinkBadges drink={d} onTagClick={onTagClick} />
             )}
           </div>
           {d.type === "Bières & Cidres" ? (

@@ -23,10 +23,10 @@ export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "S
   );
 }
 
-export function DrinkBadges({ drink, onTagClick, size = 11 }) {
+export function DrinkBadges({ drink, onTagClick, size = 11, hideCountry = false }) {
   const items = [];
   const isInherentlyNonAlcoholic = NON_ALCOHOLIC_DRINK_TYPES.includes(drink.type);
-  if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality) {
+  if (!hideCountry && NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality) {
     items.push({
       key: "country",
       label: <CountryFlagImg country={drink.nationality} size={18.5} />,
