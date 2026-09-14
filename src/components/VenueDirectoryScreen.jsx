@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg, VerifiedBadge } from "./icons.jsx";
-import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton } from "./ui.jsx";
+import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { formatCompactCount, sameVenueByNameCity, formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { loadNearbyVenues, loadVenueCountryCounts, loadVenueCityCounts, loadVenuesDirectoryPage, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
@@ -158,16 +158,19 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
         alignItems: "center",
       }}
     >
-      <div>
-        <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}>
-          {v.name}
-          {v.status === "complete" && <VerifiedBadge size={15} />}
-          {v.status === "to_process" && (
-            <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700, verticalAlign: "middle" }}>EN ATTENTE</span>
-          )}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={44} />
+        <div>
+          <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}>
+            {v.name}
+            {v.status === "complete" && <VerifiedBadge size={15} />}
+            {v.status === "to_process" && (
+              <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700, verticalAlign: "middle" }}>EN ATTENTE</span>
+            )}
+          </div>
+          {v.subtitle && <div style={{ fontSize: "12px", color: COLORS.chalkWhite, fontStyle: "italic", fontWeight: 600, marginTop: "1px" }}>{v.subtitle}</div>}
+          <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>{formatAddress(v)}</div>
         </div>
-        {v.subtitle && <div style={{ fontSize: "12px", color: COLORS.wine, fontWeight: 600, marginTop: "1px" }}>{v.subtitle}</div>}
-        <div style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "2px" }}>{formatAddress(v)}</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
         {alreadyAdded(v) && <span style={{ fontSize: "14px", color: COLORS.amber }}>★</span>}
