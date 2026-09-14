@@ -262,11 +262,11 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
   const myRoundsTotal = myPending + myPaid + myTips;
   const myContribution = (event.pot?.contributions || []).filter((c) => c.name === myName).reduce((sum, c) => sum + c.amount, 0);
   const myCagnotteTotal = myPending + myPaid + myContribution + myTips;
-  const sessionPending = event.rounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
+  const sessionPending = event.rounds.filter((r) => !r.offeredBy && r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
   const sessionTips =
-    event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) +
+    event.rounds.filter((r) => !r.offeredBy && r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) +
     Object.values(event.tabTipsByBuyer || {}).reduce((sum, t) => sum + t, 0);
-  const sessionPaid = event.rounds.reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
+  const sessionPaid = event.rounds.filter((r) => !r.offeredBy).reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
   const sessionRoundsTotal = sessionPending + sessionPaid + sessionTips;
   const cagnottePaidByPot = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
   const cagnotteDirect = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
