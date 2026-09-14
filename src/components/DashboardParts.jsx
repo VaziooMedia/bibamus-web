@@ -443,7 +443,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.amber }}>
           {currentParticipant ? labelFor(currentParticipant) : "?"}
           {currentParticipant && currentParticipant.code === myBibroCode ? (
-            <span style={{ fontFamily: "'Work Sans', sans-serif", fontWeight: 500, fontSize: "13px", color: COLORS.inkSoft }}> (vous)</span>
+            <span style={{ fontFamily: "'Work Sans', sans-serif", fontWeight: 500, fontSize: "13px", color: COLORS.inkSoft }}> (toi)</span>
           ) : (
             ""
           )}
@@ -461,7 +461,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
             >
               <span style={{ fontWeight: isMe ? 700 : 500, display: "flex", alignItems: "center", gap: "6px" }}>
                 {i + 1}. {labelFor(p)}
-                {isMe && <span style={{ fontSize: "11px", fontWeight: 500, color: COLORS.inkSoft }}> (vous)</span>}
+                {isMe && <span style={{ fontSize: "11px", fontWeight: 500, color: COLORS.inkSoft }}> (toi)</span>}
                 {p.paused && <NavIcon name="pause" size={12} color={COLORS.bobYellow} />}
               </span>
               <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
