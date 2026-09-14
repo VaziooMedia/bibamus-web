@@ -184,16 +184,34 @@ export function DrinksDirectoryScreen({
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
             <DrinkBadges drink={d} onTagClick={onTagClick} />
+            {d.type === "Bières & Cidres" && d.abv != null && (
+              <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span>
+            )}
           </div>
-          {drinkSummaryParts(d, searching).length > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>
-              {drinkSummaryParts(d, searching).map((part, i) => (
-                <React.Fragment key={i}>
-                  {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
-                  {part}
-                </React.Fragment>
-              ))}
-            </div>
+          {d.type === "Bières & Cidres" ? (
+            [searching && d.type ? drinkTypeLabel(d.type) : null, d.brewery || null].filter(Boolean).length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>
+                {[searching && d.type ? drinkTypeLabel(d.type) : null, d.brewery || null]
+                  .filter(Boolean)
+                  .map((part, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+                      {part}
+                    </React.Fragment>
+                  ))}
+              </div>
+            )
+          ) : (
+            drinkSummaryParts(d, searching).length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>
+                {drinkSummaryParts(d, searching).map((part, i) => (
+                  <React.Fragment key={i}>
+                    {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+                    {part}
+                  </React.Fragment>
+                ))}
+              </div>
+            )
           )}
         </div>
       </div>
