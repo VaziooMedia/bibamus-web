@@ -841,12 +841,91 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <button
+          onClick={() => setShowPersonalDetail((s) => !s)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+        >
+          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Ajouter une boisson hors tournée</span>
+          </span>
+          <span style={{ display: "inline-flex", transform: `rotate(${showPersonalDetail ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+          </span>
+        </button>
+
+        {showPersonalDetail && (
+          <div style={{ marginTop: "10px" }}>
+            {amIPaused && (
+              <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.bobYellow, marginBottom: "8px" }}>
+                <NavIcon name="pause" size={12} color={COLORS.bobYellow} />
+                Tu es en pause — reprends depuis le BibaRoom pour pouvoir t'ajouter une boisson.
+              </p>
+            )}
+            <input
+              value={personalDrinkQuery}
+              onChange={(e) => setPersonalDrinkQuery(e.target.value)}
+              placeholder="Chercher une boisson..."
+              autoFocus
+              disabled={amIPaused}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: "9px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none", opacity: amIPaused ? 0.5 : 1 }}
+            />
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px", maxHeight: "260px", overflowY: "auto" }}>
+              {(() => {
+                const q = normalizeForSearch(personalDrinkQuery.trim());
+                const searching = q.length > 0;
+                const list = searching
+                  ? event.menu.filter((d) => normalizeForSearch(d.name).includes(q))
+                  : event.menu.filter((d) => countPersonal(d.id) > 0);
+                if (list.length === 0) {
+                  return searching ? (
+                    <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", margin: 0 }}>Aucune boisson ne correspond.</p>
+                  ) : null;
+                }
+                return list.map((drink) => {
+                  const count = countPersonal(drink.id);
+                  return (
+                    <div
+                      key={drink.id}
+                      style={{ background: count > 0 ? COLORS.paperAlt : "transparent", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    >
+                      <span style={{ fontSize: "13px", fontWeight: 600 }}>
+                        {drink.name}
+                        {drink.volumeCl && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {drink.volumeCl}cl.</span>}
+                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <button
+                          onClick={() => removeLastPersonalFor(drink.id)}
+                          disabled={count === 0}
+                          style={{ width: "22px", height: "22px", borderRadius: "6px", border: "none", background: COLORS.surface, fontSize: "13px", fontWeight: 700, cursor: count === 0 ? "default" : "pointer" }}
+                        >
+                          −
+                        </button>
+                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", minWidth: "12px", textAlign: "center" }}>{count}</span>
+                        <button
+                          onClick={() => !amIPaused && addPersonal(drink.id)}
+                          disabled={amIPaused}
+                          style={{ width: "22px", height: "22px", borderRadius: "6px", border: "none", background: amIPaused ? COLORS.paperAlt : COLORS.amber, fontSize: "13px", fontWeight: 700, cursor: amIPaused ? "default" : "pointer", color: amIPaused ? COLORS.inkSoft : COLORS.paper }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
+        <button
           onClick={() => setShowMyStats((s) => !s)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
         >
           <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques pour ce BibaRoom</span>
           </span>
           <span style={{ display: "inline-flex", transform: `rotate(${showMyStats ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
             <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
@@ -940,86 +1019,6 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
       </div>
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-        <button
-          onClick={() => setShowPersonalDetail((s) => !s)}
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
-        >
-          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Ajouter une boisson hors tournée</span>
-          </span>
-          <span style={{ display: "inline-flex", transform: `rotate(${showPersonalDetail ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
-            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
-          </span>
-        </button>
-
-        {showPersonalDetail && (
-          <div style={{ marginTop: "10px" }}>
-            {amIPaused && (
-              <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.bobYellow, marginBottom: "8px" }}>
-                <NavIcon name="pause" size={12} color={COLORS.bobYellow} />
-                Tu es en pause — reprends depuis le BibaRoom pour pouvoir t'ajouter une boisson.
-              </p>
-            )}
-            <input
-              value={personalDrinkQuery}
-              onChange={(e) => setPersonalDrinkQuery(e.target.value)}
-              placeholder="Chercher une boisson..."
-              autoFocus
-              disabled={amIPaused}
-              style={{ width: "100%", padding: "10px 12px", borderRadius: "9px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none", opacity: amIPaused ? 0.5 : 1 }}
-            />
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px", maxHeight: "260px", overflowY: "auto" }}>
-              {(() => {
-                const q = normalizeForSearch(personalDrinkQuery.trim());
-                const searching = q.length > 0;
-                const list = searching
-                  ? event.menu.filter((d) => normalizeForSearch(d.name).includes(q))
-                  : event.menu.filter((d) => countPersonal(d.id) > 0);
-                if (list.length === 0) {
-                  return searching ? (
-                    <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", margin: 0 }}>Aucune boisson ne correspond.</p>
-                  ) : null;
-                }
-                return list.map((drink) => {
-                  const count = countPersonal(drink.id);
-                  return (
-                    <div
-                      key={drink.id}
-                      style={{ background: count > 0 ? COLORS.paperAlt : "transparent", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                    >
-                      <span style={{ fontSize: "13px", fontWeight: 600 }}>
-                        {drink.name}
-                        {drink.volumeCl && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {drink.volumeCl}cl.</span>}
-                      </span>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <button
-                          onClick={() => removeLastPersonalFor(drink.id)}
-                          disabled={count === 0}
-                          style={{ width: "22px", height: "22px", borderRadius: "6px", border: "none", background: COLORS.surface, fontSize: "13px", fontWeight: 700, cursor: count === 0 ? "default" : "pointer" }}
-                        >
-                          −
-                        </button>
-                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", minWidth: "12px", textAlign: "center" }}>{count}</span>
-                        <button
-                          onClick={() => !amIPaused && addPersonal(drink.id)}
-                          disabled={amIPaused}
-                          style={{ width: "22px", height: "22px", borderRadius: "6px", border: "none", background: amIPaused ? COLORS.paperAlt : COLORS.amber, fontSize: "13px", fontWeight: 700, cursor: amIPaused ? "default" : "pointer", color: amIPaused ? COLORS.inkSoft : COLORS.paper }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
-          </div>
-        )}
-      </div>
-
-
       {isCagnotte && <PotCard event={event} updateEvent={updateEvent} myName={myName} />}
 
       {isCagnotte && event.rounds.length > 0 && (
@@ -1108,7 +1107,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
 
       {!isOpenBar && !isCagnotte && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <button
           onClick={() => setShowSessionStats((s) => !s)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
