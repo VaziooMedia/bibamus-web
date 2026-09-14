@@ -417,7 +417,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
     }
   }
   const myEntry = participants.find((p) => p.code === myBibroCode);
-  const roundsBought = (p) => (p.isPot ? rounds.filter((r) => !r.buyerName).length : rounds.filter((r) => r.buyerName === p.name).length);
+  const roundsBought = (p) => (p.isPot ? rounds.filter((r) => !r.buyerName && !r.offeredBy).length : rounds.filter((r) => r.buyerName === p.name).length);
 
   const resolvedName = (p) => {
     const bibro = p.code && !p.isPot ? (bibros || []).find((b) => b.code === p.code) : null;
