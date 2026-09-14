@@ -247,11 +247,13 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
   const myRounds = event.rounds.filter((r) => r.buyerName === myName);
   const myPending = myRounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
-  const myTips = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) + (event.tip || 0);
+  const myTips = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) + (event.tabTipsByBuyer?.[myName] || 0);
   const myPaid = myRounds.reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
   const myRoundsTotal = myPending + myPaid + myTips;
   const sessionPending = event.rounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
-  const sessionTips = event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) + (event.tip || 0);
+  const sessionTips =
+    event.rounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) +
+    Object.values(event.tabTipsByBuyer || {}).reduce((sum, t) => sum + t, 0);
   const sessionPaid = event.rounds.reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
   const sessionRoundsTotal = sessionPending + sessionPaid + sessionTips;
   const cagnottePaidByPot = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
@@ -1655,7 +1657,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
           {isAddition ? (
             <SplitBillCard event={event} updateEvent={updateEvent} />
           ) : (
-            (tabTotal >= 0.01 || event.finalTotal != null) && <FinalTotalCard event={event} updateEvent={updateEvent} roundsSum={tabTotal} onPayTabAmount={onPayTabAmount} />
+            (tabTotal >= 0.01 || event.finalTotal != null) && <FinalTotalCard event={event} updateEvent={updateEvent} roundsSum={tabTotal} onPayTabAmount={onPayTabAmount} buyerName={myName} />
           )}
         </div>
       )}

@@ -529,9 +529,9 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   );
 }
 
-export function FinalTotalCard({ event, updateEvent, roundsSum, onPayTabAmount }) {
+export function FinalTotalCard({ event, updateEvent, roundsSum, onPayTabAmount, buyerName }) {
   const [value, setValue] = useState(event.finalTotal != null ? String(event.finalTotal) : "");
-  const [tipValue, setTipValue] = useState(event.tip ? String(event.tip) : "");
+  const [tipValue, setTipValue] = useState(event.tabTipsByBuyer?.[buyerName] ? String(event.tabTipsByBuyer[buyerName]) : "");
 
   // Le composant reste monté tout au long de la session — sans ceci, un finalTotal remis à null
   // depuis l'extérieur (nouvelle tournée sur la note après un paiement) ne rafraîchirait jamais
@@ -551,7 +551,14 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayTabAmount }
     updateEvent(event.id, (e) => ({
       ...e,
       finalTotal: isNaN(parsedTotal) ? null : parsedTotal,
-      tip: isNaN(parsedTip) ? 0 : parsedTip,
+      // Par personne, cumulé — plusieurs personnes réglant chacune leur propre note (mode
+      // Tournées) ne doivent jamais s'écraser mutuellement leur pourboire, contrairement à un
+      // champ unique partagé comme pour la Cagnotte ou l'Addition, où un seul pourboire commun
+      // a du sens.
+      tabTipsByBuyer: {
+        ...(e.tabTipsByBuyer || {}),
+        [buyerName]: (e.tabTipsByBuyer?.[buyerName] || 0) + (isNaN(parsedTip) ? 0 : parsedTip),
+      },
     }));
     // Le montant encodé est celui réellement payé — un paiement partiel (ex. 1€ sur 18€) ne
     // règle que ce montant-là ; la tournée reste sur la note pour le solde restant. Champ vide
@@ -577,7 +584,7 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayTabAmount }
         <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Note finale du bar</span>
       </div>
       {roundsSum <= 0 ? (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", margin: "6px 0 0" }}>Toutes vos tournées ont déjà été réglées.</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", margin: "6px 0 0" }}>Toutes tes tournées ont déjà été réglées.</p>
       ) : (
         <>
           <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "10px" }}>
