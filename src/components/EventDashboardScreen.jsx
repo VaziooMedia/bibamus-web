@@ -1408,8 +1408,25 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
               )}
             </div>
           )}
-          <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600 }}>
-            Jeton{myJetonSpend > 1 ? "s" : ""} utilisé{myJetonSpend > 1 ? "s" : ""} : {myJetonSpend} sur {ticketsPurchased}
+          <div style={{ display: "flex", justifyContent: "space-evenly", marginTop: "14px", paddingTop: "14px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <NavIcon name="jeton-token" size={28} color="#39FF14" />
+              </div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.ink, lineHeight: 1.3 }}>{ticketsPurchased - myJetonSpend}</div>
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
+                RESTANT{ticketsPurchased - myJetonSpend > 1 ? "S" : ""}
+              </div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <TokenPinkIcon size={28} />
+              </div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "32px", color: COLORS.ink, lineHeight: 1.3 }}>{myJetonSpend}</div>
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>
+                DÉPENSÉ{myJetonSpend > 1 ? "S" : ""}
+              </div>
+            </div>
           </div>
         </div>
       )}
