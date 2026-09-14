@@ -255,6 +255,7 @@ export default function App() {
   const [viewedClubId, setViewedClubId] = useState(null);
   const [spotifyReturnContext, setSpotifyReturnContext] = useState({ screen: "connectSpotify", eventId: null });
   const [screenBeforeVenueDirectory, setScreenBeforeVenueDirectory] = useState("repertoireHub");
+  const [screenBeforeSearch, setScreenBeforeSearch] = useState("home");
   const [screenBeforeDrinksDirectory, setScreenBeforeDrinksDirectory] = useState("repertoireHub");
   const [screenBeforeDrinkDetail, setScreenBeforeDrinkDetail] = useState("drinksDirectory");
 
@@ -1623,6 +1624,7 @@ export default function App() {
                 goToSettings={() => setScreen("settings")}
                 goToSearch={() => {
                   setSearchInitialTab("lieux");
+                  setScreenBeforeSearch("home");
                   setScreen("search");
                 }}
                 goToDrinkCheck={() => {
@@ -1671,7 +1673,10 @@ export default function App() {
                 }}
                 goToManageBreweries={() => setScreen("breweries")}
                 goToManageBrands={() => setScreen("brands")}
-                goToSearch={() => setScreen("search")}
+                goToSearch={() => {
+                  setScreenBeforeSearch("repertoireHub");
+                  setScreen("search");
+                }}
                 goToScanLinked={() => {
                   setScanMode("linked");
                   setShowBarcodeScanner(true);
@@ -2143,8 +2148,9 @@ export default function App() {
                 }}
                 goToScan={() => setShowBarcodeScanner(true)}
                 goToAtlas={() => setScreen("repertoireHub")}
+                hideBibaxAndAtlas={screenBeforeSearch === "repertoireHub"}
                 initialTab={searchInitialTab}
-                onBack={() => setScreen("home")}
+                onBack={() => setScreen(screenBeforeSearch)}
               />
             )}
             {screen === "connect" && (

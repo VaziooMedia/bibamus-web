@@ -156,7 +156,7 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
           <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: 0, lineHeight: 1 }}>
-            {!skipCountryLevel && activeCountry ? activeCountry : "Brasseries & Producteurs"}
+            {!skipCountryLevel && activeCountry ? activeCountry : "Producteurs"}
           </h1>
         </div>
         <button onClick={onRefresh} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} title="Actualiser" aria-label="Actualiser">

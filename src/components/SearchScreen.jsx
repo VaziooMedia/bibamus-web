@@ -19,7 +19,7 @@ function normalize(str) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function TagButton({ label, count, active, onClick }) {
+function TagButton({ label, count, filled, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -27,20 +27,20 @@ function TagButton({ label, count, active, onClick }) {
         display: "flex",
         alignItems: "center",
         gap: "5px",
-        background: active ? COLORS.amber : "none",
-        border: `2px solid ${active ? COLORS.amber : count > 0 ? COLORS.amber : COLORS.paperAlt}`,
+        background: filled ? COLORS.amber : "none",
+        border: `2px solid ${filled ? COLORS.amber : count > 0 ? COLORS.amber : COLORS.paperAlt}`,
         borderRadius: "999px",
         padding: "6px 12px",
         fontSize: "12.5px",
         fontWeight: 700,
-        color: active ? COLORS.paper : count > 0 ? COLORS.ink : COLORS.inkSoft,
+        color: filled ? COLORS.paper : count > 0 ? COLORS.ink : COLORS.inkSoft,
         cursor: "pointer",
         whiteSpace: "nowrap",
         flexShrink: 0,
       }}
     >
       {label}
-      <span style={{ color: active ? COLORS.paper : COLORS.inkSoft, fontWeight: 700 }}>({count})</span>
+      <span style={{ color: filled ? COLORS.paper : COLORS.inkSoft, fontWeight: 700 }}>({count})</span>
     </button>
   );
 }
@@ -99,6 +99,7 @@ export function SearchScreen({
   onOpenBibaxProfile,
   goToScan,
   goToAtlas,
+  hideBibaxAndAtlas = false,
   initialTab = "lieux",
   onBack,
 }) {
@@ -125,7 +126,7 @@ export function SearchScreen({
   );
 
   useEffect(() => {
-    if (trimmed.length < 2) {
+    if (hideBibaxAndAtlas || trimmed.length < 2) {
       setBibaxResults([]);
       return;
     }
@@ -178,7 +179,7 @@ export function SearchScreen({
     if (!hasQuery) return;
     const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
     if (counts[activeTab] === 0) {
-      const firstWithResults = TABS.find((t) => counts[t.key] > 0);
+      const firstWithResults = TABS.find((t) => (!hideBibaxAndAtlas || t.key !== "bibax") && counts[t.key] > 0);
       if (firstWithResults) setActiveTab(firstWithResults.key);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -186,6 +187,10 @@ export function SearchScreen({
 
   const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
+  const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;
+  // L'onglet rempli en vert indique celui qui a le plus de résultats — indépendant de l'onglet
+  // actuellement affiché (activeTab), qui change librement au clic sans changer ce repère.
+  const leaderKey = visibleTabs.reduce((best, t) => (counts[t.key] > (counts[best] || 0) ? t.key : best), null);
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1, boxSizing: "border-box" }}>
@@ -214,7 +219,7 @@ export function SearchScreen({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Lieux, produits, marques, producteurs, Bibax..."
+              placeholder="Rechercher..."
               autoFocus
               style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
             />
@@ -245,30 +250,32 @@ export function SearchScreen({
       ) : (
         <>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px", marginBottom: "16px" }}>
-            {TABS.map((t) => (
-              <TagButton key={t.key} label={t.label} count={counts[t.key]} active={activeTab === t.key} onClick={() => setActiveTab(t.key)} />
+            {visibleTabs.map((t) => (
+              <TagButton key={t.key} label={t.label} count={counts[t.key]} filled={t.key === leaderKey} onClick={() => setActiveTab(t.key)} />
             ))}
-            <button
-              onClick={goToAtlas}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                background: "none",
-                border: `2px solid ${COLORS.jetonFluo}`,
-                borderRadius: "999px",
-                padding: "6px 12px",
-                fontSize: "12.5px",
-                fontWeight: 700,
-                color: COLORS.jetonFluo,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-              }}
-            >
-              <NavIcon name="map" size={13} color={COLORS.jetonFluo} />
-              BibAtlas
-            </button>
+            {!hideBibaxAndAtlas && (
+              <button
+                onClick={goToAtlas}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "none",
+                  border: `2px solid ${COLORS.jetonFluo}`,
+                  borderRadius: "999px",
+                  padding: "6px 12px",
+                  fontSize: "12.5px",
+                  fontWeight: 700,
+                  color: COLORS.jetonFluo,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                <NavIcon name="map" size={13} color={COLORS.jetonFluo} />
+                BibAtlas
+              </button>
+            )}
           </div>
 
           <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto" }}>

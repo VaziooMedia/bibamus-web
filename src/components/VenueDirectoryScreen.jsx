@@ -1,5 +1,5 @@
 // ============================================================
-// Écran "Établissements & Lieux" — pays, villes, recherche et
+// Écran "Lieux" — pays, villes, recherche et
 // pagination calculés côté serveur, pour tenir à l'échelle de
 // plusieurs milliers de lieux. myVenues (mes favoris) reste une
 // petite liste passée telle quelle — seul le répertoire public
@@ -190,7 +190,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
     return onBack();
   };
 
-  const title = searching ? "Établissements & Lieux" : activeCity || (activeCountry ? countryLabel(activeCountry) : "Établissements & Lieux");
+  const title = searching ? "Lieux" : activeCity || (activeCountry ? countryLabel(activeCountry) : "Lieux");
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -273,7 +273,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
                 fontSize: "14px",
               }}
             >
-              {geoStatus === "loading" || loadingNearby ? "Recherche..." : "📍 Établissements près de moi"}
+              {geoStatus === "loading" || loadingNearby ? "Recherche..." : "📍 Lieux près de moi"}
               {geoStatus === "denied" && (
                 <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
                   Position refusée — activez-la dans les réglages de votre navigateur pour réessayer.

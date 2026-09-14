@@ -154,7 +154,7 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
         }}
       >
         <NavIcon name="search" size={17} color={COLORS.inkSoft} />
-        <span style={{ flex: 1, minWidth: 0, color: COLORS.inkSoft, fontSize: "14px" }}>Lieux, produits, marques, producteurs...</span>
+        <span style={{ flex: 1, minWidth: 0, color: COLORS.inkSoft, fontSize: "14px" }}>Rechercher...</span>
         <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />
         <span
           onClick={(e) => {
@@ -170,8 +170,8 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <ActionCard
           icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
-          title="Établissements & lieux"
-          subtitle="Répertoire des établissements & lieux référencés"
+          title="Lieux"
+          subtitle="Répertoire des lieux référencés"
           onClick={goToDiscover}
         />
         <ActionCard
@@ -182,8 +182,8 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
         />
         <ActionCard
           icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
-          title="Brasseries et producteurs"
-          subtitle="Répertoire des brasseries et producteurs référencés"
+          title="Producteurs"
+          subtitle="Répertoire des producteurs référencés"
           onClick={goToManageBreweries}
         />
         <ActionCard
