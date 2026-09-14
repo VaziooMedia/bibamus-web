@@ -261,7 +261,10 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
   const cagnottePaidByPot = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + r.total, 0);
   const cagnotteDirect = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
   const cagnottePending = event.rounds.filter((r) => !r.paidByPot && !r.offeredBy && r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
-  const cagnotteTips = event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + (r.tip || 0), 0) + (event.tip || 0);
+  const cagnotteTips =
+    event.rounds.filter((r) => r.paidByPot && !r.offeredBy).reduce((sum, r) => sum + (r.tip || 0), 0) +
+    (event.tip || 0) +
+    Object.values(event.tabTipsByBuyer || {}).reduce((sum, t) => sum + t, 0);
   const additionPending = event.rounds.filter((r) => !r.offeredBy && !isRoundPaidInAddition(r)).reduce((sum, r) => sum + r.total, 0);
   const additionPaid = event.rounds.filter((r) => !r.offeredBy && isRoundPaidInAddition(r)).reduce((sum, r) => sum + r.total, 0);
   const additionTips = (event.tip || 0) + (event.tipsCollected || 0);
