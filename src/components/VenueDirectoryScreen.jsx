@@ -250,7 +250,10 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
             width: "100%",
           }}
         >
-          <span style={{ fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>🗺️ Voir sur une carte</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
+            <NavIcon name="map" size={16} color={COLORS.chalkWhite} />
+            Voir sur une carte
+          </span>
           <span style={{ fontSize: "13px", color: COLORS.chalkWhite, opacity: 0.7 }}>→</span>
         </button>
       )}

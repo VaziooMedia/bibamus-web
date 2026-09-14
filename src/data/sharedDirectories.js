@@ -1443,6 +1443,17 @@ export async function loadNearbyVenues(lat, lng, radiusMeters = 2000, limit = 10
   return data.map((row) => ({ ...rowToVenue(row.venue), distanceMeters: row.distance_meters }));
 }
 
+// "Voir sur une carte" (BibAtlas > Lieux) — uniquement id/nom/coordonnées pour poser des points,
+// jamais le répertoire complet des lieux.
+export async function loadVenueMapPins() {
+  const { data, error } = await supabase.rpc("get_venues_map_pins");
+  if (error) {
+    console.error("loadVenueMapPins:", error);
+    return [];
+  }
+  return data.map((r) => ({ id: r.id, name: r.name, lat: r.lat, lng: r.lng }));
+}
+
 // Géocode la ville déclarée d'un profil (pas d'adresse précise, juste le centre-ville) — pour
 // alimenter les suggestions Bibax par vraie proximité géographique plutôt qu'une correspondance
 // exacte sur le nom de ville. Réutilise la même fonction serveur que le géocodage d'adresse
