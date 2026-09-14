@@ -13,6 +13,35 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, TokenPinkIcon, TokenCyanIcon, TokenGreenIcon, WaterAlertIcon } from "./icons.jsx";
+
+// Mémorise l'état déroulé/enroulé d'un bloc, par salon — un choix personnel à qui consulte la
+// page, jamais synchronisé aux autres participants (contrairement à l'objet event lui-même,
+// partagé en temps réel). Une nouvelle visite du même salon retrouve le même état ; un autre
+// salon repart sur la valeur par défaut, grâce à la clé incluant eventId.
+export function usePersistedToggle(eventId, key, defaultValue) {
+  const storageKey = `bibaroom-${eventId}-${key}`;
+  const [value, setValue] = useState(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return stored !== null ? JSON.parse(stored) : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  });
+  const setPersisted = (next) => {
+    setValue((prev) => {
+      const resolved = typeof next === "function" ? next(prev) : next;
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(resolved));
+      } catch {
+        // Stockage indisponible (navigation privée, quota plein...) — l'affichage reste
+        // fonctionnel, seule la mémorisation d'une visite à l'autre est perdue.
+      }
+      return resolved;
+    });
+  };
+  return [value, setPersisted];
+}
 import { MoneyAmount, PrimaryButton } from "./ui.jsx";
 import { formatMoney, nextId } from "../utils.js";
 import { loadSalon, saveSalon, generateRoomCode } from "../data/salons.js";
@@ -532,6 +561,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
 export function FinalTotalCard({ event, updateEvent, roundsSum, onPayTabAmount, buyerName }) {
   const [value, setValue] = useState(event.finalTotal != null ? String(event.finalTotal) : "");
   const [tipValue, setTipValue] = useState(event.tabTipsByBuyer?.[buyerName] ? String(event.tabTipsByBuyer[buyerName]) : "");
+  const [showFinalTotal, setShowFinalTotal] = usePersistedToggle(event.id, "noteFinale", false);
 
   // Le composant reste monté tout au long de la session — sans ceci, un finalTotal remis à null
   // depuis l'extérieur (nouvelle tournée sur la note après un paiement) ne rafraîchirait jamais
@@ -579,11 +609,20 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayTabAmount, 
 
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-        <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Note finale du bar</span>
-      </div>
-      {roundsSum <= 0 ? (
+      <button
+        onClick={() => setShowFinalTotal((s) => !s)}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: showFinalTotal ? "4px" : 0 }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Note finale du bar</span>
+        </span>
+        <span style={{ display: "inline-flex", transform: `rotate(${showFinalTotal ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+          <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+        </span>
+      </button>
+      {showFinalTotal && (
+      roundsSum <= 0 ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", margin: "6px 0 0" }}>Toutes tes tournées ont déjà été réglées.</p>
       ) : (
         <>
@@ -644,6 +683,7 @@ export function FinalTotalCard({ event, updateEvent, roundsSum, onPayTabAmount, 
             </button>
           )}
         </>
+      )
       )}
     </div>
   );

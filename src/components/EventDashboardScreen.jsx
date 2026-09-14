@@ -10,7 +10,7 @@ import { NavIcon, WaterAlertIcon, TokenCyanIcon, TokenPinkIcon } from "./icons.j
 import settingsIconUrl from "../assets/brand/settings-icon.png";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
-import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
+import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub } from "../data/sharedDirectories.js";
@@ -30,7 +30,9 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");
   const [expandedRoundIds, setExpandedRoundIds] = useState(() => new Set());
-  const [showRoundsList, setShowRoundsList] = useState(true);
+  const [showRoundsList, setShowRoundsList] = usePersistedToggle(event.id, "tournees", false);
+  const [showMyStats, setShowMyStats] = usePersistedToggle(event.id, "mesStats", true);
+  const [showSessionStats, setShowSessionStats] = usePersistedToggle(event.id, "statsGenerales", true);
   const [roomStories, setRoomStories] = useState([]);
   useEffect(() => {
     if (!event.salonCode) return;
@@ -838,11 +840,21 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
       </div>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques</span>
-        </div>
+        <button
+          onClick={() => setShowMyStats((s) => !s)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+        >
+          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes statistiques</span>
+          </span>
+          <span style={{ display: "inline-flex", transform: `rotate(${showMyStats ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+          </span>
+        </button>
 
+        {showMyStats && (
+        <>
         <div style={{ display: "flex", marginTop: "10px" }}>
           <div style={{ flex: 1, textAlign: "center" }}>
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
@@ -886,7 +898,7 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
         </div>
 
         {!isOpenBar && !isCagnotte && !isAddition && event.rounds.length > 0 && (
-          <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, fontSize: "12.5px", color: COLORS.inkSoft }}>
+          <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, fontSize: "12.5px", color: COLORS.inkSoft }}>
             <div style={{ marginBottom: myRounds.length > 0 ? "8px" : 0 }}>
               Tournées offertes : <strong style={{ color: COLORS.amber }}>{myRounds.length}</strong> sur <strong style={{ color: COLORS.amber }}>{event.rounds.length}</strong>
             </div>
@@ -921,6 +933,8 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
               </div>
             )}
           </div>
+        )}
+        </>
         )}
 
       </div>
@@ -1094,12 +1108,23 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
 
       {!isOpenBar && !isCagnotte && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px" }}>
+        <button
+          onClick={() => setShowSessionStats((s) => !s)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+        >
+          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>{event.currency === "jeton" ? "Mes jetons" : "Statistiques générales pour ce BibaRoom"}</span>
+          </span>
+          <span style={{ display: "inline-flex", transform: `rotate(${showSessionStats ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+          </span>
+        </button>
+
+        {showSessionStats && (
+        <>
           {event.currency === "jeton" ? (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-                <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes jetons</span>
-              </div>
               <div style={{ display: "flex", justifyContent: "space-evenly", marginTop: "10px" }}>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ display: "flex", justifyContent: "center" }}>
@@ -1123,10 +1148,6 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
             </>
           ) : (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-                <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Statistiques générales pour ce BibaRoom</div>
-              </div>
 
               <div style={{ display: "flex", marginTop: "10px" }}>
                 <div style={{ flex: 1, textAlign: "center" }}>
@@ -1257,8 +1278,11 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
               </div>
             </div>
           )}
+        </>
+        )}
         </div>
       )}
+
 
       {isOpenBar && event.rounds.length > 0 && (
         <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px 18px", marginBottom: "16px", display: "flex", gap: "18px" }}>
