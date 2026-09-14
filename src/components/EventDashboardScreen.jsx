@@ -928,17 +928,19 @@ export function EventDashboardScreen({ event, venue, eventTotal, onNewRound, onM
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <button
           onClick={() => setShowPersonalDetail((s) => !s)}
-          style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: "10px 0 0 0" }}
-          title="Ajouter une boisson hors tournée"
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
         >
+          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Ajouter une boisson hors tournée</span>
+          </span>
           <span style={{ display: "inline-flex", transform: `rotate(${showPersonalDetail ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
-            <NavIcon name="back-triangle" size={20} color={COLORS.amber} />
+            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
           </span>
         </button>
 
         {showPersonalDetail && (
           <div style={{ marginTop: "10px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "6px" }}>Ajouter une boisson hors tournée</div>
             {amIPaused && (
               <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.bobYellow, marginBottom: "8px" }}>
                 <NavIcon name="pause" size={12} color={COLORS.bobYellow} />
