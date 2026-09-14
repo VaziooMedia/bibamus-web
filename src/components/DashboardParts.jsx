@@ -243,6 +243,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   const [mode, setMode] = useState(null); // null | 'join'
   const [codeInput, setCodeInput] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [showSuggestion, setShowSuggestion] = usePersistedToggle(event.id, "suggestionTournee", true);
 
   const salonCode = event.salonCode;
   const participants = event.participants || [];
@@ -435,10 +436,20 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   return (
     <>
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-        <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Suggestion pour la prochaine tournée</span>
-      </div>
+      <button
+        onClick={() => setShowSuggestion((s) => !s)}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: showSuggestion ? "12px" : 0 }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Suggestion pour la prochaine tournée</span>
+        </span>
+        <span style={{ display: "inline-flex", transform: `rotate(${showSuggestion ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+          <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+        </span>
+      </button>
+      {showSuggestion && (
+      <>
       <div style={{ background: COLORS.paperAlt, borderRadius: "10px", padding: "12px 14px", marginBottom: "12px", textAlign: "center" }}>
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.amber }}>
           {currentParticipant ? labelFor(currentParticipant) : "?"}
@@ -471,6 +482,8 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           );
         })}
       </div>
+      </>
+      )}
     </div>
 
     <div style={{ display: "flex", gap: "12px", marginBottom: "16px", alignItems: "stretch" }}>
