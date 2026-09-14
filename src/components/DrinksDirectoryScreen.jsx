@@ -282,7 +282,7 @@ export function DrinksDirectoryScreen({ isAdmin, myBibroCode, onBack, onOpenDrin
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={activeCategory ? `Rechercher dans ${drinkTypeLabel(activeCategory)}` : "Rechercher dans toutes les catégories"}
+          placeholder="Rechercher..."
           style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "15px", outline: "none" }}
         />
         <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />

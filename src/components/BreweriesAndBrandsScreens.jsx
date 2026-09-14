@@ -233,7 +233,7 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher un producteur"
+              placeholder="Rechercher..."
               style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "14px" }}
             />
           )}
@@ -279,7 +279,7 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={`Rechercher dans ${effectiveCountry}`}
+              placeholder="Rechercher..."
               style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "14px" }}
             />
           )}
@@ -527,7 +527,7 @@ export function BrandsAdminScreen({ brands, isAdmin, onBack, onOpenBrand, onRena
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher une marque"
+              placeholder="Rechercher..."
               style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "14px" }}
             />
           )}
@@ -573,7 +573,7 @@ export function BrandsAdminScreen({ brands, isAdmin, onBack, onOpenBrand, onRena
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={`Rechercher dans ${effectiveCountry}`}
+              placeholder="Rechercher..."
               style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "14px" }}
             />
           )}
