@@ -6,6 +6,8 @@
 import React from "react";
 import { COLORS, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, NON_ALCOHOLIC_DRINK_TYPES } from "../constants.js";
 import { CountryFlagImg } from "./icons.jsx";
+import bioIconUrl from "../assets/brand/bio.svg";
+import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
 
 export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "Sans gluten" }) {
   return (
@@ -42,10 +44,10 @@ export function DrinkBadges({ drink, onTagClick, size = 11, hideCountry = false 
     items.push({ key: "alcoholic", label: "Alc.", title: "Contient de l'alcool, contrairement à la plupart des produits de cette catégorie", filter: { kind: "alcoholic" } });
   }
   if (GLUTEN_BIO_ELIGIBLE_TYPES.includes(drink.type) && drink.glutenFree) {
-    items.push({ key: "gf", label: <GlutenFreeIcon size={size + 3} color={COLORS.amberDark} />, icon: true, title: "Sans gluten", filter: { kind: "glutenFree" } });
+    items.push({ key: "gf", label: <img src={glutenFreeIconUrl} alt="Sans gluten" style={{ width: `${size + 3}px`, height: `${size + 3}px`, display: "block" }} />, icon: true, title: "Sans gluten", filter: { kind: "glutenFree" } });
   }
   if (GLUTEN_BIO_ELIGIBLE_TYPES.includes(drink.type) && drink.bio) {
-    items.push({ key: "bio", label: "🌱 BIO", title: "Bio", filter: { kind: "bio" } });
+    items.push({ key: "bio", label: <img src={bioIconUrl} alt="Bio" style={{ width: `${size + 3}px`, height: `${size + 3}px`, display: "block" }} />, icon: true, title: "Bio", filter: { kind: "bio" } });
   }
   if (items.length === 0) return null;
 
