@@ -852,7 +852,13 @@ export default function App() {
     const alreadyIn = participants.some((p) => p.code === profile.myBibroCode);
     const withMe = alreadyIn
       ? normalized
-      : { ...normalized, participants: [...participants, { code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }] };
+      : {
+          ...normalized,
+          participants: [...participants, { code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }],
+          // Retire l'invitation en attente à mon nom, si j'en avais bien reçu une pour rejoindre
+          // — sinon je resterais listé comme "Invité" alors que je viens de rejoindre pour de bon.
+          pendingBibaxInvites: (normalized.pendingBibaxInvites || []).filter((p) => p.userId !== session.user.id),
+        };
     if (!alreadyIn) {
       await saveSalon(code, withMe);
       emitEvent(EVENT_TYPES.BIBAROOM_JOINED, { actorBibroCode: profile.myBibroCode, entityType: "salon", entityId: withMe.id, payload: { salonCode: code } });
@@ -864,9 +870,17 @@ export default function App() {
 
   // Depuis le fil de notifications, en réponse à une invitation à rejoindre un salon reçue
   // via "Participants" — "Rejoindre" fait exactement ce que ferait taper le code manuellement ;
-  // "Décliner" ne fait rien de plus (rien n'avait encore été ajouté côté salon).
+  // "Décliner" retire seulement l'invitation en attente côté salon (l'hôte peut réinviter plus
+  // tard s'il le souhaite).
   const respondSalonInviteFn = async (salonCode, accept) => {
-    if (accept) await joinSalon(salonCode);
+    if (accept) {
+      await joinSalon(salonCode);
+      return;
+    }
+    const salonData = await loadSalon(salonCode);
+    if (!salonData) return;
+    const updated = { ...salonData, pendingBibaxInvites: (salonData.pendingBibaxInvites || []).filter((p) => p.userId !== session.user.id) };
+    await saveSalon(salonCode, updated);
   };
 
   // Jalon 1 BibaPlay — pas encore de vraie logique de jeu, juste créer/rejoindre/démarrer.

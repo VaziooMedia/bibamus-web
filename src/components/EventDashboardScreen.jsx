@@ -11,7 +11,7 @@ import settingsIconUrl from "../assets/brand/settings-icon.png";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
-import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
+import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
@@ -124,6 +124,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
   const [confirmDeleteRoundId, setConfirmDeleteRoundId] = useState(null);
   const [participantsEditorOpen, setParticipantsEditorOpen] = useState(false);
   const [invitedBibaxName, setInvitedBibaxName] = useState(null);
+  const [inviteError, setInviteError] = useState(null);
   const [clubPickerOpen, setClubPickerOpen] = useState(false);
   const [myClubsForPicker, setMyClubsForPicker] = useState(null);
   const [linkingClub, setLinkingClub] = useState(false);
@@ -805,12 +806,30 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
                     }
                     selfName={myName}
                     bibros={bibros}
+                    pendingInvites={event.pendingBibaxInvites || []}
+                    onCancelInvite={(userId) =>
+                      updateEvent(event.id, (e) => ({
+                        ...e,
+                        pendingBibaxInvites: (e.pendingBibaxInvites || []).filter((p) => p.userId !== userId),
+                      }))
+                    }
                     onInviteBibax={
                       event.salonCode
-                        ? (b) => {
-                            createSalonInviteNotification(b.userId, myUserId, event.salonCode, event.name);
-                            setInvitedBibaxName(b.alias || b.name);
-                            setTimeout(() => setInvitedBibaxName(null), 3000);
+                        ? async (b) => {
+                            const ok = await createSalonInviteNotification(b.userId, event.salonCode, event.name);
+                            if (ok) {
+                              const label = capitalizeFirst(b.alias || b.name);
+                              updateEvent(event.id, (e) => ({
+                                ...e,
+                                pendingBibaxInvites: [...(e.pendingBibaxInvites || []), { userId: b.userId, name: label, invitedAt: Date.now() }],
+                              }));
+                              setInvitedBibaxName(label);
+                              setInviteError(null);
+                              setTimeout(() => setInvitedBibaxName(null), 3000);
+                            } else {
+                              setInviteError(`Impossible d'inviter ${b.alias || b.name} — réessaie.`);
+                              setTimeout(() => setInviteError(null), 4000);
+                            }
                           }
                         : undefined
                     }
@@ -818,6 +837,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
                   {invitedBibaxName && (
                     <p style={{ fontSize: "12px", color: COLORS.amber, marginTop: "8px", fontWeight: 600 }}>Invitation envoyée à {invitedBibaxName}.</p>
                   )}
+                  {inviteError && <p style={{ fontSize: "12px", color: COLORS.wine, marginTop: "8px", fontWeight: 600 }}>{inviteError}</p>}
                 </div>
               )}
             </>

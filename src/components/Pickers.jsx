@@ -108,7 +108,7 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
   );
 }
 
-export function ParticipantsEditor({ names, onChange, placeholder = "Participants sans compte - Prénom ou surnom", selfName, bibros, onInviteBibax }) {
+export function ParticipantsEditor({ names, onChange, placeholder = "Participants sans compte - Prénom ou surnom", selfName, bibros, onInviteBibax, pendingInvites = [], onCancelInvite }) {
   const [nameInput, setNameInput] = useState("");
 
   const addName = () => {
@@ -129,7 +129,9 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
       {bibros && bibros.length > 0 && (
         <div style={{ marginBottom: "10px" }}>
           <BibaxSearchPicker
-            bibros={bibros.filter((b) => !names.some((n) => n.toLowerCase() === (b.alias || b.name).toLowerCase()))}
+            bibros={bibros.filter(
+              (b) => !names.some((n) => n.toLowerCase() === (b.alias || b.name).toLowerCase()) && !pendingInvites.some((p) => p.userId === b.userId)
+            )}
             onPick={(b) => {
               if (onInviteBibax) {
                 onInviteBibax(b);
@@ -153,7 +155,7 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
           +
         </button>
       </div>
-      {(names.length > 0 || selfName) && (
+      {(names.length > 0 || selfName || pendingInvites.length > 0) && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
           {selfName && (
             <div
@@ -169,6 +171,35 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
               {selfName} (moi)
             </div>
           )}
+          {pendingInvites.map((p) => (
+            <div
+              key={`invite-${p.userId}`}
+              style={{
+                background: COLORS.surface,
+                border: `2px dashed ${COLORS.paperAlt}`,
+                borderRadius: "999px",
+                padding: "6px 8px 6px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "13.5px",
+                fontWeight: 600,
+                color: COLORS.inkSoft,
+              }}
+            >
+              {p.name}
+              <span style={{ fontSize: "11px", fontWeight: 500 }}>· Invité</span>
+              {onCancelInvite && (
+                <button
+                  onClick={() => onCancelInvite(p.userId)}
+                  title="Annuler l'invitation"
+                  style={{ background: COLORS.paperAlt, border: "none", borderRadius: "50%", width: "20px", height: "20px", cursor: "pointer", color: COLORS.inkSoft, fontSize: "12px" }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
           {names.map((n) => (
             <div
               key={n}
