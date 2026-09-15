@@ -74,7 +74,15 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
     setSaving(true);
     setError(null);
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
-    const result = await addSoloCheckin(myUserId, selectedDrink.id, parseFloat(price.replace(",", ".")), venue?.id, volumeNum);
+    const isSpecialPlace = venue?.id === "@home" || venue?.id === "@event";
+    const result = await addSoloCheckin(
+      myUserId,
+      selectedDrink.id,
+      parseFloat(price.replace(",", ".")),
+      isSpecialPlace ? null : venue?.id,
+      volumeNum,
+      isSpecialPlace ? venue.id.slice(1) : null
+    );
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -374,62 +382,126 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
         </button>
       </div>
 
-      {currentVenue ? (
-        <div
-          onClick={() => setVenuePickerOpen((o) => !o)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            width: "100%",
-            boxSizing: "border-box",
-            background: COLORS.surface,
-            border: `2px solid ${COLORS.amber}`,
-            borderRadius: "12px",
-            padding: "10px 14px",
-            marginBottom: "14px",
-            cursor: "pointer",
-          }}
-        >
-          <NavIcon name="map-pin" size={16} color={COLORS.amber} />
-          <span style={{ flex: 1, fontSize: "14px", fontWeight: 700 }}>{currentVenue.name}</span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setCurrentVenue(null);
-              setVenuePickerOpen(false);
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+        {currentVenue ? (
+          <div
+            onClick={() => setVenuePickerOpen((o) => !o)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              flex: 1,
+              minWidth: 0,
+              boxSizing: "border-box",
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.amber}`,
+              borderRadius: "12px",
+              padding: "10px 14px",
+              cursor: "pointer",
             }}
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
           >
-            <NavIcon name="x" size={15} color={COLORS.inkSoft} />
+            <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+            <span style={{ flex: 1, minWidth: 0, fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentVenue.name}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentVenue(null);
+                setVenuePickerOpen(false);
+              }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
+            >
+              <NavIcon name="x" size={15} color={COLORS.inkSoft} />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setVenuePickerOpen((o) => !o)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              flex: 1,
+              minWidth: 0,
+              boxSizing: "border-box",
+              background: "none",
+              border: `2px solid ${COLORS.paperAlt}`,
+              borderRadius: "12px",
+              padding: "10px 14px",
+              cursor: "pointer",
+              textAlign: "left",
+              color: COLORS.inkSoft,
+            }}
+          >
+            <NavIcon name="map-pin" size={16} color={COLORS.inkSoft} />
+            <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>Lieu</span>
           </button>
-        </div>
-      ) : (
+        )}
         <button
-          onClick={() => setVenuePickerOpen((o) => !o)}
+          onClick={() => setAdding(true)}
+          title="Ajouter un verre"
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "8px",
-            width: "100%",
-            boxSizing: "border-box",
-            background: "none",
-            border: `2px dashed ${COLORS.paperAlt}`,
-            borderRadius: "12px",
-            padding: "10px 14px",
-            marginBottom: "14px",
+            justifyContent: "center",
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            background: COLORS.amber,
+            border: "none",
             cursor: "pointer",
-            textAlign: "left",
-            color: COLORS.inkSoft,
+            flexShrink: 0,
+            fontSize: "22px",
+            fontWeight: 700,
+            color: COLORS.paper,
+            lineHeight: 1,
           }}
         >
-          <NavIcon name="map-pin" size={16} color={COLORS.inkSoft} />
-          <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>Indiquer où tu es</span>
+          +
         </button>
-      )}
+      </div>
 
       {venuePickerOpen && (
         <div style={{ marginBottom: "18px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
+            <button
+              onClick={() => pickVenue({ id: "@home", name: "@Home" })}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                background: COLORS.surface,
+                border: `2px solid ${COLORS.amber}`,
+                borderRadius: "999px",
+                padding: "8px 14px",
+                fontSize: "13px",
+                fontWeight: 700,
+                color: COLORS.ink,
+                cursor: "pointer",
+              }}
+            >
+              <NavIcon name="map-pin" size={14} color={COLORS.amber} />
+              @Home
+            </button>
+            <button
+              onClick={() => pickVenue({ id: "@event", name: "@Event" })}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                background: COLORS.surface,
+                border: `2px solid ${COLORS.amber}`,
+                borderRadius: "999px",
+                padding: "8px 14px",
+                fontSize: "13px",
+                fontWeight: 700,
+                color: COLORS.ink,
+                cursor: "pointer",
+              }}
+            >
+              <NavIcon name="map-pin" size={14} color={COLORS.amber} />
+              @Event
+            </button>
+          </div>
           {nearbyVenues.length > 0 && (
             <div style={{ marginBottom: "10px" }}>
               <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "6px" }}>Près de toi</div>
@@ -513,10 +585,6 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
         </div>
       </div>
 
-      <PrimaryButton onClick={() => setAdding(true)} style={{ width: "100%", marginBottom: "20px" }}>
-        + Ajouter un verre
-      </PrimaryButton>
-
       <div style={{ flex: 1, overflowY: "auto" }}>
         {checkins === null ? (
           <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Chargement...</p>
@@ -567,7 +635,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
                     </div>
                     {/* Ligne 3 — lieu + date + heure */}
                     <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px" }}>
-                      {venue ? `${venue.name} · ` : ""}
+                      {venue ? `${venue.name} · ` : c.specialPlace ? `@${c.specialPlace === "home" ? "Home" : "Event"} · ` : ""}
                       {formatDateOnly(c.createdAt)} · {formatTimeOnly(c.createdAt)}
                     </div>
                   </button>
