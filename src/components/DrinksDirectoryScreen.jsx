@@ -186,7 +186,7 @@ export function DrinksDirectoryScreen({
             {(d.type === "Bières & Cidres"
               ? [
                   d.nationality ? <CountryFlagImg country={d.nationality} size={18.5} /> : null,
-                  d.abv != null ? <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span> : null,
+                  d.abv != null ? <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span> : null,
                   ...getDrinkBadgeItems(d, { hideCountry: true }).map((it) => renderDrinkBadgeItem(it, { drink: d, onTagClick, size: 11 })),
                 ]
               : getDrinkBadgeItems(d).map((it) => renderDrinkBadgeItem(it, { drink: d, onTagClick, size: 11 }))
