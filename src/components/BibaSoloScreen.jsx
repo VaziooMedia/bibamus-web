@@ -74,15 +74,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
     setSaving(true);
     setError(null);
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
-    const isSpecialPlace = venue?.id === "@home" || venue?.id === "@event";
-    const result = await addSoloCheckin(
-      myUserId,
-      selectedDrink.id,
-      parseFloat(price.replace(",", ".")),
-      isSpecialPlace ? null : venue?.id,
-      volumeNum,
-      isSpecialPlace ? venue.id.slice(1) : null
-    );
+    const result = await addSoloCheckin(myUserId, selectedDrink.id, parseFloat(price.replace(",", ".")), venue?.id, volumeNum);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -635,7 +627,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
                     </div>
                     {/* Ligne 3 — lieu + date + heure */}
                     <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px" }}>
-                      {venue ? `${venue.name} · ` : c.specialPlace ? `@${c.specialPlace === "home" ? "Home" : "Event"} · ` : ""}
+                      {venue ? `${venue.name} · ` : ""}
                       {formatDateOnly(c.createdAt)} · {formatTimeOnly(c.createdAt)}
                     </div>
                   </button>

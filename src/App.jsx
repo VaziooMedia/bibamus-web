@@ -747,7 +747,10 @@ export default function App() {
     // du menu de cet événement (régénéré à chaque création d'événement, donc toujours absent du
     // catalogue) — sinon chaque insertion échoue silencieusement sur la contrainte de clé
     // étrangère, et round_orders reste vide malgré des tournées bien fermées.
-    const realVenueId = currentEvent && currentEvent.venueId && !currentEvent.isHome && currentEvent.venueId !== "@event" ? currentEvent.venueId : null;
+    // "@home"/"@event" sont de vraies lignes dans public_venues (voir bibamus-schema-home-event-
+    // venues-and-tips.sql) — on les transmet donc littéralement, ce qui les fait apparaître dans
+    // les mêmes stats de lieux que BibaSolo, plutôt que de les réduire à null comme avant.
+    const realVenueId = currentEvent?.isHome ? "@home" : currentEvent?.venueId === "@event" ? "@event" : currentEvent?.venueId || null;
     const ordersForLog = draftOrders.map((o) => {
       const friend = draftFriends.find((f) => f.id === o.friendId);
       const drink = (currentEvent?.menu || []).find((d) => d.id === o.drinkId);

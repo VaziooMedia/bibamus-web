@@ -298,7 +298,9 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
     // du catalogue (jamais l'id local du menu de l'événement), sinon l'enregistrement échoue en
     // silence, comme pour les tournées BibaRoom.
     const drink = (event.menu || []).find((d) => d.id === drinkId);
-    const realVenueId = event.venueId && !event.isHome && event.venueId !== "@event" ? event.venueId : null;
+    // "@home"/"@event" sont de vraies lignes dans public_venues — transmis littéralement pour
+    // apparaître dans les mêmes stats de lieux que BibaSolo, plutôt que réduits à null.
+    const realVenueId = event.isHome ? "@home" : event.venueId === "@event" ? "@event" : event.venueId || null;
     const realDrinkId = drink?.fromDirectory && drink?.sourceDrinkId ? drink.sourceDrinkId : null;
     if (realDrinkId) onCheckDrink(realDrinkId, realVenueId, { volumeCl: drink?.volumeCl ?? null });
   };

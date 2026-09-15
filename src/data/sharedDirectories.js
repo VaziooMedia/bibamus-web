@@ -382,10 +382,8 @@ export function subscribeToMyNotifications(userId, onNewNotification) {
 
 // BibaSolo — historique continu, sans notion de session. addSoloCheckin enregistre une
 // consommation ; loadMySoloCheckins charge l'historique (aujourd'hui par défaut).
-export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl, specialPlace) {
-  const { error } = await supabase
-    .from("solo_checkins")
-    .insert({ user_id: userId, drink_id: drinkId, price: price || null, venue_id: venueId || null, volume_cl: volumeCl || null, special_place: specialPlace || null });
+export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl) {
+  const { error } = await supabase.from("solo_checkins").insert({ user_id: userId, drink_id: drinkId, price: price || null, venue_id: venueId || null, volume_cl: volumeCl || null });
   if (error) return { error: error.message };
   return { ok: true };
 }
@@ -402,7 +400,6 @@ export async function loadMySoloCheckins(sinceIso) {
     id: row.id,
     drinkId: row.drink_id,
     venueId: row.venue_id,
-    specialPlace: row.special_place,
     price: row.price,
     volumeCl: row.volume_cl,
     createdAt: row.created_at,
@@ -2191,6 +2188,28 @@ export async function loadMyTipsTotal(since, until) {
   return data || 0;
 }
 
+export async function loadMyTipsByVenue(since, until, limit = 10) {
+  const { data, error } = await supabase.rpc("get_my_tips_by_venue", {
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+    p_limit: limit,
+  });
+  if (error) {
+    console.error("loadMyTipsByVenue:", error);
+    return [];
+  }
+  return data.map((r) => ({ venueId: r.venue_id, value: r.value }));
+}
+
+export async function loadMyTipsByMonth(months = 6) {
+  const { data, error } = await supabase.rpc("get_my_tips_by_month", { p_months: months });
+  if (error) {
+    console.error("loadMyTipsByMonth:", error);
+    return [];
+  }
+  return data.map((r) => ({ monthStart: r.month_start, total: r.total }));
+}
+
 // --- Mes Statistiques — reconstruites sur la vraie consommation (round_orders +
 // solo_checkins + drink_checkins), avec une période libre (since/until en Date, ou null = depuis
 // toujours).
@@ -2462,6 +2481,22 @@ export async function loadMyVenueRanking(metric, since = null, until = null, lim
     return [];
   }
   return data.map((r) => ({ venueId: r.venue_id, value: r.value }));
+}
+
+// Stats pour un seul lieu précis — utilisé pour les blocs dédiés "@Home"/"@Event", qui ne sont
+// pas garantis d'apparaître dans le classement général (limité aux N premiers lieux).
+export async function loadMyVenueStats(venueId, since = null, until = null) {
+  const { data, error } = await supabase.rpc("get_my_venue_stats", {
+    p_venue_id: venueId,
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+  });
+  if (error) {
+    console.error("loadMyVenueStats:", error);
+    return null;
+  }
+  const row = data?.[0];
+  return row ? { visits: row.visits, spendEuro: row.spend_euro, spendJeton: row.spend_jeton } : null;
 }
 
 // metric: "count" | "spend_euro" | "spend_jeton" | "calories"

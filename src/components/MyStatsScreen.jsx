@@ -23,6 +23,9 @@ import {
   loadMyNewDrinksCount,
   loadMyDrinkPriceStats,
   loadMyTipsTotal,
+  loadMyTipsByVenue,
+  loadMyTipsByMonth,
+  loadMyVenueStats,
   loadMyDrinkCalorieStats,
   loadMyVenueTypeRanking,
   loadMyCityCountryStats,
@@ -169,6 +172,8 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const [priceStats, setPriceStats] = useState(null);
   const [drinksByCalories, setDrinksByCalories] = useState([]);
   const [tipsTotal, setTipsTotal] = useState(0);
+  const [tipsByVenue, setTipsByVenue] = useState([]);
+  const [tipsByMonth, setTipsByMonth] = useState([]);
   useEffect(() => {
     loadMyCategoryRanking(since, null, 10).then(setCategoryRanking);
     loadMyBeerStyleRanking(since, null, 10).then(setBeerStyleRanking);
@@ -178,8 +183,15 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     loadMyDrinkPriceStats(since, null).then(setPriceStats);
     loadMyDrinkRanking("calories", since, null, 10).then(setDrinksByCalories);
     loadMyTipsTotal(since, null).then(setTipsTotal);
+    loadMyTipsByVenue(since, null, 10).then(setTipsByVenue);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodKey]);
+
+  // Toujours sur les 6 derniers mois glissants, sans lien avec la période sélectionnée — même
+  // logique que monthlySpending un peu plus bas.
+  useEffect(() => {
+    loadMyTipsByMonth(6).then(setTipsByMonth);
+  }, []);
 
   // Résolution du nom de la boisson la plus chère — bornée à ce seul identifiant.
   const [maxPriceDrinkName, setMaxPriceDrinkName] = useState(null);
@@ -254,11 +266,15 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const [venuesBySpend, setVenuesBySpend] = useState([]);
   const [drinksByCount, setDrinksByCount] = useState([]);
   const [drinksBySpend, setDrinksBySpend] = useState([]);
+  const [homeStats, setHomeStats] = useState(null);
+  const [eventStats, setEventStats] = useState(null);
   useEffect(() => {
     loadMyVenueRanking("visits", since, null, 10).then(setVenuesByVisits);
     loadMyVenueRanking("spend_euro", since, null, 10).then(setVenuesBySpend);
     loadMyDrinkRanking("count", since, null, 10).then(setDrinksByCount);
     loadMyDrinkRanking("spend_euro", since, null, 10).then(setDrinksBySpend);
+    loadMyVenueStats("@home", since, null).then(setHomeStats);
+    loadMyVenueStats("@event", since, null).then(setEventStats);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodKey]);
 
@@ -266,10 +282,10 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   // jamais le répertoire complet.
   const [venueNames, setVenueNames] = useState({});
   useEffect(() => {
-    const ids = new Set([...venuesByVisits, ...venuesBySpend].map((r) => r.venueId));
+    const ids = new Set([...venuesByVisits, ...venuesBySpend, ...tipsByVenue].map((r) => r.venueId));
     if (ids.size === 0) return;
     loadVenuesByIds([...ids]).then((results) => setVenueNames((prev) => ({ ...prev, ...Object.fromEntries(results.map((v) => [v.id, v.name])) })));
-  }, [venuesByVisits, venuesBySpend]);
+  }, [venuesByVisits, venuesBySpend, tipsByVenue]);
 
   const [drinkNames, setDrinkNames] = useState({});
   useEffect(() => {
@@ -477,6 +493,17 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   ].filter(Boolean);
 
   const hasAnyData = overview && (overview.visits > 0 || overview.drinksOrdered > 0);
+
+  // "@Home"/"@Event" toujours visibles dans le classement par visites, même hors du top 10
+  // naturel (get_my_venue_ranking est borné) — fusionnés ici puis retriés.
+  const venueDisplayName = (venueId) => (venueId === "@home" ? "@Home" : venueId === "@event" ? "@Event" : venueNames[venueId] || "…");
+  const venuesByVisitsMerged = (() => {
+    const extra = [];
+    if (homeStats?.visits > 0 && !venuesByVisits.some((r) => r.venueId === "@home")) extra.push({ venueId: "@home", value: homeStats.visits });
+    if (eventStats?.visits > 0 && !venuesByVisits.some((r) => r.venueId === "@event")) extra.push({ venueId: "@event", value: eventStats.visits });
+    if (extra.length === 0) return venuesByVisits;
+    return [...venuesByVisits, ...extra].sort((a, b) => b.value - a.value);
+  })();
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -822,6 +849,47 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             </>
           )}
 
+          {activeCategory === "depenses" && tipsByVenue.length > 0 && (
+            <StatSection title="Pourboires par lieu" arrowColor={COLORS.amber} showBottomDivider>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {tipsByVenue.map((r, i, arr) => (
+                  <div key={r.venueId} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{venueDisplayName(r.venueId)}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}>
+                      <span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />
+                      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "13px", color: COLORS.amber, textAlign: "right", flex: 1 }}>
+                        {formatMoney(r.value, "euro").replace(" €", "")}
+                        <span style={{ fontSize: "12px", color: COLORS.inkSoft, fontWeight: 700 }}> €</span>
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </StatSection>
+          )}
+
+          {activeCategory === "depenses" && tipsByMonth.some((m) => m.total > 0) && (
+            <StatSection title="Pourboires par mois (6 derniers mois)" arrowColor={COLORS.amber} showBottomDivider>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {tipsByMonth.map((m, i, arr) => {
+                  const d = new Date(m.monthStart);
+                  return (
+                    <div key={m.monthStart} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none", display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                      <span style={{ textTransform: "capitalize" }}><span style={{ color: COLORS.amber }}>– </span>{MONTH_NAMES[d.getMonth()]} {d.getFullYear()}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}>
+                        <span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />
+                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, fontSize: "13px", color: COLORS.amber, textAlign: "right", flex: 1 }}>
+                          {formatMoney(m.total, "euro").replace(" €", "")}
+                          <span style={{ fontSize: "12px", color: COLORS.inkSoft, fontWeight: 700 }}> €</span>
+                        </span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </StatSection>
+          )}
+
           {activeCategory === "depenses" && monthlySpending.some((m) => m.totalEuro > 0) && (
             <StatSection title="Évolution des dépenses (6 derniers mois)" arrowColor={COLORS.amber} showBottomDivider>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
@@ -1108,14 +1176,16 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
 
           <StatSection title="Classement par visites" arrowColor={COLORS.amber}>
-            {venuesByVisits.length === 0 ? (
+            {venuesByVisitsMerged.length === 0 ? (
               <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Check-in dans un lieu et il apparaîtra ici.</p>
             ) : (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
-                {venuesByVisits.map((r, i, arr) => (
+                {venuesByVisitsMerged.map((r, i, arr) => {
+                  const isSpecialPlace = r.venueId === "@home" || r.venueId === "@event";
+                  return (
                   <button
                     key={r.venueId}
-                    onClick={() => openVenue(r.venueId)}
+                    onClick={() => !isSpecialPlace && openVenue(r.venueId)}
                     style={{
                       width: "100%",
                       textAlign: "left",
@@ -1123,7 +1193,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                       border: "none",
                       borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
                       padding: "10px 0",
-                      cursor: "pointer",
+                      cursor: isSpecialPlace ? "default" : "pointer",
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
@@ -1131,13 +1201,37 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
                       color: COLORS.ink,
                     }}
                   >
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{venueNames[r.venueId] || "…"}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{venueDisplayName(r.venueId)}</span>
                     <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", textAlign: "right", flex: 1 }}><span style={{ color: COLORS.amber }}>{r.value}</span> <span style={{ color: COLORS.inkSoft }}>visite{r.value > 1 ? "s" : ""}</span></span></span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </StatSection>
+
+          {(homeStats?.visits > 0 || eventStats?.visits > 0) && (
+            <div style={{ display: "grid", gridTemplateColumns: homeStats?.visits > 0 && eventStats?.visits > 0 ? "1fr 1fr" : "1fr", gap: "10px", marginTop: "14px" }}>
+              {homeStats?.visits > 0 && (
+                <div style={{ background: COLORS.surfaceAlt, borderRadius: "14px", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "16px", color: COLORS.amber, marginBottom: "4px" }}>@Home</div>
+                  <div style={{ fontSize: "12.5px", color: COLORS.chalkWhite }}>
+                    <span style={{ color: COLORS.amber, fontWeight: 700 }}>{homeStats.visits}</span> session{homeStats.visits > 1 ? "s" : ""}
+                  </div>
+                  {homeStats.spendEuro > 0 && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{formatMoney(homeStats.spendEuro, "euro")} dépensés</div>}
+                </div>
+              )}
+              {eventStats?.visits > 0 && (
+                <div style={{ background: COLORS.surfaceAlt, borderRadius: "14px", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "16px", color: COLORS.amber, marginBottom: "4px" }}>@Event</div>
+                  <div style={{ fontSize: "12.5px", color: COLORS.chalkWhite }}>
+                    <span style={{ color: COLORS.amber, fontWeight: 700 }}>{eventStats.visits}</span> session{eventStats.visits > 1 ? "s" : ""}
+                  </div>
+                  {eventStats.spendEuro > 0 && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{formatMoney(eventStats.spendEuro, "euro")} dépensés</div>}
+                </div>
+              )}
+            </div>
+          )}
           </>
           )}
 
