@@ -468,7 +468,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "10px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", marginBottom: "18px" }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", marginBottom: "8px" }}>
         <button
           onClick={onGoToBibaMusic}
           style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
