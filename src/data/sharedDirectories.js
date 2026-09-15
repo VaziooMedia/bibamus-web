@@ -335,13 +335,16 @@ export async function createSalonInviteNotification(recipientUserId, salonCode, 
 // Persiste la réponse à une invitation de salon — sans ça, "Acceptée"/"Déclinée" ne vivrait
 // qu'en mémoire du composant et les boutons Rejoindre/Décliner réapparaîtraient à chaque
 // réouverture du fil de notifications.
-export async function respondSalonInviteNotification(notificationId, accept) {
+// Persiste la réponse à une notification actionable (invitation de salon, demande Bibax...) —
+// respond_salon_invite ne fait rien de propre aux salons malgré son nom historique : elle
+// marque juste le statut d'une notification qui m'appartient, réutilisable pour tous les types.
+export async function respondNotification(notificationId, accept) {
   const { error } = await supabase.rpc("respond_salon_invite", {
     p_notification_id: notificationId,
     p_accept: accept,
   });
   if (error) {
-    console.error("respondSalonInviteNotification:", error);
+    console.error("respondNotification:", error);
     return false;
   }
   return true;

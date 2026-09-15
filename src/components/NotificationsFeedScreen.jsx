@@ -8,7 +8,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
-import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests, respondBibaxRequest, respondSalonInviteNotification } from "../data/sharedDirectories.js";
+import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests, respondBibaxRequest, respondNotification } from "../data/sharedDirectories.js";
 
 const TYPE_LABELS = {
   pulse_bix: "a Bixé votre publication",
@@ -55,6 +55,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
     if (!request) return;
     setBusyId(n.id);
     const result = await respondBibaxRequest(request.relationshipId, accept);
+    if (!result?.error) await respondNotification(n.id, accept);
     setBusyId(null);
     if (result?.error) {
       alert(result.error);
@@ -65,7 +66,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
 
   const respondSalonInvite = async (n, accept) => {
     setBusyId(n.id);
-    await respondSalonInviteNotification(n.id, accept);
+    await respondNotification(n.id, accept);
     await onRespondSalonInvite?.(n.entityId, accept);
     setBusyId(null);
     setRespondedIds((prev) => ({ ...prev, [n.id]: accept ? "accepted" : "declined" }));
