@@ -8,6 +8,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import bibaplayIconUrl from "../assets/brand/bibaplay.svg";
+import predictIconUrl from "../assets/brand/predict.svg";
 
 export function BibaPlayHubScreen({ onBack, onSelectPredict }) {
   return (
@@ -49,7 +50,7 @@ export function BibaPlayHubScreen({ onBack, onSelectPredict }) {
           textAlign: "left",
         }}
       >
-        <NavIcon name="activity" size={24} color={COLORS.amber} />
+        <img src={predictIconUrl} alt="" style={{ width: "24px", height: "24px", display: "block" }} />
         <div>
           <div style={{ fontSize: "14.5px", fontWeight: 700, color: COLORS.ink }}>Predict</div>
           <div style={{ fontSize: "12px", color: COLORS.inkSoft }}>Pronostics sportifs entre amis, sans argent réel</div>

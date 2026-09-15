@@ -175,7 +175,7 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
                 left: "10px",
                 top: "50%",
                 transform: "translateY(-50%)",
-                fontSize: "11px",
+                fontSize: "12.5px",
                 color: COLORS.inkSoft,
                 pointerEvents: "none",
                 whiteSpace: "nowrap",
