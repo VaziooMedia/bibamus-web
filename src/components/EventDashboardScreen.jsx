@@ -13,7 +13,7 @@ import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
-import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub } from "../data/sharedDirectories.js";
+import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 
 // Retient, pour toute la durée de la session dans l'app (pas juste le montage de CE composant),
@@ -123,6 +123,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
   const [editingRoundId, setEditingRoundId] = useState(null);
   const [confirmDeleteRoundId, setConfirmDeleteRoundId] = useState(null);
   const [participantsEditorOpen, setParticipantsEditorOpen] = useState(false);
+  const [invitedBibaxName, setInvitedBibaxName] = useState(null);
   const [clubPickerOpen, setClubPickerOpen] = useState(false);
   const [myClubsForPicker, setMyClubsForPicker] = useState(null);
   const [linkingClub, setLinkingClub] = useState(false);
@@ -804,7 +805,19 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
                     }
                     selfName={myName}
                     bibros={bibros}
+                    onInviteBibax={
+                      event.salonCode
+                        ? (b) => {
+                            createSalonInviteNotification(b.userId, myUserId, event.salonCode, event.name);
+                            setInvitedBibaxName(b.alias || b.name);
+                            setTimeout(() => setInvitedBibaxName(null), 3000);
+                          }
+                        : undefined
+                    }
                   />
+                  {invitedBibaxName && (
+                    <p style={{ fontSize: "12px", color: COLORS.amber, marginTop: "8px", fontWeight: 600 }}>Invitation envoyée à {invitedBibaxName}.</p>
+                  )}
                 </div>
               )}
             </>

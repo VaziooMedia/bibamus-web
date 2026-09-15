@@ -108,7 +108,7 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
   );
 }
 
-export function ParticipantsEditor({ names, onChange, placeholder = "Participants sans compte - Prénom ou surnom", selfName, bibros }) {
+export function ParticipantsEditor({ names, onChange, placeholder = "Participants sans compte - Prénom ou surnom", selfName, bibros, onInviteBibax }) {
   const [nameInput, setNameInput] = useState("");
 
   const addName = () => {
@@ -131,6 +131,10 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
           <BibaxSearchPicker
             bibros={bibros.filter((b) => !names.some((n) => n.toLowerCase() === (b.alias || b.name).toLowerCase()))}
             onPick={(b) => {
+              if (onInviteBibax) {
+                onInviteBibax(b);
+                return;
+              }
               const label = capitalizeFirst(b.alias || b.name);
               if (!names.some((n) => n.toLowerCase() === label.toLowerCase())) onChange([...names, label]);
             }}

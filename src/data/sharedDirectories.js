@@ -288,6 +288,7 @@ export async function loadMyNotifications(limit = 30) {
       createdAt: n.created_at,
       previewText: n.preview_text,
       postPreview: n.post_preview,
+      actorId: n.actor_id,
       actorName: actor?.display_name || null,
       actorLastName: actor?.last_name || null,
       actorAvatarUrl: actor?.avatar_url || null,
@@ -312,6 +313,22 @@ export async function markNotificationsRead(ids) {
 export async function markAllNotificationsRead() {
   const { error } = await supabase.from("notifications_feed").update({ read: true }).eq("read", false);
   if (error) console.error("markAllNotificationsRead:", error);
+}
+
+// Invitation à rejoindre un salon — contrairement aux autres types (bibax_request, pulse_bix...)
+// qui sont créés côté serveur, celui-ci n'a pas encore de déclencheur en base, donc on l'insère
+// directement depuis le client au moment où l'hôte choisit un vrai Bibax dans "Participants".
+export async function createSalonInviteNotification(recipientUserId, actorId, salonCode, salonName) {
+  const { error } = await supabase.from("notifications_feed").insert({
+    recipient_id: recipientUserId,
+    actor_id: actorId,
+    type: "salon_invite",
+    entity_type: "salon",
+    entity_id: salonCode,
+    preview_text: salonName || null,
+    read: false,
+  });
+  if (error) console.error("createSalonInviteNotification:", error);
 }
 
 // Abonnement temps réel — appelé une fois avec l'id de l'utilisateur, prévient

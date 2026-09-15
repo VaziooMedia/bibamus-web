@@ -862,6 +862,13 @@ export default function App() {
     setScreen("eventDashboard");
   };
 
+  // Depuis le fil de notifications, en réponse à une invitation à rejoindre un salon reçue
+  // via "Participants" — "Rejoindre" fait exactement ce que ferait taper le code manuellement ;
+  // "Décliner" ne fait rien de plus (rien n'avait encore été ajouté côté salon).
+  const respondSalonInviteFn = async (salonCode, accept) => {
+    if (accept) await joinSalon(salonCode);
+  };
+
   // Jalon 1 BibaPlay — pas encore de vraie logique de jeu, juste créer/rejoindre/démarrer.
   // linkedSalonCode est fourni quand la partie est lancée depuis un salon déjà ouvert ; sinon
   // elle est indépendante (créée depuis la tuile Home) et se rejoint avec son propre code.
@@ -3108,6 +3115,7 @@ export default function App() {
             {screen === "notificationsFeed" && (
               <NotificationsFeedScreen
                 onBack={() => setScreen("home")}
+                onRespondSalonInvite={respondSalonInviteFn}
                 onOpenPulseEntry={(entryId, openComments) => {
                   setFocusPulseEntry({ id: entryId, openComments: !!openComments });
                   setScreen("bibaPulse");
