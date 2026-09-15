@@ -308,8 +308,8 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addFriend()}
-              placeholder="Participants sans compte - Prénom ou surnom"
-              style={{ flex: 1, padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "12px", outline: "none" }}
+              placeholder="Participants sans compte Bibamus"
+              style={{ flex: 1, padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
             />
             <button onClick={() => addFriend()} style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, border: "none", borderRadius: "10px", padding: "0 18px", fontWeight: 700, fontSize: "18px", cursor: "pointer" }}>
               +

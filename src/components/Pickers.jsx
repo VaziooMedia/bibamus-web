@@ -8,6 +8,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, VerifiedBadge } from "./icons.jsx";
 import { normalizeForSearch, capitalizeFirst, sameVenueByNameCity } from "../utils.js";
 import { searchVenues } from "../data/sharedDirectories.js";
+import bibaxIconUrl from "../assets/brand/bibax.svg";
 
 export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placeholder = "Rechercher un Bibax..." }) {
   const [open, setOpen] = useState(false);
@@ -58,7 +59,7 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
         }}
       >
         <span style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-          <NavIcon name="search" size={14} color={COLORS.amber} />
+          <img src={bibaxIconUrl} alt="" style={{ width: "14px", height: "14px", display: "block" }} />
           Ajouter depuis tes Bibax...
         </span>
         <span style={{ fontSize: "11px" }}>{open ? "▲" : "▾"}</span>
@@ -121,7 +122,7 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
   );
 }
 
-export function ParticipantsEditor({ names, onChange, placeholder = "Participants sans compte - Prénom ou surnom", selfName, bibros, onInviteBibax, pendingInvites = [], onCancelInvite }) {
+export function ParticipantsEditor({ names, onChange, placeholder = "Participants sans compte Bibamus", selfName, bibros, myBibroCode, onInviteBibax, pendingInvites = [], onCancelInvite }) {
   const [nameInput, setNameInput] = useState("");
 
   const addName = () => {
@@ -143,7 +144,10 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
         <div style={{ marginBottom: "10px" }}>
           <BibaxSearchPicker
             bibros={bibros.filter(
-              (b) => !names.some((n) => n.toLowerCase() === (b.alias || b.name).toLowerCase()) && !pendingInvites.some((p) => p.userId === b.userId)
+              (b) =>
+                b.code !== myBibroCode &&
+                !names.some((n) => n.toLowerCase() === (b.alias || b.name).toLowerCase()) &&
+                !pendingInvites.some((p) => p.userId === b.userId)
             )}
             onPick={(b) => {
               if (onInviteBibax) {

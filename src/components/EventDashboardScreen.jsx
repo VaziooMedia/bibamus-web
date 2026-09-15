@@ -762,7 +762,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
             borderRadius: "8px",
             padding: "6px 10px",
             marginBottom: "18px",
-            display: "inline-block",
+            textAlign: "center",
           }}
         >
           {salonToast.type === "left" && `${salonToast.name} a quitté le BibaRoom`}
@@ -836,6 +836,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
                       }))
                     }
                     selfName={myName}
+                    myBibroCode={myBibroCode}
                     bibros={bibros}
                     pendingInvites={event.pendingBibaxInvites || []}
                     onCancelInvite={(userId) =>
