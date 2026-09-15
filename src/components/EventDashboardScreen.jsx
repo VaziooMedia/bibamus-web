@@ -8,6 +8,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
 import { NavIcon, WaterAlertIcon, TokenCyanIcon, TokenPinkIcon } from "./icons.jsx";
 import settingsIconUrl from "../assets/brand/settings-icon.png";
+import bibaplayIconUrl from "../assets/brand/bibaplay.svg";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
@@ -740,7 +741,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
           title="BibaPlay"
         >
-          <NavIcon name="activity" size={22} color={COLORS.amber} />
+          <img src={bibaplayIconUrl} alt="" style={{ width: "22px", height: "22px", display: "block" }} />
           <span style={{ fontSize: "11px", fontWeight: 700 }}>
             <span style={{ color: COLORS.ink }}>Biba</span>
             <span style={{ color: COLORS.amber }}>Play</span>

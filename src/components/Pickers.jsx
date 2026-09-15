@@ -50,7 +50,7 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
           borderRadius: "10px",
           border: `2px solid ${COLORS.paperAlt}`,
           background: COLORS.surface,
-          fontSize: "16px",
+          fontSize: "12.5px",
           color: COLORS.inkSoft,
           cursor: "pointer",
           display: "flex",
@@ -166,7 +166,7 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
           onChange={(e) => setNameInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addName()}
           placeholder={placeholder}
-          style={{ flex: 1, padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
+          style={{ flex: 1, minWidth: 0, padding: "12px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
         />
         <button onClick={addName} style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, border: "none", borderRadius: "10px", padding: "0 18px", fontWeight: 700, fontSize: "18px", cursor: "pointer" }}>
           +
