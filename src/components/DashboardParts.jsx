@@ -602,7 +602,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
       </div>
       </div>
       {confirmLeave && (
-        <p style={{ fontSize: "11px", color: COLORS.redFluo, marginTop: "8px", textAlign: "center" }}>
+        <p style={{ fontSize: "11px", color: COLORS.pinkFluo, marginTop: "8px", textAlign: "center" }}>
           Tu vas quitter ce BibaRoom.
           <br />
           Tes tournées déjà offertes restent enregistrées.{" "}
@@ -615,8 +615,10 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
         </p>
       )}
       {confirmClose && (
-        <p style={{ fontSize: "11px", color: COLORS.redFluo, marginTop: "8px", textAlign: "center" }}>
-          Sortira de tes événements en cours — reste consultable dans l'historique.{" "}
+        <p style={{ fontSize: "11px", color: COLORS.pinkFluo, marginTop: "8px", textAlign: "center" }}>
+          Sortira de tes événements en cours.
+          <br />
+          Reste consultable dans ton historique.{" "}
           <button
             onClick={() => setConfirmClose(false)}
             style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "11px", cursor: "pointer", padding: 0 }}
