@@ -67,16 +67,13 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
     if (ids.length === 0) return;
     loadDrinksByIds(ids).then(setVenueDrinks);
   }, [venue]);
-  const venueMenuItems = (() => {
-    const seen = new Set();
-    return (venue?.menu || [])
-      .filter((item) => item && item.fromDirectory && item.sourceDrinkId && !seen.has(item.sourceDrinkId) && seen.add(item.sourceDrinkId))
-      .map((item) => resolveMenuItem(item, venueDrinks))
-      .filter((item) => item.name);
-  })();
+  const venueMenuItems = (venue?.menu || [])
+    .filter((item) => item && item.fromDirectory && item.sourceDrinkId)
+    .map((item) => resolveMenuItem(item, venueDrinks))
+    .filter((item) => item.name);
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
   const venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
-  const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
 
   const q = normalize(query);
   const [drinkResults, setDrinkResults] = useState([]);
@@ -279,7 +276,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                 <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
                   {itemsInCategory(activeCategory).map((item, i, arr) => (
                     <button
-                      key={item.sourceDrinkId}
+                      key={item.id}
                       onClick={() => selectVenueMenuItem(item)}
                       style={{
                         display: "flex",
@@ -296,8 +293,11 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                       }}
                     >
                       <NavIcon name="bottle" size={16} color={COLORS.amber} />
-                      <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{item.name}</span>
-                      {item.price != null && <span style={{ fontSize: "13px", color: COLORS.amber, fontWeight: 700 }}>{String(item.price).replace(".", ",")} €</span>}
+                      <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: "6px", minWidth: 0 }}>
+                        <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</span>
+                        {item.volumeCl && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>{item.volumeCl}cl.</span>}
+                      </span>
+                      {item.price != null && <span style={{ fontSize: "13px", color: COLORS.amber, fontWeight: 700, flexShrink: 0 }}>{String(item.price).replace(".", ",")} €</span>}
                     </button>
                   ))}
                 </div>
