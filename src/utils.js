@@ -78,8 +78,9 @@ export const todayISO = () => new Date().toISOString().slice(0, 10);
 
 let idCounter = 0;
 export const nextId = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
   idCounter += 1;
-  return `${Date.now()}-${idCounter}`;
+  return `${Date.now()}-${idCounter}-${Math.random().toString(36).slice(2, 8)}`;
 };
 
 export const kcalForDrink = (drink) =>

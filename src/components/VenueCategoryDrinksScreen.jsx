@@ -25,9 +25,11 @@ const badgeStyle = {
 
 export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
+  const seenIds = new Set();
   const items = (venue?.menu || [])
     .map((d) => resolveMenuItem(d, drinksDirectory))
-    .filter((d) => categoryOf(d) === category);
+    .filter((d) => categoryOf(d) === category)
+    .filter((d) => !seenIds.has(d.id) && seenIds.add(d.id));
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -51,9 +53,38 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
             const priceNumber = priceParts.join(" ");
             const canOpenDrink = d.fromDirectory && d.sourceDrinkId && onOpenDrink;
 
+            const line2Parts = [
+              d.servingMode && SERVING_MODE_LABELS[d.servingMode] ? (
+                <span key="serving" style={{ fontSize: "11px", color: COLORS.inkSoft }}>
+                  {SERVING_MODE_LABELS[d.servingMode]}
+                </span>
+              ) : null,
+              d.nationality ? <CountryFlagImg key="flag" country={d.nationality} size={16} /> : null,
+              d.abv != null ? (
+                <span key="abv" style={{ fontSize: "11px", color: COLORS.inkSoft }}>
+                  {d.abv.toFixed(1)}% ABV
+                </span>
+              ) : null,
+              isZeroAbv ? (
+                <span key="zero" style={badgeStyle}>
+                  0.0%
+                </span>
+              ) : null,
+              d.bio ? (
+                <span key="bio" style={badgeStyle}>
+                  🌱 BIO
+                </span>
+              ) : null,
+              d.glutenFree ? (
+                <span key="gf" style={{ ...badgeStyle, padding: "3px", display: "inline-flex", alignItems: "center" }}>
+                  <GlutenFreeIcon size={11} />
+                </span>
+              ) : null,
+            ].filter(Boolean);
+
             return (
               <div key={d.id} style={{ display: "flex", alignItems: "center", gap: "12px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
-                <EntityAvatar size={44} fallbackIcon="bottle" />
+                <EntityAvatar photoUrl={d.photoUrl} size={44} fallbackIcon="bottle" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
                     <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>{d.name || "Sans nom"}</span>
@@ -61,19 +92,12 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "5px", flexWrap: "wrap" }}>
-                    {d.servingMode === "fut" && <span style={badgeStyle}>On Tap</span>}
-                    {isZeroAbv && <span style={badgeStyle}>0.0%</span>}
-                    {d.bio && <span style={badgeStyle}>🌱 BIO</span>}
-                    {d.glutenFree && (
-                      <span style={{ ...badgeStyle, padding: "3px", display: "inline-flex", alignItems: "center" }}>
-                        <GlutenFreeIcon size={11} />
-                      </span>
-                    )}
-                    {d.nationality && (
-                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: COLORS.paperAlt, borderRadius: "5px", width: "18.5px", height: "18.5px", overflow: "hidden" }}>
-                        <CountryFlagImg country={d.nationality} size={18.5} />
-                      </span>
-                    )}
+                    {line2Parts.map((part, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+                        {part}
+                      </React.Fragment>
+                    ))}
                     <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
                       <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber }}>
                         {priceNumber} <span style={{ fontSize: "10.5px", fontWeight: 600, color: COLORS.inkSoft }}>{priceSymbol}</span>
@@ -86,13 +110,7 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
                     </span>
                   </div>
 
-                  {(d.abv != null || d.brewery) && (
-                    <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, margin: "4px 0 0 0" }}>
-                      {d.abv != null && <span>{d.abv.toFixed(1)}% ABV</span>}
-                      {d.abv != null && d.brewery && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
-                      {d.brewery && <span>{d.brewery}</span>}
-                    </p>
-                  )}
+                  {d.brewery && <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "4px 0 0 0" }}>{d.brewery}</p>}
                 </div>
               </div>
             );

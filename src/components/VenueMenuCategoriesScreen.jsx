@@ -16,7 +16,8 @@ export function VenueMenuCategoriesScreen({ venue, onBack, onOpenCategory }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   // Le menu tel que stocké ne contient que des références (sourceDrinkId, fromDirectory...),
   // pas le nom/type réel — sans cette résolution, tout retombe dans "Non classé".
-  const menu = (venue?.menu || []).map((d) => resolveMenuItem(d, drinksDirectory));
+  const seenIds = new Set();
+  const menu = (venue?.menu || []).map((d) => resolveMenuItem(d, drinksDirectory)).filter((d) => !seenIds.has(d.id) && seenIds.add(d.id));
   const categoriesWithCount = [...MENU_CATEGORIES, "Non classé"]
     .map((cat) => ({ cat, count: menu.filter((d) => categoryOf(d) === cat).length }))
     .filter(({ count }) => count > 0);
