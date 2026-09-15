@@ -603,6 +603,8 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
       </div>
       {confirmLeave && (
         <p style={{ fontSize: "11px", color: COLORS.redFluo, marginTop: "8px", textAlign: "center" }}>
+          Tu vas quitter ce BibaRoom.
+          <br />
           Tes tournées déjà offertes restent enregistrées.{" "}
           <button
             onClick={() => setConfirmLeave(false)}

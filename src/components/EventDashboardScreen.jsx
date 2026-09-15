@@ -393,11 +393,29 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           )}
         </div>
       </div>
-      <div style={{ marginTop: "4px", marginBottom: "4px" }}>
+      <div style={{ marginTop: "4px", marginBottom: "4px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
         <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>
           {event.date && `${formatDate(event.date)} · `}
           {event.createdAt && `Start : ${formatTime(event.createdAt)}`}
         </span>
+        <button
+          onClick={onOpenSettings}
+          title="Réglages de la session"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "40px",
+            height: "32px",
+            background: "none",
+            border: `2px solid ${COLORS.paperAlt}`,
+            borderRadius: "8px",
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+        >
+          <img src={settingsIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
+        </button>
       </div>
       {venue && (
         <button
@@ -426,25 +444,6 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-        <button
-          onClick={onOpenSettings}
-          title="Réglages de la session"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "40px",
-            height: "32px",
-            background: "none",
-            border: `2px solid ${COLORS.paperAlt}`,
-            borderRadius: "8px",
-            cursor: "pointer",
-            flexShrink: 0,
-          }}
-        >
-          <img src={settingsIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
-        </button>
-
         <button
           onClick={togglePause}
           style={{
