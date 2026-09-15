@@ -549,18 +549,6 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         </button>
 
         <button
-          onClick={onGoToBibaPlay}
-          style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
-          title="BibaPlay"
-        >
-          <NavIcon name="activity" size={22} color={COLORS.amber} />
-          <span style={{ fontSize: "11px", fontWeight: 700 }}>
-            <span style={{ color: COLORS.ink }}>Biba</span>
-            <span style={{ color: COLORS.amber }}>Play</span>
-          </span>
-        </button>
-
-        <button
           onClick={onManageMenu}
           style={{ position: "relative", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "4px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px 9px", fontWeight: 600, fontSize: "11px", color: COLORS.ink, cursor: "pointer" }}
         >
@@ -733,6 +721,20 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           <WaterAlertIcon size={20} dark={event.waterAlert?.enabled} />
         </button>
         </div>
+      </div>
+
+      <div style={{ display: "flex", marginBottom: "18px" }}>
+        <button
+          onClick={onGoToBibaPlay}
+          style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
+          title="BibaPlay"
+        >
+          <NavIcon name="activity" size={22} color={COLORS.amber} />
+          <span style={{ fontSize: "11px", fontWeight: 700 }}>
+            <span style={{ color: COLORS.ink }}>Biba</span>
+            <span style={{ color: COLORS.amber }}>Play</span>
+          </span>
+        </button>
       </div>
 
       {event.nowPlayingTrack && (
