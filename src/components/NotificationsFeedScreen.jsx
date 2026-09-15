@@ -16,7 +16,7 @@ const TYPE_LABELS = {
   pulse_sante: "a dit Cheers à votre publication",
   bibax_request: "vous a envoyé une demande Bibax",
   bibax_accepted: "a accepté votre demande Bibax",
-  salon_invite: "vous invite à rejoindre un BibaRoom",
+  salon_invite: "t'invite à rejoindre un BibaRoom",
 };
 
 function timeAgo(iso) {
