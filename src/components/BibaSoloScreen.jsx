@@ -9,7 +9,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { COLORS, COUNTRY_FLAGS, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { NavIcon, FlagIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
-import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds, searchVenues, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds, searchVenues, loadVenuesByIds, loadNearbyVenues } from "../data/sharedDirectories.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 
 function normalize(str) {
@@ -75,6 +75,21 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], onDone, onBack }) {
     }, 350);
     return () => clearTimeout(timer);
   }, [vq, venueQuery]);
+
+  // Suggestions "Près de toi" — géolocalisation demandée dès l'ouverture de l'écran, en arrière-
+  // plan, pour que les lieux proches soient déjà prêts au moment où on arrive à l'étape "Lieu".
+  // Silencieux si refusé ou indisponible : la recherche manuelle reste toujours là.
+  const [nearbyVenues, setNearbyVenues] = useState([]);
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        loadNearbyVenues(pos.coords.latitude, pos.coords.longitude, 500, 5).then(setNearbyVenues);
+      },
+      () => {},
+      { timeout: 8000, maximumAge: 300000 }
+    );
+  }, []);
 
   const selectDrink = (d) => {
     setSelectedDrink(d);
@@ -226,6 +241,35 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], onDone, onBack }) {
             </div>
           ) : (
             <>
+              {nearbyVenues.length > 0 && (
+                <div style={{ marginBottom: "10px" }}>
+                  <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "6px" }}>Près de toi</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {nearbyVenues.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVenue(v)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          background: COLORS.surface,
+                          border: `2px solid ${COLORS.amber}`,
+                          borderRadius: "999px",
+                          padding: "8px 14px",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: COLORS.ink,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <NavIcon name="map-pin" size={14} color={COLORS.amber} />
+                        {v.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <input
                 type="text"
                 value={venueQuery}
