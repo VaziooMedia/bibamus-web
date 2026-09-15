@@ -82,7 +82,6 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
       return next;
     });
   const [purchaseQty, setPurchaseQty] = useState(1);
-  const [confirmClose, setConfirmClose] = useState(false);
   const [sessionMenuOpen, setSessionMenuOpen] = useState(false);
   const [waterAlertModalOpen, setWaterAlertModalOpen] = useState(false);
   const waterAlertClaimedForCount = React.useRef(null);
@@ -459,7 +458,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
             width: "60px",
             height: "32px",
             background: "none",
-            border: `2px solid ${event.paused || confirmClose ? COLORS.jetonFluo : COLORS.paperAlt}`,
+            border: `2px solid ${event.paused ? COLORS.jetonFluo : COLORS.paperAlt}`,
             borderRadius: "8px",
             cursor: "pointer",
           }}
@@ -467,7 +466,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         >
           <NavIcon name="pause" size={12} color={event.paused ? COLORS.jetonFluo : COLORS.amber} />
           <span style={{ fontSize: "10px", color: COLORS.inkSoft }}>/</span>
-          <NavIcon name="stop" size={12} color={confirmClose ? COLORS.redFluo : COLORS.amber} />
+          <NavIcon name="stop" size={12} color={COLORS.amber} />
         </button>
 
         {sessionMenuOpen && (
@@ -509,40 +508,6 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
               <NavIcon name={event.paused ? "play" : "pause"} size={14} color={COLORS.jetonFluo} />
               {event.paused ? "Reprendre" : "Session en pause"}
             </button>
-            {!event.salonCode && (
-              <button
-                onClick={() => (confirmClose ? onCloseEvent() : setConfirmClose(true))}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  width: "100%",
-                  background: "none",
-                  border: "none",
-                  borderRadius: "7px",
-                  padding: "9px 10px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: confirmClose ? COLORS.redFluo : COLORS.ink,
-                  cursor: "pointer",
-                  textAlign: "left",
-                }}
-              >
-                <NavIcon name="stop" size={14} color={COLORS.redFluo} />
-                {confirmClose ? "Confirmer ?" : "Fin de la session"}
-              </button>
-            )}
-            {!event.salonCode && confirmClose && (
-              <p style={{ fontSize: "10.5px", color: COLORS.redFluo, padding: "0 10px 6px 10px", margin: 0 }}>
-                Sortira de tes événements en cours — reste consultable dans l'historique.{" "}
-                <button
-                  onClick={() => setConfirmClose(false)}
-                  style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "10.5px", cursor: "pointer", padding: 0 }}
-                >
-                  Annuler
-                </button>
-              </p>
-            )}
           </div>
         )}
         </div>
