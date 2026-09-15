@@ -31,7 +31,7 @@ import { RoundTicketScreen } from "./components/RoundTicketScreen.jsx";
 import { NewEventScreen } from "./components/NewEventScreen.jsx";
 import { JoinSalonScreen } from "./components/JoinSalonScreen.jsx";
 import { BibaPlayHubScreen } from "./components/BibaPlayHubScreen.jsx";
-import { PredictHubScreen, PredictGameScreen } from "./components/PredictScreens.jsx";
+import { PredictHubScreen, PredictGameScreen, ANSWER_DURATION_SECONDS } from "./components/PredictScreens.jsx";
 import { MenuSetupScreen } from "./components/MenuSetupScreen.jsx";
 import { DrinksDirectoryScreen } from "./components/DrinksDirectoryScreen.jsx";
 import { DrinkFormScreen } from "./components/DrinkFormScreen.jsx";
@@ -870,9 +870,69 @@ export default function App() {
     setScreen("predictGame");
   };
 
-  const startPredictGameFn = async () => {
+  const startPredictGameFn = async (teamA, teamB) => {
     if (!activePredictGame) return;
-    const updated = { ...activePredictGame, status: "active", startedAt: Date.now() };
+    const updated = { ...activePredictGame, status: "active", startedAt: Date.now(), teamA: (teamA || "").trim() || null, teamB: (teamB || "").trim() || null };
+    await savePredictGame(activePredictGame.code, updated);
+    setActivePredictGame(updated);
+  };
+
+  // L'hôte lance un nouveau pronostic — 15 secondes pour répondre, un chrono partagé (lockAt)
+  // que tous les téléphones lisent de la même donnée, plutôt que de compter chacun de leur côté.
+  const launchPredictionFn = async (template) => {
+    if (!activePredictGame) return;
+    const fresh = (await loadPredictGame(activePredictGame.code)) || activePredictGame;
+    const updated = {
+      ...fresh,
+      activePrediction: {
+        id: `pred_${Date.now()}`,
+        title: template.title,
+        choices: template.choices,
+        basePoints: template.basePoints,
+        lockAt: Date.now() + ANSWER_DURATION_SECONDS * 1000,
+        answers: [],
+        correctChoiceId: null,
+      },
+    };
+    await savePredictGame(activePredictGame.code, updated);
+    setActivePredictGame(updated);
+  };
+
+  // Répond au pronostic en cours — repart de l'état partagé le plus frais possible avant
+  // d'écrire, pour ne pas écraser la réponse d'un ami soumise au même instant (le blob est
+  // partagé, pas une ligne par réponse) ; même précaution que la fusion des participants
+  // d'un salon.
+  const submitPredictAnswerFn = async (choiceId) => {
+    if (!activePredictGame?.activePrediction) return;
+    const fresh = (await loadPredictGame(activePredictGame.code)) || activePredictGame;
+    if (!fresh.activePrediction || fresh.activePrediction.correctChoiceId) return;
+    const otherAnswers = (fresh.activePrediction.answers || []).filter((a) => a.userCode !== profile.myBibroCode);
+    const updated = {
+      ...fresh,
+      activePrediction: {
+        ...fresh.activePrediction,
+        answers: [...otherAnswers, { userCode: profile.myBibroCode, choiceId, submittedAt: Date.now() }],
+      },
+    };
+    await savePredictGame(activePredictGame.code, updated);
+    setActivePredictGame(updated);
+  };
+
+  // L'hôte valide la bonne réponse — distribue les points à qui avait trouvé, puis range le
+  // pronostic dans l'historique (le classement et le feedback s'appuient dessus).
+  const resolvePredictionFn = async (correctChoiceId) => {
+    if (!activePredictGame?.activePrediction) return;
+    const fresh = (await loadPredictGame(activePredictGame.code)) || activePredictGame;
+    const prediction = fresh.activePrediction;
+    if (!prediction || prediction.correctChoiceId) return;
+    const answers = prediction.answers || [];
+    const participants = (fresh.participants || []).map((p) => {
+      const answer = answers.find((a) => a.userCode === p.code);
+      const correct = answer && answer.choiceId === correctChoiceId;
+      return correct ? { ...p, score: (p.score || 0) + prediction.basePoints } : p;
+    });
+    const resolved = { ...prediction, correctChoiceId, resolvedAt: Date.now() };
+    const updated = { ...fresh, participants, activePrediction: null, history: [...(fresh.history || []), resolved] };
     await savePredictGame(activePredictGame.code, updated);
     setActivePredictGame(updated);
   };
@@ -2931,6 +2991,9 @@ export default function App() {
                   setScreen(screenBeforePredict);
                 }}
                 onStart={startPredictGameFn}
+                onLaunchPrediction={launchPredictionFn}
+                onSubmitAnswer={submitPredictAnswerFn}
+                onResolvePrediction={resolvePredictionFn}
               />
             )}
             {screen === "bibaPulse" && (
