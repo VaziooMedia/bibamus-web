@@ -14,8 +14,20 @@ export function BibaPlayHubScreen({ onBack, onSelectPredict }) {
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 8px 0" }}>
-        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <img src={bibaplayIconUrl} alt="" style={{ width: "24px", height: "24px", display: "block" }} />
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "46px",
+            height: "46px",
+            borderRadius: "50%",
+            background: COLORS.paperAlt,
+            flexShrink: 0,
+          }}
+        >
+          <img src={bibaplayIconUrl} alt="" style={{ width: "24px", height: "24px", display: "block" }} />
+        </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>
           Biba<span style={{ color: COLORS.amber }}>Play</span>
         </h1>

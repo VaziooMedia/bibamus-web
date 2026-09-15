@@ -304,13 +304,33 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
       {addPeopleOpen && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
           <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
-            <input
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addFriend()}
-              placeholder="Participants sans compte Bibamus"
-              style={{ flex: 1, minWidth: 0, padding: "12px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
-            />
+            <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
+              <input
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addFriend()}
+                style={{ width: "100%", boxSizing: "border-box", padding: "12px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
+              />
+              {!nameInput && (
+                <span
+                  style={{
+                    position: "absolute",
+                    left: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: "11px",
+                    color: COLORS.inkSoft,
+                    pointerEvents: "none",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    maxWidth: "calc(100% - 20px)",
+                  }}
+                >
+                  Participants sans compte Bibamus
+                </span>
+              )}
+            </div>
             <button onClick={() => addFriend()} style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, border: "none", borderRadius: "10px", padding: "0 18px", fontWeight: 700, fontSize: "18px", cursor: "pointer" }}>
               +
             </button>

@@ -161,13 +161,33 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
         </div>
       )}
       <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
-        <input
-          value={nameInput}
-          onChange={(e) => setNameInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addName()}
-          placeholder={placeholder}
-          style={{ flex: 1, minWidth: 0, padding: "12px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
-        />
+        <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
+          <input
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addName()}
+            style={{ width: "100%", boxSizing: "border-box", padding: "12px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
+          />
+          {!nameInput && (
+            <span
+              style={{
+                position: "absolute",
+                left: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: "11px",
+                color: COLORS.inkSoft,
+                pointerEvents: "none",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                maxWidth: "calc(100% - 20px)",
+              }}
+            >
+              {placeholder}
+            </span>
+          )}
+        </div>
         <button onClick={addName} style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, border: "none", borderRadius: "10px", padding: "0 18px", fontWeight: 700, fontSize: "18px", cursor: "pointer" }}>
           +
         </button>
