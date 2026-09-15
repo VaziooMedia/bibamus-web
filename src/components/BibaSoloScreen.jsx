@@ -49,6 +49,16 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
   const [price, setPrice] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Carte du lieu choisi — comme dans un salon, seuls les vrais produits du catalogue (pas les
+  // ajouts purement locaux au menu d'un lieu) peuvent être réutilisés ici, sinon le nom ne se
+  // résoudrait plus correctement ensuite dans l'historique ou les stats.
+  const venueMenuItems = (() => {
+    const seen = new Set();
+    return (venue?.menu || [])
+      .filter((item) => item.fromDirectory && item.sourceDrinkId && !seen.has(item.sourceDrinkId) && seen.add(item.sourceDrinkId))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  })();
+
   const q = normalize(query);
   const [drinkResults, setDrinkResults] = useState([]);
   useEffect(() => {
@@ -65,6 +75,14 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
   const selectDrink = (d) => {
     setSelectedDrink(d);
     setVolume(d.volumeCl ? String(d.volumeCl) : "25");
+  };
+
+  // Choisir un item de la carte du lieu — pré-remplit aussi le prix et le volume réellement
+  // pratiqués là-bas, modifiables ensuite comme d'habitude.
+  const selectVenueMenuItem = (item) => {
+    setSelectedDrink({ id: item.sourceDrinkId, name: item.name });
+    setVolume(item.volumeCl ? String(item.volumeCl) : "25");
+    if (item.price != null) setPrice(String(item.price).replace(".", ","));
   };
 
   const [error, setError] = useState(null);
@@ -93,6 +111,35 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
 
       {!selectedDrink ? (
         <>
+          {venueMenuItems.length > 0 && query.length === 0 && (
+            <div style={{ marginBottom: "18px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Carte de {venue.name}</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {venueMenuItems.map((item) => (
+                  <button
+                    key={item.sourceDrinkId}
+                    onClick={() => selectVenueMenuItem(item)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: COLORS.surface,
+                      border: `2px solid ${COLORS.amber}`,
+                      borderRadius: "999px",
+                      padding: "8px 14px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: COLORS.ink,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <NavIcon name="bottle" size={14} color={COLORS.amber} />
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {recentDrinks.length > 0 && query.length === 0 && (
             <div style={{ marginBottom: "18px" }}>
               <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
@@ -382,8 +429,9 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              flex: 1,
+              flexShrink: 1,
               minWidth: 0,
+              maxWidth: "75%",
               boxSizing: "border-box",
               background: COLORS.surface,
               border: `2px solid ${COLORS.amber}`,
@@ -393,7 +441,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
             }}
           >
             <NavIcon name="map-pin" size={16} color={COLORS.amber} />
-            <span style={{ flex: 1, minWidth: 0, fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentVenue.name}</span>
+            <span style={{ minWidth: 0, fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentVenue.name}</span>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -471,7 +519,9 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
                 cursor: "pointer",
               }}
             >
-              <NavIcon name="map-pin" size={14} color={COLORS.amber} />
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+                <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+              </span>
               @Home
             </button>
             <button
@@ -490,13 +540,15 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
                 cursor: "pointer",
               }}
             >
-              <NavIcon name="map-pin" size={14} color={COLORS.amber} />
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+                <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+              </span>
               @Event
             </button>
           </div>
           {nearbyVenues.length > 0 && (
             <div style={{ marginBottom: "10px" }}>
-              <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "6px" }}>Près de toi</div>
+              <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "6px" }}>Lieux proches de toi</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {nearbyVenues.map((v) => (
                   <button
@@ -516,7 +568,9 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
                       cursor: "pointer",
                     }}
                   >
-                    <NavIcon name="map-pin" size={14} color={COLORS.amber} />
+                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+                      <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+                    </span>
                     {v.name}
                   </button>
                 ))}
