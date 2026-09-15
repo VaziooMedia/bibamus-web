@@ -257,7 +257,7 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
 // --- Écran de la partie Predict elle-même. En attente : code (si indépendante), participants,
 // et formulaire de démarrage pour l'hôte (noms des deux équipes). Une fois active : classement
 // en direct, et la question en cours (ou le bouton pour en lancer une, côté hôte). ---
-export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunchPrediction, onSubmitAnswer, onResolvePrediction, onBotAnswer }) {
+export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunchPrediction, onSubmitAnswer, onResolvePrediction, onBotAnswer, onRemoveParticipant, onLeave }) {
   const [copied, setCopied] = useState(false);
   const [teamAInput, setTeamAInput] = useState("");
   const [teamBInput, setTeamBInput] = useState("");
@@ -333,7 +333,7 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
         )}
 
         <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px" }}>Participants ({participants.length})</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "24px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
           {participants.map((p) => (
             <div
               key={p.code}
@@ -351,30 +351,51 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
                 {p.name}
                 {p.code === myBibroCode && <span style={{ fontSize: "11px", fontWeight: 500, color: COLORS.inkSoft }}> (toi)</span>}
               </span>
-              {p.code === game.hostBibroCode && <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.amber, letterSpacing: "0.5px" }}>HÔTE</span>}
+              {p.code === game.hostBibroCode ? (
+                <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.amber, letterSpacing: "0.5px" }}>HÔTE</span>
+              ) : (
+                isHost &&
+                onRemoveParticipant && (
+                  <button
+                    onClick={() => onRemoveParticipant(p.code)}
+                    title="Retirer ce participant"
+                    style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "13px", cursor: "pointer", padding: "2px 6px" }}
+                  >
+                    ✕
+                  </button>
+                )
+              )}
             </div>
           ))}
         </div>
+        {!isHost && onLeave && (
+          <button
+            onClick={onLeave}
+            style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12px", textDecoration: "underline", cursor: "pointer", padding: 0, marginBottom: "24px", alignSelf: "flex-start" }}
+          >
+            Je ne veux pas jouer, me retirer
+          </button>
+        )}
 
         <div style={{ marginTop: "auto" }}>
           {isHost ? (
             <>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px" }}>Les deux équipes (optionnel)</div>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px" }}>Match</div>
               <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
                 <input
                   value={teamAInput}
                   onChange={(e) => setTeamAInput(e.target.value)}
                   placeholder="Équipe A"
-                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "13.5px", outline: "none" }}
+                  style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "13.5px", outline: "none" }}
                 />
                 <input
                   value={teamBInput}
                   onChange={(e) => setTeamBInput(e.target.value)}
                   placeholder="Équipe B"
-                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "13.5px", outline: "none" }}
+                  style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "13.5px", outline: "none" }}
                 />
               </div>
-              <PrimaryButton onClick={() => onStart(teamAInput, teamBInput)} disabled={participants.length < 2} style={{ width: "100%" }}>
+              <PrimaryButton onClick={() => onStart(teamAInput, teamBInput)} disabled={participants.length < 2 || !teamAInput.trim() || !teamBInput.trim()} style={{ width: "100%" }}>
                 Démarrer la partie
               </PrimaryButton>
             </>

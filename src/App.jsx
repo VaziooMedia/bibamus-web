@@ -839,7 +839,7 @@ export default function App() {
   // Jalon 1 BibaPlay — pas encore de vraie logique de jeu, juste créer/rejoindre/démarrer.
   // linkedSalonCode est fourni quand la partie est lancée depuis un salon déjà ouvert ; sinon
   // elle est indépendante (créée depuis la tuile Home) et se rejoint avec son propre code.
-  const createPredictGameFn = async (linkedSalonCode, testMode) => {
+  const createPredictGameFn = async (linkedSalonCode, testMode, initialParticipants) => {
     const code = await generatePredictGameCode();
     const gameData = {
       code,
@@ -847,7 +847,7 @@ export default function App() {
       hostBibroCode: profile.myBibroCode,
       status: "waiting",
       testMode: !!testMode,
-      participants: [
+      participants: initialParticipants || [
         { code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() },
         ...(testMode ? [{ code: "__test_bot__", name: "Bibax test 🤖", joinedAt: Date.now(), isTestBot: true }] : []),
       ],
@@ -942,16 +942,49 @@ export default function App() {
     setActivePredictGame(updated);
   };
 
-  // Depuis un salon déjà ouvert : rejoint la partie Predict déjà en cours si quelqu'un
-  // d'autre l'a lancée, sinon en crée une nouvelle liée à ce salon (les autres participants
-  // la verront apparaître automatiquement, sans code à taper).
+  // L'hôte retire un participant qui ne souhaite pas jouer (uniquement pendant l'attente,
+  // avant le début de la partie).
+  const removePredictParticipantFn = async (participantCode) => {
+    if (!activePredictGame) return;
+    const fresh = (await loadPredictGame(activePredictGame.code)) || activePredictGame;
+    const updated = { ...fresh, participants: (fresh.participants || []).filter((p) => p.code !== participantCode) };
+    await savePredictGame(activePredictGame.code, updated);
+    setActivePredictGame(updated);
+  };
+
+  // Un participant se retire lui-même s'il ne veut pas jouer (utile car, venant d'un salon,
+  // tout le monde y est ajouté automatiquement sans l'avoir demandé).
+  const leavePredictGameFn = async () => {
+    if (!activePredictGame) return;
+    const fresh = (await loadPredictGame(activePredictGame.code)) || activePredictGame;
+    const updated = { ...fresh, participants: (fresh.participants || []).filter((p) => p.code !== profile.myBibroCode) };
+    await savePredictGame(activePredictGame.code, updated);
+    setActivePredictGame(null);
+    setScreen(screenBeforePredict);
+  };
+
+  // Depuis un salon déjà ouvert : tous les participants déjà enregistrés du salon (de vrais
+  // comptes Bibax, pas les invités sans compte) se retrouvent directement dans la partie —
+  // sans code ni QR à scanner, vu qu'ils sont déjà réunis dans le même salon. Rejoint la
+  // partie déjà en cours si quelqu'un d'autre l'a lancée (en y ajoutant qui manquerait encore
+  // à l'appel), sinon en crée une nouvelle liée à ce salon.
   const goToBibaPlayFromSalonFn = async () => {
     if (!currentEvent) return;
+    const salonParticipants = (currentEvent.participants || []).map((p) => ({ code: p.code, name: p.name, joinedAt: Date.now() }));
     if (currentEvent.activeBibaPlayCode) {
-      await joinPredictGameFn(currentEvent.activeBibaPlayCode);
-      return;
+      const fresh = await loadPredictGame(currentEvent.activeBibaPlayCode);
+      if (fresh) {
+        const existingCodes = new Set((fresh.participants || []).map((p) => p.code));
+        const missing = salonParticipants.filter((p) => !existingCodes.has(p.code));
+        const updated = missing.length > 0 ? { ...fresh, participants: [...fresh.participants, ...missing] } : fresh;
+        if (missing.length > 0) await savePredictGame(currentEvent.activeBibaPlayCode, updated);
+        setActivePredictGame(updated);
+        setScreenBeforePredict(screen);
+        setScreen("predictGame");
+        return;
+      }
     }
-    const code = await createPredictGameFn(currentEvent.salonCode);
+    const code = await createPredictGameFn(currentEvent.salonCode, false, salonParticipants);
     updateEvent(currentEvent.id, (e) => ({ ...e, activeBibaPlayCode: code }));
   };
 
@@ -2999,6 +3032,8 @@ export default function App() {
                 onLaunchPrediction={launchPredictionFn}
                 onSubmitAnswer={submitPredictAnswerFn}
                 onBotAnswer={(choiceId) => submitPredictAnswerFn(choiceId, "__test_bot__")}
+                onRemoveParticipant={removePredictParticipantFn}
+                onLeave={leavePredictGameFn}
                 onResolvePrediction={resolvePredictionFn}
               />
             )}
