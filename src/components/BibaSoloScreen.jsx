@@ -10,7 +10,7 @@ import { COLORS, COUNTRY_FLAGS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES } from "..
 import { NavIcon, FlagIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds, searchVenues, loadVenuesByIds, loadNearbyVenues, loadGenericDrinks } from "../data/sharedDirectories.js";
-import { drinkTypeLabel } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 
 function normalize(str) {
@@ -58,10 +58,21 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
 
   // Carte du lieu choisi — comme dans un salon, seuls les vrais produits du catalogue (pas les
   // ajouts purement locaux au menu d'un lieu) peuvent être réutilisés ici, sinon le nom ne se
-  // résoudrait plus correctement ensuite dans l'historique ou les stats.
+  // résoudrait plus correctement ensuite dans l'historique ou les stats. Le menu stocké ne
+  // contient que sourceDrinkId + prix — le vrai nom/type/volume vient du catalogue, chargé ici
+  // puis appliqué à chaque item exactement comme le fait la création d'un salon.
+  const [venueDrinks, setVenueDrinks] = useState([]);
+  useEffect(() => {
+    const ids = [...new Set((venue?.menu || []).filter((d) => d && d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId))];
+    if (ids.length === 0) return;
+    loadDrinksByIds(ids).then(setVenueDrinks);
+  }, [venue]);
   const venueMenuItems = (() => {
     const seen = new Set();
-    return (venue?.menu || []).filter((item) => item && item.fromDirectory && item.sourceDrinkId && !seen.has(item.sourceDrinkId) && seen.add(item.sourceDrinkId));
+    return (venue?.menu || [])
+      .filter((item) => item && item.fromDirectory && item.sourceDrinkId && !seen.has(item.sourceDrinkId) && seen.add(item.sourceDrinkId))
+      .map((item) => resolveMenuItem(item, venueDrinks))
+      .filter((item) => item.name);
   })();
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
   const venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
