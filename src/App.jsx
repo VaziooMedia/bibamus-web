@@ -871,9 +871,11 @@ export default function App() {
   const leaveSalonFn = async (eventId, salonCode) => {
     const salonData = await loadSalon(salonCode);
     if (salonData) {
+      const notice = { id: `notice-${Date.now()}`, type: "left", name: profile.name, at: Date.now() };
       const updated = {
         ...salonData,
         participants: (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode),
+        systemNotices: [...(salonData.systemNotices || []), notice].slice(-10),
         updatedAt: Date.now(),
       };
       await saveSalon(salonCode, updated);

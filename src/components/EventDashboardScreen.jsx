@@ -391,6 +391,14 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           {event.createdAt && `Start : ${formatTime(event.createdAt)}`}
         </span>
       </div>
+      {(event.systemNotices || [])
+        .filter((n) => Date.now() - n.at < 10 * 60 * 1000)
+        .slice(-3)
+        .map((n) => (
+          <div key={n.id} style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "4px" }}>
+            {n.type === "left" ? `${n.name} a quitté le BibaRoom` : null}
+          </div>
+        ))}
       {venue && (
         <button
           onClick={() => onOpenVenue(venue.id)}
