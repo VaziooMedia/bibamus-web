@@ -14,7 +14,7 @@ import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
-import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification } from "../data/sharedDirectories.js";
+import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 
 // Retient, pour toute la durée de la session dans l'app (pas juste le montage de CE composant),
@@ -791,6 +791,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
                         ? async (b) => {
                             const ok = await createSalonInviteNotification(b.userId, event.salonCode, event.name);
                             if (ok) {
+                              sendPushNotification([b.code], "BibaRoom", `${myName} t'invite à rejoindre "${event.name}"`);
                               const label = capitalizeFirst(b.alias || b.name);
                               updateEvent(event.id, (e) => ({
                                 ...e,

@@ -9,13 +9,13 @@
 // production pour WaterAlert. Sur iPhone, ne fonctionne que si
 // l'app a été ajoutée à l'écran d'accueil (iOS 16.4+).
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { PageTitleWithBar } from "./AccountScreen.jsx";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
-import { upsertPushSubscription } from "../data/sharedDirectories.js";
+import { upsertPushSubscription, hasActivePushSubscription, deleteMyPushSubscriptions } from "../data/sharedDirectories.js";
 
 function NotifRow({ icon, title, subtitle, checked, onChange, disabled, badge }) {
   return (
@@ -85,6 +85,14 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
   };
   const masterEnabled = p.notifEnabled !== false;
 
+  // Le toggle "Notifications push" ne se fie pas au profil (jamais vraiment persisté côté
+  // serveur) mais à l'existence réelle d'une souscription push enregistrée pour ce compte —
+  // sinon il pouvait sembler se désactiver tout seul au rechargement.
+  const [pushEnabled, setPushEnabled] = useState(false);
+  useEffect(() => {
+    hasActivePushSubscription().then(setPushEnabled);
+  }, []);
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -107,18 +115,19 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
           icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />}
           title="Notifications push"
           subtitle="Sur iPhone, ajoute d'abord Bibamus à ton écran d'accueil"
-          checked={p.notifPushEnabled === true}
+          checked={pushEnabled}
           onChange={async (v) => {
             if (v) {
               const token = await requestNotificationPermissionAndGetToken();
               if (token) {
                 await upsertPushSubscription(token, "web");
-                update({ notifPushEnabled: true });
+                setPushEnabled(true);
               } else if (Notification?.permission === "denied") {
                 alert("Notifications refusées — active-les dans les réglages de ton navigateur ou de ton téléphone pour Bibamus.");
               }
             } else {
-              update({ notifPushEnabled: false });
+              await deleteMyPushSubscriptions();
+              setPushEnabled(false);
             }
           }}
         />

@@ -477,10 +477,39 @@ export async function sendWaterAlertPush(bibroCodes) {
   if (error) console.error("sendWaterAlertPush:", error);
 }
 
+export async function sendPushNotification(bibroCodes, title, body) {
+  const { error } = await supabase.functions.invoke("send-push-notification", {
+    body: { bibro_codes: bibroCodes, title, body },
+  });
+  if (error) console.error("sendPushNotification:", error);
+}
+
 export async function upsertPushSubscription(fcmToken, platform = "web") {
   const { error } = await supabase.rpc("upsert_push_subscription", { p_fcm_token: fcmToken, p_platform: platform });
   if (error) {
     console.error("upsertPushSubscription:", error);
+    return false;
+  }
+  return true;
+}
+
+// Source de vérité pour le toggle "Notifications push" : plutôt qu'un simple booléen sur le
+// profil (jamais vraiment persisté nulle part côté serveur, d'où le toggle qui semblait se
+// désactiver tout seul), on vérifie directement si une vraie souscription push existe déjà —
+// RLS filtre automatiquement sur l'utilisateur connecté.
+export async function hasActivePushSubscription() {
+  const { data, error } = await supabase.from("push_subscriptions").select("id").limit(1).maybeSingle();
+  if (error) {
+    console.error("hasActivePushSubscription:", error);
+    return false;
+  }
+  return !!data;
+}
+
+export async function deleteMyPushSubscriptions() {
+  const { error } = await supabase.from("push_subscriptions").delete().not("id", "is", null);
+  if (error) {
+    console.error("deleteMyPushSubscriptions:", error);
     return false;
   }
   return true;
