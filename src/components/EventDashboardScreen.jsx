@@ -24,7 +24,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink }) {
+export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -1770,7 +1770,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         )}
       </div>
 
-      <SalonSection event={event} updateEvent={updateEvent} myName={myName} profile={profile} myBibroCode={myBibroCode} bibros={bibros} />
+      <SalonSection event={event} updateEvent={updateEvent} myName={myName} profile={profile} myBibroCode={myBibroCode} bibros={bibros} onLeaveSalon={onLeaveSalon} />
 
       <PrimaryButton
         onClick={onNewRound}

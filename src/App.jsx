@@ -868,6 +868,22 @@ export default function App() {
     setScreen("eventDashboard");
   };
 
+  // Quitter un salon partagé — il faut d'abord se retirer soi-même de la vraie liste de
+  // participants côté serveur (sinon le salon reste actif à mon nom là-bas, et réapparaît en
+  // double dans BibaLive au prochain chargement, quoi qu'on fasse localement), puis retirer la
+  // copie locale de "events" (pas la transformer en événement solo vide — la faire disparaître
+  // complètement, exactement comme demandé).
+  const leaveSalonFn = async (eventId, salonCode) => {
+    const salonData = await loadSalon(salonCode);
+    if (salonData) {
+      const updated = { ...salonData, participants: (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode) };
+      await saveSalon(salonCode, updated);
+    }
+    setEvents((prev) => prev.filter((e) => e.id !== eventId));
+    setActiveEventId(null);
+    setScreen("home");
+  };
+
   // Depuis le fil de notifications, en réponse à une invitation à rejoindre un salon reçue
   // via "Participants" — "Rejoindre" fait exactement ce que ferait taper le code manuellement ;
   // "Décliner" retire seulement l'invitation en attente côté salon (l'hôte peut réinviter plus
@@ -1989,6 +2005,7 @@ export default function App() {
                   setBibaPlayLinkedSalonCode(currentEvent?.salonCode || null);
                   setScreen("games");
                 }}
+                onLeaveSalon={() => leaveSalonFn(activeEventId, currentEvent?.salonCode)}
                 onAddStory={(contextType, contextId) => {
                   setStoryCreateContext({ contextType, contextId, returnScreen: "eventDashboard" });
                   setScreen("storyCreate");

@@ -219,7 +219,7 @@ export function PotCard({ event, updateEvent, myName }) {
   );
 }
 
-export function SalonSection({ event, updateEvent, myName, profile, myBibroCode, bibros }) {
+export function SalonSection({ event, updateEvent, myName, profile, myBibroCode, bibros, onLeaveSalon }) {
   // Calcule le nom d'affichage dans ce salon selon la préférence de l'utilisateur (prénom ou
   // surnom), en ajoutant automatiquement l'initiale du nom de famille si ce nom est déjà pris
   // par un autre participant présent dans ce même salon.
@@ -319,7 +319,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   };
 
   const leaveSalon = () => {
-    updateEvent(event.id, (e) => ({ ...e, salonCode: null, participants: [] }));
+    onLeaveSalon?.();
     setMode(null);
   };
 
