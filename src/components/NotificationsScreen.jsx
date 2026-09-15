@@ -2,15 +2,20 @@
 // Écran "Notifications" — accessible depuis Paramètres. Toutes
 // les préférences sont réellement stockées dès maintenant, même
 // si le système de notification lui-même (centre interne, envoi)
-// n'est pas encore construit. Seule "Notifications push" est
-// grisée — impossible sur le web pour une bonne partie du public
-// (iPhone en UE), prévue pour l'app native.
+// n'est pas encore construit pour la plupart des types listés.
+// "Notifications push" est la seule vraiment branchée pour
+// l'instant : elle demande la permission et enregistre le jeton
+// FCM de l'appareil (voir firebaseClient.js) — déjà utilisée en
+// production pour WaterAlert. Sur iPhone, ne fonctionne que si
+// l'app a été ajoutée à l'écran d'accueil (iOS 16.4+).
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { PageTitleWithBar } from "./AccountScreen.jsx";
+import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
+import { upsertPushSubscription } from "../data/sharedDirectories.js";
 
 function NotifRow({ icon, title, subtitle, checked, onChange, disabled, badge }) {
   return (
@@ -98,7 +103,25 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
       </NotifGroup>
 
       <NotifGroup title="Activités">
-        <NotifRow icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />} title="Notifications push" subtitle="Prévu sur l'app native" disabled badge="App native" checked={false} onChange={() => {}} />
+        <NotifRow
+          icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />}
+          title="Notifications push"
+          subtitle="Sur iPhone, ajoute d'abord Bibamus à ton écran d'accueil"
+          checked={p.notifPushEnabled === true}
+          onChange={async (v) => {
+            if (v) {
+              const token = await requestNotificationPermissionAndGetToken();
+              if (token) {
+                await upsertPushSubscription(token, "web");
+                update({ notifPushEnabled: true });
+              } else if (Notification?.permission === "denied") {
+                alert("Notifications refusées — active-les dans les réglages de ton navigateur ou de ton téléphone pour Bibamus.");
+              }
+            } else {
+              update({ notifPushEnabled: false });
+            }
+          }}
+        />
         <NotifRow
           icon={<NavIcon name="tag" size={17} color={COLORS.amber} />}
           title="Mentions"
