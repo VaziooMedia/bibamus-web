@@ -765,8 +765,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
             textAlign: "center",
           }}
         >
-          {salonToast.type === "left" && `${salonToast.name} a quitté le BibaRoom`}
-          {salonToast.type === "joined" && `${salonToast.name} a rejoint le BibaRoom`}
+          {salonToast.type === "left" && `${salonToast.name} a quitté ce BibaRoom`}
+          {salonToast.type === "joined" && `${salonToast.name} a rejoint ce BibaRoom`}
           <button
             onClick={() => setSalonToast(null)}
             style={{
