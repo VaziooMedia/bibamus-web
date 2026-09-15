@@ -305,9 +305,14 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
       }
       const existingParticipants = existing.participants || [];
       const already = existingParticipants.some((p) => p.code === myBibroCode);
-      const nextParticipants = already ? existingParticipants : [...existingParticipants, { code: myBibroCode, name: resolveSalonDisplayName(existingParticipants), joinedAt: Date.now() }];
+      const myDisplayName = resolveSalonDisplayName(existingParticipants);
+      const nextParticipants = already ? existingParticipants : [...existingParticipants, { code: myBibroCode, name: myDisplayName, joinedAt: Date.now() }];
       if (!already) {
-        await saveSalon(code, { ...existing, participants: nextParticipants });
+        await saveSalon(code, {
+          ...existing,
+          participants: nextParticipants,
+          systemNotices: [...(existing.systemNotices || []), { id: `notice-${Date.now()}`, type: "joined", name: myDisplayName, at: Date.now() }].slice(-10),
+        });
       }
       // On rejoint le salon complet de l'autre Bibax — remplace notre propre événement local par le sien.
       updateEvent(event.id, () => ({ ...existing, participants: nextParticipants }));

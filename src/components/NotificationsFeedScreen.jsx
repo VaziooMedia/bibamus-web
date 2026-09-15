@@ -68,7 +68,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
   const respondSalonInvite = async (n, accept) => {
     setBusyId(n.id);
     await respondNotification(n.id, accept);
-    await onRespondSalonInvite?.(n.entityId, accept, n.actorId);
+    await onRespondSalonInvite?.(n.entityId, accept);
     setBusyId(null);
     setRespondedIds((prev) => ({ ...prev, [n.id]: accept ? "accepted" : "declined" }));
   };

@@ -35,6 +35,17 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
   const [showSessionStats, setShowSessionStats] = usePersistedToggle(event.id, "statsGenerales", true);
   const [showMyJetons, setShowMyJetons] = usePersistedToggle(event.id, "mesJetons", false);
   const [roomStories, setRoomStories] = useState([]);
+  const [salonToast, setSalonToast] = useState(null);
+  const shownNoticeIdsRef = React.useRef(new Set());
+  useEffect(() => {
+    const notices = event.systemNotices || [];
+    const fresh = notices.find((n) => Date.now() - n.at < 8000 && !shownNoticeIdsRef.current.has(n.id));
+    if (!fresh) return;
+    shownNoticeIdsRef.current.add(fresh.id);
+    setSalonToast(fresh);
+    const timeout = setTimeout(() => setSalonToast(null), 3500);
+    return () => clearTimeout(timeout);
+  }, [event.systemNotices]);
   useEffect(() => {
     if (!event.salonCode) return;
     const load = () => loadRoomStories(event.salonCode).then(setRoomStories);
@@ -391,14 +402,24 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           {event.createdAt && `Start : ${formatTime(event.createdAt)}`}
         </span>
       </div>
-      {(event.systemNotices || [])
-        .filter((n) => Date.now() - n.at < 10 * 60 * 1000)
-        .slice(-3)
-        .map((n) => (
-          <div key={n.id} style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "4px" }}>
-            {n.type === "left" ? `${n.name} a quitté le BibaRoom` : null}
-          </div>
-        ))}
+      {salonToast && (
+        <div
+          style={{
+            fontSize: "12px",
+            color: COLORS.inkSoft,
+            fontStyle: "italic",
+            background: COLORS.surface,
+            border: `1px solid ${COLORS.paperAlt}`,
+            borderRadius: "8px",
+            padding: "6px 10px",
+            marginBottom: "6px",
+            display: "inline-block",
+          }}
+        >
+          {salonToast.type === "left" && `${salonToast.name} a quitté le BibaRoom`}
+          {salonToast.type === "joined" && `${salonToast.name} a rejoint le BibaRoom`}
+        </div>
+      )}
       {venue && (
         <button
           onClick={() => onOpenVenue(venue.id)}

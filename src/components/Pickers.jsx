@@ -25,9 +25,10 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
 
   const available = bibros.filter((b) => !excludeCodes.includes(b.code));
   const q = normalizeForSearch(query.trim());
-  const filtered = (q ? available.filter((b) => normalizeForSearch(b.alias || b.name).includes(q)) : available).sort((a, b) => {
+  const searchText = (b) => [b.alias, b.firstName || b.name, b.lastName, b.nickname].filter(Boolean).join(" ");
+  const filtered = (q ? available.filter((b) => normalizeForSearch(searchText(b)).includes(q)) : available).sort((a, b) => {
     if (!!a.isFavorite !== !!b.isFavorite) return a.isFavorite ? -1 : 1;
-    return (a.alias || a.name).localeCompare(b.alias || b.name);
+    return searchText(a).localeCompare(searchText(b));
   });
 
   const pick = (b) => {
@@ -97,7 +98,14 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
                   style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: "14px", fontWeight: 600, color: COLORS.ink, cursor: "pointer" }}
                 >
                   {b.isFavorite ? "⭐ " : ""}
-                  {b.alias || b.name}
+                  {b.alias || [b.firstName || b.name, b.lastName].filter(Boolean).join(" ")}
+                  {b.nickname && <span style={{ color: COLORS.amber, fontStyle: "italic", fontWeight: 600 }}> {b.nickname}</span>}
+                  {b.alias && (
+                    <span style={{ color: COLORS.inkSoft, fontWeight: 500, fontSize: "12.5px" }}>
+                      {" "}
+                      ({[b.firstName || b.name, b.lastName].filter(Boolean).join(" ")})
+                    </span>
+                  )}
                 </button>
               ))
             )}

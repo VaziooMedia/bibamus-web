@@ -853,6 +853,7 @@ export default function App() {
           // Retire l'invitation en attente à mon nom, si j'en avais bien reçu une pour rejoindre
           // — sinon je resterais listé comme "Invité" alors que je viens de rejoindre pour de bon.
           pendingBibaxInvites: (normalized.pendingBibaxInvites || []).filter((p) => p.userId !== session.user.id),
+          systemNotices: [...(normalized.systemNotices || []), { id: `notice-${Date.now()}`, type: "joined", name: profile.name, at: Date.now() }].slice(-10),
         };
     if (!alreadyIn) {
       await saveSalon(code, withMe);
@@ -889,13 +890,9 @@ export default function App() {
   // via "Participants" — "Rejoindre" fait exactement ce que ferait taper le code manuellement ;
   // "Décliner" retire seulement l'invitation en attente côté salon (l'hôte peut réinviter plus
   // tard s'il le souhaite).
-  const respondSalonInviteFn = async (salonCode, accept, inviterUserId) => {
+  const respondSalonInviteFn = async (salonCode, accept) => {
     if (accept) {
       await joinSalon(salonCode);
-      if (inviterUserId) {
-        const salonData = await loadSalon(salonCode);
-        await sendNotification(inviterUserId, "salon_invite_accepted", "salon", salonCode, salonData?.name || null);
-      }
       return;
     }
     const salonData = await loadSalon(salonCode);
