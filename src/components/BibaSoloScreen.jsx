@@ -537,9 +537,29 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
   const [venuesById, setVenuesById] = useState({});
 
   // Lieu actuel — fixé une fois ici, appliqué automatiquement à chaque verre ajouté ensuite,
-  // sans le redemander à chaque fois. Géolocalisation tentée dès l'ouverture de l'écran, en
-  // arrière-plan ; silencieuse si refusée ou indisponible, la recherche manuelle reste là.
-  const [currentVenue, setCurrentVenue] = useState(null);
+  // sans le redemander à chaque fois. Persisté pour tenir jusqu'à ce qu'on le change soi-même,
+  // même en quittant puis en revenant sur BibaSolo. Géolocalisation tentée dès l'ouverture de
+  // l'écran, en arrière-plan ; silencieuse si refusée ou indisponible, la recherche manuelle
+  // reste là.
+  const venueStorageKey = `bibasolo-${myUserId}-current-venue`;
+  const [currentVenue, setCurrentVenueState] = useState(() => {
+    try {
+      const stored = localStorage.getItem(venueStorageKey);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const setCurrentVenue = (next) => {
+    setCurrentVenueState(next);
+    try {
+      if (next) localStorage.setItem(venueStorageKey, JSON.stringify(next));
+      else localStorage.removeItem(venueStorageKey);
+    } catch {
+      // localStorage indisponible (mode privé, quota...) — le lieu reste actif pour la session
+      // en cours, simplement pas retrouvé à la prochaine ouverture.
+    }
+  };
   const [venuePickerOpen, setVenuePickerOpen] = useState(false);
   const [nearbyVenues, setNearbyVenues] = useState([]);
   const [venueQuery, setVenueQuery] = useState("");
