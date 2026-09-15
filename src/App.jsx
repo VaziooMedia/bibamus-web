@@ -651,6 +651,29 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePredictGame?.code]);
 
+  // Réconciliation réactive : si la partie Predict est liée à ce salon et encore en attente,
+  // quiconque rejoint le salon APRÈS que la partie ait été créée doit quand même s'y retrouver
+  // automatiquement — pas seulement celui qui retouche le bouton BibaPlay. Sans ça, quelqu'un
+  // qui rejoint le salon une fois la partie déjà créée resterait invisible pour toujours.
+  const salonParticipantCodes = (currentEvent?.participants || []).map((p) => p.code).join(",");
+  React.useEffect(() => {
+    if (!activePredictGame || activePredictGame.status !== "waiting" || !activePredictGame.linkedSalonCode) return;
+    if (!currentEvent || currentEvent.salonCode !== activePredictGame.linkedSalonCode) return;
+    const existingCodes = new Set((activePredictGame.participants || []).map((p) => p.code));
+    const missing = (currentEvent.participants || []).filter((p) => !existingCodes.has(p.code));
+    if (missing.length === 0) return;
+    (async () => {
+      const fresh = (await loadPredictGame(activePredictGame.code)) || activePredictGame;
+      const freshExisting = new Set((fresh.participants || []).map((p) => p.code));
+      const stillMissing = missing.filter((p) => !freshExisting.has(p.code)).map((p) => ({ code: p.code, name: p.name, joinedAt: Date.now() }));
+      if (stillMissing.length === 0) return;
+      const updated = { ...fresh, participants: [...(fresh.participants || []), ...stillMissing] };
+      await savePredictGame(activePredictGame.code, updated);
+      setActivePredictGame((prev) => (prev && prev.code === updated.code ? updated : prev));
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [salonParticipantCodes, activePredictGame?.code, activePredictGame?.status]);
+
   const startNewRound = () => {
     const selfEntry = { id: "self", name: profile.name, isSelf: true, code: profile.myBibroCode };
     const rounds = currentEvent?.rounds || [];
