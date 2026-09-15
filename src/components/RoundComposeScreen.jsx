@@ -337,7 +337,6 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           </div>
           {myBibrosNotAdded.length > 0 && (
             <div style={{ marginBottom: "10px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "6px" }}>DEPUIS TES BIBAX</div>
               <BibaxSearchPicker bibros={myBibrosNotAdded} onPick={(b) => addRealBibro(b.code, b.alias || b.name)} />
             </div>
           )}
