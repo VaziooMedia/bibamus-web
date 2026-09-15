@@ -623,15 +623,15 @@ export default function App() {
           // jamais écraser un état local déjà plus récent — sinon une action peut sembler "ne
           // pas marcher" alors qu'elle a bien été appliquée localement, juste réécrasée aussitôt.
           if ((updatedData.updatedAt || 0) < (e.updatedAt || 0)) return e;
-          // Fusionne les participants par union plutôt que d'écraser — une mise à jour arrivée
-          // dans le mauvais ordre (course entre deux appareils qui rejoignent en même temps) ne
-          // peut alors plus faire "disparaître" quelqu'un qui vient vraiment de rejoindre.
-          const merged = { ...e, ...updatedData };
-          const byCode = new Map();
-          [...(e.participants || []), ...(updatedData.participants || [])].forEach((p) => {
-            if (p && p.code) byCode.set(p.code, { ...byCode.get(p.code), ...p });
-          });
-          merged.participants = Array.from(byCode.values());
+          // On fait confiance à la liste de participants reçue telle quelle (déjà protégée
+          // juste au-dessus contre une donnée périmée) — une fusion par union avait été essayée
+          // ici pour éviter qu'une arrivée simultanée de deux appareils ne s'annule
+          // accidentellement, mais elle rendait un départ structurellement impossible à
+          // propager : la personne partie restait pour toujours dans l'ancienne liste locale,
+          // jamais retirée par l'union. Un départ qui ne se propage jamais est un bug bien plus
+          // grave et certain qu'une rare course à l'arrivée, qui se corrige de toute façon au
+          // prochain événement temps réel.
+          const merged = { ...e, ...updatedData, participants: updatedData.participants || e.participants || [] };
           return normalizeEvent(merged);
         })
       );
