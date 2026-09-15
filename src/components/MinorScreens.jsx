@@ -336,7 +336,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
         Les tournées déjà offertes gardent leur historique tel quel.
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "20px" }}>
         {modes.map((m) => (
           <button
             key={m.key}
