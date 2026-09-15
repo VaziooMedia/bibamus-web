@@ -66,6 +66,35 @@ function MenuItemBlock({ item, onClick }) {
   const priceSymbol = priceParts.length > 1 ? priceParts.pop() : null;
   const priceNumber = priceParts.join(" ");
 
+  const line2Parts = [
+    item.servingMode && SERVING_MODE_LABELS[item.servingMode] ? (
+      <span key="serving" style={{ fontSize: "11px", color: COLORS.inkSoft }}>
+        {SERVING_MODE_LABELS[item.servingMode]}
+      </span>
+    ) : null,
+    item.nationality ? <CountryFlagImg key="flag" country={item.nationality} size={16} /> : null,
+    item.abv != null ? (
+      <span key="abv" style={{ fontSize: "11px", color: COLORS.inkSoft }}>
+        {item.abv.toFixed(1)}% ABV
+      </span>
+    ) : null,
+    isZeroAbv ? (
+      <span key="zero" style={menuBadgeStyle}>
+        0.0%
+      </span>
+    ) : null,
+    item.bio ? (
+      <span key="bio" style={menuBadgeStyle}>
+        🌱 BIO
+      </span>
+    ) : null,
+    item.glutenFree ? (
+      <span key="gf" style={{ ...menuBadgeStyle, padding: "3px", display: "inline-flex", alignItems: "center" }}>
+        <GlutenFreeIcon size={11} />
+      </span>
+    ) : null,
+  ].filter(Boolean);
+
   return (
     <button
       onClick={onClick}
@@ -79,16 +108,12 @@ function MenuItemBlock({ item, onClick }) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "5px", flexWrap: "wrap" }}>
-          {item.servingMode && SERVING_MODE_LABELS[item.servingMode] && <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>{SERVING_MODE_LABELS[item.servingMode]}</span>}
-          {item.nationality && <CountryFlagImg country={item.nationality} size={16} />}
-          {item.abv != null && <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>{item.abv.toFixed(1)}%</span>}
-          {isZeroAbv && <span style={menuBadgeStyle}>0.0%</span>}
-          {item.bio && <span style={menuBadgeStyle}>🌱 BIO</span>}
-          {item.glutenFree && (
-            <span style={{ ...menuBadgeStyle, padding: "3px", display: "inline-flex", alignItems: "center" }}>
-              <GlutenFreeIcon size={11} />
-            </span>
-          )}
+          {line2Parts.map((part, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+              {part}
+            </React.Fragment>
+          ))}
           {priceText && (
             <span style={{ marginLeft: "auto", fontSize: "13px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>
               {priceNumber} <span style={{ fontSize: "10.5px", fontWeight: 600, color: COLORS.inkSoft }}>{priceSymbol}</span>
@@ -215,8 +240,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                           background: COLORS.surface,
                           border: `2px solid ${COLORS.amber}`,
                           borderRadius: "999px",
-                          padding: "6px 12px",
-                          fontSize: "11.5px",
+                          padding: "5px 10px",
+                          fontSize: "10.5px",
                           fontWeight: 700,
                           color: COLORS.ink,
                           cursor: "pointer",
@@ -230,7 +255,6 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
               )}
               {recentDrinks.length > 0 && <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px" }} />}
 
-              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Quelle boisson ?</label>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {venueMenuItems.length > 0 && (
                   <button
@@ -249,8 +273,12 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                       textAlign: "left",
                     }}
                   >
-                    <img src={carteIconUrl} alt="" style={{ width: "18px", height: "18px", display: "block" }} />
-                    <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>{venue.name} - Carte</span>
+                    <img src={carteIconUrl} alt="" style={{ height: "22px", width: "auto", display: "block" }} />
+                    <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink, display: "flex", alignItems: "center", gap: "8px" }}>
+                      {venue.name}
+                      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
+                      Carte
+                    </span>
                     <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
                   </button>
                 )}
@@ -270,7 +298,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                     textAlign: "left",
                   }}
                 >
-                  <img src={bibatlasIconUrl} alt="" style={{ width: "18px", height: "18px", display: "block" }} />
+                  <img src={bibatlasIconUrl} alt="" style={{ height: "22px", width: "auto", display: "block" }} />
                   <span style={{ flex: 1, fontSize: "14px", fontWeight: 700 }}>
                     <span style={{ color: COLORS.chalkWhite }}>Biba</span>
                     <span style={{ color: COLORS.amber }}>Atlas</span>
@@ -293,7 +321,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                     textAlign: "left",
                   }}
                 >
-                  <img src={beerIconUrl} alt="" style={{ width: "18px", height: "18px", display: "block" }} />
+                  <img src={beerIconUrl} alt="" style={{ height: "22px", width: "auto", display: "block" }} />
                   <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>Produits génériques</span>
                   <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
                 </button>
@@ -602,7 +630,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
   const refresh = () => loadMySoloCheckins(startOfTodayIso()).then(setCheckins);
 
   // Favoris — sur tout l'historique, pas seulement aujourd'hui, sinon la liste se vide à
-  // chaque nouvelle journée. Limité à 4, le plus ancien pousse dehors dès qu'un nouveau arrive.
+  // chaque nouvelle journée. Limité à 3, le plus ancien pousse dehors dès qu'un nouveau arrive.
   const refreshFavorites = () =>
     loadMySoloCheckins().then((all) => {
       const seen = new Set();
@@ -613,7 +641,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
           seen.add(key);
           ids.push(key);
         }
-        if (ids.length >= 4) break;
+        if (ids.length >= 3) break;
       }
       setRecentDrinkIds(ids);
     });
