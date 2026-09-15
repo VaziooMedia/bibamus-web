@@ -603,7 +603,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
         </button>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "14px" }}>
         {currentVenue ? (
           <div
             onClick={() => setVenuePickerOpen((o) => !o)}
