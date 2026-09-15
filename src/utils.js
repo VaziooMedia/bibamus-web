@@ -105,6 +105,7 @@ export const resolveMenuItem = (item, drinksDirectory) => {
     ...item,
     name: master.name,
     type: normalizeDrinkType(master.type),
+    photoUrl: master.photoUrl,
     kcalPer100ml: master.kcalPer100ml,
     beerTags: master.beerTags,
     abv: master.abv,

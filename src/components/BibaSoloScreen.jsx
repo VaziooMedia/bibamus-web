@@ -68,7 +68,7 @@ function MenuItemBlock({ item, onClick }) {
       onClick={onClick}
       style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", boxSizing: "border-box", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "left", cursor: "pointer" }}
     >
-      <EntityAvatar size={44} fallbackIcon="bottle" />
+      <EntityAvatar photoUrl={item.photoUrl} size={44} fallbackIcon="bottle" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
           <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>{item.name}</span>
