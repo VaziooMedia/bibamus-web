@@ -562,17 +562,17 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
             justifyContent: "center",
             gap: "5px",
             background: "none",
-            border: `2px solid ${confirmLeave ? COLORS.redFluo : COLORS.paperAlt}`,
+            border: `2px solid ${isAlone ? COLORS.paperAlt : COLORS.pinkFluo}`,
             borderRadius: "8px",
             padding: "9px 10px",
-            color: confirmLeave ? COLORS.redFluo : COLORS.ink,
+            color: isAlone ? COLORS.ink : COLORS.pinkFluo,
             fontSize: "12px",
             fontWeight: 600,
             cursor: isAlone ? "not-allowed" : "pointer",
             opacity: isAlone ? 0.4 : 1,
           }}
         >
-          <NavIcon name="stop" size={13} color={confirmLeave ? COLORS.redFluo : COLORS.amber} />
+          <NavIcon name="stop" size={13} color={isAlone ? COLORS.amber : COLORS.pinkFluo} />
           {confirmLeave ? "Confirmer ?" : "Quitter"}
         </button>
         <button
@@ -585,17 +585,17 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
             justifyContent: "center",
             gap: "5px",
             background: "none",
-            border: `2px solid ${confirmClose ? COLORS.redFluo : COLORS.paperAlt}`,
+            border: `2px solid ${!isAlone ? COLORS.paperAlt : COLORS.pinkFluo}`,
             borderRadius: "8px",
             padding: "9px 10px",
-            color: confirmClose ? COLORS.redFluo : COLORS.ink,
+            color: !isAlone ? COLORS.ink : COLORS.pinkFluo,
             fontSize: "12px",
             fontWeight: 600,
             cursor: !isAlone ? "not-allowed" : "pointer",
             opacity: !isAlone ? 0.4 : 1,
           }}
         >
-          <NavIcon name="stop" size={13} color={confirmClose ? COLORS.redFluo : COLORS.amber} />
+          <NavIcon name="stop" size={13} color={!isAlone ? COLORS.amber : COLORS.pinkFluo} />
           {confirmClose ? "Confirmer ?" : "Fin"}
         </button>
         </div>

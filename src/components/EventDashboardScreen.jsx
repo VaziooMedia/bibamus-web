@@ -463,7 +463,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         >
           <NavIcon name={event.paused ? "play" : "pause"} size={12} color={event.paused ? COLORS.jetonFluo : COLORS.amber} />
           <span style={{ fontSize: "11px", fontWeight: 600, color: event.paused ? COLORS.jetonFluo : COLORS.ink }}>
-            {event.paused ? "Reprendre" : "Pause session"}
+            Session
           </span>
         </button>
         </div>
