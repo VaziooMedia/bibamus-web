@@ -6,10 +6,11 @@
 // direct au-dessus de la liste.
 // ============================================================
 import React, { useState, useEffect, useMemo } from "react";
-import { COLORS, COUNTRY_FLAGS, VOLUME_DISPLAY_TYPES } from "../constants.js";
+import { COLORS, COUNTRY_FLAGS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon, FlagIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
-import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds, searchVenues, loadVenuesByIds, loadNearbyVenues } from "../data/sharedDirectories.js";
+import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds, searchVenues, loadVenuesByIds, loadNearbyVenues, loadGenericDrinks } from "../data/sharedDirectories.js";
+import { drinkTypeLabel } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 
 function normalize(str) {
@@ -49,15 +50,22 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
   const [price, setPrice] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Trois portes d'entrée distinctes une fois qu'un lieu est choisi, comme dans un salon : sa
+  // propre carte (par catégories), une recherche libre dans tout BibAtlas, ou une recherche
+  // bornée aux produits marqués génériques.
+  const [pickMode, setPickMode] = useState(null); // null | "carte" | "bibatlas" | "generic"
+  const [activeCategory, setActiveCategory] = useState(null);
+
   // Carte du lieu choisi — comme dans un salon, seuls les vrais produits du catalogue (pas les
   // ajouts purement locaux au menu d'un lieu) peuvent être réutilisés ici, sinon le nom ne se
   // résoudrait plus correctement ensuite dans l'historique ou les stats.
   const venueMenuItems = (() => {
     const seen = new Set();
-    return (venue?.menu || [])
-      .filter((item) => item.fromDirectory && item.sourceDrinkId && !seen.has(item.sourceDrinkId) && seen.add(item.sourceDrinkId))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return (venue?.menu || []).filter((item) => item.fromDirectory && item.sourceDrinkId && !seen.has(item.sourceDrinkId) && seen.add(item.sourceDrinkId));
   })();
+  const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
+  const venueCategories = MENU_CATEGORIES.filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
+  const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat).sort((a, b) => a.name.localeCompare(b.name));
 
   const q = normalize(query);
   const [drinkResults, setDrinkResults] = useState([]);
@@ -71,6 +79,15 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
     }, 350);
     return () => clearTimeout(timer);
   }, [q, query]);
+
+  // Produits génériques — chargés une fois, filtrés côté client sur la recherche tapée.
+  const [genericDrinks, setGenericDrinks] = useState([]);
+  const [genericQuery, setGenericQuery] = useState("");
+  useEffect(() => {
+    if (pickMode === "generic" && genericDrinks.length === 0) loadGenericDrinks().then(setGenericDrinks);
+  }, [pickMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  const gq = normalize(genericQuery);
+  const genericResults = gq.length === 0 ? genericDrinks : genericDrinks.filter((d) => normalize(d.name).includes(gq));
 
   const selectDrink = (d) => {
     setSelectedDrink(d);
@@ -111,99 +128,264 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
 
       {!selectedDrink ? (
         <>
-          {venueMenuItems.length > 0 && query.length === 0 && (
-            <div style={{ marginBottom: "18px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Carte de {venue.name}</label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {venueMenuItems.map((item) => (
+          {pickMode === null && (
+            <>
+              {recentDrinks.length > 0 && (
+                <div style={{ marginBottom: "18px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {recentDrinks.map((d) => (
+                      <button
+                        key={d.id}
+                        onClick={() => selectDrink(d)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          background: COLORS.surface,
+                          border: `2px solid ${COLORS.amber}`,
+                          borderRadius: "999px",
+                          padding: "8px 14px",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: COLORS.ink,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <NavIcon name="bottle" size={14} color={COLORS.amber} />
+                        {d.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Quelle boisson ?</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {venueMenuItems.length > 0 && (
                   <button
-                    key={item.sourceDrinkId}
-                    onClick={() => selectVenueMenuItem(item)}
+                    onClick={() => setPickMode("carte")}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
+                      gap: "12px",
+                      width: "100%",
+                      boxSizing: "border-box",
                       background: COLORS.surface,
                       border: `2px solid ${COLORS.amber}`,
-                      borderRadius: "999px",
-                      padding: "8px 14px",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: COLORS.ink,
+                      borderRadius: "12px",
+                      padding: "14px",
                       cursor: "pointer",
+                      textAlign: "left",
                     }}
                   >
-                    <NavIcon name="bottle" size={14} color={COLORS.amber} />
-                    {item.name}
+                    <NavIcon name="bottle" size={18} color={COLORS.amber} />
+                    <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>Carte de {venue.name}</span>
+                    <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
                   </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {recentDrinks.length > 0 && query.length === 0 && (
-            <div style={{ marginBottom: "18px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {recentDrinks.map((d) => (
-                  <button
-                    key={d.id}
-                    onClick={() => selectDrink(d)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      background: COLORS.surface,
-                      border: `2px solid ${COLORS.amber}`,
-                      borderRadius: "999px",
-                      padding: "8px 14px",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: COLORS.ink,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <NavIcon name="bottle" size={14} color={COLORS.amber} />
-                    {d.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Quelle boisson ?</label>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher une boisson..."
-            autoFocus
-            style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
-          />
-          {drinkResults.length > 0 && (
-            <div style={{ marginTop: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-              {drinkResults.map((d, i) => (
+                )}
                 <button
-                  key={d.id}
-                  onClick={() => selectDrink(d)}
+                  onClick={() => setPickMode("bibatlas")}
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "10px",
+                    gap: "12px",
                     width: "100%",
-                    background: "none",
-                    border: "none",
-                    borderBottom: i === drinkResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
-                    padding: "12px 4px",
-                    textAlign: "left",
+                    boxSizing: "border-box",
+                    background: COLORS.surface,
+                    border: `2px solid ${COLORS.paperAlt}`,
+                    borderRadius: "12px",
+                    padding: "14px",
                     cursor: "pointer",
-                    color: COLORS.ink,
+                    textAlign: "left",
                   }}
                 >
-                  <NavIcon name="bottle" size={16} color={COLORS.amber} />
-                  <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{d.name}</span>
-                  <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>{d.type}</span>
+                  <NavIcon name="search" size={18} color={COLORS.amber} />
+                  <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>Rechercher dans BibAtlas</span>
+                  <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
                 </button>
-              ))}
-            </div>
+                <button
+                  onClick={() => setPickMode("generic")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                    background: COLORS.surface,
+                    border: `2px solid ${COLORS.paperAlt}`,
+                    borderRadius: "12px",
+                    padding: "14px",
+                    cursor: "pointer",
+                    textAlign: "left",
+                  }}
+                >
+                  <NavIcon name="search" size={18} color={COLORS.amber} />
+                  <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>Produit générique</span>
+                  <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
+                </button>
+              </div>
+            </>
+          )}
+
+          {pickMode === "carte" && (
+            <>
+              <button
+                onClick={() => (activeCategory ? setActiveCategory(null) : setPickMode(null))}
+                style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: "14px" }}
+              >
+                <NavIcon name="back-triangle" size={12} color={COLORS.inkSoft} />
+                {activeCategory ? "Catégories" : "Retour"}
+              </button>
+              {!activeCategory ? (
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+                  {venueCategories.map((cat, i) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        borderBottom: i === venueCategories.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
+                        padding: "14px 4px",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        color: COLORS.ink,
+                        fontSize: "14px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {drinkTypeLabel(cat)}
+                      <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>{itemsInCategory(cat).length} →</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+                  {itemsInCategory(activeCategory).map((item, i, arr) => (
+                    <button
+                      key={item.sourceDrinkId}
+                      onClick={() => selectVenueMenuItem(item)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        borderBottom: i === arr.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
+                        padding: "12px 4px",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        color: COLORS.ink,
+                      }}
+                    >
+                      <NavIcon name="bottle" size={16} color={COLORS.amber} />
+                      <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{item.name}</span>
+                      {item.price != null && <span style={{ fontSize: "13px", color: COLORS.amber, fontWeight: 700 }}>{String(item.price).replace(".", ",")} €</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {pickMode === "bibatlas" && (
+            <>
+              <button
+                onClick={() => setPickMode(null)}
+                style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: "14px" }}
+              >
+                <NavIcon name="back-triangle" size={12} color={COLORS.inkSoft} />
+                Retour
+              </button>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher une boisson..."
+                autoFocus
+                style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
+              />
+              {drinkResults.length > 0 && (
+                <div style={{ marginTop: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+                  {drinkResults.map((d, i) => (
+                    <button
+                      key={d.id}
+                      onClick={() => selectDrink(d)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        borderBottom: i === drinkResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
+                        padding: "12px 4px",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        color: COLORS.ink,
+                      }}
+                    >
+                      <NavIcon name="bottle" size={16} color={COLORS.amber} />
+                      <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{d.name}</span>
+                      <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>{d.type}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {pickMode === "generic" && (
+            <>
+              <button
+                onClick={() => setPickMode(null)}
+                style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: "14px" }}
+              >
+                <NavIcon name="back-triangle" size={12} color={COLORS.inkSoft} />
+                Retour
+              </button>
+              <input
+                type="text"
+                value={genericQuery}
+                onChange={(e) => setGenericQuery(e.target.value)}
+                placeholder="Rechercher un produit générique..."
+                autoFocus
+                style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
+              />
+              {genericResults.length > 0 && (
+                <div style={{ marginTop: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", maxHeight: "340px", overflowY: "auto" }}>
+                  {genericResults.map((d, i) => (
+                    <button
+                      key={d.id}
+                      onClick={() => selectDrink(d)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        borderBottom: i === genericResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
+                        padding: "12px 4px",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        color: COLORS.ink,
+                      }}
+                    >
+                      <NavIcon name="bottle" size={16} color={COLORS.amber} />
+                      <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{d.name}</span>
+                      <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>{d.type}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </>
       ) : (
@@ -460,8 +642,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              flex: 1,
-              minWidth: 0,
+              flexShrink: 0,
               boxSizing: "border-box",
               background: "none",
               border: `2px solid ${COLORS.paperAlt}`,
@@ -473,7 +654,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
             }}
           >
             <NavIcon name="map-pin" size={16} color={COLORS.inkSoft} />
-            <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>Lieu</span>
+            <span style={{ fontSize: "14px", fontWeight: 600 }}>Lieu</span>
           </button>
         )}
         <button
