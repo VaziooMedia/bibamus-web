@@ -50,7 +50,7 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
           borderRadius: "10px",
           border: `2px solid ${COLORS.paperAlt}`,
           background: COLORS.surface,
-          fontSize: "13.5px",
+          fontSize: "16px",
           color: COLORS.inkSoft,
           cursor: "pointer",
           display: "flex",

@@ -43,8 +43,6 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
     if (!fresh) return;
     shownNoticeIdsRef.current.add(fresh.id);
     setSalonToast(fresh);
-    const timeout = setTimeout(() => setSalonToast(null), 3500);
-    return () => clearTimeout(timeout);
   }, [event.systemNotices]);
   useEffect(() => {
     if (!event.salonCode) return;
@@ -753,6 +751,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
       {salonToast && (
         <div
           style={{
+            position: "relative",
             fontSize: "12px",
             color: COLORS.pinkFluo,
             fontWeight: 600,
@@ -760,13 +759,33 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
             background: "rgba(239,0,124,0.08)",
             border: `2px solid ${COLORS.pinkFluo}`,
             borderRadius: "8px",
-            padding: "6px 10px",
+            padding: "6px 32px",
             marginBottom: "18px",
             textAlign: "center",
           }}
         >
           {salonToast.type === "left" && `${salonToast.name} a quitté le BibaRoom`}
           {salonToast.type === "joined" && `${salonToast.name} a rejoint le BibaRoom`}
+          <button
+            onClick={() => setSalonToast(null)}
+            style={{
+              position: "absolute",
+              top: "50%",
+              right: "8px",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              color: COLORS.pinkFluo,
+              fontSize: "16px",
+              fontWeight: 700,
+              fontStyle: "normal",
+              cursor: "pointer",
+              padding: 0,
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
         </div>
       )}
 
