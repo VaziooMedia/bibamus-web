@@ -9,12 +9,15 @@ import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
+import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
+import { QRCodeSVG } from "./QRCodeSVG.jsx";
 
 // --- Écran d'entrée pour Predict : créer ou rejoindre une partie avec un code, comme pour un
 // BibaRoom classique. Atteint soit depuis la liste des jeux BibaPlay (partie indépendante),
 // soit directement depuis un salon déjà ouvert (partie liée à ce salon). ---
 export function PredictHubScreen({ onBack, onCreate, onJoin }) {
   const [mode, setMode] = useState(null); // null | "join"
+  const [scanning, setScanning] = useState(false);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,8 +33,8 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
     }
   };
 
-  const handleJoin = async () => {
-    const finalCode = code.trim();
+  const handleJoin = async (codeToJoin) => {
+    const finalCode = (codeToJoin || code).trim();
     if (!finalCode) return;
     setLoading(true);
     setError("");
@@ -41,6 +44,12 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
       setError(e.message || "Code introuvable. Vérifie auprès de tes amis.");
       setLoading(false);
     }
+  };
+
+  const handleScanned = (scannedCode) => {
+    setScanning(false);
+    setCode(scannedCode);
+    handleJoin(scannedCode);
   };
 
   return (
@@ -133,14 +142,30 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
                 color: COLORS.ink,
               }}
             />
+            <span style={{ width: "1px", height: "24px", background: COLORS.paperAlt, flexShrink: 0 }} />
+            <button
+              onClick={() => setScanning(true)}
+              title="Scanner le QR code"
+              style={{ display: "flex", alignItems: "center", background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0 }}
+            >
+              <NavIcon name="scan-line" size={20} color={COLORS.amber} />
+            </button>
           </div>
           {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "12px" }}>{error}</p>}
-          <PrimaryButton onClick={handleJoin} disabled={!code.trim() || loading} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => handleJoin()} disabled={!code.trim() || loading} style={{ width: "100%" }}>
             {loading ? "..." : "Rejoindre →"}
           </PrimaryButton>
         </>
       )}
       <PageFooterNav onBack={mode === "join" ? () => setMode(null) : onBack} />
+      {scanning && (
+        <SalonQrScannerModal
+          onClose={() => setScanning(false)}
+          onScanned={handleScanned}
+          title="Rejoindre une partie Predict"
+          instruction="Visez le QR code affiché par l'hôte de la partie"
+        />
+      )}
     </div>
   );
 }
@@ -184,6 +209,9 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart }) {
           }}
         >
           <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>Code de la partie</span>
+          <div style={{ background: COLORS.ink, borderRadius: "10px", padding: "10px", margin: "6px 0" }}>
+            <QRCodeSVG value={game.code} size={120} color={COLORS.paper} background={COLORS.ink} />
+          </div>
           <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", letterSpacing: "6px", color: COLORS.amber }}>{game.code}</span>
           <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>{copied ? "Copié !" : "Touche pour copier"}</span>
         </button>
