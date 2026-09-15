@@ -550,7 +550,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           title="S'absenter un moment sans quitter le BibaRoom — bloque ton nom dans les tournées le temps de ta pause"
         >
           <NavIcon name={myEntry && myEntry.paused ? "play" : "pause"} size={13} color={COLORS.amber} />
-          {myEntry && myEntry.paused ? "Reprendre" : "Pause"}
+          {myEntry && myEntry.paused ? "Je reviens" : "Ma pause"}
         </button>
         <button
           onClick={() => !isAlone && (confirmLeave ? leaveSalon() : setConfirmLeave(true))}

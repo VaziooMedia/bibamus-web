@@ -82,7 +82,6 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
       return next;
     });
   const [purchaseQty, setPurchaseQty] = useState(1);
-  const [sessionMenuOpen, setSessionMenuOpen] = useState(false);
   const [waterAlertModalOpen, setWaterAlertModalOpen] = useState(false);
   const waterAlertClaimedForCount = React.useRef(null);
 
@@ -446,71 +445,27 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           <img src={settingsIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
         </button>
 
-        <div style={{ position: "relative" }}>
         <button
-          onClick={() => setSessionMenuOpen((o) => !o)}
+          onClick={togglePause}
           style={{
             flexShrink: 0,
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
             gap: "6px",
-            width: "60px",
             height: "32px",
             background: "none",
             border: `2px solid ${event.paused ? COLORS.jetonFluo : COLORS.paperAlt}`,
             borderRadius: "8px",
+            padding: "0 10px",
             cursor: "pointer",
           }}
-          title="Pause / Fin de l'événement"
+          title="Met la session en pause pour tout le monde"
         >
-          <NavIcon name="pause" size={12} color={event.paused ? COLORS.jetonFluo : COLORS.amber} />
-          <span style={{ fontSize: "10px", color: COLORS.inkSoft }}>/</span>
-          <NavIcon name="stop" size={12} color={COLORS.amber} />
+          <NavIcon name={event.paused ? "play" : "pause"} size={12} color={event.paused ? COLORS.jetonFluo : COLORS.amber} />
+          <span style={{ fontSize: "11px", fontWeight: 600, color: event.paused ? COLORS.jetonFluo : COLORS.ink }}>
+            {event.paused ? "Reprendre" : "Pause session"}
+          </span>
         </button>
-
-        {sessionMenuOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: "36px",
-              right: 0,
-              zIndex: 10,
-              background: COLORS.surfaceAlt,
-              border: `2px solid ${COLORS.paperAlt}`,
-              borderRadius: "10px",
-              padding: "6px",
-              minWidth: "190px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.35)",
-            }}
-          >
-            <button
-              onClick={() => {
-                togglePause();
-                setSessionMenuOpen(false);
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                width: "100%",
-                background: "none",
-                border: "none",
-                borderRadius: "7px",
-                padding: "9px 10px",
-                fontSize: "13px",
-                fontWeight: 600,
-                color: event.paused ? COLORS.jetonFluo : COLORS.ink,
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <NavIcon name={event.paused ? "play" : "pause"} size={14} color={COLORS.jetonFluo} />
-              {event.paused ? "Reprendre" : "Session en pause"}
-            </button>
-          </div>
-        )}
-        </div>
         </div>
       </div>
 
