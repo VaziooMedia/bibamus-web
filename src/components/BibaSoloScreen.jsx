@@ -61,11 +61,11 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
   // résoudrait plus correctement ensuite dans l'historique ou les stats.
   const venueMenuItems = (() => {
     const seen = new Set();
-    return (venue?.menu || []).filter((item) => item.fromDirectory && item.sourceDrinkId && !seen.has(item.sourceDrinkId) && seen.add(item.sourceDrinkId));
+    return (venue?.menu || []).filter((item) => item && item.fromDirectory && item.sourceDrinkId && !seen.has(item.sourceDrinkId) && seen.add(item.sourceDrinkId));
   })();
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
   const venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
-  const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat).sort((a, b) => a.name.localeCompare(b.name));
+  const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
   const q = normalize(query);
   const [drinkResults, setDrinkResults] = useState([]);
