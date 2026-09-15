@@ -839,14 +839,18 @@ export default function App() {
   // Jalon 1 BibaPlay — pas encore de vraie logique de jeu, juste créer/rejoindre/démarrer.
   // linkedSalonCode est fourni quand la partie est lancée depuis un salon déjà ouvert ; sinon
   // elle est indépendante (créée depuis la tuile Home) et se rejoint avec son propre code.
-  const createPredictGameFn = async (linkedSalonCode) => {
+  const createPredictGameFn = async (linkedSalonCode, testMode) => {
     const code = await generatePredictGameCode();
     const gameData = {
       code,
       linkedSalonCode: linkedSalonCode || null,
       hostBibroCode: profile.myBibroCode,
       status: "waiting",
-      participants: [{ code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() }],
+      testMode: !!testMode,
+      participants: [
+        { code: profile.myBibroCode, name: profile.name, joinedAt: Date.now() },
+        ...(testMode ? [{ code: "__test_bot__", name: "Bibax test 🤖", joinedAt: Date.now(), isTestBot: true }] : []),
+      ],
       createdAt: Date.now(),
     };
     await createPredictGame(code, gameData, linkedSalonCode);
@@ -902,16 +906,17 @@ export default function App() {
   // d'écrire, pour ne pas écraser la réponse d'un ami soumise au même instant (le blob est
   // partagé, pas une ligne par réponse) ; même précaution que la fusion des participants
   // d'un salon.
-  const submitPredictAnswerFn = async (choiceId) => {
+  const submitPredictAnswerFn = async (choiceId, userCode) => {
     if (!activePredictGame?.activePrediction) return;
+    const actorCode = userCode || profile.myBibroCode;
     const fresh = (await loadPredictGame(activePredictGame.code)) || activePredictGame;
     if (!fresh.activePrediction || fresh.activePrediction.correctChoiceId) return;
-    const otherAnswers = (fresh.activePrediction.answers || []).filter((a) => a.userCode !== profile.myBibroCode);
+    const otherAnswers = (fresh.activePrediction.answers || []).filter((a) => a.userCode !== actorCode);
     const updated = {
       ...fresh,
       activePrediction: {
         ...fresh.activePrediction,
-        answers: [...otherAnswers, { userCode: profile.myBibroCode, choiceId, submittedAt: Date.now() }],
+        answers: [...otherAnswers, { userCode: actorCode, choiceId, submittedAt: Date.now() }],
       },
     };
     await savePredictGame(activePredictGame.code, updated);
@@ -2978,7 +2983,7 @@ export default function App() {
             {screen === "predictHub" && (
               <PredictHubScreen
                 onBack={() => setScreen("games")}
-                onCreate={() => createPredictGameFn(null)}
+                onCreate={(testMode) => createPredictGameFn(null, testMode)}
                 onJoin={joinPredictGameFn}
               />
             )}
@@ -2993,6 +2998,7 @@ export default function App() {
                 onStart={startPredictGameFn}
                 onLaunchPrediction={launchPredictionFn}
                 onSubmitAnswer={submitPredictAnswerFn}
+                onBotAnswer={(choiceId) => submitPredictAnswerFn(choiceId, "__test_bot__")}
                 onResolvePrediction={resolvePredictionFn}
               />
             )}

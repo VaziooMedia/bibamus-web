@@ -72,12 +72,13 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [testMode, setTestMode] = useState(false);
 
   const handleCreate = async () => {
     setLoading(true);
     setError("");
     try {
-      await onCreate();
+      await onCreate(testMode);
     } catch (e) {
       setError(e.message || "Impossible de créer la partie — réessaie.");
       setLoading(false);
@@ -114,6 +115,38 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
 
       {mode !== "join" ? (
         <>
+          <button
+            onClick={() => setTestMode((t) => !t)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: COLORS.surface,
+              border: `2px solid ${testMode ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "10px",
+              padding: "10px 14px",
+              marginBottom: "12px",
+              cursor: "pointer",
+            }}
+          >
+            <span style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.ink, textAlign: "left" }}>
+              Mode test solo
+              <div style={{ fontSize: "11px", fontWeight: 400, color: COLORS.inkSoft, marginTop: "2px" }}>Ajoute un joueur fictif qui répond seul, pour tester sans un 2ᵉ téléphone</div>
+            </span>
+            <span
+              style={{
+                width: "38px",
+                height: "22px",
+                borderRadius: "11px",
+                background: testMode ? COLORS.amber : COLORS.paperAlt,
+                position: "relative",
+                flexShrink: 0,
+                marginLeft: "10px",
+              }}
+            >
+              <span style={{ position: "absolute", top: "2px", left: testMode ? "18px" : "2px", width: "18px", height: "18px", borderRadius: "50%", background: COLORS.paper, transition: "left 0.15s ease" }} />
+            </span>
+          </button>
           <button
             onClick={handleCreate}
             disabled={loading}
@@ -224,7 +257,7 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
 // --- Écran de la partie Predict elle-même. En attente : code (si indépendante), participants,
 // et formulaire de démarrage pour l'hôte (noms des deux équipes). Une fois active : classement
 // en direct, et la question en cours (ou le bouton pour en lancer une, côté hôte). ---
-export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunchPrediction, onSubmitAnswer, onResolvePrediction }) {
+export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunchPrediction, onSubmitAnswer, onResolvePrediction, onBotAnswer }) {
   const [copied, setCopied] = useState(false);
   const [teamAInput, setTeamAInput] = useState("");
   const [teamBInput, setTeamBInput] = useState("");
@@ -243,6 +276,21 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
     const interval = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(interval);
   }, [prediction?.id, prediction?.correctChoiceId]);
+
+  // Mode test solo — le joueur fictif "répond" tout seul après un délai aléatoire, pour
+  // pouvoir dérouler toute la boucle (chrono, verrouillage, scoring) sans un vrai 2ᵉ téléphone.
+  useEffect(() => {
+    if (!game.testMode || !prediction || prediction.correctChoiceId || !onBotAnswer) return;
+    const alreadyAnswered = prediction.answers?.some((a) => a.userCode === "__test_bot__");
+    if (alreadyAnswered) return;
+    const delayMs = 2000 + Math.random() * 6000;
+    const timeout = setTimeout(() => {
+      const choice = prediction.choices[Math.floor(Math.random() * prediction.choices.length)];
+      onBotAnswer(choice.id);
+    }, delayMs);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prediction?.id, game.testMode]);
 
   const copyCode = () => {
     navigator.clipboard?.writeText(game.code);
