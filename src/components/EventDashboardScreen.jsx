@@ -402,24 +402,6 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           {event.createdAt && `Start : ${formatTime(event.createdAt)}`}
         </span>
       </div>
-      {salonToast && (
-        <div
-          style={{
-            fontSize: "12px",
-            color: COLORS.inkSoft,
-            fontStyle: "italic",
-            background: COLORS.surface,
-            border: `1px solid ${COLORS.paperAlt}`,
-            borderRadius: "8px",
-            padding: "6px 10px",
-            marginBottom: "6px",
-            display: "inline-block",
-          }}
-        >
-          {salonToast.type === "left" && `${salonToast.name} a quitté le BibaRoom`}
-          {salonToast.type === "joined" && `${salonToast.name} a rejoint le BibaRoom`}
-        </div>
-      )}
       {venue && (
         <button
           onClick={() => onOpenVenue(venue.id)}
@@ -767,6 +749,26 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           </span>
         </button>
       </div>
+
+      {salonToast && (
+        <div
+          style={{
+            fontSize: "12px",
+            color: COLORS.pinkFluo,
+            fontWeight: 600,
+            fontStyle: "italic",
+            background: "rgba(239,0,124,0.08)",
+            border: `2px solid ${COLORS.pinkFluo}`,
+            borderRadius: "8px",
+            padding: "6px 10px",
+            marginBottom: "18px",
+            display: "inline-block",
+          }}
+        >
+          {salonToast.type === "left" && `${salonToast.name} a quitté le BibaRoom`}
+          {salonToast.type === "joined" && `${salonToast.name} a rejoint le BibaRoom`}
+        </div>
+      )}
 
       {event.nowPlayingTrack && (
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "18px", marginTop: "-10px" }}>

@@ -99,7 +99,12 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
                 >
                   {b.isFavorite ? "⭐ " : ""}
                   {b.alias || [b.firstName || b.name, b.lastName].filter(Boolean).join(" ")}
-                  {b.nickname && <span style={{ color: COLORS.amber, fontStyle: "italic", fontWeight: 600 }}> {b.nickname}</span>}
+                  {b.nickname && (
+                    <span style={{ color: COLORS.amber, fontStyle: "italic", fontWeight: 600 }}>
+                      {" "}
+                      <span style={{ color: COLORS.inkSoft, fontStyle: "normal" }}>·</span> {b.nickname}
+                    </span>
+                  )}
                   {b.alias && (
                     <span style={{ color: COLORS.inkSoft, fontWeight: 500, fontSize: "12.5px" }}>
                       {" "}
