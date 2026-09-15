@@ -350,6 +350,7 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
               <span style={{ fontSize: "13.5px", fontWeight: p.code === myBibroCode ? 700 : 500 }}>
                 {p.name}
                 {p.code === myBibroCode && <span style={{ fontSize: "11px", fontWeight: 500, color: COLORS.inkSoft }}> (toi)</span>}
+                {p.isGuest && <span style={{ fontSize: "11px", fontWeight: 500, color: COLORS.inkSoft }}> (sans compte)</span>}
               </span>
               {p.code === game.hostBibroCode ? (
                 <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.amber, letterSpacing: "0.5px" }}>HÔTE</span>
@@ -447,6 +448,7 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
               <span style={{ color: COLORS.inkSoft, fontSize: "12px" }}>{i + 1}.</span>
               {p.name}
               {p.code === myBibroCode && <span style={{ fontSize: "11px", fontWeight: 500, color: COLORS.inkSoft }}> (toi)</span>}
+              {p.isGuest && <span style={{ fontSize: "11px", fontWeight: 500, color: COLORS.inkSoft }}> (sans compte)</span>}
             </span>
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "14px", color: COLORS.amber }}>{p.score || 0} pts</span>
           </div>
@@ -515,6 +517,31 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
           )}
           {!isHost && isLocked && !prediction.correctChoiceId && (
             <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "12px", textAlign: "center" }}>En attente que l'hôte valide la bonne réponse...</p>
+          )}
+          {isHost && !isLocked && (
+            <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+              {sortedParticipants
+                .filter((p) => p.isGuest && !prediction.answers?.some((a) => a.userCode === p.code))
+                .map((guest) => (
+                  <div key={guest.code} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>Pour {guest.name} (sans compte)</span>
+                    <select
+                      onChange={(e) => e.target.value && onSubmitAnswer(e.target.value, guest.code)}
+                      defaultValue=""
+                      style={{ fontSize: "12px", padding: "4px 6px", borderRadius: "6px", border: `1px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink }}
+                    >
+                      <option value="" disabled>
+                        Choisir...
+                      </option>
+                      {prediction.choices.map((choice) => (
+                        <option key={choice.id} value={choice.id}>
+                          {choice.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+            </div>
           )}
         </div>
       ) : isHost ? (
