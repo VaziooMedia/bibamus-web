@@ -640,18 +640,6 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentEvent?.salonCode]);
 
-  // Tout le monde présent au salon peut jouer, pas seulement les vrais comptes Bibax : les
-  // invités ajoutés sans compte (event.knownFriends, de simples noms) reçoivent un identifiant
-  // synthétique stable, puisqu'ils n'ont pas de code Bibro propre — mais comme ils n'ont pas
-  // non plus de session à eux, seul l'hôte peut répondre à leur place (voir plus bas).
-  const getSalonPredictCandidates = (event) => {
-    const real = (event.participants || []).map((p) => ({ code: p.code, name: p.name }));
-    const guests = (event.knownFriends || [])
-      .filter((name) => !real.some((p) => p.name === name))
-      .map((name) => ({ code: `guest:${name}`, name, isGuest: true }));
-    return [...real, ...guests];
-  };
-
   // Même principe pour une partie BibaPlay en cours — les autres joueurs (et les autres
   // participants du salon, si la partie y est liée) voient les changements en direct.
   React.useEffect(() => {
@@ -667,17 +655,20 @@ export default function App() {
   // quiconque rejoint le salon APRÈS que la partie ait été créée doit quand même s'y retrouver
   // automatiquement — pas seulement celui qui retouche le bouton BibaPlay. Sans ça, quelqu'un
   // qui rejoint le salon une fois la partie déjà créée resterait invisible pour toujours.
-  const salonParticipantCodes = currentEvent ? getSalonPredictCandidates(currentEvent).map((p) => p.code).join(",") : "";
+  // Seuls les vrais participants (event.participants, une vraie session par personne) comptent
+  // ici — un invité sans compte (event.knownFriends) n'a justement pas de téléphone à lui pour
+  // jouer, ça n'aurait aucun sens de l'y ajouter.
+  const salonParticipantCodes = (currentEvent?.participants || []).map((p) => p.code).join(",");
   React.useEffect(() => {
     if (!activePredictGame || activePredictGame.status !== "waiting" || !activePredictGame.linkedSalonCode) return;
     if (!currentEvent || currentEvent.salonCode !== activePredictGame.linkedSalonCode) return;
     const existingCodes = new Set((activePredictGame.participants || []).map((p) => p.code));
-    const missing = getSalonPredictCandidates(currentEvent).filter((p) => !existingCodes.has(p.code));
+    const missing = (currentEvent.participants || []).filter((p) => !existingCodes.has(p.code));
     if (missing.length === 0) return;
     (async () => {
       const fresh = (await loadPredictGame(activePredictGame.code)) || activePredictGame;
       const freshExisting = new Set((fresh.participants || []).map((p) => p.code));
-      const stillMissing = missing.filter((p) => !freshExisting.has(p.code)).map((p) => ({ code: p.code, name: p.name, joinedAt: Date.now(), isGuest: p.isGuest || false }));
+      const stillMissing = missing.filter((p) => !freshExisting.has(p.code)).map((p) => ({ code: p.code, name: p.name, joinedAt: Date.now() }));
       if (stillMissing.length === 0) return;
       const updated = { ...fresh, participants: [...(fresh.participants || []), ...stillMissing] };
       await savePredictGame(activePredictGame.code, updated);
@@ -1005,7 +996,7 @@ export default function App() {
   // à l'appel), sinon en crée une nouvelle liée à ce salon.
   const goToBibaPlayFromSalonFn = async () => {
     if (!currentEvent) return;
-    const salonParticipants = getSalonPredictCandidates(currentEvent).map((p) => ({ code: p.code, name: p.name, joinedAt: Date.now(), isGuest: p.isGuest || false }));
+    const salonParticipants = (currentEvent.participants || []).map((p) => ({ code: p.code, name: p.name, joinedAt: Date.now() }));
     if (currentEvent.activeBibaPlayCode) {
       const fresh = await loadPredictGame(currentEvent.activeBibaPlayCode);
       if (fresh) {
