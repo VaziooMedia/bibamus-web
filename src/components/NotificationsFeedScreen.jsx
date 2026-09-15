@@ -17,6 +17,7 @@ const TYPE_LABELS = {
   bibax_request: "vous a envoyé une demande Bibax",
   bibax_accepted: "a accepté votre demande Bibax",
   salon_invite: "t'invite à rejoindre un BibaRoom",
+  salon_invite_accepted: "a rejoint ton BibaRoom",
 };
 
 function timeAgo(iso) {
@@ -67,7 +68,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
   const respondSalonInvite = async (n, accept) => {
     setBusyId(n.id);
     await respondNotification(n.id, accept);
-    await onRespondSalonInvite?.(n.entityId, accept);
+    await onRespondSalonInvite?.(n.entityId, accept, n.actorId);
     setBusyId(null);
     setRespondedIds((prev) => ({ ...prev, [n.id]: accept ? "accepted" : "declined" }));
   };

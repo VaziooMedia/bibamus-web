@@ -129,6 +129,7 @@ import {
   deleteRoundOrders,
   deleteRoundOrdersByEvent,
   loadDrinkLinkedEntities,
+  sendNotification,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
@@ -619,18 +620,12 @@ export default function App() {
       setEvents((prev) =>
         prev.map((e) => {
           if (e.id !== currentEvent.id) return e;
-          // Un écho de notre propre écriture (ou une mise à jour arrivée en retard) ne doit
-          // jamais écraser un état local déjà plus récent — sinon une action peut sembler "ne
-          // pas marcher" alors qu'elle a bien été appliquée localement, juste réécrasée aussitôt.
-          if ((updatedData.updatedAt || 0) < (e.updatedAt || 0)) return e;
-          // On fait confiance à la liste de participants reçue telle quelle (déjà protégée
-          // juste au-dessus contre une donnée périmée) — une fusion par union avait été essayée
-          // ici pour éviter qu'une arrivée simultanée de deux appareils ne s'annule
-          // accidentellement, mais elle rendait un départ structurellement impossible à
-          // propager : la personne partie restait pour toujours dans l'ancienne liste locale,
-          // jamais retirée par l'union. Un départ qui ne se propage jamais est un bug bien plus
-          // grave et certain qu'une rare course à l'arrivée, qui se corrige de toute façon au
-          // prochain événement temps réel.
+          // Postgres garantit déjà l'ordre réel des événements — pas besoin de revérifier avec
+          // une horloge client, qui compare les horloges de DEUX appareils physiques différents
+          // (celui qui écrit, celui qui reçoit) : si elles ne sont pas parfaitement synchronisées
+          // (vraisemblable entre deux vrais téléphones), une mise à jour légitime peut être
+          // rejetée silencieusement, sans aucune erreur visible — c'était probablement la vraie
+          // cause d'un départ qui ne se propageait jamais chez l'autre participant.
           const merged = { ...e, ...updatedData, participants: updatedData.participants || e.participants || [] };
           return normalizeEvent(merged);
         })
@@ -876,7 +871,11 @@ export default function App() {
   const leaveSalonFn = async (eventId, salonCode) => {
     const salonData = await loadSalon(salonCode);
     if (salonData) {
-      const updated = { ...salonData, participants: (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode) };
+      const updated = {
+        ...salonData,
+        participants: (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode),
+        updatedAt: Date.now(),
+      };
       await saveSalon(salonCode, updated);
     }
     setEvents((prev) => prev.filter((e) => e.id !== eventId));
@@ -888,14 +887,18 @@ export default function App() {
   // via "Participants" — "Rejoindre" fait exactement ce que ferait taper le code manuellement ;
   // "Décliner" retire seulement l'invitation en attente côté salon (l'hôte peut réinviter plus
   // tard s'il le souhaite).
-  const respondSalonInviteFn = async (salonCode, accept) => {
+  const respondSalonInviteFn = async (salonCode, accept, inviterUserId) => {
     if (accept) {
       await joinSalon(salonCode);
+      if (inviterUserId) {
+        const salonData = await loadSalon(salonCode);
+        await sendNotification(inviterUserId, "salon_invite_accepted", "salon", salonCode, salonData?.name || null);
+      }
       return;
     }
     const salonData = await loadSalon(salonCode);
     if (!salonData) return;
-    const updated = { ...salonData, pendingBibaxInvites: (salonData.pendingBibaxInvites || []).filter((p) => p.userId !== session.user.id) };
+    const updated = { ...salonData, pendingBibaxInvites: (salonData.pendingBibaxInvites || []).filter((p) => p.userId !== session.user.id), updatedAt: Date.now() };
     await saveSalon(salonCode, updated);
   };
 

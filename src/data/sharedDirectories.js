@@ -350,6 +350,23 @@ export async function respondNotification(notificationId, accept) {
   return true;
 }
 
+// Envoi générique — utilisée par exemple pour prévenir l'auteur d'une invitation de salon
+// qu'elle a été acceptée, mais réutilisable pour n'importe quel autre "notifier X de Y" futur.
+export async function sendNotification(recipientUserId, type, entityType, entityId, previewText) {
+  const { error } = await supabase.rpc("send_notification", {
+    p_recipient_user_id: recipientUserId,
+    p_type: type,
+    p_entity_type: entityType,
+    p_entity_id: entityId,
+    p_preview_text: previewText || null,
+  });
+  if (error) {
+    console.error("sendNotification:", error);
+    return false;
+  }
+  return true;
+}
+
 // Abonnement temps réel — appelé une fois avec l'id de l'utilisateur, prévient
 // immédiatement (sans attendre un cycle de vérification) dès qu'une nouvelle notification lui
 // est destinée. Retourne une fonction à appeler pour se désabonner proprement.
