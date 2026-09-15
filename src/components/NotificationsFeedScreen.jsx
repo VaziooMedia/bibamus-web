@@ -8,7 +8,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
-import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests, respondBibaxRequest } from "../data/sharedDirectories.js";
+import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests, respondBibaxRequest, respondSalonInviteNotification } from "../data/sharedDirectories.js";
 
 const TYPE_LABELS = {
   pulse_bix: "a Bixé votre publication",
@@ -65,6 +65,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
 
   const respondSalonInvite = async (n, accept) => {
     setBusyId(n.id);
+    await respondSalonInviteNotification(n.id, accept);
     await onRespondSalonInvite?.(n.entityId, accept);
     setBusyId(null);
     setRespondedIds((prev) => ({ ...prev, [n.id]: accept ? "accepted" : "declined" }));
@@ -103,7 +104,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
             {notifications.map((n, i) => {
               const pendingRequest = n.type === "bibax_request" ? pendingBibax.find((r) => r.userId === n.actorId) : null;
               const isActionable = (n.type === "bibax_request" && pendingRequest) || n.type === "salon_invite";
-              const responded = respondedIds[n.id];
+              const responded = n.status === "accepted" || n.status === "declined" ? n.status : respondedIds[n.id];
               const content = (
                 <>
                   <EntityAvatar photoUrl={n.actorAvatarUrl} size={40} />
@@ -124,7 +125,13 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                     )}
                     {responded && (
                       <div style={{ fontSize: "12px", color: COLORS.amber, marginTop: "6px", fontWeight: 600 }}>
-                        {responded === "accepted" ? "Acceptée" : "Déclinée"}
+                        {n.type === "salon_invite"
+                          ? responded === "accepted"
+                            ? "Tu as rejoint le salon."
+                            : "Tu as décliné l'invitation."
+                          : responded === "accepted"
+                          ? "Acceptée"
+                          : "Déclinée"}
                       </div>
                     )}
                   </span>

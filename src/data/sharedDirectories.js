@@ -285,6 +285,7 @@ export async function loadMyNotifications(limit = 30) {
       entityType: n.entity_type,
       entityId: n.entity_id,
       read: n.read,
+      status: n.status,
       createdAt: n.created_at,
       previewText: n.preview_text,
       postPreview: n.post_preview,
@@ -326,6 +327,21 @@ export async function createSalonInviteNotification(recipientUserId, salonCode, 
   });
   if (error) {
     console.error("createSalonInviteNotification:", error);
+    return false;
+  }
+  return true;
+}
+
+// Persiste la réponse à une invitation de salon — sans ça, "Acceptée"/"Déclinée" ne vivrait
+// qu'en mémoire du composant et les boutons Rejoindre/Décliner réapparaîtraient à chaque
+// réouverture du fil de notifications.
+export async function respondSalonInviteNotification(notificationId, accept) {
+  const { error } = await supabase.rpc("respond_salon_invite", {
+    p_notification_id: notificationId,
+    p_accept: accept,
+  });
+  if (error) {
+    console.error("respondSalonInviteNotification:", error);
     return false;
   }
   return true;
