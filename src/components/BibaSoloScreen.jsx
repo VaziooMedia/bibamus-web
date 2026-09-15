@@ -40,14 +40,13 @@ function drinkCalories(drink, volumeCl) {
   return Math.round((drink.kcalPer100ml * volume * 10) / 100);
 }
 
-// Écran d'ajout — recherche une boisson, prix obligatoire, lieu optionnel.
-function AddSoloCheckinScreen({ myUserId, recentDrinks = [], onDone, onBack }) {
+// Écran d'ajout — recherche une boisson, prix obligatoire. Le lieu est fixé une fois sur la
+// page principale de BibaSolo et appliqué automatiquement ici, sans le redemander à chaque verre.
+function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBack }) {
   const [query, setQuery] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
   const [volume, setVolume] = useState("");
   const [price, setPrice] = useState("");
-  const [venueQuery, setVenueQuery] = useState("");
-  const [selectedVenue, setSelectedVenue] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const q = normalize(query);
@@ -63,34 +62,6 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], onDone, onBack }) {
     return () => clearTimeout(timer);
   }, [q, query]);
 
-  const vq = normalize(venueQuery);
-  const [venueResults, setVenueResults] = useState([]);
-  useEffect(() => {
-    if (vq.length < 2) {
-      setVenueResults([]);
-      return;
-    }
-    const timer = setTimeout(() => {
-      searchVenues(venueQuery.trim(), 6).then(setVenueResults);
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [vq, venueQuery]);
-
-  // Suggestions "Près de toi" — géolocalisation demandée dès l'ouverture de l'écran, en arrière-
-  // plan, pour que les lieux proches soient déjà prêts au moment où on arrive à l'étape "Lieu".
-  // Silencieux si refusé ou indisponible : la recherche manuelle reste toujours là.
-  const [nearbyVenues, setNearbyVenues] = useState([]);
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        loadNearbyVenues(pos.coords.latitude, pos.coords.longitude, 500, 5).then(setNearbyVenues);
-      },
-      () => {},
-      { timeout: 8000, maximumAge: 300000 }
-    );
-  }, []);
-
   const selectDrink = (d) => {
     setSelectedDrink(d);
     setVolume(d.volumeCl ? String(d.volumeCl) : "25");
@@ -103,7 +74,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], onDone, onBack }) {
     setSaving(true);
     setError(null);
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
-    const result = await addSoloCheckin(myUserId, selectedDrink.id, parseFloat(price.replace(",", ".")), selectedVenue?.id, volumeNum);
+    const result = await addSoloCheckin(myUserId, selectedDrink.id, parseFloat(price.replace(",", ".")), venue?.id, volumeNum);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -230,83 +201,11 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], onDone, onBack }) {
             style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "18px" }}
           />
 
-          <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Lieu (optionnel)</label>
-          {selectedVenue ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
-              <NavIcon name="map-pin" size={16} color={COLORS.amber} />
-              <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{selectedVenue.name}</span>
-              <button onClick={() => setSelectedVenue(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                <NavIcon name="x" size={15} color={COLORS.inkSoft} />
-              </button>
+          {venue && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "18px" }}>
+              <NavIcon name="map-pin" size={14} color={COLORS.amber} />
+              {venue.name}
             </div>
-          ) : (
-            <>
-              {nearbyVenues.length > 0 && (
-                <div style={{ marginBottom: "10px" }}>
-                  <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "6px" }}>Près de toi</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                    {nearbyVenues.map((v) => (
-                      <button
-                        key={v.id}
-                        onClick={() => setSelectedVenue(v)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          background: COLORS.surface,
-                          border: `2px solid ${COLORS.amber}`,
-                          borderRadius: "999px",
-                          padding: "8px 14px",
-                          fontSize: "13px",
-                          fontWeight: 700,
-                          color: COLORS.ink,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <NavIcon name="map-pin" size={14} color={COLORS.amber} />
-                        {v.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <input
-                type="text"
-                value={venueQuery}
-                onChange={(e) => setVenueQuery(e.target.value)}
-                placeholder="Rechercher un lieu..."
-                style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
-              />
-              {venueResults.length > 0 && (
-                <div style={{ marginTop: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-                  {venueResults.map((v, i) => (
-                    <button
-                      key={v.id}
-                      onClick={() => {
-                        setSelectedVenue(v);
-                        setVenueQuery("");
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        width: "100%",
-                        background: "none",
-                        border: "none",
-                        borderBottom: i === venueResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
-                        padding: "12px 4px",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        color: COLORS.ink,
-                      }}
-                    >
-                      <NavIcon name="map-pin" size={16} color={COLORS.amber} />
-                      <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{v.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
           )}
 
           {error && <p style={{ fontSize: "12.5px", color: "#FF3B3B", marginTop: "10px" }}>{error}</p>}
@@ -328,6 +227,44 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
   const [adding, setAdding] = useState(false);
   const [drinksById, setDrinksById] = useState({});
   const [venuesById, setVenuesById] = useState({});
+
+  // Lieu actuel — fixé une fois ici, appliqué automatiquement à chaque verre ajouté ensuite,
+  // sans le redemander à chaque fois. Géolocalisation tentée dès l'ouverture de l'écran, en
+  // arrière-plan ; silencieuse si refusée ou indisponible, la recherche manuelle reste là.
+  const [currentVenue, setCurrentVenue] = useState(null);
+  const [venuePickerOpen, setVenuePickerOpen] = useState(false);
+  const [nearbyVenues, setNearbyVenues] = useState([]);
+  const [venueQuery, setVenueQuery] = useState("");
+  const [venueResults, setVenueResults] = useState([]);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        loadNearbyVenues(pos.coords.latitude, pos.coords.longitude, 500, 5).then(setNearbyVenues);
+      },
+      () => {},
+      { timeout: 8000, maximumAge: 300000 }
+    );
+  }, []);
+
+  const vq = normalize(venueQuery);
+  useEffect(() => {
+    if (vq.length < 2) {
+      setVenueResults([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchVenues(venueQuery.trim(), 6).then(setVenueResults);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [vq, venueQuery]);
+
+  const pickVenue = (v) => {
+    setCurrentVenue(v);
+    setVenuePickerOpen(false);
+    setVenueQuery("");
+  };
 
   const refresh = () => loadMySoloCheckins(startOfTodayIso()).then(setCheckins);
 
@@ -406,6 +343,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
       <AddSoloCheckinScreen
         myUserId={myUserId}
         recentDrinks={recentDrinkIds.map((id) => drinksById[id]).filter(Boolean)}
+        venue={currentVenue}
         onBack={() => setAdding(false)}
         onDone={() => {
           setAdding(false);
@@ -435,6 +373,128 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
           <NavIcon name="refresh" size={16} color={COLORS.inkSoft} />
         </button>
       </div>
+
+      {currentVenue ? (
+        <div
+          onClick={() => setVenuePickerOpen((o) => !o)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            width: "100%",
+            boxSizing: "border-box",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.amber}`,
+            borderRadius: "12px",
+            padding: "10px 14px",
+            marginBottom: "14px",
+            cursor: "pointer",
+          }}
+        >
+          <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+          <span style={{ flex: 1, fontSize: "14px", fontWeight: 700 }}>{currentVenue.name}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrentVenue(null);
+              setVenuePickerOpen(false);
+            }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          >
+            <NavIcon name="x" size={15} color={COLORS.inkSoft} />
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setVenuePickerOpen((o) => !o)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            width: "100%",
+            boxSizing: "border-box",
+            background: "none",
+            border: `2px dashed ${COLORS.paperAlt}`,
+            borderRadius: "12px",
+            padding: "10px 14px",
+            marginBottom: "14px",
+            cursor: "pointer",
+            textAlign: "left",
+            color: COLORS.inkSoft,
+          }}
+        >
+          <NavIcon name="map-pin" size={16} color={COLORS.inkSoft} />
+          <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>Indiquer où tu es</span>
+        </button>
+      )}
+
+      {venuePickerOpen && (
+        <div style={{ marginBottom: "18px" }}>
+          {nearbyVenues.length > 0 && (
+            <div style={{ marginBottom: "10px" }}>
+              <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "6px" }}>Près de toi</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {nearbyVenues.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => pickVenue(v)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: COLORS.surface,
+                      border: `2px solid ${COLORS.amber}`,
+                      borderRadius: "999px",
+                      padding: "8px 14px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: COLORS.ink,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <NavIcon name="map-pin" size={14} color={COLORS.amber} />
+                    {v.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <input
+            type="text"
+            value={venueQuery}
+            onChange={(e) => setVenueQuery(e.target.value)}
+            placeholder="Rechercher un lieu..."
+            autoFocus
+            style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
+          />
+          {venueResults.length > 0 && (
+            <div style={{ marginTop: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+              {venueResults.map((v, i) => (
+                <button
+                  key={v.id}
+                  onClick={() => pickVenue(v)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    width: "100%",
+                    background: "none",
+                    border: "none",
+                    borderBottom: i === venueResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
+                    padding: "12px 4px",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    color: COLORS.ink,
+                  }}
+                >
+                  <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+                  <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{v.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
         <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "center" }}>
