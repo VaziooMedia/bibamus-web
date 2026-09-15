@@ -219,7 +219,7 @@ export function PotCard({ event, updateEvent, myName }) {
   );
 }
 
-export function SalonSection({ event, updateEvent, myName, profile, myBibroCode, bibros, onLeaveSalon }) {
+export function SalonSection({ event, updateEvent, myName, profile, myBibroCode, bibros, onLeaveSalon, onCloseEvent }) {
   // Calcule le nom d'affichage dans ce salon selon la préférence de l'utilisateur (prénom ou
   // surnom), en ajoutant automatiquement l'initiale du nom de famille si ce nom est déjà pris
   // par un autre participant présent dans ce même salon.
@@ -237,6 +237,10 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   const [mode, setMode] = useState(null); // null | 'join'
   const [codeInput, setCodeInput] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
+  // Seuls les vrais comptes comptent ici — un invité sans compte n'a aucun pouvoir sur le
+  // salon, il n'existe que de nom pour la logistique (compter ses tournées, ses stats...).
+  const isAlone = (event.participants || []).filter((p) => p.code !== myBibroCode).length === 0;
   const [showSuggestion, setShowSuggestion] = usePersistedToggle(event.id, "suggestionTournee", false);
 
   const salonCode = event.salonCode;
@@ -549,7 +553,9 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           {myEntry && myEntry.paused ? "Reprendre" : "Pause"}
         </button>
         <button
-          onClick={() => (confirmLeave ? leaveSalon() : setConfirmLeave(true))}
+          onClick={() => !isAlone && (confirmLeave ? leaveSalon() : setConfirmLeave(true))}
+          disabled={isAlone}
+          title={isAlone ? "Tu es seul·e ici — utilise « Fin » pour clôturer le salon" : undefined}
           style={{
             display: "flex",
             alignItems: "center",
@@ -562,11 +568,35 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
             color: confirmLeave ? COLORS.redFluo : COLORS.ink,
             fontSize: "12px",
             fontWeight: 600,
-            cursor: "pointer",
+            cursor: isAlone ? "not-allowed" : "pointer",
+            opacity: isAlone ? 0.4 : 1,
           }}
         >
           <NavIcon name="stop" size={13} color={confirmLeave ? COLORS.redFluo : COLORS.amber} />
           {confirmLeave ? "Confirmer ?" : "Quitter"}
+        </button>
+        <button
+          onClick={() => isAlone && (confirmClose ? onCloseEvent?.() : setConfirmClose(true))}
+          disabled={!isAlone}
+          title={!isAlone ? "D'autres personnes sont encore dans ce salon — quitte plutôt avec « Quitter »" : undefined}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "5px",
+            background: "none",
+            border: `2px solid ${confirmClose ? COLORS.redFluo : COLORS.paperAlt}`,
+            borderRadius: "8px",
+            padding: "9px 10px",
+            color: confirmClose ? COLORS.redFluo : COLORS.ink,
+            fontSize: "12px",
+            fontWeight: 600,
+            cursor: !isAlone ? "not-allowed" : "pointer",
+            opacity: !isAlone ? 0.4 : 1,
+          }}
+        >
+          <NavIcon name="stop" size={13} color={confirmClose ? COLORS.redFluo : COLORS.amber} />
+          {confirmClose ? "Confirmer ?" : "Fin"}
         </button>
         </div>
       </div>
@@ -576,6 +606,17 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           Tes tournées déjà offertes restent enregistrées.{" "}
           <button
             onClick={() => setConfirmLeave(false)}
+            style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "11px", cursor: "pointer", padding: 0 }}
+          >
+            Annuler
+          </button>
+        </p>
+      )}
+      {confirmClose && (
+        <p style={{ fontSize: "11px", color: COLORS.redFluo, marginTop: "8px", textAlign: "center" }}>
+          Sortira de tes événements en cours — reste consultable dans l'historique.{" "}
+          <button
+            onClick={() => setConfirmClose(false)}
             style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "11px", cursor: "pointer", padding: 0 }}
           >
             Annuler

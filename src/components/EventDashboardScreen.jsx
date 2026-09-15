@@ -509,28 +509,30 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
               <NavIcon name={event.paused ? "play" : "pause"} size={14} color={COLORS.jetonFluo} />
               {event.paused ? "Reprendre" : "Session en pause"}
             </button>
-            <button
-              onClick={() => (confirmClose ? onCloseEvent() : setConfirmClose(true))}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                width: "100%",
-                background: "none",
-                border: "none",
-                borderRadius: "7px",
-                padding: "9px 10px",
-                fontSize: "13px",
-                fontWeight: 600,
-                color: confirmClose ? COLORS.redFluo : COLORS.ink,
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <NavIcon name="stop" size={14} color={COLORS.redFluo} />
-              {confirmClose ? "Confirmer ?" : "Fin de la session"}
-            </button>
-            {confirmClose && (
+            {!event.salonCode && (
+              <button
+                onClick={() => (confirmClose ? onCloseEvent() : setConfirmClose(true))}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  borderRadius: "7px",
+                  padding: "9px 10px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: confirmClose ? COLORS.redFluo : COLORS.ink,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <NavIcon name="stop" size={14} color={COLORS.redFluo} />
+                {confirmClose ? "Confirmer ?" : "Fin de la session"}
+              </button>
+            )}
+            {!event.salonCode && confirmClose && (
               <p style={{ fontSize: "10.5px", color: COLORS.redFluo, padding: "0 10px 6px 10px", margin: 0 }}>
                 Sortira de tes événements en cours — reste consultable dans l'historique.{" "}
                 <button
@@ -1822,7 +1824,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         )}
       </div>
 
-      <SalonSection event={event} updateEvent={updateEvent} myName={myName} profile={profile} myBibroCode={myBibroCode} bibros={bibros} onLeaveSalon={onLeaveSalon} />
+      <SalonSection event={event} updateEvent={updateEvent} myName={myName} profile={profile} myBibroCode={myBibroCode} bibros={bibros} onLeaveSalon={onLeaveSalon} onCloseEvent={onCloseEvent} />
 
       <PrimaryButton
         onClick={onNewRound}
