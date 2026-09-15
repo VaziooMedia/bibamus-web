@@ -13,6 +13,9 @@ import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx
 import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds, searchVenues, loadVenuesByIds, loadNearbyVenues, loadGenericDrinks } from "../data/sharedDirectories.js";
 import { drinkTypeLabel, resolveMenuItem, formatMoney } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
+import carteIconUrl from "../assets/brand/carte.svg";
+import bibatlasIconUrl from "../assets/brand/bibatlas.svg";
+import beerIconUrl from "../assets/brand/beer.svg";
 
 function normalize(str) {
   return (str || "")
@@ -199,7 +202,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
           {pickMode === null && (
             <>
               {recentDrinks.length > 0 && (
-                <div style={{ marginBottom: "18px" }}>
+                <div style={{ marginBottom: "14px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {recentDrinks.map((d) => (
@@ -209,24 +212,23 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: "6px",
                           background: COLORS.surface,
                           border: `2px solid ${COLORS.amber}`,
                           borderRadius: "999px",
-                          padding: "8px 14px",
-                          fontSize: "13px",
+                          padding: "6px 12px",
+                          fontSize: "11.5px",
                           fontWeight: 700,
                           color: COLORS.ink,
                           cursor: "pointer",
                         }}
                       >
-                        <NavIcon name="bottle" size={14} color={COLORS.amber} />
                         {d.name}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
+              {recentDrinks.length > 0 && <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px" }} />}
 
               <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Quelle boisson ?</label>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -247,8 +249,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                       textAlign: "left",
                     }}
                   >
-                    <NavIcon name="bottle" size={18} color={COLORS.amber} />
-                    <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>Carte de {venue.name}</span>
+                    <img src={carteIconUrl} alt="" style={{ width: "18px", height: "18px", display: "block" }} />
+                    <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>{venue.name} - Carte</span>
                     <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
                   </button>
                 )}
@@ -268,8 +270,11 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                     textAlign: "left",
                   }}
                 >
-                  <NavIcon name="search" size={18} color={COLORS.amber} />
-                  <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>Rechercher dans BibAtlas</span>
+                  <img src={bibatlasIconUrl} alt="" style={{ width: "18px", height: "18px", display: "block" }} />
+                  <span style={{ flex: 1, fontSize: "14px", fontWeight: 700 }}>
+                    <span style={{ color: COLORS.chalkWhite }}>Biba</span>
+                    <span style={{ color: COLORS.amber }}>Atlas</span>
+                  </span>
                   <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
                 </button>
                 <button
@@ -288,8 +293,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                     textAlign: "left",
                   }}
                 >
-                  <NavIcon name="search" size={18} color={COLORS.amber} />
-                  <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>Produit générique</span>
+                  <img src={beerIconUrl} alt="" style={{ width: "18px", height: "18px", display: "block" }} />
+                  <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>Produits génériques</span>
                   <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
                 </button>
               </div>
@@ -597,7 +602,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
   const refresh = () => loadMySoloCheckins(startOfTodayIso()).then(setCheckins);
 
   // Favoris — sur tout l'historique, pas seulement aujourd'hui, sinon la liste se vide à
-  // chaque nouvelle journée. Limité à 3, le plus ancien pousse dehors dès qu'un nouveau arrive.
+  // chaque nouvelle journée. Limité à 4, le plus ancien pousse dehors dès qu'un nouveau arrive.
   const refreshFavorites = () =>
     loadMySoloCheckins().then((all) => {
       const seen = new Set();
@@ -608,7 +613,7 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
           seen.add(key);
           ids.push(key);
         }
-        if (ids.length >= 3) break;
+        if (ids.length >= 4) break;
       }
       setRecentDrinkIds(ids);
     });
