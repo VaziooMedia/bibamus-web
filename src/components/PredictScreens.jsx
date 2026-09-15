@@ -12,6 +12,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
+import predictIconUrl from "../assets/brand/predict.svg";
 
 export const ANSWER_DURATION_SECONDS = 15;
 
@@ -108,7 +109,20 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={mode === "join" ? () => setMode(null) : onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 8px 0" }}>
-        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "46px",
+            height: "46px",
+            borderRadius: "50%",
+            background: COLORS.paperAlt,
+            flexShrink: 0,
+          }}
+        >
+          <img src={predictIconUrl} alt="" style={{ width: "24px", height: "24px", display: "block" }} />
+        </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Predict</h1>
       </div>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "22px" }}>Pronostics entre amis, sans argent réel — juste des points et un classement.</p>
@@ -303,7 +317,20 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
       <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
         <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 22px 0" }}>
-          <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "46px",
+              height: "46px",
+              borderRadius: "50%",
+              background: COLORS.paperAlt,
+              flexShrink: 0,
+            }}
+          >
+            <img src={predictIconUrl} alt="" style={{ width: "24px", height: "24px", display: "block" }} />
+          </span>
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Predict</h1>
         </div>
 
@@ -419,7 +446,20 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 4px 0" }}>
-        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "46px",
+            height: "46px",
+            borderRadius: "50%",
+            background: COLORS.paperAlt,
+            flexShrink: 0,
+          }}
+        >
+          <img src={predictIconUrl} alt="" style={{ width: "24px", height: "24px", display: "block" }} />
+        </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Predict</h1>
       </div>
       {(game.teamA || game.teamB) && (
