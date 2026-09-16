@@ -15,6 +15,16 @@ import { loadMyStories } from "../data/sharedDirectories.js";
 const FLUO_BLUE = "#2E9EFF";
 const FLUO_RED = "#FF3B3B";
 
+const GENDER_OPTIONS = [
+  { value: "male", label: "Homme" },
+  { value: "female", label: "Femme" },
+  { value: "non_binary", label: "Non-binaire" },
+  { value: "gender_fluid", label: "Gender fluid" },
+  { value: "custom", label: "Je préfère me définir autrement" },
+  { value: "undisclosed", label: "Je préfère ne pas préciser" },
+];
+const GENDER_LABELS = Object.fromEntries(GENDER_OPTIONS.map((o) => [o.value, o.label]));
+
 // Sépare un numéro déjà stocké ("+352 691 234 567") en indicatif + reste, pour pré-remplir
 // les deux champs de l'éditeur téléphone.
 function splitPhone(stored) {
@@ -164,6 +174,7 @@ export function AccountScreen({ myName, profile, myUserId, onOpenMyStory, onBack
         <AccountRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Prénom" value={profile.name || "—"} onClick={() => goToField("name")} />
         <AccountRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Nom" value={profile.lastName || "—"} onClick={() => goToField("lastName")} />
         <AccountRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Surnom" value={profile.nickname || "—"} onClick={() => goToField("nickname")} />
+        <AccountRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Genre" value={profile.gender === "custom" ? profile.genderCustom || "—" : GENDER_LABELS[profile.gender] || "—"} onClick={() => goToField("gender")} />
         <div style={{ borderBottom: "none" }}>
           <AccountRow icon={<NavIcon name="align-left" size={17} color={COLORS.amber} />} title="Bio" value={profile.bio || "—"} onClick={() => goToField("bio")} />
         </div>
@@ -284,6 +295,72 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
           value={value}
           onChange={(e) => handleChange(e.target.value)}
           style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
+        />
+      )}
+
+      <PrimaryButton onClick={handleSave} disabled={saving} style={{ width: "100%", marginTop: "20px" }}>
+        {saving ? "Enregistrement..." : "Enregistrer"}
+      </PrimaryButton>
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Genre — choix multiple avec option de texte libre ("custom"). Séparé de FieldEditScreen car
+// ce n'est ni un simple champ texte, ni une date : une vraie liste de choix.
+export function GenderEditScreen({ profile, onSaveProfile, onBack }) {
+  const [gender, setGender] = useState(profile.gender || "undisclosed");
+  const [genderCustom, setGenderCustom] = useState(profile.genderCustom || "");
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onSaveProfile({ gender, genderCustom: gender === "custom" ? genderCustom : "" });
+    setSaving(false);
+    onBack();
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="user" size={22} color={COLORS.amber} />}>Genre</PageTitleWithBar>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {GENDER_OPTIONS.map((o) => (
+          <button
+            key={o.value}
+            onClick={() => setGender(o.value)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              boxSizing: "border-box",
+              background: COLORS.surface,
+              border: `2px solid ${gender === o.value ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "12px",
+              padding: "14px",
+              textAlign: "left",
+              cursor: "pointer",
+              color: COLORS.ink,
+              fontSize: "14px",
+              fontWeight: gender === o.value ? 700 : 500,
+            }}
+          >
+            {o.label}
+            {gender === o.value && <NavIcon name="check" size={16} color={COLORS.amber} />}
+          </button>
+        ))}
+      </div>
+
+      {gender === "custom" && (
+        <input
+          type="text"
+          value={genderCustom}
+          onChange={(e) => setGenderCustom(e.target.value)}
+          placeholder="Comment tu te définis..."
+          autoFocus
+          style={{ width: "100%", boxSizing: "border-box", padding: "14px", marginTop: "10px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "15px" }}
         />
       )}
 

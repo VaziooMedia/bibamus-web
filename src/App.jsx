@@ -49,7 +49,7 @@ import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { WrappedScreen } from "./components/WrappedScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen, WaterAlertSettingsScreen } from "./components/MinorScreens.jsx";
-import { AccountScreen, FieldEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
+import { AccountScreen, FieldEditScreen, GenderEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen, MyStatsPrivacyScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
 import { PreferencesScreen, StorySettingsScreen, ChoiceScreen, VolumeWeightScreen } from "./components/PreferencesScreen.jsx";
@@ -135,7 +135,7 @@ import {
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -420,6 +420,8 @@ export default function App() {
       city: profile.city,
       locality: profile.locality,
       bio: profile.bio,
+      gender: profile.gender,
+      genderCustom: profile.genderCustom,
       facebookUrl: profile.facebookUrl,
       instagramUrl: profile.instagramUrl,
       tiktokUrl: profile.tiktokUrl,
@@ -876,7 +878,7 @@ export default function App() {
   const leaveSalonFn = async (eventId, salonCode, noticeType = "left") => {
     const salonData = await loadSalon(salonCode);
     if (salonData) {
-      const notice = { id: `notice-${Date.now()}`, type: noticeType, name: profile.name, at: Date.now() };
+      const notice = { id: `notice-${Date.now()}`, type: noticeType, name: profile.name, gender: profile.gender, at: Date.now() };
       const updated = {
         ...salonData,
         participants: (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode),
@@ -886,7 +888,7 @@ export default function App() {
       await saveSalon(salonCode, updated);
       if (noticeType === "safe") {
         const others = (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode);
-        if (others.length > 0) sendPushNotification(others.map((p) => p.code), "BibaRoom", `${profile.name} signale être bien arrivé·e à destination.`);
+        if (others.length > 0) sendPushNotification(others.map((p) => p.code), "BibaRoom", `${profile.name} signale être bien ${genderAgree(profile.gender, "arrivé", "arrivée")} à destination.`);
       }
     }
     setEvents((prev) => prev.filter((e) => e.id !== eventId));
@@ -2674,6 +2676,8 @@ export default function App() {
                       ? "accountEmail"
                       : field === "phone"
                       ? "accountPhone"
+                      : field === "gender"
+                      ? "accountGender"
                       : socialKeys.includes(field)
                       ? "accountSocial"
                       : "accountField"
@@ -2690,6 +2694,9 @@ export default function App() {
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
                 onBack={() => setScreen("account")}
               />
+            )}
+            {screen === "accountGender" && (
+              <GenderEditScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("account")} />
             )}
             {screen === "accountLocation" && (
               <LocationEditScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("account")} />

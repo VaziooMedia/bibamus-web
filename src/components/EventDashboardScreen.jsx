@@ -12,7 +12,7 @@ import bibaplayIconUrl from "../assets/brand/bibaplay.svg";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
-import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst } from "../utils.js";
+import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
@@ -690,7 +690,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         >
           {salonToast.type === "left" && `${salonToast.name} a quitté ce BibaRoom`}
           {salonToast.type === "joined" && `${salonToast.name} a rejoint ce BibaRoom`}
-          {salonToast.type === "safe" && `${salonToast.name} signale être bien arrivé·e à destination`}
+          {salonToast.type === "safe" && `${salonToast.name} signale être bien ${genderAgree(salonToast.gender, "arrivé", "arrivée")} à destination`}
           <button
             onClick={() => setSalonToast(null)}
             style={{

@@ -134,6 +134,15 @@ export const formatMoney = (value, currency) => {
   return `${value.toFixed(2).replace(".", ",")} €`;
 };
 
+// Accord grammatical basé sur le genre déclaré — "male"/"female" donnent l'accord classique,
+// tout le reste (non-binaire, gender fluid, autre, non précisé, ou absent) garde l'écriture
+// inclusive comme choix neutre par défaut.
+export const genderAgree = (gender, masculine, feminine, neutral = `${masculine}·${feminine.slice(masculine.length)}`) => {
+  if (gender === "male") return masculine;
+  if (gender === "female") return feminine;
+  return neutral;
+};
+
 export const drinkTypeLabel = (type) => {
   if (type === "Bières") return "Bières & Cidres";
   if (type === "Vins & bulles") return "Vins & Bulles";
