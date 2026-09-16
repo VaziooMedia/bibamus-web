@@ -43,7 +43,7 @@ export function usePersistedToggle(eventId, key, defaultValue) {
   return [value, setPersisted];
 }
 import { MoneyAmount, PrimaryButton } from "./ui.jsx";
-import { formatMoney, nextId } from "../utils.js";
+import { formatMoney, nextId, genderAgree } from "../utils.js";
 import { loadSalon, saveSalon, generateRoomCode } from "../data/salons.js";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 
@@ -625,7 +625,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
           <div style={{ background: COLORS.surface, borderRadius: "20px", padding: "28px 24px", width: "100%", maxWidth: "340px", textAlign: "center" }}>
             <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: "0 0 8px 0", color: COLORS.ink }}>Tu rentres ?</h2>
-            <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "22px" }}>Mets-toi en pause et confirme lorsque tu es bien arrivé·e à destination.</p>
+            <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "22px" }}>Mets-toi en pause et confirme lorsque tu es bien {genderAgree(profile.gender, "arrivé", "arrivée")} à destination.</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <button
                 onClick={goSafePending}
@@ -656,7 +656,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
         <p style={{ fontSize: "11px", color: COLORS.pinkFluo, marginTop: "8px", textAlign: "center" }}>
           {myEntry?.awaitingSafe ? (
             <>
-              Tu vas confirmer être bien arrivé·e et quitter ce BibaRoom.
+              Tu vas confirmer être bien {genderAgree(profile.gender, "arrivé", "arrivée")} et quitter ce BibaRoom.
               <br />
               Un message sera envoyé aux autres.
             </>
