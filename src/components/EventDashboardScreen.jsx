@@ -690,7 +690,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         >
           {salonToast.type === "left" && `${salonToast.name} a quitté ce BibaRoom`}
           {salonToast.type === "joined" && `${salonToast.name} a rejoint ce BibaRoom`}
-          {salonToast.type === "safe" && `${salonToast.name} confirme être bien arrivé·e`}
+          {salonToast.type === "safe" && `${salonToast.name} signale être bien arrivé·e à destination`}
           <button
             onClick={() => setSalonToast(null)}
             style={{

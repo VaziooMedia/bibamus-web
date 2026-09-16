@@ -886,7 +886,7 @@ export default function App() {
       await saveSalon(salonCode, updated);
       if (noticeType === "safe") {
         const others = (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode);
-        if (others.length > 0) sendPushNotification(others.map((p) => p.code), "BibaRoom", `${profile.name} confirme être bien arrivé·e.`);
+        if (others.length > 0) sendPushNotification(others.map((p) => p.code), "BibaRoom", `${profile.name} signale être bien arrivé·e à destination.`);
       }
     }
     setEvents((prev) => prev.filter((e) => e.id !== eventId));
