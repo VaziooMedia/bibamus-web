@@ -143,6 +143,16 @@ export const genderAgree = (gender, masculine, feminine, neutral = `${masculine}
   return neutral;
 };
 
+// Reproduit exactement le format des clés de COUNTRY_ISO_CODES (minuscule, sans accent,
+// tirets/apostrophes/espaces remplacés par un underscore) — pour retrouver le vrai nom
+// correctement capitalisé (depuis COUNTRIES) à partir d'un code ISO détecté.
+export const slugifyCountryName = (name) =>
+  name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[-'\s]/g, "_");
+
 export const drinkTypeLabel = (type) => {
   if (type === "Bières") return "Bières & Cidres";
   if (type === "Vins & bulles") return "Vins & Bulles";

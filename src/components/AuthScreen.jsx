@@ -208,7 +208,13 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
         setError(`Bibamus concerne des boissons alcoolisées — un âge minimum de ${minimumAge} ans est requis pour ce pays.`);
         return;
       }
-      const result = await signUp(email, password, { firstName: firstName.trim(), lastName: lastName.trim(), nickname: nickname.trim(), birthDate, country });
+      const result = await signUp(email, password, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        nickname: nickname.trim(),
+        birthDate,
+        country: PROFILE_COUNTRIES.find((c) => c.code === country)?.fr || country,
+      });
       setLoading(false);
       if (result.error) {
         setError(result.error);
