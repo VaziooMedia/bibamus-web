@@ -509,6 +509,8 @@ export default function App() {
     profile.city,
     profile.locality,
     profile.bio,
+    profile.gender,
+    profile.genderCustom,
     profile.facebookUrl,
     profile.instagramUrl,
     profile.tiktokUrl,
