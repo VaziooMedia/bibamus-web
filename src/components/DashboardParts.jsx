@@ -570,8 +570,6 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
             if (isAlone) return;
             if (myEntry?.awaitingSafe) {
               confirmLeave ? leaveSalon("safe") : setConfirmLeave(true);
-            } else if (confirmLeave) {
-              leaveSalon("left");
             } else {
               setLeaveChoiceOpen(true);
             }
@@ -595,7 +593,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           }}
         >
           <NavIcon name="stop" size={13} color={isAlone ? COLORS.amber : COLORS.pinkFluo} />
-          {confirmLeave ? "Confirmer ?" : myEntry?.awaitingSafe ? "Safe" : "Quitter"}
+          {myEntry?.awaitingSafe ? (confirmLeave ? "Confirmer ?" : "Safe") : "Quitter"}
         </button>
         <button
           onClick={() => isAlone && (confirmClose ? onCloseEvent?.() : setConfirmClose(true))}
@@ -624,33 +622,37 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
       </div>
       </div>
       {leaveChoiceOpen && (
-        <div style={{ marginTop: "10px", background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "14px" }}>
-          <p style={{ fontSize: "12px", color: COLORS.ink, marginBottom: "10px" }}>
-            Tu peux te mettre en pause le temps de rentrer, et confirmer toi-même une fois arrivé·e — l'app ne vérifie pas si tu es vraiment bien rentré·e, c'est un signal que tu envoies toi-même.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <button
-              onClick={goSafePending}
-              style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "9px 10px", color: COLORS.amber, fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
-            >
-              Pause, je confirme en arrivant
-            </button>
-            <button
-              onClick={() => {
-                setLeaveChoiceOpen(false);
-                setConfirmLeave(true);
-              }}
-              style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "9px 10px", color: COLORS.inkSoft, fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
-            >
-              Quitter maintenant
-            </button>
-            <button onClick={() => setLeaveChoiceOpen(false)} style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "11px", cursor: "pointer", padding: "2px 0 0" }}>
-              Annuler
-            </button>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+          <div style={{ background: COLORS.surface, borderRadius: "20px", padding: "28px 24px", width: "100%", maxWidth: "340px", textAlign: "center" }}>
+            <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: "0 0 8px 0", color: COLORS.ink }}>Tu rentres ?</h2>
+            <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "22px" }}>Mets-toi en pause et confirme lorsque tu es bien arrivé·e à destination.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <button
+                onClick={goSafePending}
+                style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "10px", padding: "11px 10px", color: COLORS.amber, fontSize: "13px", fontWeight: 700, cursor: "pointer" }}
+              >
+                Pause
+              </button>
+              <button
+                onClick={() => (confirmLeave ? leaveSalon("left") : setConfirmLeave(true))}
+                style={{ background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "10px", padding: "11px 10px", color: COLORS.pinkFluo, fontSize: "13px", fontWeight: 700, cursor: "pointer" }}
+              >
+                {confirmLeave ? "Confirmer ?" : "Quitter"}
+              </button>
+              <button
+                onClick={() => {
+                  setLeaveChoiceOpen(false);
+                  setConfirmLeave(false);
+                }}
+                style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "11.5px", cursor: "pointer", padding: "4px 0 0" }}
+              >
+                Annuler
+              </button>
+            </div>
           </div>
         </div>
       )}
-      {confirmLeave && (
+      {confirmLeave && !leaveChoiceOpen && (
         <p style={{ fontSize: "11px", color: COLORS.pinkFluo, marginTop: "8px", textAlign: "center" }}>
           {myEntry?.awaitingSafe ? (
             <>
