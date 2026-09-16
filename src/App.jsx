@@ -119,6 +119,7 @@ import {
   recordDrinkCheckIn,
   publishDrinkCheckInToPulse,
   loadDrinksByIds,
+  sendPushNotification,
   countMyRatedDrinks,
   loadVenuesByIds,
   recordRoundOrders,
@@ -872,10 +873,10 @@ export default function App() {
   // double dans BibaLive au prochain chargement, quoi qu'on fasse localement), puis retirer la
   // copie locale de "events" (pas la transformer en événement solo vide — la faire disparaître
   // complètement, exactement comme demandé).
-  const leaveSalonFn = async (eventId, salonCode) => {
+  const leaveSalonFn = async (eventId, salonCode, noticeType = "left") => {
     const salonData = await loadSalon(salonCode);
     if (salonData) {
-      const notice = { id: `notice-${Date.now()}`, type: "left", name: profile.name, at: Date.now() };
+      const notice = { id: `notice-${Date.now()}`, type: noticeType, name: profile.name, at: Date.now() };
       const updated = {
         ...salonData,
         participants: (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode),
@@ -883,6 +884,10 @@ export default function App() {
         updatedAt: Date.now(),
       };
       await saveSalon(salonCode, updated);
+      if (noticeType === "safe") {
+        const others = (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode);
+        if (others.length > 0) sendPushNotification(others.map((p) => p.code), "BibaRoom", `${profile.name} confirme être bien arrivé·e.`);
+      }
     }
     setEvents((prev) => prev.filter((e) => e.id !== eventId));
     setActiveEventId(null);
@@ -2010,7 +2015,7 @@ export default function App() {
                   setBibaPlayLinkedSalonCode(currentEvent?.salonCode || null);
                   setScreen("games");
                 }}
-                onLeaveSalon={() => leaveSalonFn(activeEventId, currentEvent?.salonCode)}
+                onLeaveSalon={(noticeType) => leaveSalonFn(activeEventId, currentEvent?.salonCode, noticeType)}
                 onAddStory={(contextType, contextId) => {
                   setStoryCreateContext({ contextType, contextId, returnScreen: "eventDashboard" });
                   setScreen("storyCreate");

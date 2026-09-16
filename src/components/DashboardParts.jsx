@@ -238,6 +238,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   const [codeInput, setCodeInput] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [leaveChoiceOpen, setLeaveChoiceOpen] = useState(false);
   // Seuls les vrais comptes comptent ici — un invité sans compte n'a aucun pouvoir sur le
   // salon, il n'existe que de nom pour la logistique (compter ses tournées, ses stats...).
   const isAlone = (event.participants || []).filter((p) => p.code !== myBibroCode).length === 0;
@@ -327,8 +328,8 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
     setLoading(false);
   };
 
-  const leaveSalon = () => {
-    onLeaveSalon?.();
+  const leaveSalon = (noticeType) => {
+    onLeaveSalon?.(noticeType);
     setMode(null);
   };
 
@@ -338,8 +339,20 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
   const togglePauseSelf = () => {
     updateEvent(event.id, (e) => ({
       ...e,
-      participants: (e.participants || []).map((p) => (p.code === myBibroCode ? { ...p, paused: !p.paused } : p)),
+      participants: (e.participants || []).map((p) => (p.code === myBibroCode ? { ...p, paused: !p.paused, awaitingSafe: p.paused ? false : p.awaitingSafe } : p)),
     }));
+  };
+
+  // Alternative à "Quitter" proposée au moment de partir : se mettre en pause en attendant de
+  // confirmer son retour, plutôt que quitter tout de suite. Le bouton devient alors "Safe" —
+  // rien ici ne vérifie réellement que la personne est bien rentrée, c'est un signal qu'elle
+  // envoie elle-même quand elle le décide.
+  const goSafePending = () => {
+    updateEvent(event.id, (e) => ({
+      ...e,
+      participants: (e.participants || []).map((p) => (p.code === myBibroCode ? { ...p, paused: true, awaitingSafe: true } : p)),
+    }));
+    setLeaveChoiceOpen(false);
   };
 
   if (!salonCode) {
@@ -553,7 +566,16 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           {myEntry && myEntry.paused ? "Je reviens" : "Ma pause"}
         </button>
         <button
-          onClick={() => !isAlone && (confirmLeave ? leaveSalon() : setConfirmLeave(true))}
+          onClick={() => {
+            if (isAlone) return;
+            if (myEntry?.awaitingSafe) {
+              confirmLeave ? leaveSalon("safe") : setConfirmLeave(true);
+            } else if (confirmLeave) {
+              leaveSalon("left");
+            } else {
+              setLeaveChoiceOpen(true);
+            }
+          }}
           disabled={isAlone}
           title={isAlone ? "Tu es seul·e ici — utilise « Fin » pour clôturer le salon" : undefined}
           style={{
@@ -573,7 +595,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
           }}
         >
           <NavIcon name="stop" size={13} color={isAlone ? COLORS.amber : COLORS.pinkFluo} />
-          {confirmLeave ? "Confirmer ?" : "Quitter"}
+          {confirmLeave ? "Confirmer ?" : myEntry?.awaitingSafe ? "Safe" : "Quitter"}
         </button>
         <button
           onClick={() => isAlone && (confirmClose ? onCloseEvent?.() : setConfirmClose(true))}
@@ -601,11 +623,48 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
         </div>
       </div>
       </div>
+      {leaveChoiceOpen && (
+        <div style={{ marginTop: "10px", background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "14px" }}>
+          <p style={{ fontSize: "12px", color: COLORS.ink, marginBottom: "10px" }}>
+            Tu peux te mettre en pause le temps de rentrer, et confirmer toi-même une fois arrivé·e — l'app ne vérifie pas si tu es vraiment bien rentré·e, c'est un signal que tu envoies toi-même.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <button
+              onClick={goSafePending}
+              style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "9px 10px", color: COLORS.amber, fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+            >
+              Pause, je confirme en arrivant
+            </button>
+            <button
+              onClick={() => {
+                setLeaveChoiceOpen(false);
+                setConfirmLeave(true);
+              }}
+              style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "9px 10px", color: COLORS.inkSoft, fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
+            >
+              Quitter maintenant
+            </button>
+            <button onClick={() => setLeaveChoiceOpen(false)} style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "11px", cursor: "pointer", padding: "2px 0 0" }}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
       {confirmLeave && (
         <p style={{ fontSize: "11px", color: COLORS.pinkFluo, marginTop: "8px", textAlign: "center" }}>
-          Tu vas quitter ce BibaRoom.
-          <br />
-          Tes tournées déjà offertes restent enregistrées.{" "}
+          {myEntry?.awaitingSafe ? (
+            <>
+              Tu vas confirmer être bien arrivé·e et quitter ce BibaRoom.
+              <br />
+              Un message sera envoyé aux autres.
+            </>
+          ) : (
+            <>
+              Tu vas quitter ce BibaRoom.
+              <br />
+              Tes tournées déjà offertes restent enregistrées.
+            </>
+          )}{" "}
           <button
             onClick={() => setConfirmLeave(false)}
             style={{ background: "none", border: "none", color: COLORS.inkSoft, textDecoration: "underline", fontSize: "11px", cursor: "pointer", padding: 0 }}
