@@ -3187,6 +3187,22 @@ export async function loadVenueFollowStatus(venueId) {
   return !!data;
 }
 
+// Même principe que toggleFollowVenue/loadVenueFollowStatus, mais pour un produit.
+export async function toggleFollowDrink(drinkId) {
+  const { data, error } = await supabase.rpc("toggle_follow_drink", { p_drink_id: drinkId });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function loadDrinkFollowStatus(drinkId) {
+  const { data, error } = await supabase.rpc("get_drink_follow_status", { p_drink_id: drinkId });
+  if (error) {
+    console.error("loadDrinkFollowStatus:", error);
+    return false;
+  }
+  return !!data;
+}
+
 export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
   const {
     data: { user },

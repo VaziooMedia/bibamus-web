@@ -18,7 +18,7 @@ import { formatDrinkFieldValue, formatMoney, normalizeUrl } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { styleTagLabel } from "../data/styleTagLabels.js";
-import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds } from "../data/sharedDirectories.js";
+import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -62,15 +62,21 @@ export function DrinkDetailScreen({
   const [myCheckCount, setMyCheckCount] = useState(null);
   const isBeer = BEER_TYPES.includes(drink.type);
 
-  // Cloche de notification — TEMPORAIRE : état local uniquement, pas encore persisté en base
-  // (en attente de la vraie fonction serveur équivalente à toggle_follow_venue, spécifique
-  // aux produits).
+  // Cloche de notification — ses activités apparaissent dans ton fil Pulse, comme pour un lieu.
   const [isFollowed, setIsFollowed] = useState(false);
   const [togglingFollow, setTogglingFollow] = useState(false);
-  const handleToggleFollow = () => {
+  useEffect(() => {
+    loadDrinkFollowStatus(drink.id).then(setIsFollowed);
+  }, [drink.id]);
+  const handleToggleFollow = async () => {
     setTogglingFollow(true);
-    setIsFollowed((f) => !f);
+    const result = await toggleFollowDrink(drink.id);
     setTogglingFollow(false);
+    if (result?.error) {
+      alert(result.error);
+      return;
+    }
+    setIsFollowed(result.following);
   };
 
   const ratingValues = Object.values(drink.ratings || {}).filter((v) => typeof v === "number" && isFinite(v));
