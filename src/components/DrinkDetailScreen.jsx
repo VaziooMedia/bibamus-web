@@ -11,14 +11,25 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
-import { NavIcon, VerifiedBadge, CertificationIcon } from "./icons.jsx";
+import { NavIcon, CertificationIcon, CountryFlagImg, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { drinkTypeLabel, formatDrinkFieldValue, formatMoney } from "../utils.js";
+import { formatDrinkFieldValue, formatMoney, normalizeUrl } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
+import { styleTagLabel } from "../data/styleTagLabels.js";
 import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
+
+// Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
+// de gestion — les autres n'en ont pas encore ; on laisse alors vide.
+const SUBTYPE_LABELS = {
+  biere: "Bière",
+  cidre: "Cidre",
+  poire: "Poiré",
+  vin: "Vin",
+  vin_effervescent: "Vin effervescent",
+};
 
 export function DrinkDetailScreen({
   drink,
@@ -50,6 +61,17 @@ export function DrinkDetailScreen({
   const [justChecked, setJustChecked] = useState(false);
   const [myCheckCount, setMyCheckCount] = useState(null);
   const isBeer = BEER_TYPES.includes(drink.type);
+
+  // Cloche de notification — TEMPORAIRE : état local uniquement, pas encore persisté en base
+  // (en attente de la vraie fonction serveur équivalente à toggle_follow_venue, spécifique
+  // aux produits).
+  const [isFollowed, setIsFollowed] = useState(false);
+  const [togglingFollow, setTogglingFollow] = useState(false);
+  const handleToggleFollow = () => {
+    setTogglingFollow(true);
+    setIsFollowed((f) => !f);
+    setTogglingFollow(false);
+  };
 
   const ratingValues = Object.values(drink.ratings || {}).filter((v) => typeof v === "number" && isFinite(v));
   const ratingAverage = ratingValues.length > 0 ? ratingValues.reduce((s, v) => s + v, 0) / ratingValues.length : null;
@@ -117,27 +139,37 @@ export function DrinkDetailScreen({
         <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
           <PageHeader onBack={onBack} />
         </div>
-        <div style={{ position: "absolute", top: "20px", right: "20px" }}>
-          <CertificationIcon level={drink.certificationLevel} size={20} />
-        </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
           <EntityAvatar photoUrl={drink.photoUrl} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{drink.name}</h1>
-            {drink.status === "complete" && <VerifiedBadge size={17} />}
+            <CertificationIcon level={drink.certificationLevel} size={17} />
           </div>
-          {drink.type && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{drinkTypeLabel(drink.type)}</p>}
-          {(isBeer || drink.type === "Vins & Bulles" || drink.type === "Spiritueux") && !drink.isGeneric && (
+          {SUBTYPE_LABELS[drink.beverageSubtype] && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{SUBTYPE_LABELS[drink.beverageSubtype]}</p>}
+          <div style={{ position: "absolute", top: "26px", right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
             <button
-              onClick={() => onToggleWishlist(drink.id)}
-              title={isOnWishlist ? "Retirer de ma liste à goûter" : "Ajouter à ma liste à goûter"}
-              style={{ position: "absolute", top: "26px", right: "8px", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+              onClick={handleToggleFollow}
+              disabled={togglingFollow}
+              title={isFollowed ? "Suivi sur Pulse — ses activités apparaissent" : "Suivre sur Pulse"}
+              style={{ background: "none", border: "none", cursor: togglingFollow ? "default" : "pointer", padding: 0, display: "flex" }}
             >
-              <NavIcon name="star" size={28} color={COLORS.amber} filled={!!isOnWishlist} />
+              <NavIcon name="bell" size={28} color={COLORS.amber} filled={isFollowed} />
             </button>
-          )}
+            {(isBeer || drink.type === "Vins & Bulles" || drink.type === "Spiritueux") && !drink.isGeneric && (
+              <>
+                <span style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />
+                <button
+                  onClick={() => onToggleWishlist(drink.id)}
+                  title={isOnWishlist ? "Retirer de ma liste à goûter" : "Ajouter à ma liste à goûter"}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+                >
+                  <NavIcon name="star" size={28} color={COLORS.amber} filled={!!isOnWishlist} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
         {ratingAverage != null && (
           <div style={{ position: "absolute", bottom: "8px", right: "68px", left: "108px" }}>
@@ -241,6 +273,58 @@ export function DrinkDetailScreen({
                 </span>
               </button>
             ))}
+          </div>
+        )}
+
+        {(drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null) && (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
+              {(drink.originRegion || drink.nationality) && (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <NavIcon name="map-pin" size={15} color={COLORS.inkSoft} />
+                  {[drink.originRegion, drink.nationality].filter(Boolean).join(", ")}
+                  {drink.nationality && <CountryFlagImg country={drink.nationality} size={14} />}
+                </div>
+              )}
+              {drink.abv != null && (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  {drink.abv}% vol.
+                </div>
+              )}
+              {drink.launchYear && (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <NavIcon name="calendar" size={15} color={COLORS.inkSoft} />
+                  Lancé en {drink.launchYear}
+                </div>
+              )}
+              {drink.ibu != null && (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <NavIcon name="bottle" size={15} color={COLORS.inkSoft} />
+                  {drink.ibu} IBU
+                </div>
+              )}
+              {drink.colorEbc != null && (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <NavIcon name="bottle" size={15} color={COLORS.inkSoft} />
+                  {drink.colorEbc} EBC
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {drink.styles?.length > 0 && (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {drink.styles.map((code) => (
+                <span
+                  key={code}
+                  style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "5px 10px", fontSize: "11.5px", fontWeight: 600, color: COLORS.ink }}
+                >
+                  {styleTagLabel(code)}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
