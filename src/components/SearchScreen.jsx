@@ -8,9 +8,21 @@
 // ============================================================
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
+import { formatAddress } from "../utils.js";
 import { searchBibax, searchDrinks, searchVenues } from "../data/sharedDirectories.js";
+
+// Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
+// de gestion — les autres (Soft, Spiritueux...) n'en ont pas encore ; on laisse alors vide
+// plutôt que d'afficher un code brut ou la catégorie générale.
+const SUBTYPE_LABELS = {
+  biere: "Bière",
+  cidre: "Cidre",
+  poire: "Poiré",
+  vin: "Vin",
+  vin_effervescent: "Vin effervescent",
+};
 
 function normalize(str) {
   return (str || "")
@@ -308,19 +320,38 @@ export function SearchScreen({
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
                 {activeTab === "lieux" &&
                   venueResults.map((v, i) => (
-                    <ResultRow key={v.id} title={v.name} subtitle={v.city} avatar={<GenericIconAvatar name="map-pin" />} onClick={() => onOpenVenue(v.id)} last={i === venueResults.length - 1} />
+                    <ResultRow
+                      key={v.id}
+                      title={v.name}
+                      subtitle={
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                          {formatAddress(v)}
+                          <CountryFlagImg country={v.country} size={13} />
+                        </span>
+                      }
+                      avatar={<GenericIconAvatar name="map-pin" />}
+                      onClick={() => onOpenVenue(v.id)}
+                      last={i === venueResults.length - 1}
+                    />
                   ))}
                 {activeTab === "produits" &&
                   drinkResults.map((d, i) => (
-                    <ResultRow key={d.id} title={d.name} subtitle={d.type} avatar={<GenericIconAvatar name="bottle" />} onClick={() => onOpenDrink(d.id)} last={i === drinkResults.length - 1} />
+                    <ResultRow key={d.id} title={d.name} subtitle={SUBTYPE_LABELS[d.beverageSubtype] || ""} avatar={<GenericIconAvatar name="bottle" />} onClick={() => onOpenDrink(d.id)} last={i === drinkResults.length - 1} />
                   ))}
                 {activeTab === "marques" &&
                   brandResults.map((b, i) => (
-                    <ResultRow key={b.id} title={b.name} avatar={<GenericIconAvatar name="tag" />} onClick={() => onOpenBrand(b.id)} last={i === brandResults.length - 1} />
+                    <ResultRow
+                      key={b.id}
+                      title={b.name}
+                      subtitle={breweriesDirectory.find((br) => br.id === b.producerId)?.name}
+                      avatar={<GenericIconAvatar name="tag" />}
+                      onClick={() => onOpenBrand(b.id)}
+                      last={i === brandResults.length - 1}
+                    />
                   ))}
                 {activeTab === "producteurs" &&
                   breweryResults.map((b, i) => (
-                    <ResultRow key={b.id} title={b.name} avatar={<GenericIconAvatar name="world" />} onClick={() => onOpenBrewery(b.id)} last={i === breweryResults.length - 1} />
+                    <ResultRow key={b.id} title={b.name} subtitle={b.country} avatar={<GenericIconAvatar name="world" />} onClick={() => onOpenBrewery(b.id)} last={i === breweryResults.length - 1} />
                   ))}
                 {activeTab === "bibax" &&
                   bibaxResults.map((b, i) => (
