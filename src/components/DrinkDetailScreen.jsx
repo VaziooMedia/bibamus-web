@@ -271,37 +271,33 @@ export function DrinkDetailScreen({
           </div>
         )}
 
-        {(drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null) && (
+        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null) && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
-              {(drink.originRegion || drink.nationality) && (
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <NavIcon name="map-pin" size={15} color={COLORS.inkSoft} />
-                  {[drink.originRegion, drink.nationality].filter(Boolean).join(", ")}
-                  {drink.nationality && <CountryFlagImg country={drink.nationality} size={14} />}
+              {(drink.abv != null || drink.ibu != null || drink.colorEbc != null) && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  {drink.abv != null && <span>{drink.abv}% vol. ABV</span>}
+                  {drink.abv != null && (drink.ibu != null || drink.colorEbc != null) && (
+                    <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block" }} />
+                  )}
+                  {drink.ibu != null && <span>{drink.ibu} IBU</span>}
+                  {drink.ibu != null && drink.colorEbc != null && (
+                    <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block" }} />
+                  )}
+                  {drink.colorEbc != null && <span>{drink.colorEbc} EBC</span>}
                 </div>
               )}
-              {drink.abv != null && (
+              {(drink.originCity || drink.originRegion || drink.nationality) && (
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  {drink.abv}% vol.
+                  <NavIcon name="map-pin" size={15} color={COLORS.inkSoft} />
+                  {[drink.originCity, drink.originRegion, drink.nationality].filter(Boolean).join(", ")}
+                  {drink.nationality && <CountryFlagImg country={drink.nationality} size={14} />}
                 </div>
               )}
               {drink.launchYear && (
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <NavIcon name="calendar" size={15} color={COLORS.inkSoft} />
                   Lancé en {drink.launchYear}
-                </div>
-              )}
-              {drink.ibu != null && (
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <NavIcon name="bottle" size={15} color={COLORS.inkSoft} />
-                  {drink.ibu} IBU
-                </div>
-              )}
-              {drink.colorEbc != null && (
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <NavIcon name="bottle" size={15} color={COLORS.inkSoft} />
-                  {drink.colorEbc} EBC
                 </div>
               )}
             </div>
