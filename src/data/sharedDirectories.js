@@ -260,6 +260,9 @@ export async function searchBibax(query) {
     lastName: row.last_name,
     avatarUrl: row.avatar_url,
     bibroCode: row.bibro_code,
+    city: row.city,
+    country: prettifyCountry(row.country),
+    mutualBibaxCount: row.mutual_bibax_count || 0,
   }));
 }
 

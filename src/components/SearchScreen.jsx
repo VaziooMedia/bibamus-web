@@ -358,6 +358,16 @@ export function SearchScreen({
                     <ResultRow
                       key={b.id}
                       title={[b.displayName, b.lastName].filter(Boolean).join(" ")}
+                      subtitle={
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                          {b.city}
+                          {b.country && <CountryFlagImg country={b.country} size={13} />}
+                          {(b.city || b.country) && b.mutualBibaxCount > 0 && (
+                            <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block" }} />
+                          )}
+                          {b.mutualBibaxCount > 0 && `${b.mutualBibaxCount} Bibax en commun`}
+                        </span>
+                      }
                       avatar={<EntityAvatar photoUrl={b.avatarUrl} size={36} />}
                       onClick={() => onOpenBibaxProfile(b.bibroCode)}
                       last={i === bibaxResults.length - 1}
