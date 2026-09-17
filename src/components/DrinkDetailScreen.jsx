@@ -137,9 +137,13 @@ export function DrinkDetailScreen({
           style={{
             width: "100%",
             height: "150px",
-            background: drink.photoUrl ? `url(${drink.photoUrl}) center/cover` : COLORS.surfaceAlt,
-            filter: drink.photoUrl ? "blur(14px)" : "none",
-            transform: drink.photoUrl ? "scale(1.1)" : "none",
+            background: drink.coverPhotoUrl
+              ? `url(${drink.coverPhotoUrl}) center/cover`
+              : drink.photoUrl
+              ? `url(${drink.photoUrl}) center/cover`
+              : COLORS.surfaceAlt,
+            filter: !drink.coverPhotoUrl && drink.photoUrl ? "blur(14px)" : "none",
+            transform: !drink.coverPhotoUrl && drink.photoUrl ? "scale(1.1)" : "none",
           }}
         />
         <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
