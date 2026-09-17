@@ -79,12 +79,14 @@ export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, isAdmin,
         position: "relative",
       }}
     >
+      <span style={{ position: "absolute", top: "10px", right: "12px" }}>
+        <CertificationIcon level={b.certificationLevel} size={15} />
+      </span>
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <EntityAvatar photoUrl={b.profilePhotoUrl} photoEmoji={b.avatarEmoji} size={44} />
         <div>
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}>
             {b.name}
-            <CertificationIcon level={b.certificationLevel} size={15} />
           </div>
           <div style={{ fontSize: "9.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{countryLabel(b.country)}</div>
         </div>
