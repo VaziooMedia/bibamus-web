@@ -9,7 +9,7 @@
 // ============================================================
 import React, { useState, useEffect, useMemo } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, CountryFlagImg, VerifiedBadge } from "./icons.jsx";
+import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { loadBreweriesDirectory, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 
@@ -84,10 +84,7 @@ export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, isAdmin,
         <div>
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}>
             {b.name}
-            {b.status === "complete" && <VerifiedBadge size={15} />}
-            {b.status === "to_process" && (
-              <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700, verticalAlign: "middle" }}>EN ATTENTE</span>
-            )}
+            <CertificationIcon level={b.certificationLevel} size={15} />
           </div>
           <div style={{ fontSize: "9.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{countryLabel(b.country)}</div>
         </div>

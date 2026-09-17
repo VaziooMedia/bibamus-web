@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS } from "../constants.js";
-import { VerifiedBadge, NavIcon } from "./icons.jsx";
+import { VerifiedBadge, NavIcon, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
@@ -51,7 +51,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{brewery.name}</h1>
-            {brewery.status === "complete" && <VerifiedBadge size={17} />}
+            <CertificationIcon level={brewery.certificationLevel} size={17} />
           </div>
           {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{brewery.country}</p>}
         </div>
