@@ -85,14 +85,6 @@ function ResultRow({ title, subtitle, avatar, onClick, last }) {
   );
 }
 
-function GenericIconAvatar({ name }) {
-  return (
-    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
-      <NavIcon name={name} size={17} color={COLORS.amber} />
-    </span>
-  );
-}
-
 const TABS = [
   { key: "lieux", label: "Lieux", icon: "map-pin" },
   { key: "produits", label: "Produits", icon: "bottle" },
@@ -329,14 +321,21 @@ export function SearchScreen({
                           <CountryFlagImg country={v.country} size={13} />
                         </span>
                       }
-                      avatar={<GenericIconAvatar name="map-pin" />}
+                      avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} fallbackIcon="map-pin" />}
                       onClick={() => onOpenVenue(v.id)}
                       last={i === venueResults.length - 1}
                     />
                   ))}
                 {activeTab === "produits" &&
                   drinkResults.map((d, i) => (
-                    <ResultRow key={d.id} title={d.name} subtitle={SUBTYPE_LABELS[d.beverageSubtype] || ""} avatar={<GenericIconAvatar name="bottle" />} onClick={() => onOpenDrink(d.id)} last={i === drinkResults.length - 1} />
+                    <ResultRow
+                      key={d.id}
+                      title={d.name}
+                      subtitle={SUBTYPE_LABELS[d.beverageSubtype] || ""}
+                      avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={36} fallbackIcon="bottle" />}
+                      onClick={() => onOpenDrink(d.id)}
+                      last={i === drinkResults.length - 1}
+                    />
                   ))}
                 {activeTab === "marques" &&
                   brandResults.map((b, i) => (
@@ -344,14 +343,21 @@ export function SearchScreen({
                       key={b.id}
                       title={b.name}
                       subtitle={breweriesDirectory.find((br) => br.id === b.producerId)?.name}
-                      avatar={<GenericIconAvatar name="tag" />}
+                      avatar={<EntityAvatar photoUrl={b.logoUrl} size={36} fallbackIcon="tag" />}
                       onClick={() => onOpenBrand(b.id)}
                       last={i === brandResults.length - 1}
                     />
                   ))}
                 {activeTab === "producteurs" &&
                   breweryResults.map((b, i) => (
-                    <ResultRow key={b.id} title={b.name} subtitle={b.country} avatar={<GenericIconAvatar name="world" />} onClick={() => onOpenBrewery(b.id)} last={i === breweryResults.length - 1} />
+                    <ResultRow
+                      key={b.id}
+                      title={b.name}
+                      subtitle={b.country}
+                      avatar={<EntityAvatar photoUrl={b.profilePhotoUrl} photoEmoji={b.avatarEmoji} size={36} fallbackIcon="world" />}
+                      onClick={() => onOpenBrewery(b.id)}
+                      last={i === breweryResults.length - 1}
+                    />
                   ))}
                 {activeTab === "bibax" &&
                   bibaxResults.map((b, i) => (
