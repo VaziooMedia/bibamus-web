@@ -2237,6 +2237,14 @@ export default function App() {
                 onOpenTagFilter={openTagFilter}
                 onUploadPhoto={(file) => uploadPhotoForDrink(viewedDrinkId, file)}
                 onDeletePhoto={() => deletePhotoForDrink(viewedDrinkId)}
+                onOpenBrand={(id) => {
+                  setViewedBrandId(id);
+                  setScreen("brandDetail");
+                }}
+                onOpenBrewery={(id) => {
+                  setViewedBreweryId(id);
+                  setScreen("breweryDetail");
+                }}
               />
             )}
             {screen === "profile" && (
@@ -2924,6 +2932,10 @@ export default function App() {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
+                onOpenBrand={(id) => {
+                  setViewedBrandId(id);
+                  setScreen("brandDetail");
+                }}
                 onSuggestEdit={(name, country) => suggestBreweryEdit(viewedBreweryId, name, country)}
                 pendingContributions={viewedBreweryContributions}
                 onApproveContribution={approveBreweryContribution}
@@ -2950,6 +2962,10 @@ export default function App() {
                 onOpenDrink={(id) => {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
+                }}
+                onOpenBrewery={(id) => {
+                  setViewedBreweryId(id);
+                  setScreen("breweryDetail");
                 }}
                 onSuggestEdit={(name) => suggestBrandEdit(viewedBrandId, name)}
                 pendingContributions={viewedBrandContributions}

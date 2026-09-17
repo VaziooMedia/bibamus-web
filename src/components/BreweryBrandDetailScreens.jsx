@@ -10,9 +10,9 @@ import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
-import { loadDrinksByBrewery, loadDrinksByBrand } from "../data/sharedDirectories.js";
+import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweryById } from "../data/sharedDirectories.js";
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
@@ -26,6 +26,11 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
   useEffect(() => {
     loadDrinksByBrewery(brewery.name).then(setRelatedDrinks);
   }, [brewery.name]);
+
+  const [relatedBrands, setRelatedBrands] = useState([]);
+  useEffect(() => {
+    loadBrandsByProducer(brewery.id).then(setRelatedBrands);
+  }, [brewery.id]);
 
   const submitEdit = () => {
     onSuggestEdit(nameValue, countryValue);
@@ -110,6 +115,31 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
               Suggérer
             </button>
           </div>
+        </div>
+      )}
+
+      <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
+        SES MARQUES ({relatedBrands.length})
+      </div>
+      {relatedBrands.length === 0 ? (
+        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "20px" }}>
+          Aucune marque liée à ce producteur pour l'instant.
+        </p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+          {relatedBrands.map((b) => (
+            <button
+              key={b.id}
+              onClick={() => onOpenBrand(b.id)}
+              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+            >
+              <EntityAvatar photoUrl={b.logoUrl} size={28} />
+              <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                {b.name}
+                <CertificationIcon level={b.certificationLevel} size={13} />
+              </span>
+            </button>
+          ))}
         </div>
       )}
 
@@ -255,7 +285,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brand.name || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -268,6 +298,12 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
   useEffect(() => {
     loadDrinksByBrand(brand.name).then(setRelatedDrinks);
   }, [brand.name]);
+
+  const [producer, setProducer] = useState(null);
+  useEffect(() => {
+    if (brand.producerId) loadBreweryById(brand.producerId).then(setProducer);
+    else setProducer(null);
+  }, [brand.producerId]);
 
   const submitEdit = () => {
     onSuggestEdit(nameValue);
@@ -344,6 +380,24 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
             Suggérer
           </button>
         </div>
+      )}
+
+      {producer && (
+        <>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
+            SON PRODUCTEUR
+          </div>
+          <button
+            onClick={() => onOpenBrewery(producer.id)}
+            style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "20px" }}
+          >
+            <EntityAvatar photoUrl={producer.profilePhotoUrl} photoEmoji={producer.avatarEmoji} size={28} />
+            <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+              {producer.name}
+              <CertificationIcon level={producer.certificationLevel} size={13} />
+            </span>
+          </button>
+        </>
       )}
 
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>

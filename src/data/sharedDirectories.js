@@ -2056,6 +2056,68 @@ export async function loadDrinksByBrand(brandName) {
   return data.map(rowToDrink);
 }
 
+// Câblage Producteur ↔ Marque ↔ Produit — via les vraies clés (producer_id, brand_id,
+// producer_ids), en plus des fonctions ci-dessus qui restent basées sur le nom.
+export async function loadBrandsByProducer(producerId) {
+  if (!producerId) return [];
+  const { data, error } = await supabase.from("brands_directory").select("*").eq("producer_id", producerId).order("name");
+  if (error) {
+    console.error("loadBrandsByProducer:", error);
+    return [];
+  }
+  return data.map(rowToBrand);
+}
+
+export async function loadDrinksByProducerId(producerId) {
+  if (!producerId) return [];
+  const { data, error } = await supabase.from("drinks_directory").select("*").contains("producer_ids", [producerId]).order("name");
+  if (error) {
+    console.error("loadDrinksByProducerId:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
+export async function loadDrinksByBrandId(brandId) {
+  if (!brandId) return [];
+  const { data, error } = await supabase.from("drinks_directory").select("*").eq("brand_id", brandId).order("name");
+  if (error) {
+    console.error("loadDrinksByBrandId:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
+export async function loadBreweryById(id) {
+  if (!id) return null;
+  const { data, error } = await supabase.from("breweries_directory").select("*").eq("id", id).maybeSingle();
+  if (error || !data) {
+    if (error) console.error("loadBreweryById:", error);
+    return null;
+  }
+  return rowToBrewery(data);
+}
+
+export async function loadBrandById(id) {
+  if (!id) return null;
+  const { data, error } = await supabase.from("brands_directory").select("*").eq("id", id).maybeSingle();
+  if (error || !data) {
+    if (error) console.error("loadBrandById:", error);
+    return null;
+  }
+  return rowToBrand(data);
+}
+
+export async function loadBreweriesByIds(ids) {
+  if (!ids || ids.length === 0) return [];
+  const { data, error } = await supabase.from("breweries_directory").select("*").in("id", ids);
+  if (error) {
+    console.error("loadBreweriesByIds:", error);
+    return [];
+  }
+  return data.map(rowToBrewery);
+}
+
 // Pour chaque marque, sa nationalité la plus fréquente parmi ses produits liés — une seule
 // requête pour toutes les marques, au lieu de filtrer le répertoire complet marque par marque.
 export async function loadBrandDominantNationalities() {
@@ -2671,6 +2733,8 @@ function rowToDrink(row) {
     defaultServingMode: row.default_serving_mode,
     brewery: row.brewery,
     brand: row.brand,
+    brandId: row.brand_id,
+    producerIds: row.producer_ids || [],
     nationality: COUNTRY_CODE_TO_LABEL[row.nationality] || row.nationality,
     abv: row.abv,
     kcalPer100ml: row.kcal_per_100ml,
@@ -2681,6 +2745,7 @@ function rowToDrink(row) {
     beerTags: row.beer_tags || [],
     aliases: row.aliases || [],
     status: row.status,
+    certificationLevel: row.certification_level,
     isGeneric: row.is_generic,
     averagePrice: row.average_price,
     averageJetonValue: row.average_jeton_value,
@@ -2705,6 +2770,8 @@ function drinkToRow(d, partial = false) {
     type: DRINK_TYPE_LABEL_TO_CODE[d.type] || d.type,
     brewery: d.brewery,
     brand: d.brand,
+    brand_id: d.brandId,
+    producer_ids: d.producerIds,
     nationality: COUNTRY_LABEL_TO_CODE[d.nationality] || d.nationality,
     abv: d.abv,
     kcal_per_100ml: d.kcalPer100ml,
@@ -2714,6 +2781,7 @@ function drinkToRow(d, partial = false) {
     serving_mode: d.servingMode,
     beer_tags: d.beerTags,
     status: d.status,
+    certification_level: d.certificationLevel,
     is_generic: d.isGeneric,
     aliases: d.aliases,
     average_price: d.averagePrice,
@@ -2975,6 +3043,7 @@ function rowToBrand(row) {
     aliases: row.aliases || [],
     id: row.id,
     name: row.name,
+    producerId: row.producer_id,
     originCountry: COUNTRY_CODE_TO_LABEL[row.origin_country] || row.origin_country,
     status: row.status,
     certificationLevel: row.certification_level,
@@ -2989,6 +3058,7 @@ function rowToBrand(row) {
 function brandToRow(b, partial = false) {
   const row = {
     name: b.name,
+    producer_id: b.producerId,
     origin_country: COUNTRY_LABEL_TO_CODE[b.originCountry] || b.originCountry,
     status: b.status,
     certification_level: b.certificationLevel,

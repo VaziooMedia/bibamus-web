@@ -17,7 +17,7 @@ import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { drinkTypeLabel, formatDrinkFieldValue, formatMoney } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
-import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats } from "../data/sharedDirectories.js";
+import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 export function DrinkDetailScreen({
@@ -38,6 +38,8 @@ export function DrinkDetailScreen({
   pendingContributions = [],
   onApproveContribution,
   onRejectContribution,
+  onOpenBrand,
+  onOpenBrewery,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -63,6 +65,18 @@ export function DrinkDetailScreen({
       cancelled = true;
     };
   }, [drink.id]);
+
+  const [linkedBrand, setLinkedBrand] = useState(null);
+  useEffect(() => {
+    if (drink.brandId) loadBrandById(drink.brandId).then(setLinkedBrand);
+    else setLinkedBrand(null);
+  }, [drink.brandId]);
+
+  const [linkedProducers, setLinkedProducers] = useState([]);
+  useEffect(() => {
+    if (drink.producerIds?.length > 0) loadBreweriesByIds(drink.producerIds).then(setLinkedProducers);
+    else setLinkedProducers([]);
+  }, [drink.producerIds]);
 
   // Consommé par tous les Bibax ce mois-ci — jamais d'argent ici (réservé propriétaire/admin),
   // juste une quantité, publique.
@@ -197,6 +211,36 @@ export function DrinkDetailScreen({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {(linkedBrand || linkedProducers.length > 0) && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+            {linkedBrand && (
+              <button
+                onClick={() => onOpenBrand(linkedBrand.id)}
+                style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+              >
+                <EntityAvatar photoUrl={linkedBrand.logoUrl} size={28} />
+                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {linkedBrand.name}
+                  <CertificationIcon level={linkedBrand.certificationLevel} size={13} />
+                </span>
+              </button>
+            )}
+            {linkedProducers.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => onOpenBrewery(p.id)}
+                style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+              >
+                <EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={28} />
+                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {p.name}
+                  <CertificationIcon level={p.certificationLevel} size={13} />
+                </span>
+              </button>
+            ))}
           </div>
         )}
 
