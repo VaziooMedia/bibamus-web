@@ -1927,7 +1927,7 @@ export default function App() {
                   setScreenBeforeDrinksDirectory("repertoireHub");
                   setScreen("drinksDirectory");
                 }}
-                goToManageBreweries={() => setScreen("breweries")}
+                goToManageBreweries={() => setScreen("breweryDirectory")}
                 goToManageBrands={() => setScreen("brands")}
                 goToSearch={() => {
                   setScreenBeforeSearch("repertoireHub");
