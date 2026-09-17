@@ -2909,14 +2909,6 @@ export default function App() {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
-                onRename={(name) => {
-                  updateBrewery(viewedBreweryId, { name });
-                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === viewedBreweryId ? { ...b, name } : b)));
-                }}
-                onEditCountry={(country) => {
-                  updateBrewery(viewedBreweryId, { country });
-                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === viewedBreweryId ? { ...b, country } : b)));
-                }}
                 onSuggestEdit={(name, country) => suggestBreweryEdit(viewedBreweryId, name, country)}
                 pendingContributions={viewedBreweryContributions}
                 onApproveContribution={approveBreweryContribution}

@@ -12,14 +12,15 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { loadDrinksByBrewery, loadDrinksByBrand } from "../data/sharedDirectories.js";
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onRename, onEditCountry, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
   const [reporting, setReporting] = useState(false);
+  const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const isLocked = !isAdmin && brewery.status === "complete";
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
 
   const [relatedDrinks, setRelatedDrinks] = useState([]);
   useEffect(() => {
@@ -27,12 +28,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
   }, [brewery.name]);
 
   const submitEdit = () => {
-    if (isLocked) {
-      onSuggestEdit(nameValue, countryValue);
-    } else {
-      onRename(nameValue);
-      onEditCountry(countryValue);
-    }
+    onSuggestEdit(nameValue, countryValue);
     setEditing(false);
   };
 
@@ -59,26 +55,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
           </div>
           {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{brewery.country}</p>}
         </div>
-        <button
-          onClick={() => setEditing(true)}
-          title={isLocked ? "Suggérer une modification" : "Modifier"}
-          style={{
-            position: "absolute",
-            bottom: "8px",
-            right: "8px",
-            width: "44px",
-            height: "44px",
-            borderRadius: "50%",
-            background: COLORS.amber,
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <NavIcon name="pencil" size={20} color={COLORS.paper} />
-        </button>
       </div>
 
       <div style={{ marginTop: "76px" }}>
@@ -115,7 +91,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
 
       {editing && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-          {isLocked && <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>Certifiée — tes changements seront soumis à validation.</p>}
+          <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>Ta suggestion sera soumise à validation.</p>
           <input
             value={nameValue}
             onChange={(e) => setNameValue(e.target.value)}
@@ -131,7 +107,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
               style={{ flex: 1, padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
             />
             <button onClick={submitEdit} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 14px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper }}>
-              {isLocked ? "Suggérer" : "OK"}
+              Suggérer
             </button>
           </div>
         </div>
@@ -187,20 +163,90 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
           </div>
         </div>
       )}
-      <button
-        onClick={() => setReporting(true)}
-        style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
-      >
-        <ReportIcon /> Signaler cette fiche
-      </button>
-      {reporting && <ReportModal entityType="producer" entityId={brewery.id} myBibroCode={myBibroCode} directory={breweriesDirectory} onClose={() => setReporting(false)} />}
-      <button
-        onClick={() => setClaiming(true)}
-        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "10px 0 0 0", textAlign: "left" }}
-      >
-        Ce producteur vous appartient ? Revendiquez cette fiche
-      </button>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
+        <button
+          onClick={() => setClaiming(true)}
+          style={{
+            display: "inline-block",
+            background: "none",
+            border: `1.5px solid ${COLORS.paperAlt}`,
+            borderRadius: "7px",
+            padding: "5px 10px",
+            color: COLORS.inkSoft,
+            fontWeight: 600,
+            fontSize: "10px",
+            cursor: "pointer",
+            textAlign: "center",
+          }}
+        >
+          Revendiquer la gestion de ce producteur
+        </button>
+        <button
+          onClick={() => setShowActionsMenu(true)}
+          title="Plus d'options"
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center" }}
+        >
+          <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
+        </button>
+      </div>
       {claiming && <ClaimModal entityType="producer" entityId={brewery.id} entityName={brewery.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
+
+      {showActionsMenu && (
+        <div
+          onClick={() => setShowActionsMenu(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
+          >
+            <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                setEditing(true);
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <NavIcon name="pencil" size={20} color={COLORS.amber} />
+              Suggérer une modification
+            </button>
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                setReportInitialReason("wrong_info");
+                setReporting(true);
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <ReportIcon />
+              Signaler une erreur ou un changement
+            </button>
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                setReportInitialReason(null);
+                setReporting(true);
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <ReportIcon />
+              Signaler cette fiche
+            </button>
+          </div>
+        </div>
+      )}
+      {reporting && (
+        <ReportModal
+          entityType="producer"
+          entityId={brewery.id}
+          myBibroCode={myBibroCode}
+          initialReason={reportInitialReason}
+          directory={breweriesDirectory}
+          onClose={() => setReporting(false)}
+        />
+      )}
       <div style={{ marginTop: "-14px" }}>
         <BackFooterLink onClick={onBack} />
       </div>
