@@ -61,6 +61,7 @@ import { NotificationsFeedScreen } from "./components/NotificationsFeedScreen.js
 import { BibaSoloScreen } from "./components/BibaSoloScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
+import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
 import { ImportDataScreen } from "./components/ImportDataScreen.jsx";
 import { BibrosListScreen, BibroDetailScreen, BibroStatsScreen, BibroPulseScreen, AddBibroScreen, AdminUnlockScreen, MutualBibaxScreen } from "./components/BibrosScreens.jsx";
@@ -606,6 +607,7 @@ export default function App() {
 
   const [activeCountry, setActiveCountry] = useState(null);
   const [activeCity, setActiveCity] = useState(null);
+  const [activeBreweryCountry, setActiveBreweryCountry] = useState(null);
 
   const [activeEventId, setActiveEventId] = useState(null);
   const [activePredictGame, setActivePredictGame] = useState(null);
@@ -2854,6 +2856,19 @@ export default function App() {
                   setBreweriesDirectory((prev) => prev.filter((b) => b.id !== id));
                 }}
                 onRefresh={async () => setBreweriesDirectory(await loadBreweriesDirectory())}
+              />
+            )}
+            {screen === "breweryDirectory" && (
+              <BreweryDirectoryScreen
+                myBreweries={[]}
+                isAdmin={!!profile.isAdmin}
+                onBack={() => setScreen("repertoireHub")}
+                onOpenBrewery={(id) => {
+                  setViewedBreweryId(id);
+                  setScreen("breweryDetail");
+                }}
+                activeCountry={activeBreweryCountry}
+                setActiveCountry={setActiveBreweryCountry}
               />
             )}
             {screen === "brands" && (
