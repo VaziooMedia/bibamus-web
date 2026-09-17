@@ -255,13 +255,14 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onRename, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brand.name || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
-  const isLocked = !isAdmin && brand.status === "complete";
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
 
   const [relatedDrinks, setRelatedDrinks] = useState([]);
   useEffect(() => {
@@ -269,55 +270,67 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
   }, [brand.name]);
 
   const submitEdit = () => {
-    if (isLocked) {
-      onSuggestEdit(nameValue);
-    } else {
-      onRename(nameValue);
-    }
+    onSuggestEdit(nameValue);
     setEditing(false);
   };
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={onBack} />
-
-      {pendingContributions.length > 0 && (
-        <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {pendingContributions.map((c) => (
-              <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
-                <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
-                  <strong>{BRAND_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
-                </div>
-                {isAdmin && (
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      onClick={() => onApproveContribution(c)}
-                      style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
-                    >
-                      ✓ Accepter
-                    </button>
-                    <button
-                      onClick={() => onRejectContribution(c)}
-                      style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
-                    >
-                      ✕ Refuser
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
+      <div style={{ position: "relative", margin: "-28px -20px 0 -20px" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "150px",
+            background: brand.coverPhotoUrl ? `url(${brand.coverPhotoUrl}) center/cover` : COLORS.surfaceAlt,
+          }}
+        />
+        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
+          <PageHeader onBack={onBack} />
+        </div>
+        <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
+          <EntityAvatar photoUrl={brand.logoUrl} size={90} />
+        </div>
+        <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{brand.name}</h1>
+            <CertificationIcon level={brand.certificationLevel} size={17} />
           </div>
         </div>
-      )}
-
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: 0, lineHeight: 1 }}>{brand.name}</h1>
-        {brand.status === "complete" && <VerifiedBadge size={22} />}
       </div>
 
-      {editing ? (
+      <div style={{ marginTop: "76px" }}>
+        {pendingContributions.length > 0 && (
+          <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
+            <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {pendingContributions.map((c) => (
+                <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
+                  <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
+                    <strong>{BRAND_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
+                  </div>
+                  {isAdmin && (
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() => onApproveContribution(c)}
+                        style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
+                      >
+                        ✓ Accepter
+                      </button>
+                      <button
+                        onClick={() => onRejectContribution(c)}
+                        style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
+                      >
+                        ✕ Refuser
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      {editing && (
         <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
           <input
             value={nameValue}
@@ -328,16 +341,9 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
             style={{ flex: 1, padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
           />
           <button onClick={submitEdit} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 14px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper }}>
-            {isLocked ? "Suggérer" : "OK"}
+            Suggérer
           </button>
         </div>
-      ) : (
-        <button
-          onClick={() => setEditing(true)}
-          style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "20px" }}
-        >
-          {isLocked ? "📝 Suggérer une modification" : "✏️ Modifier"}
-        </button>
       )}
 
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
@@ -390,21 +396,94 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
           </div>
         </div>
       )}
-      <button
-        onClick={() => setReporting(true)}
-        style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "14px 0 0 0", textAlign: "left" }}
-      >
-        <ReportIcon /> Signaler cette fiche
-      </button>
-      {reporting && <ReportModal entityType="brand" entityId={brand.id} myBibroCode={myBibroCode} directory={brandsDirectory} onClose={() => setReporting(false)} />}
-      <button
-        onClick={() => setClaiming(true)}
-        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "10px 0 0 0", textAlign: "left" }}
-      >
-        Cette marque vous appartient ? Revendiquez cette fiche
-      </button>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
+        <button
+          onClick={() => setClaiming(true)}
+          style={{
+            display: "inline-block",
+            background: "none",
+            border: `1.5px solid ${COLORS.paperAlt}`,
+            borderRadius: "7px",
+            padding: "5px 10px",
+            color: COLORS.inkSoft,
+            fontWeight: 600,
+            fontSize: "10px",
+            cursor: "pointer",
+            textAlign: "center",
+          }}
+        >
+          Revendiquer la gestion de cette marque
+        </button>
+        <button
+          onClick={() => setShowActionsMenu(true)}
+          title="Plus d'options"
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center" }}
+        >
+          <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
+        </button>
+      </div>
       {claiming && <ClaimModal entityType="brand" entityId={brand.id} entityName={brand.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
-      <BackFooterLink onClick={onBack} />
+
+      {showActionsMenu && (
+        <div
+          onClick={() => setShowActionsMenu(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
+          >
+            <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                setEditing(true);
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <NavIcon name="pencil" size={20} color={COLORS.amber} />
+              Suggérer une modification
+            </button>
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                setReportInitialReason("wrong_info");
+                setReporting(true);
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <ReportIcon />
+              Signaler une erreur ou un changement
+            </button>
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                setReportInitialReason(null);
+                setReporting(true);
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <ReportIcon />
+              Signaler cette fiche
+            </button>
+          </div>
+        </div>
+      )}
+      {reporting && (
+        <ReportModal
+          entityType="brand"
+          entityId={brand.id}
+          myBibroCode={myBibroCode}
+          initialReason={reportInitialReason}
+          directory={brandsDirectory}
+          onClose={() => setReporting(false)}
+        />
+      )}
+      <div style={{ marginTop: "-14px" }}>
+        <BackFooterLink onClick={onBack} />
+      </div>
+      </div>
     </div>
   );
 }

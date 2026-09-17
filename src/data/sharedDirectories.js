@@ -2975,7 +2975,11 @@ function rowToBrand(row) {
     aliases: row.aliases || [],
     id: row.id,
     name: row.name,
+    originCountry: COUNTRY_CODE_TO_LABEL[row.origin_country] || row.origin_country,
     status: row.status,
+    certificationLevel: row.certification_level,
+    logoUrl: row.logo_url,
+    coverPhotoUrl: row.cover_photo_url,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
     pendingContributionsCount: row.pending_contributions_count || 0,
@@ -2985,7 +2989,11 @@ function rowToBrand(row) {
 function brandToRow(b, partial = false) {
   const row = {
     name: b.name,
+    origin_country: COUNTRY_LABEL_TO_CODE[b.originCountry] || b.originCountry,
     status: b.status,
+    certification_level: b.certificationLevel,
+    logo_url: b.logoUrl,
+    cover_photo_url: b.coverPhotoUrl,
     submitted_by: b.submittedBy,
     aliases: b.aliases,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
