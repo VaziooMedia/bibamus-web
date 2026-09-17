@@ -2904,7 +2904,7 @@ export default function App() {
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
-                onBack={() => setScreen("breweries")}
+                onBack={() => setScreen("breweryDirectory")}
                 onOpenDrink={(id) => {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
@@ -2928,7 +2928,7 @@ export default function App() {
                 onDelete={() => {
                   deleteBrewery(viewedBreweryId);
                   setBreweriesDirectory((prev) => prev.filter((b) => b.id !== viewedBreweryId));
-                  setScreen("breweries");
+                  setScreen("breweryDirectory");
                 }}
               />
             )}

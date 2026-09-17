@@ -4,8 +4,8 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS } from "../constants.js";
-import { VerifiedBadge } from "./icons.jsx";
-import { PageHeader, BackFooterLink } from "./ui.jsx";
+import { VerifiedBadge, NavIcon } from "./icons.jsx";
+import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
@@ -38,46 +38,82 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={onBack} />
-
-      {pendingContributions.length > 0 && (
-        <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {pendingContributions.map((c) => (
-              <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
-                <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
-                  <strong>{BREWERY_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
-                </div>
-                {isAdmin && (
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      onClick={() => onApproveContribution(c)}
-                      style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
-                    >
-                      ✓ Accepter
-                    </button>
-                    <button
-                      onClick={() => onRejectContribution(c)}
-                      style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
-                    >
-                      ✕ Refuser
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+      <div style={{ position: "relative", margin: "-28px -20px 0 -20px" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "150px",
+            background: brewery.coverPhotoUrl ? `url(${brewery.coverPhotoUrl}) center/cover` : COLORS.surfaceAlt,
+          }}
+        />
+        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
+          <PageHeader onBack={onBack} />
         </div>
-      )}
-
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: 0, lineHeight: 1 }}>{brewery.name}</h1>
-        {brewery.country && <span style={{ fontSize: "16px", fontWeight: 500, color: COLORS.inkSoft }}>{brewery.country}</span>}
-        {brewery.status === "complete" && <VerifiedBadge size={22} />}
+        <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
+          <EntityAvatar photoUrl={brewery.profilePhotoUrl} photoEmoji={brewery.avatarEmoji} size={90} />
+        </div>
+        <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{brewery.name}</h1>
+            {brewery.status === "complete" && <VerifiedBadge size={17} />}
+          </div>
+          {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{brewery.country}</p>}
+        </div>
+        <button
+          onClick={() => setEditing(true)}
+          title={isLocked ? "Suggérer une modification" : "Modifier"}
+          style={{
+            position: "absolute",
+            bottom: "8px",
+            right: "8px",
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            background: COLORS.amber,
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <NavIcon name="pencil" size={20} color={COLORS.paper} />
+        </button>
       </div>
 
-      {editing ? (
+      <div style={{ marginTop: "76px" }}>
+        {pendingContributions.length > 0 && (
+          <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
+            <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {pendingContributions.map((c) => (
+                <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
+                  <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
+                    <strong>{BREWERY_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
+                  </div>
+                  {isAdmin && (
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() => onApproveContribution(c)}
+                        style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
+                      >
+                        ✓ Accepter
+                      </button>
+                      <button
+                        onClick={() => onRejectContribution(c)}
+                        style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
+                      >
+                        ✕ Refuser
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      {editing && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
           {isLocked && <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>Certifiée — tes changements seront soumis à validation.</p>}
           <input
@@ -99,13 +135,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
             </button>
           </div>
         </div>
-      ) : (
-        <button
-          onClick={() => setEditing(true)}
-          style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "20px" }}
-        >
-          {isLocked ? "📝 Suggérer une modification" : "✏️ Modifier"}
-        </button>
       )}
 
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
@@ -172,7 +201,10 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
         Ce producteur vous appartient ? Revendiquez cette fiche
       </button>
       {claiming && <ClaimModal entityType="producer" entityId={brewery.id} entityName={brewery.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
-      <BackFooterLink onClick={onBack} />
+      <div style={{ marginTop: "-14px" }}>
+        <BackFooterLink onClick={onBack} />
+      </div>
+      </div>
     </div>
   );
 }
