@@ -1534,6 +1534,17 @@ export async function loadNearbyVenues(lat, lng, radiusMeters = 2000, limit = 10
   return data.map((row) => ({ ...rowToVenue(row.venue), distanceMeters: row.distance_meters }));
 }
 
+// Les 5 lieux les plus proches de l'utilisateur qui proposent ce produit sur leur carte —
+// jamais la liste complète (potentiellement énorme), toujours triée par distance réelle.
+export async function loadNearestVenuesServingDrink(drinkId, lat, lng, limit = 5) {
+  const { data, error } = await supabase.rpc("get_nearest_venues_serving_drink", { p_drink_id: drinkId, p_lat: lat, p_lng: lng, p_limit: limit });
+  if (error) {
+    console.error("loadNearestVenuesServingDrink:", error);
+    return [];
+  }
+  return data.map((row) => ({ ...rowToVenue(row.venue), distanceMeters: row.distance_meters }));
+}
+
 // "Voir sur une carte" (BibAtlas > Lieux) — uniquement id/nom/coordonnées pour poser des points,
 // jamais le répertoire complet des lieux.
 export async function loadVenueMapPins() {

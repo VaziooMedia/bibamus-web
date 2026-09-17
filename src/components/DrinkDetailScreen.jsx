@@ -18,7 +18,7 @@ import { formatDrinkFieldValue, formatMoney } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { styleTagLabel } from "../data/styleTagLabels.js";
-import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus } from "../data/sharedDirectories.js";
+import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -51,6 +51,7 @@ export function DrinkDetailScreen({
   onRejectContribution,
   onOpenBrand,
   onOpenBrewery,
+  onOpenVenue,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -112,6 +113,26 @@ export function DrinkDetailScreen({
   useEffect(() => {
     const since = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     loadDrinkGlobalStats(drink.id, since, null).then(setGlobalMonthCount);
+  }, [drink.id]);
+
+  // Lieux qui le proposent — jamais la liste complète (potentiellement énorme), toujours les 5
+  // plus proches de l'utilisateur. "denied" distingue le refus explicite du "pas encore demandé".
+  const [nearestVenues, setNearestVenues] = useState(null);
+  const [geoStatus, setGeoStatus] = useState("idle");
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setGeoStatus("unavailable");
+      return;
+    }
+    setGeoStatus("locating");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeoStatus("ok");
+        loadNearestVenuesServingDrink(drink.id, pos.coords.latitude, pos.coords.longitude, 5).then(setNearestVenues);
+      },
+      () => setGeoStatus("denied"),
+      { timeout: 8000 }
+    );
   }, [drink.id]);
 
   // Chiffre d'affaires — réservé aux admins pour l'instant, en attendant la future plateforme
@@ -377,12 +398,39 @@ export function DrinkDetailScreen({
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
             <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Lieux qui le proposent</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Lieux qui le proposent près de toi</span>
           </div>
-          <div style={{ textAlign: "center", padding: "16px 0" }}>
-            <NavIcon name="map-pin" size={26} color={COLORS.paperAlt} />
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
-          </div>
+          {geoStatus === "denied" || geoStatus === "unavailable" ? (
+            <div style={{ textAlign: "center", padding: "16px 0" }}>
+              <NavIcon name="map-pin" size={26} color={COLORS.paperAlt} />
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Active ta localisation pour voir les lieux les plus proches.</p>
+            </div>
+          ) : geoStatus === "locating" || nearestVenues === null ? (
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "16px 0" }}>Recherche des lieux les plus proches...</p>
+          ) : nearestVenues.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "16px 0" }}>
+              <NavIcon name="map-pin" size={26} color={COLORS.paperAlt} />
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Aucun lieu ne le propose pour l'instant.</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {nearestVenues.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => onOpenVenue(v.id)}
+                  style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+                >
+                  <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={28} />
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontWeight: 700, fontSize: "14px", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.name}</span>
+                    <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>
+                      {v.distanceMeters < 1000 ? `${Math.round(v.distanceMeters)} m` : `${(v.distanceMeters / 1000).toFixed(1)} km`}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {isAdmin && (
