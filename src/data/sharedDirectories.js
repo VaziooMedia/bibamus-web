@@ -2108,6 +2108,28 @@ export async function loadBrandById(id) {
   return rowToBrand(data);
 }
 
+// Lien producteur ↔ lieu (linked_venue_id) — référence à sens unique portée par le
+// producteur ; pour la réciproque côté fiche Lieu, on cherche le producteur qui pointe ici.
+export async function loadVenueById(id) {
+  if (!id) return null;
+  const { data, error } = await supabase.from("public_venues").select("*").eq("id", id).maybeSingle();
+  if (error || !data) {
+    if (error) console.error("loadVenueById:", error);
+    return null;
+  }
+  return rowToVenue(data);
+}
+
+export async function loadBreweryLinkedToVenue(venueId) {
+  if (!venueId) return null;
+  const { data, error } = await supabase.from("breweries_directory").select("*").eq("linked_venue_id", venueId).maybeSingle();
+  if (error || !data) {
+    if (error) console.error("loadBreweryLinkedToVenue:", error);
+    return null;
+  }
+  return rowToBrewery(data);
+}
+
 export async function loadBreweriesByIds(ids) {
   if (!ids || ids.length === 0) return [];
   const { data, error } = await supabase.from("breweries_directory").select("*").in("id", ids);
@@ -2939,6 +2961,7 @@ function rowToBrewery(row) {
     country: COUNTRY_CODE_TO_LABEL[row.country] || row.country,
     status: row.status,
     certificationLevel: row.certification_level,
+    linkedVenueId: row.linked_venue_id,
     profilePhotoUrl: row.profile_photo_url,
     coverPhotoUrl: row.cover_photo_url,
     submittedBy: row.submitted_by,
@@ -2953,6 +2976,7 @@ function breweryToRow(b, partial = false) {
     country: COUNTRY_LABEL_TO_CODE[b.country] || b.country,
     status: b.status,
     certification_level: b.certificationLevel,
+    linked_venue_id: b.linkedVenueId,
     profile_photo_url: b.profilePhotoUrl,
     cover_photo_url: b.coverPhotoUrl,
     submitted_by: b.submittedBy,

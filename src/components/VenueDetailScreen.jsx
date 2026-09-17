@@ -12,7 +12,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { VenueRatingModal } from "./VenueRatingModal.jsx";
 import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
-import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, loadVenueRevenueStats, toggleFollowVenue, loadVenueFollowStatus } from "../data/sharedDirectories.js";
+import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, loadVenueRevenueStats, toggleFollowVenue, loadVenueFollowStatus, loadBreweryLinkedToVenue } from "../data/sharedDirectories.js";
 import { VenueCheckInConfirmModal } from "./VenueCheckInConfirmModal.jsx";
 import { loadMyVenueRating } from "../data/sharedDirectories.js";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
@@ -25,9 +25,14 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery }) {
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
+
+  const [linkedProducer, setLinkedProducer] = useState(null);
+  useEffect(() => {
+    loadBreweryLinkedToVenue(venue.id).then(setLinkedProducer);
+  }, [venue.id]);
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -209,6 +214,18 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
           <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: "#F2C94C" }}>
             📝 Une modification de la fiche est proposée, en attente de validation.
           </div>
+        )}
+        {linkedProducer && (
+          <button
+            onClick={() => onOpenBrewery(linkedProducer.id)}
+            style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "16px" }}
+          >
+            <EntityAvatar photoUrl={linkedProducer.profilePhotoUrl} photoEmoji={linkedProducer.avatarEmoji} size={28} />
+            <span>
+              <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>EXPLOITÉ PAR</span>
+              <span style={{ fontWeight: 700, fontSize: "14px" }}>{linkedProducer.name}</span>
+            </span>
+          </button>
         )}
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
         <div

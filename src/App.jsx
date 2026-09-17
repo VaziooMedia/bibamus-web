@@ -2185,6 +2185,10 @@ export default function App() {
                 onManageMenu={() => setScreen("venueMenuCategories")}
                 onToggleFavorite={() => toggleVenueFavorite(viewedVenueId)}
                 onCleanupDuplicates={() => cleanupDuplicates(viewedVenueId)}
+                onOpenBrewery={(id) => {
+                  setViewedBreweryId(id);
+                  setScreen("breweryDetail");
+                }}
               />
             )}
             {screen === "venueMenuCategories" && viewedVenue && (
@@ -2935,6 +2939,11 @@ export default function App() {
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);
                   setScreen("brandDetail");
+                }}
+                onOpenVenue={(id) => {
+                  setViewedVenueId(id);
+                  setScreenBeforeVenueDetail("breweryDetail");
+                  setScreen("venueDetail");
                 }}
                 onSuggestEdit={(name, country) => suggestBreweryEdit(viewedBreweryId, name, country)}
                 pendingContributions={viewedBreweryContributions}

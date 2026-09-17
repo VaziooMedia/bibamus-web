@@ -10,9 +10,9 @@ import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
-import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweryById } from "../data/sharedDirectories.js";
+import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweryById, loadVenueById } from "../data/sharedDirectories.js";
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
@@ -31,6 +31,12 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
   useEffect(() => {
     loadBrandsByProducer(brewery.id).then(setRelatedBrands);
   }, [brewery.id]);
+
+  const [linkedVenue, setLinkedVenue] = useState(null);
+  useEffect(() => {
+    if (brewery.linkedVenueId) loadVenueById(brewery.linkedVenueId).then(setLinkedVenue);
+    else setLinkedVenue(null);
+  }, [brewery.linkedVenueId]);
 
   const submitEdit = () => {
     onSuggestEdit(nameValue, countryValue);
@@ -116,6 +122,19 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
             </button>
           </div>
         </div>
+      )}
+
+      {linkedVenue && (
+        <button
+          onClick={() => onOpenVenue(linkedVenue.id)}
+          style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "20px" }}
+        >
+          <EntityAvatar photoUrl={linkedVenue.profilePhotoUrl} photoEmoji={linkedVenue.avatarEmoji} size={28} />
+          <span>
+            <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>LIEU LIÉ</span>
+            <span style={{ fontWeight: 700, fontSize: "14px" }}>{linkedVenue.name}</span>
+          </span>
+        </button>
       )}
 
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
