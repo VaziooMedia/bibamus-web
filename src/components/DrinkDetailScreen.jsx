@@ -11,10 +11,10 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
-import { NavIcon, CertificationIcon, CountryFlagImg, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon } from "./icons.jsx";
+import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { formatDrinkFieldValue, formatMoney, normalizeUrl } from "../utils.js";
+import { formatDrinkFieldValue, formatMoney } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { styleTagLabel } from "../data/styleTagLabels.js";
