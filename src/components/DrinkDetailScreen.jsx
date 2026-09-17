@@ -256,33 +256,18 @@ export function DrinkDetailScreen({
           </div>
         )}
 
-        {(linkedBrand || linkedProducers.length > 0) && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-            {linkedBrand && (
-              <button
-                onClick={() => onOpenBrand(linkedBrand.id)}
-                style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
-              >
-                <EntityAvatar photoUrl={linkedBrand.logoUrl} size={28} />
-                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  {linkedBrand.name}
-                  <CertificationIcon level={linkedBrand.certificationLevel} size={13} />
+        {drink.styles?.length > 0 && (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {drink.styles.map((code) => (
+                <span
+                  key={code}
+                  style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "5px 10px", fontSize: "11.5px", fontWeight: 600, color: COLORS.ink }}
+                >
+                  {styleTagLabel(code)}
                 </span>
-              </button>
-            )}
-            {linkedProducers.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => onOpenBrewery(p.id)}
-                style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
-              >
-                <EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={28} />
-                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  {p.name}
-                  <CertificationIcon level={p.certificationLevel} size={13} />
-                </span>
-              </button>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
@@ -323,18 +308,36 @@ export function DrinkDetailScreen({
           </div>
         )}
 
-        {drink.styles?.length > 0 && (
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-              {drink.styles.map((code) => (
-                <span
-                  key={code}
-                  style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "5px 10px", fontSize: "11.5px", fontWeight: 600, color: COLORS.ink }}
-                >
-                  {styleTagLabel(code)}
+        {linkedBrand && (
+          <div style={{ marginBottom: "16px" }}>
+            <button
+              onClick={() => onOpenBrand(linkedBrand.id)}
+              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+            >
+              <EntityAvatar photoUrl={linkedBrand.logoUrl} size={28} />
+              <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                {linkedBrand.name}
+                <CertificationIcon level={linkedBrand.certificationLevel} size={13} />
+              </span>
+            </button>
+          </div>
+        )}
+
+        {linkedProducers.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+            {linkedProducers.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => onOpenBrewery(p.id)}
+                style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+              >
+                <EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={28} />
+                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {p.name}
+                  <CertificationIcon level={p.certificationLevel} size={13} />
                 </span>
-              ))}
-            </div>
+              </button>
+            ))}
           </div>
         )}
 
