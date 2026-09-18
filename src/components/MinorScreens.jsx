@@ -12,6 +12,7 @@ import { PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { formatDate } from "../utils.js";
 import { loadMyStories, upsertPushSubscription } from "../data/sharedDirectories.js";
+import { loadSalonTokEnabled, setSalonTokEnabled } from "../data/toks.js";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
 
 export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBack, isAdmin, goToImport, onLogout, goToCategory }) {
@@ -235,6 +236,23 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
   const [selectedVenueId, setSelectedVenueId] = useState(event.isHome ? "@home" : event.venueId === "@event" ? "@event" : event.venueId || null);
   const [directoryOpenCount, setDirectoryOpenCount] = useState(0);
 
+  // Réglage Tok — le seul de cet écran qui soit personnel : il ne concerne que moi, alors que
+  // le mode, la monnaie et le lieu s'appliquent à tout le salon. Il s'enregistre donc
+  // immédiatement, sans passer par le bouton "Valider" qui porte les réglages communs.
+  const [tokEnabled, setTokEnabled] = useState(true);
+  useEffect(() => {
+    if (event.salonCode) loadSalonTokEnabled(event.salonCode).then(setTokEnabled);
+  }, [event.salonCode]);
+
+  const toggleTok = async (value) => {
+    setTokEnabled(value);
+    const result = await setSalonTokEnabled(event.salonCode, value);
+    if (result?.error) {
+      setTokEnabled(!value);
+      alert("Le réglage n'a pas pu être enregistré. Réessaie.");
+    }
+  };
+
   const pickFromDirectory = (publicVenueOrDraft) => {
     const resolved = onResolvePublicVenue(publicVenueOrDraft);
     setSelectedVenueId(resolved.id);
@@ -415,6 +433,49 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
       ) : eventMode === "addition" ? (
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>L'addition partagée se règle en €.</p>
       ) : null}
+
+      {event.salonCode && (
+        <>
+          <div style={{ height: "1px", background: COLORS.paperAlt, margin: "2px 0 16px" }} />
+          <SectionTitle>Tok</SectionTitle>
+          <div
+            style={{
+              background: COLORS.surface,
+              border: `2px solid ${COLORS.paperAlt}`,
+              borderRadius: "12px",
+              padding: "12px 14px",
+              marginBottom: "20px",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}
+          >
+            <span style={{ fontSize: "20px", lineHeight: 1, flexShrink: 0 }}>⚡</span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Recevoir des Tok</span>
+              <span style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>
+                Ne concerne que toi — les autres réglages de cette page valent pour tout le salon.
+              </span>
+            </span>
+            <button
+              onClick={() => toggleTok(!tokEnabled)}
+              style={{
+                width: "42px",
+                height: "24px",
+                borderRadius: "999px",
+                border: "none",
+                background: tokEnabled ? COLORS.amber : COLORS.paperAlt,
+                position: "relative",
+                cursor: "pointer",
+                padding: 0,
+                flexShrink: 0,
+              }}
+            >
+              <span style={{ position: "absolute", top: "3px", left: tokEnabled ? "21px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+            </button>
+          </div>
+        </>
+      )}
 
       <PrimaryButton
         onClick={() =>
