@@ -1,13 +1,17 @@
 // ============================================================
-// Écran "Notifications" — accessible depuis Paramètres. Toutes
-// les préférences sont réellement stockées dès maintenant, même
-// si le système de notification lui-même (centre interne, envoi)
-// n'est pas encore construit pour la plupart des types listés.
-// "Notifications push" est la seule vraiment branchée pour
-// l'instant : elle demande la permission et enregistre le jeton
-// FCM de l'appareil (voir firebaseClient.js) — déjà utilisée en
-// production pour WaterAlert. Sur iPhone, ne fonctionne que si
-// l'app a été ajoutée à l'écran d'accueil (iOS 16.4+).
+// Écran "Notifications" — accessible depuis Paramètres.
+//
+// Règle appliquée ici : un réglage n'est actif que s'il pilote réellement
+// quelque chose. Les autres sont grisés et marqués "Bientôt" — un
+// interrupteur muet est pire qu'absent, puisqu'il laisse croire qu'on a coupé
+// une notification qui continue d'arriver.
+//
+// Aujourd'hui, deux réglages seulement sont branchés :
+//   - "Notifications push" : demande la permission et enregistre le jeton FCM
+//     de l'appareil (voir firebaseClient.js). Sur iPhone, ne fonctionne que si
+//     l'app a été ajoutée à l'écran d'accueil (iOS 16.4+).
+//   - "Messages" : respecté côté serveur par get_message_push_targets, qui
+//     écarte des destinataires ceux qui l'ont désactivé.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
@@ -131,6 +135,16 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
             }
           }}
         />
+        {/* Seul réglage de cette liste, avec les notifications push, à piloter réellement
+            quelque chose : le serveur écarte des destinataires ceux qui l'ont désactivé. */}
+        <NotifRow
+          icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
+          title="Messages"
+          subtitle="Messages reçus dans BibaPing"
+          checked={masterEnabled && p.notifMessages !== false}
+          disabled={!masterEnabled}
+          onChange={(v) => update({ notifMessages: v })}
+        />
         <NotifRow
           icon={<NavIcon name="tag" size={17} color={COLORS.amber} />}
           title="Mentions"
@@ -143,22 +157,15 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
         <NotifRow
           icon={<NavIcon name="comment" size={17} color={COLORS.amber} />}
           title="Commentaires"
-          subtitle="Sur vos checks, publications, stories..."
-          checked={masterEnabled && p.notifComments !== false}
-          disabled={!masterEnabled}
-          onChange={(v) => update({ notifComments: v })}
+          subtitle="Pas encore disponible"
+          disabled
+          badge="Bientôt"
+          checked={false}
+          onChange={() => {}}
         />
         <NotifRow
           icon={<NavIcon name="user-plus" size={17} color={COLORS.amber} />}
           title="Nouveaux Bibax"
-          subtitle="Ajout et acceptation"
-          checked={masterEnabled && p.notifNewBibax !== false}
-          disabled={!masterEnabled}
-          onChange={(v) => update({ notifNewBibax: v })}
-        />
-        <NotifRow
-          icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
-          title="Messages"
           subtitle="Pas encore disponible"
           disabled
           badge="Bientôt"
@@ -168,19 +175,21 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
         <NotifRow
           icon={<NavIcon name="bibago-nav" size={15} color={COLORS.amber} />}
           title="Invitations"
-          subtitle="Invitations à rejoindre un BibaRoom ou BibArena"
-          checked={masterEnabled && p.notifInvitations !== false}
-          disabled={!masterEnabled}
-          onChange={(v) => update({ notifInvitations: v })}
+          subtitle="Pas encore disponible"
+          disabled
+          badge="Bientôt"
+          checked={false}
+          onChange={() => {}}
         />
         <div style={{ borderBottom: "none" }}>
           <NotifRow
             icon={<NavIcon name="activity" size={17} color={COLORS.amber} />}
-            title="Activités de vos Bibax"
-            subtitle="Ce que font vos Bibax"
-            checked={masterEnabled && p.notifBibaxActivity !== false}
-            disabled={!masterEnabled}
-            onChange={(v) => update({ notifBibaxActivity: v })}
+            title="Activités Bibax favoris"
+            subtitle="Pas encore disponible"
+            disabled
+            badge="Bientôt"
+            checked={false}
+            onChange={() => {}}
           />
         </div>
       </NotifGroup>
