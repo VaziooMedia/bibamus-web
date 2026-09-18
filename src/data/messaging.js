@@ -132,35 +132,23 @@ export async function createGroupConversation(title, memberUserIds, photoUrl = n
   return { id: created.id };
 }
 
-// À appeler à la CRÉATION du salon, pas à l'ouverture du chat : c'est
-// l'appartenance à cette conversation qui fait foi pour la règle "salon
-// commun" côté base (can_message). Sans elle, deux personnes d'un même salon
-// ne pourront pas s'écrire.
+// La conversation d'un BibaRoom : recherche-ou-création côté serveur.
+//
+// Surtout pas côté client : les règles de lecture ne montrent que les conversations dont on est
+// déjà membre, donc celle créée par quelqu'un d'autre serait invisible et chacun finirait par
+// créer la sienne. La fonction serveur voit tout, et un index unique garantit qu'un salon n'a
+// jamais qu'une seule conversation.
 export async function ensureSalonConversation(salonCode, salonName, memberUserIds = []) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié." };
-
-  const { data: existing } = await supabase.from("conversations").select("id").eq("salon_code", salonCode).eq("kind", "salon").maybeSingle();
-  if (existing) {
-    await addConversationMembers(existing.id, memberUserIds);
-    return { id: existing.id };
-  }
-
-  const { data: created, error } = await supabase
-    .from("conversations")
-    .insert({ kind: "salon", title: salonName || null, salon_code: salonCode, created_by: user.id })
-    .select("id")
-    .single();
+  const { data, error } = await supabase.rpc("ensure_salon_conversation", {
+    p_salon_code: salonCode,
+    p_title: salonName || null,
+    p_member_ids: [...new Set((memberUserIds || []).filter(Boolean))],
+  });
   if (error) {
     console.error("ensureSalonConversation:", error);
     return { error: error.message };
   }
-
-  await supabase.from("conversation_members").insert({ conversation_id: created.id, user_id: user.id });
-  await addConversationMembers(created.id, memberUserIds);
-  return { id: created.id };
+  return { id: data };
 }
 
 // Ajoute des participants sans se soucier des doublons : la clé primaire
