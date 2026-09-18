@@ -3,6 +3,10 @@
 // le prototype Claude. C'est l'écran le plus dense de toute
 // l'app (Jetons, Participants, Notes intermédiaires, cagnotte,
 // note finale, section BibaRoom...).
+//
+// `tabBar` : barre d'onglets fournie par SalonTabsScreen, affichée entre le
+// lieu et la ligne du mode. Elle arrive en propriété plutôt que d'être
+// construite ici, pour que cet écran ne sache rien des autres onglets.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
@@ -25,7 +29,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink }) {
+export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink, tabBar }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -428,6 +432,10 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           {venue.name}
         </button>
       )}
+
+      {/* Barre d'onglets (Salon / Pulse / Chat), fournie par SalonTabsScreen. */}
+      {tabBar && <div style={{ marginTop: "12px" }}>{tabBar}</div>}
+
       <div style={{ marginTop: "8px", marginBottom: "18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
         <button
           onClick={onOpenSettings}

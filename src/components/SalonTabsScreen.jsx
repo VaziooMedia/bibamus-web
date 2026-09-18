@@ -199,7 +199,7 @@ export function SalonTabsScreen(props) {
   // Le tableau de bord porte déjà son propre en-tête et sa propre mise en page : on le rend tel
   // quel, avec juste la barre d'onglets au-dessus.
   const tabBar = (
-    <div style={{ display: "flex", gap: "6px", padding: "0 20px", marginBottom: "10px" }}>
+    <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
       {TABS.map((t) => {
         const active = tab === t.key;
         return (
@@ -231,13 +231,10 @@ export function SalonTabsScreen(props) {
     </div>
   );
 
+  // Le tableau de bord place lui-même la barre, entre le lieu et la ligne du mode : c'est le
+  // seul endroit où elle ne coupe pas la lecture de l'en-tête.
   if (tab === "salon") {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-        <div style={{ paddingTop: "16px" }}>{tabBar}</div>
-        <EventDashboardScreen {...props} />
-      </div>
-    );
+    return <EventDashboardScreen {...props} tabBar={tabBar} />;
   }
 
   return (
@@ -245,7 +242,7 @@ export function SalonTabsScreen(props) {
       <div style={{ padding: "0 20px" }}>
         <PageHeader onBack={onBack} />
       </div>
-      {tabBar}
+      <div style={{ padding: "0 20px" }}>{tabBar}</div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "0 20px", marginBottom: "14px" }}>
         <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={34} />
