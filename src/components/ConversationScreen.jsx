@@ -254,7 +254,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
         </span>
         {conversation.kind === "salon" && (
           <span style={{ fontSize: "9px", fontWeight: 700, color: COLORS.paper, background: COLORS.amber, borderRadius: "999px", padding: "1px 6px", flexShrink: 0 }}>
-            SALON
+            BibaRoom
           </span>
         )}
       </div>
@@ -308,10 +308,28 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
                       {dayLabel(m.createdAt)}
                     </div>
                   )}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: mine ? "flex-end" : "flex-start", maxWidth: "100%" }}>
+                  // Dans un groupe ou un salon, l'avatar est posé à côté de la bulle : au-delà
+                  // de deux participants, le nom seul ne suffit plus à savoir qui parle. Il
+                  // n'apparaît que sur le premier message d'une suite du même auteur, un
+                  // espace réservé gardant l'alignement pour les suivants.
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      gap: "8px",
+                      alignItems: "flex-start",
+                      justifyContent: mine ? "flex-end" : "flex-start",
+                      maxWidth: "100%",
+                    }}
+                  >
+                    {isGroup && !mine && (
+                      <span style={{ width: "28px", flexShrink: 0, display: "flex", justifyContent: "center", paddingTop: showSender ? "17px" : "2px" }}>
+                        {showSender && <EntityAvatar photoUrl={sender?.avatarUrl} size={28} />}
+                      </span>
+                    )}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: mine ? "flex-end" : "flex-start", minWidth: 0, maxWidth: "100%" }}>
                     {showSender && (
-                      <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: COLORS.inkSoft, marginBottom: "3px", paddingLeft: "4px" }}>
-                        <EntityAvatar photoUrl={sender?.avatarUrl} size={18} />
+                      <span style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "3px", paddingLeft: "4px" }}>
                         {sender ? [sender.displayName, sender.lastName].filter(Boolean).join(" ") : "Quelqu'un"}
                       </span>
                     )}
@@ -388,6 +406,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
                       </span>
                     )}
                     <span style={{ fontSize: "10px", color: COLORS.inkSoft, margin: "2px 4px 0" }}>{messageTime(m.createdAt)}</span>
+                    </div>
                   </div>
                 </React.Fragment>
               );

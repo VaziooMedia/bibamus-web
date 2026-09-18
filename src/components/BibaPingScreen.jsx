@@ -244,18 +244,32 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
                   padding: "10px 14px",
                   cursor: "pointer",
                   boxSizing: "border-box",
+                  position: "relative",
                 }}
               >
+                {c.kind === "salon" && (
+                  // À cheval sur la bordure, comme le badge "EN COURS" d'un BibaLive : ça évite
+                  // de rogner le titre de la conversation.
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-8px",
+                      right: "12px",
+                      fontSize: "9px",
+                      fontWeight: 700,
+                      letterSpacing: "0.3px",
+                      color: COLORS.paper,
+                      background: COLORS.amber,
+                      borderRadius: "999px",
+                      padding: "2px 8px",
+                    }}
+                  >
+                    BibaRoom
+                  </span>
+                )}
                 <EntityAvatar photoUrl={photoUrl} size={44} />
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ fontWeight: 700, fontSize: "14px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>
-                    {c.kind === "salon" && (
-                      <span style={{ fontSize: "9px", fontWeight: 700, color: COLORS.paper, background: COLORS.amber, borderRadius: "999px", padding: "1px 6px", flexShrink: 0 }}>
-                        SALON
-                      </span>
-                    )}
-                  </span>
+                  <span style={{ display: "block", fontWeight: 700, fontSize: "14px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>
                   <span
                     style={{
                       display: "block",
