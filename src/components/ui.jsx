@@ -7,6 +7,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, TokenPinkIcon, TokenCyanIcon, CountryFlagImg } from "./icons.jsx";
 import { NavigationContext, ProfileNavContext } from "../contexts.js";
 import { formatMoney } from "../utils.js";
+import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 
 export function useInfiniteScroll(items, pageSize, resetKey) {
   const [visibleCount, setVisibleCount] = useState(pageSize);
@@ -434,13 +435,16 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
       </button>
 
       <button
-        onClick={() => onNavigate("repertoireHub")}
+        onClick={() => onNavigate("bibaPing")}
         style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1 }}
       >
-        <NavIcon name="map" size={20} color={active("repertoireHub") ? COLORS.jetonFluo : COLORS.amber} />
-        <span style={{ fontSize: "10px", fontWeight: active("repertoireHub") ? 700 : 600 }}>
-          <span style={{ color: active("repertoireHub") ? COLORS.jetonFluo : COLORS.ink }}>Bib</span>
-          <span style={{ color: active("repertoireHub") ? COLORS.jetonFluo : COLORS.amber }}>Atlas</span>
+        {/* Icône fournie en SVG : contrainte en hauteur uniquement, pour ne pas déformer un
+            ratio non carré. Contrairement à NavIcon, sa couleur ne suit pas l'état actif —
+            c'est le libellé qui porte cette indication. */}
+        <img src={bibaPingIconUrl} alt="" style={{ height: "20px" }} />
+        <span style={{ fontSize: "10px", fontWeight: active("bibaPing") ? 700 : 600 }}>
+          <span style={{ color: active("bibaPing") ? COLORS.jetonFluo : COLORS.ink }}>Biba</span>
+          <span style={{ color: active("bibaPing") ? COLORS.jetonFluo : COLORS.amber }}>Ping</span>
         </span>
       </button>
 
