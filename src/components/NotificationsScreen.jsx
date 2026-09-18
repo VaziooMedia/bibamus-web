@@ -181,10 +181,37 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
           checked={false}
           onChange={() => {}}
         />
+        <NotifRow
+          icon={<NavIcon name="activity" size={17} color={COLORS.amber} />}
+          title="Activités Bibax favoris"
+          subtitle="Pas encore disponible"
+          disabled
+          badge="Bientôt"
+          checked={false}
+          onChange={() => {}}
+        />
+        <NotifRow
+          icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />}
+          title="Lieux favoris"
+          subtitle="Pas encore disponible"
+          disabled
+          badge="Bientôt"
+          checked={false}
+          onChange={() => {}}
+        />
+        <NotifRow
+          icon={<NavIcon name="star" size={17} color={COLORS.amber} />}
+          title="Producteurs favoris"
+          subtitle="Pas encore disponible"
+          disabled
+          badge="Bientôt"
+          checked={false}
+          onChange={() => {}}
+        />
         <div style={{ borderBottom: "none" }}>
           <NotifRow
-            icon={<NavIcon name="activity" size={17} color={COLORS.amber} />}
-            title="Activités Bibax favoris"
+            icon={<NavIcon name="bottle" size={17} color={COLORS.amber} />}
+            title="Produits favoris"
             subtitle="Pas encore disponible"
             disabled
             badge="Bientôt"
