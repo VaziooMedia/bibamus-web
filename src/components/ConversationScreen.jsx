@@ -308,10 +308,10 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
                       {dayLabel(m.createdAt)}
                     </div>
                   )}
-                  // Dans un groupe ou un salon, l'avatar est posé à côté de la bulle : au-delà
-                  // de deux participants, le nom seul ne suffit plus à savoir qui parle. Il
-                  // n'apparaît que sur le premier message d'une suite du même auteur, un
-                  // espace réservé gardant l'alignement pour les suivants.
+                  {/* Dans un groupe ou un salon, l'avatar est posé à côté de la bulle : au-delà
+                      de deux participants, le nom seul ne suffit plus à savoir qui parle. Il
+                      n'apparaît que sur le premier message d'une suite du même auteur, un
+                      espace réservé gardant l'alignement pour les suivants. */}
                   <div
                     style={{
                       display: "flex",
