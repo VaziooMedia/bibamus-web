@@ -696,6 +696,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
             padding: 0,
             cursor: "pointer",
             flexShrink: 0,
+            marginLeft: "auto",
           }}
         >
           <img src={drinkCheckIconUrl} alt="Drink Check" style={{ height: "28px", filter: "brightness(0)" }} />

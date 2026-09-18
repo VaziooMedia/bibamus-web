@@ -327,7 +327,6 @@ export function SalonTabsScreen(props) {
       title="Envoyer un Tok"
       style={{
         position: "relative",
-        marginLeft: "auto",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
