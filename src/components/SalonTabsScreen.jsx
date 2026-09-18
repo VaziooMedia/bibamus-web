@@ -22,8 +22,9 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EventDashboardScreen } from "./EventDashboardScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
-import { PageHeader } from "./ui.jsx";
+import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
+import { loadRoomStories } from "../data/sharedDirectories.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
 import { loadTokTargets, loadMyPendingToks, loadMyTokReplies, markTokRepliesSeen, dismissTokReply, subscribeToToks } from "../data/toks.js";
 import { TokModal } from "./TokModal.jsx";
@@ -156,8 +157,19 @@ function TabBadge({ count }) {
 }
 
 export function SalonTabsScreen(props) {
-  const { event, myUserId, venue, onBack, onOpenSettings, onOpenVenue } = props;
+  const { event, myUserId, venue, onBack, onOpenSettings, onOpenVenue, onAddStory, onOpenStoryAuthor } = props;
   const [tab, setTab] = useState("salon");
+
+  // Même vrai mécanisme que dans EventDashboardScreen — l'en-tête (avatar + bouton story)
+  // doit se comporter à l'identique sur les 3 onglets, pas seulement sur Salon.
+  const [roomStories, setRoomStories] = useState([]);
+  useEffect(() => {
+    if (!event.salonCode) return;
+    const load = () => loadRoomStories(event.salonCode).then(setRoomStories);
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, [event.salonCode]);
 
   // Conversation du salon — résolue dès l'arrivée dans le salon, et pas seulement à l'ouverture
   // de l'onglet Chat : sans ça, la pastille ne pourrait jamais s'afficher avant qu'on y aille.
@@ -387,7 +399,48 @@ export function SalonTabsScreen(props) {
         <PageHeader onBack={onBack} />
       </div>
       <div style={{ padding: "0 20px" }}>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1.1 }}>{event.name}</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 2px 0" }}>
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <button
+              onClick={() => roomStories.length > 0 && onOpenStoryAuthor(roomStories)}
+              style={{
+                display: "block",
+                background: "none",
+                border: "none",
+                padding: roomStories.length > 0 ? "2px" : 0,
+                borderRadius: "50%",
+                cursor: roomStories.length > 0 ? "pointer" : "default",
+                ...(roomStories.length > 0 ? { border: "2px solid #FF2C8F" } : {}),
+              }}
+            >
+              <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={48} />
+            </button>
+            {event.salonCode && onAddStory && (
+              <button
+                onClick={() => onAddStory("room", event.salonCode)}
+                style={{
+                  position: "absolute",
+                  bottom: "-4px",
+                  right: "-4px",
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  background: "#FF2C8F",
+                  border: `2px solid ${COLORS.paper}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3.5" strokeLinecap="round">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            )}
+          </div>
+          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1.1 }}>{event.name}</h1>
+        </div>
         <div style={{ marginTop: "4px", marginBottom: "4px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
           <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>
             {event.date && `${formatDate(event.date)} · `}
