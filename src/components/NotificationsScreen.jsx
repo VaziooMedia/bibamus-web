@@ -183,7 +183,7 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
         />
         <NotifRow
           icon={<NavIcon name="activity" size={17} color={COLORS.amber} />}
-          title="Activités Bibax favoris"
+          title="Bibax favoris"
           subtitle="Pas encore disponible"
           disabled
           badge="Bientôt"
