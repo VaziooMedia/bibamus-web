@@ -21,6 +21,7 @@ import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
 import { EventDashboardScreen } from "./components/EventDashboardScreen.jsx";
 import { BibaMusicScreen } from "./components/BibaMusicScreen.jsx";
 import { BibaPulseScreen } from "./components/BibaPulseScreen.jsx";
+import { BibaPingScreen } from "./components/BibaPingScreen.jsx";
 import { BibaxAllSuggestionsScreen } from "./components/BibaxAllSuggestionsScreen.jsx";
 import { StoryCreateScreen } from "./components/StoryCreateScreen.jsx";
 import { StoriesBar } from "./components/StoriesBar.jsx";
