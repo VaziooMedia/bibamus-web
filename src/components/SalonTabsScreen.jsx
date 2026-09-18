@@ -25,7 +25,7 @@ import { ConversationScreen } from "./ConversationScreen.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages } from "../data/messaging.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
-import { loadTokTargets, loadMyPendingToks, subscribeToToks } from "../data/toks.js";
+import { loadTokTargets, loadMyPendingToks, loadMyTokReplies, markTokRepliesSeen, subscribeToToks } from "../data/toks.js";
 import { TokModal } from "./TokModal.jsx";
 import { formatTime, genderAgree } from "../utils.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
@@ -168,6 +168,7 @@ export function SalonTabsScreen(props) {
   const [tokOpen, setTokOpen] = useState(false);
   const [tokTargets, setTokTargets] = useState([]);
   const [pendingToks, setPendingToks] = useState([]);
+  const [tokReplies, setTokReplies] = useState([]);
 
   const salonCode = event?.salonCode || null;
   const eventName = event?.name || null;
@@ -211,6 +212,7 @@ export function SalonTabsScreen(props) {
     if (!salonCode) return;
     loadTokTargets(salonCode).then(setTokTargets);
     loadMyPendingToks(salonCode).then(setPendingToks);
+    loadMyTokReplies(salonCode).then(setTokReplies);
   }, [salonCode]);
 
   useEffect(() => {
@@ -339,7 +341,8 @@ export function SalonTabsScreen(props) {
           force l'icône en noir pur, quelle que soit sa couleur d'origine — il n'existe pas de
           version noire du fichier. */}
       <img src={tokIconUrl} alt="Tok" style={{ height: "28px", filter: "brightness(0)" }} />
-      <TabBadge count={pendingToks.length} />
+      {/* La pastille compte les Tok reçus ET les réponses pas encore vues. */}
+      <TabBadge count={pendingToks.length + tokReplies.length} />
     </button>
   ) : null;
 
@@ -352,8 +355,17 @@ export function SalonTabsScreen(props) {
             salonCode={salonCode}
             targets={tokTargets}
             pending={pendingToks}
+            replies={tokReplies}
             myName={props.myName}
-            onClose={() => setTokOpen(false)}
+            onClose={async () => {
+              setTokOpen(false);
+              // Les réponses affichées sont consultées : on les marque en sortant, pour que la
+              // pastille ne les recompte pas.
+              if (tokReplies.length > 0) {
+                await markTokRepliesSeen(salonCode);
+                refreshTok();
+              }
+            }}
             onChanged={refreshTok}
           />
         )}

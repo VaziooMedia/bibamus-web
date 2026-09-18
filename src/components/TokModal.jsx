@@ -16,7 +16,7 @@ import tokIconUrl from "../assets/brand/tok.svg";
 
 const ACTION_LABELS = Object.fromEntries(TOK_ACTIONS.map((a) => [a.key, a.label]));
 
-export function TokModal({ salonCode, targets, pending, myName, onClose, onChanged }) {
+export function TokModal({ salonCode, targets, pending, replies = [], myName, onClose, onChanged }) {
   const [busyId, setBusyId] = useState(null);
   const [action, setAction] = useState(TOK_ACTIONS[0].key);
   // Sélection rapide : on coche un ou plusieurs noms, puis on envoie d'un coup.
@@ -104,6 +104,37 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
           </div>
         ) : (
           <>
+            {replies.length > 0 && (
+              <div style={{ marginBottom: "18px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+                  <span style={{ fontWeight: 700, fontSize: "13px", color: COLORS.ink }}>Réponses ({replies.length})</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {replies.map((r) => (
+                    <div
+                      key={r.id}
+                      style={{
+                        background: COLORS.surfaceAlt,
+                        border: `2px solid ${COLORS.paperAlt}`,
+                        borderRadius: "10px",
+                        padding: "8px 12px",
+                        fontSize: "12.5px",
+                        color: COLORS.ink,
+                      }}
+                    >
+                      <strong>{r.targetNames}</strong>{" "}
+                      {r.status === "ACCEPTED" ? (
+                        <span style={{ color: COLORS.amber, fontWeight: 700 }}>a accepté ton Tok</span>
+                      ) : (
+                        <span style={{ color: COLORS.inkSoft }}>n'a pas donné suite</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {pending.length > 0 && (
               <div style={{ marginBottom: "18px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>

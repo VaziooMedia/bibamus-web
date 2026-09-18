@@ -149,3 +149,28 @@ export async function setSalonTokEnabled(salonCode, enabled) {
   }
   return { ok: true };
 }
+
+// Les réponses à mes Tok, pas encore consultées. Il n'y a pas de notification en cas de refus :
+// ignorer un Tok ne demande aucune justification, et une notification en ferait un reproche.
+// La réponse s'affiche donc ici, où l'on va quand on veut.
+export async function loadMyTokReplies(salonCode) {
+  if (!salonCode) return [];
+  const { data, error } = await supabase.rpc("get_my_tok_replies", { p_salon_code: salonCode });
+  if (error) {
+    console.error("loadMyTokReplies:", error);
+    return [];
+  }
+  return (data || []).map((r) => ({
+    id: r.id,
+    status: r.status,
+    action: r.action,
+    answeredAt: r.answered_at,
+    targetNames: r.target_names,
+  }));
+}
+
+export async function markTokRepliesSeen(salonCode) {
+  if (!salonCode) return;
+  const { error } = await supabase.rpc("mark_tok_replies_seen", { p_salon_code: salonCode });
+  if (error) console.error("markTokRepliesSeen:", error);
+}
