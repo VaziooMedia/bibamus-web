@@ -72,3 +72,17 @@ export async function loadBibaxRelationStatus(otherUserId) {
   const row = data?.[0];
   return { status: row?.status || "none", relationshipId: row?.relationship_id || null };
 }
+
+// Code Bibax d'une liste de comptes. Plusieurs écrans ne connaissent que l'identifiant de
+// compte des personnes qu'ils affichent (messagerie, notifications), alors que les fiches
+// s'ouvrent à partir d'un code.
+export async function loadBibroCodes(userIds) {
+  const ids = [...new Set((userIds || []).filter(Boolean))];
+  if (ids.length === 0) return {};
+  const { data, error } = await supabase.rpc("get_bibro_codes", { p_ids: ids });
+  if (error) {
+    console.error("loadBibroCodes:", error);
+    return {};
+  }
+  return Object.fromEntries((data || []).map((r) => [r.id, r.bibro_code]));
+}

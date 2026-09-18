@@ -9,6 +9,8 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests, respondBibaxRequest, respondNotification } from "../data/sharedDirectories.js";
+import { loadBibroCodes } from "../data/profiles.js";
+import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 
 const TYPE_LABELS = {
   pulse_bix: "a Bixé votre publication",
@@ -19,6 +21,10 @@ const TYPE_LABELS = {
   salon_invite: "t'invite à rejoindre un BibaRoom",
   salon_invite_accepted: "a rejoint ton BibaRoom",
 };
+
+// Notifications qui parlent d'une personne plutôt que d'une publication : y toucher ouvre sa
+// fiche.
+const PROFILE_TYPES = ["bibax_request", "bibax_accepted"];
 
 function timeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -36,19 +42,32 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
   const [pendingBibax, setPendingBibax] = useState([]);
   const [respondedIds, setRespondedIds] = useState({});
   const [busyId, setBusyId] = useState(null);
+  // Code Bibax par identifiant de compte — le fil ne connaît que les identifiants, alors que
+  // les fiches s'ouvrent à partir d'un code.
+  const [bibroCodes, setBibroCodes] = useState({});
+  const [viewedProfileCode, setViewedProfileCode] = useState(null);
 
   useEffect(() => {
-    loadMyNotifications().then((list) => {
+    loadMyNotifications().then(async (list) => {
       setNotifications(list);
       const unreadIds = list.filter((n) => !n.read).map((n) => n.id);
       if (unreadIds.length > 0) markAllNotificationsRead();
+      const actorIds = list.map((n) => n.actorId).filter(Boolean);
+      if (actorIds.length > 0) setBibroCodes(await loadBibroCodes(actorIds));
     });
     loadPendingBibaxRequests().then(setPendingBibax);
   }, []);
 
+  const openProfile = (actorId) => {
+    const code = bibroCodes[actorId];
+    if (code) setViewedProfileCode(code);
+  };
+
   const handleClick = (n) => {
     if (n.entityType === "pulse_event" && onOpenPulseEntry) onOpenPulseEntry(n.entityId, n.type === "pulse_comment");
-    else if (n.entityType === "bibax_relationship" && onOpenBibaxProfile) onOpenBibaxProfile(n.entityId);
+    // Les notifications liées à une personne ouvrent sa fiche à partir de son compte. L'ancien
+    // code passait entityId, qui est l'identifiant de la relation et non un code Bibax.
+    else if (PROFILE_TYPES.includes(n.type) || n.entityType === "bibax_relationship") openProfile(n.actorId);
   };
 
   const respondBibax = async (n, accept) => {
@@ -72,6 +91,10 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
     setBusyId(null);
     setRespondedIds((prev) => ({ ...prev, [n.id]: accept ? "accepted" : "declined" }));
   };
+
+  if (viewedProfileCode) {
+    return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
+  }
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -109,7 +132,20 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
               const responded = n.status === "accepted" || n.status === "declined" ? n.status : respondedIds[n.id];
               const content = (
                 <>
-                  <EntityAvatar photoUrl={n.actorAvatarUrl} size={40} />
+                  {/* Le rond de profil mène à la fiche de son auteur, quel que soit le type de
+                      notification. */}
+                  <EntityAvatar
+                    photoUrl={n.actorAvatarUrl}
+                    size={40}
+                    onClick={
+                      bibroCodes[n.actorId]
+                        ? (e) => {
+                            e.stopPropagation();
+                            openProfile(n.actorId);
+                          }
+                        : undefined
+                    }
+                  />
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: "14px" }}>
                       <strong>{[n.actorName, n.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}</strong> {TYPE_LABELS[n.type] || n.type}
@@ -177,8 +213,10 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                 );
               }
 
+              // Un div plutôt qu'un bouton : le rond de profil est lui-même un bouton, et
+              // imbriquer deux boutons n'est pas valide.
               return (
-                <button
+                <div
                   key={n.id}
                   onClick={() => handleClick(n)}
                   style={{
@@ -186,18 +224,17 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                     alignItems: "center",
                     gap: "12px",
                     width: "100%",
-                    background: "none",
-                    border: "none",
                     borderBottom: i === notifications.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
                     padding: "14px 0",
                     textAlign: "left",
                     cursor: "pointer",
                     color: COLORS.ink,
                     opacity: n.read ? 0.7 : 1,
+                    boxSizing: "border-box",
                   }}
                 >
                   {content}
-                </button>
+                </div>
               );
             })}
           </div>
