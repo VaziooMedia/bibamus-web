@@ -341,6 +341,17 @@ export async function uploadMessagePhoto(conversationId, file) {
 // Nouveaux messages d'une conversation ouverte. Retourne la fonction de
 // désabonnement, à appeler au démontage de l'écran — même principe que
 // subscribeToMyNotifications.
+export function subscribeToMyMessages(onAnyNewMessage) {
+  // Aucun filtre volontairement : Realtime applique les policies RLS au nom du client abonné,
+  // donc seuls les messages de mes propres conversations arrivent ici. Sert au compteur global
+  // de non-lus, qui n'a pas besoin de savoir de quelle conversation il s'agit.
+  const channel = supabase
+    .channel("messages-all")
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => onAnyNewMessage())
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}
+
 export function subscribeToConversation(conversationId, onNewMessage) {
   const channel = supabase
     .channel(`messages-${conversationId}`)

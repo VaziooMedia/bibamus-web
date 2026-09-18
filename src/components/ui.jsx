@@ -9,7 +9,7 @@ import { NavigationContext, ProfileNavContext } from "../contexts.js";
 import { formatMoney } from "../utils.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import bibaPingActiveIconUrl from "../assets/brand/bibaping-active.svg";
-import { loadMyUnreadMessageCount } from "../data/messaging.js";
+import { loadMyUnreadMessageCount, subscribeToMyMessages } from "../data/messaging.js";
 
 export function useInfiniteScroll(items, pageSize, resetKey) {
   const [visibleCount, setVisibleCount] = useState(pageSize);
@@ -391,23 +391,28 @@ export function MoneyAmount({ value, currency, centered = false, jetonIconSize =
 
 export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifications = 0 }) {
   // Messages non lus — chargé ici plutôt que reçu en propriété : la barre est présente sur
-  // tous les écrans, c'est le seul endroit qui en a besoin en permanence. Relevé toutes les
-  // 30 secondes, et immédiatement quand on quitte BibaPing (où les messages viennent d'être lus).
+  // tous les écrans, c'est le seul endroit qui en a besoin en permanence.
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const refreshUnread = React.useCallback(() => {
+    loadMyUnreadMessageCount().then(setUnreadMessages);
+  }, []);
+
+  // Relevé à chaque changement d'écran — c'est ce qui met la pastille à jour dès qu'on sort
+  // d'une conversation, où les messages viennent d'être marqués comme lus.
   React.useEffect(() => {
-    let cancelled = false;
-    const refresh = () => {
-      loadMyUnreadMessageCount().then((n) => {
-        if (!cancelled) setUnreadMessages(n);
-      });
-    };
-    refresh();
-    const interval = setInterval(refresh, 30000);
+    refreshUnread();
+  }, [screen, refreshUnread]);
+
+  // Temps réel : la pastille s'incrémente dès qu'un message arrive, sans attendre. Le relevé
+  // périodique reste en filet, au cas où l'abonnement saute (réseau coupé, onglet en veille).
+  React.useEffect(() => {
+    const unsubscribe = subscribeToMyMessages(refreshUnread);
+    const interval = setInterval(refreshUnread, 120000);
     return () => {
-      cancelled = true;
+      unsubscribe();
       clearInterval(interval);
     };
-  }, [screen]);
+  }, [refreshUnread]);
 
   const items = [
     { key: "home", label: "Home", accent: "", icon: "ti-home" },
