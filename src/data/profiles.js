@@ -58,3 +58,17 @@ export async function loadPublicProfile(bibroCode) {
     mutualBibaxCount: row.mutual_bibax_count || 0,
   };
 }
+
+// Où en est ma relation avec cette personne : none | sent | received | accepted.
+// Renvoyé par la base plutôt que deviné ici : la fiche publique n'a pas accès à la liste des
+// relations, et l'action proposée doit être juste dès l'ouverture de l'écran.
+export async function loadBibaxRelationStatus(otherUserId) {
+  if (!otherUserId) return { status: "none", relationshipId: null };
+  const { data, error } = await supabase.rpc("get_bibax_relation_status", { p_other_user_id: otherUserId });
+  if (error) {
+    console.error("loadBibaxRelationStatus:", error);
+    return { status: "none", relationshipId: null };
+  }
+  const row = data?.[0];
+  return { status: row?.status || "none", relationshipId: row?.relationship_id || null };
+}

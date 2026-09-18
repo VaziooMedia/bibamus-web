@@ -27,8 +27,8 @@ import {
   CountryFlagImg,
 } from "./icons.jsx";
 import { normalizeUrl, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
-import { loadPublicProfile } from "../data/profiles.js";
-import { loadBibaxCount, loadMyProfileStats, sendBibaxRequest } from "../data/sharedDirectories.js";
+import { loadPublicProfile, loadBibaxRelationStatus } from "../data/profiles.js";
+import { loadBibaxCount, loadMyProfileStats, sendBibaxRequest, cancelBibaxRequest, respondBibaxRequest } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
@@ -38,37 +38,48 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
   const [identity, setIdentity] = useState(undefined);
   const [bibaxCount, setBibaxCount] = useState(null);
   const [stats, setStats] = useState(null);
-  const [adding, setAdding] = useState(false);
-  const [addResult, setAddResult] = useState(null);
+  // none | sent | received | accepted — décide de l'action proposée.
+  const [relation, setRelation] = useState({ status: "none", relationshipId: null });
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setIdentity(undefined);
     loadPublicProfile(bibroCode).then((p) => setIdentity(p ?? null));
   }, [bibroCode]);
 
-  // Compteurs — chargés seulement une fois l'identifiant de compte connu.
+  // Compteurs et relation — chargés seulement une fois l'identifiant de compte connu.
   useEffect(() => {
     if (!identity?.userId) return;
     loadBibaxCount(identity.userId).then(setBibaxCount);
     loadMyProfileStats(identity.userId).then(setStats);
+    loadBibaxRelationStatus(identity.userId).then(setRelation);
   }, [identity?.userId]);
 
-  const handleAdd = async () => {
-    setAdding(true);
-    const result = await sendBibaxRequest(bibroCode);
-    setAdding(false);
-    if (result?.error) {
-      setAddResult(result.error);
-      return;
-    }
-    setAddResult(
-      result?.status === "pending"
-        ? "Demande envoyée — en attente de confirmation."
-        : result?.status === "already_bibax"
-        ? "Vous êtes déjà Bibax."
-        : "Vous êtes maintenant Bibax !"
-    );
+  const refreshRelation = async () => {
+    if (identity?.userId) setRelation(await loadBibaxRelationStatus(identity.userId));
   };
+
+  // Une seule action, dont le sens dépend du statut : demander, annuler sa demande, ou
+  // confirmer celle de l'autre. Une fois Bibax, plus rien à faire ici — la gestion de la
+  // relation se fait depuis la fiche "Mes Bibax".
+  const handleRelationAction = async () => {
+    if (busy || relation.status === "accepted") return;
+    setBusy(true);
+    let result;
+    if (relation.status === "none") result = await sendBibaxRequest(bibroCode);
+    else if (relation.status === "sent") result = await cancelBibaxRequest(relation.relationshipId);
+    else if (relation.status === "received") result = await respondBibaxRequest(relation.relationshipId, true);
+    await refreshRelation();
+    setBusy(false);
+    if (result?.error) alert(result.error);
+  };
+
+  const relationLabel = {
+    none: "Ajouter en Bibax",
+    sent: "Demande envoyée — annuler",
+    received: "Confirmer la demande",
+    accepted: "Vous êtes Bibax",
+  }[relation.status];
 
   const age = identity && identity.shareAge !== false ? computeAgeFromBirthDate(identity.birthDate) : null;
   const hasSocials =
@@ -229,8 +240,8 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
 
           <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
             <button
-              onClick={handleAdd}
-              disabled={adding || !!addResult}
+              onClick={handleRelationAction}
+              disabled={busy || relation.status === "accepted"}
               style={{
                 flex: 1,
                 display: "flex",
@@ -238,18 +249,24 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
                 justifyContent: "center",
                 gap: "8px",
                 background: COLORS.surface,
-                border: `2px solid ${COLORS.amber}`,
+                border: `2px solid ${relation.status === "accepted" ? COLORS.paperAlt : COLORS.amber}`,
                 borderRadius: "14px",
                 padding: "12px 8px",
                 fontSize: "12.5px",
                 fontWeight: 700,
-                color: COLORS.amber,
-                cursor: adding || addResult ? "default" : "pointer",
-                opacity: adding ? 0.5 : 1,
+                color: relation.status === "accepted" ? COLORS.inkSoft : COLORS.amber,
+                cursor: busy || relation.status === "accepted" ? "default" : "pointer",
+                opacity: busy ? 0.5 : 1,
               }}
             >
-              <img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
-              {addResult || (adding ? "..." : "Ajouter en Bibax")}
+              {relation.status === "accepted" ? (
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${COLORS.inkSoft}` }}>
+                  <NavIcon name="check" size={10} color={COLORS.inkSoft} />
+                </span>
+              ) : (
+                <img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
+              )}
+              {busy ? "..." : relationLabel}
             </button>
             <div
               style={{
