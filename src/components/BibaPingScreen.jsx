@@ -77,11 +77,23 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
     return { title: c.title || (c.kind === "salon" ? "Salon" : "Groupe"), photoUrl: c.photoUrl };
   };
 
+  // L'aperçu peut contenir une icône, d'où du JSX plutôt qu'une simple chaîne.
   const preview = (c) => {
     if (!c.lastMessageBody && !c.lastMessageHasMedia) return "Aucun message";
     const mine = c.lastMessageSenderId === myUserId;
-    const body = c.lastMessageBody || "📷 Photo";
-    return mine ? `Toi : ${body}` : body;
+    const prefix = mine ? "Toi : " : "";
+    if (!c.lastMessageBody) {
+      return (
+        <>
+          {prefix}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", verticalAlign: "middle" }}>
+            <NavIcon name="camera" size={13} color={COLORS.inkSoft} />
+            Photo
+          </span>
+        </>
+      );
+    }
+    return `${prefix}${c.lastMessageBody}`;
   };
 
   // Une conversation ouverte remplace entièrement la liste — au retour, on
