@@ -127,6 +127,10 @@ function TabBadge({ count }) {
   return (
     <span
       style={{
+        // À cheval sur la bordure du bouton, comme le badge "EN COURS" d'un BibaLive.
+        position: "absolute",
+        top: "-8px",
+        right: "6px",
         minWidth: "17px",
         height: "17px",
         borderRadius: "999px",
@@ -239,9 +243,9 @@ export function SalonTabsScreen(props) {
   if (!event) return null;
 
   const tabs = [
-    { key: "salon", label: "Salon", badge: 0 },
-    { key: "pulse", label: "Pulse", badge: pulseUnread },
-    { key: "chat", label: "Chat", badge: chatUnread },
+    { key: "salon", label: "BibaRoom", badge: 0 },
+    { key: "pulse", label: "BibaPulse", badge: pulseUnread },
+    { key: "chat", label: "BibaPing", badge: chatUnread },
   ];
 
   const tabBar = (
@@ -253,23 +257,25 @@ export function SalonTabsScreen(props) {
             key={t.key}
             onClick={() => setTab(t.key)}
             style={{
+              position: "relative",
               flex: 1,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "6px",
+              gap: "5px",
               background: active ? COLORS.surface : "none",
               border: `2px solid ${active ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
-              padding: "7px 10px",
-              fontSize: "12.5px",
+              padding: "7px 6px",
+              fontSize: "11.5px",
               fontWeight: 700,
               color: active ? COLORS.amber : COLORS.inkSoft,
               cursor: "pointer",
+              whiteSpace: "nowrap",
             }}
           >
             {t.key === "chat" && <img src={bibaPingIconUrl} alt="" style={{ height: "14px" }} />}
-            {t.key === "pulse" && <NavIcon name="activity" size={14} color={active ? COLORS.amber : COLORS.inkSoft} />}
+            {t.key === "pulse" && <NavIcon name="activity" size={14} color={COLORS.amber} />}
             {t.label}
             <TabBadge count={t.badge} />
           </button>
