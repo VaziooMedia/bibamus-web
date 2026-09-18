@@ -19,6 +19,15 @@ const ACTION_LABELS = Object.fromEntries(TOK_ACTIONS.map((a) => [a.key, a.label]
 export function TokModal({ salonCode, targets, pending, myName, onClose, onChanged }) {
   const [busyId, setBusyId] = useState(null);
   const [action, setAction] = useState(TOK_ACTIONS[0].key);
+  // Sélection rapide : on coche un ou plusieurs noms, puis on envoie d'un coup.
+  const [selected, setSelected] = useState(() => new Set());
+
+  const toggleTarget = (userId) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(userId) ? next.delete(userId) : next.add(userId);
+      return next;
+    });
   const [error, setError] = useState(null);
   // Animation courte après un envoi ou une acceptation : { withName }
   const [flash, setFlash] = useState(null);
@@ -28,16 +37,19 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
     setTimeout(() => setFlash(null), 1800);
   };
 
-  const handleSend = async (target) => {
-    setBusyId(target.userId);
+  const handleSend = async () => {
+    if (selected.size === 0) return;
+    setBusyId("send");
     setError(null);
-    const result = await sendTok(salonCode, target.userId, action);
+    const result = await sendTok(salonCode, [...selected], action);
     setBusyId(null);
     if (result?.error) {
       setError(result.error);
       return;
     }
-    showFlash(target.name);
+    const names = targets.filter((t) => selected.has(t.userId)).map((t) => t.name);
+    setSelected(new Set());
+    showFlash(names.length > 2 ? `${names.length} Bibax` : names.join(" × "));
     onChanged?.();
   };
 
@@ -168,31 +180,73 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {targets.map((t) => (
-                  <button
-                    key={t.userId}
-                    onClick={() => handleSend(t)}
-                    disabled={busyId === t.userId}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      textAlign: "left",
-                      width: "100%",
-                      background: COLORS.surfaceAlt,
-                      border: `2px solid ${COLORS.paperAlt}`,
-                      borderRadius: "12px",
-                      padding: "10px 14px",
-                      cursor: busyId === t.userId ? "default" : "pointer",
-                      opacity: busyId === t.userId ? 0.5 : 1,
-                    }}
-                  >
-                    <EntityAvatar photoUrl={t.avatarUrl} size={32} />
-                    <span style={{ flex: 1, minWidth: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>{t.name}</span>
-                    <img src={tokIconUrl} alt="" style={{ height: "18px" }} />
-                  </button>
-                ))}
+                {targets.map((t) => {
+                  const isSelected = selected.has(t.userId);
+                  return (
+                    <button
+                      key={t.userId}
+                      onClick={() => toggleTarget(t.userId)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        textAlign: "left",
+                        width: "100%",
+                        background: COLORS.surfaceAlt,
+                        border: `2px solid ${isSelected ? COLORS.amber : COLORS.paperAlt}`,
+                        borderRadius: "12px",
+                        padding: "10px 14px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <EntityAvatar photoUrl={t.avatarUrl} size={32} />
+                      <span style={{ flex: 1, minWidth: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>{t.name}</span>
+                      {/* Repère, jamais une interdiction : une 0.0 % s'affone aussi. */}
+                      {t.bibaZero && (
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            color: COLORS.amber,
+                            border: `2px solid ${COLORS.amber}`,
+                            borderRadius: "6px",
+                            padding: "1px 6px",
+                            flexShrink: 0,
+                          }}
+                        >
+                          ZERO
+                        </span>
+                      )}
+                      {isSelected ? (
+                        <img src={tokIconUrl} alt="" style={{ height: "18px" }} />
+                      ) : (
+                        <span style={{ width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${COLORS.paperAlt}`, flexShrink: 0 }} />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+            )}
+
+            {targets.length > 0 && (
+              <button
+                onClick={handleSend}
+                disabled={selected.size === 0 || busyId === "send"}
+                style={{
+                  width: "100%",
+                  marginTop: "12px",
+                  background: selected.size > 0 ? COLORS.amber : "none",
+                  border: `2px solid ${selected.size > 0 ? COLORS.amber : COLORS.paperAlt}`,
+                  borderRadius: "12px",
+                  padding: "13px",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: selected.size > 0 ? COLORS.paper : COLORS.inkSoft,
+                  cursor: selected.size > 0 ? "pointer" : "default",
+                }}
+              >
+                {busyId === "send" ? "..." : selected.size > 1 ? `Envoyer le Tok (${selected.size})` : "Envoyer le Tok"}
+              </button>
             )}
 
             <button

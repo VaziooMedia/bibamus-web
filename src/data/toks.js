@@ -17,7 +17,7 @@ export async function loadTokTargets(salonCode) {
     console.error("loadTokTargets:", error);
     return [];
   }
-  return (data || []).map((r) => ({ userId: r.user_id, name: r.display_name, avatarUrl: r.avatar_url }));
+  return (data || []).map((r) => ({ userId: r.user_id, name: r.display_name, avatarUrl: r.avatar_url, bibaZero: r.biba_zero }));
 }
 
 // Les actions possibles. Liste fermée, validée aussi côté serveur : l'interface doit savoir
@@ -27,18 +27,21 @@ export const TOK_ACTIONS = [
   { key: "CHUG", short: "On affone ?", label: "On affone ?" },
 ];
 
-export async function sendTok(salonCode, targetUserId, action = "SMALL_SIP") {
+// targetUserIds est une liste : le serveur bascule tout seul en Tok collectif au-delà d'un
+// destinataire, et écarte au passage ceux qui sont en cooldown plutôt que d'échouer en bloc.
+export async function sendTok(salonCode, targetUserIds, action = "SMALL_SIP") {
+  const list = Array.isArray(targetUserIds) ? targetUserIds : [targetUserIds];
   const { data, error } = await supabase.rpc("send_tok", {
     p_salon_code: salonCode,
-    p_target_user_id: targetUserId,
+    p_target_user_ids: list,
     p_action: action,
   });
   if (error) {
     console.error("sendTok:", error);
     // Le serveur renvoie des raisons courtes ; on les traduit ici plutôt que d'afficher
     // un message technique.
-    if (error.message?.includes("cooldown")) return { error: "Tu viens déjà de lui envoyer un Tok — laisse-lui une minute." };
-    if (error.message?.includes("destinataire indisponible")) return { error: "Cette personne ne peut pas recevoir de Tok pour l'instant." };
+    if (error.message?.includes("cooldown")) return { error: "Tu viens déjà de leur envoyer un Tok — laisse-leur une minute." };
+    if (error.message?.includes("destinataire indisponible")) return { error: "Personne de sélectionné ne peut recevoir de Tok pour l'instant." };
     return { error: "Le Tok n'est pas parti. Réessaie." };
   }
   return { id: data };
