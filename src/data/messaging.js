@@ -366,3 +366,25 @@ export async function canMessage(otherUserId) {
   }
   return !!data;
 }
+
+/* ---------------- PROFILS ---------------- */
+
+// loadMyConversations ne renvoie que des identifiants. Un tête-à-tête n'a ni
+// titre ni photo : ils viennent du profil de l'autre participant. Un seul
+// appel pour tous les membres de toutes les conversations affichées, via
+// l'RPC déjà utilisée ailleurs dans le projet.
+export async function loadConversationProfiles(userIds) {
+  const ids = [...new Set((userIds || []).filter(Boolean))];
+  if (ids.length === 0) return {};
+  const { data, error } = await supabase.rpc("get_profiles_basic", { p_ids: ids });
+  if (error) {
+    console.error("loadConversationProfiles:", error);
+    return {};
+  }
+  return Object.fromEntries(
+    (data || []).map((p) => [
+      p.id,
+      { id: p.id, displayName: p.display_name, lastName: p.last_name, avatarUrl: p.avatar_url },
+    ])
+  );
+}
