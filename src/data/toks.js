@@ -7,6 +7,7 @@
 // ============================================================
 
 import { supabase } from "../supabaseClient.js";
+import { sendPushNotification } from "./sharedDirectories.js";
 
 // Participants à qui je peux envoyer un Tok, ici et maintenant. La liste est déjà filtrée
 // côté serveur — inutile d'écarter quoi que ce soit ici.
@@ -18,6 +19,28 @@ export async function loadTokTargets(salonCode) {
     return [];
   }
   return (data || []).map((r) => ({ userId: r.user_id, name: r.display_name, avatarUrl: r.avatar_url, bibaZero: r.biba_zero }));
+}
+
+// Notification d'un Tok. Comme pour les messages, le serveur choisit les destinataires et
+// compose le texte ; le client ne fait que déclencher. N'échoue jamais bruyamment : le Tok est
+// déjà enregistré, un souci ici ne doit pas laisser croire qu'il n'est pas parti.
+async function notifyTok(rpcName, tokId) {
+  try {
+    const { data, error } = await supabase.rpc(rpcName, { p_tok_id: tokId });
+    if (error) {
+      console.error(`${rpcName}:`, error);
+      return;
+    }
+    const targets = data || [];
+    if (targets.length === 0) return;
+    await sendPushNotification(
+      targets.map((t) => t.bibro_code),
+      targets[0].push_title,
+      targets[0].push_body
+    );
+  } catch (e) {
+    console.error(`${rpcName}:`, e);
+  }
 }
 
 // Les actions possibles. Liste fermée, validée aussi côté serveur : l'interface doit savoir
@@ -44,6 +67,9 @@ export async function sendTok(salonCode, targetUserIds, action = "SMALL_SIP") {
     if (error.message?.includes("destinataire indisponible")) return { error: "Personne de sélectionné ne peut recevoir de Tok pour l'instant." };
     return { error: "Le Tok n'est pas parti. Réessaie." };
   }
+  // Volontairement sans await : l'animation ne doit pas attendre la notification.
+  notifyTok("get_tok_push_targets", data);
+
   return { id: data };
 }
 
@@ -53,6 +79,9 @@ export async function respondTok(tokId, accept) {
     console.error("respondTok:", error);
     return { error: "Réponse impossible. Réessaie." };
   }
+  // Prévenir l'expéditeur, qui sinon ne saurait jamais que son Tok a été accepté.
+  if (data === "ACCEPTED") notifyTok("get_tok_reply_push_target", tokId);
+
   return { status: data };
 }
 
