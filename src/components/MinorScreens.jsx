@@ -455,7 +455,9 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "block", fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Recevoir des Tok</span>
               <span style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>
-                Ne concerne que toi — les autres réglages de cette page valent pour tout le salon.
+                Ne concerne que toi.
+                <br />
+                Les autres réglages de cette page valent pour tout le salon.
               </span>
             </span>
             <button
