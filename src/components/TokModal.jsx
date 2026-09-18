@@ -51,8 +51,18 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
       setError(result.error);
       return;
     }
-    if (accept && result.status === "ACCEPTED") showFlash(tok.senderName);
     onChanged?.();
+    // Répondre clôt l'échange : la feuille se referme d'elle-même, après l'animation si le
+    // Tok a été accepté, immédiatement s'il a été ignoré.
+    if (accept && result.status === "ACCEPTED") {
+      setFlash({ withName: tok.senderName });
+      setTimeout(() => {
+        setFlash(null);
+        onClose();
+      }, 1800);
+      return;
+    }
+    onClose();
   };
 
   return (
