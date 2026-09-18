@@ -3170,7 +3170,14 @@ export default function App() {
                 onResolvePrediction={resolvePredictionFn}
               />
             )}
-            {screen === "bibaPulse" && (
+                        {screen === "bibaPing" && (
+              <BibaPingScreen
+                myUserId={session.user.id}
+                onBack={() => setScreen("home")}
+                onOpenConversation={(id) => console.log("conversation", id)}
+              />
+            )}
+              {screen === "bibaPulse" && (
               <BibaPulseScreen
                 onBack={() => {
                   setFocusPulseEntry(null);
