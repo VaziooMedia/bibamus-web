@@ -34,6 +34,7 @@ import {
   loadVenuesByIds,
   loadDrinksByIds,
 } from "../data/sharedDirectories.js";
+import { openDirectConversation } from "../data/messaging.js";
 import { PERIODS, MONTH_NAMES } from "./MyStatsScreen.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -680,6 +681,25 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   // Extrait — seulement les 3 dernières, la page complète (BibroPulseScreen) charge le reste.
   const [pulseExcerpt, setPulseExcerpt] = useState(null);
 
+  // BibaPing — l'enveloppe ouvre (ou crée) le tête-à-tête avec cette personne. Étape
+  // intermédiaire assumée : tant que l'écran de discussion n'existe pas, on confirme juste que
+  // la conversation est créée et on renvoie vers BibaPing depuis l'accueil.
+  const [openingConversation, setOpeningConversation] = useState(false);
+  const handleOpenConversation = async () => {
+    if (!bibro?.userId) {
+      alert("Impossible d'ouvrir une conversation avec ce Bibax pour l'instant.");
+      return;
+    }
+    setOpeningConversation(true);
+    const result = await openDirectConversation(bibro.userId);
+    setOpeningConversation(false);
+    if (result?.error) {
+      alert(result.error);
+      return;
+    }
+    alert(`Conversation ouverte avec ${bibro.name} — retrouve-la dans BibaPing, depuis l'accueil.`);
+  };
+
   useEffect(() => {
     if (!bibro?.userId) return;
     loadBibaxPulseActivity(bibro.userId).then((entries) => setPulseExcerpt(entries.slice(0, 3)));
@@ -908,8 +928,9 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
           Bibax
         </button>
         <button
-          disabled
-          title="Bientôt disponible"
+          onClick={handleOpenConversation}
+          disabled={openingConversation}
+          title={`Écrire à ${bibro.name}`}
           style={{
             display: "flex",
             alignItems: "center",
@@ -917,13 +938,13 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             width: "68px",
             flexShrink: 0,
             background: COLORS.surface,
-            border: `2px solid ${COLORS.paperAlt}`,
+            border: `2px solid ${COLORS.amber}`,
             borderRadius: "14px",
-            cursor: "not-allowed",
-            opacity: 0.5,
+            cursor: openingConversation ? "default" : "pointer",
+            opacity: openingConversation ? 0.5 : 1,
           }}
         >
-          <NavIcon name="mail" size={28} color={COLORS.inkSoft} />
+          <NavIcon name="mail" size={28} color={COLORS.amber} />
         </button>
         <div
           onClick={mutualCount > 0 ? () => onViewMutualBibax(bibro.userId, bibro.name) : undefined}
