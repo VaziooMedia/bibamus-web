@@ -14,7 +14,6 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadMessages, sendMessage, markConversationRead, subscribeToConversation, loadConversationProfiles } from "../data/messaging.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
-import bibaPingActiveIconUrl from "../assets/brand/bibaping-active.svg";
 
 const PAGE_SIZE = 40;
 
@@ -294,9 +293,14 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
             padding: 0,
           }}
         >
-          {/* Version rose sur le fond vert du bouton prêt à envoyer — la verte y serait
-              invisible. Version verte quand le bouton est au repos. */}
-          <img src={draft.trim() ? bibaPingActiveIconUrl : bibaPingIconUrl} alt="" style={{ height: "20px", opacity: draft.trim() ? 1 : 0.5 }} />
+          {/* Blanche sur le fond vert du bouton prêt à envoyer. Aucun SVG blanc n'existe :
+              le filtre force n'importe quelle couleur source en blanc pur. Au repos, l'icône
+              garde sa couleur d'origine, atténuée. */}
+          <img
+            src={bibaPingIconUrl}
+            alt=""
+            style={{ height: "20px", filter: draft.trim() ? "brightness(0) invert(1)" : "none", opacity: draft.trim() ? 1 : 0.5 }}
+          />
         </button>
       </div>
     </div>
