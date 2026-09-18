@@ -80,7 +80,7 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
   const preview = (c) => {
     if (!c.lastMessageBody && !c.lastMessageHasMedia) return "Aucun message";
     const mine = c.lastMessageSenderId === myUserId;
-    const body = c.lastMessageBody || "Photo";
+    const body = c.lastMessageBody || "📷 Photo";
     return mine ? `Toi : ${body}` : body;
   };
 

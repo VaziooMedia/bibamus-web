@@ -364,10 +364,15 @@ async function resizeImage(file, maxDim = 1000, quality = 0.82) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
 }
 
+// Le bucket "messages" est PRIVÉ : on ne conserve donc pas une URL (elle ne résoudrait pas)
+// mais le CHEMIN du fichier, signé à la demande au moment de l'affichage.
+//
+// Le chemin place le fichier dans un dossier portant l'identifiant de la conversation — c'est
+// ce que la policy de stockage lit pour vérifier que le lecteur en est bien participant.
 export async function uploadMessagePhoto(conversationId, file) {
   const blob = await resizeImage(file);
   const imageBase64 = await blobToBase64(blob);
-  const path = `${conversationId}-${Date.now()}.jpg`;
+  const path = `${conversationId}/${Date.now()}.jpg`;
   const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
     body: { bucket: "messages", path, imageBase64, contentType: "image/jpeg", entityType: "message", entityId: conversationId, kind: "message" },
   });
@@ -376,7 +381,20 @@ export async function uploadMessagePhoto(conversationId, file) {
     return { error: "L'envoi de la photo a échoué." };
   }
   if (data?.error) return { error: data.error };
-  return { url: data.url };
+  // On ignore volontairement l'URL renvoyée par la fonction : sur un bucket privé, elle
+  // n'aboutit pas.
+  return { path };
+}
+
+// URL temporaire pour afficher une photo. Signée une heure : assez pour une consultation,
+// assez court pour qu'un lien qui fuite ne serve pas longtemps.
+export async function getMessagePhotoUrl(path) {
+  const { data, error } = await supabase.storage.from("messages").createSignedUrl(path, 3600);
+  if (error) {
+    console.error("getMessagePhotoUrl:", error);
+    return null;
+  }
+  return data?.signedUrl || null;
 }
 
 /* ---------------- TEMPS RÉEL ---------------- */

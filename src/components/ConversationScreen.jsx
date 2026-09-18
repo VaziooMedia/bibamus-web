@@ -12,7 +12,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadMessages, sendMessage, markConversationRead, subscribeToConversation, loadConversationProfiles } from "../data/messaging.js";
+import { loadMessages, sendMessage, markConversationRead, subscribeToConversation, loadConversationProfiles, uploadMessagePhoto, getMessagePhotoUrl } from "../data/messaging.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 
 const PAGE_SIZE = 40;
@@ -44,6 +44,11 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [profilesById, setProfilesById] = useState({});
+  // Bucket privé : chaque photo est affichée via une URL signée, résolue une fois puis gardée
+  // en mémoire le temps de l'écran.
+  const [photoUrls, setPhotoUrls] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
   const bottomRef = useRef(null);
 
   const isGroup = conversation.kind !== "direct";
@@ -91,6 +96,22 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
     return unsubscribe;
   }, [conversation.id]);
 
+  // Signe les photos pas encore résolues, au fur et à mesure qu'elles apparaissent.
+  useEffect(() => {
+    const missing = (messages || [])
+      .filter((m) => m.mediaUrl && !photoUrls[m.mediaUrl])
+      .map((m) => m.mediaUrl);
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(missing.map(async (path) => [path, await getMessagePhotoUrl(path)]));
+      if (!cancelled) setPhotoUrls((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, photoUrls]);
+
   // Toujours en bas à l'arrivée d'un message, comme une vraie messagerie.
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -118,6 +139,30 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
       return;
     }
     setDraft("");
+    setMessages((prev) => {
+      if (!prev) return [result.message];
+      if (prev.some((m) => m.id === result.message.id)) return prev;
+      return [...prev, result.message];
+    });
+  };
+
+  const handlePickPhoto = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    const uploaded = await uploadMessagePhoto(conversation.id, file);
+    if (uploaded?.error) {
+      setUploading(false);
+      alert(uploaded.error);
+      return;
+    }
+    const result = await sendMessage(conversation.id, "", uploaded.path);
+    setUploading(false);
+    if (result?.error) {
+      alert(result.error);
+      return;
+    }
     setMessages((prev) => {
       if (!prev) return [result.message];
       if (prev.some((m) => m.id === result.message.id)) return prev;
@@ -224,6 +269,20 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
                         wordBreak: "break-word",
                       }}
                     >
+                      {m.mediaUrl && (
+                        <img
+                          src={photoUrls[m.mediaUrl] || undefined}
+                          alt=""
+                          style={{
+                            display: "block",
+                            maxWidth: "100%",
+                            borderRadius: "10px",
+                            marginBottom: m.body ? "6px" : 0,
+                            background: COLORS.surfaceAlt,
+                            minHeight: photoUrls[m.mediaUrl] ? undefined : "120px",
+                          }}
+                        />
+                      )}
                       {m.body}
                     </div>
                     <span style={{ fontSize: "10px", color: COLORS.inkSoft, margin: "2px 4px 0" }}>{messageTime(m.createdAt)}</span>
@@ -246,6 +305,28 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
           background: COLORS.paper,
         }}
       >
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePickPhoto} style={{ display: "none" }} />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          title="Envoyer une photo"
+          style={{
+            flexShrink: 0,
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+            background: "none",
+            border: `2px solid ${COLORS.paperAlt}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: uploading ? "default" : "pointer",
+            opacity: uploading ? 0.5 : 1,
+            padding: 0,
+          }}
+        >
+          <NavIcon name="camera" size={18} color={COLORS.amber} />
+        </button>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
