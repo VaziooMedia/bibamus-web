@@ -325,8 +325,8 @@ export function SalonTabsScreen(props) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        width: "38px",
-        height: "38px",
+        width: "50px",
+        height: "50px",
         borderRadius: "50%",
         background: COLORS.amber,
         border: "none",
@@ -338,7 +338,7 @@ export function SalonTabsScreen(props) {
       {/* Contrainte en hauteur uniquement, pour ne pas déformer un ratio non carré. Le filtre
           force l'icône en noir pur, quelle que soit sa couleur d'origine — il n'existe pas de
           version noire du fichier. */}
-      <img src={tokIconUrl} alt="Tok" style={{ height: "20px", filter: "brightness(0)" }} />
+      <img src={tokIconUrl} alt="Tok" style={{ height: "28px", filter: "brightness(0)" }} />
       <TabBadge count={pendingToks.length} />
     </button>
   ) : null;
