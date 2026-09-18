@@ -8,6 +8,7 @@ import { NavIcon, TokenPinkIcon, TokenCyanIcon, CountryFlagImg } from "./icons.j
 import { NavigationContext, ProfileNavContext } from "../contexts.js";
 import { formatMoney } from "../utils.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
+import bibaPingActiveIconUrl from "../assets/brand/bibaping-active.svg";
 
 export function useInfiniteScroll(items, pageSize, resetKey) {
   const [visibleCount, setVisibleCount] = useState(pageSize);
@@ -389,10 +390,10 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
           onClick={() => onNavigate(item.key)}
           style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1 }}
         >
-          <NavIcon name={item.icon.slice(3)} size={20} color={active(item.key) ? COLORS.jetonFluo : COLORS.amber} />
+          <NavIcon name={item.icon.slice(3)} size={20} color={active(item.key) ? COLORS.pinkFluo : COLORS.amber} />
           <span style={{ fontSize: "10px", fontWeight: active(item.key) ? 700 : 600 }}>
-            <span style={{ color: active(item.key) ? COLORS.jetonFluo : COLORS.ink }}>{item.label}</span>
-            <span style={{ color: active(item.key) ? COLORS.jetonFluo : COLORS.amber }}>{item.accent}</span>
+            <span style={{ color: active(item.key) ? COLORS.pinkFluo : COLORS.ink }}>{item.label}</span>
+            <span style={{ color: active(item.key) ? COLORS.pinkFluo : COLORS.amber }}>{item.accent}</span>
           </span>
         </button>
       ))}
@@ -417,7 +418,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
             width: "56px",
             height: "56px",
             borderRadius: "50%",
-            background: active("sessionHub") ? COLORS.jetonFluo : COLORS.paperAlt,
+            background: active("sessionHub") ? COLORS.pinkFluo : COLORS.paperAlt,
             border: `3px solid ${COLORS.surface}`,
             display: "flex",
             alignItems: "center",
@@ -428,7 +429,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         >
           <NavIcon name="bibago-nav" size={22} color={active("sessionHub") ? COLORS.paper : COLORS.amber} />
         </span>
-        <span style={{ fontSize: "10px", fontWeight: active("sessionHub") ? 700 : 600, color: active("sessionHub") ? COLORS.jetonFluo : COLORS.ink }}>
+        <span style={{ fontSize: "10px", fontWeight: active("sessionHub") ? 700 : 600, color: active("sessionHub") ? COLORS.pinkFluo : COLORS.ink }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Go</span>
         </span>
@@ -439,12 +440,12 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1 }}
       >
         {/* Icône fournie en SVG : contrainte en hauteur uniquement, pour ne pas déformer un
-            ratio non carré. Contrairement à NavIcon, sa couleur ne suit pas l'état actif —
-            c'est le libellé qui porte cette indication. */}
-        <img src={bibaPingIconUrl} alt="" style={{ height: "20px" }} />
+            ratio non carré. Deux fichiers plutôt qu'une couleur pilotée par le code, car la
+            couleur d'un SVG importé en image n'est pas modifiable ici. */}
+        <img src={active("bibaPing") ? bibaPingActiveIconUrl : bibaPingIconUrl} alt="" style={{ height: "20px" }} />
         <span style={{ fontSize: "10px", fontWeight: active("bibaPing") ? 700 : 600 }}>
-          <span style={{ color: active("bibaPing") ? COLORS.jetonFluo : COLORS.ink }}>Biba</span>
-          <span style={{ color: active("bibaPing") ? COLORS.jetonFluo : COLORS.amber }}>Ping</span>
+          <span style={{ color: active("bibaPing") ? COLORS.pinkFluo : COLORS.ink }}>Biba</span>
+          <span style={{ color: active("bibaPing") ? COLORS.pinkFluo : COLORS.amber }}>Ping</span>
         </span>
       </button>
 
@@ -453,7 +454,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1, position: "relative" }}
       >
         <span style={{ position: "relative", display: "inline-block", lineHeight: 0 }}>
-          <NavIcon name="bell" size={22} color={active("notificationsFeed") ? COLORS.jetonFluo : COLORS.amber} />
+          <NavIcon name="bell" size={22} color={active("notificationsFeed") ? COLORS.pinkFluo : COLORS.amber} />
           {unreadNotifications > 0 && (
             <span
               style={{
@@ -480,7 +481,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
             </span>
           )}
         </span>
-        <span style={{ fontSize: "10px", fontWeight: active("notificationsFeed") ? 700 : 600, color: active("notificationsFeed") ? COLORS.jetonFluo : COLORS.ink }}>Notifications</span>
+        <span style={{ fontSize: "10px", fontWeight: active("notificationsFeed") ? 700 : 600, color: active("notificationsFeed") ? COLORS.pinkFluo : COLORS.ink }}>Notifications</span>
       </button>
     </div>
   );
