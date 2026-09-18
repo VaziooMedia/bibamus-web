@@ -16,7 +16,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { loadMyConversations, loadConversationProfiles, setConversationArchived, clearConversation } from "../data/messaging.js";
+import { loadMyConversations, loadConversationProfiles, setConversationArchived, clearConversation, loadBibroCodes } from "../data/messaging.js";
+import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 
@@ -40,6 +41,9 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
   const [failed, setFailed] = useState(false);
   const [openConversation, setOpenConversation] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
+  // Code Bibax par identifiant de compte — sert à ouvrir la fiche d'un interlocuteur.
+  const [bibroCodes, setBibroCodes] = useState({});
+  const [viewedProfileCode, setViewedProfileCode] = useState(null);
   // Conversation dont le menu Archiver / Supprimer est ouvert.
   const [menuFor, setMenuFor] = useState(null);
   const [confirmClear, setConfirmClear] = useState(false);
@@ -54,8 +58,9 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
     setConversations(list);
     const ids = list.flatMap((c) => c.memberIds).filter((id) => id !== myUserId);
     if (ids.length > 0) {
-      const profiles = await loadConversationProfiles(ids);
+      const [profiles, codes] = await Promise.all([loadConversationProfiles(ids), loadBibroCodes(ids)]);
       setProfilesById(profiles);
+      setBibroCodes(codes);
     }
   }, [myUserId, showArchived]);
 
@@ -96,6 +101,14 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
     return `${prefix}${c.lastMessageBody}`;
   };
 
+  // Fiche d'un interlocuteur, ouverte depuis le rond de profil d'une conversation. On passe
+  // par l'écran de prévisualisation, qui ne demande qu'un code Bibax — la fiche complète
+  // "Mes Bibax" exigerait tout un contexte dont BibaPing ne dispose pas, et ne conviendrait
+  // pas pour quelqu'un qui n'est pas encore Bibax.
+  if (viewedProfileCode) {
+    return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
+  }
+
   // Une conversation ouverte remplace entièrement la liste — au retour, on
   // recharge pour que le dernier message et les non-lus soient à jour.
   if (openConversation) {
@@ -105,6 +118,15 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
         myUserId={myUserId}
         title={describe(openConversation).title}
         photoUrl={describe(openConversation).photoUrl}
+        onOpenProfile={
+          openConversation.kind === "direct"
+            ? () => {
+                const otherId = openConversation.memberIds.find((id) => id !== myUserId);
+                const code = bibroCodes[otherId];
+                if (code) setViewedProfileCode(code);
+              }
+            : undefined
+        }
         onBack={() => {
           setOpenConversation(null);
           refresh();
