@@ -48,7 +48,9 @@ function dayLabel(iso) {
   return new Intl.DateTimeFormat("fr-BE", { weekday: "long", day: "numeric", month: "long" }).format(d);
 }
 
-export function ConversationScreen({ conversation, myUserId, title, photoUrl, onOpenProfile, onBack }) {
+// hideHeader : utilisé quand l'écran est intégré dans un onglet, qui porte déjà son propre
+// en-tête — inutile d'en empiler deux.
+export function ConversationScreen({ conversation, myUserId, title, photoUrl, onOpenProfile, onBack, hideHeader = false }) {
   const [messages, setMessages] = useState(null);
   const [failed, setFailed] = useState(false);
   const [draft, setDraft] = useState("");
@@ -229,9 +231,10 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
   const visible = (messages || []).filter((m) => !m.deletedAt);
 
   return (
-    <div style={{ padding: "28px 20px 0", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-      <PageHeader onBack={onBack} />
+    <div style={{ padding: hideHeader ? "0" : "28px 20px 0", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+      {!hideHeader && <PageHeader onBack={onBack} />}
 
+      {!hideHeader && (
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "8px 0 14px 0" }}>
         {onOpenProfile ? (
           <button
@@ -255,6 +258,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
           </span>
         )}
       </div>
+      )}
 
       <div style={{ flex: 1, overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", gap: "8px", paddingBottom: "12px" }}>
         {failed ? (

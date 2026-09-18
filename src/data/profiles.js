@@ -86,3 +86,17 @@ export async function loadBibroCodes(userIds) {
   }
   return Object.fromEntries((data || []).map((r) => [r.id, r.bibro_code]));
 }
+
+// Identifiant de compte à partir d'un code Bibax — le sens inverse de loadBibroCodes. Les
+// participants d'un salon sont enregistrés par leur code, alors que les conversations
+// travaillent avec des identifiants de compte.
+export async function loadUserIdsByBibroCodes(codes) {
+  const list = [...new Set((codes || []).filter(Boolean))];
+  if (list.length === 0) return {};
+  const { data, error } = await supabase.rpc("get_user_ids_by_bibro_codes", { p_codes: list });
+  if (error) {
+    console.error("loadUserIdsByBibroCodes:", error);
+    return {};
+  }
+  return Object.fromEntries((data || []).map((r) => [r.bibro_code, r.id]));
+}
