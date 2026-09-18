@@ -22,12 +22,13 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EventDashboardScreen } from "./EventDashboardScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
-import { PageHeader, EntityAvatar } from "./ui.jsx";
+import { PageHeader } from "./ui.jsx";
 import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
 import { loadTokTargets, loadMyPendingToks, loadMyTokReplies, markTokRepliesSeen, dismissTokReply, subscribeToToks } from "../data/toks.js";
 import { TokModal } from "./TokModal.jsx";
-import { formatTime, genderAgree } from "../utils.js";
+import { formatTime, genderAgree, formatDate } from "../utils.js";
+import settingsIconUrl from "../assets/brand/settings-icon.png";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import tokIconUrl from "../assets/brand/tok.svg";
 
@@ -155,7 +156,7 @@ function TabBadge({ count }) {
 }
 
 export function SalonTabsScreen(props) {
-  const { event, myUserId, venue, onBack } = props;
+  const { event, myUserId, venue, onBack, onOpenSettings, onOpenVenue } = props;
   const [tab, setTab] = useState("salon");
 
   // Conversation du salon — résolue dès l'arrivée dans le salon, et pas seulement à l'ouverture
@@ -385,14 +386,43 @@ export function SalonTabsScreen(props) {
       <div style={{ padding: "0 20px" }}>
         <PageHeader onBack={onBack} />
       </div>
-      <div style={{ padding: "0 20px" }}>{tabBar}</div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "0 20px", marginBottom: "14px" }}>
-        <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={34} />
-        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {event.name}
-        </span>
+      <div style={{ padding: "0 20px" }}>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1.1 }}>{event.name}</h1>
+        <div style={{ marginTop: "4px", marginBottom: "4px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+          <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>
+            {event.date && `${formatDate(event.date)} · `}
+            {event.createdAt && `Start : ${formatTime(event.createdAt)}`}
+          </span>
+          <button
+            onClick={onOpenSettings}
+            title="Réglages de la session"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "40px",
+              height: "32px",
+              background: "none",
+              border: `2px solid ${COLORS.paperAlt}`,
+              borderRadius: "8px",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <img src={settingsIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
+          </button>
+        </div>
+        {venue && (
+          <button
+            onClick={() => onOpenVenue(venue.id)}
+            style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, marginBottom: "4px", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+          >
+            <NavIcon name="map-pin" size={11} color={COLORS.amber} />
+            {venue.name}
+          </button>
+        )}
       </div>
+      <div style={{ padding: "0 20px", marginTop: "12px" }}>{tabBar}</div>
 
       {tab === "pulse" ? (
         <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
