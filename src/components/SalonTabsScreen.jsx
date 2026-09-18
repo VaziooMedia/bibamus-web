@@ -256,7 +256,7 @@ export function SalonTabsScreen(props) {
           <SalonPulse event={event} />
         </div>
       ) : (
-        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "0 20px" }}>
+        <div style={{ flex: 1, minHeight: "360px", display: "flex", flexDirection: "column", padding: "0 20px" }}>
           <SalonChat event={event} myUserId={myUserId} myName={myName} />
         </div>
       )}

@@ -260,7 +260,19 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
       </div>
       )}
 
-      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", gap: "8px", paddingBottom: "12px" }}>
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          // Intégrée dans un onglet, cette zone n'a pas de hauteur à remplir et retomberait
+          // à zéro : on lui en garantit une.
+          minHeight: hideHeader ? "320px" : 0,
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+          paddingBottom: "12px",
+        }}
+      >
         {failed ? (
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "24px 0" }}>
             Les messages n'ont pas pu être chargés. Réessaie plus tard.
@@ -319,7 +331,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
                       gap: "8px",
                       alignItems: "flex-start",
                       justifyContent: mine ? "flex-end" : "flex-start",
-                      maxWidth: "100%",
+                      width: "100%",
                     }}
                   >
                     {isGroup && !mine && (
@@ -327,7 +339,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
                         {showSender && <EntityAvatar photoUrl={sender?.avatarUrl} size={28} />}
                       </span>
                     )}
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: mine ? "flex-end" : "flex-start", minWidth: 0, maxWidth: "100%" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: mine ? "flex-end" : "flex-start", flex: 1, minWidth: 0 }}>
                     {showSender && (
                       <span style={{ fontSize: "11px", color: COLORS.inkSoft, marginBottom: "3px", paddingLeft: "4px" }}>
                         {sender ? [sender.displayName, sender.lastName].filter(Boolean).join(" ") : "Quelqu'un"}
