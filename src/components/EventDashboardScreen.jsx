@@ -15,6 +15,7 @@ import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
 import { NavIcon, WaterAlertIcon, TokenCyanIcon, TokenPinkIcon } from "./icons.jsx";
 import settingsIconUrl from "../assets/brand/settings-icon.png";
 import bibaplayIconUrl from "../assets/brand/bibaplay.svg";
+import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
@@ -682,11 +683,22 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         </button>
         <button
           onClick={onGoToDrinkCheck}
-          style={{ display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
           title="Drink Check"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "50px",
+            height: "50px",
+            borderRadius: "50%",
+            background: COLORS.amber,
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
         >
-          <NavIcon name="bottle" size={18} color={COLORS.amber} />
-          <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink }}>Drink Check</span>
+          <img src={drinkCheckIconUrl} alt="Drink Check" style={{ height: "28px", filter: "brightness(0)" }} />
         </button>
         {tokButton}
       </div>
