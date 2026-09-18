@@ -393,7 +393,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
           <NavIcon name={item.icon.slice(3)} size={20} color={active(item.key) ? COLORS.pinkFluo : COLORS.amber} />
           <span style={{ fontSize: "10px", fontWeight: active(item.key) ? 700 : 600 }}>
             <span style={{ color: COLORS.ink }}>{item.label}</span>
-            <span style={{ color: COLORS.pinkFluo }}>{item.accent}</span>
+            <span style={{ color: active(item.key) ? COLORS.pinkFluo : COLORS.amber }}>{item.accent}</span>
           </span>
         </button>
       ))}
@@ -431,7 +431,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         </span>
         <span style={{ fontSize: "10px", fontWeight: active("sessionHub") ? 700 : 600 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
-          <span style={{ color: COLORS.pinkFluo }}>Go</span>
+          <span style={{ color: active("sessionHub") ? COLORS.pinkFluo : COLORS.amber }}>Go</span>
         </span>
       </button>
 
@@ -445,7 +445,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         <img src={active("bibaPing") ? bibaPingActiveIconUrl : bibaPingIconUrl} alt="" style={{ height: "20px" }} />
         <span style={{ fontSize: "10px", fontWeight: active("bibaPing") ? 700 : 600 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
-          <span style={{ color: COLORS.pinkFluo }}>Ping</span>
+          <span style={{ color: active("bibaPing") ? COLORS.pinkFluo : COLORS.amber }}>Ping</span>
         </span>
       </button>
 
