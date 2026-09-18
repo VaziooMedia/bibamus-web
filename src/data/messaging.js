@@ -345,8 +345,11 @@ export function subscribeToMyMessages(onAnyNewMessage) {
   // Aucun filtre volontairement : Realtime applique les policies RLS au nom du client abonné,
   // donc seuls les messages de mes propres conversations arrivent ici. Sert au compteur global
   // de non-lus, qui n'a pas besoin de savoir de quelle conversation il s'agit.
+  // Nom de canal unique : plusieurs composants (barre de navigation, accueil) s'abonnent en
+  // même temps, et Supabase refuse d'ajouter un écouteur à un canal déjà souscrit s'ils
+  // partagent le même nom.
   const channel = supabase
-    .channel("messages-all")
+    .channel(`messages-all-${Math.random().toString(36).slice(2)}`)
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => onAnyNewMessage())
     .subscribe();
   return () => supabase.removeChannel(channel);
