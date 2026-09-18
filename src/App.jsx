@@ -1992,7 +1992,7 @@ export default function App() {
               />
             )}
             {screen === "eventDashboard" && activeEventId && (
-              <EventDashboardScreen
+              <SalonTabsScreen
                 event={events.find((e) => e.id === activeEventId)}
                 venue={venuesById[events.find((e) => e.id === activeEventId)?.venueId] || null}
                 onNewRound={startNewRound}
