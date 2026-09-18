@@ -3,7 +3,9 @@
 //
 //   Salon : le tableau de bord existant, inchangé. C'est volontairement une
 //           enveloppe : EventDashboardScreen fait plus de mille lignes et
-//           n'avait pas besoin d'être touché pour gagner des onglets.
+//           n'avait pas besoin d'être réécrit pour gagner des onglets. Il
+//           reçoit simplement la barre en propriété et la place lui-même,
+//           entre le lieu et la ligne du mode.
 //   Pulse : le fil de ce qui se passe DANS ce salon (tournées, arrivées,
 //           départs). Rien à voir avec BibaPulse, qui est le réseau social.
 //   Chat  : la conversation du salon — une vraie conversation BibaPing de
@@ -12,24 +14,19 @@
 //
 // L'onglet Salon est celui par défaut à chaque ouverture : pendant une
 // soirée, c'est la surface de travail, et personne ne doit tomber sur le chat
-// en rouvrant l'app.
+// en rouvrant l'app. Les deux autres portent une pastille de non-lus, pour
+// qu'on sache qu'il se passe quelque chose sans avoir à y aller.
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EventDashboardScreen } from "./EventDashboardScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { ensureSalonConversation } from "../data/messaging.js";
+import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages } from "../data/messaging.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
 import { formatTime, genderAgree } from "../utils.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
-
-const TABS = [
-  { key: "salon", label: "Salon" },
-  { key: "pulse", label: "Pulse" },
-  { key: "chat", label: "Chat" },
-];
 
 // Fil interne : tournées et mouvements de participants, mélangés par ordre chronologique.
 // Tout vient du salon lui-même — aucune requête supplémentaire.
@@ -56,9 +53,7 @@ function buildSalonFeed(event) {
   return items.filter((i) => i.at).sort((a, b) => b.at - a.at);
 }
 
-function SalonPulse({ event }) {
-  const feed = buildSalonFeed(event);
-
+function SalonPulse({ feed }) {
   if (feed.length === 0) {
     return (
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "20px", textAlign: "center" }}>
@@ -126,22 +121,63 @@ function SalonPulse({ event }) {
   );
 }
 
-function SalonChat({ event, myUserId, myName }) {
-  // undefined = pas encore tenté, null = échec
-  const [conversation, setConversation] = useState(undefined);
+// Pastille rouge d'un onglet.
+function TabBadge({ count }) {
+  if (!count) return null;
+  return (
+    <span
+      style={{
+        minWidth: "17px",
+        height: "17px",
+        borderRadius: "999px",
+        background: "#FF3B3B",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0 4px",
+        boxSizing: "border-box",
+        fontSize: "9.5px",
+        fontWeight: 700,
+        color: "#fff",
+        lineHeight: 1,
+      }}
+    >
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
+
+export function SalonTabsScreen(props) {
+  const { event, myUserId, venue, onBack } = props;
+  const [tab, setTab] = useState("salon");
+
+  // Conversation du salon — résolue dès l'arrivée dans le salon, et pas seulement à l'ouverture
+  // de l'onglet Chat : sans ça, la pastille ne pourrait jamais s'afficher avant qu'on y aille.
+  const [conversation, setConversation] = useState(undefined); // undefined = en cours, null = échec
+  const [chatUnread, setChatUnread] = useState(0);
+
+  const salonCode = event?.salonCode || null;
+  const eventName = event?.name || null;
+  const participantCodes = (event?.participants || []).map((p) => p.code).filter(Boolean).join(",");
 
   useEffect(() => {
-    if (!event.salonCode) return;
+    setTab("salon");
+  }, [event?.id]);
+
+  useEffect(() => {
+    if (!salonCode) {
+      setConversation(null);
+      return;
+    }
     let cancelled = false;
     (async () => {
       // Les participants sont enregistrés par leur code Bibax ; la conversation travaille avec
-      // des identifiants de compte. On crée la conversation si elle n'existe pas encore, et on
-      // y réinscrit les présents à chaque ouverture — ce qui rattrape aussi les arrivées
-      // survenues depuis la dernière fois.
-      const codes = (event.participants || []).map((p) => p.code).filter(Boolean);
+      // des identifiants de compte. La recherche-ou-création se fait côté serveur, seule à voir
+      // la conversation déjà créée par quelqu'un d'autre.
+      const codes = participantCodes ? participantCodes.split(",") : [];
       const byCode = await loadUserIdsByBibroCodes(codes);
       const memberIds = Object.values(byCode).filter(Boolean);
-      const result = await ensureSalonConversation(event.salonCode, event.name, memberIds);
+      const result = await ensureSalonConversation(salonCode, eventName, memberIds);
       if (cancelled) return;
       if (result?.error || !result?.id) {
         setConversation(null);
@@ -156,51 +192,61 @@ function SalonChat({ event, myUserId, myName }) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [event.salonCode, (event.participants || []).length]);
+  }, [salonCode, participantCodes, eventName, myUserId]);
 
-  if (!event.salonCode) {
-    return (
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "20px", textAlign: "center" }}>
-        <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: 0, fontWeight: 700 }}>Pas de chat ici</p>
-        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "6px 0 0" }}>
-          Le chat n'existe que pour un BibaRoom partagé, pas pour un événement gardé sur cet appareil.
-        </p>
-      </div>
-    );
-  }
+  const conversationId = conversation?.id || null;
+  const refreshChatUnread = useCallback(() => {
+    if (!conversationId) return;
+    loadConversationUnreadCount(conversationId).then(setChatUnread);
+  }, [conversationId]);
 
-  if (conversation === undefined) {
-    return <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "24px 0" }}>Ouverture du chat...</p>;
-  }
-
-  if (conversation === null) {
-    return (
-      <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "24px 0" }}>
-        Le chat n'a pas pu être ouvert. Réessaie plus tard.
-      </p>
-    );
-  }
-
-  return <ConversationScreen conversation={conversation} myUserId={myUserId} title={event.name} hideHeader onBack={() => {}} />;
-}
-
-export function SalonTabsScreen(props) {
-  const { event, myUserId, myName, venue, onBack, onAddStory, onOpenStoryAuthor } = props;
-  const [tab, setTab] = useState("salon");
-
-  // L'onglet Salon redevient l'onglet actif dès qu'on change de salon.
+  // Relevé à l'arrivée, à chaque changement d'onglet (on sort du chat, les messages viennent
+  // d'être lus), et dès qu'un message arrive.
   useEffect(() => {
-    setTab("salon");
-  }, [event?.id]);
+    refreshChatUnread();
+  }, [refreshChatUnread, tab]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+    const unsubscribe = subscribeToMyMessages(refreshChatUnread);
+    return unsubscribe;
+  }, [conversationId, refreshChatUnread]);
+
+  // Pulse : le repère de dernière lecture reste sur l'appareil. Le fil est reconstruit à partir
+  // du salon lui-même, il n'y a rien à stocker côté serveur.
+  const feed = buildSalonFeed(event || {});
+  const seenKey = `bibamus-salon-pulse-seen-${event?.id || ""}`;
+  const [pulseSeenAt, setPulseSeenAt] = useState(() => {
+    try {
+      return parseInt(localStorage.getItem(seenKey) || "0", 10) || 0;
+    } catch {
+      return 0;
+    }
+  });
+  const pulseUnread = feed.filter((i) => i.at > pulseSeenAt).length;
+  const newestFeedAt = feed.length > 0 ? feed[0].at : 0;
+
+  useEffect(() => {
+    if (tab !== "pulse" || newestFeedAt <= pulseSeenAt) return;
+    setPulseSeenAt(newestFeedAt);
+    try {
+      localStorage.setItem(seenKey, String(newestFeedAt));
+    } catch {
+      // best-effort
+    }
+  }, [tab, newestFeedAt, pulseSeenAt, seenKey]);
 
   if (!event) return null;
 
-  // Le tableau de bord porte déjà son propre en-tête et sa propre mise en page : on le rend tel
-  // quel, avec juste la barre d'onglets au-dessus.
+  const tabs = [
+    { key: "salon", label: "Salon", badge: 0 },
+    { key: "pulse", label: "Pulse", badge: pulseUnread },
+    { key: "chat", label: "Chat", badge: chatUnread },
+  ];
+
   const tabBar = (
     <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
-      {TABS.map((t) => {
+      {tabs.map((t) => {
         const active = tab === t.key;
         return (
           <button
@@ -225,14 +271,13 @@ export function SalonTabsScreen(props) {
             {t.key === "chat" && <img src={bibaPingIconUrl} alt="" style={{ height: "14px" }} />}
             {t.key === "pulse" && <NavIcon name="activity" size={14} color={active ? COLORS.amber : COLORS.inkSoft} />}
             {t.label}
+            <TabBadge count={t.badge} />
           </button>
         );
       })}
     </div>
   );
 
-  // Le tableau de bord place lui-même la barre, entre le lieu et la ligne du mode : c'est le
-  // seul endroit où elle ne coupe pas la lecture de l'en-tête.
   if (tab === "salon") {
     return <EventDashboardScreen {...props} tabBar={tabBar} />;
   }
@@ -253,11 +298,26 @@ export function SalonTabsScreen(props) {
 
       {tab === "pulse" ? (
         <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
-          <SalonPulse event={event} />
+          <SalonPulse feed={feed} />
         </div>
       ) : (
         <div style={{ flex: 1, minHeight: "360px", display: "flex", flexDirection: "column", padding: "0 20px" }}>
-          <SalonChat event={event} myUserId={myUserId} myName={myName} />
+          {!salonCode ? (
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "20px", textAlign: "center" }}>
+              <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: 0, fontWeight: 700 }}>Pas de chat ici</p>
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "6px 0 0" }}>
+                Le chat n'existe que pour un BibaRoom partagé, pas pour un événement gardé sur cet appareil.
+              </p>
+            </div>
+          ) : conversation === undefined ? (
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "24px 0" }}>Ouverture du chat...</p>
+          ) : conversation === null ? (
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "24px 0" }}>
+              Le chat n'a pas pu être ouvert. Réessaie plus tard.
+            </p>
+          ) : (
+            <ConversationScreen conversation={conversation} myUserId={myUserId} title={event.name} hideHeader onBack={() => {}} />
+          )}
         </div>
       )}
     </div>

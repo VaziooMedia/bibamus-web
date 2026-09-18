@@ -528,3 +528,15 @@ export function subscribeToReactions(onChange) {
     .subscribe();
   return () => supabase.removeChannel(channel);
 }
+
+// Non-lus d'une conversation précise — pour la pastille de l'onglet Chat d'un BibaRoom. Le
+// compteur global (loadMyUnreadMessageCount) répond pour toutes conversations confondues.
+export async function loadConversationUnreadCount(conversationId) {
+  if (!conversationId) return 0;
+  const { data, error } = await supabase.rpc("get_conversation_unread_count", { p_conversation_id: conversationId });
+  if (error) {
+    console.error("loadConversationUnreadCount:", error);
+    return 0;
+  }
+  return data || 0;
+}
