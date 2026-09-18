@@ -4,6 +4,7 @@ import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
+import { ProfileNavContext } from "../contexts.js";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -374,6 +375,8 @@ export function BibaPulseScreen({
   // Fiche d'un Bibax ouverte depuis un rond de profil du fil. Affichée ici même plutôt que
   // remontée au routeur : la navigation reste interne à BibaPulse.
   const [viewedProfileCode, setViewedProfileCode] = useState(null);
+  // Mon propre rond de profil mène à MON profil, pas à la fiche publique d'un autre Bibax.
+  const { goToProfile } = React.useContext(ProfileNavContext);
   const focusedCardRef = React.useRef(null);
   const hasScrolledToFocus = React.useRef(false);
   // Le fil ne charge jamais qu'une poignée d'entrées à la fois (pagination) — les produits qu'il
@@ -498,7 +501,7 @@ export function BibaPulseScreen({
               myUserId={myUserId}
               onOpenVenue={onOpenVenue}
               onOpenDrink={onOpenDrink}
-              onOpenProfile={setViewedProfileCode}
+              onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
               highlighted={entry.id === focusEntryId}
               initialShowComments={entry.id === focusEntryId && openCommentsOnFocus}

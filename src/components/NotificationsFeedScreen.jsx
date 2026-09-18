@@ -8,9 +8,10 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
-import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests, respondBibaxRequest, respondNotification } from "../data/sharedDirectories.js";
+import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests, respondBibaxRequest, respondNotification, getSession } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
+import { ProfileNavContext } from "../contexts.js";
 
 const TYPE_LABELS = {
   pulse_bix: "a Bixé votre publication",
@@ -46,6 +47,14 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
   // les fiches s'ouvrent à partir d'un code.
   const [bibroCodes, setBibroCodes] = useState({});
   const [viewedProfileCode, setViewedProfileCode] = useState(null);
+  // Mon propre rond de profil mène à MON profil. L'écran ne reçoit pas mon identifiant, on le
+  // lit donc depuis la session plutôt que de le faire descendre depuis le routeur.
+  const [myUserId, setMyUserId] = useState(null);
+  const { goToProfile } = React.useContext(ProfileNavContext);
+
+  useEffect(() => {
+    getSession().then((s) => setMyUserId(s?.user?.id || null));
+  }, []);
 
   useEffect(() => {
     loadMyNotifications().then(async (list) => {
@@ -59,6 +68,10 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
   }, []);
 
   const openProfile = (actorId) => {
+    if (actorId && actorId === myUserId) {
+      goToProfile();
+      return;
+    }
     const code = bibroCodes[actorId];
     if (code) setViewedProfileCode(code);
   };
@@ -138,7 +151,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                     photoUrl={n.actorAvatarUrl}
                     size={40}
                     onClick={
-                      bibroCodes[n.actorId]
+                      bibroCodes[n.actorId] || n.actorId === myUserId
                         ? (e) => {
                             e.stopPropagation();
                             openProfile(n.actorId);
