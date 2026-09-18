@@ -8,11 +8,23 @@
 // Photos volontairement absentes pour l'instant : on les ajoutera une fois le
 // texte éprouvé.
 // ============================================================
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadMessages, sendMessage, markConversationRead, subscribeToConversation, loadConversationProfiles, uploadMessagePhoto, getMessagePhotoUrl } from "../data/messaging.js";
+import {
+  loadMessages,
+  sendMessage,
+  markConversationRead,
+  subscribeToConversation,
+  loadConversationProfiles,
+  uploadMessagePhoto,
+  getMessagePhotoUrl,
+  loadMessageReactions,
+  setMessageReaction,
+  subscribeToReactions,
+  REACTION_EMOJIS,
+} from "../data/messaging.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 
 const PAGE_SIZE = 40;
@@ -48,6 +60,11 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
   // en mémoire le temps de l'écran.
   const [photoUrls, setPhotoUrls] = useState({});
   const [uploading, setUploading] = useState(false);
+  // Réactions des messages affichés : { [messageId]: [{ emoji, userIds }] }.
+  const [reactions, setReactions] = useState({});
+  // Message dont la palette est ouverte (appui long).
+  const [reactingTo, setReactingTo] = useState(null);
+  const longPressTimer = useRef(null);
   const fileInputRef = useRef(null);
   const bottomRef = useRef(null);
 
@@ -111,6 +128,45 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
       cancelled = true;
     };
   }, [messages, photoUrls]);
+
+  // Réactions des messages chargés, rechargées dès qu'une réaction bouge quelque part.
+  const messageIdsKey = (messages || []).map((m) => m.id).join(",");
+  const refreshReactions = useCallback(() => {
+    const ids = messageIdsKey ? messageIdsKey.split(",") : [];
+    if (ids.length === 0) return;
+    loadMessageReactions(ids).then(setReactions);
+  }, [messageIdsKey]);
+
+  useEffect(() => {
+    refreshReactions();
+  }, [refreshReactions]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToReactions(refreshReactions);
+    return unsubscribe;
+  }, [refreshReactions]);
+
+  // Appui long : ouvre la palette. Annulé si le doigt bouge (l'utilisateur fait défiler) ou
+  // si le contact se termine avant le délai.
+  const startLongPress = (message) => {
+    clearTimeout(longPressTimer.current);
+    longPressTimer.current = setTimeout(() => setReactingTo(message), 450);
+  };
+  const cancelLongPress = () => clearTimeout(longPressTimer.current);
+
+  const myReactionFor = (messageId) => (reactions[messageId] || []).find((r) => r.userIds.includes(myUserId))?.emoji || null;
+
+  const applyReaction = async (emoji) => {
+    const target = reactingTo;
+    setReactingTo(null);
+    if (!target) return;
+    const result = await setMessageReaction(target.id, emoji, myReactionFor(target.id));
+    if (result?.error) {
+      alert(result.error);
+      return;
+    }
+    refreshReactions();
+  };
 
   // Toujours en bas à l'arrivée d'un message, comme une vraie messagerie.
   useEffect(() => {
@@ -256,8 +312,20 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
                       </span>
                     )}
                     <div
+                      onPointerDown={() => startLongPress(m)}
+                      onPointerUp={cancelLongPress}
+                      onPointerLeave={cancelLongPress}
+                      onPointerCancel={cancelLongPress}
+                      onContextMenu={(e) => {
+                        // Empêche le menu contextuel du navigateur, qui s'ouvrirait par-dessus
+                        // la palette sur un appui long.
+                        e.preventDefault();
+                      }}
                       style={{
                         maxWidth: "78%",
+                        userSelect: "none",
+                        WebkitUserSelect: "none",
+                        WebkitTouchCallout: "none",
                         background: mine ? COLORS.amber : COLORS.surface,
                         color: mine ? COLORS.paper : COLORS.ink,
                         border: mine ? "none" : `2px solid ${COLORS.paperAlt}`,
@@ -285,6 +353,36 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
                       )}
                       {m.body}
                     </div>
+                    {(reactions[m.id] || []).length > 0 && (
+                      <span style={{ display: "flex", flexWrap: "wrap", gap: "4px", margin: "3px 4px 0" }}>
+                        {(reactions[m.id] || []).map((r) => {
+                          const mineHere = r.userIds.includes(myUserId);
+                          return (
+                            <button
+                              key={r.emoji}
+                              onClick={() => setMessageReaction(m.id, r.emoji, myReactionFor(m.id)).then(refreshReactions)}
+                              title={mineHere ? "Retirer ma réaction" : "Réagir"}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "3px",
+                                background: COLORS.surface,
+                                border: `1.5px solid ${mineHere ? COLORS.amber : COLORS.paperAlt}`,
+                                borderRadius: "999px",
+                                padding: "1px 7px",
+                                fontSize: "12px",
+                                lineHeight: 1.6,
+                                color: COLORS.ink,
+                                cursor: "pointer",
+                              }}
+                            >
+                              {r.emoji}
+                              {r.userIds.length > 1 && <span style={{ fontSize: "10.5px", color: COLORS.inkSoft }}>{r.userIds.length}</span>}
+                            </button>
+                          );
+                        })}
+                      </span>
+                    )}
                     <span style={{ fontSize: "10px", color: COLORS.inkSoft, margin: "2px 4px 0" }}>{messageTime(m.createdAt)}</span>
                   </div>
                 </React.Fragment>
@@ -294,6 +392,44 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
         )}
         <div ref={bottomRef} />
       </div>
+
+      {reactingTo && (
+        <div
+          onClick={() => setReactingTo(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
+          >
+            <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
+            <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center" }}>
+              {REACTION_EMOJIS.map((emoji) => {
+                const mineHere = myReactionFor(reactingTo.id) === emoji;
+                return (
+                  <button
+                    key={emoji}
+                    onClick={() => applyReaction(emoji)}
+                    style={{
+                      background: "none",
+                      border: `2px solid ${mineHere ? COLORS.amber : "transparent"}`,
+                      borderRadius: "50%",
+                      width: "48px",
+                      height: "48px",
+                      fontSize: "26px",
+                      lineHeight: 1,
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    {emoji}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div
         style={{

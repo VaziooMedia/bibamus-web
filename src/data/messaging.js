@@ -477,3 +477,66 @@ export async function loadMyUnreadMessageCount() {
   }
   return data || 0;
 }
+
+/* ---------------- RÉACTIONS ---------------- */
+
+// Palette fermée plutôt qu'un clavier emoji complet : plus rapide à poser, et une liste de
+// réactions reste lisible d'un coup d'œil.
+export const REACTION_EMOJIS = ["👌", "🍻", "😂", "❤️", "🫶", "🤗"];
+
+// Réactions des messages affichés à l'écran, regroupées par message puis par emoji.
+// Renvoie { [messageId]: [{ emoji, userIds }] }.
+export async function loadMessageReactions(messageIds) {
+  const ids = [...new Set((messageIds || []).filter(Boolean))];
+  if (ids.length === 0) return {};
+  const { data, error } = await supabase.from("message_reactions").select("message_id, user_id, emoji").in("message_id", ids);
+  if (error) {
+    console.error("loadMessageReactions:", error);
+    return {};
+  }
+  const byMessage = {};
+  (data || []).forEach((r) => {
+    const list = (byMessage[r.message_id] = byMessage[r.message_id] || []);
+    const existing = list.find((x) => x.emoji === r.emoji);
+    if (existing) existing.userIds.push(r.user_id);
+    else list.push({ emoji: r.emoji, userIds: [r.user_id] });
+  });
+  return byMessage;
+}
+
+// Une seule réaction par personne : poser le même emoji le retire, en poser un autre remplace
+// le précédent. L'upsert s'appuie sur la clé primaire (message_id, user_id).
+export async function setMessageReaction(messageId, emoji, currentEmoji) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié." };
+
+  if (currentEmoji === emoji) {
+    const { error } = await supabase.from("message_reactions").delete().eq("message_id", messageId).eq("user_id", user.id);
+    if (error) {
+      console.error("setMessageReaction (retrait):", error);
+      return { error: error.message };
+    }
+    return { ok: true };
+  }
+
+  const { error } = await supabase
+    .from("message_reactions")
+    .upsert({ message_id: messageId, user_id: user.id, emoji }, { onConflict: "message_id,user_id" });
+  if (error) {
+    console.error("setMessageReaction:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
+// Temps réel — une réaction posée ailleurs apparaît sans rafraîchir. Comme pour les messages,
+// RLS filtre déjà ce qui arrive ici, et le nom de canal est unique par abonnement.
+export function subscribeToReactions(onChange) {
+  const channel = supabase
+    .channel(`reactions-${Math.random().toString(36).slice(2)}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, () => onChange())
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}
