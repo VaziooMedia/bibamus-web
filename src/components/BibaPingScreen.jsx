@@ -16,7 +16,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { loadMyConversations, loadConversationProfiles } from "../data/messaging.js";
+import { loadMyConversations, loadConversationProfiles, setConversationArchived, clearConversation } from "../data/messaging.js";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 
@@ -39,9 +39,13 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
   const [profilesById, setProfilesById] = useState({});
   const [failed, setFailed] = useState(false);
   const [openConversation, setOpenConversation] = useState(null);
+  const [showArchived, setShowArchived] = useState(false);
+  // Conversation dont le menu Archiver / Supprimer est ouvert.
+  const [menuFor, setMenuFor] = useState(null);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const refresh = useCallback(async () => {
-    const list = await loadMyConversations(50);
+    const list = await loadMyConversations(50, null, showArchived);
     if (list === null) {
       setFailed(true);
       return;
@@ -53,7 +57,7 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
       const profiles = await loadConversationProfiles(ids);
       setProfilesById(profiles);
     }
-  }, [myUserId]);
+  }, [myUserId, showArchived]);
 
   useEffect(() => {
     refresh();
@@ -123,12 +127,30 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Ping</span>
         </span>
+        <button
+          onClick={() => {
+            setShowArchived((v) => !v);
+            setConversations(null);
+          }}
+          style={{
+            marginLeft: "auto",
+            background: "none",
+            border: `2px solid ${showArchived ? COLORS.amber : COLORS.paperAlt}`,
+            borderRadius: "999px",
+            padding: "5px 12px",
+            fontSize: "11.5px",
+            fontWeight: 700,
+            color: showArchived ? COLORS.amber : COLORS.inkSoft,
+            cursor: "pointer",
+          }}
+        >
+          {showArchived ? "Conversations" : "Archivées"}
+        </button>
         {onNewConversation && (
           <button
             onClick={onNewConversation}
             title="Nouvelle conversation"
             style={{
-              marginLeft: "auto",
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
@@ -157,9 +179,11 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "24px 0" }}>Chargement...</p>
       ) : conversations.length === 0 ? (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "20px", textAlign: "center" }}>
-          <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: 0, fontWeight: 700 }}>Aucune conversation</p>
+          <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: 0, fontWeight: 700 }}>
+            {showArchived ? "Aucune conversation archivée" : "Aucune conversation"}
+          </p>
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "6px 0 0" }}>
-            Écris à tes Bibax, ou aux gens d'un salon en cours.
+            {showArchived ? "Les conversations archivées apparaîtront ici." : "Écris à tes Bibax, ou aux gens d'un salon en cours."}
           </p>
         </div>
       ) : (
@@ -168,7 +192,9 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
             const { title, photoUrl } = describe(c);
             const unread = c.unreadCount > 0;
             return (
-              <button
+              // Un div plutôt qu'un bouton : le menu ci-dessous est lui-même un bouton, et
+              // imbriquer deux boutons n'est pas valide.
+              <div
                 key={c.id}
                 onClick={() => setOpenConversation(c)}
                 style={{
@@ -182,6 +208,7 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
                   borderRadius: "12px",
                   padding: "10px 14px",
                   cursor: "pointer",
+                  boxSizing: "border-box",
                 }}
               >
                 <EntityAvatar photoUrl={photoUrl} size={44} />
@@ -231,9 +258,77 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
                     </span>
                   )}
                 </span>
-              </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmClear(false);
+                    setMenuFor(c);
+                  }}
+                  title="Options"
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", flexShrink: 0 }}
+                >
+                  <NavIcon name="dots" size={20} color={COLORS.inkSoft} />
+                </button>
+              </div>
             );
           })}
+        </div>
+      )}
+
+      {menuFor && (
+        <div
+          onClick={() => setMenuFor(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
+          >
+            <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
+            <button
+              onClick={async () => {
+                const target = menuFor;
+                setMenuFor(null);
+                await setConversationArchived(target.id, !target.archived);
+                refresh();
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <NavIcon name="check" size={20} color={COLORS.amber} />
+              {menuFor.archived ? "Désarchiver" : "Archiver"}
+            </button>
+            <button
+              onClick={async () => {
+                if (!confirmClear) {
+                  setConfirmClear(true);
+                  return;
+                }
+                const target = menuFor;
+                setMenuFor(null);
+                setConfirmClear(false);
+                await clearConversation(target.id);
+                refresh();
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.wine, cursor: "pointer", textAlign: "left" }}
+            >
+              <NavIcon name="x" size={20} color={COLORS.wine} />
+              {confirmClear ? "Confirmer la suppression ?" : "Supprimer"}
+            </button>
+            {confirmClear && (
+              <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "0 6px 6px", lineHeight: 1.5 }}>
+                La conversation disparaîtra de ta liste avec son historique. Les autres participants gardent le leur.
+              </p>
+            )}
+            <button
+              onClick={() => {
+                setMenuFor(null);
+                setConfirmClear(false);
+              }}
+              style={{ width: "100%", padding: "14px 6px", background: "none", border: "none", fontSize: "15px", fontWeight: 600, color: COLORS.inkSoft, cursor: "pointer", textAlign: "left" }}
+            >
+              Annuler
+            </button>
+          </div>
         </div>
       )}
 

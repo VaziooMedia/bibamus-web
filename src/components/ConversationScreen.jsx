@@ -52,7 +52,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const list = await loadMessages(conversation.id, PAGE_SIZE);
+      const list = await loadMessages(conversation.id, PAGE_SIZE, null, conversation.clearedAt || null);
       if (cancelled) return;
       if (list === null) {
         setFailed(true);
@@ -100,7 +100,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
     if (!messages || messages.length === 0) return;
     setLoadingMore(true);
     const oldest = messages[0].createdAt;
-    const older = await loadMessages(conversation.id, PAGE_SIZE, oldest);
+    const older = await loadMessages(conversation.id, PAGE_SIZE, oldest, conversation.clearedAt || null);
     setLoadingMore(false);
     if (!older) return;
     setHasMore(older.length === PAGE_SIZE);

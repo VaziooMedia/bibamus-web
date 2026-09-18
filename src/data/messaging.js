@@ -22,10 +22,11 @@ function directKey(userIdA, userIdB) {
   return [userIdA, userIdB].sort().join("_");
 }
 
-export async function loadMyConversations(limit = 50, before = null) {
+export async function loadMyConversations(limit = 50, before = null, archived = false) {
   const { data, error } = await supabase.rpc("get_my_conversations", {
     p_limit: limit,
     p_before: before,
+    p_archived: archived,
   });
   if (error) {
     console.error("loadMyConversations:", error);
@@ -43,6 +44,8 @@ export async function loadMyConversations(limit = 50, before = null) {
     lastMessageSenderId: row.last_message_sender_id,
     unreadCount: row.unread_count || 0,
     memberIds: row.member_ids || [],
+    clearedAt: row.cleared_at,
+    archived: row.archived,
   }));
 }
 
@@ -178,6 +181,44 @@ export async function addConversationMembers(conversationId, userIds) {
   return { ok: true };
 }
 
+// Archivage et suppression sont personnels : ils n'écrivent que sur ma propre ligne de
+// participation, jamais sur la conversation. L'autre ne voit rien changer.
+export async function setConversationArchived(conversationId, archived) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié." };
+  const { error } = await supabase
+    .from("conversation_members")
+    .update({ archived_at: archived ? new Date().toISOString() : null })
+    .eq("conversation_id", conversationId)
+    .eq("user_id", user.id);
+  if (error) {
+    console.error("setConversationArchived:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
+// "Supprimer" de mon côté : la conversation et son historique disparaissent de ma liste. Les
+// messages restent en base pour les autres participants — personne n'efface chez autrui.
+export async function clearConversation(conversationId) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié." };
+  const { error } = await supabase
+    .from("conversation_members")
+    .update({ cleared_at: new Date().toISOString(), archived_at: null })
+    .eq("conversation_id", conversationId)
+    .eq("user_id", user.id);
+  if (error) {
+    console.error("clearConversation:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
 export async function leaveConversation(conversationId) {
   const {
     data: { user },
@@ -218,7 +259,7 @@ export async function setConversationMuted(conversationId, muted) {
 
 // Les plus récents d'abord (c'est l'ordre de l'index). `before` = created_at
 // du plus ancien message déjà chargé, pour remonter dans l'historique.
-export async function loadMessages(conversationId, limit = 40, before = null) {
+export async function loadMessages(conversationId, limit = 40, before = null, after = null) {
   let query = supabase
     .from("messages")
     .select("*")
@@ -226,6 +267,8 @@ export async function loadMessages(conversationId, limit = 40, before = null) {
     .order("created_at", { ascending: false })
     .limit(limit);
   if (before) query = query.lt("created_at", before);
+  // `after` = ma date de suppression : ce qui précède n'existe plus de mon côté.
+  if (after) query = query.gt("created_at", after);
 
   const { data, error } = await query;
   if (error) {
