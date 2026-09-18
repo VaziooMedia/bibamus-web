@@ -92,7 +92,14 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
             <img src={tokIconUrl} alt="" style={{ height: "46px" }} />
             <p style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "10px 0 0", color: COLORS.amber }}>Tok !</p>
             <p style={{ fontSize: "14px", color: COLORS.ink, margin: "6px 0 0" }}>
-              {myName} × {flash.withName}
+              {/* Le séparateur est en vert fluo ; withName peut déjà contenir plusieurs noms
+                  pour un Tok collectif, d'où le découpage. */}
+              {[myName, ...String(flash.withName).split(" × ")].map((name, i) => (
+                <React.Fragment key={`${name}-${i}`}>
+                  {i > 0 && <span style={{ color: COLORS.amber, fontWeight: 800 }}> × </span>}
+                  {name}
+                </React.Fragment>
+              ))}
             </p>
           </div>
         ) : (
