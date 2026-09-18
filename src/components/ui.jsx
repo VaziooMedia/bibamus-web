@@ -392,8 +392,8 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         >
           <NavIcon name={item.icon.slice(3)} size={20} color={active(item.key) ? COLORS.pinkFluo : COLORS.amber} />
           <span style={{ fontSize: "10px", fontWeight: active(item.key) ? 700 : 600 }}>
-            <span style={{ color: active(item.key) ? COLORS.pinkFluo : COLORS.ink }}>{item.label}</span>
-            <span style={{ color: active(item.key) ? COLORS.pinkFluo : COLORS.amber }}>{item.accent}</span>
+            <span style={{ color: COLORS.ink }}>{item.label}</span>
+            <span style={{ color: COLORS.pinkFluo }}>{item.accent}</span>
           </span>
         </button>
       ))}
@@ -429,9 +429,9 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         >
           <NavIcon name="bibago-nav" size={22} color={active("sessionHub") ? COLORS.paper : COLORS.amber} />
         </span>
-        <span style={{ fontSize: "10px", fontWeight: active("sessionHub") ? 700 : 600, color: active("sessionHub") ? COLORS.pinkFluo : COLORS.ink }}>
+        <span style={{ fontSize: "10px", fontWeight: active("sessionHub") ? 700 : 600 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
-          <span style={{ color: COLORS.amber }}>Go</span>
+          <span style={{ color: COLORS.pinkFluo }}>Go</span>
         </span>
       </button>
 
@@ -444,8 +444,8 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
             couleur d'un SVG importé en image n'est pas modifiable ici. */}
         <img src={active("bibaPing") ? bibaPingActiveIconUrl : bibaPingIconUrl} alt="" style={{ height: "20px" }} />
         <span style={{ fontSize: "10px", fontWeight: active("bibaPing") ? 700 : 600 }}>
-          <span style={{ color: active("bibaPing") ? COLORS.pinkFluo : COLORS.ink }}>Biba</span>
-          <span style={{ color: active("bibaPing") ? COLORS.pinkFluo : COLORS.amber }}>Ping</span>
+          <span style={{ color: COLORS.ink }}>Biba</span>
+          <span style={{ color: COLORS.pinkFluo }}>Ping</span>
         </span>
       </button>
 
@@ -481,7 +481,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
             </span>
           )}
         </span>
-        <span style={{ fontSize: "10px", fontWeight: active("notificationsFeed") ? 700 : 600, color: active("notificationsFeed") ? COLORS.pinkFluo : COLORS.ink }}>Notifications</span>
+        <span style={{ fontSize: "10px", fontWeight: active("notificationsFeed") ? 700 : 600, color: COLORS.ink }}>Notifications</span>
       </button>
     </div>
   );
