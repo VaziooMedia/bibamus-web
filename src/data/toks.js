@@ -20,8 +20,19 @@ export async function loadTokTargets(salonCode) {
   return (data || []).map((r) => ({ userId: r.user_id, name: r.display_name, avatarUrl: r.avatar_url }));
 }
 
-export async function sendTok(salonCode, targetUserId) {
-  const { data, error } = await supabase.rpc("send_tok", { p_salon_code: salonCode, p_target_user_id: targetUserId });
+// Les actions possibles. Liste fermée, validée aussi côté serveur : l'interface doit savoir
+// afficher tout ce qui peut arriver.
+export const TOK_ACTIONS = [
+  { key: "SMALL_SIP", short: "Petite gorgée", label: "Petite gorgée ensemble ?" },
+  { key: "CHUG", short: "On affone ?", label: "On affone ?" },
+];
+
+export async function sendTok(salonCode, targetUserId, action = "SMALL_SIP") {
+  const { data, error } = await supabase.rpc("send_tok", {
+    p_salon_code: salonCode,
+    p_target_user_id: targetUserId,
+    p_action: action,
+  });
   if (error) {
     console.error("sendTok:", error);
     // Le serveur renvoie des raisons courtes ; on les traduit ici plutôt que d'afficher

@@ -11,15 +11,14 @@
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
-import { sendTok, respondTok } from "../data/toks.js";
+import { sendTok, respondTok, TOK_ACTIONS } from "../data/toks.js";
 import tokIconUrl from "../assets/brand/tok.svg";
 
-const ACTION_LABELS = {
-  SMALL_SIP: "Petite gorgée ensemble ?",
-};
+const ACTION_LABELS = Object.fromEntries(TOK_ACTIONS.map((a) => [a.key, a.label]));
 
 export function TokModal({ salonCode, targets, pending, myName, onClose, onChanged }) {
   const [busyId, setBusyId] = useState(null);
+  const [action, setAction] = useState(TOK_ACTIONS[0].key);
   const [error, setError] = useState(null);
   // Animation courte après un envoi ou une acceptation : { withName }
   const [flash, setFlash] = useState(null);
@@ -32,7 +31,7 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
   const handleSend = async (target) => {
     setBusyId(target.userId);
     setError(null);
-    const result = await sendTok(salonCode, target.userId);
+    const result = await sendTok(salonCode, target.userId, action);
     setBusyId(null);
     if (result?.error) {
       setError(result.error);
@@ -132,6 +131,33 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
               <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
               <span style={{ fontWeight: 700, fontSize: "13px", color: COLORS.ink }}>Envoyer un Tok</span>
+            </div>
+
+            {/* Le choix reste facultatif : "Petite gorgée" est sélectionné d'emblée, on peut
+                donc toucher un nom directement. */}
+            <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+              {TOK_ACTIONS.map((a) => {
+                const selected = action === a.key;
+                return (
+                  <button
+                    key={a.key}
+                    onClick={() => setAction(a.key)}
+                    style={{
+                      flex: 1,
+                      background: selected ? COLORS.amber : "none",
+                      color: selected ? COLORS.paper : COLORS.inkSoft,
+                      border: `2px solid ${selected ? COLORS.amber : COLORS.paperAlt}`,
+                      borderRadius: "999px",
+                      padding: "7px 10px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {a.short}
+                  </button>
+                );
+              })}
             </div>
 
             {error && <p style={{ fontSize: "12.5px", color: COLORS.wine, margin: "0 0 8px" }}>{error}</p>}
