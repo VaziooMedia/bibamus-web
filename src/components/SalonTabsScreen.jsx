@@ -242,10 +242,11 @@ export function SalonTabsScreen(props) {
 
   if (!event) return null;
 
+  // Libellé scindé : une fois l'onglet actif, seul le suffixe passe en blanc.
   const tabs = [
-    { key: "salon", label: "BibaRoom", badge: 0 },
-    { key: "pulse", label: "BibaPulse", badge: pulseUnread },
-    { key: "chat", label: "BibaPing", badge: chatUnread },
+    { key: "salon", suffix: "Room", badge: 0 },
+    { key: "pulse", suffix: "Pulse", badge: pulseUnread },
+    { key: "chat", suffix: "Ping", badge: chatUnread },
   ];
 
   const tabBar = (
@@ -274,9 +275,12 @@ export function SalonTabsScreen(props) {
               whiteSpace: "nowrap",
             }}
           >
-            {t.key === "chat" && <img src={bibaPingIconUrl} alt="" style={{ height: "14px" }} />}
-            {t.key === "pulse" && <NavIcon name="activity" size={14} color={COLORS.amber} />}
-            {t.label}
+            {t.key === "chat" && <img src={bibaPingIconUrl} alt="" style={{ height: "17px" }} />}
+            {t.key === "pulse" && <NavIcon name="activity" size={18} color={COLORS.amber} />}
+            <span>
+              Biba
+              <span style={{ color: active ? COLORS.ink : "inherit" }}>{t.suffix}</span>
+            </span>
             <TabBadge count={t.badge} />
           </button>
         );
