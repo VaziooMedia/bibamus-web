@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds, getSession } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 
@@ -362,7 +362,7 @@ export function BibaPulseScreen({
   onBack,
   breweriesDirectory = [],
   brandsDirectory = [],
-  myUserId,
+  myUserId: myUserIdProp,
   onOpenVenue,
   onOpenDrink,
   focusEntryId,
@@ -377,6 +377,14 @@ export function BibaPulseScreen({
   const [viewedProfileCode, setViewedProfileCode] = useState(null);
   // Mon propre rond de profil mène à MON profil, pas à la fiche publique d'un autre Bibax.
   const { goToProfile } = React.useContext(ProfileNavContext);
+  // Le routeur ne transmet pas encore cet identifiant à cet écran : on le lit depuis la
+  // session, tout en respectant la propriété si elle est fournie un jour.
+  const [sessionUserId, setSessionUserId] = useState(null);
+  useEffect(() => {
+    if (myUserIdProp) return;
+    getSession().then((s) => setSessionUserId(s?.user?.id || null));
+  }, [myUserIdProp]);
+  const myUserId = myUserIdProp || sessionUserId;
   const focusedCardRef = React.useRef(null);
   const hasScrolledToFocus = React.useRef(false);
   // Le fil ne charge jamais qu'une poignée d'entrées à la fois (pagination) — les produits qu'il
