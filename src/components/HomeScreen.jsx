@@ -12,7 +12,7 @@ import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
-import { loadMyUnreadMessageCount } from "../data/messaging.js";
+import { loadMyUnreadMessageCount, subscribeToMyMessages } from "../data/messaging.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
@@ -123,10 +123,15 @@ export function HomeScreen({
     loadPulseFeed(null, 3).then(setPulseEntries);
   }, []);
 
-  // Messages non lus — alimente la pastille rouge de la tuile BibaPing.
+  // Messages non lus — alimente la pastille rouge de la tuile BibaPing. Relevé au montage,
+  // puis à chaque message reçu : sans l'abonnement temps réel, la pastille ne bougerait pas
+  // tant qu'on reste sur l'accueil.
   const [unreadMessages, setUnreadMessages] = useState(0);
   useEffect(() => {
-    loadMyUnreadMessageCount().then(setUnreadMessages);
+    const refresh = () => loadMyUnreadMessageCount().then(setUnreadMessages);
+    refresh();
+    const unsubscribe = subscribeToMyMessages(refresh);
+    return unsubscribe;
   }, []);
 
   const [bibaxSuggestionsPool, setBibaxSuggestionsPool] = useState(null);
