@@ -87,6 +87,7 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
         conversation={openConversation}
         myUserId={myUserId}
         title={describe(openConversation).title}
+        photoUrl={describe(openConversation).photoUrl}
         onBack={() => {
           setOpenConversation(null);
           refresh();

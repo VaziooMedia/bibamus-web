@@ -35,7 +35,7 @@ function dayLabel(iso) {
   return new Intl.DateTimeFormat("fr-BE", { weekday: "long", day: "numeric", month: "long" }).format(d);
 }
 
-export function ConversationScreen({ conversation, myUserId, title, onBack }) {
+export function ConversationScreen({ conversation, myUserId, title, photoUrl, onOpenProfile, onBack }) {
   const [messages, setMessages] = useState(null);
   const [failed, setFailed] = useState(false);
   const [draft, setDraft] = useState("");
@@ -130,8 +130,20 @@ export function ConversationScreen({ conversation, myUserId, title, onBack }) {
     <div style={{ padding: "28px 20px 0", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <PageHeader onBack={onBack} />
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "8px 0 14px 0" }}>
-        <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "8px 0 14px 0" }}>
+        {onOpenProfile ? (
+          <button
+            onClick={onOpenProfile}
+            title={`Voir la fiche de ${title}`}
+            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", flexShrink: 0, lineHeight: 0 }}
+          >
+            <EntityAvatar photoUrl={photoUrl} size={34} />
+          </button>
+        ) : (
+          <span style={{ display: "flex", flexShrink: 0, lineHeight: 0 }}>
+            <EntityAvatar photoUrl={photoUrl} size={34} />
+          </span>
+        )}
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {title}
         </span>

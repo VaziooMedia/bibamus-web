@@ -760,6 +760,8 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
         conversation={openConversation}
         myUserId={myUserId}
         title={[bibro.name, bibro.lastName].filter(Boolean).join(" ")}
+        photoUrl={bibro.avatarUrl}
+        onOpenProfile={() => setOpenConversation(null)}
         onBack={() => setOpenConversation(null)}
       />
     );
