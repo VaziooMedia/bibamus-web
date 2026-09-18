@@ -292,10 +292,12 @@ async function notifyNewMessage(conversationId, preview) {
     }
     const targets = data || [];
     if (targets.length === 0) return;
+    // body_prefix vaut "" en tête-à-tête (le titre porte déjà le prénom) et "Prénom : " dans
+    // un groupe ou un BibaRoom, où le titre est celui de la conversation.
     await sendPushNotification(
       targets.map((t) => t.bibro_code),
       targets[0].push_title,
-      preview
+      `${targets[0].body_prefix || ""}${preview}`
     );
   } catch (e) {
     console.error("notifyNewMessage:", e);
