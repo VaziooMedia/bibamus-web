@@ -31,7 +31,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink, tabBar, tokButton }) {
+export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onGoToDrinkCheck, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink, tabBar, tokButton }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -679,6 +679,14 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
             <span style={{ color: COLORS.ink }}>Biba</span>
             <span style={{ color: COLORS.amber }}>Play</span>
           </span>
+        </button>
+        <button
+          onClick={onGoToDrinkCheck}
+          style={{ display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
+          title="Drink Check"
+        >
+          <NavIcon name="bottle" size={18} color={COLORS.amber} />
+          <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink }}>Drink Check</span>
         </button>
         {tokButton}
       </div>
