@@ -6,12 +6,18 @@
 //
 // Un tête-à-tête n'a ni titre ni photo en base — ils viennent du profil de
 // l'autre participant, résolu ici en un seul appel pour toute la liste.
+//
+// L'écran de discussion s'ouvre depuis ici plutôt que par le routeur : ça
+// évite de toucher à App.jsx pour une navigation qui reste interne à
+// BibaPing. Si une conversation doit un jour s'ouvrir depuis ailleurs (une
+// fiche Bibax, une notification), on la remontera au routeur à ce moment-là.
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { loadMyConversations, loadConversationProfiles } from "../data/messaging.js";
+import { ConversationScreen } from "./ConversationScreen.jsx";
 
 function timeAgo(iso) {
   if (!iso) return "";
@@ -26,32 +32,31 @@ function timeAgo(iso) {
   return new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "short" }).format(new Date(iso));
 }
 
-export function BibaPingScreen({ myUserId, onBack, onOpenConversation, onNewConversation }) {
+export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
   // null = pas encore chargé OU échec ; le drapeau d'erreur distingue les deux.
   const [conversations, setConversations] = useState(null);
   const [profilesById, setProfilesById] = useState({});
   const [failed, setFailed] = useState(false);
+  const [openConversation, setOpenConversation] = useState(null);
+
+  const refresh = useCallback(async () => {
+    const list = await loadMyConversations(50);
+    if (list === null) {
+      setFailed(true);
+      return;
+    }
+    setFailed(false);
+    setConversations(list);
+    const ids = list.flatMap((c) => c.memberIds).filter((id) => id !== myUserId);
+    if (ids.length > 0) {
+      const profiles = await loadConversationProfiles(ids);
+      setProfilesById(profiles);
+    }
+  }, [myUserId]);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const list = await loadMyConversations(50);
-      if (cancelled) return;
-      if (list === null) {
-        setFailed(true);
-        return;
-      }
-      setConversations(list);
-      const ids = list.flatMap((c) => c.memberIds).filter((id) => id !== myUserId);
-      if (ids.length > 0) {
-        const profiles = await loadConversationProfiles(ids);
-        if (!cancelled) setProfilesById(profiles);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [myUserId]);
+    refresh();
+  }, [refresh]);
 
   // Titre et photo : ceux de la conversation pour un groupe ou un salon, ceux
   // de l'autre participant pour un tête-à-tête.
@@ -73,6 +78,22 @@ export function BibaPingScreen({ myUserId, onBack, onOpenConversation, onNewConv
     const body = c.lastMessageBody || "Photo";
     return mine ? `Toi : ${body}` : body;
   };
+
+  // Une conversation ouverte remplace entièrement la liste — au retour, on
+  // recharge pour que le dernier message et les non-lus soient à jour.
+  if (openConversation) {
+    return (
+      <ConversationScreen
+        conversation={openConversation}
+        myUserId={myUserId}
+        title={describe(openConversation).title}
+        onBack={() => {
+          setOpenConversation(null);
+          refresh();
+        }}
+      />
+    );
+  }
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -131,7 +152,7 @@ export function BibaPingScreen({ myUserId, onBack, onOpenConversation, onNewConv
             return (
               <button
                 key={c.id}
-                onClick={() => onOpenConversation(c.id)}
+                onClick={() => setOpenConversation(c)}
                 style={{
                   display: "flex",
                   alignItems: "center",
