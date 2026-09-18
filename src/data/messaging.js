@@ -12,6 +12,7 @@
 // ============================================================
 
 import { supabase } from "../supabaseClient.js";
+import { sendPushNotification } from "./sharedDirectories.js";
 
 /* ---------------- CONVERSATIONS ---------------- */
 
@@ -278,6 +279,29 @@ function rowToMessage(row) {
   };
 }
 
+// Notification d'un nouveau message. Le serveur décide des destinataires (préférences,
+// sourdine, blocages) ; le client se contente de déclencher l'envoi. N'échoue jamais
+// bruyamment : un souci ici ne doit pas donner l'impression que le message n'est pas parti,
+// puisqu'il est déjà enregistré.
+async function notifyNewMessage(conversationId, preview) {
+  try {
+    const { data, error } = await supabase.rpc("get_message_push_targets", { p_conversation_id: conversationId });
+    if (error) {
+      console.error("notifyNewMessage:", error);
+      return;
+    }
+    const targets = data || [];
+    if (targets.length === 0) return;
+    await sendPushNotification(
+      targets.map((t) => t.bibro_code),
+      targets[0].push_title,
+      preview
+    );
+  } catch (e) {
+    console.error("notifyNewMessage:", e);
+  }
+}
+
 export async function sendMessage(conversationId, body, mediaUrl = null) {
   const {
     data: { user },
@@ -303,6 +327,11 @@ export async function sendMessage(conversationId, body, mediaUrl = null) {
     }
     return { error: error.message };
   }
+
+  // Volontairement sans await : le message est enregistré, l'expéditeur n'a pas à attendre que
+  // la notification parte pour voir son message s'afficher.
+  notifyNewMessage(conversationId, text ? (text.length > 120 ? `${text.slice(0, 117)}...` : text) : "Photo");
+
   return { message: rowToMessage(data) };
 }
 
