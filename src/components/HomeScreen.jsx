@@ -73,6 +73,7 @@ export function HomeScreen({
   goToGames,
   goToBibaMeet,
   goToBibaPulse,
+  goToBibaPing,
   bibaMeetVisible = true,
   bibaPulseVisible = true,
   gamesVisible = true,
@@ -564,8 +565,7 @@ export function HomeScreen({
         <CategoryTile
           title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Ping</span></>}
           subtitle="Messagerie Bibamus"
-          badge="Soon"
-          disabled
+          onClick={goToBibaPing}
         />
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
