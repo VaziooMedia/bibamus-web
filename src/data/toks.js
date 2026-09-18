@@ -174,3 +174,10 @@ export async function markTokRepliesSeen(salonCode) {
   const { error } = await supabase.rpc("mark_tok_replies_seen", { p_salon_code: salonCode });
   if (error) console.error("markTokRepliesSeen:", error);
 }
+
+// Retire une seule réponse de ma fenêtre. Le Tok reste en base avec son statut : seule sa
+// réponse cesse de m'être signalée.
+export async function dismissTokReply(tokId) {
+  const { error } = await supabase.rpc("dismiss_tok_reply", { p_tok_id: tokId });
+  if (error) console.error("dismissTokReply:", error);
+}

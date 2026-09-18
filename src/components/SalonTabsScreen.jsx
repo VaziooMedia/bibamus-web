@@ -25,7 +25,7 @@ import { ConversationScreen } from "./ConversationScreen.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages } from "../data/messaging.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
-import { loadTokTargets, loadMyPendingToks, loadMyTokReplies, markTokRepliesSeen, subscribeToToks } from "../data/toks.js";
+import { loadTokTargets, loadMyPendingToks, loadMyTokReplies, markTokRepliesSeen, dismissTokReply, subscribeToToks } from "../data/toks.js";
 import { TokModal } from "./TokModal.jsx";
 import { formatTime, genderAgree } from "../utils.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
@@ -356,6 +356,10 @@ export function SalonTabsScreen(props) {
             targets={tokTargets}
             pending={pendingToks}
             replies={tokReplies}
+            onDismissReply={async (tokId) => {
+              setTokReplies((prev) => prev.filter((r) => r.id !== tokId));
+              await dismissTokReply(tokId);
+            }}
             myName={props.myName}
             onClose={async () => {
               setTokOpen(false);

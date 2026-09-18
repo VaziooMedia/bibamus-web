@@ -11,12 +11,13 @@
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
+import { NavIcon } from "./icons.jsx";
 import { sendTok, respondTok, TOK_ACTIONS } from "../data/toks.js";
 import tokIconUrl from "../assets/brand/tok.svg";
 
 const ACTION_LABELS = Object.fromEntries(TOK_ACTIONS.map((a) => [a.key, a.label]));
 
-export function TokModal({ salonCode, targets, pending, replies = [], myName, onClose, onChanged }) {
+export function TokModal({ salonCode, targets, pending, replies = [], myName, onClose, onChanged, onDismissReply }) {
   const [busyId, setBusyId] = useState(null);
   const [action, setAction] = useState(TOK_ACTIONS[0].key);
   // Sélection rapide : on coche un ou plusieurs noms, puis on envoie d'un coup.
@@ -121,14 +122,26 @@ export function TokModal({ salonCode, targets, pending, replies = [], myName, on
                         padding: "8px 12px",
                         fontSize: "12.5px",
                         color: COLORS.ink,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
                       }}
                     >
-                      <strong>{r.targetNames}</strong>{" "}
-                      {r.status === "ACCEPTED" ? (
-                        <span style={{ color: COLORS.amber, fontWeight: 700 }}>a accepté ton Tok</span>
-                      ) : (
-                        <span style={{ color: COLORS.inkSoft }}>n'a pas donné suite</span>
-                      )}
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <strong>{r.targetNames}</strong>{" "}
+                        {r.status === "ACCEPTED" ? (
+                          <span style={{ color: COLORS.amber, fontWeight: 700 }}>a accepté ton Tok</span>
+                        ) : (
+                          <span style={{ color: COLORS.inkSoft }}>n'a pas donné suite</span>
+                        )}
+                      </span>
+                      <button
+                        onClick={() => onDismissReply?.(r.id)}
+                        title="Retirer de la liste"
+                        style={{ background: "none", border: "none", padding: "2px", display: "flex", cursor: "pointer", flexShrink: 0 }}
+                      >
+                        <NavIcon name="x" size={14} color={COLORS.inkSoft} />
+                      </button>
                     </div>
                   ))}
                 </div>
