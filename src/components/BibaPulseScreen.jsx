@@ -3,6 +3,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -50,7 +51,7 @@ function ReactorsList({ people, emptyLabel }) {
   );
 }
 
-const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onUpdate, initialShowComments, highlighted }, ref) {
+const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onOpenProfile, onUpdate, initialShowComments, highlighted }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -130,7 +131,12 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
       <span style={{ position: "absolute", top: "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
-        <EntityAvatar photoUrl={entry.actorAvatarUrl} size={36} />
+        {/* Le rond de profil mène à la fiche de son auteur. */}
+        <EntityAvatar
+          photoUrl={entry.actorAvatarUrl}
+          size={36}
+          onClick={entry.actorBibroCode && onOpenProfile ? () => onOpenProfile(entry.actorBibroCode) : undefined}
+        />
         <div style={{ flex: 1, minWidth: 0, paddingRight: "60px" }}>
           <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
@@ -365,6 +371,9 @@ export function BibaPulseScreen({
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [focusAttempts, setFocusAttempts] = useState(0);
+  // Fiche d'un Bibax ouverte depuis un rond de profil du fil. Affichée ici même plutôt que
+  // remontée au routeur : la navigation reste interne à BibaPulse.
+  const [viewedProfileCode, setViewedProfileCode] = useState(null);
   const focusedCardRef = React.useRef(null);
   const hasScrolledToFocus = React.useRef(false);
   // Le fil ne charge jamais qu'une poignée d'entrées à la fois (pagination) — les produits qu'il
@@ -442,6 +451,10 @@ export function BibaPulseScreen({
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
   };
 
+  if (viewedProfileCode) {
+    return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
+  }
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -485,6 +498,7 @@ export function BibaPulseScreen({
               myUserId={myUserId}
               onOpenVenue={onOpenVenue}
               onOpenDrink={onOpenDrink}
+              onOpenProfile={setViewedProfileCode}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
               highlighted={entry.id === focusEntryId}
               initialShowComments={entry.id === focusEntryId && openCommentsOnFocus}
