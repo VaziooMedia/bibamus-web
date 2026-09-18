@@ -13,6 +13,8 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadMessages, sendMessage, markConversationRead, subscribeToConversation, loadConversationProfiles } from "../data/messaging.js";
+import bibaPingIconUrl from "../assets/brand/bibaping.svg";
+import bibaPingActiveIconUrl from "../assets/brand/bibaping-active.svg";
 
 const PAGE_SIZE = 40;
 
@@ -292,9 +294,9 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
             padding: 0,
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={draft.trim() ? COLORS.paper : COLORS.inkSoft} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 12h15M13 6l6 6-6 6" />
-          </svg>
+          {/* Version rose sur le fond vert du bouton prêt à envoyer — la verte y serait
+              invisible. Version verte quand le bouton est au repos. */}
+          <img src={draft.trim() ? bibaPingActiveIconUrl : bibaPingIconUrl} alt="" style={{ height: "20px", opacity: draft.trim() ? 1 : 0.5 }} />
         </button>
       </div>
     </div>

@@ -102,8 +102,23 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
       <PageHeader onBack={onBack} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "8px 0 18px 0" }}>
-        {/* Icône contrainte en hauteur uniquement, pour ne pas déformer un ratio non carré. */}
-        <img src={bibaPingIconUrl} alt="" style={{ height: "22px", flexShrink: 0 }} />
+        {/* Rond de fond comme sur les autres écrans ; icône contrainte en hauteur
+            uniquement, pour ne pas déformer un ratio non carré. */}
+        <span
+          style={{
+            width: "38px",
+            height: "38px",
+            borderRadius: "50%",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.paperAlt}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <img src={bibaPingIconUrl} alt="" style={{ height: "20px" }} />
+        </span>
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px" }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Ping</span>
