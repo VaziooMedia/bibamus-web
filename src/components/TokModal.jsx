@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
 import { sendTok, respondTok } from "../data/toks.js";
+import tokIconUrl from "../assets/brand/tok.svg";
 
 const ACTION_LABELS = {
   SMALL_SIP: "Petite gorgée ensemble ?",
@@ -67,7 +68,7 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
 
         {flash ? (
           <div style={{ textAlign: "center", padding: "30px 0" }}>
-            <div style={{ fontSize: "40px", lineHeight: 1 }}>⚡</div>
+            <img src={tokIconUrl} alt="" style={{ height: "46px" }} />
             <p style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "10px 0 0", color: COLORS.amber }}>Tok !</p>
             <p style={{ fontSize: "14px", color: COLORS.ink, margin: "6px 0 0" }}>
               {myName} × {flash.withName}
@@ -87,7 +88,10 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <EntityAvatar photoUrl={t.senderAvatarUrl} size={32} />
                         <span style={{ flex: 1, minWidth: 0 }}>
-                          <span style={{ display: "block", fontSize: "13.5px", fontWeight: 700, color: COLORS.ink }}>⚡ {t.senderName} t'envoie un Tok</span>
+                          <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "13.5px", fontWeight: 700, color: COLORS.ink }}>
+                            <img src={tokIconUrl} alt="" style={{ height: "14px" }} />
+                            {t.senderName} t'envoie un Tok
+                          </span>
                           <span style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, marginTop: "1px" }}>
                             {ACTION_LABELS[t.action] || "Interaction en attente"}
                           </span>
@@ -149,7 +153,7 @@ export function TokModal({ salonCode, targets, pending, myName, onClose, onChang
                   >
                     <EntityAvatar photoUrl={t.avatarUrl} size={32} />
                     <span style={{ flex: 1, minWidth: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>{t.name}</span>
-                    <span style={{ fontSize: "16px" }}>⚡</span>
+                    <img src={tokIconUrl} alt="" style={{ height: "18px" }} />
                   </button>
                 ))}
               </div>

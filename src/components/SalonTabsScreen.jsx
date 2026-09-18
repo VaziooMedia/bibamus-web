@@ -29,6 +29,7 @@ import { loadTokTargets, loadMyPendingToks, subscribeToToks } from "../data/toks
 import { TokModal } from "./TokModal.jsx";
 import { formatTime, genderAgree } from "../utils.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
+import tokIconUrl from "../assets/brand/tok.svg";
 
 // Fil interne : tournées et mouvements de participants, mélangés par ordre chronologique.
 // Tout vient du salon lui-même — aucune requête supplémentaire.
@@ -329,7 +330,8 @@ export function SalonTabsScreen(props) {
         cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: "14px", lineHeight: 1 }}>⚡</span>
+      {/* Contrainte en hauteur uniquement, pour ne pas déformer un ratio non carré. */}
+      <img src={tokIconUrl} alt="" style={{ height: "16px" }} />
       <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink }}>Tok</span>
       <TabBadge count={pendingToks.length} />
     </button>

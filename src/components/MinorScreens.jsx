@@ -8,6 +8,7 @@ import { NavIcon, WaterAlertIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton, SectionTitle } from "./ui.jsx";
 import { ProfileHeader } from "./ProfileParts.jsx";
 import settingsIconUrl from "../assets/brand/settings-icon.png";
+import tokIconUrl from "../assets/brand/tok.svg";
 import { PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { formatDate } from "../utils.js";
@@ -450,7 +451,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
               gap: "12px",
             }}
           >
-            <span style={{ fontSize: "20px", lineHeight: 1, flexShrink: 0 }}>⚡</span>
+            <img src={tokIconUrl} alt="" style={{ height: "22px", flexShrink: 0 }} />
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "block", fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Recevoir des Tok</span>
               <span style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>
