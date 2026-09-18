@@ -356,7 +356,26 @@ export async function markConversationRead(conversationId) {
     .update({ last_read_at: new Date().toISOString() })
     .eq("conversation_id", conversationId)
     .eq("user_id", user.id);
-  if (error) console.error("markConversationRead:", error);
+  if (error) {
+    console.error("markConversationRead:", error);
+    return;
+  }
+  // Lire ne produit aucun événement temps réel : le marquage touche ma ligne de participation,
+  // pas les messages. Sans ce signal, les compteurs (barre du bas, tuile d'accueil, onglet
+  // Chat d'un BibaRoom) resteraient affichés jusqu'au message suivant.
+  try {
+    window.dispatchEvent(new CustomEvent("bibaping:read", { detail: { conversationId } }));
+  } catch {
+    // Pas de fenêtre disponible : sans conséquence, les compteurs se rafraîchiront plus tard.
+  }
+}
+
+// Écoute les lectures signalées ci-dessus. Renvoie une fonction de désabonnement, comme les
+// abonnements temps réel, pour s'utiliser de la même façon dans un useEffect.
+export function onConversationRead(callback) {
+  const handler = () => callback();
+  window.addEventListener("bibaping:read", handler);
+  return () => window.removeEventListener("bibaping:read", handler);
 }
 
 /* ---------------- PHOTOS ---------------- */

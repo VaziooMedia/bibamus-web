@@ -23,7 +23,7 @@ import { NavIcon } from "./icons.jsx";
 import { EventDashboardScreen } from "./EventDashboardScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages } from "../data/messaging.js";
+import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
 import { loadTokTargets, loadMyPendingToks, loadMyTokReplies, markTokRepliesSeen, dismissTokReply, subscribeToToks } from "../data/toks.js";
 import { TokModal } from "./TokModal.jsx";
@@ -240,7 +240,11 @@ export function SalonTabsScreen(props) {
   useEffect(() => {
     if (!conversationId) return;
     const unsubscribe = subscribeToMyMessages(refreshChatUnread);
-    return unsubscribe;
+    const unsubscribeRead = onConversationRead(refreshChatUnread);
+    return () => {
+      unsubscribe();
+      unsubscribeRead();
+    };
   }, [conversationId, refreshChatUnread]);
 
   // Pulse : le repère de dernière lecture reste sur l'appareil. Le fil est reconstruit à partir

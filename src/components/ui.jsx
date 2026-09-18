@@ -9,7 +9,7 @@ import { NavigationContext, ProfileNavContext } from "../contexts.js";
 import { formatMoney } from "../utils.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import bibaPingActiveIconUrl from "../assets/brand/bibaping-active.svg";
-import { loadMyUnreadMessageCount, subscribeToMyMessages } from "../data/messaging.js";
+import { loadMyUnreadMessageCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
 
 export function useInfiniteScroll(items, pageSize, resetKey) {
   const [visibleCount, setVisibleCount] = useState(pageSize);
@@ -406,10 +406,16 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
   // Temps réel : la pastille s'incrémente dès qu'un message arrive, sans attendre. Le relevé
   // périodique reste en filet, au cas où l'abonnement saute (réseau coupé, onglet en veille).
   React.useEffect(() => {
-    const unsubscribe = subscribeToMyMessages(refreshUnread);
+    // Deux sources : l'arrivée d'un message, et la lecture d'une conversation — cette
+    // dernière ne produit aucun événement temps réel.
+    const unsubscribeRead = onConversationRead(refreshUnread);
+    const unsubscribe = subscribeToMyMessages(() => {
+      refreshUnread();
+    });
     const interval = setInterval(refreshUnread, 120000);
     return () => {
       unsubscribe();
+      unsubscribeRead();
       clearInterval(interval);
     };
   }, [refreshUnread]);

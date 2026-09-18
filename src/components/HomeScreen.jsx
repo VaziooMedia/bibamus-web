@@ -12,7 +12,7 @@ import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
-import { loadMyUnreadMessageCount, subscribeToMyMessages } from "../data/messaging.js";
+import { loadMyUnreadMessageCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
@@ -130,8 +130,14 @@ export function HomeScreen({
   useEffect(() => {
     const refresh = () => loadMyUnreadMessageCount().then(setUnreadMessages);
     refresh();
+    // Deux sources : l'arrivée d'un message, et la lecture d'une conversation ailleurs dans
+    // l'app — cette dernière ne produit aucun événement temps réel.
     const unsubscribe = subscribeToMyMessages(refresh);
-    return unsubscribe;
+    const unsubscribeRead = onConversationRead(refresh);
+    return () => {
+      unsubscribe();
+      unsubscribeRead();
+    };
   }, []);
 
   const [bibaxSuggestionsPool, setBibaxSuggestionsPool] = useState(null);
