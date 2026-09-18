@@ -12,6 +12,7 @@ import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { loadMyUnreadMessageCount } from "../data/messaging.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
@@ -120,6 +121,12 @@ export function HomeScreen({
   }, [pulseStoriesRefreshKey]);
   useEffect(() => {
     loadPulseFeed(null, 3).then(setPulseEntries);
+  }, []);
+
+  // Messages non lus — alimente la pastille rouge de la tuile BibaPing.
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  useEffect(() => {
+    loadMyUnreadMessageCount().then(setUnreadMessages);
   }, []);
 
   const [bibaxSuggestionsPool, setBibaxSuggestionsPool] = useState(null);
@@ -566,6 +573,7 @@ export function HomeScreen({
           title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Ping</span></>}
           subtitle="Messagerie Bibamus"
           onClick={goToBibaPing}
+          countBadge={unreadMessages}
         />
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (

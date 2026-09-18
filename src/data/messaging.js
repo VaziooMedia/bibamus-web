@@ -388,3 +388,17 @@ export async function loadConversationProfiles(userIds) {
     ])
   );
 }
+
+/* ---------------- COMPTEUR DE NON-LUS ---------------- */
+
+// Toutes conversations confondues — pour la pastille de la barre de navigation et la tuile
+// d'accueil. Calculé côté serveur : le client n'a jamais besoin de charger les conversations
+// pour afficher ce nombre.
+export async function loadMyUnreadMessageCount() {
+  const { data, error } = await supabase.rpc("get_my_unread_message_count");
+  if (error) {
+    console.error("loadMyUnreadMessageCount:", error);
+    return 0;
+  }
+  return data || 0;
+}

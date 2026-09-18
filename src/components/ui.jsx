@@ -9,6 +9,7 @@ import { NavigationContext, ProfileNavContext } from "../contexts.js";
 import { formatMoney } from "../utils.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import bibaPingActiveIconUrl from "../assets/brand/bibaping-active.svg";
+import { loadMyUnreadMessageCount } from "../data/messaging.js";
 
 export function useInfiniteScroll(items, pageSize, resetKey) {
   const [visibleCount, setVisibleCount] = useState(pageSize);
@@ -286,7 +287,7 @@ export function ActionCard({ icon, title, subtitle, onClick, highlight, disabled
   );
 }
 
-export function CategoryTile({ iconElement, title, subtitle, onClick, badge, disabled }) {
+export function CategoryTile({ iconElement, title, subtitle, onClick, badge, countBadge = 0, disabled }) {
   return (
     <button
       onClick={disabled ? undefined : onClick}
@@ -322,6 +323,30 @@ export function CategoryTile({ iconElement, title, subtitle, onClick, badge, dis
           }}
         >
           {badge}
+        </span>
+      )}
+      {countBadge > 0 && (
+        <span
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            minWidth: "20px",
+            height: "20px",
+            borderRadius: "999px",
+            background: COLORS.redFluo,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 5px",
+            boxSizing: "border-box",
+            fontSize: "11px",
+            fontWeight: 700,
+            color: "#fff",
+            lineHeight: 1,
+          }}
+        >
+          {countBadge > 99 ? "99+" : countBadge}
         </span>
       )}
       {iconElement && <span style={{ display: "flex", lineHeight: 0 }}>{iconElement}</span>}
@@ -365,6 +390,25 @@ export function MoneyAmount({ value, currency, centered = false, jetonIconSize =
 }
 
 export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifications = 0 }) {
+  // Messages non lus — chargé ici plutôt que reçu en propriété : la barre est présente sur
+  // tous les écrans, c'est le seul endroit qui en a besoin en permanence. Relevé toutes les
+  // 30 secondes, et immédiatement quand on quitte BibaPing (où les messages viennent d'être lus).
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  React.useEffect(() => {
+    let cancelled = false;
+    const refresh = () => {
+      loadMyUnreadMessageCount().then((n) => {
+        if (!cancelled) setUnreadMessages(n);
+      });
+    };
+    refresh();
+    const interval = setInterval(refresh, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [screen]);
+
   const items = [
     { key: "home", label: "Home", accent: "", icon: "ti-home" },
     { key: "bibaPulse", label: "Biba", accent: "Pulse", icon: "ti-activity" },
@@ -442,7 +486,34 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         {/* Icône fournie en SVG : contrainte en hauteur uniquement, pour ne pas déformer un
             ratio non carré. Deux fichiers plutôt qu'une couleur pilotée par le code, car la
             couleur d'un SVG importé en image n'est pas modifiable ici. */}
-        <img src={active("bibaPing") ? bibaPingActiveIconUrl : bibaPingIconUrl} alt="" style={{ height: "20px" }} />
+        <span style={{ position: "relative", display: "inline-block", lineHeight: 0 }}>
+          <img src={active("bibaPing") ? bibaPingActiveIconUrl : bibaPingIconUrl} alt="" style={{ height: "20px" }} />
+          {unreadMessages > 0 && (
+            <span
+              style={{
+                position: "absolute",
+                top: "-6px",
+                right: "-10px",
+                minWidth: "16px",
+                height: "16px",
+                borderRadius: "999px",
+                background: "#FF3B3B",
+                border: `2px solid ${COLORS.surface}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 3px",
+                boxSizing: "border-box",
+                fontSize: "9px",
+                fontWeight: 700,
+                color: "#fff",
+                lineHeight: 1,
+              }}
+            >
+              {unreadMessages > 9 ? "9+" : unreadMessages}
+            </span>
+          )}
+        </span>
         <span style={{ fontSize: "10px", fontWeight: active("bibaPing") ? 700 : 600 }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: active("bibaPing") ? COLORS.pinkFluo : COLORS.amber }}>Ping</span>
