@@ -1880,6 +1880,7 @@ export default function App() {
                 bibaPulseVisible={featureFlags.nav_bibapulse_visible !== false}
                 gamesVisible={featureFlags.nav_games_visible !== false}
                 goToBibaPulse={() => setScreen("bibaPulse")}
+                goToBibaPing={() => setScreen("bibaPing")}                
                 goToSettings={() => setScreen("settings")}
                 goToSearch={() => {
                   setSearchInitialTab("lieux");
