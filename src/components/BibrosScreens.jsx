@@ -36,6 +36,7 @@ import {
 } from "../data/sharedDirectories.js";
 import { openDirectConversation } from "../data/messaging.js";
 import { ConversationScreen } from "./ConversationScreen.jsx";
+import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import { PERIODS, MONTH_NAMES } from "./MyStatsScreen.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -960,7 +961,9 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             opacity: openingConversation ? 0.5 : 1,
           }}
         >
-          <NavIcon name="mail" size={28} color={COLORS.amber} />
+          {/* Icône BibaPing plutôt qu'une enveloppe générique — contrainte en hauteur
+              uniquement, pour ne pas déformer un ratio non carré. */}
+          <img src={bibaPingIconUrl} alt="" style={{ height: "26px" }} />
         </button>
         <div
           onClick={mutualCount > 0 ? () => onViewMutualBibax(bibro.userId, bibro.name) : undefined}

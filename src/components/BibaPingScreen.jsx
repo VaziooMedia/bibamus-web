@@ -18,6 +18,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { loadMyConversations, loadConversationProfiles } from "../data/messaging.js";
 import { ConversationScreen } from "./ConversationScreen.jsx";
+import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 
 function timeAgo(iso) {
   if (!iso) return "";
@@ -101,7 +102,8 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
       <PageHeader onBack={onBack} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "8px 0 18px 0" }}>
-        <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+        {/* Icône contrainte en hauteur uniquement, pour ne pas déformer un ratio non carré. */}
+        <img src={bibaPingIconUrl} alt="" style={{ height: "22px", flexShrink: 0 }} />
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px" }}>
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Ping</span>
