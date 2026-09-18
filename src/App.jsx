@@ -2061,8 +2061,24 @@ export default function App() {
             )}
             {screen === "drinkCheck" && currentEvent && (
               <DrinkCheckScreen
-                event={currentEvent}
-                venue={venuesById[currentEvent?.venueId] || null}
+                drinkIds={(() => {
+                  const localIds = new Set();
+                  (currentEvent.rounds || []).forEach((r) => {
+                    (r.orders || []).filter((o) => o.friendId === "self").forEach((o) => localIds.add(o.drinkId));
+                  });
+                  (currentEvent.personalOrders || []).forEach((o) => localIds.add(o.drinkId));
+                  return [...localIds]
+                    .map((localId) => (currentEvent.menu || []).find((d) => d.id === localId))
+                    .filter((d) => d?.fromDirectory && d?.sourceDrinkId)
+                    .map((d) => d.sourceDrinkId);
+                })()}
+                presetVenue={(() => {
+                  const venue = venuesById[currentEvent?.venueId] || null;
+                  if (venue) return { id: currentEvent.venueId, name: venue.name };
+                  if (currentEvent.isHome) return { id: "@home", name: "@Home" };
+                  if (currentEvent.venueId === "@event") return { id: "@event", name: "@Event" };
+                  return null;
+                })()}
                 myBibroCode={profile.myBibroCode}
                 onBack={() => setScreen("eventDashboard")}
                 onRateDrink={rateDrinkStandalone}
@@ -3247,6 +3263,9 @@ export default function App() {
             {screen === "bibaSolo" && (
               <BibaSoloScreen
                 myUserId={session.user.id}
+                myBibroCode={profile.myBibroCode}
+                onRateDrink={rateDrinkStandalone}
+                onUnrateDrink={unrateDrinkStandalone}
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail("bibaSolo");
                   setViewedDrinkId(id);

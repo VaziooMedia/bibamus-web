@@ -1,13 +1,8 @@
 // ============================================================
-// Écran "Drink Check" — accessible depuis un salon. Liste les vrais produits
-// que l'utilisateur a réellement consommés dans CE salon (tournées où il a
-// commandé, + ses consommations personnelles), pour qu'il puisse en choisir
-// un à noter. "Déjà noté" s'affiche si une vraie note existe déjà pour ce
-// produit (drink.ratings[myBibroCode]).
-//
-// Seuls les produits liés au vrai répertoire global (fromDirectory + sourceDrinkId)
-// peuvent être notés — un élément de menu purement local n'a pas de fiche à noter,
-// exactement comme le fait déjà silencieusement onCheckDrink pour les stats.
+// Écran "Drink Check" — réutilisé depuis un salon comme depuis BibaSolo. Liste
+// les vrais produits déjà consommés (drinkIds, résolus par l'appelant — chaque
+// contexte a sa propre vraie façon de les calculer), pour en choisir un à noter.
+// "Déjà noté" s'affiche si une vraie note existe déjà (drink.ratings[myBibroCode]).
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
@@ -16,37 +11,18 @@ import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { loadDrinksByIds } from "../data/sharedDirectories.js";
 
-export function DrinkCheckScreen({ event, venue, myBibroCode, onBack, onRateDrink, onUnrateDrink }) {
+export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, onBack, onRateDrink, onUnrateDrink }) {
   const [drinks, setDrinks] = useState(null);
   const [checking, setChecking] = useState(null);
 
   useEffect(() => {
-    const localIds = new Set();
-    (event.rounds || []).forEach((r) => {
-      (r.orders || []).filter((o) => o.friendId === "self").forEach((o) => localIds.add(o.drinkId));
-    });
-    (event.personalOrders || []).forEach((o) => localIds.add(o.drinkId));
-
-    const sourceIds = [...localIds]
-      .map((localId) => (event.menu || []).find((d) => d.id === localId))
-      .filter((d) => d?.fromDirectory && d?.sourceDrinkId)
-      .map((d) => d.sourceDrinkId);
-    const uniqueSourceIds = [...new Set(sourceIds)];
-
-    if (uniqueSourceIds.length === 0) {
+    const uniqueIds = [...new Set(drinkIds || [])];
+    if (uniqueIds.length === 0) {
       setDrinks([]);
       return;
     }
-    loadDrinksByIds(uniqueSourceIds).then(setDrinks);
-  }, [event.rounds, event.personalOrders, event.menu]);
-
-  const presetVenue = venue
-    ? { id: event.isHome ? "@home" : event.venueId === "@event" ? "@event" : event.venueId, name: venue.name }
-    : event.isHome
-    ? { id: "@home", name: "@Home" }
-    : event.venueId === "@event"
-    ? { id: "@event", name: "@Event" }
-    : null;
+    loadDrinksByIds(uniqueIds).then(setDrinks);
+  }, [drinkIds]);
 
   const ratingFor = (drink) => {
     const raw = drink.ratings && drink.ratings[myBibroCode];
@@ -64,12 +40,12 @@ export function DrinkCheckScreen({ event, venue, myBibroCode, onBack, onRateDrin
         <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Drink Check</h1>
       </div>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>Choisis un produit que tu as consommé ce soir pour le noter.</p>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>Choisis un produit que tu as consommé pour le noter.</p>
 
       {drinks === null ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Chargement...</p>
       ) : drinks.length === 0 ? (
-        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun produit du répertoire consommé pour l'instant ce soir.</p>
+        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun produit du répertoire consommé pour l'instant.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {drinks.map((d) => {

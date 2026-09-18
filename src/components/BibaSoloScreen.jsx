@@ -16,6 +16,8 @@ import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import bibatlasIconUrl from "../assets/brand/bibatlas.svg";
 import beerIconUrl from "../assets/brand/beer.svg";
+import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
+import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
 
 function normalize(str) {
   return (str || "")
@@ -562,10 +564,11 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
   );
 }
 
-export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
+export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onOpenDrink, onBack }) {
   const [checkins, setCheckins] = useState(null);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
+  const [checkingDrinks, setCheckingDrinks] = useState(false);
   const [drinksById, setDrinksById] = useState({});
   const [venuesById, setVenuesById] = useState({});
 
@@ -715,6 +718,19 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
     );
   }
 
+  if (checkingDrinks) {
+    return (
+      <DrinkCheckScreen
+        drinkIds={(checkins || []).map((c) => c.drinkId)}
+        presetVenue={currentVenue ? { id: currentVenue.id, name: currentVenue.name } : null}
+        myBibroCode={myBibroCode}
+        onBack={() => setCheckingDrinks(false)}
+        onRateDrink={onRateDrink}
+        onUnrateDrink={onUnrateDrink}
+      />
+    );
+  }
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -732,6 +748,25 @@ export function BibaSoloScreen({ myUserId, onOpenDrink, onBack }) {
           style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px", cursor: "pointer", display: "flex" }}
         >
           <NavIcon name="refresh" size={16} color={COLORS.inkSoft} />
+        </button>
+        <button
+          onClick={() => setCheckingDrinks(true)}
+          title="Drink Check"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "42px",
+            height: "42px",
+            borderRadius: "50%",
+            background: COLORS.amber,
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+        >
+          <img src={drinkCheckIconUrl} alt="Drink Check" style={{ height: "24px", filter: "brightness(0)" }} />
         </button>
       </div>
 
