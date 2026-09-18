@@ -313,26 +313,32 @@ export function SalonTabsScreen(props) {
     </div>
   );
 
+  // Volontairement différent des autres boutons de cette ligne : rond et plein, poussé à
+  // l'extrême droite. Tok est une action sociale, pas un accès à un écran.
   const tokButton = salonCode ? (
     <button
       onClick={() => setTokOpen(true)}
       title="Envoyer un Tok"
       style={{
         position: "relative",
+        marginLeft: "auto",
         display: "flex",
         alignItems: "center",
-        gap: "6px",
-        height: "32px",
-        background: "none",
-        border: `2px solid ${pendingToks.length > 0 ? COLORS.amber : COLORS.paperAlt}`,
-        borderRadius: "8px",
-        padding: "0 12px",
+        justifyContent: "center",
+        width: "38px",
+        height: "38px",
+        borderRadius: "50%",
+        background: COLORS.amber,
+        border: "none",
+        padding: 0,
         cursor: "pointer",
+        flexShrink: 0,
       }}
     >
-      {/* Contrainte en hauteur uniquement, pour ne pas déformer un ratio non carré. */}
-      <img src={tokIconUrl} alt="" style={{ height: "16px" }} />
-      <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink }}>Tok</span>
+      {/* Contrainte en hauteur uniquement, pour ne pas déformer un ratio non carré. Le filtre
+          force l'icône en noir pur, quelle que soit sa couleur d'origine — il n'existe pas de
+          version noire du fichier. */}
+      <img src={tokIconUrl} alt="Tok" style={{ height: "20px", filter: "brightness(0)" }} />
       <TabBadge count={pendingToks.length} />
     </button>
   ) : null;
