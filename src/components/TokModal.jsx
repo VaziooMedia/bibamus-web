@@ -1,0 +1,169 @@
+// ============================================================
+// Tok — la feuille qui s'ouvre depuis le bouton du BibaRoom.
+//
+// Règle directrice du cahier des charges : plus il faut réfléchir avant
+// d'envoyer un Tok, moins ça marche. D'où un seul écran, sans confirmation —
+// on touche un nom, le Tok part.
+//
+// La même feuille sert à répondre aux Tok reçus : ils apparaissent en haut,
+// avant la liste des participants.
+// ============================================================
+import React, { useState } from "react";
+import { COLORS } from "../constants.js";
+import { EntityAvatar } from "./ui.jsx";
+import { sendTok, respondTok } from "../data/toks.js";
+
+const ACTION_LABELS = {
+  SMALL_SIP: "Petite gorgée ensemble ?",
+};
+
+export function TokModal({ salonCode, targets, pending, myName, onClose, onChanged }) {
+  const [busyId, setBusyId] = useState(null);
+  const [error, setError] = useState(null);
+  // Animation courte après un envoi ou une acceptation : { withName }
+  const [flash, setFlash] = useState(null);
+
+  const showFlash = (withName) => {
+    setFlash({ withName });
+    setTimeout(() => setFlash(null), 1800);
+  };
+
+  const handleSend = async (target) => {
+    setBusyId(target.userId);
+    setError(null);
+    const result = await sendTok(salonCode, target.userId);
+    setBusyId(null);
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
+    showFlash(target.name);
+    onChanged?.();
+  };
+
+  const handleRespond = async (tok, accept) => {
+    setBusyId(tok.id);
+    setError(null);
+    const result = await respondTok(tok.id, accept);
+    setBusyId(null);
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
+    if (accept && result.status === "ACCEPTED") showFlash(tok.senderName);
+    onChanged?.();
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px", maxHeight: "80vh", overflowY: "auto" }}
+      >
+        <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
+
+        {flash ? (
+          <div style={{ textAlign: "center", padding: "30px 0" }}>
+            <div style={{ fontSize: "40px", lineHeight: 1 }}>⚡</div>
+            <p style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "10px 0 0", color: COLORS.amber }}>Tok !</p>
+            <p style={{ fontSize: "14px", color: COLORS.ink, margin: "6px 0 0" }}>
+              {myName} × {flash.withName}
+            </p>
+          </div>
+        ) : (
+          <>
+            {pending.length > 0 && (
+              <div style={{ marginBottom: "18px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+                  <span style={{ fontWeight: 700, fontSize: "13px", color: COLORS.ink }}>Tok reçus ({pending.length})</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {pending.map((t) => (
+                    <div key={t.id} style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "10px 12px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <EntityAvatar photoUrl={t.senderAvatarUrl} size={32} />
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: "block", fontSize: "13.5px", fontWeight: 700, color: COLORS.ink }}>⚡ {t.senderName} t'envoie un Tok</span>
+                          <span style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, marginTop: "1px" }}>
+                            {ACTION_LABELS[t.action] || "Interaction en attente"}
+                          </span>
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                        <button
+                          onClick={() => handleRespond(t, true)}
+                          disabled={busyId === t.id}
+                          style={{ flex: 1, background: COLORS.amber, border: "none", borderRadius: "8px", padding: "8px", fontWeight: 700, fontSize: "13px", color: COLORS.paper, cursor: "pointer" }}
+                        >
+                          Accepter
+                        </button>
+                        <button
+                          onClick={() => handleRespond(t, false)}
+                          disabled={busyId === t.id}
+                          style={{ flex: 1, background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px", fontWeight: 700, fontSize: "13px", color: COLORS.inkSoft, cursor: "pointer" }}
+                        >
+                          Ignorer
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+              <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+              <span style={{ fontWeight: 700, fontSize: "13px", color: COLORS.ink }}>Envoyer un Tok</span>
+            </div>
+
+            {error && <p style={{ fontSize: "12.5px", color: COLORS.wine, margin: "0 0 8px" }}>{error}</p>}
+
+            {targets.length === 0 ? (
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", padding: "12px 0", margin: 0 }}>
+                Personne à qui envoyer un Tok pour l'instant.
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {targets.map((t) => (
+                  <button
+                    key={t.userId}
+                    onClick={() => handleSend(t)}
+                    disabled={busyId === t.userId}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      textAlign: "left",
+                      width: "100%",
+                      background: COLORS.surfaceAlt,
+                      border: `2px solid ${COLORS.paperAlt}`,
+                      borderRadius: "12px",
+                      padding: "10px 14px",
+                      cursor: busyId === t.userId ? "default" : "pointer",
+                      opacity: busyId === t.userId ? 0.5 : 1,
+                    }}
+                  >
+                    <EntityAvatar photoUrl={t.avatarUrl} size={32} />
+                    <span style={{ flex: 1, minWidth: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>{t.name}</span>
+                    <span style={{ fontSize: "16px" }}>⚡</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={onClose}
+              style={{ width: "100%", padding: "14px 6px 0", background: "none", border: "none", fontSize: "15px", fontWeight: 600, color: COLORS.inkSoft, cursor: "pointer", textAlign: "left" }}
+            >
+              Fermer
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -25,6 +25,8 @@ import { ConversationScreen } from "./ConversationScreen.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages } from "../data/messaging.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
+import { loadTokTargets, loadMyPendingToks, subscribeToToks } from "../data/toks.js";
+import { TokModal } from "./TokModal.jsx";
 import { formatTime, genderAgree } from "../utils.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 
@@ -160,6 +162,12 @@ export function SalonTabsScreen(props) {
   const [conversation, setConversation] = useState(undefined); // undefined = en cours, null = échec
   const [chatUnread, setChatUnread] = useState(0);
 
+  // Tok — chargé dès l'arrivée dans le salon, pour que la pastille du bouton existe avant
+  // qu'on l'ouvre.
+  const [tokOpen, setTokOpen] = useState(false);
+  const [tokTargets, setTokTargets] = useState([]);
+  const [pendingToks, setPendingToks] = useState([]);
+
   const salonCode = event?.salonCode || null;
   const eventName = event?.name || null;
   const participantCodes = (event?.participants || []).map((p) => p.code).filter(Boolean).join(",");
@@ -197,6 +205,22 @@ export function SalonTabsScreen(props) {
       cancelled = true;
     };
   }, [salonCode, participantCodes, eventName, myUserId]);
+
+  const refreshTok = useCallback(() => {
+    if (!salonCode) return;
+    loadTokTargets(salonCode).then(setTokTargets);
+    loadMyPendingToks(salonCode).then(setPendingToks);
+  }, [salonCode]);
+
+  useEffect(() => {
+    refreshTok();
+  }, [refreshTok]);
+
+  useEffect(() => {
+    if (!salonCode) return;
+    const unsubscribe = subscribeToToks(refreshTok);
+    return unsubscribe;
+  }, [salonCode, refreshTok]);
 
   const conversationId = conversation?.id || null;
   const refreshChatUnread = useCallback(() => {
@@ -288,8 +312,45 @@ export function SalonTabsScreen(props) {
     </div>
   );
 
+  const tokButton = salonCode ? (
+    <button
+      onClick={() => setTokOpen(true)}
+      title="Envoyer un Tok"
+      style={{
+        position: "relative",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        height: "32px",
+        background: "none",
+        border: `2px solid ${pendingToks.length > 0 ? COLORS.amber : COLORS.paperAlt}`,
+        borderRadius: "8px",
+        padding: "0 12px",
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ fontSize: "14px", lineHeight: 1 }}>⚡</span>
+      <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink }}>Tok</span>
+      <TabBadge count={pendingToks.length} />
+    </button>
+  ) : null;
+
   if (tab === "salon") {
-    return <EventDashboardScreen {...props} tabBar={tabBar} />;
+    return (
+      <>
+        <EventDashboardScreen {...props} tabBar={tabBar} tokButton={tokButton} />
+        {tokOpen && (
+          <TokModal
+            salonCode={salonCode}
+            targets={tokTargets}
+            pending={pendingToks}
+            myName={props.myName}
+            onClose={() => setTokOpen(false)}
+            onChanged={refreshTok}
+          />
+        )}
+      </>
+    );
   }
 
   return (

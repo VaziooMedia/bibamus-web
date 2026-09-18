@@ -7,6 +7,8 @@
 // `tabBar` : barre d'onglets fournie par SalonTabsScreen, affichée entre le
 // lieu et la ligne du mode. Elle arrive en propriété plutôt que d'être
 // construite ici, pour que cet écran ne sache rien des autres onglets.
+//
+// `tokButton` : même principe, affiché à côté de BibaPlay.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
@@ -29,7 +31,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink, tabBar }) {
+export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink, tabBar, tokButton }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -666,7 +668,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         </div>
       </div>
 
-      <div style={{ display: "flex", marginBottom: "18px" }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "18px" }}>
         <button
           onClick={onGoToBibaPlay}
           style={{ position: "relative", display: "flex", alignItems: "center", gap: "6px", height: "32px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "0 10px", cursor: "pointer" }}
@@ -678,6 +680,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
             <span style={{ color: COLORS.amber }}>Play</span>
           </span>
         </button>
+        {tokButton}
       </div>
 
       {salonToast && (
