@@ -35,6 +35,7 @@ import {
   loadDrinksByIds,
 } from "../data/sharedDirectories.js";
 import { openDirectConversation } from "../data/messaging.js";
+import { ConversationScreen } from "./ConversationScreen.jsx";
 import { PERIODS, MONTH_NAMES } from "./MyStatsScreen.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -681,10 +682,11 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   // Extrait — seulement les 3 dernières, la page complète (BibroPulseScreen) charge le reste.
   const [pulseExcerpt, setPulseExcerpt] = useState(null);
 
-  // BibaPing — l'enveloppe ouvre (ou crée) le tête-à-tête avec cette personne. Étape
-  // intermédiaire assumée : tant que l'écran de discussion n'existe pas, on confirme juste que
-  // la conversation est créée et on renvoie vers BibaPing depuis l'accueil.
+  // BibaPing — l'enveloppe ouvre (ou crée) le tête-à-tête avec cette personne, puis affiche la
+  // discussion à la place de la fiche. Même principe que BibaPing : la navigation reste interne
+  // au composant, sans passer par le routeur.
   const [openingConversation, setOpeningConversation] = useState(false);
+  const [openConversation, setOpenConversation] = useState(null);
   const handleOpenConversation = async () => {
     if (!bibro?.userId) {
       alert("Impossible d'ouvrir une conversation avec ce Bibax pour l'instant.");
@@ -697,7 +699,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
       alert(result.error);
       return;
     }
-    alert(`Conversation ouverte avec ${bibro.name} — retrouve-la dans BibaPing, depuis l'accueil.`);
+    setOpenConversation({ id: result.id, kind: "direct", memberIds: [myUserId, bibro.userId] });
   };
 
   useEffect(() => {
@@ -750,6 +752,18 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.amber, lineHeight: 1 }}>{value != null ? value : "…"}</span>
     </button>
   );
+
+  // La discussion remplace entièrement la fiche ; le retour ramène ici.
+  if (openConversation) {
+    return (
+      <ConversationScreen
+        conversation={openConversation}
+        myUserId={myUserId}
+        title={[bibro.name, bibro.lastName].filter(Boolean).join(" ")}
+        onBack={() => setOpenConversation(null)}
+      />
+    );
+  }
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
