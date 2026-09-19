@@ -1023,10 +1023,11 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            height: "32px",
             background: waterAlert?.enabled ? COLORS.amber : "none",
             border: `2px solid ${waterAlert?.enabled ? COLORS.amber : COLORS.paperAlt}`,
             borderRadius: "10px",
-            padding: "6px",
+            padding: "0 8px",
             cursor: "pointer",
           }}
         >
