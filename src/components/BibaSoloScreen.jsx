@@ -766,7 +766,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
               background: COLORS.surface,
               border: `2px solid ${COLORS.amber}`,
               borderRadius: "12px",
-              padding: "10px 14px",
+              padding: "8px 12px",
               cursor: "pointer",
             }}
           >
@@ -780,7 +780,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
               }}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
             >
-              <NavIcon name="x" size={15} color={COLORS.inkSoft} />
+              <NavIcon name="x" size={12} color={COLORS.paperAlt} />
             </button>
           </div>
         ) : (
@@ -795,7 +795,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
               background: "none",
               border: `2px solid ${COLORS.paperAlt}`,
               borderRadius: "12px",
-              padding: "10px 14px",
+              padding: "8px 12px",
               cursor: "pointer",
               textAlign: "left",
               color: COLORS.inkSoft,
@@ -805,48 +805,51 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
             <span style={{ fontSize: "12px", fontWeight: 600 }}>Lieu</span>
           </button>
         )}
-        <button
-          onClick={() => setCheckingDrinks(true)}
-          title="Drink Check"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "42px",
-            height: "42px",
-            borderRadius: "50%",
-            background: COLORS.amber,
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            flexShrink: 0,
-          }}
-        >
-          <img src={drinkCheckIconUrl} alt="Drink Check" style={{ height: "24px", filter: "brightness(0)" }} />
-        </button>
-        <button
-          onClick={() => setAdding(true)}
-          title="Ajouter un verre"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "44px",
-            height: "44px",
-            borderRadius: "50%",
-            background: COLORS.amber,
-            border: "none",
-            cursor: "pointer",
-            flexShrink: 0,
-            fontSize: "22px",
-            fontWeight: 700,
-            color: COLORS.paper,
-            lineHeight: 1,
-          }}
-        >
-          +
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          <button
+            onClick={() => setCheckingDrinks(true)}
+            title="Drink Check"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "42px",
+              height: "42px",
+              borderRadius: "50%",
+              background: COLORS.amber,
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <img src={drinkCheckIconUrl} alt="Drink Check" style={{ height: "24px", filter: "brightness(0)" }} />
+          </button>
+          <button
+            onClick={() => setAdding(true)}
+            title="Ajouter un verre"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "44px",
+              height: "44px",
+              borderRadius: "50%",
+              background: COLORS.amber,
+              border: "none",
+              cursor: "pointer",
+              flexShrink: 0,
+              fontSize: "22px",
+              fontWeight: 700,
+              color: COLORS.paper,
+              lineHeight: 1,
+            }}
+          >
+            +
+          </button>
+        </div>
       </div>
+      <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, marginBottom: "14px" }} />
 
       {venuePickerOpen && (
         <div style={{ marginBottom: "18px" }}>
@@ -978,6 +981,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>Kcal</div>
         </div>
       </div>
+      <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, marginBottom: "18px" }} />
 
       <div style={{ flex: 1, overflowY: "auto" }}>
         {checkins === null ? (
@@ -1006,19 +1010,21 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                     disabled={!drink || !onOpenDrink}
                     style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
                   >
-                    <EntityAvatar size={40} fallbackIcon="bottle" />
+                    <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />
                   </button>
                   <button
                     onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
                     disabled={!drink || !onOpenDrink}
                     style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
                   >
-                    {/* Ligne 1 — produit */}
-                    <div style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</div>
-                    {/* Ligne 2 — volume + mentions + drapeau */}
+                    {/* Ligne 1 — produit + volume */}
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
+                      {c.volumeCl && <span style={{ fontSize: "12px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>{c.volumeCl} cl.</span>}
+                    </div>
+                    {/* Ligne 2 — mentions + drapeau */}
                     <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px", flexWrap: "wrap" }}>
-                      {c.volumeCl && <span>{c.volumeCl} cl.</span>}
-                      {showMentions && drink.abv != null && <span>· {String(drink.abv).replace(".", ",")}%</span>}
+                      {showMentions && drink.abv != null && <span>{String(drink.abv).replace(".", ",")}%</span>}
                       {showMentions && drink.bio && <span>· Bio</span>}
                       {showMentions && drink.glutenFree && <span>· Sans gluten</span>}
                       {drink?.nationality && COUNTRY_FLAGS[drink.nationality] && (
@@ -1033,14 +1039,16 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                       {formatDateOnly(c.createdAt)} · {formatTimeOnly(c.createdAt)}
                     </div>
                   </button>
-                  {c.price != null && (
-                    <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px" }}>
-                      {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
-                    </span>
-                  )}
-                  <button onClick={() => handleDelete(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginTop: "28px" }}>
-                    <NavIcon name="x" size={14} color={COLORS.paperAlt} />
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0 }}>
+                    {c.price != null && (
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber }}>
+                        {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+                      </span>
+                    )}
+                    <button onClick={() => handleDelete(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginTop: "36px" }}>
+                      <NavIcon name="x" size={14} color={COLORS.paperAlt} />
+                    </button>
+                  </div>
                 </div>
               );
             })}
