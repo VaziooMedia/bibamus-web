@@ -446,7 +446,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                       }}
                     >
                       <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
-                      <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: "6px", minWidth: 0 }}>
+                      <span style={{ flex: 1, display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
                         <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
                         {d.abv != null && (
                           <>
@@ -500,7 +500,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                       }}
                     >
                       <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
-                      <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: "6px", minWidth: 0 }}>
+                      <span style={{ flex: 1, display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
                         <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
                         {d.abv != null && (
                           <>
