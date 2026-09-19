@@ -445,9 +445,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                         color: COLORS.ink,
                       }}
                     >
-                      <NavIcon name="bottle" size={16} color={COLORS.amber} />
+                      <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
                       <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{d.name}</span>
-                      <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>{d.type}</span>
                     </button>
                   ))}
                 </div>
@@ -492,9 +491,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                         color: COLORS.ink,
                       }}
                     >
-                      <NavIcon name="bottle" size={16} color={COLORS.amber} />
+                      <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
                       <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{d.name}</span>
-                      <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>{d.type}</span>
                     </button>
                   ))}
                 </div>
@@ -1040,10 +1038,10 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                       {/* Ligne 2 — mentions + drapeau, séparés par un point vert fluo */}
                       {(() => {
                         const mentionParts = [];
-                        if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
+                        if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
                         if (showMentions && drink.bio) mentionParts.push(<span key="bio">Bio</span>);
                         if (showMentions && drink.glutenFree) mentionParts.push(<span key="gf">Sans gluten</span>);
-                        if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
+                        if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
                         if (mentionParts.length === 0) return null;
                         return (
                           <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px", flexWrap: "wrap" }}>
