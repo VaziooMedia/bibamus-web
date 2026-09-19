@@ -391,9 +391,10 @@ export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl) 
   return { ok: true };
 }
 
-export async function loadMySoloCheckins(sinceIso) {
+export async function loadMySoloCheckins(sinceIso, excludeArchived = false) {
   let query = supabase.from("solo_checkins").select("*").order("created_at", { ascending: false });
   if (sinceIso) query = query.gte("created_at", sinceIso);
+  if (excludeArchived) query = query.is("archived_at", null);
   const { data, error } = await query;
   if (error) {
     console.error("loadMySoloCheckins:", error);
@@ -407,6 +408,16 @@ export async function loadMySoloCheckins(sinceIso) {
     volumeCl: row.volume_cl,
     createdAt: row.created_at,
   }));
+}
+
+// "Archiver" — la liste du jour disparaît de BibaSolo (et ses 3 compteurs repartent à zéro),
+// mais la vraie consommation reste comptée dans Mes Statistiques (contrairement à la croix de
+// suppression individuelle, qui reste un vrai DELETE définitif).
+export async function archiveSoloCheckins(ids) {
+  if (!ids || ids.length === 0) return { ok: true };
+  const { error } = await supabase.from("solo_checkins").update({ archived_at: new Date().toISOString() }).in("id", ids);
+  if (error) return { error: error.message };
+  return { ok: true };
 }
 
 export async function deleteSoloCheckin(id) {

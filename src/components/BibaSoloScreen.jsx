@@ -14,6 +14,7 @@ import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
 import {
   addSoloCheckin,
+  archiveSoloCheckins,
   loadMySoloCheckins,
   deleteSoloCheckin,
   searchDrinks,
@@ -825,7 +826,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     setVenueQuery("");
   };
 
-  const refresh = () => loadMySoloCheckins(startOfTodayIso()).then(setCheckins);
+  const refresh = () => loadMySoloCheckins(startOfTodayIso(), true).then(setCheckins);
 
   // Favoris — sur tout l'historique, pas seulement aujourd'hui, sinon la liste se vide à
   // chaque nouvelle journée. Limité à 3, le plus ancien pousse dehors dès qu'un nouveau arrive.
@@ -889,12 +890,12 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     await deleteSoloCheckin(id);
   };
 
-  const handleReset = async () => {
+  const handleArchive = async () => {
     if (!checkins || checkins.length === 0) return;
-    if (!window.confirm("Tout effacer pour aujourd'hui ? Cette action est irréversible.")) return;
+    if (!window.confirm("Archiver la liste du jour ? Les compteurs BibaSolo repartent à zéro, mais tout reste compté dans Mes Statistiques.")) return;
     const ids = checkins.map((c) => c.id);
     setCheckins([]);
-    await Promise.all(ids.map((id) => deleteSoloCheckin(id)));
+    await archiveSoloCheckins(ids);
   };
 
   if (adding) {
@@ -1034,8 +1035,8 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <WaterAlertIcon size={18} />
         </button>
         <button
-          onClick={handleReset}
-          title="Réinitialiser aujourd'hui"
+          onClick={handleArchive}
+          title="Archiver la liste du jour"
           style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px", cursor: "pointer", display: "flex" }}
         >
           <NavIcon name="refresh" size={16} color={COLORS.inkSoft} />
