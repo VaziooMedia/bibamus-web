@@ -3208,6 +3208,56 @@ export async function loadVenueFollowStatus(venueId) {
 }
 
 // Même principe que toggleFollowVenue/loadVenueFollowStatus, mais pour un produit.
+// BibaZERO et WaterAlert version solo — mêmes vrais concepts que dans un salon (voir
+// BibaBobModal/WaterAlertModal), mais persistés sur le profil plutôt que sur un event.
+export async function loadMyBibaZeroStatus(userId) {
+  const { data, error } = await supabase.from("profiles").select("biba_zero_active, biba_zero_tolerance, biba_zero_joker_used, biba_zero_pin").eq("id", userId).single();
+  if (error) {
+    console.error("loadMyBibaZeroStatus:", error);
+    return null;
+  }
+  if (!data.biba_zero_active) return null;
+  return { tolerance: data.biba_zero_tolerance, jokerUsed: data.biba_zero_joker_used, pin: data.biba_zero_pin };
+}
+
+export async function activateBibaZeroSolo(userId, tolerance, pin) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ biba_zero_active: true, biba_zero_tolerance: tolerance, biba_zero_joker_used: false, biba_zero_pin: pin })
+    .eq("id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function deactivateBibaZeroSolo(userId, pin) {
+  const { data: profile, error: readError } = await supabase.from("profiles").select("biba_zero_pin").eq("id", userId).single();
+  if (readError) return { error: readError.message };
+  if ((profile.biba_zero_pin || "") !== pin) return { error: "Code incorrect." };
+  const { error } = await supabase.from("profiles").update({ biba_zero_active: false, biba_zero_tolerance: null, biba_zero_joker_used: false, biba_zero_pin: null }).eq("id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function useBibaZeroJokerSolo(userId) {
+  const { error } = await supabase.from("profiles").update({ biba_zero_joker_used: true }).eq("id", userId);
+  if (error) console.error("useBibaZeroJokerSolo:", error);
+}
+
+export async function loadMyWaterAlertSoloSettings(userId) {
+  const { data, error } = await supabase.from("profiles").select("water_alert_solo").eq("id", userId).single();
+  if (error) {
+    console.error("loadMyWaterAlertSoloSettings:", error);
+    return { enabled: false };
+  }
+  return data.water_alert_solo || { enabled: false };
+}
+
+export async function saveWaterAlertSoloSettings(userId, settings) {
+  const { error } = await supabase.from("profiles").update({ water_alert_solo: settings }).eq("id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function toggleFollowDrink(drinkId) {
   const { data, error } = await supabase.rpc("toggle_follow_drink", { p_drink_id: drinkId });
   if (error) return { error: error.message };

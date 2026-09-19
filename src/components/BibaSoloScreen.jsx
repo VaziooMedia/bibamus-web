@@ -7,11 +7,30 @@
 // ============================================================
 import React, { useState, useEffect, useMemo } from "react";
 import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
-import { NavIcon, CountryFlagImg } from "./icons.jsx";
+import { NavIcon, CountryFlagImg, WaterAlertIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
-import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
-import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds, searchVenues, loadVenuesByIds, loadNearbyVenues, loadGenericDrinks } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney } from "../utils.js";
+import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink } from "./ui.jsx";
+import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
+import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
+import {
+  addSoloCheckin,
+  loadMySoloCheckins,
+  deleteSoloCheckin,
+  searchDrinks,
+  loadDrinksByIds,
+  searchVenues,
+  loadVenuesByIds,
+  loadNearbyVenues,
+  loadGenericDrinks,
+  loadMyBibaZeroStatus,
+  activateBibaZeroSolo,
+  deactivateBibaZeroSolo,
+  useBibaZeroJokerSolo,
+  loadMyWaterAlertSoloSettings,
+  saveWaterAlertSoloSettings,
+  upsertPushSubscription,
+} from "../data/sharedDirectories.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import bibatlasIconUrl from "../assets/brand/bibatlas.svg";
@@ -131,7 +150,7 @@ function MenuItemBlock({ item, onClick }) {
 
 // Écran d'ajout — recherche une boisson, prix obligatoire. Le lieu est fixé une fois sur la
 // page principale de BibaSolo et appliqué automatiquement ici, sans le redemander à chaque verre.
-function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBack }) {
+function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActive = false, onDone, onBack }) {
   const [query, setQuery] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
   const [volume, setVolume] = useState("");
@@ -160,20 +179,23 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
   const venueMenuItems = (venue?.menu || [])
     .filter((item) => item && item.fromDirectory && item.sourceDrinkId)
     .map((item) => resolveMenuItem(item, venueDrinks))
-    .filter((item) => item.name);
+    .filter((item) => item.name)
+    .filter((item) => !bibaZeroActive || !isAlcoholicDrink(item));
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
   const venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
   const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
+  const visibleRecentDrinks = bibaZeroActive ? recentDrinks.filter((d) => !isAlcoholicDrink(d)) : recentDrinks;
 
   const q = normalize(query);
-  const [drinkResults, setDrinkResults] = useState([]);
+  const [rawDrinkResults, setRawDrinkResults] = useState([]);
+  const drinkResults = bibaZeroActive ? rawDrinkResults.filter((d) => !isAlcoholicDrink(d)) : rawDrinkResults;
   useEffect(() => {
     if (q.length < 2) {
-      setDrinkResults([]);
+      setRawDrinkResults([]);
       return;
     }
     const timer = setTimeout(() => {
-      searchDrinks(query.trim(), 8).then(setDrinkResults);
+      searchDrinks(query.trim(), 8).then(setRawDrinkResults);
     }, 350);
     return () => clearTimeout(timer);
   }, [q, query]);
@@ -185,7 +207,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
     if (pickMode === "generic" && genericDrinks.length === 0) loadGenericDrinks().then(setGenericDrinks);
   }, [pickMode]); // eslint-disable-line react-hooks/exhaustive-deps
   const gq = normalize(genericQuery);
-  const genericResults = gq.length === 0 ? genericDrinks : genericDrinks.filter((d) => normalize(d.name).includes(gq));
+  const genericResults = (gq.length === 0 ? genericDrinks : genericDrinks.filter((d) => normalize(d.name).includes(gq))).filter((d) => !bibaZeroActive || !isAlcoholicDrink(d));
 
   const selectDrink = (d) => {
     setSelectedDrink(d);
@@ -228,11 +250,11 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
         <>
           {pickMode === null && (
             <>
-              {recentDrinks.length > 0 && (
+              {visibleRecentDrinks.length > 0 && (
                 <div style={{ marginBottom: "14px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                    {recentDrinks.map((d) => (
+                    {visibleRecentDrinks.map((d) => (
                       <button
                         key={d.id}
                         onClick={() => selectDrink(d)}
@@ -255,7 +277,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                   </div>
                 </div>
               )}
-              {recentDrinks.length > 0 && <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px" }} />}
+              {visibleRecentDrinks.length > 0 && <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px" }} />}
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {venueMenuItems.length > 0 && (
@@ -578,6 +600,118 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
   );
 }
 
+// Même vrai principe que WaterAlertSettingsScreen (MinorScreens.jsx), mais persisté sur le
+// profil plutôt que sur un event de salon — "rounds" (tournées) devient "checkins"
+// (consommations du jour).
+function WaterAlertSoloSettingsScreen({ myUserId, settings, onSave, onBack }) {
+  const wa = settings || {};
+  const [mode, setMode] = useState(wa.enabled ? wa.mode || "time" : "off");
+  const [everyMinutes, setEveryMinutes] = useState(wa.everyMinutes ? String(wa.everyMinutes) : "30");
+  const [everyRounds, setEveryRounds] = useState(wa.everyRounds ? String(wa.everyRounds) : "3");
+
+  const options = [
+    { key: "off", label: "Désactivé", desc: "Aucun rappel" },
+    { key: "time", label: "Toutes les X minutes", desc: "Rappel basé sur le temps écoulé" },
+    { key: "checkins", label: "Toutes les X consommations", desc: "Rappel basé sur le nombre de verres du jour" },
+  ];
+
+  const handleSubmit = async () => {
+    if (mode === "off") {
+      await saveWaterAlertSoloSettings(myUserId, { enabled: false });
+      onSave({ enabled: false });
+      return;
+    }
+    const token = await requestNotificationPermissionAndGetToken();
+    if (token) {
+      await upsertPushSubscription(token, "web");
+    } else if (Notification?.permission === "denied") {
+      alert("Notifications refusées — le rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.");
+    }
+    const next = { enabled: true, mode, everyMinutes: parseInt(everyMinutes, 10) || 30, everyRounds: parseInt(everyRounds, 10) || 3 };
+    await saveWaterAlertSoloSettings(myUserId, next);
+    onSave(next);
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 6px 0" }}>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <WaterAlertIcon size={26} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>
+          Water<span style={{ color: COLORS.amber }}>Alert</span>
+        </h1>
+      </div>
+
+      <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "18px" }}>
+        Un rappel s'affiche pour te suggérer de boire un verre d'eau.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+        {options.map((o) => (
+          <div key={o.key}>
+            <button
+              onClick={() => setMode(o.key)}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                background: mode === o.key ? COLORS.amber : COLORS.surface,
+                color: mode === o.key ? COLORS.paper : COLORS.ink,
+                border: `2px solid ${mode === o.key ? COLORS.amber : COLORS.paperAlt}`,
+                borderRadius: "12px",
+                padding: "12px 14px",
+                cursor: "pointer",
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: "14.5px" }}>{o.label}</div>
+              <div style={{ fontSize: "12px", marginTop: "2px", opacity: mode === o.key ? 0.85 : 0.65 }}>{o.desc}</div>
+            </button>
+            {o.key === "time" && mode === "time" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", paddingLeft: "4px" }}>
+                <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>Toutes les</span>
+                <select
+                  value={everyMinutes}
+                  onChange={(e) => setEveryMinutes(e.target.value)}
+                  style={{ padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" }}
+                >
+                  {[15, 30, 45, 60, 75, 90, 120, 150, 180].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+                <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>minutes</span>
+              </div>
+            )}
+            {o.key === "checkins" && mode === "checkins" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", paddingLeft: "4px" }}>
+                <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>Toutes les</span>
+                <select
+                  value={everyRounds}
+                  onChange={(e) => setEveryRounds(e.target.value)}
+                  style={{ padding: "8px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" }}
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+                <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>consommations</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <PrimaryButton onClick={handleSubmit} style={{ width: "100%" }}>
+        Valider
+      </PrimaryButton>
+      <BackFooterLink onClick={onBack} />
+    </div>
+  );
+}
+
 export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onOpenDrink, onBack }) {
   const [checkins, setCheckins] = useState(null);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
@@ -615,6 +749,52 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   const [nearbyVenues, setNearbyVenues] = useState([]);
   const [venueQuery, setVenueQuery] = useState("");
   const [venueResults, setVenueResults] = useState([]);
+
+  // BibaZERO — même vrai concept qu'en salon (voir BibaBobModal), persisté sur le profil.
+  const [bibaZero, setBibaZero] = useState(null);
+  const [bibaZeroMenuOpen, setBibaZeroMenuOpen] = useState(false);
+  const [bibaBobModalMode, setBibaBobModalMode] = useState(null); // null | "activate" | "deactivate"
+  const refreshBibaZero = () => loadMyBibaZeroStatus(myUserId).then(setBibaZero);
+  useEffect(() => {
+    refreshBibaZero();
+  }, [myUserId]);
+
+  // WaterAlert — même vrai concept qu'en salon, mais basé sur le nombre de vraies
+  // consommations du jour ("checkins") plutôt que de tournées. Rappel purement visuel, actif
+  // uniquement tant que l'app reste ouverte (pas de vrai déclencheur serveur ici, contrairement
+  // au salon, qui envoie une vraie notification push même app fermée).
+  const [waterAlert, setWaterAlert] = useState(null);
+  const [waterAlertModalOpen, setWaterAlertModalOpen] = useState(false);
+  const [waterAlertSettingsOpen, setWaterAlertSettingsOpen] = useState(false);
+  const waterAlertClaimedForCount = React.useRef(null);
+  useEffect(() => {
+    loadMyWaterAlertSoloSettings(myUserId).then(setWaterAlert);
+  }, [myUserId]);
+  useEffect(() => {
+    if (!waterAlert || !waterAlert.enabled || waterAlert.mode !== "checkins" || checkins === null) return;
+    if (waterAlertClaimedForCount.current === null) {
+      waterAlertClaimedForCount.current = checkins.length;
+      return;
+    }
+    const since = checkins.length - (waterAlert.lastReminderCount ?? checkins.length);
+    if (checkins.length > waterAlertClaimedForCount.current && since >= (waterAlert.everyRounds || 3)) {
+      waterAlertClaimedForCount.current = checkins.length;
+      setWaterAlertModalOpen(true);
+    }
+  }, [checkins?.length, waterAlert?.enabled, waterAlert?.mode]);
+  useEffect(() => {
+    if (!waterAlert || !waterAlert.enabled || waterAlert.mode !== "time") return;
+    const checkElapsed = () => {
+      const lastAt = waterAlert.lastReminderAt || new Date().toISOString();
+      const elapsedMs = Date.now() - new Date(lastAt).getTime();
+      if (elapsedMs >= (waterAlert.everyMinutes || 30) * 60000) {
+        setWaterAlertModalOpen(true);
+        setWaterAlert((w) => ({ ...w, lastReminderAt: new Date().toISOString() }));
+      }
+    };
+    const interval = setInterval(checkElapsed, 15000);
+    return () => clearInterval(interval);
+  }, [waterAlert?.enabled, waterAlert?.mode, waterAlert?.lastReminderAt]);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -723,6 +903,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         myUserId={myUserId}
         recentDrinks={recentDrinkIds.map((id) => drinksById[id]).filter(Boolean)}
         venue={currentVenue}
+        bibaZeroActive={!!bibaZero}
         onBack={() => setAdding(false)}
         onDone={() => {
           setAdding(false);
@@ -746,6 +927,20 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     );
   }
 
+  if (waterAlertSettingsOpen) {
+    return (
+      <WaterAlertSoloSettingsScreen
+        myUserId={myUserId}
+        settings={waterAlert}
+        onSave={(next) => {
+          setWaterAlert(next);
+          setWaterAlertSettingsOpen(false);
+        }}
+        onBack={() => setWaterAlertSettingsOpen(false)}
+      />
+    );
+  }
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -757,6 +952,86 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Solo</span>
         </h1>
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setBibaZeroMenuOpen((o) => !o)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "60px",
+              height: "32px",
+              background: bibaZero ? COLORS.amber : "none",
+              border: `2px solid ${bibaZero ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "8px",
+              cursor: "pointer",
+            }}
+            title={bibaZero ? "BibaZERO actif" : "Mode BibaZERO"}
+          >
+            <span style={{ fontSize: "12.5px", fontWeight: 700, color: bibaZero ? COLORS.paper : COLORS.amber }}>ZERO</span>
+          </button>
+          {bibaZeroMenuOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                marginTop: "6px",
+                zIndex: 10,
+                background: COLORS.surfaceAlt,
+                border: `2px solid ${COLORS.paperAlt}`,
+                borderRadius: "10px",
+                padding: "12px 14px",
+                minWidth: "220px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.35)",
+              }}
+            >
+              {bibaZero ? (
+                <>
+                  <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: 0 }}>
+                    <strong style={{ color: COLORS.ink }}>Actif</strong> — {bibaZero.tolerance === "zero" ? "tolérance zéro" : bibaZero.jokerUsed ? "joker déjà utilisé" : "avec 1 joker"}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setBibaBobModalMode("deactivate");
+                      setBibaZeroMenuOpen(false);
+                    }}
+                    style={{ background: "none", border: "none", color: COLORS.bobBlue, fontSize: "12px", fontWeight: 700, cursor: "pointer", padding: "8px 0 0 0" }}
+                  >
+                    Désactiver
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => {
+                    setBibaBobModalMode("activate");
+                    setBibaZeroMenuOpen(false);
+                  }}
+                  style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", fontSize: "12.5px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", padding: 0, whiteSpace: "nowrap" }}
+                >
+                  <NavIcon name="play" size={13} color={COLORS.amber} />
+                  Activer <span><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>ZERO</span></span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => setWaterAlertSettingsOpen(true)}
+          title="Réglages WaterAlert"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: waterAlert?.enabled ? COLORS.amber : "none",
+            border: `2px solid ${waterAlert?.enabled ? COLORS.amber : COLORS.paperAlt}`,
+            borderRadius: "10px",
+            padding: "6px",
+            cursor: "pointer",
+          }}
+        >
+          <WaterAlertIcon size={18} />
+        </button>
         <button
           onClick={handleReset}
           title="Réinitialiser aujourd'hui"
@@ -1097,6 +1372,34 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           </div>
         )}
       </div>
+
+      {bibaBobModalMode && (
+        <BibaBobModal
+          friendName="toi"
+          storedPin={bibaZero?.pin}
+          mode={bibaBobModalMode}
+          onActivate={async (tolerance, pin) => {
+            const result = await activateBibaZeroSolo(myUserId, tolerance, pin);
+            if (result?.error) {
+              alert(result.error);
+              return;
+            }
+            setBibaBobModalMode(null);
+            refreshBibaZero();
+          }}
+          onDeactivate={async () => {
+            const result = await deactivateBibaZeroSolo(myUserId, bibaZero?.pin);
+            if (result?.error) {
+              alert(result.error);
+              return;
+            }
+            setBibaBobModalMode(null);
+            refreshBibaZero();
+          }}
+          onClose={() => setBibaBobModalMode(null)}
+        />
+      )}
+      {waterAlertModalOpen && <WaterAlertModal onClose={() => setWaterAlertModalOpen(false)} />}
 
       <PageFooterNav onBack={onBack} />
     </div>
