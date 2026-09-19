@@ -446,7 +446,15 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                       }}
                     >
                       <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
-                      <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{d.name}</span>
+                      <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: "6px", minWidth: 0 }}>
+                        <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
+                        {d.abv != null && (
+                          <>
+                            <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />
+                            <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{String(d.abv).replace(".", ",")}% ABV</span>
+                          </>
+                        )}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -492,7 +500,15 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, onDone, onBa
                       }}
                     >
                       <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
-                      <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{d.name}</span>
+                      <span style={{ flex: 1, display: "flex", alignItems: "baseline", gap: "6px", minWidth: 0 }}>
+                        <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
+                        {d.abv != null && (
+                          <>
+                            <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />
+                            <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{String(d.abv).replace(".", ",")}% ABV</span>
+                          </>
+                        )}
+                      </span>
                     </button>
                   ))}
                 </div>
