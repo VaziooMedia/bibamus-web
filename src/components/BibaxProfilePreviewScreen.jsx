@@ -76,7 +76,7 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
 
   const relationLabel = {
     none: "Ajouter en Bibax",
-    sent: "Demande envoyée — annuler",
+    sent: "Demande envoyée",
     received: "Confirmer la demande",
     accepted: "Vous êtes Bibax",
   }[relation.status];
