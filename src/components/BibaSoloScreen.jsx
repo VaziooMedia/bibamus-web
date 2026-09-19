@@ -6,8 +6,8 @@
 // direct au-dessus de la liste.
 // ============================================================
 import React, { useState, useEffect, useMemo } from "react";
-import { COLORS, COUNTRY_FLAGS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
-import { NavIcon, FlagIcon, CountryFlagImg } from "./icons.jsx";
+import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
+import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { addSoloCheckin, loadMySoloCheckins, deleteSoloCheckin, searchDrinks, loadDrinksByIds, searchVenues, loadVenuesByIds, loadNearbyVenues, loadGenericDrinks } from "../data/sharedDirectories.js";
@@ -569,6 +569,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
   const [checkingDrinks, setCheckingDrinks] = useState(false);
+  const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [drinksById, setDrinksById] = useState({});
   const [venuesById, setVenuesById] = useState({});
 
@@ -734,7 +735,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 28px 0" }}>
         <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "46px", height: "46px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
           <img src={bibaSoloIconUrl} alt="BibaSolo" style={{ width: "26px", height: "26px" }} />
         </span>
@@ -977,8 +978,21 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>Dépensé</div>
         </div>
         <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "center" }}>
-          <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>{totals.kcal}</div>
-          <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>Kcal</div>
+          {caloriesHidden ? (
+            <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.inkSoft }}>—</div>
+          ) : (
+            <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>{totals.kcal}</div>
+          )}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginTop: "2px" }}>
+            <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>Kcal</span>
+            <button
+              onClick={() => setCaloriesHidden((h) => !h)}
+              style={{ display: "flex", alignItems: "center", background: "none", border: "none", color: COLORS.inkSoft, cursor: "pointer", padding: 0 }}
+              title={caloriesHidden ? "Afficher les calories" : "Masquer les calories"}
+            >
+              <NavIcon name={caloriesHidden ? "eye-off" : "eye"} size={11} color={COLORS.inkSoft} />
+            </button>
+          </div>
         </div>
       </div>
       <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, marginBottom: "18px" }} />
@@ -999,53 +1013,67 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                   key={c.id}
                   style={{
                     display: "flex",
-                    alignItems: "flex-start",
-                    gap: "10px",
+                    flexDirection: "column",
+                    gap: "4px",
                     padding: "12px 0",
                     borderBottom: i === checkins.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
                   }}
                 >
-                  <button
-                    onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-                    disabled={!drink || !onOpenDrink}
-                    style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
-                  >
-                    <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />
-                  </button>
-                  <button
-                    onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-                    disabled={!drink || !onOpenDrink}
-                    style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
-                  >
-                    {/* Ligne 1 — produit + volume */}
-                    <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                      <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
-                      {c.volumeCl && <span style={{ fontSize: "12px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>{c.volumeCl} cl.</span>}
-                    </div>
-                    {/* Ligne 2 — mentions + drapeau */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px", flexWrap: "wrap" }}>
-                      {showMentions && drink.abv != null && <span>{String(drink.abv).replace(".", ",")}%</span>}
-                      {showMentions && drink.bio && <span>· Bio</span>}
-                      {showMentions && drink.glutenFree && <span>· Sans gluten</span>}
-                      {drink?.nationality && COUNTRY_FLAGS[drink.nationality] && (
-                        <span style={{ marginLeft: "2px" }}>
-                          <FlagIcon flag={COUNTRY_FLAGS[drink.nationality]} size={12} />
-                        </span>
-                      )}
-                    </div>
-                    {/* Ligne 3 — lieu + date + heure */}
-                    <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px" }}>
-                      {venue ? `${venue.name} · ` : ""}
-                      {formatDateOnly(c.createdAt)} · {formatTimeOnly(c.createdAt)}
-                    </div>
-                  </button>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <button
+                      onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+                      disabled={!drink || !onOpenDrink}
+                      style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
+                    >
+                      <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />
+                    </button>
+                    <button
+                      onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+                      disabled={!drink || !onOpenDrink}
+                      style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
+                    >
+                      {/* Ligne 1 — produit + volume */}
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                        <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
+                        {c.volumeCl && <span style={{ fontSize: "12px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>{c.volumeCl} cl.</span>}
+                      </div>
+                      {/* Ligne 2 — mentions + drapeau, séparés par un point vert fluo */}
+                      {(() => {
+                        const mentionParts = [];
+                        if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}%</span>);
+                        if (showMentions && drink.bio) mentionParts.push(<span key="bio">Bio</span>);
+                        if (showMentions && drink.glutenFree) mentionParts.push(<span key="gf">Sans gluten</span>);
+                        if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={13} />);
+                        if (mentionParts.length === 0) return null;
+                        return (
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px", flexWrap: "wrap" }}>
+                            {mentionParts.map((part, idx) => (
+                              <React.Fragment key={idx}>
+                                {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                                {part}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </button>
                     {c.price != null && (
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber }}>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px", flexShrink: 0 }}>
                         {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
                       </span>
                     )}
-                    <button onClick={() => handleDelete(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginTop: "36px" }}>
+                  </div>
+                  {/* Ligne 3 — lieu + date + heure (séparés par un point vert fluo), croix à l'extrême droite */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginLeft: "50px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
+                      {[venue?.name, formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
+                        <React.Fragment key={idx}>
+                          {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                          <span>{part}</span>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <button onClick={() => handleDelete(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}>
                       <NavIcon name="x" size={14} color={COLORS.paperAlt} />
                     </button>
                   </div>
