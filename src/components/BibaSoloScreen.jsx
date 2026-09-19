@@ -914,7 +914,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                       border: `2px solid ${COLORS.amber}`,
                       borderRadius: "999px",
                       padding: "8px 14px",
-                      fontSize: "13px",
+                      fontSize: "11px",
                       fontWeight: 700,
                       color: COLORS.ink,
                       cursor: "pointer",
@@ -1035,15 +1035,15 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                       {/* Ligne 1 — produit + volume */}
                       <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
                         <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
-                        {c.volumeCl && <span style={{ fontSize: "12px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>{c.volumeCl} cl.</span>}
+                        {c.volumeCl && <span style={{ fontSize: "12px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>{c.volumeCl}cl.</span>}
                       </div>
                       {/* Ligne 2 — mentions + drapeau, séparés par un point vert fluo */}
                       {(() => {
                         const mentionParts = [];
-                        if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}%</span>);
+                        if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
                         if (showMentions && drink.bio) mentionParts.push(<span key="bio">Bio</span>);
                         if (showMentions && drink.glutenFree) mentionParts.push(<span key="gf">Sans gluten</span>);
-                        if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={13} />);
+                        if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
                         if (mentionParts.length === 0) return null;
                         return (
                           <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px", flexWrap: "wrap" }}>
