@@ -749,25 +749,6 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         >
           <NavIcon name="refresh" size={16} color={COLORS.inkSoft} />
         </button>
-        <button
-          onClick={() => setCheckingDrinks(true)}
-          title="Drink Check"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "42px",
-            height: "42px",
-            borderRadius: "50%",
-            background: COLORS.amber,
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            flexShrink: 0,
-          }}
-        >
-          <img src={drinkCheckIconUrl} alt="Drink Check" style={{ height: "24px", filter: "brightness(0)" }} />
-        </button>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "14px" }}>
@@ -790,7 +771,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
             }}
           >
             <NavIcon name="map-pin" size={16} color={COLORS.amber} />
-            <span style={{ minWidth: 0, fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentVenue.name}</span>
+            <span style={{ minWidth: 0, fontSize: "12px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentVenue.name}</span>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -821,9 +802,28 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
             }}
           >
             <NavIcon name="map-pin" size={16} color={COLORS.inkSoft} />
-            <span style={{ fontSize: "14px", fontWeight: 600 }}>Lieu</span>
+            <span style={{ fontSize: "12px", fontWeight: 600 }}>Lieu</span>
           </button>
         )}
+        <button
+          onClick={() => setCheckingDrinks(true)}
+          title="Drink Check"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "42px",
+            height: "42px",
+            borderRadius: "50%",
+            background: COLORS.amber,
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+        >
+          <img src={drinkCheckIconUrl} alt="Drink Check" style={{ height: "24px", filter: "brightness(0)" }} />
+        </button>
         <button
           onClick={() => setAdding(true)}
           title="Ajouter un verre"
@@ -1038,8 +1038,8 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                       {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
                     </span>
                   )}
-                  <button onClick={() => handleDelete(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginTop: "2px" }}>
-                    <NavIcon name="trash" size={14} color={COLORS.inkSoft} />
+                  <button onClick={() => handleDelete(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", marginTop: "28px" }}>
+                    <NavIcon name="x" size={14} color={COLORS.paperAlt} />
                   </button>
                 </div>
               );
