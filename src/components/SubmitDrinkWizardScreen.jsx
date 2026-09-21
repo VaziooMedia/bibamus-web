@@ -42,7 +42,7 @@ function StepShell({ step, totalSteps, title, onBack, onPrevious, children, foot
         <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{title}</h1>
       </div>
-      <div style={{ flex: 1 }}>{children}</div>
+      <div>{children}</div>
       {onPrevious && (
         <button
           onClick={onPrevious}
@@ -234,7 +234,27 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         }
       >
         <label style={labelStyle}>Degré d'alcool (% ABV)</label>
-        <input type="number" step="0.1" min="0" max="100" value={abv} onChange={(e) => setAbv(e.target.value)} placeholder="Ex : 5" style={inputStyle} autoFocus />
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          max="100"
+          value={abv}
+          onChange={(e) => setAbv(e.target.value)}
+          placeholder="Ex : 5"
+          disabled={abv === "0"}
+          style={{ ...inputStyle, width: "100px" }}
+          autoFocus
+        />
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "14px", cursor: "pointer", fontSize: "13.5px", fontWeight: 600, color: COLORS.ink }}>
+          <input
+            type="checkbox"
+            checked={abv === "0"}
+            onChange={(e) => setAbv(e.target.checked ? "0" : "")}
+            style={{ width: "18px", height: "18px", accentColor: COLORS.amber }}
+          />
+          0,0% (sans alcool)
+        </label>
       </StepShell>
     );
   }
