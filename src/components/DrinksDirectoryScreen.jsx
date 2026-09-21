@@ -102,24 +102,44 @@ export function DrinksDirectoryScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showingList, activeCategory, activeLetter, useLetterTier, searching, q, activeTagFilter, refreshTick]);
 
+  const loadingMoreRef = React.useRef(false);
+  const hasMoreRef = React.useRef(true);
+  const itemsRef = React.useRef([]);
+  const loadParamsRef = React.useRef({});
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+    hasMoreRef.current = hasMore;
+    itemsRef.current = items;
+    loadParamsRef.current = { activeCategory, useLetterTier, activeLetter, searching, q, activeTagFilter };
+  }, [loadingMore, hasMore, items, activeCategory, useLetterTier, activeLetter, searching, q, activeTagFilter]);
+
   const loadMore = async () => {
-    if (loadingMore || !hasMore) return;
+    if (loadingMoreRef.current || !hasMoreRef.current) return;
+    loadingMoreRef.current = true;
     setLoadingMore(true);
-    const nextPage = Math.floor(items.length / PAGE_SIZE);
+    const { activeCategory: cat, useLetterTier: ult, activeLetter: al, searching: s, q: query, activeTagFilter: tf } = loadParamsRef.current;
+    const nextPage = Math.floor(itemsRef.current.length / PAGE_SIZE);
     const results = await loadDrinksDirectoryPage({
-      type: activeCategory || null,
-      letter: useLetterTier && activeLetter ? activeLetter : null,
-      query: searching ? q : null,
-      tagKind: activeTagFilter?.kind || null,
-      tagValue: activeTagFilter?.value || null,
+      type: cat || null,
+      letter: ult && al ? al : null,
+      query: s ? query : null,
+      tagKind: tf?.kind || null,
+      tagValue: tf?.value || null,
       page: nextPage,
       pageSize: PAGE_SIZE,
     });
     setItems((prev) => [...prev, ...results]);
     setHasMore(results.length === PAGE_SIZE);
+    hasMoreRef.current = results.length === PAGE_SIZE;
+    loadingMoreRef.current = false;
     setLoadingMore(false);
   };
 
+  // L'observateur n'est créé qu'une seule fois par sentinel (pas à chaque changement de items,
+  // hasMore ou loadingMore) — les vraies valeurs à jour sont lues via les refs ci-dessus.
+  // Recréer l'observateur à chaque changement de données créait une vraie course : avec
+  // rootMargin aussi large, chaque nouvel observateur détectait le sentinel comme déjà visible
+  // et redéclenchait aussitôt loadMore, en cascade, dupliquant des pages entières.
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node) return;
@@ -132,7 +152,7 @@ export function DrinksDirectoryScreen({
     observer.observe(node);
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sentinelRef.current, items.length, hasMore, loadingMore]);
+  }, [sentinelRef.current]);
 
   const goBackOneLevel = () => {
     if (searching) return onBack();
