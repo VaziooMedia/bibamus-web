@@ -2745,6 +2745,20 @@ export async function createDrink(drink) {
   return rowToDrink(data);
 }
 
+// Même chose que createDrink, mais sans relire la ligne après écriture — nécessaire pour un
+// produit créé avec status "draft" : la vraie règle de lecture n'autorise que
+// to_process/to_fix/complete, donc la relecture automatique de .select().single() échoue
+// avec une vraie erreur RLS même quand l'écriture elle-même a réussi. L'appelant doit déjà
+// connaître l'id (il le génère lui-même) puisque rien n'est retourné ici.
+export async function createDrinkQuiet(drink) {
+  const { error } = await supabase.from("drinks_directory").insert(drinkToRow(drink));
+  if (error) {
+    console.error("createDrinkQuiet:", error);
+    return false;
+  }
+  return true;
+}
+
 export async function updateDrink(id, patch) {
   const { error } = await supabase.from("drinks_directory").update(drinkToRow(patch, true)).eq("id", id);
   if (error) console.error("updateDrink:", error);

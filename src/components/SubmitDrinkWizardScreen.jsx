@@ -9,7 +9,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS, DRINK_TYPES, COUNTRIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { createDrink, updateDrink, deleteDrink, createDrinkVariant } from "../data/sharedDirectories.js";
+import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariant } from "../data/sharedDirectories.js";
 
 const BEER_CIDER_SUBTYPES = [
   { code: "biere", fr: "Bière" },
@@ -112,19 +112,20 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   };
 
   const goToStep1 = async () => {
-    const created = await createDrink({
-      id: `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+    const newId = `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const ok = await createDrinkQuiet({
+      id: newId,
       name: name.trim(),
       type,
       beverageSubtype: subtypeOptions ? beverageSubtype : null,
       status: "draft",
       certificationLevel: "bibamus",
     });
-    if (!created) {
+    if (!ok) {
       alert("La création du produit a échoué — merci de réessayer.");
       return;
     }
-    setDrinkId(created.id);
+    setDrinkId(newId);
     setStep(2);
   };
 
