@@ -11,6 +11,7 @@ import { NavIcon, CountryFlagImg, WaterAlertIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink } from "./ui.jsx";
 import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
+import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
 import {
   addSoloCheckin,
@@ -162,6 +163,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   // propre carte (par catégories), une recherche libre dans tout BibAtlas, ou une recherche
   // bornée aux produits marqués génériques.
   const [pickMode, setPickMode] = useState(null); // null | "carte" | "bibatlas" | "generic"
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [carteQuery, setCarteQuery] = useState("");
   const [categoryQuery, setCategoryQuery] = useState("");
@@ -251,6 +253,74 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
         <>
           {pickMode === null && (
             <>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    background: COLORS.surface,
+                    border: `2px solid ${COLORS.paperAlt}`,
+                    borderRadius: "12px",
+                    padding: "10px 14px",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <NavIcon name="search" size={17} color={COLORS.inkSoft} />
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Rechercher dans BibAtlas..."
+                    style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
+                  />
+                </div>
+                <button onClick={() => setScannerOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
+                  <NavIcon name="scan-line" size={22} color={COLORS.amber} />
+                </button>
+              </div>
+
+              {query.length >= 2 ? (
+                drinkResults.length > 0 ? (
+                  <div style={{ marginBottom: "18px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+                    {drinkResults.map((d, i) => (
+                      <button
+                        key={d.id}
+                        onClick={() => selectDrink(d)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          width: "100%",
+                          background: "none",
+                          border: "none",
+                          borderBottom: i === drinkResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
+                          padding: "12px 4px",
+                          textAlign: "left",
+                          cursor: "pointer",
+                          color: COLORS.ink,
+                        }}
+                      >
+                        <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
+                        <span style={{ flex: 1, display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
+                          <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
+                          {d.abv != null && (
+                            <>
+                              <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />
+                              <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{String(d.abv).replace(".", ",")}% ABV</span>
+                            </>
+                          )}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", margin: "0 0 18px" }}>Aucun résultat.</p>
+                )
+              ) : (
+                <>
               {visibleRecentDrinks.length > 0 && (
                 <div style={{ marginBottom: "14px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
@@ -429,6 +499,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                 </>
               )}
             </>
+              )}
+          </>
           )}
 
           {pickMode === "bibatlas" && (
@@ -597,6 +669,18 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
       )}
 
       <PageFooterNav onBack={onBack} />
+
+      {scannerOpen && (
+        <BarcodeScannerModal
+          myBibroCode={myUserId}
+          onClose={() => setScannerOpen(false)}
+          onFoundDrink={async (drinkId) => {
+            setScannerOpen(false);
+            const [d] = await loadDrinksByIds([drinkId]);
+            if (d) selectDrink(d);
+          }}
+        />
+      )}
     </div>
   );
 }
