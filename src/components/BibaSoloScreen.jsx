@@ -35,7 +35,6 @@ import {
 import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
-import bibatlasIconUrl from "../assets/brand/bibatlas.svg";
 import beerIconUrl from "../assets/brand/beer.svg";
 import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
@@ -253,32 +252,30 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
         <>
           {pickMode === null && (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <div
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    background: COLORS.surface,
-                    border: `2px solid ${COLORS.paperAlt}`,
-                    borderRadius: "12px",
-                    padding: "10px 14px",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <NavIcon name="search" size={17} color={COLORS.inkSoft} />
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Rechercher dans BibAtlas..."
-                    style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
-                  />
-                </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  background: COLORS.surface,
+                  border: `2px solid ${COLORS.paperAlt}`,
+                  borderRadius: "12px",
+                  padding: "10px 14px",
+                  boxSizing: "border-box",
+                  marginBottom: "14px",
+                }}
+              >
+                <NavIcon name="search" size={17} color={COLORS.inkSoft} />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Rechercher dans BibAtlas..."
+                  style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
+                />
+                <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />
                 <button onClick={() => setScannerOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
-                  <NavIcon name="scan-line" size={22} color={COLORS.amber} />
+                  <NavIcon name="scan-line" size={18} color={COLORS.amber} />
                 </button>
               </div>
 
@@ -377,29 +374,6 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                     <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
                   </button>
                 )}
-                <button
-                  onClick={() => setPickMode("bibatlas")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    width: "100%",
-                    boxSizing: "border-box",
-                    background: COLORS.surface,
-                    border: `2px solid ${COLORS.paperAlt}`,
-                    borderRadius: "12px",
-                    padding: "14px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                  }}
-                >
-                  <img src={bibatlasIconUrl} alt="" style={{ height: "22px", width: "auto", display: "block" }} />
-                  <span style={{ flex: 1, fontSize: "14px", fontWeight: 700 }}>
-                    <span style={{ color: COLORS.chalkWhite }}>Biba</span>
-                    <span style={{ color: COLORS.amber }}>Atlas</span>
-                  </span>
-                  <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
-                </button>
                 <button
                   onClick={() => setPickMode("generic")}
                   style={{
@@ -501,60 +475,6 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
             </>
               )}
           </>
-          )}
-
-          {pickMode === "bibatlas" && (
-            <>
-              <button
-                onClick={() => setPickMode(null)}
-                style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: "14px" }}
-              >
-                <NavIcon name="back-triangle" size={12} color={COLORS.inkSoft} />
-                Retour
-              </button>
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher une boisson..."
-                autoFocus
-                style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
-              />
-              {drinkResults.length > 0 && (
-                <div style={{ marginTop: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-                  {drinkResults.map((d, i) => (
-                    <button
-                      key={d.id}
-                      onClick={() => selectDrink(d)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        width: "100%",
-                        background: "none",
-                        border: "none",
-                        borderBottom: i === drinkResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
-                        padding: "12px 4px",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        color: COLORS.ink,
-                      }}
-                    >
-                      <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
-                      <span style={{ flex: 1, display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
-                        <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
-                        {d.abv != null && (
-                          <>
-                            <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />
-                            <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{String(d.abv).replace(".", ",")}% ABV</span>
-                          </>
-                        )}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
           )}
 
           {pickMode === "generic" && (
