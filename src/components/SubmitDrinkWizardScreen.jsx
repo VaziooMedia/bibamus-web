@@ -46,7 +46,7 @@ function StepShell({ step, totalSteps, title, onBack, onPrevious, children, foot
       {onPrevious && (
         <button
           onClick={onPrevious}
-          style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "0 0 12px 0", display: "flex", alignItems: "center", gap: "6px" }}
+          style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "24px 0 12px 0", display: "flex", alignItems: "center", gap: "6px" }}
         >
           <NavIcon name="back-triangle" size={12} color={COLORS.inkSoft} />
           Précédent
