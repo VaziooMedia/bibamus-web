@@ -2875,6 +2875,7 @@ function drinkToRow(d, partial = false) {
   const row = {
     name: d.name,
     type: DRINK_TYPE_LABEL_TO_CODE[d.type] || d.type,
+    beverage_subtype: d.beverageSubtype,
     brewery: d.brewery,
     brand: d.brand,
     brand_id: d.brandId,

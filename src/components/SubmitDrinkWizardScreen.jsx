@@ -118,6 +118,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
       type,
       beverageSubtype: subtypeOptions ? beverageSubtype : null,
       status: "draft",
+      certificationLevel: "bibamus",
     });
     if (!created) {
       alert("La création du produit a échoué — merci de réessayer.");
