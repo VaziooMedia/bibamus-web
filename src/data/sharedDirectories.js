@@ -1446,6 +1446,38 @@ export async function deletePublicVenue(id) {
   if (error) console.error("deletePublicVenue:", error);
 }
 
+// Même vrai mécanisme que côté admin (edge function déjà existante, réutilisée telle quelle).
+export async function geocodeAddress({ streetName, streetNumber, postalCode, city, countryIsoCode }) {
+  try {
+    const { data, error } = await supabase.functions.invoke("geoapify-geocode", {
+      body: { streetName, streetNumber, postalCode, city, countryIsoCode },
+    });
+    if (error) {
+      console.error("geocodeAddress:", error);
+      return null;
+    }
+    return data;
+  } catch (e) {
+    console.error("geocodeAddress:", e);
+    return null;
+  }
+}
+
+export async function saveGeocodeResult(venueId, { lat, lng, source, confidence, status }) {
+  const { error } = await supabase
+    .from("public_venues")
+    .update({
+      lat,
+      lng,
+      geocode_source: source,
+      geocode_confidence: confidence,
+      geocode_status: status,
+      geocoded_at: new Date().toISOString(),
+    })
+    .eq("id", venueId);
+  if (error) console.error("saveGeocodeResult:", error);
+}
+
 function rowToVenue(row) {
   return {
     id: row.id,

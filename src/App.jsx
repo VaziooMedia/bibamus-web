@@ -39,6 +39,7 @@ import { MenuSetupScreen } from "./components/MenuSetupScreen.jsx";
 import { DrinksDirectoryScreen } from "./components/DrinksDirectoryScreen.jsx";
 import { DrinkFormScreen } from "./components/DrinkFormScreen.jsx";
 import { SubmitDrinkWizardScreen } from "./components/SubmitDrinkWizardScreen.jsx";
+import { SubmitVenueWizardScreen } from "./components/SubmitVenueWizardScreen.jsx";
 import { DirectoryVenueFormScreen } from "./components/DirectoryVenueFormScreen.jsx";
 import { VenueDetailScreen } from "./components/VenueDetailScreen.jsx";
 import { VenueMenuCategoriesScreen } from "./components/VenueMenuCategoriesScreen.jsx";
@@ -2171,12 +2172,11 @@ export default function App() {
               />
             )}
             {screen === "submitVenue" && (
-              <DirectoryVenueFormScreen
-                venue={null}
-                breweriesDirectory={breweriesDirectory}
-                onRegisterBrewery={registerBrewery}
-                addIntent={false}
-                onSave={submitVenue}
+              <SubmitVenueWizardScreen
+                onDone={(createdId) => {
+                  emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: createdId });
+                  setScreen("venueDirectory");
+                }}
                 onCancel={() => setScreen("venueDirectory")}
               />
             )}
