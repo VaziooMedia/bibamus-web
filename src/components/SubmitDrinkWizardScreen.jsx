@@ -118,8 +118,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
       name: name.trim(),
       type,
       beverageSubtype: subtypeOptions ? beverageSubtype : null,
-      status: "draft",
-      certificationLevel: "bibamus",
+      status: "to_process",
     });
     if (!ok) {
       alert("La création du produit a échoué — merci de réessayer.");
@@ -160,7 +159,6 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
     await updateDrink(drinkId, {
       brandId: selectedBrand?.id || null,
       producerIds: selectedProducers.map((p) => p.id),
-      status: "to_process",
     });
     validatedRef.current = true;
     setSaving(false);
