@@ -254,7 +254,7 @@ export function HomeScreen({
           >
             <img src={loupeIconUrl} alt="Search" style={{ width: "28px", height: "28px" }} />
           </button>
-          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Search</span>
+          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.ink, textAlign: "center" }}>Search</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
@@ -273,7 +273,10 @@ export function HomeScreen({
           >
             <img src={bibaSoloIconUrl} alt="BibaSolo" style={{ width: "28px", height: "28px" }} />
           </button>
-          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>BibaSolo</span>
+          <span style={{ fontSize: "9.5px", fontWeight: 600, textAlign: "center" }}>
+            <span style={{ color: COLORS.ink }}>Biba</span>
+            <span style={{ color: COLORS.amber }}>Solo</span>
+          </span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
@@ -292,7 +295,10 @@ export function HomeScreen({
           >
             <img src={drinkCheckIconUrl} alt="Drink Check" style={{ width: "32px", height: "32px" }} />
           </button>
-          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Drink Check</span>
+          <span style={{ fontSize: "9.5px", fontWeight: 600, textAlign: "center" }}>
+            <span style={{ color: COLORS.ink }}>Drink</span>
+            <span style={{ color: COLORS.amber }}>Check</span>
+          </span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
@@ -311,7 +317,10 @@ export function HomeScreen({
           >
             <img src={placeCheckIconUrl} alt="Place Check" style={{ width: "32px", height: "32px" }} />
           </button>
-          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.inkSoft, textAlign: "center" }}>Place Check</span>
+          <span style={{ fontSize: "9.5px", fontWeight: 600, textAlign: "center" }}>
+            <span style={{ color: COLORS.ink }}>Place</span>
+            <span style={{ color: COLORS.amber }}>Check</span>
+          </span>
         </div>
       </div>
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
