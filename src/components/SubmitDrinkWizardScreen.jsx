@@ -52,7 +52,7 @@ function StepShell({ step, totalSteps, title, onBack, onPrevious, children, foot
           Précédent
         </button>
       )}
-      {footer}
+      <div style={{ marginTop: "24px" }}>{footer}</div>
     </div>
   );
 }
@@ -234,27 +234,29 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         }
       >
         <label style={labelStyle}>Degré d'alcool (% ABV)</label>
-        <input
-          type="number"
-          step="0.1"
-          min="0"
-          max="100"
-          value={abv}
-          onChange={(e) => setAbv(e.target.value)}
-          placeholder="Ex : 5"
-          disabled={abv === "0"}
-          style={{ ...inputStyle, width: "100px" }}
-          autoFocus
-        />
-        <label style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "14px", cursor: "pointer", fontSize: "13.5px", fontWeight: 600, color: COLORS.ink }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <input
-            type="checkbox"
-            checked={abv === "0"}
-            onChange={(e) => setAbv(e.target.checked ? "0" : "")}
-            style={{ width: "18px", height: "18px", accentColor: COLORS.amber }}
+            type="number"
+            step="0.1"
+            min="0"
+            max="100"
+            value={abv}
+            onChange={(e) => setAbv(e.target.value)}
+            placeholder="Ex : 5"
+            disabled={abv === "0"}
+            style={{ ...inputStyle, width: "100px", textAlign: "center" }}
+            autoFocus
           />
-          0,0% (sans alcool)
-        </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13.5px", fontWeight: 600, color: COLORS.ink }}>
+            <input
+              type="checkbox"
+              checked={abv === "0"}
+              onChange={(e) => setAbv(e.target.checked ? "0" : "")}
+              style={{ width: "18px", height: "18px", accentColor: COLORS.amber }}
+            />
+            0,0% (sans alcool)
+          </label>
+        </div>
       </StepShell>
     );
   }
@@ -289,7 +291,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
               min="0"
               value={variant.volumeCl}
               onChange={(e) => setVariant((v) => ({ ...v, volumeCl: e.target.value }))}
-              placeholder="Volume (cl)"
+              placeholder="Volume (cl.)"
               style={{ ...inputStyle, flex: 1, padding: "10px 8px", textAlign: "center" }}
             />
           </div>
