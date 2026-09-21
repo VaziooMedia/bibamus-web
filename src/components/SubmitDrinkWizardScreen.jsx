@@ -29,7 +29,7 @@ const CONTAINER_TYPES = [
   { code: "brique", fr: "Brique" },
 ];
 
-function StepShell({ step, totalSteps, title, onBack, canSkipBack, children, footer }) {
+function StepShell({ step, totalSteps, title, onBack, onPrevious, children, footer }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -38,8 +38,20 @@ function StepShell({ step, totalSteps, title, onBack, canSkipBack, children, foo
           <span key={i} style={{ flex: 1, height: "3px", borderRadius: "2px", background: i < step ? COLORS.amber : COLORS.paperAlt }} />
         ))}
       </div>
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 18px 0" }}>{title}</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 18px 0" }}>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{title}</h1>
+      </div>
       <div style={{ flex: 1 }}>{children}</div>
+      {onPrevious && (
+        <button
+          onClick={onPrevious}
+          style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "0 0 12px 0", display: "flex", alignItems: "center", gap: "6px" }}
+        >
+          <NavIcon name="back-triangle" size={12} color={COLORS.inkSoft} />
+          Précédent
+        </button>
+      )}
       {footer}
     </div>
   );
@@ -78,16 +90,11 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   const [abv, setAbv] = useState("");
   const step2Valid = abv.trim().length > 0 && !isNaN(parseFloat(abv));
 
-  // Page 3 — Code-barre + contenant + volume (facultatif, plusieurs possibles)
-  const [variants, setVariants] = useState([{ container: CONTAINER_TYPES[0].code, volumeCl: "", barcode: "" }]);
-  const updateVariant = (i, patch) => setVariants((prev) => prev.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
-  const addVariantRow = () => setVariants((prev) => [...prev, { container: CONTAINER_TYPES[0].code, volumeCl: "", barcode: "" }]);
-  const removeVariantRow = (i) => setVariants((prev) => prev.filter((_, idx) => idx !== i));
+  // Page 3 — Code-barre + contenant + volume (facultatif, un seul conditionnement)
+  const [variant, setVariant] = useState({ container: CONTAINER_TYPES[0].code, volumeCl: "", barcode: "" });
 
-  // Page 4 — Pays / Région / Ville
+  // Page 4 — Pays
   const [nationality, setNationality] = useState("");
-  const [originRegion, setOriginRegion] = useState("");
-  const [originCity, setOriginCity] = useState("");
 
   // Page 5 — Marque + Producteur
   const [brandQuery, setBrandQuery] = useState("");
@@ -134,23 +141,20 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   };
 
   const goToStep3 = async () => {
-    const rows = variants.filter((v) => v.volumeCl.trim().length > 0);
-    await Promise.all(
-      rows.map((v) =>
-        createDrinkVariant({
-          drinkId,
-          container: v.container,
-          volumeMl: parseFloat(v.volumeCl) * 10,
-          barcode: v.barcode.trim() || null,
-          marketCountry: null,
-        })
-      )
-    );
+    if (variant.volumeCl.trim().length > 0) {
+      await createDrinkVariant({
+        drinkId,
+        container: variant.container,
+        volumeMl: parseFloat(variant.volumeCl) * 10,
+        barcode: variant.barcode.trim() || null,
+        marketCountry: null,
+      });
+    }
     setStep(4);
   };
 
   const goToStep4 = async () => {
-    await updateDrink(drinkId, { nationality: nationality || null, originRegion: originRegion.trim() || null, originCity: originCity.trim() || null });
+    await updateDrink(drinkId, { nationality: nationality || null });
     setStep(5);
   };
 
@@ -222,6 +226,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         totalSteps={5}
         title="Degré d'alcool"
         onBack={handleAbandon}
+        onPrevious={() => setStep(1)}
         footer={
           <PrimaryButton onClick={goToStep2} disabled={!step2Valid} style={{ width: "100%" }}>
             Suivant
@@ -239,46 +244,43 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
       <StepShell
         step={3}
         totalSteps={5}
-        title="Code-barre & conditionnement"
+        title="Code-barres"
         onBack={handleAbandon}
+        onPrevious={() => setStep(2)}
         footer={
           <PrimaryButton onClick={goToStep3} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
       >
-        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif — un produit peut avoir plusieurs conditionnements (bouteille, canette...).</p>
-        {variants.map((v, i) => (
-          <div key={i} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "10px" }}>
-            <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-              <select value={v.container} onChange={(e) => updateVariant(i, { container: e.target.value })} style={{ ...inputStyle, flex: 1.4, padding: "10px 8px" }}>
-                {CONTAINER_TYPES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.fr}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                step="0.5"
-                min="0"
-                value={v.volumeCl}
-                onChange={(e) => updateVariant(i, { volumeCl: e.target.value })}
-                placeholder="Volume (cl)"
-                style={{ ...inputStyle, flex: 1, padding: "10px 8px", textAlign: "center" }}
-              />
-              {variants.length > 1 && (
-                <button onClick={() => removeVariantRow(i)} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 4px", flexShrink: 0 }}>
-                  <NavIcon name="x" size={16} color={COLORS.inkSoft} />
-                </button>
-              )}
-            </div>
-            <input type="text" value={v.barcode} onChange={(e) => updateVariant(i, { barcode: e.target.value })} placeholder="Code-barre (facultatif)" style={{ ...inputStyle, padding: "10px 8px" }} />
+        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif.</p>
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+            <select value={variant.container} onChange={(e) => setVariant((v) => ({ ...v, container: e.target.value }))} style={{ ...inputStyle, flex: 1.4, padding: "10px 8px" }}>
+              {CONTAINER_TYPES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.fr}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              value={variant.volumeCl}
+              onChange={(e) => setVariant((v) => ({ ...v, volumeCl: e.target.value }))}
+              placeholder="Volume (cl)"
+              style={{ ...inputStyle, flex: 1, padding: "10px 8px", textAlign: "center" }}
+            />
           </div>
-        ))}
-        <button onClick={addVariantRow} style={{ background: "none", border: `2px dashed ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px", width: "100%", color: COLORS.amber, fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>
-          + Ajouter un conditionnement
-        </button>
+          <input
+            type="text"
+            value={variant.barcode}
+            onChange={(e) => setVariant((v) => ({ ...v, barcode: e.target.value }))}
+            placeholder="Code-barre (facultatif)"
+            style={{ ...inputStyle, padding: "10px 8px" }}
+          />
+        </div>
       </StepShell>
     );
   }
@@ -290,6 +292,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         totalSteps={5}
         title="Origine"
         onBack={handleAbandon}
+        onPrevious={() => setStep(3)}
         footer={
           <PrimaryButton onClick={goToStep4} style={{ width: "100%" }}>
             Suivant
@@ -298,7 +301,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
       >
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif.</p>
         <label style={labelStyle}>Pays d'origine</label>
-        <select value={nationality} onChange={(e) => setNationality(e.target.value)} style={{ ...inputStyle, marginBottom: "16px" }}>
+        <select value={nationality} onChange={(e) => setNationality(e.target.value)} style={inputStyle}>
           <option value="">Non renseigné</option>
           {COUNTRIES.map((c) => (
             <option key={c} value={c}>
@@ -306,10 +309,6 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
             </option>
           ))}
         </select>
-        <label style={labelStyle}>Région</label>
-        <input type="text" value={originRegion} onChange={(e) => setOriginRegion(e.target.value)} placeholder="Ex : Wallonie" style={{ ...inputStyle, marginBottom: "16px" }} />
-        <label style={labelStyle}>Ville</label>
-        <input type="text" value={originCity} onChange={(e) => setOriginCity(e.target.value)} placeholder="Ex : Liège" style={inputStyle} />
       </StepShell>
     );
   }
@@ -318,8 +317,9 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
     <StepShell
       step={5}
       totalSteps={5}
-      title="Marque & producteur"
+      title="Marque & Producteur"
       onBack={handleAbandon}
+      onPrevious={() => setStep(4)}
       footer={
         <PrimaryButton onClick={handleFinalSubmit} disabled={saving} style={{ width: "100%" }}>
           {saving ? "Enregistrement..." : "Valider"}
