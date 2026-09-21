@@ -2755,6 +2755,58 @@ export async function deleteDrink(id) {
   if (error) console.error("deleteDrink:", error);
 }
 
+// Variantes de conditionnement d'un produit (contenant + volume + code-barre) — même vraie
+// table que côté admin (drink_barcodes), copiées fidèlement pour rester cohérentes.
+function rowToVariant(row) {
+  return {
+    id: row.id,
+    drinkId: row.product_id,
+    barcode: row.barcode,
+    container: row.container,
+    volumeMl: row.volume_ml,
+    marketCountry: row.market_country,
+    verified: !!row.verified,
+  };
+}
+
+export async function loadDrinkVariants(drinkId) {
+  const { data, error } = await supabase.from("drink_barcodes").select("*").eq("product_id", drinkId).order("created_at");
+  if (error) {
+    console.error("loadDrinkVariants:", error);
+    return [];
+  }
+  return data.map(rowToVariant);
+}
+
+export async function createDrinkVariant({ drinkId, container, volumeMl, barcode, marketCountry }) {
+  const row = {
+    id: `variant-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+    product_id: drinkId,
+    container: container || null,
+    volume_ml: volumeMl || null,
+    barcode: barcode || null,
+    market_country: marketCountry || null,
+    verified: false,
+  };
+  const { data, error } = await supabase.from("drink_barcodes").insert(row).select().single();
+  if (error) {
+    console.error("createDrinkVariant:", error);
+    return null;
+  }
+  return rowToVariant(data);
+}
+
+export async function updateDrinkVariant(id, { container, volumeMl, barcode, marketCountry }) {
+  const patch = { container: container || null, volume_ml: volumeMl || null, barcode: barcode || null, market_country: marketCountry || null };
+  const { error } = await supabase.from("drink_barcodes").update(patch).eq("id", id);
+  if (error) console.error("updateDrinkVariant:", error);
+}
+
+export async function deleteDrinkVariant(id) {
+  const { error } = await supabase.from("drink_barcodes").delete().eq("id", id);
+  if (error) console.error("deleteDrinkVariant:", error);
+}
+
 // bibamus-admin stocke le type de produit sous forme de code technique stable (chantier
 // multilingue) — ex. "bieres_cidres" — alors que l'app grand public affiche et compare encore
 // sur le libellé français. Cette correspondance traduit à la frontière, dans les deux sens,

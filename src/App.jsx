@@ -38,6 +38,7 @@ import { PredictHubScreen, PredictGameScreen, ANSWER_DURATION_SECONDS } from "./
 import { MenuSetupScreen } from "./components/MenuSetupScreen.jsx";
 import { DrinksDirectoryScreen } from "./components/DrinksDirectoryScreen.jsx";
 import { DrinkFormScreen } from "./components/DrinkFormScreen.jsx";
+import { SubmitDrinkWizardScreen } from "./components/SubmitDrinkWizardScreen.jsx";
 import { DirectoryVenueFormScreen } from "./components/DirectoryVenueFormScreen.jsx";
 import { VenueDetailScreen } from "./components/VenueDetailScreen.jsx";
 import { VenueMenuCategoriesScreen } from "./components/VenueMenuCategoriesScreen.jsx";
@@ -2200,13 +2201,13 @@ export default function App() {
               />
             )}
             {screen === "submitDrink" && (
-              <DrinkFormScreen
-                drink={null}
+              <SubmitDrinkWizardScreen
                 breweriesDirectory={breweriesDirectory}
-                onRegisterBrewery={registerBrewery}
                 brandsDirectory={brandsDirectory}
-                onRegisterBrand={registerBrand}
-                onSave={submitDrink}
+                onDone={(createdId) => {
+                  emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: createdId });
+                  setScreen("drinksDirectory");
+                }}
                 onCancel={() => setScreen("drinksDirectory")}
               />
             )}
