@@ -45,29 +45,6 @@ function StepShell({ step, totalSteps, title, onBack, canSkipBack, children, foo
   );
 }
 
-function OptionButton({ selected, onClick, children }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: "100%",
-        textAlign: "left",
-        background: selected ? COLORS.amber : COLORS.surface,
-        color: selected ? COLORS.paper : COLORS.ink,
-        border: `2px solid ${selected ? COLORS.amber : COLORS.paperAlt}`,
-        borderRadius: "12px",
-        padding: "12px 14px",
-        fontSize: "14px",
-        fontWeight: 700,
-        cursor: "pointer",
-        marginBottom: "8px",
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 const inputStyle = { width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" };
 const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
 
@@ -135,7 +112,13 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   };
 
   const goToStep1 = async () => {
-    const created = await createDrink({ name: name.trim(), type, beverageSubtype: subtypeOptions ? beverageSubtype : null, status: "draft" });
+    const created = await createDrink({
+      id: `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      name: name.trim(),
+      type,
+      beverageSubtype: subtypeOptions ? beverageSubtype : null,
+      status: "draft",
+    });
     if (!created) {
       alert("La création du produit a échoué — merci de réessayer.");
       return;
@@ -199,31 +182,33 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du produit" style={{ ...inputStyle, marginBottom: "20px" }} autoFocus />
 
         <label style={labelStyle}>Catégorie</label>
-        <div style={{ marginBottom: "20px" }}>
+        <select
+          value={type}
+          onChange={(e) => {
+            setType(e.target.value);
+            setBeverageSubtype("");
+          }}
+          style={{ ...inputStyle, marginBottom: "20px" }}
+        >
+          <option value="">Choisir une catégorie</option>
           {DRINK_TYPES.map((t) => (
-            <OptionButton
-              key={t}
-              selected={type === t}
-              onClick={() => {
-                setType(t);
-                setBeverageSubtype("");
-              }}
-            >
+            <option key={t} value={t}>
               {t}
-            </OptionButton>
+            </option>
           ))}
-        </div>
+        </select>
 
         {subtypeOptions && (
           <>
             <label style={labelStyle}>Sous-catégorie</label>
-            <div>
+            <select value={beverageSubtype} onChange={(e) => setBeverageSubtype(e.target.value)} style={inputStyle}>
+              <option value="">Choisir une sous-catégorie</option>
               {subtypeOptions.map((s) => (
-                <OptionButton key={s.code} selected={beverageSubtype === s.code} onClick={() => setBeverageSubtype(s.code)}>
+                <option key={s.code} value={s.code}>
                   {s.fr}
-                </OptionButton>
+                </option>
               ))}
-            </div>
+            </select>
           </>
         )}
       </StepShell>
