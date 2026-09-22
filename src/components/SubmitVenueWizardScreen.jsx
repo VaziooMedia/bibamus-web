@@ -99,15 +99,8 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
 
   const goToStep1 = async () => {
     setSubmitting(true);
-    const trimmedName = name.trim();
-    const results = await searchVenues(trimmedName);
-    const duplicate = results.find((v) => normalizeForDuplicateCheck(v.name) === normalizeForDuplicateCheck(trimmedName));
-    if (duplicate && !window.confirm(`Un lieu nommé "${duplicate.name}" existe déjà. Continuer quand même et en créer un nouveau ?`)) {
-      setSubmitting(false);
-      return;
-    }
     const newId = `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-    const created = await createPublicVenue({ id: newId, name: trimmedName, status: "to_process", menu: [], likes: [] });
+    const created = await createPublicVenue({ id: newId, name: name.trim(), status: "to_process", menu: [], likes: [] });
     setSubmitting(false);
     if (!created) {
       alert("La création du lieu a échoué — merci de réessayer.");
@@ -133,7 +126,24 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
 
   const goToStep4 = async () => {
     setSubmitting(true);
-    await updatePublicVenue(venueId, { streetName: streetName.trim(), streetNumber: streetNumber.trim(), village: village.trim() || null });
+    const trimmedStreetName = streetName.trim();
+    const trimmedStreetNumber = streetNumber.trim();
+    const results = await searchVenues(name.trim());
+    const duplicate = results.find(
+      (v) =>
+        v.id !== venueId &&
+        normalizeForDuplicateCheck(v.name) === normalizeForDuplicateCheck(name) &&
+        normalizeForDuplicateCheck(v.postalCode || "") === normalizeForDuplicateCheck(postalCode) &&
+        normalizeForDuplicateCheck(v.city || "") === normalizeForDuplicateCheck(city) &&
+        normalizeForDuplicateCheck(v.streetName || "") === normalizeForDuplicateCheck(trimmedStreetName) &&
+        normalizeForDuplicateCheck(v.streetNumber || "") === normalizeForDuplicateCheck(trimmedStreetNumber)
+    );
+    if (duplicate) {
+      setSubmitting(false);
+      alert(`Alerte :\n"${duplicate.name}, ${duplicate.streetName}, ${duplicate.streetNumber} - ${duplicate.postalCode} ${duplicate.city}" existe déjà.\nVous ne pouvez pas le rajouter.`);
+      return;
+    }
+    await updatePublicVenue(venueId, { streetName: trimmedStreetName, streetNumber: trimmedStreetNumber, village: village.trim() || null });
     setSubmitting(false);
     setStep(5);
   };
