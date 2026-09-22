@@ -297,7 +297,17 @@ export function BrandSearchSelect({ value, onChange, brands, onRegister, placeho
   );
 }
 
-export function VenuePositionPicker({ lat, lng, onChange }) {
+function buildVenuePinIcon(verified) {
+  const color = verified ? COLORS.amber : COLORS.pinkFluo;
+  return window.L.divIcon({
+    className: "",
+    html: `<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:2px solid ${COLORS.paper};box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+  });
+}
+
+export function VenuePositionPicker({ lat, lng, onChange, verified = true }) {
   const mapContainerRef = React.useRef(null);
   const mapInstanceRef = React.useRef(null);
   const markerRef = React.useRef(null);
@@ -323,7 +333,7 @@ export function VenuePositionPicker({ lat, lng, onChange }) {
           if (markerRef.current) {
             markerRef.current.setLatLng(latlng);
           } else {
-            markerRef.current = L.marker(latlng, { draggable: true }).addTo(map);
+            markerRef.current = L.marker(latlng, { icon: buildVenuePinIcon(verified), draggable: true }).addTo(map);
             markerRef.current.on("dragend", () => {
               const pos = markerRef.current.getLatLng();
               onChange(pos.lat, pos.lng);
@@ -376,6 +386,10 @@ export function VenuePositionPicker({ lat, lng, onChange }) {
     }
   }, [lat, lng]);
 
+  React.useEffect(() => {
+    if (markerRef.current) markerRef.current.setIcon(buildVenuePinIcon(verified));
+  }, [verified]);
+
   return (
     <div>
       {status === "error" && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "8px" }}>La carte n'a pas pu se charger.</p>}
@@ -399,6 +413,7 @@ export function VenuePositionPicker({ lat, lng, onChange }) {
         {lat != null && (
           <button
             onClick={() => recenterRef.current && recenterRef.current(lat, lng)}
+            title="Recentrer sur l'adresse"
             style={{
               position: "absolute",
               bottom: "10px",
@@ -406,20 +421,17 @@ export function VenuePositionPicker({ lat, lng, onChange }) {
               zIndex: 1000,
               display: "flex",
               alignItems: "center",
-              gap: "6px",
+              justifyContent: "center",
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
               background: COLORS.amber,
               border: "none",
-              borderRadius: "8px",
-              padding: "8px 12px",
-              color: COLORS.paper,
-              fontSize: "12px",
-              fontWeight: 700,
               cursor: "pointer",
               boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
             }}
           >
-            <NavIcon name="map-pin" size={14} color={COLORS.paper} />
-            Recentrer sur l'adresse
+            <NavIcon name="map-pin" size={18} color={COLORS.paper} />
           </button>
         )}
       </div>

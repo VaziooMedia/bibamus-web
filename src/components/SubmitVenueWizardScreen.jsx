@@ -146,6 +146,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
     setLat(newLat);
     setLng(newLng);
     if (newLat != null && newLng != null) {
+      setGeocodeStatus("manual");
       await saveGeocodeResult(venueId, { lat: newLat, lng: newLng, source: "manual", confidence: null, status: "manual" });
     }
   };
@@ -265,7 +266,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
     <StepShell
       step={5}
       totalSteps={5}
-      title="Géocodage & vérification"
+      title="Géocodage & Vérification"
       onBack={handleAbandon}
       onPrevious={() => setStep(4)}
       footer={
@@ -302,7 +303,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
       {!geocodeNotFound && geocodeStatus && <p style={{ fontSize: "12px", color: COLORS.amber, marginBottom: "10px" }}>✓ Position géocodée — vérifiez ou ajustez ci-dessous si besoin.</p>}
 
       <label style={labelStyle}>Vérification sur la carte</label>
-      <VenuePositionPicker lat={lat} lng={lng} onChange={handlePositionChange} />
+      <VenuePositionPicker lat={lat} lng={lng} onChange={handlePositionChange} verified={["verified", "exact", "manual"].includes(geocodeStatus)} />
     </StepShell>
   );
 }
