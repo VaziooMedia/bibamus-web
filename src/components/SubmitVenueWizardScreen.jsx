@@ -453,8 +453,12 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
       {showConfirmPopup && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", zIndex: 2000 }}>
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "16px", padding: "24px", maxWidth: "360px" }}>
-            <p style={{ fontSize: "14.5px", color: COLORS.ink, margin: "0 0 20px 0", lineHeight: 1.5 }}>
-              Ta contribution sera vérifiée prochainement, mais elle est déjà disponible dans BibAtlas.
+            <p style={{ fontSize: "14.5px", color: COLORS.ink, margin: "0 0 20px 0", lineHeight: 1.6 }}>
+              Merci pour ta contribution !
+              <br />
+              Elle sera vérifiée prochainement.
+              <br />
+              En attendant, elle est déjà disponible sur Bib<span style={{ color: COLORS.amber }}>Atlas</span>.
             </p>
             <PrimaryButton onClick={handleConfirmCreate} disabled={saving} style={{ width: "100%" }}>
               {saving ? "Enregistrement..." : "OK"}
