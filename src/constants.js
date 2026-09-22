@@ -463,6 +463,31 @@ export const SNACK_TYPES = [
   "Végétarien",
 ];
 
+export const BRAND_CLASSIFICATIONS = [
+  { code: "biere", fr: "Bière" },
+  { code: "vin", fr: "Vin" },
+  { code: "bulles", fr: "Bulles (champagne, crémant...)" },
+  { code: "spiritueux", fr: "Spiritueux" },
+  { code: "cidre", fr: "Cidre" },
+  { code: "soft_soda", fr: "Soft / Soda" },
+  { code: "eau", fr: "Eau" },
+  { code: "boisson_energetique", fr: "Boisson énergétique" },
+  { code: "cafe", fr: "Café" },
+  { code: "the", fr: "Thé" },
+  { code: "snacks", fr: "Snacks" },
+  { code: "autre", fr: "Autre" },
+];
+
+export const BRAND_TYPES = [
+  { code: "artisanale", fr: "Artisanale" },
+  { code: "trappiste", fr: "Trappiste" },
+  { code: "abbaye", fr: "Abbaye" },
+  { code: "locale", fr: "Locale" },
+  { code: "regionale", fr: "Régionale" },
+  { code: "nationale", fr: "Nationale" },
+  { code: "internationale", fr: "Internationale" },
+];
+
 export const PRODUCER_TYPES = [
   { code: "brasserie", fr: "Brasserie" },
   { code: "micro_brasserie", fr: "Micro-brasserie" },
