@@ -10,7 +10,8 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
-import { createPublicVenue, updatePublicVenue, deletePublicVenue, geocodeAddress, saveGeocodeResult } from "../data/sharedDirectories.js";
+import { createPublicVenue, updatePublicVenue, deletePublicVenue, geocodeAddress, saveGeocodeResult, searchVenues } from "../data/sharedDirectories.js";
+import { normalizeForDuplicateCheck } from "../utils.js";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -48,6 +49,7 @@ const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, m
 export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   const [step, setStep] = useState(1);
   const [venueId, setVenueId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const validatedRef = useRef(false);
   const venueIdRef = useRef(null);
   useEffect(() => {
@@ -96,8 +98,17 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   };
 
   const goToStep1 = async () => {
+    setSubmitting(true);
+    const trimmedName = name.trim();
+    const results = await searchVenues(trimmedName);
+    const duplicate = results.find((v) => normalizeForDuplicateCheck(v.name) === normalizeForDuplicateCheck(trimmedName));
+    if (duplicate && !window.confirm(`Un lieu nommé "${duplicate.name}" existe déjà. Continuer quand même et en créer un nouveau ?`)) {
+      setSubmitting(false);
+      return;
+    }
     const newId = `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-    const created = await createPublicVenue({ id: newId, name: name.trim(), status: "to_process", menu: [], likes: [] });
+    const created = await createPublicVenue({ id: newId, name: trimmedName, status: "to_process", menu: [], likes: [] });
+    setSubmitting(false);
     if (!created) {
       alert("La création du lieu a échoué — merci de réessayer.");
       return;
@@ -107,17 +118,23 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   };
 
   const goToStep2 = async () => {
+    setSubmitting(true);
     await updatePublicVenue(venueId, { country });
+    setSubmitting(false);
     setStep(3);
   };
 
   const goToStep3 = async () => {
+    setSubmitting(true);
     await updatePublicVenue(venueId, { postalCode: postalCode.trim(), city: city.trim() });
+    setSubmitting(false);
     setStep(4);
   };
 
   const goToStep4 = async () => {
+    setSubmitting(true);
     await updatePublicVenue(venueId, { streetName: streetName.trim(), streetNumber: streetNumber.trim(), village: village.trim() || null });
+    setSubmitting(false);
     setStep(5);
   };
 
@@ -166,8 +183,8 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         title="Dénomination"
         onBack={onCancel}
         footer={
-          <PrimaryButton onClick={goToStep1} disabled={!name.trim()} style={{ width: "100%" }}>
-            Suivant
+          <PrimaryButton onClick={goToStep1} disabled={!name.trim() || submitting} style={{ width: "100%" }}>
+            {submitting ? "Vérification..." : "Suivant"}
           </PrimaryButton>
         }
       >
@@ -186,7 +203,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         onBack={handleAbandon}
         onPrevious={() => setStep(1)}
         footer={
-          <PrimaryButton onClick={goToStep2} disabled={!country} style={{ width: "100%" }}>
+          <PrimaryButton onClick={goToStep2} disabled={!country || submitting} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
@@ -213,7 +230,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         onBack={handleAbandon}
         onPrevious={() => setStep(2)}
         footer={
-          <PrimaryButton onClick={goToStep3} disabled={!postalCode.trim() || !city.trim()} style={{ width: "100%" }}>
+          <PrimaryButton onClick={goToStep3} disabled={!postalCode.trim() || !city.trim() || submitting} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
@@ -247,7 +264,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         onBack={handleAbandon}
         onPrevious={() => setStep(3)}
         footer={
-          <PrimaryButton onClick={goToStep4} disabled={!streetName.trim() || !streetNumber.trim()} style={{ width: "100%" }}>
+          <PrimaryButton onClick={goToStep4} disabled={!streetName.trim() || !streetNumber.trim() || submitting} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }

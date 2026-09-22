@@ -9,7 +9,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS, DRINK_TYPES, COUNTRIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariant } from "../data/sharedDirectories.js";
+import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariant, searchDrinks } from "../data/sharedDirectories.js";
+import { normalizeForDuplicateCheck } from "../utils.js";
 
 const BEER_CIDER_SUBTYPES = [
   { code: "biere", fr: "Bière" },
@@ -63,6 +64,7 @@ const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, m
 export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, onDone, onCancel }) {
   const [step, setStep] = useState(1);
   const [drinkId, setDrinkId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const validatedRef = useRef(false);
   const drinkIdRef = useRef(null);
   useEffect(() => {
@@ -119,14 +121,23 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   };
 
   const goToStep1 = async () => {
+    setSubmitting(true);
+    const trimmedName = name.trim();
+    const results = await searchDrinks(trimmedName);
+    const duplicate = results.find((d) => normalizeForDuplicateCheck(d.name) === normalizeForDuplicateCheck(trimmedName));
+    if (duplicate && !window.confirm(`Un produit nommé "${duplicate.name}" existe déjà. Continuer quand même et en créer un nouveau ?`)) {
+      setSubmitting(false);
+      return;
+    }
     const newId = `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     const ok = await createDrinkQuiet({
       id: newId,
-      name: name.trim(),
+      name: trimmedName,
       type,
       beverageSubtype: subtypeOptions ? beverageSubtype : null,
       status: "to_process",
     });
+    setSubmitting(false);
     if (!ok) {
       alert("La création du produit a échoué — merci de réessayer.");
       return;
@@ -136,11 +147,14 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   };
 
   const goToStep2 = async () => {
+    setSubmitting(true);
     await updateDrink(drinkId, { abv: parseFloat(abv) });
+    setSubmitting(false);
     setStep(3);
   };
 
   const goToStep3 = async () => {
+    setSubmitting(true);
     if (variant.volumeCl.trim().length > 0) {
       await createDrinkVariant({
         drinkId,
@@ -150,11 +164,14 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         marketCountry: null,
       });
     }
+    setSubmitting(false);
     setStep(4);
   };
 
   const goToStep4 = async () => {
+    setSubmitting(true);
     await updateDrink(drinkId, { nationality: nationality || null });
+    setSubmitting(false);
     setStep(5);
   };
 
@@ -177,8 +194,8 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         title="Nom, catégorie & sous-catégorie"
         onBack={onCancel}
         footer={
-          <PrimaryButton onClick={goToStep1} disabled={!step1Valid} style={{ width: "100%" }}>
-            Suivant
+          <PrimaryButton onClick={goToStep1} disabled={!step1Valid || submitting} style={{ width: "100%" }}>
+            {submitting ? "Vérification..." : "Suivant"}
           </PrimaryButton>
         }
       >
@@ -228,7 +245,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         onBack={handleAbandon}
         onPrevious={() => setStep(1)}
         footer={
-          <PrimaryButton onClick={goToStep2} disabled={!step2Valid} style={{ width: "100%" }}>
+          <PrimaryButton onClick={goToStep2} disabled={!step2Valid || submitting} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
@@ -270,7 +287,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         onBack={handleAbandon}
         onPrevious={() => setStep(2)}
         footer={
-          <PrimaryButton onClick={goToStep3} style={{ width: "100%" }}>
+          <PrimaryButton onClick={goToStep3} disabled={submitting} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
@@ -316,7 +333,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         onBack={handleAbandon}
         onPrevious={() => setStep(3)}
         footer={
-          <PrimaryButton onClick={goToStep4} style={{ width: "100%" }}>
+          <PrimaryButton onClick={goToStep4} disabled={submitting} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
