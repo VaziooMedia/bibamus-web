@@ -124,15 +124,18 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
     setStep(4);
   };
 
+  const stripArticle = (s) => (s || "").trim().replace(/^(le|la|les|l')\s*/i, "");
+  const normalizeVenueName = (s) => normalizeForDuplicateCheck(stripArticle(s));
+
   const goToStep4 = async () => {
     setSubmitting(true);
     const trimmedStreetName = streetName.trim();
     const trimmedStreetNumber = streetNumber.trim();
-    const results = await searchVenues(name.trim());
+    const results = await searchVenues(stripArticle(name.trim()));
     const duplicate = results.find(
       (v) =>
         v.id !== venueId &&
-        normalizeForDuplicateCheck(v.name) === normalizeForDuplicateCheck(name) &&
+        normalizeVenueName(v.name) === normalizeVenueName(name) &&
         normalizeForDuplicateCheck(v.postalCode || "") === normalizeForDuplicateCheck(postalCode) &&
         normalizeForDuplicateCheck(v.city || "") === normalizeForDuplicateCheck(city) &&
         normalizeForDuplicateCheck(v.streetName || "") === normalizeForDuplicateCheck(trimmedStreetName) &&
