@@ -205,7 +205,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
       <StepShell
         step={3}
         totalSteps={5}
-        title="Code postal & commune"
+        title="Code postal & Commune"
         onBack={handleAbandon}
         onPrevious={() => setStep(2)}
         footer={
@@ -215,9 +215,9 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         }
       >
         <label style={labelStyle}>Code postal</label>
-        <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Ex : 4900" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
+        <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="0000" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
         <label style={labelStyle}>Commune</label>
-        <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex : Spa" style={inputStyle} />
+        <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Commune" style={inputStyle} />
       </StepShell>
     );
   }
@@ -236,12 +236,12 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           </PrimaryButton>
         }
       >
-        <label style={labelStyle}>Rue, place, avenue, boulevard...</label>
-        <input type="text" value={streetName} onChange={(e) => setStreetName(e.target.value)} placeholder="Ex : Rue de la Paix" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
+        <label style={labelStyle}>Rue / Place / Avenue / Boulevard</label>
+        <input type="text" value={streetName} onChange={(e) => setStreetName(e.target.value)} placeholder="Adresse" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
         <label style={labelStyle}>Numéro</label>
-        <input type="text" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="Ex : 12" style={{ ...inputStyle, marginBottom: "16px", width: "100px" }} />
+        <input type="text" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="00" style={{ ...inputStyle, marginBottom: "16px", width: "100px" }} />
         <label style={labelStyle}>Section / Village (facultatif)</label>
-        <input type="text" value={village} onChange={(e) => setVillage(e.target.value)} placeholder="Ex : Franchimont" style={inputStyle} />
+        <input type="text" value={village} onChange={(e) => setVillage(e.target.value)} placeholder="Section / Village" style={inputStyle} />
       </StepShell>
     );
   }
@@ -265,6 +265,10 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         style={{
           width: "100%",
           boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
           background: COLORS.surface,
           border: `2px solid ${COLORS.amber}`,
           borderRadius: "12px",
@@ -276,7 +280,8 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           marginBottom: "10px",
         }}
       >
-        {geocoding ? "Géocodage..." : "📍 Géocoder automatiquement"}
+        {!geocoding && <NavIcon name="map-pin" size={17} color={COLORS.amber} />}
+        {geocoding ? "Géocodage..." : "Géocoder automatiquement"}
       </button>
       {geocodeNotFound && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "10px" }}>Adresse introuvable — vérifiez les pages précédentes, ou placez le repère manuellement ci-dessous.</p>}
       {!geocodeNotFound && geocodeStatus && <p style={{ fontSize: "12px", color: COLORS.amber, marginBottom: "10px" }}>✓ Position géocodée — vérifiez ou ajustez ci-dessous si besoin.</p>}

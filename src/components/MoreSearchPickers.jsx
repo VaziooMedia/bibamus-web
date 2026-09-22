@@ -382,12 +382,49 @@ export function VenuePositionPicker({ lat, lng, onChange }) {
       <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
         {lat != null ? "Glissez le repère pour ajuster, ou touchez ailleurs pour le déplacer." : "Touchez la carte à l'emplacement de l'établissement."}
       </p>
-      <div ref={mapContainerRef} style={{ width: "100%", height: "220px", borderRadius: "12px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.paperAlt }} />
+      <style>{`
+        .leaflet-control-zoom { border: none !important; box-shadow: none !important; }
+        .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+          background: ${COLORS.surface} !important;
+          color: ${COLORS.amber} !important;
+          border: 2px solid ${COLORS.amber} !important;
+          font-weight: 700 !important;
+        }
+        .leaflet-control-zoom-in { border-radius: 10px 10px 0 0 !important; }
+        .leaflet-control-zoom-out { border-radius: 0 0 10px 10px !important; border-top: none !important; }
+        .leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover { background: ${COLORS.amber} !important; color: ${COLORS.paper} !important; }
+      `}</style>
+      <div style={{ position: "relative" }}>
+        <div ref={mapContainerRef} style={{ width: "100%", height: "220px", borderRadius: "12px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.paperAlt }} />
+        {lat != null && (
+          <button
+            onClick={() => recenterRef.current && recenterRef.current(lat, lng)}
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              right: "10px",
+              zIndex: 1000,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: COLORS.amber,
+              border: "none",
+              borderRadius: "8px",
+              padding: "8px 12px",
+              color: COLORS.paper,
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+            }}
+          >
+            <NavIcon name="map-pin" size={14} color={COLORS.paper} />
+            Recentrer sur l'adresse
+          </button>
+        )}
+      </div>
       {lat != null && (
         <div style={{ display: "flex", alignItems: "center", gap: "16px", padding: "8px 0 0 0" }}>
-          <button onClick={() => recenterRef.current && recenterRef.current(lat, lng)} style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "12px", fontWeight: 700, cursor: "pointer", padding: 0 }}>
-            📍 Recentrer sur l'adresse
-          </button>
           <button
             onClick={() => onChange(null, null)}
             style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: 0 }}
