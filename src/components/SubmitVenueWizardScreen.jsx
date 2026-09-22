@@ -69,6 +69,22 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   // Page 1 — Dénomination
   const [name, setName] = useState("");
 
+  // Repère les vraies correspondances existantes en direct pendant la saisie du nom, avec
+  // leur vraie adresse (essentiel pour les lieux, vu la fréquence des homonymes) — bien plus
+  // efficace que de ne le signaler qu'à la toute fin du parcours.
+  const [nameMatches, setNameMatches] = useState([]);
+  useEffect(() => {
+    const q = name.trim();
+    if (q.length < 2) {
+      setNameMatches([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchVenues(q, 5).then(setNameMatches);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [name]);
+
   // Page 2 — Pays
   const [country, setCountry] = useState("");
 
@@ -203,6 +219,21 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
       >
         <label style={labelStyle}>Nom du lieu</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du lieu" style={inputStyle} autoFocus />
+        {nameMatches.length > 0 && (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "10px 12px", marginTop: "10px" }}>
+            <p style={{ fontSize: "11.5px", color: COLORS.pinkFluo, fontWeight: 700, margin: "0 0 6px 0" }}>Lieu(x) similaire(s) déjà existant(s) :</p>
+            {nameMatches.map((v) => (
+              <div key={v.id} style={{ padding: "4px 0" }}>
+                <div style={{ fontSize: "12.5px", fontWeight: 600 }}>{v.name}</div>
+                {(v.streetName || v.city) && (
+                  <div style={{ fontSize: "11px", color: COLORS.inkSoft }}>
+                    {[v.streetName && v.streetNumber ? `${v.streetName}, ${v.streetNumber}` : v.streetName, v.postalCode && v.city ? `${v.postalCode} ${v.city}` : v.city].filter(Boolean).join(" - ")}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </StepShell>
     );
   }

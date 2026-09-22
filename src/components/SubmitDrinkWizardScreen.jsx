@@ -88,6 +88,21 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   const subtypeOptions = type === "Bières & Cidres" ? BEER_CIDER_SUBTYPES : type === "Vins & Bulles" ? WINE_SUBTYPES : null;
   const step1Valid = name.trim().length > 0 && !!type && (!subtypeOptions || !!beverageSubtype);
 
+  // Repère les vraies correspondances existantes en direct pendant la saisie du nom — bien
+  // plus efficace que de ne le signaler qu'à la toute fin du parcours.
+  const [nameMatches, setNameMatches] = useState([]);
+  useEffect(() => {
+    const q = name.trim();
+    if (q.length < 2) {
+      setNameMatches([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchDrinks(q, 5).then(setNameMatches);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [name]);
+
   // Page 2 — Degré d'alcool
   const [abv, setAbv] = useState("");
   const step2Valid = abv.trim().length > 0 && !isNaN(parseFloat(abv));
@@ -200,7 +215,18 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         }
       >
         <label style={labelStyle}>Nom du produit</label>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du produit" style={{ ...inputStyle, marginBottom: "20px" }} autoFocus />
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du produit" style={{ ...inputStyle, marginBottom: nameMatches.length > 0 ? "8px" : "20px" }} autoFocus />
+        {nameMatches.length > 0 && (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "10px 12px", marginBottom: "20px" }}>
+            <p style={{ fontSize: "11.5px", color: COLORS.pinkFluo, fontWeight: 700, margin: "0 0 6px 0" }}>Produit(s) similaire(s) déjà existant(s) :</p>
+            {nameMatches.map((d) => (
+              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0" }}>
+                <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={22} fallbackIcon="bottle" />
+                <span style={{ fontSize: "12.5px", fontWeight: 600 }}>{d.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <label style={labelStyle}>Catégorie</label>
         <select
