@@ -507,12 +507,6 @@ export const VENUE_TYPES = [
   { code: "bar_a_gin", fr: "Bar à gin" },
   { code: "bar_a_shot", fr: "Bar à shot" },
   { code: "drink_food_shop", fr: "Drink & Food Shop" },
-  { code: "karaokes_occasionnels", fr: "Karaokés occasionnels" },
-  { code: "concerts_occasionnels", fr: "Concerts occasionnels" },
-  { code: "billard", fr: "Billard" },
-  { code: "babyfoot_kicker", fr: "Babyfoot - Kicker" },
-  { code: "jeu_de_flechettes", fr: "Jeu de fléchettes" },
-  { code: "bingo", fr: "Bingo" },
 ];
 
 export const VENUE_TYPE_TAGS = [
