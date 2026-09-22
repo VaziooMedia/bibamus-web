@@ -254,12 +254,17 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
             <button
               onClick={() => {
                 setShowActionsMenu(false);
-                setEditing(true);
+                if (isAdmin) {
+                  setEditing(true);
+                } else {
+                  setReportInitialReason("suggestion");
+                  setReporting(true);
+                }
               }}
               style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
             >
               <NavIcon name="pencil" size={20} color={COLORS.amber} />
-              Suggérer une modification
+              {isAdmin ? "Éditer" : "Suggérer une modification"}
             </button>
             <button
               onClick={() => {
@@ -511,12 +516,17 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
             <button
               onClick={() => {
                 setShowActionsMenu(false);
-                setEditing(true);
+                if (isAdmin) {
+                  setEditing(true);
+                } else {
+                  setReportInitialReason("suggestion");
+                  setReporting(true);
+                }
               }}
               style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
             >
               <NavIcon name="pencil" size={20} color={COLORS.amber} />
-              Suggérer une modification
+              {isAdmin ? "Éditer" : "Suggérer une modification"}
             </button>
             <button
               onClick={() => {

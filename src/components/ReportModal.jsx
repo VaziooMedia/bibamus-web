@@ -18,6 +18,7 @@ function ReportIcon() {
 // sens que pour un établissement.
 function reasonsFor(entityType) {
   const base = [
+    { key: "suggestion", label: "Suggestion de modification", commentRequired: true },
     { key: "wrong_info", label: "Information(s) incorrecte(s)", commentRequired: true },
     { key: "duplicate", label: "Fiche en double", commentRequired: false },
     { key: "inappropriate", label: "Contenu inapproprié", commentRequired: true },
