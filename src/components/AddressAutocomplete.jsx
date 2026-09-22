@@ -1,12 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import { GeocoderAutocomplete } from "@geoapify/geocoder-autocomplete";
-import "@geoapify/geocoder-autocomplete/styles/minimal-dark.css";
+import { COLORS } from "../constants.js";
 
 const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY || "";
 
 // Deux champs (code postal + ville) qui se remplissent l'un l'autre automatiquement à la
 // sélection — évite les doublons linguistiques (Waimes/Weismes) puisque Geoapify renvoie le
 // nom dans la langue demandée (lang: "fr"), pas les deux variantes à la fois.
+//
+// Style entièrement propre à l'app plutôt que le thème par défaut de la librairie (qui jure
+// visuellement avec le reste) — géré via la balise <style> ci-dessous, ciblant ses vraies
+// classes CSS internes.
 //
 // Les deux instances Geoapify sont créées UNE SEULE FOIS (pas à chaque changement de pays) —
 // on met à jour leur filtre pays via l'API dédiée (clearFilters/addFilterByCountry) plutôt que
@@ -24,7 +28,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       lang: "fr",
       type: "postcode",
       skipIcons: true,
-      placeholder: "",
+      placeholder: "Ex : 4900",
     });
     postalAutocomplete.on("select", (result) => {
       const props = result?.properties;
@@ -38,7 +42,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       lang: "fr",
       type: "city",
       skipIcons: true,
-      placeholder: "",
+      placeholder: "Ex : Spa",
     });
     cityAutocomplete.on("select", (result) => {
       const props = result?.properties;
@@ -86,7 +90,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
 
   if (!GEOAPIFY_API_KEY) {
     return (
-      <p style={{ fontSize: "11px", color: "#8792A6", gridColumn: "1 / -1" }}>
+      <p style={{ fontSize: "11px", color: COLORS.inkSoft, gridColumn: "1 / -1" }}>
         Auto-complétion non configurée (clé Geoapify manquante) — les champs restent modifiables à la main ci-dessous.
       </p>
     );
@@ -94,19 +98,46 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
 
   return (
     <>
-      {required && (
-        <style>{`
-          .req-geo-postal .geoapify-autocomplete-input, .req-geo-city .geoapify-autocomplete-input {
-            border-color: #FF3B4E !important;
-          }
-        `}</style>
-      )}
+      <style>{`
+        .geoapify-autocomplete-input {
+          width: 100% !important;
+          box-sizing: border-box !important;
+          padding: 12px 14px !important;
+          border-radius: 12px !important;
+          border: 2px solid ${COLORS.paperAlt} !important;
+          background: ${COLORS.surface} !important;
+          color: ${COLORS.ink} !important;
+          font-size: 14px !important;
+          font-family: inherit !important;
+        }
+        .geoapify-autocomplete-input:focus { outline: none !important; border-color: ${COLORS.amber} !important; }
+        .geoapify-autocomplete-items {
+          background: ${COLORS.surface} !important;
+          border: 2px solid ${COLORS.paperAlt} !important;
+          border-radius: 12px !important;
+          margin-top: 4px !important;
+          overflow: hidden !important;
+          z-index: 1000 !important;
+        }
+        .geoapify-autocomplete-items > div {
+          color: ${COLORS.ink} !important;
+          font-size: 13.5px !important;
+          padding: 10px 14px !important;
+          border-bottom: 1px solid ${COLORS.paperAlt} !important;
+        }
+        .geoapify-autocomplete-items > div:last-child { border-bottom: none !important; }
+        .geoapify-autocomplete-items > div:hover, .geoapify-autocomplete-items > .active {
+          background: ${COLORS.amber} !important;
+          color: ${COLORS.paper} !important;
+        }
+        ${required ? `.req-geo-postal .geoapify-autocomplete-input, .req-geo-city .geoapify-autocomplete-input { border-color: #FF3B4E !important; }` : ""}
+      `}</style>
       <div>
-        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Code postal</label>
+        <label style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "4px" }}>Code postal</label>
         <div ref={postalRef} className={required ? "req-geo-postal" : undefined} style={{ position: "relative" }} onInput={(e) => onPostalCodeChange(e.target.value)} />
       </div>
       <div>
-        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Commune</label>
+        <label style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "4px" }}>Commune</label>
         <div ref={cityRef} className={required ? "req-geo-city" : undefined} style={{ position: "relative" }} onInput={(e) => onCityChange(e.target.value)} />
       </div>
     </>
