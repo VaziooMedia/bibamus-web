@@ -1,16 +1,16 @@
 // ============================================================
-// Ajouter un lieu — même vrai principe que "Proposer une boisson" (SubmitDrinkWizardScreen) :
-// un vrai parcours en 5 pages, une vraie info à la fois. Le lieu est créé dès la page 1
-// (status "to_process", donc déjà visible/utilisable, comme pour les produits) ; abandonner
-// avant la toute dernière page supprime le brouillon.
+// Ajouter un lieu — un vrai parcours en 7 pages, une vraie info à la fois. Contrairement à la
+// version précédente, RIEN n'est écrit en base tant que l'utilisateur n'a pas validé la toute
+// dernière page ET confirmé le vrai popup qui suit — tout reste en mémoire locale jusque-là.
+// Ça évite les vrais brouillons/tests qui apparaissaient dans BibAtlas avant toute validation.
 // ============================================================
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, COUNTRIES, COUNTRY_ISO_CODES, VENUE_TYPES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
-import { createPublicVenue, updatePublicVenue, deletePublicVenue, geocodeAddress, saveGeocodeResult, searchVenues, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
+import { createPublicVenue, saveGeocodeResult, geocodeAddress, searchVenues, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
 import { normalizeForDuplicateCheck } from "../utils.js";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
@@ -48,32 +48,35 @@ const requiredStyle = (filled) => ({ ...inputStyle, border: `2px solid ${filled 
 const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
 const capitalizeFirst = (s) => (s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
+const AMENITY_FIELDS = [
+  ["hasOccasionalKaraoke", "Karaokés occasionnels"],
+  ["hasOccasionalConcerts", "Concerts occasionnels"],
+  ["hasBilliards", "Billard"],
+  ["hasFoosball", "Babyfoot - Kicker"],
+  ["hasDarts", "Jeu de fléchettes"],
+  ["hasBingo", "Bingo"],
+  ["hasFood", "Restauration"],
+  ["hasSnacks", "Petite restauration"],
+  ["hasTerrace", "Terrasse"],
+  ["wheelchairAccessible", "Accessible PMR"],
+  ["hasWifi", "WiFi gratuit"],
+  ["hasDogs", "Chiens acceptés"],
+  ["canDance", "Possibilité de danser (en soirée)"],
+  ["reservationPossible", "Réservation possible"],
+  ["goodForGroups", "Idéal pour des grands groupes"],
+  ["privatizationPossible", "Privatisation possible"],
+  ["hasPrivateRoom", "Salle annexe privée disponible"],
+  ["smokingArea", "Espace fumeurs"],
+];
+
 export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   const [step, setStep] = useState(1);
-  const [venueId, setVenueId] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const validatedRef = useRef(false);
-  const venueIdRef = useRef(null);
-  useEffect(() => {
-    venueIdRef.current = venueId;
-  }, [venueId]);
-
-  // Filet de sécurité : si l'utilisateur quitte cet écran par un autre chemin que la vraie
-  // validation finale, le brouillon créé est supprimé.
-  useEffect(() => {
-    return () => {
-      if (venueIdRef.current && !validatedRef.current) {
-        deletePublicVenue(venueIdRef.current);
-      }
-    };
-  }, []);
 
   // Page 1 — Dénomination
   const [name, setName] = useState("");
 
   // Repère les vraies correspondances existantes en direct pendant la saisie du nom, avec
-  // leur vraie adresse (essentiel pour les lieux, vu la fréquence des homonymes) — bien plus
-  // efficace que de ne le signaler qu'à la toute fin du parcours.
+  // leur vraie adresse (essentiel pour les lieux, vu la fréquence des homonymes).
   const [nameMatches, setNameMatches] = useState([]);
   useEffect(() => {
     const q = name.trim();
@@ -98,61 +101,40 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   const [streetName, setStreetName] = useState("");
   const [streetNumber, setStreetNumber] = useState("");
   const [village, setVillage] = useState("");
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
 
   // Page 5 — Géocodage + vérification
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeNotFound, setGeocodeNotFound] = useState(false);
   const [geocodeStatus, setGeocodeStatus] = useState(null);
+  const [geocodeSource, setGeocodeSource] = useState(null);
+  const [geocodeConfidence, setGeocodeConfidence] = useState(null);
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
+
+  // Page 6 — Type
+  const [venueTypes, setVenueTypes] = useState([]);
+  const toggleVenueType = (code) => setVenueTypes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+
+  // Page 7 — Aménités
+  const [amenities, setAmenities] = useState({});
+  const toggleAmenity = (key) => setAmenities((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  // Vraie confirmation finale — rien n'est créé avant que l'utilisateur clique "OK" ici.
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const handleAbandon = async () => {
-    if (venueId) {
-      if (!window.confirm("Abandonner la création de ce lieu ? Rien ne sera enregistré.")) return;
-      await deletePublicVenue(venueId);
-    }
-    onCancel();
-  };
-
-  const goToStep1 = async () => {
-    setSubmitting(true);
-    const newId = `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-    const created = await createPublicVenue({ id: newId, name: name.trim(), status: "to_process", menu: [], likes: [] });
-    setSubmitting(false);
-    if (!created) {
-      alert("La création du lieu a échoué — merci de réessayer.");
-      return;
-    }
-    setVenueId(newId);
-    setStep(2);
-  };
-
-  const goToStep2 = async () => {
-    setSubmitting(true);
-    await updatePublicVenue(venueId, { country });
-    setSubmitting(false);
-    setStep(3);
-  };
-
-  const goToStep3 = async () => {
-    setSubmitting(true);
-    await updatePublicVenue(venueId, { postalCode: postalCode.trim(), city: city.trim() });
-    setSubmitting(false);
-    setStep(4);
-  };
 
   const stripArticle = (s) => (s || "").trim().replace(/^(le|la|les|l')\s*/i, "");
   const normalizeVenueName = (s) => normalizeForDuplicateCheck(stripArticle(s));
 
   const goToStep4 = async () => {
-    setSubmitting(true);
+    setCheckingDuplicate(true);
     const trimmedStreetName = streetName.trim();
     const trimmedStreetNumber = streetNumber.trim();
     const results = await searchVenues(stripArticle(name.trim()));
+    setCheckingDuplicate(false);
     const duplicate = results.find(
       (v) =>
-        v.id !== venueId &&
         normalizeVenueName(v.name) === normalizeVenueName(name) &&
         normalizeForDuplicateCheck(v.postalCode || "") === normalizeForDuplicateCheck(postalCode) &&
         normalizeForDuplicateCheck(v.city || "") === normalizeForDuplicateCheck(city) &&
@@ -160,12 +142,11 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         normalizeForDuplicateCheck(v.streetNumber || "") === normalizeForDuplicateCheck(trimmedStreetNumber)
     );
     if (duplicate) {
-      setSubmitting(false);
       alert(`Alerte :\n"${duplicate.name}, ${duplicate.streetName}, ${duplicate.streetNumber} - ${duplicate.postalCode} ${duplicate.city}" existe déjà.\nVous ne pouvez pas le rajouter.`);
       return;
     }
-    await updatePublicVenue(venueId, { streetName: trimmedStreetName, streetNumber: trimmedStreetNumber, village: village.trim() || null });
-    setSubmitting(false);
+    setStreetName(trimmedStreetName);
+    setStreetNumber(trimmedStreetNumber);
     setStep(5);
   };
 
@@ -185,58 +166,53 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
       return;
     }
     setGeocodeStatus(result.status);
+    setGeocodeSource(result.source);
+    setGeocodeConfidence(result.confidence);
     setLat(result.lat);
     setLng(result.lng);
-    await saveGeocodeResult(venueId, { lat: result.lat, lng: result.lng, source: result.source, confidence: result.confidence, status: result.status });
   };
 
-  const handlePositionChange = async (newLat, newLng) => {
+  const handlePositionChange = (newLat, newLng) => {
     setLat(newLat);
     setLng(newLng);
     if (newLat != null && newLng != null) {
       setGeocodeStatus("manual");
-      await saveGeocodeResult(venueId, { lat: newLat, lng: newLng, source: "manual", confidence: null, status: "manual" });
+      setGeocodeSource("manual");
+      setGeocodeConfidence(null);
     }
   };
 
-  const goToStep5 = async () => {
-    setStep(6);
-  };
-
-  // Page 6 — Type (facultatif, plusieurs choix possibles)
-  const [venueTypes, setVenueTypes] = useState([]);
-  const toggleVenueType = (code) => setVenueTypes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
-
-  // Page 7 — Aménités (facultatif)
-  const AMENITY_FIELDS = [
-    ["hasOccasionalKaraoke", "Karaokés occasionnels"],
-    ["hasOccasionalConcerts", "Concerts occasionnels"],
-    ["hasBilliards", "Billard"],
-    ["hasFoosball", "Babyfoot - Kicker"],
-    ["hasDarts", "Jeu de fléchettes"],
-    ["hasBingo", "Bingo"],
-    ["hasFood", "Restauration"],
-    ["hasSnacks", "Petite restauration"],
-    ["hasTerrace", "Terrasse"],
-    ["wheelchairAccessible", "Accessible PMR"],
-    ["hasWifi", "WiFi gratuit"],
-    ["hasDogs", "Chiens acceptés"],
-    ["canDance", "Possibilité de danser (en soirée)"],
-    ["reservationPossible", "Réservation possible"],
-    ["goodForGroups", "Idéal pour des grands groupes"],
-    ["privatizationPossible", "Privatisation possible"],
-    ["hasPrivateRoom", "Salle annexe privée disponible"],
-    ["smokingArea", "Espace fumeurs"],
-  ];
-  const [amenities, setAmenities] = useState({});
-  const toggleAmenity = (key) => setAmenities((prev) => ({ ...prev, [key]: !prev[key] }));
-
-  const handleFinalSubmit = async () => {
+  // Vraie création complète, en un seul vrai appel — déclenchée uniquement par le "OK" du
+  // popup de confirmation, jamais avant.
+  const handleConfirmCreate = async () => {
     setSaving(true);
-    await updatePublicVenue(venueId, { venueTypes, ...amenities });
-    validatedRef.current = true;
+    const newId = `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const created = await createPublicVenue({
+      id: newId,
+      name: name.trim(),
+      country,
+      postalCode: postalCode.trim(),
+      city: city.trim(),
+      streetName: streetName.trim(),
+      streetNumber: streetNumber.trim(),
+      village: village.trim() || null,
+      venueTypes,
+      ...amenities,
+      status: "to_process",
+      menu: [],
+      likes: [],
+    });
+    if (!created) {
+      setSaving(false);
+      alert("La création du lieu a échoué — merci de réessayer.");
+      return;
+    }
+    if (lat != null && lng != null) {
+      await saveGeocodeResult(newId, { lat, lng, source: geocodeSource, confidence: geocodeConfidence, status: geocodeStatus });
+    }
     setSaving(false);
-    onDone(venueId);
+    setShowConfirmPopup(false);
+    onDone(newId);
   };
 
   if (step === 1) {
@@ -247,8 +223,8 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         title="Dénomination"
         onBack={onCancel}
         footer={
-          <PrimaryButton onClick={goToStep1} disabled={!name.trim() || submitting} style={{ width: "100%" }}>
-            {submitting ? "Vérification..." : "Suivant"}
+          <PrimaryButton onClick={() => setStep(2)} disabled={!name.trim()} style={{ width: "100%" }}>
+            Suivant
           </PrimaryButton>
         }
       >
@@ -279,10 +255,10 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         step={2}
         totalSteps={7}
         title="Pays"
-        onBack={handleAbandon}
+        onBack={onCancel}
         onPrevious={() => setStep(1)}
         footer={
-          <PrimaryButton onClick={goToStep2} disabled={!country || submitting} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setStep(3)} disabled={!country} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
@@ -305,10 +281,10 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         step={3}
         totalSteps={7}
         title="Code postal & Commune"
-        onBack={handleAbandon}
+        onBack={onCancel}
         onPrevious={() => setStep(2)}
         footer={
-          <PrimaryButton onClick={goToStep3} disabled={!postalCode.trim() || !city.trim() || submitting} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setStep(4)} disabled={!postalCode.trim() || !city.trim()} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
@@ -338,11 +314,11 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         step={4}
         totalSteps={7}
         title="Adresse"
-        onBack={handleAbandon}
+        onBack={onCancel}
         onPrevious={() => setStep(3)}
         footer={
-          <PrimaryButton onClick={goToStep4} disabled={!streetName.trim() || !streetNumber.trim() || submitting} style={{ width: "100%" }}>
-            Suivant
+          <PrimaryButton onClick={goToStep4} disabled={!streetName.trim() || !streetNumber.trim() || checkingDuplicate} style={{ width: "100%" }}>
+            {checkingDuplicate ? "Vérification..." : "Suivant"}
           </PrimaryButton>
         }
       >
@@ -366,43 +342,43 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         step={5}
         totalSteps={7}
         title="Géocodage & Vérification"
-        onBack={handleAbandon}
+        onBack={onCancel}
         onPrevious={() => setStep(4)}
         footer={
-          <PrimaryButton onClick={goToStep5} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setStep(6)} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
       >
-      <button
-        onClick={handleGeocode}
-        disabled={geocoding}
-        style={{
-          width: "100%",
-          boxSizing: "border-box",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-          background: COLORS.surface,
-          border: `2px solid ${COLORS.amber}`,
-          borderRadius: "12px",
-          padding: "12px",
-          color: COLORS.amber,
-          fontSize: "14px",
-          fontWeight: 700,
-          cursor: geocoding ? "default" : "pointer",
-          marginBottom: "10px",
-        }}
-      >
-        {!geocoding && <NavIcon name="map-pin" size={17} color={COLORS.amber} />}
-        {geocoding ? "Géocodage..." : "Géocoder automatiquement"}
-      </button>
-      {geocodeNotFound && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "10px" }}>Adresse introuvable — vérifiez les pages précédentes, ou placez le repère manuellement ci-dessous.</p>}
-      {!geocodeNotFound && geocodeStatus && <p style={{ fontSize: "12px", color: COLORS.amber, marginBottom: "10px" }}>✓ Position géocodée — vérifiez ou ajustez ci-dessous si besoin.</p>}
+        <button
+          onClick={handleGeocode}
+          disabled={geocoding}
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            background: COLORS.surface,
+            border: `2px solid ${COLORS.amber}`,
+            borderRadius: "12px",
+            padding: "12px",
+            color: COLORS.amber,
+            fontSize: "14px",
+            fontWeight: 700,
+            cursor: geocoding ? "default" : "pointer",
+            marginBottom: "10px",
+          }}
+        >
+          {!geocoding && <NavIcon name="map-pin" size={17} color={COLORS.amber} />}
+          {geocoding ? "Géocodage..." : "Géocoder automatiquement"}
+        </button>
+        {geocodeNotFound && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "10px" }}>Adresse introuvable — vérifiez les pages précédentes, ou placez le repère manuellement ci-dessous.</p>}
+        {!geocodeNotFound && geocodeStatus && <p style={{ fontSize: "12px", color: COLORS.amber, marginBottom: "10px" }}>✓ Position géocodée — vérifiez ou ajustez ci-dessous si besoin.</p>}
 
-      <label style={labelStyle}>Vérification sur la carte</label>
-      <VenuePositionPicker lat={lat} lng={lng} onChange={handlePositionChange} verified={["verified", "exact", "manual"].includes(geocodeStatus)} />
+        <label style={labelStyle}>Vérification sur la carte</label>
+        <VenuePositionPicker lat={lat} lng={lng} onChange={handlePositionChange} verified={["verified", "exact", "manual"].includes(geocodeStatus)} />
       </StepShell>
     );
   }
@@ -413,7 +389,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         step={6}
         totalSteps={7}
         title="Type"
-        onBack={handleAbandon}
+        onBack={onCancel}
         onPrevious={() => setStep(5)}
         footer={
           <PrimaryButton onClick={() => setStep(7)} disabled={venueTypes.length === 0} style={{ width: "100%" }}>
@@ -450,27 +426,42 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   }
 
   return (
-    <StepShell
-      step={7}
-      totalSteps={7}
-      title="Aménités"
-      onBack={handleAbandon}
-      onPrevious={() => setStep(6)}
-      footer={
-        <PrimaryButton onClick={handleFinalSubmit} disabled={saving} style={{ width: "100%" }}>
-          {saving ? "Enregistrement..." : "Valider"}
-        </PrimaryButton>
-      }
-    >
-      <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif - Plusieurs choix possibles</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {AMENITY_FIELDS.map(([key, label]) => (
-          <label key={key} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", cursor: "pointer" }}>
-            <input type="checkbox" checked={!!amenities[key]} onChange={() => toggleAmenity(key)} style={{ width: "18px", height: "18px", accentColor: COLORS.amber, flexShrink: 0 }} />
-            {label}
-          </label>
-        ))}
-      </div>
-    </StepShell>
+    <>
+      <StepShell
+        step={7}
+        totalSteps={7}
+        title="Aménités"
+        onBack={onCancel}
+        onPrevious={() => setStep(6)}
+        footer={
+          <PrimaryButton onClick={() => setShowConfirmPopup(true)} style={{ width: "100%" }}>
+            Valider
+          </PrimaryButton>
+        }
+      >
+        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif - Plusieurs choix possibles</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {AMENITY_FIELDS.map(([key, label]) => (
+            <label key={key} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", cursor: "pointer" }}>
+              <input type="checkbox" checked={!!amenities[key]} onChange={() => toggleAmenity(key)} style={{ width: "18px", height: "18px", accentColor: COLORS.amber, flexShrink: 0 }} />
+              {label}
+            </label>
+          ))}
+        </div>
+      </StepShell>
+
+      {showConfirmPopup && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", zIndex: 2000 }}>
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "16px", padding: "24px", maxWidth: "360px" }}>
+            <p style={{ fontSize: "14.5px", color: COLORS.ink, margin: "0 0 20px 0", lineHeight: 1.5 }}>
+              Ta contribution sera vérifiée prochainement, mais elle est déjà disponible dans BibAtlas.
+            </p>
+            <PrimaryButton onClick={handleConfirmCreate} disabled={saving} style={{ width: "100%" }}>
+              {saving ? "Enregistrement..." : "OK"}
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
