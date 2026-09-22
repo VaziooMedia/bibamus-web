@@ -463,6 +463,31 @@ export const SNACK_TYPES = [
   "Végétarien",
 ];
 
+export const PRODUCER_TYPES = [
+  { code: "brasserie", fr: "Brasserie" },
+  { code: "micro_brasserie", fr: "Micro-brasserie" },
+  { code: "distillerie", fr: "Distillerie" },
+  { code: "cidrerie", fr: "Cidrerie" },
+  { code: "domaine_viticole", fr: "Domaine viticole" },
+  { code: "hydromellerie", fr: "Hydromellerie" },
+  { code: "torrefacteur", fr: "Torréfacteur" },
+  { code: "boissons_sans_alcool", fr: "Boissons sans alcool" },
+  { code: "alimentaire", fr: "Alimentaire" },
+];
+
+export const PRODUCER_PROFILES = [
+  { code: "micro_producteur", fr: "Micro-producteur" },
+  { code: "artisanal", fr: "Artisanal" },
+  { code: "local", fr: "Local" },
+  { code: "trappiste", fr: "Trappiste" },
+  { code: "abbaye", fr: "Abbaye" },
+  { code: "independant", fr: "Indépendant" },
+  { code: "industriel", fr: "Industriel" },
+  { code: "groupe", fr: "Groupe" },
+  { code: "multinationale", fr: "Multinationale" },
+  { code: "cooperative", fr: "Coopérative" },
+];
+
 export const VENUE_TYPES = [
   { code: "bar", fr: "Bar" },
   { code: "cafe", fr: "Café" },

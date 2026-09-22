@@ -3138,6 +3138,15 @@ function rowToBrewery(row) {
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
     pendingContributionsCount: row.pending_contributions_count || 0,
+    streetName: row.street_name,
+    streetNumber: row.street_number,
+    postalCode: row.postal_code,
+    city: row.city,
+    village: row.village,
+    lat: row.lat,
+    lng: row.lng,
+    producerTypes: row.producer_types || [],
+    producerProfiles: row.producer_profiles || [],
   };
 }
 
@@ -3153,6 +3162,15 @@ function breweryToRow(b, partial = false) {
     submitted_by: b.submittedBy,
     aliases: b.aliases,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
+    street_name: b.streetName,
+    street_number: b.streetNumber,
+    postal_code: b.postalCode,
+    city: b.city,
+    village: b.village,
+    lat: b.lat,
+    lng: b.lng,
+    producer_types: b.producerTypes,
+    producer_profiles: b.producerProfiles,
   };
   if (!partial) row.id = b.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
