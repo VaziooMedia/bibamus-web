@@ -28,7 +28,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       lang: "fr",
       type: "postcode",
       skipIcons: true,
-      placeholder: "Ex : 4900",
+      placeholder: "Code postal",
     });
     postalAutocomplete.on("select", (result) => {
       const props = result?.properties;
@@ -42,7 +42,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       lang: "fr",
       type: "city",
       skipIcons: true,
-      placeholder: "Ex : Spa",
+      placeholder: "Commune",
     });
     cityAutocomplete.on("select", (result) => {
       const props = result?.properties;
@@ -131,13 +131,13 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
           color: ${COLORS.paper} !important;
         }
         ${required ? `.req-geo-postal .geoapify-autocomplete-input, .req-geo-city .geoapify-autocomplete-input { border-color: #FF3B4E !important; }` : ""}
+        .geoapify-close-button { color: ${COLORS.inkSoft} !important; right: 12px !important; }
+        .geoapify-close-button:hover { color: ${COLORS.ink} !important; }
       `}</style>
       <div>
-        <label style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "4px" }}>Code postal</label>
         <div ref={postalRef} className={required ? "req-geo-postal" : undefined} style={{ position: "relative" }} onInput={(e) => onPostalCodeChange(e.target.value)} />
       </div>
       <div>
-        <label style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "4px" }}>Commune</label>
         <div ref={cityRef} className={required ? "req-geo-city" : undefined} style={{ position: "relative" }} onInput={(e) => onCityChange(e.target.value)} />
       </div>
     </>

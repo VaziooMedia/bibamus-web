@@ -250,7 +250,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           </PrimaryButton>
         }
       >
-        <label style={labelStyle}>Nom du lieu</label>
+        <p style={{ fontSize: "13px", color: COLORS.pinkFluo, fontWeight: 600, margin: "0 0 20px 0" }}>Vérifie bien les majuscules et l'orthographe</p>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du lieu" style={inputStyle} autoFocus />
         {nameMatches.length > 0 && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "10px 12px", marginTop: "10px" }}>
@@ -285,7 +285,6 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           </PrimaryButton>
         }
       >
-        <label style={labelStyle}>Pays</label>
         <select value={country} onChange={(e) => setCountry(e.target.value)} style={inputStyle}>
           <option value="">Choisir un pays</option>
           {COUNTRIES.map((c) => (
@@ -322,9 +321,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           />
         ) : (
           <>
-            <label style={labelStyle}>Code postal</label>
-            <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="0000" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
-            <label style={labelStyle}>Commune</label>
+            <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Code postal" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
             <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Commune" style={inputStyle} />
           </>
         )}
@@ -346,11 +343,8 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           </PrimaryButton>
         }
       >
-        <label style={labelStyle}>Rue / Place / Avenue / Boulevard</label>
-        <input type="text" value={streetName} onChange={(e) => setStreetName(e.target.value)} placeholder="Adresse" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
-        <label style={labelStyle}>Numéro</label>
-        <input type="text" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="00" style={{ ...inputStyle, marginBottom: "16px", width: "100px" }} />
-        <label style={labelStyle}>Section / Village (facultatif)</label>
+        <input type="text" value={streetName} onChange={(e) => setStreetName(e.target.value)} placeholder="Rue / Place / Avenue / Boulevard" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
+        <input type="text" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="N°" style={{ ...inputStyle, marginBottom: "16px", width: "100px" }} />
         <input type="text" value={village} onChange={(e) => setVillage(e.target.value)} placeholder="Section / Village" style={inputStyle} />
       </StepShell>
     );
@@ -429,8 +423,8 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
                   background: checked ? COLORS.amber : "none",
                   border: `2px solid ${checked ? COLORS.amber : COLORS.paperAlt}`,
                   borderRadius: "999px",
-                  padding: "8px 14px",
-                  fontSize: "13px",
+                  padding: "5px 10px",
+                  fontSize: "11px",
                   fontWeight: 600,
                   color: checked ? COLORS.paper : COLORS.ink,
                   cursor: "pointer",
