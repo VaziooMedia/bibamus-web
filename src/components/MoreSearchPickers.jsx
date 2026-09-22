@@ -6,7 +6,7 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS, GENERIC_BRAND_LABEL } from "../constants.js";
-import { VerifiedBadge } from "./icons.jsx";
+import { VerifiedBadge, NavIcon } from "./icons.jsx";
 import { normalizeForSearch, normalizeForDuplicateCheck, drinkTypeLabel, ensureLeafletLoaded } from "../utils.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
 
