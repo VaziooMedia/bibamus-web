@@ -251,32 +251,18 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
             style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
           >
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
-            <button
-              onClick={() => {
-                setShowActionsMenu(false);
-                if (isAdmin) {
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setShowActionsMenu(false);
                   setEditing(true);
-                } else {
-                  setReportInitialReason("suggestion");
-                  setReporting(true);
-                }
-              }}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-            >
-              <NavIcon name="pencil" size={20} color={COLORS.amber} />
-              {isAdmin ? "Éditer" : "Suggérer une modification"}
-            </button>
-            <button
-              onClick={() => {
-                setShowActionsMenu(false);
-                setReportInitialReason("wrong_info");
-                setReporting(true);
-              }}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-            >
-              <ReportIcon />
-              Signaler une erreur ou un changement
-            </button>
+                }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+              >
+                <NavIcon name="pencil" size={20} color={COLORS.amber} />
+                Éditer
+              </button>
+            )}
             <button
               onClick={() => {
                 setShowActionsMenu(false);
@@ -286,7 +272,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
               style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
             >
               <ReportIcon />
-              Signaler cette fiche
+              Signaler ou suggérer une modification
             </button>
           </div>
         </div>
@@ -513,32 +499,18 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
             style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
           >
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
-            <button
-              onClick={() => {
-                setShowActionsMenu(false);
-                if (isAdmin) {
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setShowActionsMenu(false);
                   setEditing(true);
-                } else {
-                  setReportInitialReason("suggestion");
-                  setReporting(true);
-                }
-              }}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-            >
-              <NavIcon name="pencil" size={20} color={COLORS.amber} />
-              {isAdmin ? "Éditer" : "Suggérer une modification"}
-            </button>
-            <button
-              onClick={() => {
-                setShowActionsMenu(false);
-                setReportInitialReason("wrong_info");
-                setReporting(true);
-              }}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-            >
-              <ReportIcon />
-              Signaler une erreur ou un changement
-            </button>
+                }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+              >
+                <NavIcon name="pencil" size={20} color={COLORS.amber} />
+                Éditer
+              </button>
+            )}
             <button
               onClick={() => {
                 setShowActionsMenu(false);
@@ -548,7 +520,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
               style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
             >
               <ReportIcon />
-              Signaler cette fiche
+              Signaler ou suggérer une modification
             </button>
           </div>
         </div>
