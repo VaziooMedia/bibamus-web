@@ -301,6 +301,8 @@ export function VenuePositionPicker({ lat, lng, onChange }) {
   const mapContainerRef = React.useRef(null);
   const mapInstanceRef = React.useRef(null);
   const markerRef = React.useRef(null);
+  const recenterRef = React.useRef(null);
+  const firstAutoRecenterDone = React.useRef(false);
   const [status, setStatus] = useState("loading"); // "loading" | "ready" | "error"
 
   React.useEffect(() => {
@@ -336,6 +338,14 @@ export function VenuePositionPicker({ lat, lng, onChange }) {
           onChange(e.latlng.lat, e.latlng.lng);
         });
 
+        // Recentre et zoome sur une vraie position donnée — utilisé automatiquement dès
+        // qu'un vrai géocodage aboutit, et via le bouton "Recentrer" ci-dessous.
+        recenterRef.current = (rLat, rLng) => {
+          if (rLat == null || rLng == null) return;
+          placeMarker([rLat, rLng]);
+          map.setView([rLat, rLng], 17);
+        };
+
         mapInstanceRef.current = map;
         setStatus("ready");
       } catch (e) {
@@ -356,6 +366,16 @@ export function VenuePositionPicker({ lat, lng, onChange }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Recentre automatiquement la première fois qu'une vraie position arrive après le montage
+  // (ex. juste après un géocodage réussi) — pas à chaque rendu, pour ne pas gêner un
+  // ajustement manuel déjà en cours.
+  React.useEffect(() => {
+    if (lat != null && lng != null && !firstAutoRecenterDone.current && recenterRef.current) {
+      firstAutoRecenterDone.current = true;
+      recenterRef.current(lat, lng);
+    }
+  }, [lat, lng]);
+
   return (
     <div>
       {status === "error" && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "8px" }}>La carte n'a pas pu se charger.</p>}
@@ -364,12 +384,17 @@ export function VenuePositionPicker({ lat, lng, onChange }) {
       </p>
       <div ref={mapContainerRef} style={{ width: "100%", height: "220px", borderRadius: "12px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.paperAlt }} />
       {lat != null && (
-        <button
-          onClick={() => onChange(null, null)}
-          style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: "8px 0 0 0" }}
-        >
-          Retirer la position
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", padding: "8px 0 0 0" }}>
+          <button onClick={() => recenterRef.current && recenterRef.current(lat, lng)} style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "12px", fontWeight: 700, cursor: "pointer", padding: 0 }}>
+            📍 Recentrer sur l'adresse
+          </button>
+          <button
+            onClick={() => onChange(null, null)}
+            style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: 0 }}
+          >
+            Retirer la position
+          </button>
+        </div>
       )}
     </div>
   );
