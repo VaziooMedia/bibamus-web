@@ -44,7 +44,9 @@ function StepShell({ step, totalSteps, title, onBack, onPrevious, children, foot
 }
 
 const inputStyle = { width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" };
+const requiredInputStyle = { ...inputStyle, border: `2px solid ${COLORS.pinkFluo}` };
 const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
+const capitalizeFirst = (s) => (s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   const [step, setStep] = useState(1);
@@ -251,7 +253,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         }
       >
         <p style={{ fontSize: "13px", color: COLORS.pinkFluo, fontWeight: 600, margin: "0 0 20px 0" }}>Vérifie bien les majuscules et l'orthographe</p>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du lieu" style={inputStyle} autoFocus />
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du lieu" style={requiredInputStyle} autoFocus />
         {nameMatches.length > 0 && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "10px 12px", marginTop: "10px" }}>
             <p style={{ fontSize: "11.5px", color: COLORS.pinkFluo, fontWeight: 700, margin: "0 0 6px 0" }}>Lieu(x) similaire(s) déjà existant(s) :</p>
@@ -285,7 +287,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           </PrimaryButton>
         }
       >
-        <select value={country} onChange={(e) => setCountry(e.target.value)} style={inputStyle}>
+        <select value={country} onChange={(e) => setCountry(e.target.value)} style={requiredInputStyle}>
           <option value="">Choisir un pays</option>
           {COUNTRIES.map((c) => (
             <option key={c} value={c}>
@@ -318,11 +320,12 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
             countryIsoCode={COUNTRY_ISO_CODES[country]}
             onPostalCodeChange={setPostalCode}
             onCityChange={setCity}
+            required
           />
         ) : (
           <>
-            <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Code postal" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
-            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Commune" style={inputStyle} />
+            <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Code postal" style={{ ...requiredInputStyle, marginBottom: "16px" }} autoFocus />
+            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Commune" style={requiredInputStyle} />
           </>
         )}
       </StepShell>
@@ -343,9 +346,16 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           </PrimaryButton>
         }
       >
-        <input type="text" value={streetName} onChange={(e) => setStreetName(e.target.value)} placeholder="Rue / Place / Avenue / Boulevard" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
-        <input type="text" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="N°" style={{ ...inputStyle, marginBottom: "16px", width: "100px" }} />
-        <input type="text" value={village} onChange={(e) => setVillage(e.target.value)} placeholder="Section / Village" style={inputStyle} />
+        <input
+          type="text"
+          value={streetName}
+          onChange={(e) => setStreetName(capitalizeFirst(e.target.value))}
+          placeholder="Rue / Place / Avenue / Boulevard"
+          style={{ ...requiredInputStyle, marginBottom: "16px" }}
+          autoFocus
+        />
+        <input type="text" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="N°" style={{ ...requiredInputStyle, marginBottom: "16px", width: "100px" }} />
+        <input type="text" value={village} onChange={(e) => setVillage(capitalizeFirst(e.target.value))} placeholder="Section / Village" style={inputStyle} />
       </StepShell>
     );
   }
@@ -406,12 +416,12 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         onBack={handleAbandon}
         onPrevious={() => setStep(5)}
         footer={
-          <PrimaryButton onClick={() => setStep(7)} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setStep(7)} disabled={venueTypes.length === 0} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
       >
-        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif — plusieurs choix possibles.</p>
+        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Minimum 1 - Plusieurs choix possibles</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
           {VENUE_TYPES.map((t) => {
             const checked = venueTypes.includes(t.code);
@@ -452,7 +462,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         </PrimaryButton>
       }
     >
-      <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif.</p>
+      <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif - Plusieurs choix possibles</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {AMENITY_FIELDS.map(([key, label]) => (
           <label key={key} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", cursor: "pointer" }}>

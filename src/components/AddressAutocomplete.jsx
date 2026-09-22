@@ -130,9 +130,19 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
           background: ${COLORS.amber} !important;
           color: ${COLORS.paper} !important;
         }
-        ${required ? `.req-geo-postal .geoapify-autocomplete-input, .req-geo-city .geoapify-autocomplete-input { border-color: #FF3B4E !important; }` : ""}
+        ${required ? `.req-geo-postal .geoapify-autocomplete-input, .req-geo-city .geoapify-autocomplete-input { border-color: ${COLORS.pinkFluo} !important; }` : ""}
         .geoapify-close-button { color: ${COLORS.inkSoft} !important; right: 12px !important; }
         .geoapify-close-button:hover { color: ${COLORS.ink} !important; }
+        .geoapify-autocomplete-items { position: absolute !important; }
+        .geoapify-close-button {
+          position: absolute !important;
+          top: 0 !important;
+          right: 12px !important;
+          height: 100% !important;
+          display: none !important;
+          align-items: center !important;
+        }
+        .geoapify-close-button.visible { display: flex !important; }
       `}</style>
       <div>
         <div ref={postalRef} className={required ? "req-geo-postal" : undefined} style={{ position: "relative" }} onInput={(e) => onPostalCodeChange(e.target.value)} />
