@@ -10,7 +10,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
-import { createPublicVenue, updatePublicVenue, deletePublicVenue, geocodeAddress, saveGeocodeResult, searchVenues } from "../data/sharedDirectories.js";
+import { createPublicVenue, updatePublicVenue, deletePublicVenue, geocodeAddress, saveGeocodeResult, searchVenues, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
 import { normalizeForDuplicateCheck } from "../utils.js";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
@@ -44,7 +44,7 @@ function StepShell({ step, totalSteps, title, onBack, onPrevious, children, foot
 }
 
 const inputStyle = { width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" };
-const requiredInputStyle = { ...inputStyle, border: `2px solid ${COLORS.pinkFluo}` };
+const requiredStyle = (filled) => ({ ...inputStyle, border: `2px solid ${filled ? COLORS.amber : COLORS.pinkFluo}` });
 const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
 const capitalizeFirst = (s) => (s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
@@ -177,7 +177,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
       streetNumber,
       postalCode,
       city,
-      countryIsoCode: COUNTRY_ISO_CODES[country],
+      countryIsoCode: COUNTRY_ISO_CODES[COUNTRY_LABEL_TO_CODE[country] || country],
     });
     setGeocoding(false);
     if (!result || result.notFound) {
@@ -253,7 +253,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         }
       >
         <p style={{ fontSize: "13px", color: COLORS.pinkFluo, fontWeight: 600, margin: "0 0 20px 0" }}>Vérifie bien les majuscules et l'orthographe</p>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du lieu" style={requiredInputStyle} autoFocus />
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du lieu" style={requiredStyle(name.trim().length > 0)} autoFocus />
         {nameMatches.length > 0 && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "10px 12px", marginTop: "10px" }}>
             <p style={{ fontSize: "11.5px", color: COLORS.pinkFluo, fontWeight: 700, margin: "0 0 6px 0" }}>Lieu(x) similaire(s) déjà existant(s) :</p>
@@ -287,7 +287,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           </PrimaryButton>
         }
       >
-        <select value={country} onChange={(e) => setCountry(e.target.value)} style={requiredInputStyle}>
+        <select value={country} onChange={(e) => setCountry(e.target.value)} style={requiredStyle(!!country)}>
           <option value="">Choisir un pays</option>
           {COUNTRIES.map((c) => (
             <option key={c} value={c}>
@@ -317,15 +317,15 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           <AddressAutocomplete
             postalCode={postalCode}
             city={city}
-            countryIsoCode={COUNTRY_ISO_CODES[country]}
+            countryIsoCode={COUNTRY_ISO_CODES[COUNTRY_LABEL_TO_CODE[country] || country]}
             onPostalCodeChange={setPostalCode}
             onCityChange={setCity}
             required
           />
         ) : (
           <>
-            <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Code postal" style={{ ...requiredInputStyle, marginBottom: "16px" }} autoFocus />
-            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Commune" style={requiredInputStyle} />
+            <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Code postal" style={{ ...requiredStyle(postalCode.trim().length > 0), marginBottom: "16px" }} autoFocus />
+            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Commune" style={requiredStyle(city.trim().length > 0)} />
           </>
         )}
       </StepShell>
@@ -351,10 +351,10 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           value={streetName}
           onChange={(e) => setStreetName(capitalizeFirst(e.target.value))}
           placeholder="Rue / Place / Avenue / Boulevard"
-          style={{ ...requiredInputStyle, marginBottom: "16px" }}
+          style={{ ...requiredStyle(streetName.trim().length > 0), marginBottom: "16px" }}
           autoFocus
         />
-        <input type="text" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="N°" style={{ ...requiredInputStyle, marginBottom: "16px", width: "100px" }} />
+        <input type="text" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="N°" style={{ ...requiredStyle(streetNumber.trim().length > 0), marginBottom: "16px", width: "100px" }} />
         <input type="text" value={village} onChange={(e) => setVillage(capitalizeFirst(e.target.value))} placeholder="Section / Village" style={inputStyle} />
       </StepShell>
     );

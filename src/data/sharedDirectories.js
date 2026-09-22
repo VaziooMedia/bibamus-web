@@ -3122,7 +3122,7 @@ export const COUNTRY_CODE_TO_LABEL = {
   venezuela: "Vénézuéla",
   autre: "Autre",
 };
-const COUNTRY_LABEL_TO_CODE = Object.fromEntries(Object.entries(COUNTRY_CODE_TO_LABEL).map(([code, label]) => [label, code]));
+export const COUNTRY_LABEL_TO_CODE = Object.fromEntries(Object.entries(COUNTRY_CODE_TO_LABEL).map(([code, label]) => [label, code]));
 
 function rowToBrewery(row) {
   return {

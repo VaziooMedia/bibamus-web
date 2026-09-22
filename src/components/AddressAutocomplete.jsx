@@ -130,7 +130,12 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
           background: ${COLORS.amber} !important;
           color: ${COLORS.paper} !important;
         }
-        ${required ? `.req-geo-postal .geoapify-autocomplete-input, .req-geo-city .geoapify-autocomplete-input { border-color: ${COLORS.pinkFluo} !important; }` : ""}
+        ${
+          required
+            ? `.req-geo-postal .geoapify-autocomplete-input { border-color: ${(postalCode || "").trim().length > 0 ? COLORS.amber : COLORS.pinkFluo} !important; }
+        .req-geo-city .geoapify-autocomplete-input { border-color: ${(city || "").trim().length > 0 ? COLORS.amber : COLORS.pinkFluo} !important; }`
+            : ""
+        }
         .geoapify-close-button { color: ${COLORS.inkSoft} !important; right: 12px !important; }
         .geoapify-close-button:hover { color: ${COLORS.ink} !important; }
         .geoapify-autocomplete-items { position: absolute !important; }
@@ -144,7 +149,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
         }
         .geoapify-close-button.visible { display: flex !important; }
       `}</style>
-      <div>
+      <div style={{ marginBottom: "16px" }}>
         <div ref={postalRef} className={required ? "req-geo-postal" : undefined} style={{ position: "relative" }} onInput={(e) => onPostalCodeChange(e.target.value)} />
       </div>
       <div>
