@@ -5,7 +5,7 @@
 // avant la toute dernière page supprime le brouillon.
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
-import { COLORS, COUNTRIES, COUNTRY_ISO_CODES } from "../constants.js";
+import { COLORS, COUNTRIES, COUNTRY_ISO_CODES, VENUE_TYPES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
@@ -197,8 +197,41 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
     }
   };
 
+  const goToStep5 = async () => {
+    setStep(6);
+  };
+
+  // Page 6 — Type (facultatif, plusieurs choix possibles)
+  const [venueTypes, setVenueTypes] = useState([]);
+  const toggleVenueType = (code) => setVenueTypes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+
+  // Page 7 — Aménités (facultatif)
+  const AMENITY_FIELDS = [
+    ["hasOccasionalKaraoke", "Karaokés occasionnels"],
+    ["hasOccasionalConcerts", "Concerts occasionnels"],
+    ["hasBilliards", "Billard"],
+    ["hasFoosball", "Babyfoot - Kicker"],
+    ["hasDarts", "Jeu de fléchettes"],
+    ["hasBingo", "Bingo"],
+    ["hasFood", "Restauration"],
+    ["hasSnacks", "Petite restauration"],
+    ["hasTerrace", "Terrasse"],
+    ["wheelchairAccessible", "Accessible PMR"],
+    ["hasWifi", "WiFi gratuit"],
+    ["hasDogs", "Chiens acceptés"],
+    ["canDance", "Possibilité de danser (en soirée)"],
+    ["reservationPossible", "Réservation possible"],
+    ["goodForGroups", "Idéal pour des grands groupes"],
+    ["privatizationPossible", "Privatisation possible"],
+    ["hasPrivateRoom", "Salle annexe privée disponible"],
+    ["smokingArea", "Espace fumeurs"],
+  ];
+  const [amenities, setAmenities] = useState({});
+  const toggleAmenity = (key) => setAmenities((prev) => ({ ...prev, [key]: !prev[key] }));
+
   const handleFinalSubmit = async () => {
     setSaving(true);
+    await updatePublicVenue(venueId, { venueTypes, ...amenities });
     validatedRef.current = true;
     setSaving(false);
     onDone(venueId);
@@ -208,7 +241,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
     return (
       <StepShell
         step={1}
-        totalSteps={5}
+        totalSteps={7}
         title="Dénomination"
         onBack={onCancel}
         footer={
@@ -242,7 +275,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
     return (
       <StepShell
         step={2}
-        totalSteps={5}
+        totalSteps={7}
         title="Pays"
         onBack={handleAbandon}
         onPrevious={() => setStep(1)}
@@ -269,7 +302,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
     return (
       <StepShell
         step={3}
-        totalSteps={5}
+        totalSteps={7}
         title="Code postal & Commune"
         onBack={handleAbandon}
         onPrevious={() => setStep(2)}
@@ -303,7 +336,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
     return (
       <StepShell
         step={4}
-        totalSteps={5}
+        totalSteps={7}
         title="Adresse"
         onBack={handleAbandon}
         onPrevious={() => setStep(3)}
@@ -323,19 +356,20 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
     );
   }
 
-  return (
-    <StepShell
-      step={5}
-      totalSteps={5}
-      title="Géocodage & Vérification"
-      onBack={handleAbandon}
-      onPrevious={() => setStep(4)}
-      footer={
-        <PrimaryButton onClick={handleFinalSubmit} disabled={saving} style={{ width: "100%" }}>
-          {saving ? "Enregistrement..." : "Valider"}
-        </PrimaryButton>
-      }
-    >
+  if (step === 5) {
+    return (
+      <StepShell
+        step={5}
+        totalSteps={7}
+        title="Géocodage & Vérification"
+        onBack={handleAbandon}
+        onPrevious={() => setStep(4)}
+        footer={
+          <PrimaryButton onClick={goToStep5} style={{ width: "100%" }}>
+            Suivant
+          </PrimaryButton>
+        }
+      >
       <button
         onClick={handleGeocode}
         disabled={geocoding}
@@ -365,6 +399,74 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
 
       <label style={labelStyle}>Vérification sur la carte</label>
       <VenuePositionPicker lat={lat} lng={lng} onChange={handlePositionChange} verified={["verified", "exact", "manual"].includes(geocodeStatus)} />
+      </StepShell>
+    );
+  }
+
+  if (step === 6) {
+    return (
+      <StepShell
+        step={6}
+        totalSteps={7}
+        title="Type"
+        onBack={handleAbandon}
+        onPrevious={() => setStep(5)}
+        footer={
+          <PrimaryButton onClick={() => setStep(7)} style={{ width: "100%" }}>
+            Suivant
+          </PrimaryButton>
+        }
+      >
+        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif — plusieurs choix possibles.</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          {VENUE_TYPES.map((t) => {
+            const checked = venueTypes.includes(t.code);
+            return (
+              <button
+                key={t.code}
+                onClick={() => toggleVenueType(t.code)}
+                style={{
+                  background: checked ? COLORS.amber : "none",
+                  border: `2px solid ${checked ? COLORS.amber : COLORS.paperAlt}`,
+                  borderRadius: "999px",
+                  padding: "8px 14px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: checked ? COLORS.paper : COLORS.ink,
+                  cursor: "pointer",
+                }}
+              >
+                {t.fr}
+              </button>
+            );
+          })}
+        </div>
+      </StepShell>
+    );
+  }
+
+  return (
+    <StepShell
+      step={7}
+      totalSteps={7}
+      title="Aménités"
+      onBack={handleAbandon}
+      onPrevious={() => setStep(6)}
+      footer={
+        <PrimaryButton onClick={handleFinalSubmit} disabled={saving} style={{ width: "100%" }}>
+          {saving ? "Enregistrement..." : "Valider"}
+        </PrimaryButton>
+      }
+    >
+      <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {AMENITY_FIELDS.map(([key, label]) => (
+          <label key={key} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", cursor: "pointer" }}>
+            <input type="checkbox" checked={!!amenities[key]} onChange={() => toggleAmenity(key)} style={{ width: "18px", height: "18px", accentColor: COLORS.amber, flexShrink: 0 }} />
+            {label}
+          </label>
+        ))}
+      </div>
     </StepShell>
   );
 }
