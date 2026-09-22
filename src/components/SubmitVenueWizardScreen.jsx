@@ -9,7 +9,10 @@ import { COLORS, COUNTRIES, COUNTRY_ISO_CODES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
+import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { createPublicVenue, updatePublicVenue, deletePublicVenue, geocodeAddress, saveGeocodeResult } from "../data/sharedDirectories.js";
+
+const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
 function StepShell({ step, totalSteps, title, onBack, onPrevious, children, footer }) {
   return (
@@ -214,10 +217,22 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
           </PrimaryButton>
         }
       >
-        <label style={labelStyle}>Code postal</label>
-        <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="0000" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
-        <label style={labelStyle}>Commune</label>
-        <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Commune" style={inputStyle} />
+        {GEOAPIFY_CONFIGURED ? (
+          <AddressAutocomplete
+            postalCode={postalCode}
+            city={city}
+            countryIsoCode={COUNTRY_ISO_CODES[country]}
+            onPostalCodeChange={setPostalCode}
+            onCityChange={setCity}
+          />
+        ) : (
+          <>
+            <label style={labelStyle}>Code postal</label>
+            <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="0000" style={{ ...inputStyle, marginBottom: "16px" }} autoFocus />
+            <label style={labelStyle}>Commune</label>
+            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Commune" style={inputStyle} />
+          </>
+        )}
       </StepShell>
     );
   }
