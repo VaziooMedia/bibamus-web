@@ -293,15 +293,13 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
       </button>
 
       <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        <RoundButton onClick={uploading ? undefined : publish} title="Publier">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: uploading ? 0.4 : 1 }}>
-            <line x1="12" y1="19" x2="12" y2="5" />
-            <polyline points="5 12 12 5 19 12" />
-          </svg>
+        <RoundButton onClick={() => setTagsSheetOpen(true)} title="Tags">
+          <TagIcon />
         </RoundButton>
 
         {selectedTagKey && tagPositions[selectedTagKey] && (
-          // Couleur/inversion du vrai tag sélectionné (tap sur sa vraie pastille) — gérées ici
+          // Couleur/inversion du vrai tag sélectionné (tap sur sa vraie pastille) — juste sous
+          // le bouton Tags, pour que le vrai lien entre les deux saute aux yeux. Gérées ici
           // plutôt que dans la vraie mini-page du bas, pour que le tag reste visible sur
           // l'image pendant le réglage plutôt que d'être caché ou assombri derrière elle.
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(13,27,42,0.75)", borderRadius: "22px", padding: "8px" }}>
@@ -357,13 +355,21 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             background: "none",
           }}
         />
-        <RoundButton onClick={() => setTagsSheetOpen(true)} title="Tags">
-          <TagIcon />
+      </div>
+
+      {/* Publier, séparé de la pile d'outils du haut — en bas à droite, vraie flèche pointant
+          vers la droite plutôt que vers le haut. */}
+      <div style={{ position: "absolute", bottom: "20px", right: "16px" }}>
+        <RoundButton onClick={uploading ? undefined : publish} title="Publier">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: uploading ? 0.4 : 1 }}>
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
         </RoundButton>
       </div>
 
       {error && (
-        <div style={{ position: "absolute", bottom: "20px", left: "16px", right: "16px", background: "rgba(255,59,78,0.95)", borderRadius: "10px", padding: "10px 14px" }}>
+        <div style={{ position: "absolute", bottom: "90px", left: "16px", right: "16px", background: "rgba(255,59,78,0.95)", borderRadius: "10px", padding: "10px 14px" }}>
           <p style={{ fontSize: "12.5px", color: "#fff", margin: 0 }}>{error}</p>
         </div>
       )}
