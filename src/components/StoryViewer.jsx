@@ -226,46 +226,62 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag, 
         </div>
       </div>
 
-      {pendingTag && (
-        <div
-          style={{
-            position: "fixed",
-            top: `${pendingTag.rect.top}px`,
-            left: `${Math.min(Math.max(pendingTag.rect.left + pendingTag.rect.width / 2, 90), window.innerWidth - 90)}px`,
-            transform: "translate(-50%, calc(-100% - 10px))",
-            zIndex: 20,
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            background: "rgba(13,27,42,0.9)",
-            border: "1.5px solid #F2F2E8",
-            borderRadius: "999px",
-            padding: "6px 6px 6px 14px",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenTag(pendingTag.type, pendingTag.id, index);
-          }}
-        >
-          <span style={{ color: "#fff", fontSize: "12.5px", fontWeight: 700 }}>{pendingTag.label}</span>
-          <span
-            style={{
-              width: "22px",
-              height: "22px",
-              borderRadius: "50%",
-              border: "2px solid #fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 6 15 12 9 18" />
-            </svg>
-          </span>
-        </div>
-      )}
+      {pendingTag &&
+        (() => {
+          const screenW = window.innerWidth;
+          const tagCenterX = pendingTag.rect.left + pendingTag.rect.width / 2;
+          // Devine le vrai côté d'ancrage selon la vraie zone de l'écran où se trouve le tag —
+          // ancrer par un vrai bord (gauche ou droite) plutôt que toujours centrer garantit que
+          // la barrette reste dans le cadre, quelle que soit sa vraie largeur réelle (qui
+          // dépend du texte, donc inconnue à l'avance).
+          const zone = tagCenterX < screenW * 0.3 ? "left" : tagCenterX > screenW * 0.7 ? "right" : "center";
+          const barStyle =
+            zone === "left"
+              ? { left: `${Math.max(12, pendingTag.rect.left)}px`, transform: "translateY(calc(-100% - 4px))" }
+              : zone === "right"
+              ? { left: `${Math.min(screenW - 12, pendingTag.rect.right)}px`, transform: "translate(-100%, calc(-100% - 4px))" }
+              : { left: `${tagCenterX}px`, transform: "translate(-50%, calc(-100% - 4px))" };
+          return (
+            <div
+              style={{
+                position: "fixed",
+                top: `${pendingTag.rect.top}px`,
+                ...barStyle,
+                zIndex: 20,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(13,27,42,0.9)",
+                border: "1.5px solid #F2F2E8",
+                borderRadius: "999px",
+                padding: "6px 6px 6px 14px",
+                whiteSpace: "nowrap",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenTag(pendingTag.type, pendingTag.id, index);
+              }}
+            >
+              <span style={{ color: "#fff", fontSize: "12.5px", fontWeight: 700 }}>{pendingTag.label}</span>
+              <span
+                style={{
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "50%",
+                  border: "2px solid #fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 6 15 12 9 18" />
+                </svg>
+              </span>
+            </div>
+          );
+        })()}
 
       {showMenu && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 210 }} onClick={() => setShowMenu(false)}>
