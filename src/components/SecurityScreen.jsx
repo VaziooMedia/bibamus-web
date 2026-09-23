@@ -90,6 +90,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
       <SecurityGroup title="Confidentialité">
         <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir ce qui est visible" onClick={() => goToSubScreen("publicProfile")} />
         <SecurityRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Mes Statistiques" subtitle="Choisir ce que tes Bibax voient" onClick={() => goToSubScreen("myStats")} />
+        <SecurityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Stories de Bibax" subtitle="Taguage et accès à ton profil" onClick={() => goToSubScreen("storyTagsPrivacy")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow icon={<NavIcon name="no-entry" size={17} color={COLORS.amber} />} title="Utilisateurs bloqués" subtitle="Gérer les comptes bloqués" onClick={() => goToSubScreen("blockedUsers")} />
         </div>
@@ -195,8 +196,57 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   );
 }
 
+// Stories de Bibax — 4e sous-section de Confidentialité. Contrôle si d'autres personnes
+// peuvent vous taguer dans leurs Stories, et si un vrai tap sur ce tag peut ouvrir votre
+// profil. Un vrai tag reste affiché même profil désactivé — seul l'accès est bloqué, pas le
+// vrai tag lui-même (déjà accepté au moment où la Story a été publiée).
+export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
+  const [p, setP] = useState(profile);
+  const update = (patch) => {
+    setP((prev) => ({ ...prev, ...patch }));
+    onSaveProfile(patch);
+  };
 
-// Utilisateurs bloqués — liste réelle, avec déblocage.
+  const ToggleRow = ({ title, description, field }) => {
+    const isOn = p[field] !== false;
+    return (
+      <div style={{ padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+              <span style={{ fontWeight: 700, fontSize: "14px" }}>{title}</span>
+            </div>
+            <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginLeft: "12px" }}>{description}</div>
+          </div>
+          <button
+            onClick={() => update({ [field]: !isOn })}
+            style={{ width: "42px", height: "24px", borderRadius: "999px", border: "none", background: isOn ? COLORS.amber : COLORS.paperAlt, position: "relative", cursor: "pointer", padding: 0, flexShrink: 0 }}
+          >
+            <span style={{ position: "absolute", top: "3px", left: isOn ? "21px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="tag" size={22} color={COLORS.amber} />}>Stories de Bibax</PageTitleWithBar>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisissez si d'autres Bibax peuvent vous taguer dans leurs Stories, et ce que ce tag permet.</p>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+        <ToggleRow title="Autoriser les tags" description="D'autres Bibax peuvent vous ajouter comme tag dans leurs Stories." field="allowStoryTags" />
+        <div style={{ borderBottom: "none" }}>
+          <ToggleRow title="Accéder à mon profil via un tag" description="Un tap sur votre tag ouvre votre profil, comme pour les autres tags." field="allowProfileViaTag" />
+        </div>
+      </div>
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
 export function BlockedUsersScreen({ onBack }) {
   const [blocked, setBlocked] = useState(null);
   const [unblockingId, setUnblockingId] = useState(null);

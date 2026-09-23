@@ -57,7 +57,7 @@ import { MyStatsScreen } from "./components/MyStatsScreen.jsx";
 import { WrappedScreen } from "./components/WrappedScreen.jsx";
 import { SettingsScreen, EventHistoryScreen, MyProductsHubScreen, EventSettingsScreen, WaterAlertSettingsScreen } from "./components/MinorScreens.jsx";
 import { AccountScreen, FieldEditScreen, GenderEditScreen, EmailViewScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
-import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen, MyStatsPrivacyScreen } from "./components/SecurityScreen.jsx";
+import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen, MyStatsPrivacyScreen, StoryTagsPrivacyScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
 import { PreferencesScreen, StorySettingsScreen, ChoiceScreen, VolumeWeightScreen } from "./components/PreferencesScreen.jsx";
 import { AppearanceScreen } from "./components/AppearanceScreen.jsx";
@@ -503,6 +503,8 @@ export default function App() {
       shareLinkedin: profile.shareLinkedin,
       sharePinterest: profile.sharePinterest,
       shareTwitch: profile.shareTwitch,
+      allowStoryTags: profile.allowStoryTags,
+      allowProfileViaTag: profile.allowProfileViaTag,
       shareStatsOverview: profile.shareStatsOverview,
       shareStatsRecords: profile.shareStatsRecords,
       shareStatsDrinks: profile.shareStatsDrinks,
@@ -592,6 +594,8 @@ export default function App() {
     profile.shareLinkedin,
     profile.sharePinterest,
     profile.shareTwitch,
+    profile.allowStoryTags,
+    profile.allowProfileViaTag,
     profile.shareStatsOverview,
     profile.shareStatsRecords,
     profile.shareStatsDrinks,
@@ -2656,6 +2660,7 @@ export default function App() {
                     resetSessions: "securityResetSessions",
                     publicProfile: "securityPublicProfile",
                     myStats: "securityMyStats",
+                    storyTagsPrivacy: "securityStoryTagsPrivacy",
                     blockedUsers: "securityBlockedUsers",
                     permissions: "securityPermissions",
                   };
@@ -2677,6 +2682,9 @@ export default function App() {
             )}
             {screen === "securityMyStats" && (
               <MyStatsPrivacyScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("security")} />
+            )}
+            {screen === "securityStoryTagsPrivacy" && (
+              <StoryTagsPrivacyScreen profile={profile} onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))} onBack={() => setScreen("security")} />
             )}
             {screen === "securityBlockedUsers" && <BlockedUsersScreen onBack={() => setScreen("security")} />}
             {screen === "securityPermissions" && (
@@ -3351,7 +3359,18 @@ export default function App() {
               />
             )}
             {screen === "bibaxProfilePreview" && viewedBibaxProfileCode && (
-              <BibaxProfilePreviewScreen bibroCode={viewedBibaxProfileCode} onBack={() => setScreen("home")} />
+              <BibaxProfilePreviewScreen
+                bibroCode={viewedBibaxProfileCode}
+                onBack={() => {
+                  if (storyResumeState) {
+                    setViewedStoryAuthor(storyResumeState.stories);
+                    setStoryResumeState(null);
+                    setScreen("home");
+                  } else {
+                    setScreen("home");
+                  }
+                }}
+              />
             )}
             {screen === "storyCreate" && storyCreateContext && (
               <StoryCreateScreen
@@ -3433,7 +3452,10 @@ export default function App() {
           onOpenTag={(entityType, entityId, index) => {
             setStoryResumeState({ stories: viewedStoryAuthor, index });
             setViewedStoryAuthor(null);
-            if (entityType === "venue") {
+            if (entityType === "bibax") {
+              setViewedBibaxProfileCode(entityId);
+              setScreen("bibaxProfilePreview");
+            } else if (entityType === "venue") {
               setViewedVenueId(entityId);
               setScreen("venueDetail");
             } else if (entityType === "drink") {

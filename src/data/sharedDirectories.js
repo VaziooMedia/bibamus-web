@@ -266,6 +266,28 @@ export async function searchBibax(query) {
   }));
 }
 
+// Pour le vrai picker de tag "Taguer un Bibax" — même vraie recherche que searchBibax, mais
+// enrichie du vrai réglage allow_story_tags de chaque personne : la vraie RPC search_bibax ne
+// le renvoie pas (on ne connaît pas son vrai corps pour l'y ajouter sans risque), donc un vrai
+// second appel direct sur profiles, fusionné côté client par id.
+export async function searchBibaxForTagging(query) {
+  const results = await searchBibax(query);
+  if (results.length === 0) return results;
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, allow_story_tags")
+    .in(
+      "id",
+      results.map((r) => r.id)
+    );
+  if (error) {
+    console.error("searchBibaxForTagging:", error);
+    return results.map((r) => ({ ...r, name: r.displayName, allowStoryTags: true }));
+  }
+  const byId = new Map(data.map((r) => [r.id, r.allow_story_tags]));
+  return results.map((r) => ({ ...r, name: r.displayName, allowStoryTags: byId.get(r.id) !== false }));
+}
+
 // Fil de notifications — chargement, marquer comme lu(es), compteur non-lus.
 export async function loadMyNotifications(limit = 30) {
   const { data, error } = await supabase.from("notifications_feed").select("*").order("created_at", { ascending: false }).limit(limit);
@@ -759,6 +781,8 @@ export async function loadMyProfile(userId) {
     shareLinkedin: data.share_linkedin,
     sharePinterest: data.share_pinterest,
     shareTwitch: data.share_twitch,
+    allowStoryTags: data.allow_story_tags,
+    allowProfileViaTag: data.allow_profile_via_tag,
     shareStatsOverview: data.share_stats_overview,
     shareStatsRecords: data.share_stats_records,
     shareStatsDrinks: data.share_stats_drinks,
@@ -858,6 +882,8 @@ export async function updateMyProfile(
     shareLinkedin,
     sharePinterest,
     shareTwitch,
+    allowStoryTags,
+    allowProfileViaTag,
     shareStatsOverview,
     shareStatsRecords,
     shareStatsDrinks,
@@ -948,6 +974,8 @@ export async function updateMyProfile(
     share_linkedin: shareLinkedin,
     share_pinterest: sharePinterest,
     share_twitch: shareTwitch,
+    allow_story_tags: allowStoryTags,
+    allow_profile_via_tag: allowProfileViaTag,
     share_stats_overview: shareStatsOverview,
     share_stats_records: shareStatsRecords,
     share_stats_drinks: shareStatsDrinks,
@@ -1337,6 +1365,7 @@ export async function createStory({ contextType, contextId, mediaUrl, caption, s
       tagged_drink_id: tags.taggedDrinkId || null,
       tagged_brand_id: tags.taggedBrandId || null,
       tagged_producer_id: tags.taggedProducerId || null,
+      tagged_bibax_code: tags.taggedBibaxCode || null,
       tag_positions: tags.tagPositions || null,
     })
     .select("id")
@@ -1355,22 +1384,27 @@ async function enrichStoriesWithTags(stories) {
   const ids = stories.map((s) => s.id);
   const { data: tagRows, error } = await supabase
     .from("stories")
-    .select("id, tag_positions, tagged_venue_id, tagged_drink_id, tagged_brand_id, tagged_producer_id")
+    .select("id, tag_positions, tagged_venue_id, tagged_drink_id, tagged_brand_id, tagged_producer_id, tagged_bibax_code")
     .in("id", ids);
   if (error) {
     console.error("enrichStoriesWithTags:", error);
     return stories;
   }
-  const [venues, drinks, brands, producers] = await Promise.all([
+  const bibaxCodes = [...new Set(tagRows.map((r) => r.tagged_bibax_code).filter(Boolean))];
+  const [venues, drinks, brands, producers, bibaxRows] = await Promise.all([
     loadVenuesByIds(tagRows.map((r) => r.tagged_venue_id)),
     loadDrinksByIds(tagRows.map((r) => r.tagged_drink_id)),
     loadBrandsByIds(tagRows.map((r) => r.tagged_brand_id)),
     loadBreweriesByIds(tagRows.map((r) => r.tagged_producer_id)),
+    bibaxCodes.length > 0
+      ? supabase.from("profiles").select("bibro_code, name, last_name, allow_profile_via_tag").in("bibro_code", bibaxCodes).then((r) => r.data || [])
+      : Promise.resolve([]),
   ]);
   const byId = new Map(tagRows.map((r) => [r.id, r]));
   return stories.map((s) => {
     const r = byId.get(s.id);
     if (!r) return s;
+    const bibax = bibaxRows.find((b) => b.bibro_code === r.tagged_bibax_code);
     return {
       ...s,
       tagPositions: r.tag_positions || {},
@@ -1379,13 +1413,19 @@ async function enrichStoriesWithTags(stories) {
         drink: r.tagged_drink_id || null,
         brand: r.tagged_brand_id || null,
         producer: r.tagged_producer_id || null,
+        bibax: r.tagged_bibax_code || null,
       },
       tagLabels: {
         venue: venues.find((v) => v.id === r.tagged_venue_id)?.name || null,
         drink: drinks.find((d) => d.id === r.tagged_drink_id)?.name || null,
         brand: brands.find((b) => b.id === r.tagged_brand_id)?.name || null,
         producer: producers.find((p) => p.id === r.tagged_producer_id)?.name || null,
+        bibax: bibax ? [bibax.name, bibax.last_name].filter(Boolean).join(" ") : null,
       },
+      // Un vrai tag Bibax reste affiché même si la personne a désactivé l'accès au profil via
+      // tag (allow_profile_via_tag) — seul le vrai clic vers la fiche doit être bloqué, pas le
+      // vrai tag lui-même (déjà accepté par la personne au moment de la publication).
+      bibaxProfileViaTagAllowed: bibax ? bibax.allow_profile_via_tag !== false : true,
     };
   });
 }

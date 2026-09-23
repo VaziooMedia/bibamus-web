@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { uploadStoryMedia, createStory, searchVenues, searchDrinks, searchBrands, searchBreweries } from "../data/sharedDirectories.js";
+import { uploadStoryMedia, createStory, searchBibaxForTagging, searchVenues, searchDrinks, searchBrands, searchBreweries } from "../data/sharedDirectories.js";
 import { MobileImageEditor } from "./MobileImageEditor.jsx";
 import { MobileTagPill } from "./MobileTagPill.jsx";
 
@@ -28,7 +28,10 @@ function TagPicker({ label, searchFn, selected, onSelect }) {
 
   return (
     <div>
-      <p style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, margin: "0 0 6px" }}>{label}</p>
+      <p style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, margin: "0 0 6px", display: "flex", alignItems: "center", gap: "6px" }}>
+        <span style={{ width: "3px", height: "12px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        {label}
+      </p>
       {selected ? (
         <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: COLORS.surfaceAlt, borderRadius: "999px", padding: "6px 6px 6px 14px" }}>
           <span style={{ fontSize: "13.5px", color: COLORS.ink, fontWeight: 700 }}>{selected.name}</span>
@@ -49,18 +52,39 @@ function TagPicker({ label, searchFn, selected, onSelect }) {
           />
           {results.length > 0 && (
             <div style={{ marginTop: "4px", background: COLORS.surface, borderRadius: "10px", border: `1px solid ${COLORS.paperAlt}`, overflow: "hidden" }}>
-              {results.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => {
-                    onSelect(r);
-                    setQuery("");
-                  }}
-                  style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 12px", background: "none", border: "none", color: COLORS.ink, fontSize: "13.5px", cursor: "pointer" }}
-                >
-                  {r.name}
-                </button>
-              ))}
+              {results.map((r) => {
+                // Un Bibax ayant désactivé "Autoriser les tags" apparaît grisé, non
+                // sélectionnable — sa vraie préférence de confidentialité prime.
+                const disabled = r.allowStoryTags === false;
+                return (
+                  <button
+                    key={r.id}
+                    onClick={
+                      disabled
+                        ? undefined
+                        : () => {
+                            onSelect(r);
+                            setQuery("");
+                          }
+                    }
+                    disabled={disabled}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "10px 12px",
+                      background: "none",
+                      border: "none",
+                      color: disabled ? COLORS.inkSoft : COLORS.ink,
+                      fontSize: "13.5px",
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      opacity: disabled ? 0.5 : 1,
+                    }}
+                  >
+                    {r.name}
+                  </button>
+                );
+              })}
             </div>
           )}
         </>
@@ -69,9 +93,10 @@ function TagPicker({ label, searchFn, selected, onSelect }) {
   );
 }
 
-// Les 4 vrais tags de fiche possibles, avec leur vrai symbole propre — la légende n'en a pas,
+// Les 5 vrais tags de fiche possibles, avec leur vrai symbole propre — la légende n'en a pas,
 // vu que c'est un vrai texte libre plutôt qu'une référence à une fiche précise.
 const TAG_TYPES = [
+  { key: "bibax", label: "Taguer un Bibax", symbol: "@", searchFn: searchBibaxForTagging },
   { key: "venue", label: "Taguer un lieu", symbol: "@", searchFn: searchVenues },
   { key: "drink", label: "Taguer un produit", symbol: "#", searchFn: searchDrinks },
   { key: "brand", label: "Taguer une marque", symbol: "#", searchFn: searchBrands },
@@ -199,6 +224,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
         pulseVisibility: "relations",
         locationName: contextType === "room" && sharedToPulse && includeLocation ? venueName : null,
         tags: {
+          taggedBibaxCode: selectedTags.bibax?.bibroCode || null,
           taggedVenueId: selectedTags.venue?.id || null,
           taggedDrinkId: selectedTags.drink?.id || null,
           taggedBrandId: selectedTags.brand?.id || null,

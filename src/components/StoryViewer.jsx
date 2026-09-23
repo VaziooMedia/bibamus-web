@@ -59,6 +59,7 @@ function StoryTagPill({ label, symbol = "#", pos, onOpen }) {
 // la légende ("caption" dans tagPositions) n'en a pas, vu que c'est un vrai texte libre plutôt
 // qu'une référence à une fiche précise.
 const OFFICIAL_TAG_TYPES = [
+  { key: "bibax", symbol: "@" },
   { key: "venue", symbol: "@" },
   { key: "drink", symbol: "#" },
   { key: "brand", symbol: "#" },
@@ -148,7 +149,11 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag, 
             const pos = story.tagPositions[t.key];
             const entityId = story.tagIds?.[t.key];
             if (!label || !pos) return null;
-            return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onOpen={onOpenTag && entityId ? (rect) => setPendingTag({ type: t.key, id: entityId, label, rect }) : null} />;
+            // Le vrai tag Bibax reste affiché même si la personne taguée a désactivé l'accès à
+            // son profil via tag — seul le vrai clic est alors bloqué (onOpen devient null), le
+            // vrai tag lui-même n'est pas retiré.
+            const canOpen = onOpenTag && entityId && (t.key !== "bibax" || story.bibaxProfileViaTagAllowed !== false);
+            return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onOpen={canOpen ? (rect) => setPendingTag({ type: t.key, id: entityId, label, rect }) : null} />;
           })}
         </div>
       )}
