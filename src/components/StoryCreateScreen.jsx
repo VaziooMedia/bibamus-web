@@ -150,7 +150,6 @@ function TagIcon() {
 export function StoryCreateScreen({ contextType, contextId, venueName, myUserId, onBack, onPublished }) {
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
-  const filesInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [tagsSheetOpen, setTagsSheetOpen] = useState(false);
   const [imageLocked, setImageLocked] = useState(false);
@@ -269,7 +268,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
 
         {error && <p style={{ fontSize: "12.5px", color: COLORS.wine, marginBottom: "10px" }}>{error}</p>}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
           <button
             onClick={() => cameraInputRef.current?.click()}
             style={{
@@ -291,8 +290,11 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
           </button>
 
           {/* Ouvre le vrai sélecteur natif du téléphone, sans capture — c'est lui qui affiche
-              la vraie galerie du vrai appareil (Bibamus ne peut techniquement pas la lister
-              lui-même, aucun site web ne le peut). */}
+              la vraie galerie et les vrais fichiers. Un seul vrai bloc pour les deux : sur la
+              plupart des vrais téléphones, le navigateur affiche le vrai même menu (Photothèque
+              / Fichiers) quel que soit celui des deux qu'on visait — aucun standard web ne
+              permet de vraiment les distinguer, donc 2 vrais boutons distincts n'auraient fait
+              que reproduire le vrai même résultat deux fois. */}
           <button
             onClick={() => galleryInputRef.current?.click()}
             style={{
@@ -314,38 +316,12 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
               <circle cx="8.5" cy="8.5" r="1.5" />
               <path d="m21 15-5-5L5 21" />
             </svg>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink, textAlign: "center" }}>Photothèque</span>
-          </button>
-
-          {/* Vrai sélecteur de fichiers plus large (Fichiers/iCloud Drive, stockage cloud,
-              etc.), sans restriction de type — au cas où la photo voulue ne soit pas dans la
-              vraie galerie photo elle-même. */}
-          <button
-            onClick={() => filesInputRef.current?.click()}
-            style={{
-              aspectRatio: "1",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              background: COLORS.surfaceAlt,
-              border: `2px solid ${COLORS.paperAlt}`,
-              borderRadius: "12px",
-              cursor: "pointer",
-              padding: "6px",
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={COLORS.ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-            </svg>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink, textAlign: "center" }}>Choisir un fichier</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink, textAlign: "center" }}>Photothèque / Fichiers</span>
           </button>
         </div>
 
         <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={handlePick} />
         <input ref={galleryInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePick} />
-        <input ref={filesInputRef} type="file" style={{ display: "none" }} onChange={handlePick} />
       </div>
     );
   }
