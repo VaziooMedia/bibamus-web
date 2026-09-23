@@ -340,7 +340,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             // le vrai lien saute aux yeux. Gérées ici plutôt que dans la vraie mini-page du bas,
             // pour que le tag reste visible sur l'image pendant le réglage plutôt que d'être
             // caché ou assombri derrière elle.
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(13,27,42,0.75)", borderRadius: "0 0 22px 22px", padding: "10px 8px 8px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px", background: "rgba(13,27,42,0.75)", borderRadius: "22px", padding: "10px 8px", marginTop: "10px" }}>
               <input
                 type="color"
                 value={tagPositions[selectedTagKey].color || "#F2F2E8"}
@@ -385,16 +385,16 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
           ref={captionInputRef}
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
-          placeholder="Ajouter une légende (optionnel)"
+          placeholder="Ajouter une légende"
           style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "12px 14px", borderRadius: "999px", border: "none", fontSize: "14px", background: "rgba(13,27,42,0.75)", color: "#fff", outline: "none" }}
         />
         <button
           onClick={() => captionInputRef.current?.blur()}
           title="Envoyer sur l'image"
           aria-label="Envoyer sur l'image"
-          style={{ width: "40px", height: "40px", borderRadius: "50%", border: "none", background: "#39FF66", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+          style={{ width: "40px", height: "40px", border: "none", background: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, padding: 0 }}
         >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0D1B2A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="19" x2="12" y2="5" />
             <polyline points="5 12 12 5 19 12" />
           </svg>
