@@ -1391,6 +1391,7 @@ async function enrichStoriesWithTags(stories) {
     .from("stories")
     .select("id, tag_positions, tagged_venue_id, tagged_drink_id, tagged_brand_id, tagged_producer_id, tagged_bibax_code")
     .in("id", ids);
+  console.log("[DEBUG enrichStoriesWithTags] tagRows:", tagRows, "error:", error);
   if (error) {
     console.error("enrichStoriesWithTags:", error);
     return stories;
@@ -1406,7 +1407,7 @@ async function enrichStoriesWithTags(stories) {
       : Promise.resolve([]),
   ]);
   const byId = new Map(tagRows.map((r) => [r.id, r]));
-  return stories.map((s) => {
+  const result = stories.map((s) => {
     const r = byId.get(s.id);
     if (!r) return s;
     const bibax = bibaxRows.find((b) => b.bibro_code === r.tagged_bibax_code);
@@ -1433,6 +1434,9 @@ async function enrichStoriesWithTags(stories) {
       bibaxProfileViaTagAllowed: bibax ? bibax.allow_profile_via_tag !== false : true,
     };
   });
+  console.log("[DEBUG enrichStoriesWithTags] venues/drinks/brands/producers/bibaxRows:", venues, drinks, brands, producers, bibaxRows);
+  console.log("[DEBUG enrichStoriesWithTags] result:", result);
+  return result;
 }
 
 export async function loadRoomStories(salonCode) {
