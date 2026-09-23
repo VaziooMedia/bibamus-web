@@ -69,10 +69,11 @@ const OFFICIAL_TAG_TYPES = [
 // cercle individuel sur l'accueil, ou toute la Story collective d'un BibaRoom mélangeant
 // plusieurs auteurs) — chaque diapositive affiche son PROPRE auteur, jamais un auteur figé
 // pour tout le lot.
-export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag }) {
-  const [index, setIndex] = useState(0);
+export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag, initialIndex = 0 }) {
+  const [index, setIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+  const [pendingTag, setPendingTag] = useState(null);
   const [localBix, setLocalBix] = useState({});
   const timerRef = useRef(null);
 
@@ -106,6 +107,7 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag }
   useEffect(() => {
     setProgress(0);
     setShowMenu(false);
+    setPendingTag(null);
     const start = Date.now();
     timerRef.current = setInterval(() => {
       const pct = Math.min(1, (Date.now() - start) / STORY_DURATION_MS);
@@ -146,7 +148,7 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag }
             const pos = story.tagPositions[t.key];
             const entityId = story.tagIds?.[t.key];
             if (!label || !pos) return null;
-            return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onOpen={onOpenTag && entityId ? () => onOpenTag(t.key, entityId) : null} />;
+            return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onOpen={onOpenTag && entityId ? () => setPendingTag({ type: t.key, id: entityId, label }) : null} />;
           })}
         </div>
       )}
@@ -154,6 +156,10 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag }
       <div
         style={{ position: "absolute", inset: 0 }}
         onClick={(e) => {
+          if (pendingTag) {
+            setPendingTag(null);
+            return;
+          }
           const x = e.clientX;
           if (x < window.innerWidth / 2) goPrev();
           else goNext();
@@ -219,6 +225,47 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag }
           </button>
         </div>
       </div>
+
+      {pendingTag && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 20,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            background: "rgba(13,27,42,0.9)",
+            border: "1.5px solid #F2F2E8",
+            borderRadius: "999px",
+            padding: "8px 8px 8px 18px",
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenTag(pendingTag.type, pendingTag.id, index);
+          }}
+        >
+          <span style={{ color: "#fff", fontSize: "14.5px", fontWeight: 700 }}>{pendingTag.label}</span>
+          <span
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "50%",
+              border: "2px solid #fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 6 15 12 9 18" />
+            </svg>
+          </span>
+        </div>
+      )}
 
       {showMenu && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 210 }} onClick={() => setShowMenu(false)}>

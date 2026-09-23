@@ -264,6 +264,10 @@ export default function App() {
   const [screenBeforeBibaxSuggestions, setScreenBeforeBibaxSuggestions] = useState("home");
   const [storyCreateContext, setStoryCreateContext] = useState(null); // {contextType, contextId, returnScreen}
   const [viewedStoryAuthor, setViewedStoryAuthor] = useState(null); // {authorId, authorName, authorAvatarUrl, stories}
+  // Vraie mémoire du visionneur quand on quitte une Story pour voir la fiche d'un tag — permet
+  // au vrai bouton "retour" de la fiche de rouvrir la story exacte plutôt que de renvoyer vers
+  // l'écran précédent habituel.
+  const [storyResumeState, setStoryResumeState] = useState(null); // {stories, index} | null
   const [pulseStoriesRefreshKey, setPulseStoriesRefreshKey] = useState(0);
   const [screenBeforeVenueDetail, setScreenBeforeVenueDetail] = useState("venueDirectory");
   const [screenBeforeBibaSolo, setScreenBeforeBibaSolo] = useState("sessionHub");
@@ -2228,7 +2232,15 @@ export default function App() {
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
                 onCheckIn={(opts) => checkInVenue(viewedVenueId, opts)}
                 onPublishCheckInPulse={() => publishCheckInPulse(viewedVenueId)}
-                onBack={() => setScreen(screenBeforeVenueDetail)}
+                onBack={() => {
+                  if (storyResumeState) {
+                    setViewedStoryAuthor(storyResumeState.stories);
+                    setStoryResumeState(null);
+                    setScreen("home");
+                  } else {
+                    setScreen(screenBeforeVenueDetail);
+                  }
+                }}
                 onEdit={() => setScreen("editVenue")}
                 onDelete={() => {
                   deletePublicVenue(viewedVenueId);
@@ -2287,7 +2299,15 @@ export default function App() {
                 onUnrate={() => unrateDrink(viewedDrinkId)}
                 onToggleMode={(mode) => toggleTastedServingMode(viewedDrinkId, mode)}
                 onCheckDrink={(drinkId, venueId, opts) => checkInDrink(drinkId, venueId, opts)}
-                onBack={() => setScreen(screenBeforeDrinkDetail)}
+                onBack={() => {
+                  if (storyResumeState) {
+                    setViewedStoryAuthor(storyResumeState.stories);
+                    setStoryResumeState(null);
+                    setScreen("home");
+                  } else {
+                    setScreen(screenBeforeDrinkDetail);
+                  }
+                }}
                 onEdit={() => setScreen("editDrink")}
                 onCertify={() => certifyDrink(viewedDrinkId)}
                 onDecertify={() => decertifyDrink(viewedDrinkId)}
@@ -3016,7 +3036,15 @@ export default function App() {
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
-                onBack={() => setScreen("breweryDirectory")}
+                onBack={() => {
+                  if (storyResumeState) {
+                    setViewedStoryAuthor(storyResumeState.stories);
+                    setStoryResumeState(null);
+                    setScreen("home");
+                  } else {
+                    setScreen("breweryDirectory");
+                  }
+                }}
                 onOpenDrink={(id) => {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
@@ -3052,7 +3080,15 @@ export default function App() {
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
-                onBack={() => setScreen("brandDirectory")}
+                onBack={() => {
+                  if (storyResumeState) {
+                    setViewedStoryAuthor(storyResumeState.stories);
+                    setStoryResumeState(null);
+                    setScreen("home");
+                  } else {
+                    setScreen("brandDirectory");
+                  }
+                }}
                 onOpenDrink={(id) => {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
@@ -3393,7 +3429,9 @@ export default function App() {
           myUserId={session.user.id}
           onClose={() => setViewedStoryAuthor(null)}
           onChanged={() => setPulseStoriesRefreshKey((k) => k + 1)}
-          onOpenTag={(entityType, entityId) => {
+          initialIndex={storyResumeState?.index ?? 0}
+          onOpenTag={(entityType, entityId, index) => {
+            setStoryResumeState({ stories: viewedStoryAuthor, index });
             setViewedStoryAuthor(null);
             if (entityType === "venue") {
               setViewedVenueId(entityId);
