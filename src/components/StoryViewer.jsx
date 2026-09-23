@@ -139,7 +139,7 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag }
       <img src={story.mediaUrl} alt="" onLoad={handleImgLoad} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: imgFit }} />
 
       {story.tagPositions && (
-        <>
+        <div style={{ position: "absolute", inset: 0, zIndex: 5, pointerEvents: "none" }}>
           {story.tagPositions.caption && story.caption && <StoryTagPill label={story.caption} symbol="" pos={story.tagPositions.caption} />}
           {OFFICIAL_TAG_TYPES.map((t) => {
             const label = story.tagLabels?.[t.key];
@@ -148,7 +148,7 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag }
             if (!label || !pos) return null;
             return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onOpen={onOpenTag && entityId ? () => onOpenTag(t.key, entityId) : null} />;
           })}
-        </>
+        </div>
       )}
 
       <div
