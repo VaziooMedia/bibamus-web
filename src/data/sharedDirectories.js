@@ -1387,11 +1387,7 @@ export async function createStory({ contextType, contextId, mediaUrl, caption, s
 async function enrichStoriesWithTags(stories) {
   if (stories.length === 0) return stories;
   const ids = stories.map((s) => s.id);
-  const { data: tagRows, error } = await supabase
-    .from("stories")
-    .select("id, tag_positions, tagged_venue_id, tagged_drink_id, tagged_brand_id, tagged_producer_id, tagged_bibax_code")
-    .in("id", ids);
-  console.log("[DEBUG enrichStoriesWithTags] tagRows:\n" + JSON.stringify(tagRows, null, 2) + "\nerror:\n" + JSON.stringify(error, null, 2));
+  const { data: tagRows, error } = await supabase.rpc("get_story_tags", { p_ids: ids });
   if (error) {
     console.error("enrichStoriesWithTags:", error);
     return stories;
@@ -1407,7 +1403,7 @@ async function enrichStoriesWithTags(stories) {
       : Promise.resolve([]),
   ]);
   const byId = new Map(tagRows.map((r) => [r.id, r]));
-  const result = stories.map((s) => {
+  return stories.map((s) => {
     const r = byId.get(s.id);
     if (!r) return s;
     const bibax = bibaxRows.find((b) => b.bibro_code === r.tagged_bibax_code);
@@ -1434,9 +1430,6 @@ async function enrichStoriesWithTags(stories) {
       bibaxProfileViaTagAllowed: bibax ? bibax.allow_profile_via_tag !== false : true,
     };
   });
-  console.log("[DEBUG enrichStoriesWithTags] venues/drinks/brands/producers/bibaxRows:\n" + JSON.stringify({ venues, drinks, brands, producers, bibaxRows }, null, 2));
-  console.log("[DEBUG enrichStoriesWithTags] result:\n" + JSON.stringify(result, null, 2));
-  return result;
 }
 
 export async function loadRoomStories(salonCode) {
