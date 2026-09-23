@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { PageHeader } from "./ui.jsx";
 import { uploadStoryMedia, createStory, searchVenues, searchDrinks, searchBrands, searchBreweries } from "../data/sharedDirectories.js";
 import { MobileImageEditor } from "./MobileImageEditor.jsx";
 import { MobileTagPill } from "./MobileTagPill.jsx";
@@ -79,17 +78,67 @@ const TAG_TYPES = [
   { key: "producer", label: "Taguer un producteur", symbol: "#", searchFn: searchBreweries },
 ];
 
+// Vrai bouton rond flottant réutilisé pour les 3 vrais contrôles du haut — même vrai style,
+// juste l'icône qui change.
+function RoundButton({ onClick, title, children }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      style={{
+        width: "44px",
+        height: "44px",
+        borderRadius: "50%",
+        border: "none",
+        background: "rgba(13,27,42,0.75)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        flexShrink: 0,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PaletteIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8H16c2.2 0 4-1.8 4-4C20 6.5 16.4 2 12 2z" stroke="#fff" strokeWidth="1.6" />
+      <circle cx="7" cy="10" r="1.4" fill="#39FF66" />
+      <circle cx="10.5" cy="6.5" r="1.4" fill="#FF3B4E" />
+      <circle cx="15" cy="7" r="1.4" fill="#00C8FF" />
+      <circle cx="17" cy="11.5" r="1.4" fill="#FFC145" />
+    </svg>
+  );
+}
+
+function TagIcon() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.59 9.59a2 2 0 0 0 2.82 0l5.59-5.59a2 2 0 0 0 0-2.82Z" />
+      <circle cx="7.5" cy="7.5" r="1" fill="#fff" />
+    </svg>
+  );
+}
+
 // Création d'une Story — depuis Home (contexte "global", destinée à BibaPulse) ou depuis un
 // BibaRoom (contexte "room", salon uniquement par défaut, avec choix explicite pour aussi la
 // diffuser dans BibaPulse). La confidentialité est toujours privilégiée par défaut.
 //
-// En 2 vraies étapes comme côté plateforme de gestion : cadrage (position/zoom/rotation/fond,
-// au doigt plutôt qu'au curseur), puis légende + taguage avec placement visuel de chaque tag
-// directement sur l'image.
+// Vraie page unique, en plein écran fixe : l'image occupe tout l'espace, avec les vrais
+// réglages en boutons ronds flottants plutôt qu'en dessous d'elle — sinon, sur mobile, l'image
+// remplissant tout l'écran, atteindre un vrai réglage plus bas obligeait à toucher l'image
+// elle-même pour y arriver, ce qui la déplaçait à chaque fois. Les tags et la légende vivent
+// dans une vraie mini-page qui glisse depuis le bas, sans jamais faire défiler la page entière.
 export function StoryCreateScreen({ contextType, contextId, venueName, myUserId, onBack, onPublished }) {
   const fileInputRef = useRef(null);
+  const colorInputRef = useRef(null);
   const [file, setFile] = useState(null);
-  const [step, setStep] = useState("edit");
+  const [tagsSheetOpen, setTagsSheetOpen] = useState(false);
   const [caption, setCaption] = useState("");
   const [bgColor, setBgColor] = useState("#0D1B2A");
   const [selectedTags, setSelectedTags] = useState({}); // { venue: {id,name}, drink: {...}, ... }
@@ -106,8 +155,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
   };
 
   // Ajoute une vraie position par défaut (étagée verticalement) dès qu'un tag devient actif, et
-  // retire sa position dès qu'il est désactivé — même vrai mécanisme que côté plateforme de
-  // gestion.
+  // retire sa position dès qu'il est désactivé.
   useEffect(() => {
     setTagPositions((prev) => {
       const next = { ...prev };
@@ -181,14 +229,15 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
     }
   };
 
-  return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={file && step === "tags" ? () => setStep("edit") : onBack} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 18px 0", color: COLORS.ink }}>
-        {!file ? "Nouvelle Story" : step === "edit" ? "Cadrer l'image" : "Légende & taguage"}
-      </h1>
-
-      {!file && (
+  if (!file) {
+    return (
+      <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "14px" }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }} title="Retour" aria-label="Retour">
+            <NavIcon name="back-triangle" size={22} color={COLORS.amber} />
+          </button>
+        </div>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 18px 0", color: COLORS.ink }}>Nouvelle Story</h1>
         <button
           onClick={() => fileInputRef.current?.click()}
           style={{
@@ -202,47 +251,73 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             border: `2px dashed ${COLORS.paperAlt}`,
             borderRadius: "16px",
             cursor: "pointer",
-            marginBottom: "20px",
           }}
         >
           <NavIcon name="plus" size={32} color={COLORS.amber} />
           <span style={{ fontSize: "14px", fontWeight: 700, color: COLORS.inkSoft }}>Choisir une photo</span>
         </button>
+        <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePick} />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "#000", zIndex: 100 }}>
+      <MobileImageEditor ref={editorRef} file={file} interactive={!tagsSheetOpen} backgroundColor={bgColor}>
+        {tagPositions.caption && caption.trim() && (
+          <MobileTagPill label={caption.trim()} symbol="" pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
+        )}
+        {TAG_TYPES.map((t) => {
+          const label = activeLabelFor(t.key);
+          const pos = tagPositions[t.key];
+          if (!label || !pos) return null;
+          return <MobileTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onChange={(p) => setTagPositions((prev) => ({ ...prev, [t.key]: p }))} />;
+        })}
+      </MobileImageEditor>
+
+      <button
+        onClick={onBack}
+        title="Fermer"
+        aria-label="Fermer"
+        style={{ position: "absolute", top: "16px", left: "16px", width: "40px", height: "40px", borderRadius: "50%", border: "none", background: "rgba(13,27,42,0.75)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
+      <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+        <RoundButton onClick={uploading ? undefined : publish} title="Publier">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: uploading ? 0.4 : 1 }}>
+            <line x1="12" y1="19" x2="12" y2="5" />
+            <polyline points="5 12 12 5 19 12" />
+          </svg>
+        </RoundButton>
+        <RoundButton onClick={() => colorInputRef.current?.click()} title="Couleur de fond">
+          <PaletteIcon />
+        </RoundButton>
+        <RoundButton onClick={() => setTagsSheetOpen(true)} title="Tags">
+          <TagIcon />
+        </RoundButton>
+      </div>
+      <input ref={colorInputRef} type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} style={{ position: "absolute", width: 0, height: 0, opacity: 0 }} />
+
+      {error && (
+        <div style={{ position: "absolute", bottom: "20px", left: "16px", right: "16px", background: "rgba(255,59,78,0.95)", borderRadius: "10px", padding: "10px 14px" }}>
+          <p style={{ fontSize: "12.5px", color: "#fff", margin: 0 }}>{error}</p>
+        </div>
       )}
 
-      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePick} />
+      {tagsSheetOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 110 }} onClick={() => setTagsSheetOpen(false)}>
+          <div
+            style={{ position: "absolute", bottom: 0, left: 0, right: 0, maxHeight: "72vh", overflowY: "auto", background: COLORS.paper, borderRadius: "16px 16px 0 0", padding: "18px 20px 28px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
 
-      {file && (
-        <>
-          <MobileImageEditor ref={editorRef} file={file} interactive={step === "edit"} backgroundColor={bgColor}>
-            {step === "tags" && tagPositions.caption && caption.trim() && (
-              <MobileTagPill label={caption.trim()} symbol="" pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
-            )}
-            {step === "tags" &&
-              TAG_TYPES.map((t) => {
-                const label = activeLabelFor(t.key);
-                const pos = tagPositions[t.key];
-                if (!label || !pos) return null;
-                return <MobileTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onChange={(p) => setTagPositions((prev) => ({ ...prev, [t.key]: p }))} />;
-              })}
-          </MobileImageEditor>
-
-          {step === "edit" ? (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "16px 0" }}>
-                <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.ink }}>Couleur de fond</span>
-                <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} style={{ width: "32px", height: "22px", padding: 0, border: "none", borderRadius: "6px", cursor: "pointer" }} />
-              </div>
-              <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "0 0 16px" }}>Un doigt pour déplacer, deux doigts pour zoomer et pivoter.</p>
-              <button
-                onClick={() => setStep("tags")}
-                style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "14px", fontWeight: 700, fontSize: "14.5px", color: COLORS.paper, cursor: "pointer" }}
-              >
-                Continuer
-              </button>
-            </>
-          ) : (
-            <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <input
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
@@ -305,18 +380,15 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
                 </div>
               )}
 
-              {error && <p style={{ fontSize: "12.5px", color: COLORS.wine, margin: 0 }}>{error}</p>}
-
               <button
-                onClick={publish}
-                disabled={uploading}
-                style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "14px", fontWeight: 700, fontSize: "14.5px", color: COLORS.paper, cursor: "pointer", opacity: uploading ? 0.6 : 1 }}
+                onClick={() => setTagsSheetOpen(false)}
+                style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}
               >
-                {uploading ? "Publication..." : "Publier"}
+                Terminé
               </button>
             </div>
-          )}
-        </>
+          </div>
+        </div>
       )}
     </div>
   );
