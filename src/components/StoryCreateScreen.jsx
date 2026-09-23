@@ -69,6 +69,32 @@ function TagPicker({ label, searchFn, selected, onSelect }) {
   );
 }
 
+// Vrai petit rond de couleur propre à un tag (ou à la légende) — s'affiche uniquement une fois
+// le tag actif, à côté de son champ. Même vrai correctif de déclenchement que pour le fond :
+// une vraie taille non nulle plutôt que 0, sinon certains vrais navigateurs mobiles refusent
+// d'ouvrir le vrai sélecteur natif.
+function TagColorButton({ pos, onChange }) {
+  const inputRef = useRef(null);
+  if (!pos) return null;
+  return (
+    <>
+      <button
+        onClick={() => inputRef.current?.click()}
+        title="Couleur du tag"
+        aria-label="Couleur du tag"
+        style={{ width: "26px", height: "26px", borderRadius: "50%", background: pos.color || "#F2F2E8", border: `2px solid ${COLORS.paperAlt}`, cursor: "pointer", flexShrink: 0, padding: 0 }}
+      />
+      <input
+        ref={inputRef}
+        type="color"
+        value={pos.color || "#F2F2E8"}
+        onChange={(e) => onChange({ ...pos, color: e.target.value })}
+        style={{ position: "fixed", top: 0, left: "-9999px", width: "1px", height: "1px", opacity: 0, border: "none", padding: 0 }}
+      />
+    </>
+  );
+}
+
 // Les 4 vrais tags de fiche possibles, avec leur vrai symbole propre — la légende n'en a pas,
 // vu que c'est un vrai texte libre plutôt qu'une référence à une fiche précise.
 const TAG_TYPES = [
@@ -101,18 +127,6 @@ function RoundButton({ onClick, title, children }) {
     >
       {children}
     </button>
-  );
-}
-
-function PaletteIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8H16c2.2 0 4-1.8 4-4C20 6.5 16.4 2 12 2z" stroke="#fff" strokeWidth="1.6" />
-      <circle cx="7" cy="10" r="1.4" fill="#39FF66" />
-      <circle cx="10.5" cy="6.5" r="1.4" fill="#FF3B4E" />
-      <circle cx="15" cy="7" r="1.4" fill="#00C8FF" />
-      <circle cx="17" cy="11.5" r="1.4" fill="#FFC145" />
-    </svg>
   );
 }
 
@@ -295,13 +309,19 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
           </svg>
         </RoundButton>
         <RoundButton onClick={() => colorInputRef.current?.click()} title="Couleur de fond">
-          <PaletteIcon />
+          <span style={{ width: "22px", height: "22px", borderRadius: "50%", background: bgColor, border: "2px solid #fff", display: "block" }} />
         </RoundButton>
         <RoundButton onClick={() => setTagsSheetOpen(true)} title="Tags">
           <TagIcon />
         </RoundButton>
       </div>
-      <input ref={colorInputRef} type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} style={{ position: "absolute", width: 0, height: 0, opacity: 0 }} />
+      <input
+        ref={colorInputRef}
+        type="color"
+        value={bgColor}
+        onChange={(e) => setBgColor(e.target.value)}
+        style={{ position: "fixed", top: 0, left: "-9999px", width: "1px", height: "1px", opacity: 0, border: "none", padding: 0 }}
+      />
 
       {error && (
         <div style={{ position: "absolute", bottom: "20px", left: "16px", right: "16px", background: "rgba(255,59,78,0.95)", borderRadius: "10px", padding: "10px 14px" }}>
@@ -318,16 +338,24 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
 
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <input
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Ajouter une légende (optionnel)"
-                style={{ padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", background: COLORS.surface, color: COLORS.ink, outline: "none" }}
-              />
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <input
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder="Ajouter une légende (optionnel)"
+                  style={{ flex: 1, minWidth: 0, padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", background: COLORS.surface, color: COLORS.ink, outline: "none" }}
+                />
+                <TagColorButton pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
+              </div>
               {tagPositions.caption && <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>Un doigt pour déplacer la légende sur l'image, deux doigts pour la redimensionner et la faire pivoter.</p>}
 
               {TAG_TYPES.map((t) => (
-                <TagPicker key={t.key} label={t.label} searchFn={t.searchFn} selected={selectedTags[t.key]} onSelect={(item) => setSelectedTags((prev) => ({ ...prev, [t.key]: item }))} />
+                <div key={t.key} style={{ display: "flex", alignItems: "flex-end", gap: "10px" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <TagPicker label={t.label} searchFn={t.searchFn} selected={selectedTags[t.key]} onSelect={(item) => setSelectedTags((prev) => ({ ...prev, [t.key]: item }))} />
+                  </div>
+                  <TagColorButton pos={tagPositions[t.key]} onChange={(p) => setTagPositions((prev) => ({ ...prev, [t.key]: p }))} />
+                </div>
               ))}
 
               {contextType === "room" && (
