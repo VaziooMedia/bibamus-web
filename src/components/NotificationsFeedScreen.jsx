@@ -175,7 +175,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                         "{n.postPreview}"
                       </div>
                     )}
-                    {n.previewText && (
+                    {n.previewText && n.type !== "story_tag" && (
                       <div style={{ fontSize: "12.5px", color: COLORS.ink, marginTop: "4px", fontStyle: "italic", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         « {n.previewText} »
                       </div>
