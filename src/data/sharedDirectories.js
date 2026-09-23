@@ -1279,6 +1279,12 @@ export async function loadOfficialStories() {
     iBixed: false,
     locationText: s.location_text,
     tagPositions: s.tag_positions || {},
+    tagIds: {
+      venue: s.tagged_venue_id || null,
+      drink: s.tagged_drink_id || null,
+      brand: s.tagged_brand_id || null,
+      producer: s.tagged_producer_id || null,
+    },
     tagLabels: {
       venue: venues.find((v) => v.id === s.tagged_venue_id)?.name || null,
       drink: drinks.find((d) => d.id === s.tagged_drink_id)?.name || null,

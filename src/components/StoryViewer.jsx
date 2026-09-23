@@ -19,12 +19,20 @@ function contrastColor(hex) {
 
 // Vrai tag posé sur l'image d'une Story officielle — même vraie apparence que dans la
 // plateforme de gestion (position en fraction du cadre, rotation, échelle, couleur, inversion,
-// symbole selon le type de tag), mais purement en lecture ici, sans déplacement possible.
-function StoryTagPill({ label, symbol = "#", pos }) {
+// symbole selon le type de tag). Cliquable pour ouvrir la vraie fiche visée quand onOpen est
+// fourni (jamais pour la légende — un vrai texte libre, sans fiche à ouvrir).
+function StoryTagPill({ label, symbol = "#", pos, onOpen }) {
   const color = pos.color || "#F2F2E8";
   const inverted = !!pos.invert;
   return (
     <div
+      onClick={
+        onOpen &&
+        ((e) => {
+          e.stopPropagation();
+          onOpen();
+        })
+      }
       style={{
         position: "absolute",
         left: `${pos.x * 100}%`,
@@ -38,7 +46,8 @@ function StoryTagPill({ label, symbol = "#", pos }) {
         fontWeight: 700,
         color: inverted ? contrastColor(color) : color,
         whiteSpace: "nowrap",
-        pointerEvents: "none",
+        cursor: onOpen ? "pointer" : "default",
+        pointerEvents: onOpen ? "auto" : "none",
       }}
     >
       {symbol ? `${symbol} ${label}` : label}
@@ -60,7 +69,7 @@ const OFFICIAL_TAG_TYPES = [
 // cercle individuel sur l'accueil, ou toute la Story collective d'un BibaRoom mélangeant
 // plusieurs auteurs) — chaque diapositive affiche son PROPRE auteur, jamais un auteur figé
 // pour tout le lot.
-export function StoryViewer({ stories, myUserId, onClose, onChanged }) {
+export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag }) {
   const [index, setIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
@@ -135,8 +144,9 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged }) {
           {OFFICIAL_TAG_TYPES.map((t) => {
             const label = story.tagLabels?.[t.key];
             const pos = story.tagPositions[t.key];
+            const entityId = story.tagIds?.[t.key];
             if (!label || !pos) return null;
-            return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} />;
+            return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onOpen={onOpenTag && entityId ? () => onOpenTag(t.key, entityId) : null} />;
           })}
         </>
       )}

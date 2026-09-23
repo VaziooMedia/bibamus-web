@@ -3393,6 +3393,22 @@ export default function App() {
           myUserId={session.user.id}
           onClose={() => setViewedStoryAuthor(null)}
           onChanged={() => setPulseStoriesRefreshKey((k) => k + 1)}
+          onOpenTag={(entityType, entityId) => {
+            setViewedStoryAuthor(null);
+            if (entityType === "venue") {
+              setViewedVenueId(entityId);
+              setScreen("venueDetail");
+            } else if (entityType === "drink") {
+              setViewedDrinkId(entityId);
+              setScreen("drinkDetail");
+            } else if (entityType === "brand") {
+              setViewedBrandId(entityId);
+              setScreen("brandDetail");
+            } else if (entityType === "producer") {
+              setViewedBreweryId(entityId);
+              setScreen("breweryDetail");
+            }
+          }}
         />
       )}
     </NavigationContext.Provider>
