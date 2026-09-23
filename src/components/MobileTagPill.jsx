@@ -13,9 +13,12 @@ function contrastColor(hex) {
 
 // Même vrai style que StoryTagPill (affichage), mais manipulable ici : un vrai doigt la
 // déplace, deux vrais doigts la redimensionnent et la font pivoter en même temps — même vrai
-// principe tactile que pour l'image elle-même, plutôt que des vrais sliders séparés.
-export function MobileTagPill({ label, symbol = "#", pos, onChange }) {
+// principe tactile que pour l'image elle-même, plutôt que des vrais sliders séparés. Un vrai
+// tap simple (sans vrai déplacement) la sélectionne — sa vraie couleur se gère alors depuis la
+// vraie palette à droite de l'image, pour la garder visible pendant le réglage.
+export function MobileTagPill({ label, symbol = "#", pos, onChange, selected, onTap }) {
   const gestureRef = useRef(null);
+  const tapRef = useRef(null);
   const color = pos.color || "#F2F2E8";
   const inverted = !!pos.invert;
 
@@ -28,9 +31,11 @@ export function MobileTagPill({ label, symbol = "#", pos, onChange }) {
     const rect = frameEl.getBoundingClientRect();
     if (e.touches.length === 1) {
       gestureRef.current = { mode: "drag", rect, startX: e.touches[0].clientX, startY: e.touches[0].clientY, origX: pos.x, origY: pos.y };
+      tapRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, startTime: Date.now(), moved: false };
     } else if (e.touches.length === 2) {
       const [t1, t2] = e.touches;
       gestureRef.current = { mode: "pinch", startDist: touchDist(t1, t2), startAngle: touchAngle(t1, t2), origScale: pos.scale || 1, origRotation: pos.rotation || 0 };
+      tapRef.current = null;
     }
   };
 
@@ -43,6 +48,9 @@ export function MobileTagPill({ label, symbol = "#", pos, onChange }) {
       const dx = (e.touches[0].clientX - g.startX) / g.rect.width;
       const dy = (e.touches[0].clientY - g.startY) / g.rect.height;
       onChange({ ...pos, x: Math.min(1, Math.max(0, g.origX + dx)), y: Math.min(1, Math.max(0, g.origY + dy)) });
+      if (tapRef.current && Math.hypot(e.touches[0].clientX - tapRef.current.startX, e.touches[0].clientY - tapRef.current.startY) > 8) {
+        tapRef.current.moved = true;
+      }
     } else if (g.mode === "pinch" && e.touches.length === 2) {
       const [t1, t2] = e.touches;
       const newDist = touchDist(t1, t2);
@@ -53,7 +61,13 @@ export function MobileTagPill({ label, symbol = "#", pos, onChange }) {
 
   const onTouchEnd = (e) => {
     e.stopPropagation();
-    if (e.touches.length === 0) gestureRef.current = null;
+    if (e.touches.length === 0) {
+      gestureRef.current = null;
+      // Vrai tap = pas de vrai déplacement notable, et un vrai geste bref — sinon c'était un
+      // vrai glissement, pas une vraie sélection.
+      if (tapRef.current && !tapRef.current.moved && Date.now() - tapRef.current.startTime < 400 && onTap) onTap();
+      tapRef.current = null;
+    }
   };
 
   return (
@@ -76,6 +90,7 @@ export function MobileTagPill({ label, symbol = "#", pos, onChange }) {
         whiteSpace: "nowrap",
         touchAction: "none",
         userSelect: "none",
+        boxShadow: selected ? "0 0 0 3px #39FF66" : "none",
       }}
     >
       {symbol ? `${symbol} ${label}` : label}

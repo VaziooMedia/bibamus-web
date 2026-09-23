@@ -69,51 +69,6 @@ function TagPicker({ label, searchFn, selected, onSelect }) {
   );
 }
 
-// Vrai petit rond de couleur propre à un tag (ou à la légende) — s'affiche uniquement une fois
-// le tag actif, à côté de son champ. Même vrai correctif de déclenchement que pour le fond :
-// une vraie taille non nulle plutôt que 0, sinon certains vrais navigateurs mobiles refusent
-// d'ouvrir le vrai sélecteur natif.
-// Vraie couleur (input direct, pas de vrai bouton-proxy vers un vrai input caché — ce schéma
-// est peu fiable sur vrai mobile pour type="color") + vraie inversion, propres à un tag (ou à
-// la légende) — n'apparaissent qu'une fois le tag actif.
-function TagColorControls({ pos, onChange }) {
-  if (!pos) return null;
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-      <input
-        type="color"
-        value={pos.color || "#F2F2E8"}
-        onChange={(e) => onChange({ ...pos, color: e.target.value })}
-        title="Couleur du tag"
-        aria-label="Couleur du tag"
-        style={{ width: "28px", height: "28px", borderRadius: "50%", border: `2px solid ${COLORS.paperAlt}`, padding: 0, cursor: "pointer", WebkitAppearance: "none", appearance: "none", overflow: "hidden", background: "none" }}
-      />
-      <button
-        onClick={() => onChange({ ...pos, invert: !pos.invert })}
-        title="Inverser les couleurs"
-        aria-label="Inverser les couleurs"
-        style={{
-          width: "28px",
-          height: "28px",
-          borderRadius: "50%",
-          border: `2px solid ${pos.invert ? COLORS.amber : COLORS.paperAlt}`,
-          background: pos.invert ? COLORS.amber : "none",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 0,
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={pos.invert ? COLORS.paper : COLORS.inkSoft} strokeWidth="2" />
-          <path d="M12 3a9 9 0 0 1 0 18Z" fill={pos.invert ? COLORS.paper : COLORS.inkSoft} />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
 // Les 4 vrais tags de fiche possibles, avec leur vrai symbole propre — la légende n'en a pas,
 // vu que c'est un vrai texte libre plutôt qu'une référence à une fiche précise.
 const TAG_TYPES = [
@@ -171,6 +126,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [tagsSheetOpen, setTagsSheetOpen] = useState(false);
+  const [selectedTagKey, setSelectedTagKey] = useState(null);
   const [caption, setCaption] = useState("");
   const [bgColor, setBgColor] = useState("#0D1B2A");
   const [selectedTags, setSelectedTags] = useState({}); // { venue: {id,name}, drink: {...}, ... }
@@ -297,13 +253,30 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
     <div style={{ position: "fixed", inset: 0, background: "#000", zIndex: 100 }}>
       <MobileImageEditor ref={editorRef} file={file} interactive={!tagsSheetOpen} backgroundColor={bgColor}>
         {tagPositions.caption && caption.trim() && (
-          <MobileTagPill label={caption.trim()} symbol="" pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
+          <MobileTagPill
+            label={caption.trim()}
+            symbol=""
+            pos={tagPositions.caption}
+            onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))}
+            selected={selectedTagKey === "caption"}
+            onTap={() => setSelectedTagKey((k) => (k === "caption" ? null : "caption"))}
+          />
         )}
         {TAG_TYPES.map((t) => {
           const label = activeLabelFor(t.key);
           const pos = tagPositions[t.key];
           if (!label || !pos) return null;
-          return <MobileTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onChange={(p) => setTagPositions((prev) => ({ ...prev, [t.key]: p }))} />;
+          return (
+            <MobileTagPill
+              key={t.key}
+              label={label}
+              symbol={t.symbol}
+              pos={pos}
+              onChange={(p) => setTagPositions((prev) => ({ ...prev, [t.key]: p }))}
+              selected={selectedTagKey === t.key}
+              onTap={() => setSelectedTagKey((k) => (k === t.key ? null : t.key))}
+            />
+          );
         })}
       </MobileImageEditor>
 
@@ -326,6 +299,45 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             <polyline points="5 12 12 5 19 12" />
           </svg>
         </RoundButton>
+
+        {selectedTagKey && tagPositions[selectedTagKey] && (
+          // Couleur/inversion du vrai tag sélectionné (tap sur sa vraie pastille) — gérées ici
+          // plutôt que dans la vraie mini-page du bas, pour que le tag reste visible sur
+          // l'image pendant le réglage plutôt que d'être caché ou assombri derrière elle.
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(13,27,42,0.75)", borderRadius: "22px", padding: "8px" }}>
+            <input
+              type="color"
+              value={tagPositions[selectedTagKey].color || "#F2F2E8"}
+              onChange={(e) => setTagPositions((prev) => ({ ...prev, [selectedTagKey]: { ...prev[selectedTagKey], color: e.target.value } }))}
+              title="Couleur du tag"
+              aria-label="Couleur du tag"
+              style={{ width: "28px", height: "28px", borderRadius: "50%", border: "2px solid #fff", padding: 0, cursor: "pointer", WebkitAppearance: "none", appearance: "none", overflow: "hidden", background: "none" }}
+            />
+            <button
+              onClick={() => setTagPositions((prev) => ({ ...prev, [selectedTagKey]: { ...prev[selectedTagKey], invert: !prev[selectedTagKey].invert } }))}
+              title="Inverser les couleurs"
+              aria-label="Inverser les couleurs"
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                border: `2px solid ${tagPositions[selectedTagKey].invert ? "#39FF66" : "#fff"}`,
+                background: tagPositions[selectedTagKey].invert ? "#39FF66" : "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 0,
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke={tagPositions[selectedTagKey].invert ? "#0D1B2A" : "#fff"} strokeWidth="2" />
+                <path d="M12 3a9 9 0 0 1 0 18Z" fill={tagPositions[selectedTagKey].invert ? "#0D1B2A" : "#fff"} />
+              </svg>
+            </button>
+          </div>
+        )}
+
         <input
           type="color"
           value={bgColor}
@@ -365,24 +377,20 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
 
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <input
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  placeholder="Ajouter une légende (optionnel)"
-                  style={{ flex: 1, minWidth: 0, padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", background: COLORS.surface, color: COLORS.ink, outline: "none" }}
-                />
-                <TagColorControls pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
-              </div>
-              {tagPositions.caption && <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>Un doigt pour déplacer la légende sur l'image, deux doigts pour la redimensionner et la faire pivoter.</p>}
+              <input
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Ajouter une légende (optionnel)"
+                style={{ padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", background: COLORS.surface, color: COLORS.ink, outline: "none" }}
+              />
+              {tagPositions.caption && (
+                <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>
+                  Un doigt pour déplacer la légende sur l'image, deux doigts pour la redimensionner et la faire pivoter — tapez dessus pour en régler la couleur.
+                </p>
+              )}
 
               {TAG_TYPES.map((t) => (
-                <div key={t.key} style={{ display: "flex", alignItems: "flex-end", gap: "10px" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <TagPicker label={t.label} searchFn={t.searchFn} selected={selectedTags[t.key]} onSelect={(item) => setSelectedTags((prev) => ({ ...prev, [t.key]: item }))} />
-                  </div>
-                  <TagColorControls pos={tagPositions[t.key]} onChange={(p) => setTagPositions((prev) => ({ ...prev, [t.key]: p }))} />
-                </div>
+                <TagPicker key={t.key} label={t.label} searchFn={t.searchFn} selected={selectedTags[t.key]} onSelect={(item) => setSelectedTags((prev) => ({ ...prev, [t.key]: item }))} />
               ))}
 
               {contextType === "room" && (
