@@ -268,7 +268,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
 
         {error && <p style={{ fontSize: "12.5px", color: COLORS.wine, marginBottom: "10px" }}>{error}</p>}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "24px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", marginTop: "28px" }}>
           {/* Ouvre le vrai sélecteur natif du téléphone, sans capture — c'est lui qui affiche
               la vraie galerie et les vrais fichiers. Un seul vrai bloc pour les deux : sur la
               plupart des vrais téléphones, le navigateur affiche le vrai même menu (Photothèque
@@ -278,39 +278,47 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
           <button
             onClick={() => galleryInputRef.current?.click()}
             style={{
+              width: "140px",
+              aspectRatio: "1",
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              gap: "14px",
+              justifyContent: "center",
+              gap: "8px",
               background: COLORS.surfaceAlt,
               border: `2px solid ${COLORS.pinkFluo}`,
               borderRadius: "14px",
               cursor: "pointer",
-              padding: "18px",
+              padding: "10px",
             }}
           >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={COLORS.pinkFluo} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={COLORS.pinkFluo} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
               <path d="m21 15-5-5L5 21" />
             </svg>
-            <span style={{ fontSize: "14.5px", fontWeight: 700, color: COLORS.pinkFluo }}>Photothèque / Fichiers</span>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.pinkFluo, textAlign: "center" }}>Photothèque / Fichiers</span>
           </button>
 
           <button
             onClick={() => cameraInputRef.current?.click()}
             style={{
+              width: "140px",
+              aspectRatio: "1",
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              gap: "14px",
+              justifyContent: "center",
+              gap: "8px",
               background: COLORS.surfaceAlt,
               border: `2px solid ${COLORS.amber}`,
               borderRadius: "14px",
               cursor: "pointer",
-              padding: "18px",
+              padding: "10px",
             }}
           >
-            <NavIcon name="camera" size={26} color={COLORS.amber} />
-            <span style={{ fontSize: "14.5px", fontWeight: 700, color: COLORS.amber }}>Prendre une photo</span>
+            <NavIcon name="camera" size={28} color={COLORS.amber} />
+            <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, textAlign: "center" }}>Prendre une photo</span>
           </button>
         </div>
 
