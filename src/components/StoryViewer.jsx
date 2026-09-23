@@ -30,7 +30,7 @@ function StoryTagPill({ label, symbol = "#", pos, onOpen }) {
         onOpen &&
         ((e) => {
           e.stopPropagation();
-          onOpen();
+          onOpen(e.currentTarget.getBoundingClientRect());
         })
       }
       style={{
@@ -148,7 +148,7 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag, 
             const pos = story.tagPositions[t.key];
             const entityId = story.tagIds?.[t.key];
             if (!label || !pos) return null;
-            return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onOpen={onOpenTag && entityId ? () => setPendingTag({ type: t.key, id: entityId, label }) : null} />;
+            return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} onOpen={onOpenTag && entityId ? (rect) => setPendingTag({ type: t.key, id: entityId, label, rect }) : null} />;
           })}
         </div>
       )}
@@ -230,28 +230,28 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag, 
         <div
           style={{
             position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
+            top: `${pendingTag.rect.top}px`,
+            left: `${Math.min(Math.max(pendingTag.rect.left + pendingTag.rect.width / 2, 90), window.innerWidth - 90)}px`,
+            transform: "translate(-50%, calc(-100% - 10px))",
             zIndex: 20,
             display: "flex",
             alignItems: "center",
-            gap: "10px",
+            gap: "8px",
             background: "rgba(13,27,42,0.9)",
             border: "1.5px solid #F2F2E8",
             borderRadius: "999px",
-            padding: "8px 8px 8px 18px",
+            padding: "6px 6px 6px 14px",
           }}
           onClick={(e) => {
             e.stopPropagation();
             onOpenTag(pendingTag.type, pendingTag.id, index);
           }}
         >
-          <span style={{ color: "#fff", fontSize: "14.5px", fontWeight: 700 }}>{pendingTag.label}</span>
+          <span style={{ color: "#fff", fontSize: "12.5px", fontWeight: 700 }}>{pendingTag.label}</span>
           <span
             style={{
-              width: "28px",
-              height: "28px",
+              width: "22px",
+              height: "22px",
               borderRadius: "50%",
               border: "2px solid #fff",
               display: "flex",
@@ -260,7 +260,7 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag, 
               flexShrink: 0,
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 6 15 12 9 18" />
             </svg>
           </span>
