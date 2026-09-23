@@ -1255,6 +1255,15 @@ export async function loadOfficialStories() {
     console.error("loadOfficialStories:", error);
     return [];
   }
+  // Pas de vraie jointure FK possible ici (tagged_*_id sont de simples champs texte, sans
+  // contrainte de clé étrangère déclarée) — résolution des vrais noms côté client, une vraie
+  // seule fois pour toutes les Stories actives combinées plutôt qu'une requête par Story.
+  const [venues, drinks, brands, producers] = await Promise.all([
+    loadVenuesByIds(data.map((s) => s.tagged_venue_id)),
+    loadDrinksByIds(data.map((s) => s.tagged_drink_id)),
+    loadBrandsByIds(data.map((s) => s.tagged_brand_id)),
+    loadBreweriesByIds(data.map((s) => s.tagged_producer_id)),
+  ]);
   return data.map((s) => ({
     id: s.id,
     authorId: "bibamus-official",
@@ -1268,6 +1277,14 @@ export async function loadOfficialStories() {
     contextType: "official",
     bixCount: 0,
     iBixed: false,
+    locationText: s.location_text,
+    tagPositions: s.tag_positions || {},
+    tagLabels: {
+      venue: venues.find((v) => v.id === s.tagged_venue_id)?.name || null,
+      drink: drinks.find((d) => d.id === s.tagged_drink_id)?.name || null,
+      brand: brands.find((b) => b.id === s.tagged_brand_id)?.name || null,
+      producer: producers.find((p) => p.id === s.tagged_producer_id)?.name || null,
+    },
   }));
 }
 
@@ -2217,6 +2234,17 @@ export async function loadBreweryLinkedToVenue(venueId) {
     return null;
   }
   return rowToBrewery(data);
+}
+
+export async function loadBrandsByIds(ids) {
+  const uniqueIds = [...new Set((ids || []).filter(Boolean))];
+  if (uniqueIds.length === 0) return [];
+  const { data, error } = await supabase.from("brands_directory").select("*").in("id", uniqueIds);
+  if (error) {
+    console.error("loadBrandsByIds:", error);
+    return [];
+  }
+  return data.map(rowToBrand);
 }
 
 export async function loadBreweriesByIds(ids) {

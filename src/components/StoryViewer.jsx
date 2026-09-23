@@ -6,6 +6,56 @@ import { setStoryPulseSharing, deleteStory, toggleStoryBix } from "../data/share
 
 const STORY_DURATION_MS = 5000;
 
+// Calcule un vrai noir ou blanc contrastant avec la couleur donnée — même vrai principe que
+// côté plateforme de gestion, pour les vrais tags aux couleurs inversées (fond plein).
+function contrastColor(hex) {
+  const h = (hex || "#F2F2E8").replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance > 140 ? "#0D1B2A" : "#F2F2E8";
+}
+
+// Vrai tag posé sur l'image d'une Story officielle — même vraie apparence que dans la
+// plateforme de gestion (position en fraction du cadre, rotation, échelle, couleur, inversion,
+// symbole selon le type de tag), mais purement en lecture ici, sans déplacement possible.
+function StoryTagPill({ label, symbol = "#", pos }) {
+  const color = pos.color || "#F2F2E8";
+  const inverted = !!pos.invert;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: `${pos.x * 100}%`,
+        top: `${pos.y * 100}%`,
+        transform: `translate(-50%, -50%) rotate(${pos.rotation || 0}deg) scale(${pos.scale || 1})`,
+        background: inverted ? color : `${color}33`,
+        border: `1.5px solid ${color}`,
+        borderRadius: "999px",
+        padding: "6px 14px",
+        fontSize: "14px",
+        fontWeight: 700,
+        color: inverted ? contrastColor(color) : color,
+        whiteSpace: "nowrap",
+        pointerEvents: "none",
+      }}
+    >
+      {symbol ? `${symbol} ${label}` : label}
+    </div>
+  );
+}
+
+// Les 4 vrais tags de fiche possibles sur une Story officielle, avec leur vrai symbole propre —
+// la légende ("caption" dans tagPositions) n'en a pas, vu que c'est un vrai texte libre plutôt
+// qu'une référence à une fiche précise.
+const OFFICIAL_TAG_TYPES = [
+  { key: "venue", symbol: "@" },
+  { key: "drink", symbol: "#" },
+  { key: "brand", symbol: "#" },
+  { key: "producer", symbol: "#" },
+];
+
 // Visionneuse plein écran — reçoit un tableau plat de Stories (une seule personne pour un
 // cercle individuel sur l'accueil, ou toute la Story collective d'un BibaRoom mélangeant
 // plusieurs auteurs) — chaque diapositive affiche son PROPRE auteur, jamais un auteur figé
@@ -79,6 +129,18 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged }) {
     <div style={{ position: "fixed", inset: 0, background: "#000", zIndex: 200, overflow: "hidden" }}>
       <img src={story.mediaUrl} alt="" onLoad={handleImgLoad} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: imgFit }} />
 
+      {story.tagPositions && (
+        <>
+          {story.tagPositions.caption && story.caption && <StoryTagPill label={story.caption} symbol="" pos={story.tagPositions.caption} />}
+          {OFFICIAL_TAG_TYPES.map((t) => {
+            const label = story.tagLabels?.[t.key];
+            const pos = story.tagPositions[t.key];
+            if (!label || !pos) return null;
+            return <StoryTagPill key={t.key} label={label} symbol={t.symbol} pos={pos} />;
+          })}
+        </>
+      )}
+
       <div
         style={{ position: "absolute", inset: 0 }}
         onClick={(e) => {
@@ -127,7 +189,7 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged }) {
       </div>
 
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.6))", paddingTop: "30px" }} onClick={(e) => e.stopPropagation()}>
-        {story.caption && <p style={{ margin: "0 16px 10px", color: "#fff", fontSize: "14px", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{story.caption}</p>}
+        {story.caption && !story.tagPositions?.caption && <p style={{ margin: "0 16px 10px", color: "#fff", fontSize: "14px", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{story.caption}</p>}
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 16px" }}>
           <button
             onClick={handleBix}
