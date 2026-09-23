@@ -90,7 +90,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
       <SecurityGroup title="Confidentialité">
         <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir ce qui est visible" onClick={() => goToSubScreen("publicProfile")} />
         <SecurityRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Mes Statistiques" subtitle="Choisir ce que tes Bibax voient" onClick={() => goToSubScreen("myStats")} />
-        <SecurityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Stories de Bibax" subtitle="Taguage et accès à ton profil" onClick={() => goToSubScreen("storyTagsPrivacy")} />
+        <SecurityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Stories de Bibax" subtitle="Tags et accès à ton profil" onClick={() => goToSubScreen("storyTagsPrivacy")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow icon={<NavIcon name="no-entry" size={17} color={COLORS.amber} />} title="Utilisateurs bloqués" subtitle="Gérer les comptes bloqués" onClick={() => goToSubScreen("blockedUsers")} />
         </div>
@@ -234,12 +234,12 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="tag" size={22} color={COLORS.amber} />}>Stories de Bibax</PageTitleWithBar>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisissez si d'autres Bibax peuvent vous taguer dans leurs Stories, et ce que ce tag permet.</p>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisis si d'autres Bibax peuvent te taguer dans leurs Stories.</p>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-        <ToggleRow title="Autoriser les tags" description="D'autres Bibax peuvent vous ajouter comme tag dans leurs Stories." field="allowStoryTags" />
+        <ToggleRow title="Autoriser les tags" description="Tes Bibax peuvent te taguer sur leurs Stories." field="allowStoryTags" />
         <div style={{ borderBottom: "none" }}>
-          <ToggleRow title="Accéder à mon profil via un tag" description="Un tap sur votre tag ouvre votre profil, comme pour les autres tags." field="allowProfileViaTag" />
+          <ToggleRow title="Accéder à mon profil via un tag" description="Un tap sur ton tag propose l'accès à ton profil." field="allowProfileViaTag" />
         </div>
       </div>
 
