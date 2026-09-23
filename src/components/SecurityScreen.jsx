@@ -207,10 +207,22 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
     onSaveProfile(patch);
   };
 
-  const ToggleRow = ({ title, description, field }) => {
+  const allowTagsOn = p.allowStoryTags !== false;
+
+  // Désactiver les tags rend "accéder au profil via un tag" sans objet — les mettre en
+  // désaccord serait incohérent, vu qu'il n'y aurait alors plus jamais de tag pour y accéder.
+  const toggleAllowStoryTags = () => {
+    if (allowTagsOn) {
+      update({ allowStoryTags: false, allowProfileViaTag: false });
+    } else {
+      update({ allowStoryTags: true });
+    }
+  };
+
+  const ToggleRow = ({ title, description, field, disabled, onToggle }) => {
     const isOn = p[field] !== false;
     return (
-      <div style={{ padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
+      <div style={{ padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.5 : 1 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
@@ -220,8 +232,19 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
             <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginLeft: "12px" }}>{description}</div>
           </div>
           <button
-            onClick={() => update({ [field]: !isOn })}
-            style={{ width: "42px", height: "24px", borderRadius: "999px", border: "none", background: isOn ? COLORS.amber : COLORS.paperAlt, position: "relative", cursor: "pointer", padding: 0, flexShrink: 0 }}
+            onClick={disabled ? undefined : onToggle || (() => update({ [field]: !isOn }))}
+            disabled={disabled}
+            style={{
+              width: "42px",
+              height: "24px",
+              borderRadius: "999px",
+              border: "none",
+              background: isOn ? COLORS.amber : COLORS.paperAlt,
+              position: "relative",
+              cursor: disabled ? "not-allowed" : "pointer",
+              padding: 0,
+              flexShrink: 0,
+            }}
           >
             <span style={{ position: "absolute", top: "3px", left: isOn ? "21px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
           </button>
@@ -237,9 +260,14 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisis si d'autres Bibax peuvent te taguer dans leurs Stories.</p>
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-        <ToggleRow title="Autoriser les tags" description="Tes Bibax peuvent te taguer sur leurs Stories." field="allowStoryTags" />
+        <ToggleRow title="Autoriser les tags" description="Tes Bibax peuvent te taguer sur leurs Stories." field="allowStoryTags" onToggle={toggleAllowStoryTags} />
         <div style={{ borderBottom: "none" }}>
-          <ToggleRow title="Accéder à mon profil via un tag" description="Un tap sur ton tag propose l'accès à ton profil." field="allowProfileViaTag" />
+          <ToggleRow
+            title="Accéder à mon profil via un tag"
+            description={allowTagsOn ? "Un tap sur ton tag propose l'accès à ton profil." : "Sans tag possible, cette option n'a pas d'effet."}
+            field="allowProfileViaTag"
+            disabled={!allowTagsOn}
+          />
         </div>
       </div>
 
