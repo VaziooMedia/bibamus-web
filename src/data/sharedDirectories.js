@@ -271,21 +271,26 @@ export async function searchBibax(query) {
 // le renvoie pas (on ne connaît pas son vrai corps pour l'y ajouter sans risque), donc un vrai
 // second appel direct sur profiles, fusionné côté client par id.
 export async function searchBibaxForTagging(query) {
-  const results = await searchBibax(query);
-  if (results.length === 0) return results;
+  const [results, myBibax] = await Promise.all([searchBibax(query), loadMyBibax()]);
+  // Un vrai tag Bibax ne concerne que les vrais amis déjà confirmés — pas n'importe quel
+  // utilisateur de l'app (searchBibax est une vraie recherche globale, réutilisée ailleurs pour
+  // trouver de vraies nouvelles personnes à ajouter, pas pour les taguer).
+  const myBibaxIds = new Set(myBibax.map((b) => b.userId));
+  const friendResults = results.filter((r) => myBibaxIds.has(r.id));
+  if (friendResults.length === 0) return friendResults;
   const { data, error } = await supabase
     .from("profiles")
     .select("id, allow_story_tags")
     .in(
       "id",
-      results.map((r) => r.id)
+      friendResults.map((r) => r.id)
     );
   if (error) {
     console.error("searchBibaxForTagging:", error);
-    return results.map((r) => ({ ...r, name: r.displayName, allowStoryTags: true }));
+    return friendResults.map((r) => ({ ...r, name: r.displayName, allowStoryTags: true }));
   }
   const byId = new Map(data.map((r) => [r.id, r.allow_story_tags]));
-  return results.map((r) => ({ ...r, name: r.displayName, allowStoryTags: byId.get(r.id) !== false }));
+  return friendResults.map((r) => ({ ...r, name: r.displayName, allowStoryTags: byId.get(r.id) !== false }));
 }
 
 // Fil de notifications — chargement, marquer comme lu(es), compteur non-lus.

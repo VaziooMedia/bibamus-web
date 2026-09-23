@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { uploadStoryMedia, createStory, searchBibaxForTagging, searchVenues, searchDrinks, searchBrands, searchBreweries } from "../data/sharedDirectories.js";
+import { uploadStoryMedia, createStory, searchBibaxForTagging, searchVenues, searchDrinks, searchBrands, searchBreweries, sendNotification } from "../data/sharedDirectories.js";
 import { MobileImageEditor } from "./MobileImageEditor.jsx";
 import { MobileTagPill } from "./MobileTagPill.jsx";
 
@@ -243,6 +243,11 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
       if (result.error) {
         setError(result.error);
         return;
+      }
+      // Prévient le vrai Bibax tagué — un tag reste discret jusqu'à ce que la personne le
+      // sache réellement.
+      if (selectedTags.bibax?.id) {
+        sendNotification(selectedTags.bibax.id, "story_tag", "story", result.id, "vous a tagué(e) dans une Story");
       }
       onPublished();
     } catch (e) {
