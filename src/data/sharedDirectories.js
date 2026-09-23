@@ -1316,7 +1316,7 @@ export async function uploadStoryMedia(userId, blob) {
 
 // Crée la Story elle-même — insertion directe protégée par RLS (chacun ne peut créer que ses
 // propres Stories), pas besoin de fonction serveur pour ça.
-export async function createStory({ contextType, contextId, mediaUrl, caption, sharedToPulse, pulseVisibility, locationName }) {
+export async function createStory({ contextType, contextId, mediaUrl, caption, sharedToPulse, pulseVisibility, locationName, tags = {} }) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -1333,11 +1333,61 @@ export async function createStory({ contextType, contextId, mediaUrl, caption, s
       shared_to_pulse: contextType === "global" ? false : !!sharedToPulse,
       pulse_visibility: pulseVisibility || "relations",
       location_name: locationName || null,
+      tagged_venue_id: tags.taggedVenueId || null,
+      tagged_drink_id: tags.taggedDrinkId || null,
+      tagged_brand_id: tags.taggedBrandId || null,
+      tagged_producer_id: tags.taggedProducerId || null,
+      tag_positions: tags.tagPositions || null,
     })
     .select("id")
     .single();
   if (error) return { error: error.message };
   return { ok: true, id: data.id };
+}
+
+// Les Stories régulières (BibaRoom/BibaPulse) passent par des vraies fonctions RPC dont on ne
+// connaît pas le corps exact ici — plutôt que de les réécrire à l'aveugle et risquer de casser
+// leur vrai filtrage/visibilité déjà en place, on récupère les vrais champs de taguage via un
+// vrai second appel direct sur la table, puis on les fusionne côté client par id. Même vrai
+// principe de résolution des noms que pour les Stories officielles.
+async function enrichStoriesWithTags(stories) {
+  if (stories.length === 0) return stories;
+  const ids = stories.map((s) => s.id);
+  const { data: tagRows, error } = await supabase
+    .from("stories")
+    .select("id, tag_positions, tagged_venue_id, tagged_drink_id, tagged_brand_id, tagged_producer_id")
+    .in("id", ids);
+  if (error) {
+    console.error("enrichStoriesWithTags:", error);
+    return stories;
+  }
+  const [venues, drinks, brands, producers] = await Promise.all([
+    loadVenuesByIds(tagRows.map((r) => r.tagged_venue_id)),
+    loadDrinksByIds(tagRows.map((r) => r.tagged_drink_id)),
+    loadBrandsByIds(tagRows.map((r) => r.tagged_brand_id)),
+    loadBreweriesByIds(tagRows.map((r) => r.tagged_producer_id)),
+  ]);
+  const byId = new Map(tagRows.map((r) => [r.id, r]));
+  return stories.map((s) => {
+    const r = byId.get(s.id);
+    if (!r) return s;
+    return {
+      ...s,
+      tagPositions: r.tag_positions || {},
+      tagIds: {
+        venue: r.tagged_venue_id || null,
+        drink: r.tagged_drink_id || null,
+        brand: r.tagged_brand_id || null,
+        producer: r.tagged_producer_id || null,
+      },
+      tagLabels: {
+        venue: venues.find((v) => v.id === r.tagged_venue_id)?.name || null,
+        drink: drinks.find((d) => d.id === r.tagged_drink_id)?.name || null,
+        brand: brands.find((b) => b.id === r.tagged_brand_id)?.name || null,
+        producer: producers.find((p) => p.id === r.tagged_producer_id)?.name || null,
+      },
+    };
+  });
 }
 
 export async function loadRoomStories(salonCode) {
@@ -1346,7 +1396,7 @@ export async function loadRoomStories(salonCode) {
     console.error("loadRoomStories:", error);
     return [];
   }
-  return data.map((s) => ({
+  const mapped = data.map((s) => ({
     id: s.id,
     authorId: s.author_id,
     authorName: s.author_name,
@@ -1362,6 +1412,7 @@ export async function loadRoomStories(salonCode) {
     bixCount: s.bix_count,
     iBixed: s.i_bixed,
   }));
+  return enrichStoriesWithTags(mapped);
 }
 
 export async function loadPulseStories() {
@@ -1370,7 +1421,7 @@ export async function loadPulseStories() {
     console.error("loadPulseStories:", error);
     return [];
   }
-  return data.map((s) => ({
+  const mapped = data.map((s) => ({
     id: s.id,
     authorId: s.author_id,
     authorName: s.author_name,
@@ -1387,6 +1438,7 @@ export async function loadPulseStories() {
     bixCount: s.bix_count,
     iBixed: s.i_bixed,
   }));
+  return enrichStoriesWithTags(mapped);
 }
 
 export async function setStoryPulseSharing(storyId, shared) {
@@ -2251,6 +2303,30 @@ export async function loadBrandsByIds(ids) {
     return [];
   }
   return data.map(rowToBrand);
+}
+
+// Pas de vraie RPC dédiée pour ces 2 répertoires (contrairement à search_drinks/search_venues)
+// — vraie recherche directe par nom, simple et suffisante pour un vrai picker de tag.
+export async function searchBrands(query, limit = 30) {
+  const q = (query || "").trim();
+  if (!q) return [];
+  const { data, error } = await supabase.from("brands_directory").select("*").ilike("name", `%${q}%`).limit(limit);
+  if (error) {
+    console.error("searchBrands:", error);
+    return [];
+  }
+  return data.map(rowToBrand);
+}
+
+export async function searchBreweries(query, limit = 30) {
+  const q = (query || "").trim();
+  if (!q) return [];
+  const { data, error } = await supabase.from("breweries_directory").select("*").ilike("name", `%${q}%`).limit(limit);
+  if (error) {
+    console.error("searchBreweries:", error);
+    return [];
+  }
+  return data.map(rowToBrewery);
 }
 
 export async function loadBreweriesByIds(ids) {
