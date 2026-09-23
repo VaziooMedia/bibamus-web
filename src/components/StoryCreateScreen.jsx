@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { uploadStoryMedia, createStory, searchBibaxForTagging, searchVenues, searchDrinks, searchBrands, searchBreweries, loadMyMediaAssets } from "../data/sharedDirectories.js";
+import { uploadStoryMedia, createStory, searchBibaxForTagging, searchVenues, searchDrinks, searchBrands, searchBreweries } from "../data/sharedDirectories.js";
 import { MobileImageEditor } from "./MobileImageEditor.jsx";
 import { MobileTagPill } from "./MobileTagPill.jsx";
 
@@ -148,11 +148,10 @@ function TagIcon() {
 // elle-même pour y arriver, ce qui la déplaçait à chaque fois. Les tags et la légende vivent
 // dans une vraie mini-page qui glisse depuis le bas, sans jamais faire défiler la page entière.
 export function StoryCreateScreen({ contextType, contextId, venueName, myUserId, onBack, onPublished }) {
-  const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
+  const filesInputRef = useRef(null);
   const [file, setFile] = useState(null);
-  const [libraryPhotos, setLibraryPhotos] = useState(null);
-  const [loadingLibraryPhoto, setLoadingLibraryPhoto] = useState(false);
   const [tagsSheetOpen, setTagsSheetOpen] = useState(false);
   const [imageLocked, setImageLocked] = useState(false);
   const [selectedTagKey, setSelectedTagKey] = useState(null);
@@ -200,31 +199,15 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
     const f = e.target.files[0];
     if (!f) return;
     e.target.value = "";
+    // "Choisir un fichier" n'a volontairement aucune vraie restriction de type (pour laisser
+    // parcourir Fichiers/iCloud Drive librement) — donc une vraie vérification est nécessaire
+    // ici, sinon un vrai fichier non-image casserait silencieusement l'éditeur juste après.
+    if (!f.type.startsWith("image/")) {
+      setError("Ce fichier n'est pas une image.");
+      return;
+    }
     setFile(f);
     setError(null);
-  };
-
-  // Vraie photothèque Bibamus (photos déjà envoyées par l'utilisateur dans l'app) — chargée
-  // une vraie seule fois, avant même le choix d'une image.
-  useEffect(() => {
-    loadMyMediaAssets().then((assets) => setLibraryPhotos(assets.filter((a) => a.kind === "image" || !a.kind)));
-  }, []);
-
-  // Une vraie photo déjà en ligne doit être vraiment retéléchargée en Blob avant de pouvoir
-  // servir de vrai fichier d'entrée à l'éditeur (qui attend un vrai File/Blob local).
-  const handlePickFromLibrary = async (photo) => {
-    setLoadingLibraryPhoto(true);
-    setError(null);
-    try {
-      const response = await fetch(photo.url);
-      const blob = await response.blob();
-      setFile(blob);
-    } catch (e) {
-      console.error("handlePickFromLibrary:", e);
-      setError("Impossible de charger cette photo.");
-    } finally {
-      setLoadingLibraryPhoto(false);
-    }
   };
 
   const publish = async () => {
@@ -284,9 +267,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
           Nouvelle Story
         </h1>
 
-        {loadingLibraryPhoto && (
-          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", marginBottom: "10px" }}>Chargement de la photo...</p>
-        )}
+        {error && <p style={{ fontSize: "12.5px", color: COLORS.wine, marginBottom: "10px" }}>{error}</p>}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
           <button
@@ -309,32 +290,62 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber, textAlign: "center" }}>Prendre une photo</span>
           </button>
 
-          {/* Vraie photothèque Bibamus déjà existante (Stories et contributions déjà envoyées
-              par l'utilisateur) — pas la vraie galerie native du téléphone : un vrai site web
-              n'a techniquement aucun moyen d'afficher directement les vraies photos du vrai
-              appareil sans que la personne en choisisse une elle-même via le vrai sélecteur
-              natif (juste en dessous). */}
-          {libraryPhotos?.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => handlePickFromLibrary(p)}
-              disabled={loadingLibraryPhoto}
-              style={{ aspectRatio: "1", background: COLORS.surfaceAlt, border: "none", borderRadius: "12px", padding: 0, cursor: "pointer", overflow: "hidden", opacity: loadingLibraryPhoto ? 0.6 : 1 }}
-            >
-              <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            </button>
-          ))}
+          {/* Ouvre le vrai sélecteur natif du téléphone, sans capture — c'est lui qui affiche
+              la vraie galerie du vrai appareil (Bibamus ne peut techniquement pas la lister
+              lui-même, aucun site web ne le peut). */}
+          <button
+            onClick={() => galleryInputRef.current?.click()}
+            style={{
+              aspectRatio: "1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              background: COLORS.surfaceAlt,
+              border: `2px solid ${COLORS.paperAlt}`,
+              borderRadius: "12px",
+              cursor: "pointer",
+              padding: "6px",
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={COLORS.ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="m21 15-5-5L5 21" />
+            </svg>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink, textAlign: "center" }}>Photothèque</span>
+          </button>
+
+          {/* Vrai sélecteur de fichiers plus large (Fichiers/iCloud Drive, stockage cloud,
+              etc.), sans restriction de type — au cas où la photo voulue ne soit pas dans la
+              vraie galerie photo elle-même. */}
+          <button
+            onClick={() => filesInputRef.current?.click()}
+            style={{
+              aspectRatio: "1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              background: COLORS.surfaceAlt,
+              border: `2px solid ${COLORS.paperAlt}`,
+              borderRadius: "12px",
+              cursor: "pointer",
+              padding: "6px",
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={COLORS.ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+            </svg>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink, textAlign: "center" }}>Choisir un fichier</span>
+          </button>
         </div>
 
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          style={{ marginTop: "14px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
-        >
-          Choisir une autre photo depuis mon téléphone
-        </button>
-
         <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={handlePick} />
-        <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePick} />
+        <input ref={galleryInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePick} />
+        <input ref={filesInputRef} type="file" style={{ display: "none" }} onChange={handlePick} />
       </div>
     );
   }
