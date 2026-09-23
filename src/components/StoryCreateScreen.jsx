@@ -292,50 +292,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
         </svg>
       </button>
 
-      <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        <RoundButton onClick={() => setTagsSheetOpen(true)} title="Tags">
-          <TagIcon />
-        </RoundButton>
-
-        {selectedTagKey && tagPositions[selectedTagKey] && (
-          // Couleur/inversion du vrai tag sélectionné (tap sur sa vraie pastille) — juste sous
-          // le bouton Tags, pour que le vrai lien entre les deux saute aux yeux. Gérées ici
-          // plutôt que dans la vraie mini-page du bas, pour que le tag reste visible sur
-          // l'image pendant le réglage plutôt que d'être caché ou assombri derrière elle.
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(13,27,42,0.75)", borderRadius: "22px", padding: "8px" }}>
-            <input
-              type="color"
-              value={tagPositions[selectedTagKey].color || "#F2F2E8"}
-              onChange={(e) => setTagPositions((prev) => ({ ...prev, [selectedTagKey]: { ...prev[selectedTagKey], color: e.target.value } }))}
-              title="Couleur du tag"
-              aria-label="Couleur du tag"
-              style={{ width: "28px", height: "28px", borderRadius: "50%", border: "2px solid #fff", padding: 0, cursor: "pointer", WebkitAppearance: "none", appearance: "none", overflow: "hidden", background: "none" }}
-            />
-            <button
-              onClick={() => setTagPositions((prev) => ({ ...prev, [selectedTagKey]: { ...prev[selectedTagKey], invert: !prev[selectedTagKey].invert } }))}
-              title="Inverser les couleurs"
-              aria-label="Inverser les couleurs"
-              style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "50%",
-                border: `2px solid ${tagPositions[selectedTagKey].invert ? "#39FF66" : "#fff"}`,
-                background: tagPositions[selectedTagKey].invert ? "#39FF66" : "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: 0,
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke={tagPositions[selectedTagKey].invert ? "#0D1B2A" : "#fff"} strokeWidth="2" />
-                <path d="M12 3a9 9 0 0 1 0 18Z" fill={tagPositions[selectedTagKey].invert ? "#0D1B2A" : "#fff"} />
-              </svg>
-            </button>
-          </div>
-        )}
-
+      <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
         <input
           type="color"
           value={bgColor}
@@ -355,17 +312,79 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             background: "none",
           }}
         />
+
+        <div>
+          <RoundButton onClick={() => setTagsSheetOpen(true)} title="Tags">
+            <TagIcon />
+          </RoundButton>
+
+          {selectedTagKey && tagPositions[selectedTagKey] && (
+            // Couleur/inversion du vrai tag sélectionné (tap sur sa vraie pastille) — fusionnée
+            // avec le bouton Tags juste au-dessus (aucun vrai espace entre les deux), pour que
+            // le vrai lien saute aux yeux. Gérées ici plutôt que dans la vraie mini-page du bas,
+            // pour que le tag reste visible sur l'image pendant le réglage plutôt que d'être
+            // caché ou assombri derrière elle.
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(13,27,42,0.75)", borderRadius: "0 0 22px 22px", padding: "10px 8px 8px" }}>
+              <input
+                type="color"
+                value={tagPositions[selectedTagKey].color || "#F2F2E8"}
+                onChange={(e) => setTagPositions((prev) => ({ ...prev, [selectedTagKey]: { ...prev[selectedTagKey], color: e.target.value } }))}
+                title="Couleur du tag"
+                aria-label="Couleur du tag"
+                style={{ width: "28px", height: "28px", borderRadius: "50%", border: "2px solid #fff", padding: 0, cursor: "pointer", WebkitAppearance: "none", appearance: "none", overflow: "hidden", background: "none" }}
+              />
+              <button
+                onClick={() => setTagPositions((prev) => ({ ...prev, [selectedTagKey]: { ...prev[selectedTagKey], invert: !prev[selectedTagKey].invert } }))}
+                title="Inverser les couleurs"
+                aria-label="Inverser les couleurs"
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "50%",
+                  border: `2px solid ${tagPositions[selectedTagKey].invert ? "#39FF66" : "#fff"}`,
+                  background: tagPositions[selectedTagKey].invert ? "#39FF66" : "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0,
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke={tagPositions[selectedTagKey].invert ? "#0D1B2A" : "#fff"} strokeWidth="2" />
+                  <path d="M12 3a9 9 0 0 1 0 18Z" fill={tagPositions[selectedTagKey].invert ? "#0D1B2A" : "#fff"} />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Publier, séparé de la pile d'outils du haut — en bas à droite, vraie flèche pointant
           vers la droite plutôt que vers le haut. */}
       <div style={{ position: "absolute", bottom: "20px", right: "16px" }}>
-        <RoundButton onClick={uploading ? undefined : publish} title="Publier">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: uploading ? 0.4 : 1 }}>
+        <button
+          onClick={uploading ? undefined : publish}
+          title="Publier"
+          aria-label="Publier"
+          style={{
+            width: "60px",
+            height: "60px",
+            borderRadius: "50%",
+            border: "none",
+            background: "#39FF66",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            opacity: uploading ? 0.6 : 1,
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D1B2A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
           </svg>
-        </RoundButton>
+        </button>
       </div>
 
       {error && (
