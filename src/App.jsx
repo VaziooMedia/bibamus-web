@@ -112,6 +112,7 @@ import {
   geocodeCityForProfile,
   loadRoomStories,
   loadPulseStories,
+  loadStoryById,
   emitEvent,
   updateMyProfile,
   signOut,
@@ -3348,6 +3349,15 @@ export default function App() {
               <NotificationsFeedScreen
                 onBack={() => setScreen("home")}
                 onRespondSalonInvite={respondSalonInviteFn}
+                myGender={profile.gender}
+                onOpenTaggedStory={async (storyId) => {
+                  const story = await loadStoryById(storyId);
+                  if (story) {
+                    setViewedStoryAuthor([story]);
+                  } else {
+                    alert("Cette Story n'est plus disponible.");
+                  }
+                }}
                 onOpenPulseEntry={(entryId, openComments) => {
                   setFocusPulseEntry({ id: entryId, openComments: !!openComments });
                   setScreen("bibaPulse");

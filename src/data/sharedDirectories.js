@@ -1483,6 +1483,37 @@ export async function loadPulseStories() {
   return enrichStoriesWithTags(mapped);
 }
 
+// Charge une seule Story par son id — pour ouvrir directement celle visée par une notification
+// de tag, sans obliger la personne à la retrouver dans la barre de Stories. Reste consultable
+// même après l'expiration de 24h.
+export async function loadStoryById(id) {
+  const { data, error } = await supabase.rpc("get_story_by_id", { p_id: id });
+  if (error || !data || data.length === 0) {
+    if (error) console.error("loadStoryById:", error);
+    return null;
+  }
+  const s = data[0];
+  const mapped = {
+    id: s.id,
+    authorId: s.author_id,
+    authorName: s.author_name,
+    authorLastName: s.author_last_name,
+    authorAvatarUrl: s.author_avatar_url,
+    mediaType: s.media_type,
+    mediaUrl: s.media_url,
+    caption: s.caption,
+    createdAt: s.created_at,
+    contextType: s.context_type,
+    contextId: s.context_id,
+    locationName: s.location_name,
+    sharedToPulse: s.shared_to_pulse,
+    bixCount: 0,
+    iBixed: false,
+  };
+  const [enriched] = await enrichStoriesWithTags([mapped]);
+  return enriched;
+}
+
 export async function setStoryPulseSharing(storyId, shared) {
   const { data, error } = await supabase.rpc("set_story_pulse_sharing", { p_story_id: storyId, p_shared: shared });
   if (error) return { error: error.message };

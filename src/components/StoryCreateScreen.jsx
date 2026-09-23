@@ -247,7 +247,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
       // Prévient le vrai Bibax tagué — un tag reste discret jusqu'à ce que la personne le
       // sache réellement.
       if (selectedTags.bibax?.id) {
-        sendNotification(selectedTags.bibax.id, "story_tag", "story", result.id, "vous a tagué(e) dans une Story");
+        sendNotification(selectedTags.bibax.id, "story_tag", "story", result.id);
       }
       onPublished();
     } catch (e) {

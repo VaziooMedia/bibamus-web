@@ -13,7 +13,7 @@ import { loadBibroCodes } from "../data/profiles.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 
-const TYPE_LABELS = {
+const TYPE_LABELS = (myGender) => ({
   pulse_bix: "a Bixé votre publication",
   pulse_comment: "a commenté votre publication",
   pulse_sante: "a dit Cheers à votre publication",
@@ -21,7 +21,10 @@ const TYPE_LABELS = {
   bibax_accepted: "a accepté votre demande Bibax",
   salon_invite: "t'invite à rejoindre un BibaRoom",
   salon_invite_accepted: "a rejoint ton BibaRoom",
-};
+  // La vraie conjugaison suit le vrai genre du destinataire (celui qui reçoit et lit la
+  // notification), pas celui de l'auteur du tag.
+  story_tag: `vous a ${myGender === "female" ? "taguée" : "tagué"} dans une Story`,
+});
 
 // Notifications qui parlent d'une personne plutôt que d'une publication : y toucher ouvre sa
 // fiche.
@@ -38,7 +41,7 @@ function timeAgo(iso) {
   return `Il y a ${days} j`;
 }
 
-export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxProfile, onRespondSalonInvite }) {
+export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxProfile, onRespondSalonInvite, myGender, onOpenTaggedStory }) {
   const [notifications, setNotifications] = useState(null);
   const [pendingBibax, setPendingBibax] = useState([]);
   const [respondedIds, setRespondedIds] = useState({});
@@ -81,6 +84,9 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
     // Les notifications liées à une personne ouvrent sa fiche à partir de son compte. L'ancien
     // code passait entityId, qui est l'identifiant de la relation et non un code Bibax.
     else if (PROFILE_TYPES.includes(n.type) || n.entityType === "bibax_relationship") openProfile(n.actorId);
+    // Un tag dans une Story ouvre directement cette Story précise — sinon la personne devrait
+    // la retrouver elle-même dans la barre de Stories, parmi toutes les autres.
+    else if (n.type === "story_tag" && n.entityId && onOpenTaggedStory) onOpenTaggedStory(n.entityId);
   };
 
   const respondBibax = async (n, accept) => {
@@ -161,7 +167,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                   />
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: "14px" }}>
-                      <strong>{[n.actorName, n.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}</strong> {TYPE_LABELS[n.type] || n.type}
+                      <strong>{[n.actorName, n.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}</strong> {TYPE_LABELS(myGender)[n.type] || n.type}
                     </span>
                     <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{timeAgo(n.createdAt)}</div>
                     {n.postPreview && (
