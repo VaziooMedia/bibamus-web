@@ -73,25 +73,44 @@ function TagPicker({ label, searchFn, selected, onSelect }) {
 // le tag actif, à côté de son champ. Même vrai correctif de déclenchement que pour le fond :
 // une vraie taille non nulle plutôt que 0, sinon certains vrais navigateurs mobiles refusent
 // d'ouvrir le vrai sélecteur natif.
-function TagColorButton({ pos, onChange }) {
-  const inputRef = useRef(null);
+// Vraie couleur (input direct, pas de vrai bouton-proxy vers un vrai input caché — ce schéma
+// est peu fiable sur vrai mobile pour type="color") + vraie inversion, propres à un tag (ou à
+// la légende) — n'apparaissent qu'une fois le tag actif.
+function TagColorControls({ pos, onChange }) {
   if (!pos) return null;
   return (
-    <>
-      <button
-        onClick={() => inputRef.current?.click()}
-        title="Couleur du tag"
-        aria-label="Couleur du tag"
-        style={{ width: "26px", height: "26px", borderRadius: "50%", background: pos.color || "#F2F2E8", border: `2px solid ${COLORS.paperAlt}`, cursor: "pointer", flexShrink: 0, padding: 0 }}
-      />
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
       <input
-        ref={inputRef}
         type="color"
         value={pos.color || "#F2F2E8"}
         onChange={(e) => onChange({ ...pos, color: e.target.value })}
-        style={{ position: "fixed", top: 0, left: "-9999px", width: "1px", height: "1px", opacity: 0, border: "none", padding: 0 }}
+        title="Couleur du tag"
+        aria-label="Couleur du tag"
+        style={{ width: "28px", height: "28px", borderRadius: "50%", border: `2px solid ${COLORS.paperAlt}`, padding: 0, cursor: "pointer", WebkitAppearance: "none", appearance: "none", overflow: "hidden", background: "none" }}
       />
-    </>
+      <button
+        onClick={() => onChange({ ...pos, invert: !pos.invert })}
+        title="Inverser les couleurs"
+        aria-label="Inverser les couleurs"
+        style={{
+          width: "28px",
+          height: "28px",
+          borderRadius: "50%",
+          border: `2px solid ${pos.invert ? COLORS.amber : COLORS.paperAlt}`,
+          background: pos.invert ? COLORS.amber : "none",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={pos.invert ? COLORS.paper : COLORS.inkSoft} strokeWidth="2" />
+          <path d="M12 3a9 9 0 0 1 0 18Z" fill={pos.invert ? COLORS.paper : COLORS.inkSoft} />
+        </svg>
+      </button>
+    </div>
   );
 }
 
@@ -150,7 +169,6 @@ function TagIcon() {
 // dans une vraie mini-page qui glisse depuis le bas, sans jamais faire défiler la page entière.
 export function StoryCreateScreen({ contextType, contextId, venueName, myUserId, onBack, onPublished }) {
   const fileInputRef = useRef(null);
-  const colorInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [tagsSheetOpen, setTagsSheetOpen] = useState(false);
   const [caption, setCaption] = useState("");
@@ -308,20 +326,29 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             <polyline points="5 12 12 5 19 12" />
           </svg>
         </RoundButton>
-        <RoundButton onClick={() => colorInputRef.current?.click()} title="Couleur de fond">
-          <span style={{ width: "22px", height: "22px", borderRadius: "50%", background: bgColor, border: "2px solid #fff", display: "block" }} />
-        </RoundButton>
+        <input
+          type="color"
+          value={bgColor}
+          onChange={(e) => setBgColor(e.target.value)}
+          title="Couleur de fond"
+          aria-label="Couleur de fond"
+          style={{
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            border: "2px solid #fff",
+            padding: 0,
+            cursor: "pointer",
+            WebkitAppearance: "none",
+            appearance: "none",
+            overflow: "hidden",
+            background: "none",
+          }}
+        />
         <RoundButton onClick={() => setTagsSheetOpen(true)} title="Tags">
           <TagIcon />
         </RoundButton>
       </div>
-      <input
-        ref={colorInputRef}
-        type="color"
-        value={bgColor}
-        onChange={(e) => setBgColor(e.target.value)}
-        style={{ position: "fixed", top: 0, left: "-9999px", width: "1px", height: "1px", opacity: 0, border: "none", padding: 0 }}
-      />
 
       {error && (
         <div style={{ position: "absolute", bottom: "20px", left: "16px", right: "16px", background: "rgba(255,59,78,0.95)", borderRadius: "10px", padding: "10px 14px" }}>
@@ -345,7 +372,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
                   placeholder="Ajouter une légende (optionnel)"
                   style={{ flex: 1, minWidth: 0, padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", background: COLORS.surface, color: COLORS.ink, outline: "none" }}
                 />
-                <TagColorButton pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
+                <TagColorControls pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
               </div>
               {tagPositions.caption && <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>Un doigt pour déplacer la légende sur l'image, deux doigts pour la redimensionner et la faire pivoter.</p>}
 
@@ -354,7 +381,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <TagPicker label={t.label} searchFn={t.searchFn} selected={selectedTags[t.key]} onSelect={(item) => setSelectedTags((prev) => ({ ...prev, [t.key]: item }))} />
                   </div>
-                  <TagColorButton pos={tagPositions[t.key]} onChange={(p) => setTagPositions((prev) => ({ ...prev, [t.key]: p }))} />
+                  <TagColorControls pos={tagPositions[t.key]} onChange={(p) => setTagPositions((prev) => ({ ...prev, [t.key]: p }))} />
                 </div>
               ))}
 
