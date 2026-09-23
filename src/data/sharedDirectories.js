@@ -1391,7 +1391,7 @@ async function enrichStoriesWithTags(stories) {
     .from("stories")
     .select("id, tag_positions, tagged_venue_id, tagged_drink_id, tagged_brand_id, tagged_producer_id, tagged_bibax_code")
     .in("id", ids);
-  console.log("[DEBUG enrichStoriesWithTags] tagRows:", tagRows, "error:", error);
+  console.log("[DEBUG enrichStoriesWithTags] tagRows:\n" + JSON.stringify(tagRows, null, 2) + "\nerror:\n" + JSON.stringify(error, null, 2));
   if (error) {
     console.error("enrichStoriesWithTags:", error);
     return stories;
@@ -1434,8 +1434,8 @@ async function enrichStoriesWithTags(stories) {
       bibaxProfileViaTagAllowed: bibax ? bibax.allow_profile_via_tag !== false : true,
     };
   });
-  console.log("[DEBUG enrichStoriesWithTags] venues/drinks/brands/producers/bibaxRows:", venues, drinks, brands, producers, bibaxRows);
-  console.log("[DEBUG enrichStoriesWithTags] result:", result);
+  console.log("[DEBUG enrichStoriesWithTags] venues/drinks/brands/producers/bibaxRows:\n" + JSON.stringify({ venues, drinks, brands, producers, bibaxRows }, null, 2));
+  console.log("[DEBUG enrichStoriesWithTags] result:\n" + JSON.stringify(result, null, 2));
   return result;
 }
 
