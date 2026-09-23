@@ -75,6 +75,7 @@ export async function submitClaim(entityType, entityId, entityName, { companyNam
     justification,
     status: "pending",
   });
+  console.log("[DEBUG submitClaim] error:\n" + JSON.stringify(error, null, 2));
   if (error) return { error: error.message };
   return { ok: true };
 }
