@@ -137,6 +137,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const editorRef = useRef(null);
+  const captionInputRef = useRef(null);
 
   const activeLabelFor = (key) => {
     if (key === "caption") return caption.trim() || null;
@@ -375,6 +376,31 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
         </div>
       </div>
 
+      {/* Légende — tout en bas, à gauche de Publier, plutôt que dans la mini-page des tags :
+          c'est ce qu'on tape le plus souvent, autant y accéder sans avoir à ouvrir quoi que ce
+          soit. La vraie flèche referme le clavier pour voir tout de suite le vrai tag apparu
+          sur l'image (déjà placé automatiquement dès que le texte n'est plus vide). */}
+      <div style={{ position: "absolute", bottom: "20px", left: "16px", right: "90px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <input
+          ref={captionInputRef}
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
+          placeholder="Ajouter une légende (optionnel)"
+          style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "12px 14px", borderRadius: "999px", border: "none", fontSize: "14px", background: "rgba(13,27,42,0.75)", color: "#fff", outline: "none" }}
+        />
+        <button
+          onClick={() => captionInputRef.current?.blur()}
+          title="Envoyer sur l'image"
+          aria-label="Envoyer sur l'image"
+          style={{ width: "40px", height: "40px", borderRadius: "50%", border: "none", background: "#39FF66", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0D1B2A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5" />
+            <polyline points="5 12 12 5 19 12" />
+          </svg>
+        </button>
+      </div>
+
       {/* Publier, séparé de la pile d'outils du haut — en bas à droite, vraie flèche pointant
           vers la droite plutôt que vers le haut. */}
       <div style={{ position: "absolute", bottom: "20px", right: "16px" }}>
@@ -417,12 +443,6 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
 
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <input
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Ajouter une légende (optionnel)"
-                style={{ padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", background: COLORS.surface, color: COLORS.ink, outline: "none" }}
-              />
               {tagPositions.caption && (
                 <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>
                   Un doigt pour déplacer la légende sur l'image, deux doigts pour la redimensionner et la faire pivoter — tapez dessus pour en régler la couleur.
