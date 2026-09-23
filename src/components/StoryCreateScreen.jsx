@@ -126,6 +126,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [tagsSheetOpen, setTagsSheetOpen] = useState(false);
+  const [imageLocked, setImageLocked] = useState(false);
   const [selectedTagKey, setSelectedTagKey] = useState(null);
   const [caption, setCaption] = useState("");
   const [bgColor, setBgColor] = useState("#0D1B2A");
@@ -251,7 +252,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#000", zIndex: 100 }}>
-      <MobileImageEditor ref={editorRef} file={file} interactive={!tagsSheetOpen} backgroundColor={bgColor}>
+      <MobileImageEditor ref={editorRef} file={file} interactive={!tagsSheetOpen && !imageLocked} backgroundColor={bgColor}>
         {tagPositions.caption && caption.trim() && (
           <MobileTagPill
             label={caption.trim()}
@@ -292,7 +293,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
         </svg>
       </button>
 
-      <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+      <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "20px" }}>
         <input
           type="color"
           value={bgColor}
@@ -312,6 +313,20 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             background: "none",
           }}
         />
+
+        <RoundButton onClick={() => setImageLocked((v) => !v)} title={imageLocked ? "Déverrouiller l'image" : "Verrouiller l'image"}>
+          {imageLocked ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="11" width="14" height="10" rx="2" />
+              <path d="M8 11V7a4 4 0 0 1 8 0" />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="11" width="14" height="10" rx="2" />
+              <path d="M8 11V7a4 4 0 0 1 7.4-2" />
+            </svg>
+          )}
+        </RoundButton>
 
         <div>
           <RoundButton onClick={() => setTagsSheetOpen(true)} title="Tags">
