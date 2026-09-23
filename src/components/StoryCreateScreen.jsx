@@ -380,25 +380,51 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
           c'est ce qu'on tape le plus souvent, autant y accéder sans avoir à ouvrir quoi que ce
           soit. La vraie flèche referme le clavier pour voir tout de suite le vrai tag apparu
           sur l'image (déjà placé automatiquement dès que le texte n'est plus vide). */}
-      <div style={{ position: "absolute", bottom: "20px", left: "16px", right: "90px", display: "flex", alignItems: "center", gap: "8px" }}>
-        <input
-          ref={captionInputRef}
-          value={caption}
-          onChange={(e) => setCaption(e.target.value)}
-          placeholder="Ajouter une légende"
-          style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "12px 14px", borderRadius: "999px", border: "none", fontSize: "14px", background: "rgba(13,27,42,0.75)", color: "#fff", outline: "none" }}
-        />
-        <button
-          onClick={() => captionInputRef.current?.blur()}
-          title="Envoyer sur l'image"
-          aria-label="Envoyer sur l'image"
-          style={{ width: "40px", height: "40px", border: "none", background: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, padding: 0 }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="19" x2="12" y2="5" />
-            <polyline points="5 12 12 5 19 12" />
-          </svg>
-        </button>
+      <div style={{ position: "absolute", bottom: "20px", left: "16px", right: "90px" }}>
+        <div style={{ position: "relative" }}>
+          <input
+            ref={captionInputRef}
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="Ajouter une légende"
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "12px 46px 12px 14px",
+              borderRadius: "999px",
+              border: "none",
+              fontSize: "14px",
+              background: "rgba(13,27,42,0.75)",
+              color: "#fff",
+              outline: "none",
+            }}
+          />
+          <button
+            onClick={() => captionInputRef.current?.blur()}
+            title="Envoyer sur l'image"
+            aria-label="Envoyer sur l'image"
+            style={{
+              position: "absolute",
+              top: "50%",
+              right: "4px",
+              transform: "translateY(-50%)",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              border: "none",
+              background: "rgba(255,255,255,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5" />
+              <polyline points="5 12 12 5 19 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Publier, séparé de la pile d'outils du haut — en bas à droite, vraie flèche pointant

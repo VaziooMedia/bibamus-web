@@ -80,20 +80,30 @@ export function MobileTagPill({ label, symbol = "#", pos, onChange, selected, on
         left: `${pos.x * 100}%`,
         top: `${pos.y * 100}%`,
         transform: `translate(-50%, -50%) rotate(${pos.rotation || 0}deg) scale(${pos.scale || 1})`,
-        background: inverted ? color : `${color}33`,
-        border: `1.5px solid ${color}`,
-        borderRadius: "999px",
-        padding: "6px 14px",
-        fontSize: "14px",
-        fontWeight: 700,
-        color: inverted ? contrastColor(color) : color,
-        whiteSpace: "nowrap",
+        // Vraie zone de toucher bien plus grande que la vraie pastille visible en dessous —
+        // sans ce vrai coussin invisible, poser 2 vrais doigts sur un vrai petit tag pour le
+        // pincer/pivoter est très difficile (les doigts sont bien plus larges que lui).
+        padding: "22px",
         touchAction: "none",
         userSelect: "none",
-        boxShadow: selected ? "0 0 0 3px #39FF66" : "none",
       }}
     >
-      {symbol ? `${symbol} ${label}` : label}
+      <div
+        style={{
+          background: inverted ? color : `${color}33`,
+          border: `1.5px solid ${color}`,
+          borderRadius: "999px",
+          padding: "6px 14px",
+          fontSize: "14px",
+          fontWeight: 700,
+          color: inverted ? contrastColor(color) : color,
+          whiteSpace: "nowrap",
+          boxShadow: selected ? "0 0 0 3px #39FF66" : "none",
+          pointerEvents: "none",
+        }}
+      >
+        {symbol ? `${symbol} ${label}` : label}
+      </div>
     </div>
   );
 }
