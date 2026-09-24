@@ -93,82 +93,82 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
               style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", color: COLORS.ink, background: "none", boxSizing: "border-box", marginBottom: "14px" }}
             />
 
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Pays de la société (ou votre nationalité, si personne physique) *</p>
-            <div style={{ position: "relative", marginBottom: "14px" }}>
-              <button
-                type="button"
-                onClick={() => setCountryOpen((o) => !o)}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "12px 14px",
-                  borderRadius: "10px",
-                  border: `2px solid ${COLORS.paperAlt}`,
-                  fontSize: "14px",
-                  color: COLORS.ink,
-                  background: "none",
-                  boxSizing: "border-box",
-                  cursor: "pointer",
-                  textAlign: "left",
-                }}
-              >
-                <CountryFlagImg country={country} size={16} />
-                <span style={{ flex: 1 }}>{country}</span>
-                <span style={{ color: COLORS.inkSoft, fontSize: "12px" }}>▾</span>
-              </button>
-              {countryOpen && (
-                <div
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Numéro d'entreprise - Si disponible</p>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+              <div style={{ position: "relative", flexShrink: 0 }}>
+                <button
+                  type="button"
+                  onClick={() => setCountryOpen((o) => !o)}
                   style={{
-                    position: "absolute",
-                    top: "calc(100% + 4px)",
-                    left: 0,
-                    right: 0,
-                    maxHeight: "220px",
-                    overflowY: "auto",
-                    background: COLORS.surface,
-                    border: `2px solid ${COLORS.paperAlt}`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    height: "100%",
+                    padding: "12px 10px",
                     borderRadius: "10px",
-                    zIndex: 20,
+                    border: `2px solid ${COLORS.paperAlt}`,
+                    fontSize: "14px",
+                    color: COLORS.ink,
+                    background: "none",
+                    boxSizing: "border-box",
+                    cursor: "pointer",
                   }}
                 >
-                  {COUNTRIES.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => {
-                        setCountry(c);
-                        setCountryOpen(false);
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        width: "100%",
-                        padding: "10px 14px",
-                        background: "none",
-                        border: "none",
-                        fontSize: "13.5px",
-                        color: COLORS.ink,
-                        cursor: "pointer",
-                        textAlign: "left",
-                      }}
-                    >
-                      <CountryFlagImg country={c} size={15} />
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              )}
+                  <CountryFlagImg country={country} size={15} />
+                  {(COUNTRY_ISO_CODES[country] || "").toUpperCase()}
+                  <span style={{ color: COLORS.inkSoft, fontSize: "11px" }}>▾</span>
+                </button>
+                {countryOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 4px)",
+                      left: 0,
+                      minWidth: "180px",
+                      maxHeight: "220px",
+                      overflowY: "auto",
+                      background: COLORS.surface,
+                      border: `2px solid ${COLORS.paperAlt}`,
+                      borderRadius: "10px",
+                      zIndex: 20,
+                    }}
+                  >
+                    {COUNTRIES.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => {
+                          setCountry(c);
+                          setCountryOpen(false);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          width: "100%",
+                          padding: "10px 14px",
+                          background: "none",
+                          border: "none",
+                          fontSize: "13.5px",
+                          color: COLORS.ink,
+                          cursor: "pointer",
+                          textAlign: "left",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <CountryFlagImg country={c} size={15} />
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <input
+                value={vatNumber}
+                onChange={(e) => setVatNumber(e.target.value)}
+                style={{ flex: 1, minWidth: 0, padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", color: COLORS.ink, background: "none", boxSizing: "border-box" }}
+              />
             </div>
-
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Numéro d'entreprise - Si disponible</p>
-            <input
-              value={vatNumber}
-              onChange={(e) => setVatNumber(e.target.value)}
-              style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", color: COLORS.ink, background: "none", boxSizing: "border-box", marginBottom: "14px" }}
-            />
 
             <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Administrateur de l'entreprise (1) - Si disponible</p>
             <input
