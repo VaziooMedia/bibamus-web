@@ -3450,7 +3450,13 @@ export default function App() {
               </div>
             )}
             </div>
-            <BottomNav screen={screen} onNavigate={setScreen} onGoToSessionHub={() => setScreen("sessionHub")} unreadNotifications={unreadNotificationsCount} />
+            <BottomNav
+              screen={screen}
+              onNavigate={setScreen}
+              onGoToSessionHub={() => setScreen("sessionHub")}
+              unreadNotifications={unreadNotificationsCount}
+              bibaPingVisible={featureFlags.nav_bibaping_visible !== false}
+            />
           </div>
         </div>
       </ProfileNavContext.Provider>

@@ -389,7 +389,7 @@ export function MoneyAmount({ value, currency, centered = false, jetonIconSize =
   );
 }
 
-export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifications = 0 }) {
+export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifications = 0, bibaPingVisible = true }) {
   // Messages non lus — chargé ici plutôt que reçu en propriété : la barre est présente sur
   // tous les écrans, c'est le seul endroit qui en a besoin en permanence.
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -490,6 +490,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         </span>
       </button>
 
+      {bibaPingVisible && (
       <button
         onClick={() => onNavigate("bibaPing")}
         style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1 }}
@@ -530,6 +531,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
           <span style={{ color: active("bibaPing") ? COLORS.pinkFluo : COLORS.amber }}>Ping</span>
         </span>
       </button>
+      )}
 
       <button
         onClick={() => onNavigate("notificationsFeed")}
