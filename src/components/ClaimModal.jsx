@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, COUNTRIES } from "../constants.js";
 import { submitClaim } from "../data/sharedDirectories.js";
+import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 
 // entityType: "venue" | "drink" | "brand" | "producer"
 export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUserId, onClose }) {
   const [companyName, setCompanyName] = useState("");
+  const [country, setCountry] = useState("Belgique");
+  const [countryOpen, setCountryOpen] = useState(false);
   const [vatNumber, setVatNumber] = useState("");
   const [officers, setOfficers] = useState("");
   const [justification, setJustification] = useState("");
@@ -21,7 +24,13 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
       entityType,
       entityId,
       entityName,
-      { companyName: companyName.trim(), vatNumber: vatNumber.trim(), officers: officers.trim(), justification: justification.trim() },
+      {
+        companyName: companyName.trim(),
+        claimantCountry: (COUNTRY_ISO_CODES[country] || "").toUpperCase(),
+        vatNumber: vatNumber.trim(),
+        officers: officers.trim(),
+        justification: justification.trim(),
+      },
       myUserId,
       myBibroCode
     );
@@ -83,6 +92,76 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
               onChange={(e) => setCompanyName(e.target.value)}
               style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", color: COLORS.ink, background: "none", boxSizing: "border-box", marginBottom: "14px" }}
             />
+
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Pays de la société (ou votre nationalité, si personne physique) *</p>
+            <div style={{ position: "relative", marginBottom: "14px" }}>
+              <button
+                type="button"
+                onClick={() => setCountryOpen((o) => !o)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "12px 14px",
+                  borderRadius: "10px",
+                  border: `2px solid ${COLORS.paperAlt}`,
+                  fontSize: "14px",
+                  color: COLORS.ink,
+                  background: "none",
+                  boxSizing: "border-box",
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <CountryFlagImg country={country} size={16} />
+                <span style={{ flex: 1 }}>{country}</span>
+                <span style={{ color: COLORS.inkSoft, fontSize: "12px" }}>▾</span>
+              </button>
+              {countryOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 4px)",
+                    left: 0,
+                    right: 0,
+                    maxHeight: "220px",
+                    overflowY: "auto",
+                    background: COLORS.surface,
+                    border: `2px solid ${COLORS.paperAlt}`,
+                    borderRadius: "10px",
+                    zIndex: 20,
+                  }}
+                >
+                  {COUNTRIES.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => {
+                        setCountry(c);
+                        setCountryOpen(false);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        width: "100%",
+                        padding: "10px 14px",
+                        background: "none",
+                        border: "none",
+                        fontSize: "13.5px",
+                        color: COLORS.ink,
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      <CountryFlagImg country={c} size={15} />
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Numéro d'entreprise - Si disponible</p>
             <input

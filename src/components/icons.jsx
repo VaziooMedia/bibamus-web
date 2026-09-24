@@ -109,7 +109,7 @@ const FLAG_URLS_BY_CODE = {
 // Mappe chaque nom de pays (tel que stocké dans COUNTRY_FLAGS) vers son code ISO à 2 lettres,
 // correspondant aux fichiers SVG dans src/assets/flags/. L'Angleterre et l'Écosse utilisent les
 // drapeaux de nation constitutive du Royaume-Uni plutôt que le drapeau britannique générique.
-const COUNTRY_ISO_CODES = {
+export const COUNTRY_ISO_CODES = {
   Belgique: "be",
   France: "fr",
   Luxembourg: "lu",

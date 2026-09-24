@@ -61,7 +61,7 @@ export async function loadFeatureFlags(countryCode) {
 // continuer à fonctionner.
 // Analytics — suivi simple d'usage (vues d'écran, actions clés), consultable côté plateforme
 // de gestion. N'échoue jamais bruyamment : un souci ici ne doit pas gêner le reste de l'app.
-export async function submitClaim(entityType, entityId, entityName, { companyName, vatNumber, officers, justification }, claimantId, claimantBibroCode) {
+export async function submitClaim(entityType, entityId, entityName, { companyName, claimantCountry, vatNumber, officers, justification }, claimantId, claimantBibroCode) {
   const { error } = await supabase.from("entity_claims").insert({
     id: `claim-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     entity_type: entityType,
@@ -69,13 +69,13 @@ export async function submitClaim(entityType, entityId, entityName, { companyNam
     entity_name: entityName,
     claimant_id: claimantId,
     claimant_bibro_code: claimantBibroCode,
+    claimant_country: claimantCountry || null,
     company_name: companyName,
     vat_number: vatNumber || null,
     officers: officers || null,
     justification,
     status: "pending",
   });
-  console.log("[DEBUG submitClaim] error:\n" + JSON.stringify(error, null, 2));
   if (error) return { error: error.message };
   return { ok: true };
 }
