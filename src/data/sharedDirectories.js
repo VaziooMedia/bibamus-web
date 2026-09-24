@@ -2384,7 +2384,11 @@ export async function loadBrandsByIds(ids) {
 export async function searchBrands(query, limit = 30) {
   const q = (query || "").trim();
   if (!q) return [];
-  const { data, error } = await supabase.from("brands_directory").select("*").ilike("name", `%${q}%`).limit(limit);
+  const { data, error } = await supabase
+    .from("brands_directory")
+    .select("*")
+    .or(`name.ilike.%${q}%,alternate_name.ilike.%${q}%,aliases.cs.{${q}}`)
+    .limit(limit);
   if (error) {
     console.error("searchBrands:", error);
     return [];
@@ -2395,7 +2399,11 @@ export async function searchBrands(query, limit = 30) {
 export async function searchBreweries(query, limit = 30) {
   const q = (query || "").trim();
   if (!q) return [];
-  const { data, error } = await supabase.from("breweries_directory").select("*").ilike("name", `%${q}%`).limit(limit);
+  const { data, error } = await supabase
+    .from("breweries_directory")
+    .select("*")
+    .or(`name.ilike.%${q}%,alternate_name.ilike.%${q}%,aliases.cs.{${q}}`)
+    .limit(limit);
   if (error) {
     console.error("searchBreweries:", error);
     return [];
