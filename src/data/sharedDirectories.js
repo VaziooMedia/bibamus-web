@@ -12,6 +12,7 @@
 // ============================================================
 
 import { supabase } from "../supabaseClient.js";
+import { normalizeSearchText } from "../utils.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
@@ -2387,7 +2388,7 @@ export async function searchBrands(query, limit = 30) {
   const { data, error } = await supabase
     .from("brands_directory")
     .select("*")
-    .or(`name.ilike.%${q}%,alternate_name.ilike.%${q}%,aliases.cs.{${q}}`)
+    .ilike("search_text", `%${normalizeSearchText(q)}%`)
     .limit(limit);
   if (error) {
     console.error("searchBrands:", error);
@@ -2402,7 +2403,7 @@ export async function searchBreweries(query, limit = 30) {
   const { data, error } = await supabase
     .from("breweries_directory")
     .select("*")
-    .or(`name.ilike.%${q}%,alternate_name.ilike.%${q}%,aliases.cs.{${q}}`)
+    .ilike("search_text", `%${normalizeSearchText(q)}%`)
     .limit(limit);
   if (error) {
     console.error("searchBreweries:", error);

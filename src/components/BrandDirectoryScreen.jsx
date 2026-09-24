@@ -10,6 +10,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { loadBrandsDirectory, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
+import { normalizeSearchText } from "../utils.js";
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
@@ -33,7 +34,7 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, isAdmin, addI
     });
   }, [refreshTick]);
 
-  const q = debouncedQuery.trim().toLowerCase();
+  const q = normalizeSearchText(debouncedQuery);
   const searching = q.length > 0;
 
   const countryCounts = useMemo(() => {
@@ -50,7 +51,9 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, isAdmin, addI
 
   const items = useMemo(() => {
     if (searching) {
-      return all.filter((b) => b.name.toLowerCase().includes(q));
+      return all.filter((b) =>
+        [b.name, b.alternateName, ...(b.aliases || []), ...(b.translations || []).map((t) => t.value)].some((v) => v && normalizeSearchText(v).includes(q))
+      );
     }
     if (activeCountry) {
       return all.filter((b) => b.originCountry === activeCountry).sort((a, b) => a.name.localeCompare(b.name));

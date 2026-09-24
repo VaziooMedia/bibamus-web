@@ -492,3 +492,22 @@ export function displayName(entity, appLanguageCode) {
   }
   return entity.name;
 }
+
+// Vraie normalisation de recherche — pour retrouver une fiche même sans taper le vrai nom
+// exact (accents, tirets, abréviations courantes). Reproduit côté client la vraie même vraie
+// logique que la vraie colonne search_text calculée en base (voir migration SQL dédiée), pour
+// que les vraies recherches purement locales (déjà en mémoire) se comportent pareil que les
+// vraies recherches côté serveur.
+export function normalizeSearchText(str) {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // accents (Jägermeister → jagermeister)
+    .replace(/[-'’`]/g, " ") // tirets/apostrophes → espace (Belle-Vue → belle vue)
+    .replace(/\./g, "") // points (St. → St)
+    .replace(/\bsainte\b/g, "ste")
+    .replace(/\bsaint\b/g, "st") // Saint ↔ St
+    .replace(/\s+/g, " ")
+    .trim();
+}
