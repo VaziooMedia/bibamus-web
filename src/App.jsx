@@ -1668,6 +1668,7 @@ export default function App() {
     emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId, skipPulse: !publishToPulse });
     // Persistance réelle en base — c'est elle qui autorise ensuite à laisser un avis sur ce lieu.
     await recordVenueCheckIn(venueId);
+    trackEvent("place_checked", "venue", profile.myBibroCode);
   };
 
   // À partir du 2e check-in, la publication BibaPulse est confirmée séparément (case cochée
@@ -1682,6 +1683,7 @@ export default function App() {
   const checkInDrink = async (drinkId, venueId, { publishToPulse = true, volumeCl = null } = {}) => {
     emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: !publishToPulse });
     await recordDrinkCheckIn(drinkId, venueId, volumeCl);
+    trackEvent("drink_checked", "drink", profile.myBibroCode);
     if (publishToPulse) publishDrinkCheckInToPulse(drinkId, venueId);
   };
 
@@ -2186,6 +2188,7 @@ export default function App() {
               <SubmitVenueWizardScreen
                 onDone={(createdId) => {
                   emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: createdId });
+                  trackEvent("venue_added", "venue", profile.myBibroCode);
                   setScreen("venueDirectory");
                 }}
                 onCancel={() => setScreen("venueDirectory")}
@@ -2217,6 +2220,7 @@ export default function App() {
                 brandsDirectory={brandsDirectory}
                 onDone={(createdId) => {
                   emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: createdId });
+                  trackEvent("drink_added", "drink", profile.myBibroCode);
                   setScreen("drinksDirectory");
                 }}
                 onCancel={() => setScreen("drinksDirectory")}
@@ -2982,6 +2986,7 @@ export default function App() {
                 breweriesDirectory={breweriesDirectory}
                 onDone={(createdId) => {
                   emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "brewery", entityId: createdId });
+                  trackEvent("producer_added", "brewery", profile.myBibroCode);
                   setScreen("breweryDirectory");
                 }}
                 onCancel={() => setScreen("breweryDirectory")}
@@ -3007,6 +3012,7 @@ export default function App() {
                 breweriesDirectory={breweriesDirectory}
                 onDone={(createdId) => {
                   emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "brand", entityId: createdId });
+                  trackEvent("brand_added", "brand", profile.myBibroCode);
                   setScreen("brandDirectory");
                 }}
                 onCancel={() => setScreen("brandDirectory")}

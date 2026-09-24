@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { COLORS, COUNTRIES } from "../constants.js";
-import { submitClaim } from "../data/sharedDirectories.js";
+import { submitClaim, trackEvent } from "../data/sharedDirectories.js";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 
 // entityType: "venue" | "drink" | "brand" | "producer"
@@ -40,6 +40,7 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
       return;
     }
     setDone(true);
+    trackEvent("claim_submitted", entityType, myBibroCode);
   };
 
   return (
