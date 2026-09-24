@@ -646,7 +646,6 @@ export const PROFILE_COUNTRIES = [
   { code: "suisse", fr: "Suisse" },
   { code: "tunisie", fr: "Tunisie" },
   { code: "venezuela", fr: "Vénézuéla" },
-  { code: "international", fr: "International" },
   { code: "autre", fr: "Autre" },
 ];
 
@@ -692,6 +691,7 @@ export const COUNTRIES = [
   "Suisse",
   "Tunisie",
   "Vénézuéla",
+  "International",
   "Autre",
 ];
 

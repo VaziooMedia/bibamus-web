@@ -167,6 +167,13 @@ export function CountryFlagImg({ country, size = 16, style }) {
       </span>
     );
   }
+  if (country === "Autre") {
+    return (
+      <span style={{ width: flagWidth, height: flagHeight, display: "inline-flex", alignItems: "center", justifyContent: "center", verticalAlign: "middle", ...style }}>
+        <NavIcon name="world" size={Math.round(size * 0.85)} color={COLORS.inkSoft} />
+      </span>
+    );
+  }
   if (country === "Non renseigné") {
     return (
       <span
