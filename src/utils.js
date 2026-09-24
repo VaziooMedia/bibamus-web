@@ -464,3 +464,31 @@ export const formatDuration = (startMs, endMs) => {
   if (m === 0) return `${h} h`;
   return `${h} h ${m}`;
 };
+
+// Vraie préparation pour le jour où l'app sera vraiment traduite (elle ne l'est pas encore —
+// aujourd'hui, tout le texte de l'interface reste en dur en français) : dès que app_language
+// sera vraiment exploité quelque part, cette vraie fonction résout le vrai nom à afficher pour
+// une vraie fiche (lieu/produit/marque/producteur), en préférant sa vraie traduction dans la
+// vraie langue active de l'utilisateur si elle existe, sinon son vrai nom par défaut.
+// appLanguageCode est le vrai code court stocké sur le profil (ex. "nl"), pas le vrai label
+// complet utilisé dans translations[].lang (ex. "Néerlandais") — ces vraies 2 listes ne sont
+// pas encore alignées (app_language n'a que 4 langues, translations en propose 9, et l'anglais
+// y est distingué UK/US) : le mapping ci-dessous fait le vrai lien entre les deux.
+const APP_LANGUAGE_CODE_TO_TRANSLATION_LABEL = {
+  fr: "Français",
+  nl: "Néerlandais",
+  de: "Allemand",
+  en: ["Anglais (UK)", "Anglais (US)"], // pas de vrai distinction UK/US côté app_language — UK d'abord par défaut
+};
+
+export function displayName(entity, appLanguageCode) {
+  if (!entity) return "";
+  const target = APP_LANGUAGE_CODE_TO_TRANSLATION_LABEL[appLanguageCode];
+  if (!target || !entity.translations || entity.translations.length === 0) return entity.name;
+  const candidates = Array.isArray(target) ? target : [target];
+  for (const label of candidates) {
+    const match = entity.translations.find((t) => t.lang === label && t.value?.trim());
+    if (match) return match.value;
+  }
+  return entity.name;
+}
