@@ -25,7 +25,7 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
 
@@ -574,6 +574,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
+        {claimsEnabled && (
         <button
           onClick={() => setClaiming(true)}
           style={{
@@ -591,6 +592,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
         >
           Revendiquer la gérance de ce lieu
         </button>
+        )}
         <button
           onClick={() => setShowActionsMenu(true)}
           title="Plus d'options"
@@ -599,7 +601,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
           <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
-      {claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
+      {claimsEnabled && claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       {showRatingModal && <VenueRatingModal venueId={venue.id} venueName={venue.name} onClose={() => setShowRatingModal(false)} />}
       {showCheckInConfirm && (
         <VenueCheckInConfirmModal

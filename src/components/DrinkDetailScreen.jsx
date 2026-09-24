@@ -52,6 +52,7 @@ export function DrinkDetailScreen({
   onOpenBrand,
   onOpenBrewery,
   onOpenVenue,
+  claimsEnabled = true,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -463,6 +464,7 @@ export function DrinkDetailScreen({
         )}
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
+          {claimsEnabled && (
           <button
             onClick={() => setClaiming(true)}
             style={{
@@ -480,6 +482,7 @@ export function DrinkDetailScreen({
           >
             Revendiquer la gestion de ce produit
           </button>
+          )}
           <button
             onClick={() => setShowActionsMenu(true)}
             title="Plus d'options"
@@ -488,7 +491,7 @@ export function DrinkDetailScreen({
             <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
           </button>
         </div>
-        {claiming && <ClaimModal entityType="drink" entityId={drink.id} entityName={drink.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
+        {claimsEnabled && claiming && <ClaimModal entityType="drink" entityId={drink.id} entityName={drink.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 
         {showActionsMenu && (
           <div

@@ -12,7 +12,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweryById, loadVenueById } from "../data/sharedDirectories.js";
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
@@ -214,6 +214,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
       )}
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
+        {claimsEnabled && (
         <button
           onClick={() => setClaiming(true)}
           style={{
@@ -231,6 +232,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
         >
           Revendiquer la gestion de ce producteur
         </button>
+        )}
         <button
           onClick={() => setShowActionsMenu(true)}
           title="Plus d'options"
@@ -239,7 +241,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
           <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
-      {claiming && <ClaimModal entityType="producer" entityId={brewery.id} entityName={brewery.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
+      {claimsEnabled && claiming && <ClaimModal entityType="producer" entityId={brewery.id} entityName={brewery.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 
       {showActionsMenu && (
         <div
@@ -295,7 +297,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete }) {
+export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brand.name || "");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -462,6 +464,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
       )}
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
+        {claimsEnabled && (
         <button
           onClick={() => setClaiming(true)}
           style={{
@@ -479,6 +482,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
         >
           Revendiquer la gestion de cette marque
         </button>
+        )}
         <button
           onClick={() => setShowActionsMenu(true)}
           title="Plus d'options"
@@ -487,7 +491,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
           <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
-      {claiming && <ClaimModal entityType="brand" entityId={brand.id} entityName={brand.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
+      {claimsEnabled && claiming && <ClaimModal entityType="brand" entityId={brand.id} entityName={brand.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 
       {showActionsMenu && (
         <div

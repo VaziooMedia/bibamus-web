@@ -78,6 +78,9 @@ export function HomeScreen({
   bibaMeetVisible = true,
   bibaPulseVisible = true,
   gamesVisible = true,
+  bibaPingVisible = true,
+  atlasVisible = true,
+  storiesEnabled = true,
   goToSettings,
   goToSearch,
   goToDrinkCheck,
@@ -208,6 +211,7 @@ export function HomeScreen({
               {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={44} color={COLORS.amber} />}
             </span>
           </button>
+          {storiesEnabled && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -232,6 +236,7 @@ export function HomeScreen({
               <path d="M12 5v14M5 12h14" />
             </svg>
           </button>
+          )}
         </div>
       </div>
 
@@ -582,19 +587,23 @@ export function HomeScreen({
         {bibaMeetVisible && (
           <CategoryTile icon="ti-users" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
         )}
+        {atlasVisible && (
         <CategoryTile icon="ti-map" title={<><span style={{ color: COLORS.ink }}>Bib</span><span style={{ color: COLORS.amber }}>Atlas</span></>} subtitle="Lieux, produits, marques et producteurs" onClick={goToRepertoireHub} />
+        )}
         <CategoryTile
           title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Cal</span></>}
           subtitle="Agenda des events autour de vous"
           badge="Soon"
           disabled
         />
+        {bibaPingVisible && (
         <CategoryTile
           title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Ping</span></>}
           subtitle="Messagerie Bibamus"
           onClick={goToBibaPing}
           countBadge={unreadMessages}
         />
+        )}
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>

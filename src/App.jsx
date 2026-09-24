@@ -1839,6 +1839,30 @@ export default function App() {
     );
   }
 
+  if (featureFlags.maintenance_mode === true) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "32px 24px",
+          background: "#08131F",
+          color: "#F2F2E8",
+          textAlign: "center",
+        }}
+      >
+        <BibamusLogoFull height={38} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "28px", margin: "32px 0 12px" }}>Maintenance en cours</h1>
+        <p style={{ fontSize: "14px", color: "#8792A6", maxWidth: "320px", lineHeight: 1.6 }}>
+          Bibamus est momentanément indisponible pour une opération de maintenance. Merci de repasser dans quelques instants.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <NavigationContext.Provider value={() => setScreen("home")}>
       <ProfileNavContext.Provider
@@ -1919,6 +1943,9 @@ export default function App() {
                 bibaMeetVisible={featureFlags.nav_bibameet_visible !== false}
                 bibaPulseVisible={featureFlags.nav_bibapulse_visible !== false}
                 gamesVisible={featureFlags.nav_games_visible !== false}
+                bibaPingVisible={featureFlags.nav_bibaping_visible !== false}
+                atlasVisible={featureFlags.nav_atlas_visible !== false}
+                storiesEnabled={featureFlags.stories_enabled !== false}
                 goToBibaPulse={() => setScreen("bibaPulse")}
                 goToBibaPing={() => setScreen("bibaPing")}                
                 goToSettings={() => setScreen("settings")}
@@ -2231,6 +2258,7 @@ export default function App() {
             )}
             {screen === "venueDetail" && viewedVenue && (
               <VenueDetailScreen
+                claimsEnabled={featureFlags.claims_enabled !== false}
                 venue={(() => {
                   const v = viewedVenue;
                   return v ? { ...v, isFavorite: favoriteVenueIds.includes(v.id) } : v;
@@ -2296,6 +2324,7 @@ export default function App() {
             )}
             {screen === "drinkDetail" && viewedDrink && (
               <DrinkDetailScreen
+                claimsEnabled={featureFlags.claims_enabled !== false}
                 drink={viewedDrink}
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
@@ -3046,6 +3075,7 @@ export default function App() {
             )}
             {screen === "breweryDetail" && (
               <BreweryDetailScreen
+                claimsEnabled={featureFlags.claims_enabled !== false}
                 brewery={resolveEntity(breweriesDirectory, viewedBreweryId)}
                 breweriesDirectory={breweriesDirectory}
                 isAdmin={!!profile.isAdmin}
@@ -3090,6 +3120,7 @@ export default function App() {
             )}
             {screen === "brandDetail" && (
               <BrandDetailScreen
+                claimsEnabled={featureFlags.claims_enabled !== false}
                 brand={resolveEntity(brandsDirectory, viewedBrandId)}
                 brandsDirectory={brandsDirectory}
                 isAdmin={!!profile.isAdmin}
