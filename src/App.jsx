@@ -2094,10 +2094,14 @@ export default function App() {
                 }}
                 onGoToDrinkCheck={() => setScreen("drinkCheck")}
                 onLeaveSalon={(noticeType) => leaveSalonFn(activeEventId, currentEvent?.salonCode, noticeType)}
-                onAddStory={(contextType, contextId) => {
-                  setStoryCreateContext({ contextType, contextId, returnScreen: "eventDashboard" });
-                  setScreen("storyCreate");
-                }}
+                onAddStory={
+                  featureFlags.stories_enabled !== false
+                    ? (contextType, contextId) => {
+                        setStoryCreateContext({ contextType, contextId, returnScreen: "eventDashboard" });
+                        setScreen("storyCreate");
+                      }
+                    : undefined
+                }
                 onOpenStoryAuthor={setViewedStoryAuthor}
               />
             )}
