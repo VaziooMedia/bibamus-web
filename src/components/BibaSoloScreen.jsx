@@ -188,7 +188,10 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     .map((item) => resolveMenuItem(item, venueDrinks))
     .filter((item) => item.name)
     .filter((item) => !bibaZeroActive || !isAlcoholicDrink(item));
-  console.log("[DIAG] venueDrinks.length :", venueDrinks.length, "| venueMenuItems.length final :", venueMenuItems.length);
+  useEffect(() => {
+    alert(`DIAGNOSTIC — venue: ${venue?.id || "aucun"} | menu.length: ${(venue?.menu || []).length} | venueDrinks.length: ${venueDrinks.length} | venueMenuItems.length: ${venueMenuItems.length}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [venueDrinks, venueMenuItems.length]);
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
   const venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
   const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
