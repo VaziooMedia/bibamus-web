@@ -176,10 +176,10 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [venueDrinks, setVenueDrinks] = useState([]);
   useEffect(() => {
     const ids = [...new Set((venue?.menu || []).filter((d) => d && d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId))];
-    console.log("[DIAG] venue reçu :", venue?.id, venue?.name, "| menu.length :", (venue?.menu || []).length, "| ids uniques à charger :", ids.length);
+    alert(`DIAGNOSTIC 1 — ids uniques à charger : ${ids.length} | premier id : ${ids[0] || "aucun"}`);
     if (ids.length === 0) return;
     loadDrinksByIds(ids).then((result) => {
-      console.log("[DIAG] loadDrinksByIds a renvoyé", result.length, "produit(s) sur", ids.length, "demandé(s)");
+      alert(`DIAGNOSTIC 2 — loadDrinksByIds a renvoyé ${result.length} produit(s) sur ${ids.length} demandé(s)`);
       setVenueDrinks(result);
     });
   }, [venue]);
