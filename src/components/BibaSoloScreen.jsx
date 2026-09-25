@@ -176,10 +176,9 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [venueDrinks, setVenueDrinks] = useState([]);
   useEffect(() => {
     const ids = [...new Set((venue?.menu || []).filter((d) => d && d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId))];
-    alert(`DIAGNOSTIC 1 — ids uniques à charger : ${ids.length} | premier id : ${ids[0] || "aucun"}`);
     if (ids.length === 0) return;
     loadDrinksByIds(ids).then((result) => {
-      alert(`DIAGNOSTIC 2 — loadDrinksByIds a renvoyé ${result.length} produit(s) sur ${ids.length} demandé(s)`);
+      alert(`DIAGNOSTIC — ids demandés : ${ids.length} | premier id : ${ids[0]} | produits reçus : ${result.length} | premier produit reçu : ${result[0] ? result[0].id + " / " + result[0].name : "aucun"}`);
       setVenueDrinks(result);
     });
   }, [venue]);
@@ -188,10 +187,6 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     .map((item) => resolveMenuItem(item, venueDrinks))
     .filter((item) => item.name)
     .filter((item) => !bibaZeroActive || !isAlcoholicDrink(item));
-  useEffect(() => {
-    alert(`DIAGNOSTIC — venue: ${venue?.id || "aucun"} | menu.length: ${(venue?.menu || []).length} | venueDrinks.length: ${venueDrinks.length} | venueMenuItems.length: ${venueMenuItems.length}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [venueDrinks, venueMenuItems.length]);
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
   const venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
   const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
