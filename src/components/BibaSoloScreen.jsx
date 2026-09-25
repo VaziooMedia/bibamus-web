@@ -23,6 +23,7 @@ import {
   searchVenues,
   loadVenuesByIds,
   loadNearbyVenues,
+  loadVenueById,
   loadGenericDrinks,
   loadMyBibaZeroStatus,
   activateBibaZeroSolo,
@@ -750,6 +751,18 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
       // en cours, simplement pas retrouvé à la prochaine ouverture.
     }
   };
+  // Le vrai lieu persisté (voir plus haut) reste sinon figé sur sa vraie version au moment de
+  // la vraie sélection — si sa vraie carte a vraiment été remplie/modifiée depuis, ce vrai
+  // rafraîchissement silencieux évite de rester bloqué sur une vraie copie périmée sans menu.
+  useEffect(() => {
+    if (currentVenue?.id) {
+      loadVenueById(currentVenue.id).then((fresh) => {
+        if (fresh) setCurrentVenue(fresh);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentVenue?.id]);
+
   const [venuePickerOpen, setVenuePickerOpen] = useState(false);
   const [nearbyVenues, setNearbyVenues] = useState([]);
   const [venueQuery, setVenueQuery] = useState("");
