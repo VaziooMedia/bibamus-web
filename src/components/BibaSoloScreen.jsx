@@ -351,7 +351,10 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {venueMenuItems.length > 0 && (
                   <button
-                    onClick={() => setPickMode("carte")}
+                    onClick={() => {
+                      alert("CLIC DÉTECTÉ sur le bouton Carte");
+                      setPickMode("carte");
+                    }}
                     style={{
                       display: "flex",
                       alignItems: "center",
