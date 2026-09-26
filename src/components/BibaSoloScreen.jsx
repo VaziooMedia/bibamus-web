@@ -184,11 +184,6 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     .map((item) => resolveMenuItem(item, venueDrinks))
     .filter((item) => item.name)
     .filter((item) => !bibaZeroActive || !isAlcoholicDrink(item));
-  useEffect(() => {
-    if (venueDrinks.length === 0) return;
-    alert(`DIAGNOSTIC — venue: ${venue?.id} | venueMenuItems.length : ${venueMenuItems.length} | pickMode : ${pickMode} | selectedDrink : ${selectedDrink ? selectedDrink.name : "aucun"}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [venueDrinks]);
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
   const venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
   const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
@@ -433,6 +428,9 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                     </div>
                   ) : (
                     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+                      <p style={{ color: "red", fontSize: "16px", fontWeight: 900, padding: "10px", background: "yellow" }}>
+                        DIAGNOSTIC — venueCategories.length: {venueCategories.length} | contenu: {JSON.stringify(venueCategories)}
+                      </p>
                       {venueCategories.map((cat, i) => (
                         <button
                           key={cat}
