@@ -401,6 +401,9 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
           {pickMode === "carte" && (
             <>
+              <p style={{ color: "red", fontSize: "16px", fontWeight: 900, padding: "10px", background: "yellow" }}>
+                DIAGNOSTIC A — on est bien dans pickMode carte | activeCategory: {String(activeCategory)} | carteQuery: "{carteQuery}"
+              </p>
               <button
                 onClick={() => (activeCategory ? setActiveCategory(null) : setPickMode(null))}
                 style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: "14px" }}
