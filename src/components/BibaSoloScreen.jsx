@@ -176,10 +176,6 @@ function MenuItemBlock({ item, onClick }) {
 // Écran d'ajout — recherche une boisson, prix obligatoire. Le lieu est fixé une fois sur la
 // page principale de BibaSolo et appliqué automatiquement ici, sans le redemander à chaque verre.
 function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActive = false, onDone, onBack }) {
-  useEffect(() => {
-    alert("MONTAGE d'AddSoloCheckinScreen");
-    return () => alert("DÉMONTAGE d'AddSoloCheckinScreen");
-  }, []);
   const [query, setQuery] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
   const [volume, setVolume] = useState("");
@@ -190,9 +186,6 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   // propre carte (par catégories), une recherche libre dans tout BibAtlas, ou une recherche
   // bornée aux produits marqués génériques.
   const [pickMode, setPickMode] = useState(null); // null | "carte" | "bibatlas" | "generic"
-  useEffect(() => {
-    alert(`CHANGEMENT DE pickMode : "${pickMode}"`);
-  }, [pickMode]);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [carteQuery, setCarteQuery] = useState("");
@@ -220,7 +213,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
     itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
   } catch (err) {
-    alert(`ERREUR JS PENDANT LE CALCUL DU MENU : ${err.message}\n${err.stack}`);
+    console.error("Erreur pendant le calcul du menu:", err);
     venueMenuItems = [];
     categoryOf = () => "Non classé";
     venueCategories = [];
@@ -769,13 +762,6 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, onSave, onBack }) {
 }
 
 export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onOpenDrink, onBack }) {
-  useEffect(() => {
-    const handler = (event) => {
-      alert(`ERREUR JS CAPTURÉE : ${event.message} | fichier : ${event.filename}:${event.lineno}:${event.colno}`);
-    };
-    window.addEventListener("error", handler);
-    return () => window.removeEventListener("error", handler);
-  }, []);
   const [checkins, setCheckins] = useState(null);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
