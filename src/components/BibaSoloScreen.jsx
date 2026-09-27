@@ -153,6 +153,10 @@ function MenuItemBlock({ item, onClick }) {
 // Écran d'ajout — recherche une boisson, prix obligatoire. Le lieu est fixé une fois sur la
 // page principale de BibaSolo et appliqué automatiquement ici, sans le redemander à chaque verre.
 function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActive = false, onDone, onBack }) {
+  useEffect(() => {
+    alert("MONTAGE d'AddSoloCheckinScreen");
+    return () => alert("DÉMONTAGE d'AddSoloCheckinScreen");
+  }, []);
   const [query, setQuery] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
   const [volume, setVolume] = useState("");
@@ -355,7 +359,6 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                 {venueMenuItems.length > 0 && (
                   <button
                     onClick={() => {
-                      alert("CLIC DÉTECTÉ sur le bouton Carte");
                       setPickMode("carte");
                     }}
                     style={{
