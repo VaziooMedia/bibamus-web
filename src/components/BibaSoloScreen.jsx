@@ -209,14 +209,23 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     if (ids.length === 0) return;
     loadDrinksByIds(ids).then(setVenueDrinks);
   }, [venue]);
-  const venueMenuItems = (venue?.menu || [])
-    .filter((item) => item && item.fromDirectory && item.sourceDrinkId)
-    .map((item) => resolveMenuItem(item, venueDrinks))
-    .filter((item) => item.name)
-    .filter((item) => !bibaZeroActive || !isAlcoholicDrink(item));
-  const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
-  const venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
-  const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
+  let venueMenuItems, categoryOf, venueCategories, itemsInCategory;
+  try {
+    venueMenuItems = (venue?.menu || [])
+      .filter((item) => item && item.fromDirectory && item.sourceDrinkId)
+      .map((item) => resolveMenuItem(item, venueDrinks))
+      .filter((item) => item.name)
+      .filter((item) => !bibaZeroActive || !isAlcoholicDrink(item));
+    categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
+    venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
+    itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
+  } catch (err) {
+    alert(`ERREUR JS PENDANT LE CALCUL DU MENU : ${err.message}\n${err.stack}`);
+    venueMenuItems = [];
+    categoryOf = () => "Non classé";
+    venueCategories = [];
+    itemsInCategory = () => [];
+  }
   const visibleRecentDrinks = bibaZeroActive ? recentDrinks.filter((d) => !isAlcoholicDrink(d)) : recentDrinks;
 
   const q = normalize(query);
