@@ -6,6 +6,7 @@
 // direct au-dessus de la liste.
 // ============================================================
 import React, { useState, useEffect, useMemo } from "react";
+import ReactDOM from "react-dom";
 import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg, WaterAlertIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
@@ -432,9 +433,12 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
           {pickMode === "carte" && (
             <DiagErrorBoundary><>
-              <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 999999, color: "red", fontSize: "16px", fontWeight: 900, padding: "10px", background: "yellow" }}>
-                DIAGNOSTIC A — on est bien dans pickMode carte | activeCategory: {String(activeCategory)} | carteQuery: "{carteQuery}"
-              </div>
+              {ReactDOM.createPortal(
+                <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 999999, color: "red", fontSize: "16px", fontWeight: 900, padding: "10px", background: "yellow" }}>
+                  DIAGNOSTIC A (PORTAL) — on est bien dans pickMode carte | activeCategory: {String(activeCategory)} | carteQuery: "{carteQuery}"
+                </div>,
+                document.body
+              )}
               <button
                 onClick={() => (activeCategory ? setActiveCategory(null) : setPickMode(null))}
                 style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: "14px" }}
