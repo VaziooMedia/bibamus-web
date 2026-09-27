@@ -734,6 +734,13 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, onSave, onBack }) {
 }
 
 export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onOpenDrink, onBack }) {
+  useEffect(() => {
+    const handler = (event) => {
+      alert(`ERREUR JS CAPTURÉE : ${event.message} | fichier : ${event.filename}:${event.lineno}:${event.colno}`);
+    };
+    window.addEventListener("error", handler);
+    return () => window.removeEventListener("error", handler);
+  }, []);
   const [checkins, setCheckins] = useState(null);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
