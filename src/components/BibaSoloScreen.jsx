@@ -13,6 +13,28 @@ import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink 
 import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
 import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
+
+class DiagErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ background: "red", color: "white", padding: "14px", fontSize: "14px", fontWeight: 700 }}>
+          ERREUR DE RENDU CAPTURÉE : {String(this.state.error && this.state.error.message)}
+          <br />
+          {String(this.state.error && this.state.error.stack)}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import {
   addSoloCheckin,
   archiveSoloCheckins,
@@ -409,7 +431,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
           )}
 
           {pickMode === "carte" && (
-            <>
+            <DiagErrorBoundary><>
               <p style={{ color: "red", fontSize: "16px", fontWeight: 900, padding: "10px", background: "yellow" }}>
                 DIAGNOSTIC A — on est bien dans pickMode carte | activeCategory: {String(activeCategory)} | carteQuery: "{carteQuery}"
               </p>
@@ -488,7 +510,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                   </div>
                 </>
               )}
-            </>
+            </></DiagErrorBoundary>
               )}
           </>
           )}
