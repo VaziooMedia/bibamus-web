@@ -432,9 +432,9 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
           {pickMode === "carte" && (
             <DiagErrorBoundary><>
-              <p style={{ color: "red", fontSize: "16px", fontWeight: 900, padding: "10px", background: "yellow" }}>
+              <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 999999, color: "red", fontSize: "16px", fontWeight: 900, padding: "10px", background: "yellow" }}>
                 DIAGNOSTIC A — on est bien dans pickMode carte | activeCategory: {String(activeCategory)} | carteQuery: "{carteQuery}"
-              </p>
+              </div>
               <button
                 onClick={() => (activeCategory ? setActiveCategory(null) : setPickMode(null))}
                 style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: "14px" }}
