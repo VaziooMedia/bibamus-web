@@ -163,6 +163,9 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   // propre carte (par catégories), une recherche libre dans tout BibAtlas, ou une recherche
   // bornée aux produits marqués génériques.
   const [pickMode, setPickMode] = useState(null); // null | "carte" | "bibatlas" | "generic"
+  useEffect(() => {
+    alert(`CHANGEMENT DE pickMode : "${pickMode}"`);
+  }, [pickMode]);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [carteQuery, setCarteQuery] = useState("");
