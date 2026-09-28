@@ -7,13 +7,13 @@
 //     dans ce lieu — une seule publication pour le geste, celle du produit ;
 //   - publier ou non sur BibaPulse, avec qui peut le voir (« Mes Bibax » par défaut), un
 //     commentaire, une photo et des Bibax tagués ;
-//   - revenir sur son avis déjà donné sur le lieu (lien discret, si un avis existe).
-//
-// La question complète (« donne ton avis ») n'est posée qu'au premier check-in, après cette
-// fenêtre (voir VenueDetailScreen.jsx).
+//   - donner, modifier ou retirer son avis sur le lieu : liste déroulante, « Pas d'avis » par défaut
+//     (ou l'avis déjà donné, s'il y en a un — pour qu'un check ne l'efface jamais par mégarde).
 //
 // Résultat envoyé à onClose : null si annulé, sinon
-//   { publishToPulse, visibility, content, drink: { id, name } | null, modifyRating }
+//   { publishToPulse, visibility, content, drink: { id, name } | null, ratingChange }
+// où ratingChange vaut null (avis inchangé), { value: 1..5 } (donner / modifier l'avis)
+// ou { value: null } (retirer l'avis existant).
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
@@ -32,7 +32,10 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
   const [drink, setDrink] = useState(null); // { id, name }
   const [drinkQuery, setDrinkQuery] = useState("");
   const [drinkResults, setDrinkResults] = useState([]);
-  const ratingLabel = RATING_LABELS.find((l) => l.value === myRating)?.fr;
+  // Avis sur le lieu : « Pas d'avis » (null) par défaut, ou l'avis déjà donné.
+  const existingRating = myRating == null ? null : myRating;
+  const [rating, setRating] = useState(existingRating);
+  const existingRatingLabel = RATING_LABELS.find((l) => l.value === existingRating)?.fr;
 
   // Recherche du produit à ajouter (mêmes règles que les autres recherches : 2 lettres minimum).
   useEffect(() => {
@@ -53,7 +56,7 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
     };
   }, [drinkQuery]);
 
-  const handleConfirm = async (modifyRating = false) => {
+  const handleConfirm = async () => {
     if (sending) return;
     form.setError(null);
 
@@ -70,7 +73,9 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
       }
       content = built.content;
     }
-    onClose({ publishToPulse, visibility: form.visibility, content, drink: drink ? { id: drink.id, name: drink.name } : null, modifyRating });
+    // Rien à faire si l'avis est identique à celui déjà donné.
+    const ratingChange = rating === existingRating ? null : { value: rating };
+    onClose({ publishToPulse, visibility: form.visibility, content, drink: drink ? { id: drink.id, name: drink.name } : null, ratingChange });
   };
 
   return (
@@ -111,6 +116,23 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
           </span>
         </h2>
         {venueName && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 20px 0" }}>{venueName}</p>}
+
+        <label style={labelStyle}>Ton avis sur ce lieu</label>
+        <select
+          value={rating == null ? "" : String(rating)}
+          onChange={(e) => setRating(e.target.value === "" ? null : Number(e.target.value))}
+          style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: existingRating != null && rating == null ? "6px" : "16px" }}
+        >
+          <option value="">Pas d'avis</option>
+          {RATING_LABELS.map((level) => (
+            <option key={level.value} value={level.value}>
+              {level.fr}
+            </option>
+          ))}
+        </select>
+        {existingRating != null && rating == null && (
+          <p style={{ fontSize: "12px", color: "#ef007c", margin: "0 0 16px" }}>Ton avis actuel{existingRatingLabel ? ` (${existingRatingLabel})` : ""} sera retiré.</p>
+        )}
 
         <label style={labelStyle}>Produit (facultatif)</label>
         {drink ? (
@@ -185,17 +207,8 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
 
         {form.error && <p style={{ color: COLORS.wine, fontSize: "13px", margin: "0 0 12px" }}>{form.error}</p>}
 
-        {myRating != null && (
-          <button
-            onClick={() => handleConfirm(true)}
-            style={{ display: "block", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12px", cursor: "pointer", padding: 0, marginBottom: "20px", textAlign: "left" }}
-          >
-            Modifier mon avis sur ce lieu{ratingLabel ? ` (actuellement : ${ratingLabel})` : ""}
-          </button>
-        )}
-
         <button
-          onClick={() => handleConfirm(false)}
+          onClick={() => handleConfirm()}
           disabled={sending}
           style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px", fontWeight: 700, color: COLORS.paper, cursor: sending ? "default" : "pointer", opacity: sending ? 0.6 : 1 }}
         >

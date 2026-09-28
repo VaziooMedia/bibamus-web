@@ -10,7 +10,6 @@ import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink, formatMoney
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
-import { VenueRatingModal } from "./VenueRatingModal.jsx";
 import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
 import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, loadVenueRevenueStats, toggleFollowVenue, loadVenueFollowStatus, loadBreweryLinkedToVenue } from "../data/sharedDirectories.js";
 import { VenueCheckInConfirmModal } from "./VenueCheckInConfirmModal.jsx";
@@ -118,30 +117,26 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
     venue.restaurantGuruUrl
   );
   const iLike = likes.includes(myBibroCode);
-  const [showRatingModal, setShowRatingModal] = useState(false);
   const [showCheckInConfirm, setShowCheckInConfirm] = useState(false);
   const [checkInMyRating, setCheckInMyRating] = useState(null);
 
-  // La fenêtre « Place Check-in » s'ouvre à chaque check-in ; le check n'est enregistré qu'à sa
-  // confirmation. La question complète ("donne ton avis") n'est posée qu'une seule fois, juste
-  // après le premier check-in — si l'utilisateur a déjà une note sur ce lieu, la fenêtre propose
-  // seulement un lien discret pour revenir sur l'avis déjà donné.
+  // La fenêtre « PlaceCheck » s'ouvre à chaque check-in ; le check n'est enregistré qu'à sa confirmation.
+  // L'avis sur le lieu se donne dans cette même fenêtre (liste déroulante) : elle reçoit l'avis déjà donné,
+  // s'il y en a un.
   const handleCheckIn = async () => {
     setCheckInMyRating(await loadMyVenueRating(venue.id));
     setShowCheckInConfirm(true);
   };
 
-  // Parcours « PlaceCheck depuis l'accueil » : la fenêtre de check s'ouvre dès l'arrivée sur la fiche, et à la
-  // fin (après la question de l'avis, s'il y en a une) on repart vers le Pulse ou l'accueil — voir App.jsx.
+  // Parcours « PlaceCheck depuis l'accueil » : la fenêtre de check s'ouvre dès l'arrivée sur la fiche, et une
+  // fois le check confirmé on repart vers le Pulse ou l'accueil — voir App.jsx.
   const [inHomeCheckFlow, setInHomeCheckFlow] = useState(autoOpenCheck);
-  const [flowInfo, setFlowInfo] = useState(null); // résultat en attente pendant la question de l'avis
   useEffect(() => {
     if (autoOpenCheck) handleCheckIn();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const finishHomeFlow = (info) => {
     setInHomeCheckFlow(false);
-    setFlowInfo(null);
     onCheckFlowFinished && onCheckFlowFinished(info);
   };
 
@@ -153,15 +148,9 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
       return;
     }
     setJustCheckedIn(true);
-    const pulseResult = await onCheckIn({ publishToPulse: result.publishToPulse, visibility: result.visibility, content: result.content, drink: result.drink });
+    const pulseResult = await onCheckIn({ publishToPulse: result.publishToPulse, visibility: result.visibility, content: result.content, drink: result.drink, ratingChange: result.ratingChange });
     if (pulseResult && pulseResult.error) alert("Ton check-in est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
-    const info = { name: venue.name, published: !!result.publishToPulse && !(pulseResult && pulseResult.error) };
-    if (checkInMyRating == null || result.modifyRating) {
-      if (inHomeCheckFlow) setFlowInfo(info);
-      setShowRatingModal(true);
-    } else if (inHomeCheckFlow) {
-      finishHomeFlow(info);
-    }
+    if (inHomeCheckFlow) finishHomeFlow({ name: venue.name, published: !!result.publishToPulse && !(pulseResult && pulseResult.error) });
   };
 
   return (
@@ -628,16 +617,6 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
         </button>
       </div>
       {claimsEnabled && claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
-      {showRatingModal && (
-        <VenueRatingModal
-          venueId={venue.id}
-          venueName={venue.name}
-          onClose={() => {
-            setShowRatingModal(false);
-            if (flowInfo) finishHomeFlow(flowInfo);
-          }}
-        />
-      )}
       {showCheckInConfirm && (
         <VenueCheckInConfirmModal venueName={venue.name} myRating={checkInMyRating} onClose={handleCheckInConfirmed} />
       )}

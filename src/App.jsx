@@ -128,6 +128,8 @@ import {
   loadMutualBibaxList,
   recordVenueCheckIn,
   publishVenueCheckInToPulse,
+  submitVenueRating,
+  removeVenueRating,
   recordDrinkCheckIn,
   loadMyDrinkCheckinCount,
   publishDrinkCheckInToPulse,
@@ -1681,13 +1683,20 @@ export default function App() {
   // Si publishToPulse est faux, rien n'est publié mais le passage (et le produit) sont bien
   // enregistrés. L'émission d'événement ci-dessous ne sert qu'aux statistiques (skipPulse).
   // Renvoie le résultat de la publication ({ ok } ou { error }), ou null si rien n'a été publié.
-  const checkInVenue = async (venueId, { publishToPulse = true, visibility = null, content = null, drink = null } = {}) => {
+  const checkInVenue = async (venueId, { publishToPulse = true, visibility = null, content = null, drink = null, ratingChange = null } = {}) => {
     // Marquage local existant, conservé tel quel (présence en temps réel sur cet appareil).
     setCheckedInVenueId(venueId);
     emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId, skipPulse: true });
     // Persistance réelle en base — c'est elle qui autorise ensuite à laisser un avis sur ce lieu.
     await recordVenueCheckIn(venueId);
     trackEvent("place_checked", "venue", profile.myBibroCode);
+    // Avis sur le lieu, donné dans la fenêtre de check : APRÈS l'enregistrement du passage, puisque c'est lui
+    // qui autorise l'avis. ratingChange : { value: 1..5 } pour donner ou modifier l'avis, { value: null } pour
+    // le retirer, null s'il est inchangé. Un échec n'annule ni le check ni sa publication : on prévient l'utilisateur.
+    if (ratingChange) {
+      const ratingResult = ratingChange.value == null ? await removeVenueRating(venueId) : await submitVenueRating(venueId, ratingChange.value);
+      if (ratingResult && ratingResult.error) alert("Ton check-in est enregistré, mais ton avis n'a pas pu l'être. Tu pourras le donner lors d'un prochain check.");
+    }
     if (drink) return checkInDrink(drink.id, venueId, { publishToPulse, visibility, content });
     if (!publishToPulse) return null;
     return publishVenueCheckInToPulse(venueId, { visibility, content });
