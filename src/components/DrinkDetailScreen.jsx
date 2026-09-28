@@ -148,8 +148,16 @@ export function DrinkDetailScreen({
     setShowCheckModal(false);
     if (!result) return;
     setJustChecked(true);
-    await onCheckDrink(drink.id, result.venueId, { publishToPulse: result.publishToPulse });
+    const pulseResult = await onCheckDrink(drink.id, result.venueId, {
+      publishToPulse: result.publishToPulse,
+      visibility: result.visibility,
+      content: result.content,
+    });
     setMyCheckCount((n) => (n == null ? 1 : n + 1));
+    // Le check lui-même est enregistré ; seule la publication dans BibaPulse a échoué.
+    if (pulseResult && pulseResult.error) {
+      alert("Ton check est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
+    }
   };
 
   return (
@@ -542,7 +550,8 @@ export function DrinkDetailScreen({
           drinkName={drink.name}
           drinkType={drink.type}
           myRating={myRating}
-          onRate={onRate}
+          enableContent
+          onRate={(value) => onRate(value, { skipDiscoveryPulse: true })}
           onUnrate={() => onUnrate(drink.id)}
           onClose={handleCheckConfirmed}
         />

@@ -127,6 +127,7 @@ import {
   recordVenueCheckIn,
   publishVenueCheckInToPulse,
   recordDrinkCheckIn,
+  loadMyDrinkCheckinCount,
   publishDrinkCheckInToPulse,
   loadDrinksByIds,
   sendPushNotification,
@@ -1271,11 +1272,11 @@ export default function App() {
   }, [session]);
   useEffect(() => saveLocal("bibamus-wishlist-drinks", wishlistDrinkIds), [wishlistDrinkIds]);
 
-  const toggleTastedDrink = (id) => {
+  const toggleTastedDrink = (id, { skipPulse = false } = {}) => {
     setTastedDrinkIds((prev) => {
       const alreadyTasted = prev.includes(id);
       setDrinkTastedServer(id, !alreadyTasted);
-      if (!alreadyTasted) emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: id });
+      if (!alreadyTasted && !skipPulse) emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: id });
       return alreadyTasted ? prev.filter((x) => x !== id) : [...prev, id];
     });
   };
@@ -1283,7 +1284,9 @@ export default function App() {
 
   // Note et modes goûtés : partagés sur la fiche du produit elle-même (comme dans le prototype
   // Claude) — chaque Bibax y ajoute sa propre entrée, indexée par son code personnel.
-  const rateDrink = (drinkId, value) => {
+  // skipDiscoveryPulse : la note vient du formulaire de check, qui publie lui-même UNE seule carte
+  // (Découverte ou Check) — on ne publie donc pas en plus une Découverte à cause de cette note.
+  const rateDrink = (drinkId, value, { skipDiscoveryPulse = false } = {}) => {
     setViewedDrink((prev) =>
       prev && prev.id === drinkId
         ? {
@@ -1302,7 +1305,7 @@ export default function App() {
       // Noter une bière n'a de sens que si on l'a goûtée — les deux restent synchronisés plutôt
       // que de risquer une bière notée mais jamais marquée dégustée, ou encore sur la liste d'envie.
       if (BEER_TYPES.includes(drink.type) && !tastedDrinkIds.includes(drinkId)) {
-        toggleTastedDrink(drinkId);
+        toggleTastedDrink(drinkId, { skipPulse: skipDiscoveryPulse });
       }
     }
   };
@@ -1678,11 +1681,18 @@ export default function App() {
 
   // Miroir de checkInVenue, mais pour un produit — répétable (pas de marquage local "présence
   // en temps réel" comme pour un lieu), et venueId optionnel.
-  const checkInDrink = async (drinkId, venueId, { publishToPulse = true, volumeCl = null } = {}) => {
-    emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: !publishToPulse });
+  // Une seule carte publiée par check : "Découverte" la première fois que la personne checke ce
+  // produit, "Check" ensuite. L'émission d'événement ci-dessous ne sert qu'aux statistiques
+  // (skipPulse) : la publication, elle, est faite une seule fois plus bas. Renvoie le résultat de
+  // la publication ({ ok } ou { error }), ou null si rien n'a été publié.
+  const checkInDrink = async (drinkId, venueId, { publishToPulse = true, volumeCl = null, visibility = null, content = null } = {}) => {
+    emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: true });
     await recordDrinkCheckIn(drinkId, venueId, volumeCl);
     trackEvent("drink_checked", "drink", profile.myBibroCode);
-    if (publishToPulse) publishDrinkCheckInToPulse(drinkId, venueId);
+    if (!publishToPulse) return null;
+    // Le check vient d'être enregistré : s'il est le seul, c'est le premier de cette personne.
+    const checkCount = await loadMyDrinkCheckinCount(drinkId);
+    return publishDrinkCheckInToPulse(drinkId, venueId, { isDiscovery: checkCount <= 1, visibility, content });
   };
 
   const handleLogout = async () => {
@@ -2335,7 +2345,7 @@ export default function App() {
                 onToggleTasted={() => toggleTastedDrink(viewedDrinkId)}
                 isOnWishlist={wishlistDrinkIds.includes(viewedDrinkId)}
                 onToggleWishlist={() => toggleWishlistDrink(viewedDrinkId)}
-                onRate={(value) => rateDrink(viewedDrinkId, value)}
+                onRate={(value, opts) => rateDrink(viewedDrinkId, value, opts)}
                 onUnrate={() => unrateDrink(viewedDrinkId)}
                 onToggleMode={(mode) => toggleTastedServingMode(viewedDrinkId, mode)}
                 onCheckDrink={(drinkId, venueId, opts) => checkInDrink(drinkId, venueId, opts)}

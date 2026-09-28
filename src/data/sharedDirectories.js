@@ -114,7 +114,8 @@ export async function createPulseEvent(eventType, objectType, objectId, options 
         venueId: options.venueId || null,
         roomSalonCode: options.roomSalonCode || null,
         visibility: options.visibility || null,
-        metadata: options.metadata || null,
+        // Contenu vérifié côté serveur : { comment, photoUrl, rating, taggedIds }.
+        content: options.content || null,
       },
     });
     if (error) {
@@ -132,9 +133,12 @@ export async function createPulseEvent(eventType, objectType, objectId, options 
         }
       }
       console.error("createPulseEvent:", detail);
+      return { error: detail };
     }
+    return { ok: true };
   } catch (e) {
     console.error("createPulseEvent:", e);
+    return { error: String(e?.message || e) };
   }
 }
 
@@ -636,8 +640,22 @@ export async function loadMyDrinkCheckinCount(drinkId) {
   return data || 0;
 }
 
-export async function publishDrinkCheckInToPulse(drinkId, venueId = null) {
-  await createPulseEvent("drink_checked", "drink", drinkId, { venueId });
+// Une seule publication par check : "Découverte" (product_discovered) la première fois que la
+// personne checke ce produit, "Check" (drink_checked) les fois suivantes. Renvoie { ok } ou { error }.
+export async function publishDrinkCheckInToPulse(drinkId, venueId = null, { isDiscovery = false, visibility = null, content = null } = {}) {
+  return createPulseEvent(isDiscovery ? "product_discovered" : "drink_checked", "drink", drinkId, { venueId, visibility, content });
+}
+
+// Envoie une photo pour le Pulse. Le serveur vérifie le contenu (Google Vision), choisit lui-même
+// le nom et le dossier de la photo, et renvoie son adresse. La photo doit être un JPEG déjà réduit.
+export async function uploadPulsePhoto(blob) {
+  const imageBase64 = await blobToBase64(blob);
+  const { data, error } = await supabase.functions.invoke("upload-pulse-photo", {
+    body: { imageBase64, contentType: "image/jpeg" },
+  });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { url: data.url };
 }
 
 export async function lookupBibroCode(code) {

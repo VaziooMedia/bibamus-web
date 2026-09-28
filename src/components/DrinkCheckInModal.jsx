@@ -12,12 +12,13 @@
 // au moment d'ouvrir une fiche produit) — presetVenue est déjà
 // prévu en prop pour le jour où cette info existera.
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
-import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
+import { loadNearbyVenues, searchVenues, searchBibaxForTagging, uploadPulsePhoto } from "../data/sharedDirectories.js";
+import { fileToResizedJpegBlob } from "../imageUtils.js";
 
 const TITLE_BY_TYPE = {
   "Bières & Cidres": "Check cette bière",
@@ -29,12 +30,20 @@ const TITLE_BY_TYPE = {
   Snacks: "Check ce snack",
 };
 
+// Nombre maximum de Bibax tagués dans une publication (le serveur en accepte jusqu'à 10).
+const MAX_TAGS = 5;
+
+const isOnRatingScale = (v) => Number.isFinite(v) && v >= 0.25 && v <= 5 && Math.abs(v * 4 - Math.round(v * 4)) < 1e-9;
+
 const SPECIAL_VENUES = [
   { id: "@home", name: "@Home" },
   { id: "@event", name: "@Event" },
 ];
 
-export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue = null, onRate, onUnrate, onClose }) {
+// enableContent : affiche les champs de publication (visibilité, commentaire, photo, Bibax tagués).
+// Le résultat renvoyé à onClose est { publishToPulse, venueId, visibility, content } — content ne
+// contient que ce qui a été renseigné : { comment, rating, photoUrl, taggedIds }.
+export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue = null, enableContent = false, onRate, onUnrate, onClose }) {
   const hasRating = myRating != null;
   const [isEditingRating, setIsEditingRating] = useState(!hasRating);
   const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
@@ -44,6 +53,15 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [nearbyVenues, setNearbyVenues] = useState([]);
   const [searchedVenues, setSearchedVenues] = useState([]);
+  const [visibility, setVisibility] = useState("public");
+  const [comment, setComment] = useState("");
+  const [photo, setPhoto] = useState(null); // { blob, previewUrl }
+  const [tagQuery, setTagQuery] = useState("");
+  const [tagResults, setTagResults] = useState([]);
+  const [taggedPeople, setTaggedPeople] = useState([]); // [{ id, name }]
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -68,19 +86,91 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
     return () => clearTimeout(timer);
   }, [q]);
 
+  // Recherche des Bibax à taguer — uniquement de vrais Bibax confirmés qui acceptent d'être tagués.
+  useEffect(() => {
+    const term = tagQuery.trim();
+    if (term.length < 2) {
+      setTagResults([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      searchBibaxForTagging(term).then((results) => {
+        if (cancelled) return;
+        setTagResults(results.filter((r) => r.allowStoryTags !== false && !taggedPeople.some((t) => t.id === r.id)).slice(0, 6));
+      });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [tagQuery, taggedPeople]);
+
+  // Libère l'aperçu de la photo quand elle change ou quand la fenêtre se ferme.
+  useEffect(() => {
+    return () => {
+      if (photo) URL.revokeObjectURL(photo.previewUrl);
+    };
+  }, [photo]);
+
+  const handlePhotoPick = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Ce fichier n'est pas une image.");
+      return;
+    }
+    try {
+      const blob = await fileToResizedJpegBlob(file);
+      setPhoto({ blob, previewUrl: URL.createObjectURL(blob) });
+      setError(null);
+    } catch (_) {
+      setError("Impossible de lire cette photo.");
+    }
+  };
+
   const filteredVenues = q ? searchedVenues : nearbyVenues;
   const filteredSpecials = q ? SPECIAL_VENUES.filter((v) => v.name.toLowerCase().includes(q.toLowerCase())) : SPECIAL_VENUES;
 
   const title = TITLE_BY_TYPE[drinkType] || "Check ce produit";
 
-  const finalizeCheck = (skipRating) => {
+  const finalizeCheck = async (skipRating) => {
+    if (sending) return;
+    setError(null);
+
+    // Contenu de la publication : seulement ce qui a été renseigné. La photo est envoyée AVANT de
+    // valider le check : si elle est refusée, rien n'est enregistré et on reste dans la fenêtre.
+    let content;
+    if (enableContent && publishToPulse) {
+      const built = {};
+      const trimmedComment = comment.trim();
+      if (trimmedComment) built.comment = trimmedComment;
+      const ratingForPulse = isEditingRating && !skipRating ? pendingValue : hasRating ? myRating : null;
+      if (ratingForPulse != null && isOnRatingScale(ratingForPulse)) built.rating = ratingForPulse;
+      if (taggedPeople.length > 0) built.taggedIds = taggedPeople.map((p) => p.id);
+      if (photo) {
+        setSending(true);
+        const uploaded = await uploadPulsePhoto(photo.blob);
+        if (uploaded.error) {
+          setSending(false);
+          setError(uploaded.error);
+          return;
+        }
+        built.photoUrl = uploaded.url;
+      }
+      if (Object.keys(built).length > 0) content = built;
+    }
+
     if (isEditingRating && !skipRating) onRate(pendingValue);
-    onClose({ publishToPulse, venueId: selectedVenue?.id || null });
+    onClose({ publishToPulse, venueId: selectedVenue?.id || null, visibility, content });
   };
 
   return (
     <div
-      onClick={() => onClose(null)}
+      onClick={() => {
+        if (!sending) onClose(null);
+      }}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 110 }}
     >
       <div
@@ -91,6 +181,8 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
           padding: "24px 20px calc(32px + env(safe-area-inset-bottom, 0px)) 20px",
           width: "100%",
           maxWidth: "480px",
+          maxHeight: "92vh",
+          overflowY: "auto",
           boxSizing: "border-box",
         }}
       >
@@ -255,12 +347,121 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
           Publier dans BibaPulse
         </button>
 
+        {enableContent && publishToPulse && (
+          <div style={{ marginBottom: "20px" }}>
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Qui peut le voir ?</label>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+              {[
+                { key: "public", label: "Public" },
+                { key: "relations", label: "Mes Bibax" },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setVisibility(opt.key)}
+                  style={{
+                    flex: 1,
+                    background: visibility === opt.key ? COLORS.amber : "none",
+                    color: visibility === opt.key ? COLORS.paper : COLORS.ink,
+                    border: `2px solid ${visibility === opt.key ? COLORS.amber : COLORS.paperAlt}`,
+                    borderRadius: "999px",
+                    padding: "9px 12px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Commentaire (facultatif)</label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              maxLength={280}
+              rows={3}
+              placeholder="Ton avis, une anecdote..."
+              style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontSize: "14px", fontFamily: "inherit", resize: "none" }}
+            />
+            <p style={{ margin: "2px 0 14px", fontSize: "11px", color: COLORS.inkSoft, textAlign: "right" }}>{comment.length}/280</p>
+
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Photo (facultatif)</label>
+            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoPick} />
+            {photo ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                <img src={photo.previewUrl} alt="Aperçu de la photo" style={{ width: "72px", height: "72px", objectFit: "cover", borderRadius: "10px", flexShrink: 0 }} />
+                <button
+                  onClick={() => setPhoto(null)}
+                  style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12.5px", textDecoration: "underline", cursor: "pointer", padding: 0 }}
+                >
+                  Retirer la photo
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                style={{ display: "block", width: "100%", background: "none", border: `2px dashed ${COLORS.paperAlt}`, borderRadius: "10px", padding: "11px", color: COLORS.inkSoft, fontSize: "13.5px", fontWeight: 600, cursor: "pointer", marginBottom: "16px" }}
+              >
+                Ajouter une photo
+              </button>
+            )}
+
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Avec (facultatif)</label>
+            {taggedPeople.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
+                {taggedPeople.map((person) => (
+                  <span key={person.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "5px 6px 5px 12px", fontSize: "12.5px", color: COLORS.ink }}>
+                    {person.name}
+                    <button
+                      onClick={() => setTaggedPeople((prev) => prev.filter((p) => p.id !== person.id))}
+                      aria-label={"Retirer " + person.name}
+                      style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "16px", lineHeight: 1, cursor: "pointer", padding: "0 6px" }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {taggedPeople.length < MAX_TAGS && (
+              <div style={{ position: "relative" }}>
+                <input
+                  value={tagQuery}
+                  onChange={(e) => setTagQuery(e.target.value)}
+                  placeholder="Taguer un Bibax"
+                  style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontSize: "14px" }}
+                />
+                {tagResults.length > 0 && (
+                  <div style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflow: "hidden" }}>
+                    {tagResults.map((person) => (
+                      <button
+                        key={person.id}
+                        onClick={() => {
+                          setTaggedPeople((prev) => [...prev, { id: person.id, name: person.name }]);
+                          setTagQuery("");
+                          setTagResults([]);
+                        }}
+                        style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
+                      >
+                        {person.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {error && <p style={{ color: COLORS.wine, fontSize: "13px", margin: "0 0 12px" }}>{error}</p>}
+
         <button
           onClick={() => finalizeCheck(false)}
-          disabled={!selectedVenue}
-          style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px", fontWeight: 700, color: COLORS.paper, cursor: selectedVenue ? "pointer" : "default", opacity: selectedVenue ? 1 : 0.5 }}
+          disabled={!selectedVenue || sending}
+          style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px", fontWeight: 700, color: COLORS.paper, cursor: selectedVenue && !sending ? "pointer" : "default", opacity: selectedVenue && !sending ? 1 : 0.5 }}
         >
-          Confirmer le check
+          {sending ? "Envoi de la photo..." : "Confirmer le check"}
         </button>
       </div>
     </div>
