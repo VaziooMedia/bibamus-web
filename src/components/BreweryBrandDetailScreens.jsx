@@ -153,13 +153,19 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
               color: activeTab === t.key ? COLORS.paper : COLORS.ink,
               border: `2px solid ${activeTab === t.key ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
-              padding: "9px 12px",
+              padding: "6px 12px",
               fontSize: "13px",
               fontWeight: 700,
               cursor: "pointer",
             }}
           >
-            {t.label}
+            {t.key === "bibapulse" ? (
+              <>
+                Biba<span style={{ color: activeTab === t.key ? undefined : COLORS.amber }}>Pulse</span>
+              </>
+            ) : (
+              t.label
+            )}
           </button>
         ))}
       </div>
