@@ -27,6 +27,7 @@ import internetIconUrl from "../assets/brand/internet.svg";
 
 export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
+  const [activeTab, setActiveTab] = useState("infos");
   const [justCheckedIn, setJustCheckedIn] = useState(false);
 
   const [linkedProducer, setLinkedProducer] = useState(null);
@@ -243,6 +244,33 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
             </span>
           </button>
         )}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        {[
+          { key: "infos", label: "Infos" },
+          { key: "bibapulse", label: "BibaPulse" },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            style={{
+              flex: 1,
+              background: activeTab === t.key ? COLORS.amber : "none",
+              color: activeTab === t.key ? COLORS.paper : COLORS.ink,
+              border: `2px solid ${activeTab === t.key ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "9px 12px",
+              fontSize: "13px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "infos" && (
+        <>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
         <div
           style={{
@@ -617,11 +645,10 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
           <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Pulse</span>
-        </div>
+        </>
+      )}
+
+      {activeTab === "bibapulse" && (
         <EntityPulseSection
           entityType="venue"
           entityId={venue.id}
@@ -630,7 +657,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
           onOpenDrink={onOpenDrink}
           selfEntity={{ type: "venue", object: { id: venue.id, name: venue.name } }}
         />
-      </div>
+      )}
 
       {claimsEnabled && claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       {showCheckInConfirm && (

@@ -58,6 +58,7 @@ export function DrinkDetailScreen({
   claimsEnabled = true,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [activeTab, setActiveTab] = useState("infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -317,6 +318,33 @@ export function DrinkDetailScreen({
           </div>
         )}
 
+        <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+          {[
+            { key: "infos", label: "Infos" },
+            { key: "bibapulse", label: "BibaPulse" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              style={{
+                flex: 1,
+                background: activeTab === t.key ? COLORS.amber : "none",
+                color: activeTab === t.key ? COLORS.paper : COLORS.ink,
+                border: `2px solid ${activeTab === t.key ? COLORS.amber : COLORS.paperAlt}`,
+                borderRadius: "999px",
+                padding: "9px 12px",
+                fontSize: "13px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "infos" && (
+          <>
         {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null) && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
@@ -515,20 +543,19 @@ export function DrinkDetailScreen({
             <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
           </button>
         </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Pulse</span>
-        </div>
-        <EntityPulseSection
-          entityType="drink"
-          entityId={drink.id}
-          myUserId={myUserId}
-          myBibroCode={myBibroCode}
-          onOpenVenue={onOpenVenue}
-          selfEntity={{ type: "drink", object: { id: drink.id, name: drink.name } }}
-        />
-      </div>
+          </>
+        )}
+
+        {activeTab === "bibapulse" && (
+          <EntityPulseSection
+            entityType="drink"
+            entityId={drink.id}
+            myUserId={myUserId}
+            myBibroCode={myBibroCode}
+            onOpenVenue={onOpenVenue}
+            selfEntity={{ type: "drink", object: { id: drink.id, name: drink.name } }}
+          />
+        )}
 
         {claimsEnabled && claiming && <ClaimModal entityType="drink" entityId={drink.id} entityName={drink.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 

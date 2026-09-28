@@ -16,6 +16,7 @@ import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBrewe
 export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(brewery.name || "");
+  const [activeTab, setActiveTab] = useState("infos");
   const [countryValue, setCountryValue] = useState(brewery.country || "");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
@@ -138,6 +139,33 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
         </button>
       )}
 
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        {[
+          { key: "infos", label: "Infos" },
+          { key: "bibapulse", label: "BibaPulse" },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            style={{
+              flex: 1,
+              background: activeTab === t.key ? COLORS.amber : "none",
+              color: activeTab === t.key ? COLORS.paper : COLORS.ink,
+              border: `2px solid ${activeTab === t.key ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "9px 12px",
+              fontSize: "13px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "infos" && (
+        <>
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
         SES MARQUES ({relatedBrands.length})
       </div>
@@ -242,13 +270,12 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
           <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Pulse</span>
-        </div>
+        </>
+      )}
+
+      {activeTab === "bibapulse" && (
         <EntityPulseSection entityType="producer" entityId={brewery.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} />
-      </div>
+      )}
 
       {claimsEnabled && claiming && <ClaimModal entityType="producer" entityId={brewery.id} entityName={brewery.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 

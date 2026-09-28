@@ -19,7 +19,7 @@ import { ProfileNavContext } from "../contexts.js";
 
 const SPECIAL_VENUE_LABELS = { "@home": "@Home", "@event": "@Event" };
 const SCOPES = [
-  { key: "all", label: "Tous" },
+  { key: "all", label: "Tout le monde" },
   { key: "bibax", label: "Mes Bibax" },
 ];
 
