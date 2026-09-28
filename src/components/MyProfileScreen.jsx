@@ -30,7 +30,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const fileInputRef = useRef(null);
   const [bio, setBio] = useState(profile.bio || "");
   const [shareBio, setShareBio] = useState(profile.shareBio !== false);
-  const [displayNameField, setDisplayNameField] = useState(profile.displayNameField || "firstName");
   const [facebookUrl, setFacebookUrl] = useState(profile.facebookUrl || "");
   const [instagramUrl, setInstagramUrl] = useState(profile.instagramUrl || "");
   const [tiktokUrl, setTiktokUrl] = useState(profile.tiktokUrl || "");
@@ -94,7 +93,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       locality: locality.trim(),
       avatarUrl,
       bio: bio.trim(),
-      displayNameField,
       facebookUrl: facebookUrl.trim(),
       instagramUrl: instagramUrl.trim(),
       tiktokUrl: tiktokUrl.trim(),
@@ -233,52 +231,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
       <label style={labelStyle}>Surnom</label>
       <input value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="Ex. Ju" style={fieldStyle} />
       <ShareToggle checked={shareSurnom} onChange={setShareSurnom} label="Surnom visible par mes Bibax" />
-
-      <label style={labelStyle}>Nom affiché dans les BibaRooms et ailleurs</label>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-2px", marginBottom: "10px" }}>
-        Une option n'est activable que si l'information correspondante est cochée "visible" ci-dessus. Sinon, ton prénom est utilisé par défaut.
-      </p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "18px" }}>
-        {(() => {
-          const canFullName = sharePrenom && shareNom && lastName.trim().length > 0;
-          const canNickname = shareSurnom && nickname.trim().length > 0;
-          const effective = (() => {
-            if (displayNameField === "fullName" || displayNameField === "firstNameInitial") return canFullName ? displayNameField : "firstName";
-            if (displayNameField === "nickname") return canNickname ? "nickname" : "firstName";
-            return "firstName";
-          })();
-          const options = [
-            { key: "fullName", label: lastName.trim() ? `${firstName} ${lastName}` : "Prénom + Nom", enabled: canFullName },
-            {
-              key: "firstNameInitial",
-              label: lastName.trim() ? `${firstName} ${lastName.trim().charAt(0).toUpperCase()}.` : "Prénom + 1ère lettre du nom",
-              enabled: canFullName,
-            },
-            { key: "nickname", label: nickname.trim() || "Surnom", enabled: canNickname },
-            { key: "firstName", label: firstName.trim() || "Prénom", enabled: true },
-          ];
-          return options.map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => opt.enabled && setDisplayNameField(opt.key)}
-              disabled={!opt.enabled}
-              style={{
-                background: effective === opt.key ? COLORS.amber : COLORS.surface,
-                color: effective === opt.key ? COLORS.chalkWhite : opt.enabled ? COLORS.ink : COLORS.inkSoft,
-                border: `2px solid ${effective === opt.key ? COLORS.ink : COLORS.paperAlt}`,
-                borderRadius: "999px",
-                padding: "8px 14px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: opt.enabled ? "pointer" : "not-allowed",
-                opacity: opt.enabled ? 1 : 0.45,
-              }}
-            >
-              {opt.label}
-            </button>
-          ));
-        })()}
-      </div>
 
       <label style={labelStyle}>Adresse e-mail</label>
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com" style={fieldStyle} />
