@@ -72,7 +72,7 @@ function PulseContent({ entry, onOpenTagged }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
       {photoUrl && (
-        <img src={photoUrl} alt="Photo de la publication" loading="lazy" style={{ width: "100%", maxHeight: "320px", objectFit: "cover", borderRadius: "10px", display: "block" }} />
+        <img src={photoUrl} alt="Photo de la publication" loading="lazy" style={{ width: "100%", maxHeight: "220px", objectFit: "cover", borderRadius: "10px", display: "block" }} />
       )}
       {rating !== null && (
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
