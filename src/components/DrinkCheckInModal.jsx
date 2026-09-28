@@ -17,7 +17,6 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
-import { StarsDisplay } from "./StarsDisplay.jsx";
 import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
 import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
 
@@ -166,42 +165,41 @@ export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, ena
                 Annuler
               </button>
             )}
+            {hasRating && (
+              <button
+                onClick={() => {
+                  onUnrate();
+                  setPendingValue(0.25);
+                  setSkipRating(false);
+                }}
+                style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "16px 0 0 0", textAlign: "left" }}
+              >
+                <NavIcon name="x" size={13} color={COLORS.wine} />
+                Retirer ma note
+              </button>
+            )}
           </>
         ) : (
+          // Note déjà donnée : verrouillée par défaut — ni barre d'étoiles ni retrait, seulement la valeur actuelle.
+          // C'est à l'utilisateur de demander à la revoir (« Modifier »).
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <StarsDisplay value={myRating} size={22} />
-              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }}>
-                <span style={{ color: COLORS.amber }}>{String(myRating).replace(".", ",")}</span>
-                <span style={{ color: COLORS.ink }}>/5</span>
-              </span>
-            </div>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }}>
+              <span style={{ color: COLORS.amber }}>{String(myRating).replace(".", ",")}</span>
+              <span style={{ color: COLORS.ink }}>/5</span>
+            </span>
             <button
               onClick={() => {
                 setPendingValue(myRating);
                 setIsEditingRating(true);
               }}
               title="Modifier ma note"
-              style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex" }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", gap: "6px", color: COLORS.amber, fontWeight: 600, fontSize: "12.5px" }}
             >
               <NavIcon name="pencil" size={19} color={COLORS.amber} />
+              Modifier
             </button>
           </div>
         )}
-        {!isEditingRating && (
-          <button
-            onClick={() => {
-              onUnrate();
-              setIsEditingRating(true);
-              setPendingValue(0.25);
-            }}
-            style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "16px 0 0 0", textAlign: "left" }}
-          >
-            <NavIcon name="x" size={13} color={COLORS.wine} />
-            Retirer ma note
-          </button>
-        )}
-
         <div style={{ borderBottom: `1px dashed ${COLORS.paperAlt}`, margin: "16px 0" }} />
 
         <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Lieu</label>

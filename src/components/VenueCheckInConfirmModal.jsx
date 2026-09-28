@@ -7,8 +7,9 @@
 //     dans ce lieu — une seule publication pour le geste, celle du produit ;
 //   - publier ou non sur BibaPulse, avec qui peut le voir (« Mes Bibax » par défaut), un
 //     commentaire, une photo et des Bibax tagués ;
-//   - donner, modifier ou retirer son avis sur le lieu : liste déroulante, « Pas d'avis » par défaut
-//     (ou l'avis déjà donné, s'il y en a un — pour qu'un check ne l'efface jamais par mégarde).
+//   - donner, modifier ou retirer son avis sur le lieu : liste déroulante, « Pas d'avis » par défaut.
+//     Un avis déjà donné est VERROUILLÉ : la liste n'apparaît pas d'office, seulement l'avis actuel et un
+//     bouton « Modifier » — c'est à l'utilisateur de demander à le revoir.
 //
 // Résultat envoyé à onClose : null si annulé, sinon
 //   { publishToPulse, visibility, content, drink: { id, name } | null, ratingChange }
@@ -35,6 +36,8 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
   // Avis sur le lieu : « Pas d'avis » (null) par défaut, ou l'avis déjà donné.
   const existingRating = myRating == null ? null : myRating;
   const [rating, setRating] = useState(existingRating);
+  // Un avis déjà donné est verrouillé par défaut : la liste n'apparaît que si l'utilisateur demande à le revoir.
+  const [editingRating, setEditingRating] = useState(existingRating == null);
   const existingRatingLabel = RATING_LABELS.find((l) => l.value === existingRating)?.fr;
 
   // Recherche du produit à ajouter (mêmes règles que les autres recherches : 2 lettres minimum).
@@ -118,20 +121,49 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
         {venueName && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 20px 0" }}>{venueName}</p>}
 
         <label style={labelStyle}>Ton avis sur ce lieu</label>
-        <select
-          value={rating == null ? "" : String(rating)}
-          onChange={(e) => setRating(e.target.value === "" ? null : Number(e.target.value))}
-          style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: existingRating != null && rating == null ? "6px" : "16px" }}
-        >
-          <option value="">Pas d'avis</option>
-          {RATING_LABELS.map((level) => (
-            <option key={level.value} value={level.value}>
-              {level.fr}
-            </option>
-          ))}
-        </select>
-        {existingRating != null && rating == null && (
-          <p style={{ fontSize: "12px", color: "#ef007c", margin: "0 0 16px" }}>Ton avis actuel{existingRatingLabel ? ` (${existingRatingLabel})` : ""} sera retiré.</p>
+        {!editingRating ? (
+          // Avis déjà donné : verrouillé par défaut — ni liste ni retrait, seulement l'avis actuel.
+          // C'est à l'utilisateur de demander à le revoir (« Modifier »).
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{existingRatingLabel || "Avis donné"}</span>
+            <button
+              onClick={() => setEditingRating(true)}
+              title="Modifier mon avis"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", gap: "6px", color: COLORS.amber, fontWeight: 600, fontSize: "12.5px" }}
+            >
+              <NavIcon name="pencil" size={19} color={COLORS.amber} />
+              Modifier
+            </button>
+          </div>
+        ) : (
+          <>
+            <select
+              value={rating == null ? "" : String(rating)}
+              onChange={(e) => setRating(e.target.value === "" ? null : Number(e.target.value))}
+              style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: existingRating != null ? "8px" : "16px" }}
+            >
+              <option value="">Pas d'avis</option>
+              {RATING_LABELS.map((level) => (
+                <option key={level.value} value={level.value}>
+                  {level.fr}
+                </option>
+              ))}
+            </select>
+            {existingRating != null && rating == null && (
+              <p style={{ fontSize: "12px", color: "#ef007c", margin: "0 0 8px" }}>Ton avis actuel{existingRatingLabel ? ` (${existingRatingLabel})` : ""} sera retiré.</p>
+            )}
+            {existingRating != null && (
+              <button
+                onClick={() => {
+                  setRating(existingRating);
+                  setEditingRating(false);
+                }}
+                style={{ display: "block", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0, marginBottom: "16px" }}
+              >
+                Annuler
+              </button>
+            )}
+          </>
         )}
 
         <label style={labelStyle}>Produit (facultatif)</label>
