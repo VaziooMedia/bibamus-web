@@ -368,7 +368,12 @@ export function DrinkDetailScreen({
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
               {(drink.abv != null || drink.ibu != null || drink.colorEbc != null) && (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                  {drink.abv != null && <span>{drink.abv}% vol. ABV</span>}
+                  {drink.abv != null && (
+                    <span style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                      <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />
+                      {drink.abv}% vol. ABV
+                    </span>
+                  )}
                   {drink.abv != null && (drink.ibu != null || drink.colorEbc != null) && (
                     <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block" }} />
                   )}
@@ -380,22 +385,30 @@ export function DrinkDetailScreen({
                 </div>
               )}
               {(drink.originCity || drink.originRegion || drink.nationality) && (
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <NavIcon name="map-pin" size={15} color={COLORS.inkSoft} />
-                  {[drink.originCity, drink.originRegion, drink.nationality].filter(Boolean).join(", ")}
-                  {drink.nationality && <CountryFlagImg country={drink.nationality} size={14} />}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                  <NavIcon name="map-pin" size={15} color={COLORS.amber} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    {drink.originCity && <span>{drink.originCity}</span>}
+                    {drink.originRegion && <span>{drink.originRegion}</span>}
+                    {drink.nationality && (
+                      <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        {drink.nationality}
+                        <CountryFlagImg country={drink.nationality} size={14} />
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
               {drink.launchYear && (
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <NavIcon name="calendar" size={15} color={COLORS.inkSoft} />
+                  <NavIcon name="calendar" size={15} color={COLORS.amber} />
                   Lancé en {drink.launchYear}
                 </div>
               )}
             </div>
 
             {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null) && (linkedBrand || linkedProducers.length > 0) && (
-              <div style={{ borderBottom: `1px dashed ${COLORS.paperAlt}`, margin: "14px 0" }} />
+              <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />
             )}
 
             {linkedBrand && (
@@ -404,9 +417,12 @@ export function DrinkDetailScreen({
                 style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginBottom: linkedProducers.length > 0 ? "10px" : 0 }}
               >
                 <EntityAvatar photoUrl={linkedBrand.logoUrl} size={28} />
-                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  {linkedBrand.name}
-                  <CertificationIcon level={linkedBrand.certificationLevel} size={13} />
+                <span>
+                  <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>Marque</span>
+                  <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    {linkedBrand.name}
+                    <CertificationIcon level={linkedBrand.certificationLevel} size={13} />
+                  </span>
                 </span>
               </button>
             )}
@@ -418,9 +434,12 @@ export function DrinkDetailScreen({
                 style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginTop: i > 0 ? "10px" : 0 }}
               >
                 <EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={28} />
-                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  {p.name}
-                  <CertificationIcon level={p.certificationLevel} size={13} />
+                <span>
+                  <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>Producteur</span>
+                  <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    {p.name}
+                    <CertificationIcon level={p.certificationLevel} size={13} />
+                  </span>
                 </span>
               </button>
             ))}
