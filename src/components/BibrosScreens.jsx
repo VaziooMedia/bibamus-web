@@ -658,7 +658,7 @@ export function BibroPulseScreen({ bibro, onBack }) {
           {pulseActivity.map((e) => (
             <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
               <div>
-                {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType}
+                {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType === "drink_checked" ? "🍹 A checké un produit" : e.eventType}
               </div>
               <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{formatMemberSince(e.createdAt)}</div>
             </div>
@@ -1137,7 +1137,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
           {pulseExcerpt.map((e) => (
             <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
               <div>
-                {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType}
+                {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType === "drink_checked" ? "🍹 A checké un produit" : e.eventType}
               </div>
               <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{formatMemberSince(e.createdAt)}</div>
             </div>

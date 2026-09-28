@@ -6,6 +6,7 @@ import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds, getSession } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
+import { StarsDisplay } from "./StarsDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
@@ -23,7 +24,7 @@ function resolveObject(entry, directories) {
 // Format neutre "Nom - Action @ Objet" — évite les problèmes d'accord (masculin/féminin,
 // préposition selon le nom du lieu) qu'une vraie phrase française poserait.
 function pulseActionFor(entry) {
-  return { product_discovered: "Découverte", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
+  return { product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
 }
 
 function timeAgo(iso) {
@@ -54,7 +55,53 @@ function ReactorsList({ people, emptyLabel }) {
   );
 }
 
-const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenProfile, onUpdate, initialShowComments, highlighted }, ref) {
+// Lieux "spéciaux" proposés au check d'un produit : ce ne sont pas de vraies fiches de lieu.
+const SPECIAL_VENUE_LABELS = { "@home": "@Home", "@event": "@Event" };
+
+// Contenu d'une publication : photo, note, commentaire, Bibax tagués. Tout vient de entry.metadata,
+// déjà vérifié par le serveur (create-pulse-event) — une publication sans contenu n'affiche rien
+// de plus. Les textes passent par React (jamais interprétés comme du code).
+function PulseContent({ entry, onOpenTagged }) {
+  const meta = entry.metadata || {};
+  const comment = typeof meta.comment === "string" ? meta.comment : "";
+  const photoUrl = typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null;
+  const rating = typeof meta.rating === "number" ? meta.rating : null;
+  const tagged = Array.isArray(meta.tagged) ? meta.tagged : [];
+  if (!comment && !photoUrl && rating === null && tagged.length === 0) return null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+      {photoUrl && (
+        <img src={photoUrl} alt="Photo de la publication" loading="lazy" style={{ width: "100%", maxHeight: "320px", objectFit: "cover", borderRadius: "10px", display: "block" }} />
+      )}
+      {rating !== null && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <StarsDisplay value={rating} size={16} />
+          <span style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink }}>{String(rating).replace(".", ",")}/5</span>
+        </div>
+      )}
+      {comment && <p style={{ margin: 0, fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{comment}</p>}
+      {tagged.length > 0 && (
+        <p style={{ margin: 0, fontSize: "12.5px", color: COLORS.inkSoft }}>
+          avec{" "}
+          {tagged.map((person, i) => (
+            <React.Fragment key={person.id}>
+              {i > 0 && ", "}
+              <button
+                onClick={() => onOpenTagged && onOpenTagged(person)}
+                style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: onOpenTagged ? "pointer" : "default" }}
+              >
+                {[person.name, person.last_name].filter(Boolean).join(" ")}
+              </button>
+            </React.Fragment>
+          ))}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenProfile, onUpdate, initialShowComments, highlighted }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -68,6 +115,10 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
   const obj = resolveObject(entry, directories);
 
   const canOpenObject = obj && ((entry.objectType === "venue" && onOpenVenue) || (entry.objectType === "drink" && onOpenDrink));
+  // Lieu où le check a été fait (produit checké dans un lieu) : affiché à la suite du produit.
+  const checkVenue = entry.objectType !== "venue" && entry.venueId ? directories.venuesById[entry.venueId] || null : null;
+  const checkVenueName = entry.objectType !== "venue" && entry.venueId ? SPECIAL_VENUE_LABELS[entry.venueId] || checkVenue?.name || null : null;
+  const openCheckVenue = checkVenue && onOpenVenue ? () => onOpenVenue(checkVenue.id) : null;
   const openObject = canOpenObject
     ? () => {
         if (entry.objectType === "venue") onOpenVenue(obj.id);
@@ -155,9 +206,23 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
             ) : (
               <strong style={{ color: COLORS.amber }}>{obj?.name || "une fiche"}</strong>
             )}
+            {checkVenueName && (
+              <>
+                <span style={{ color: COLORS.inkSoft }}>{" — "}</span>
+                {openCheckVenue ? (
+                  <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
+                    {checkVenueName}
+                  </button>
+                ) : (
+                  <span style={{ fontWeight: 700 }}>{checkVenueName}</span>
+                )}
+              </>
+            )}
           </p>
         </div>
       </div>
+
+      <PulseContent entry={entry} onOpenTagged={onOpenTagged} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
         <button
@@ -431,7 +496,11 @@ export function BibaPulseScreen({
   const [venuesById, setVenuesById] = useState({});
   useEffect(() => {
     const ids = new Set();
-    (entries || []).forEach((e) => e.objectType === "venue" && e.objectId && ids.add(e.objectId));
+    (entries || []).forEach((e) => {
+      if (e.objectType === "venue" && e.objectId) ids.add(e.objectId);
+      // Lieu où un produit a été checké (hors "@Home" / "@Event", qui n'ont pas de fiche).
+      else if (e.venueId && !SPECIAL_VENUE_LABELS[e.venueId]) ids.add(e.venueId);
+    });
     if (ids.size === 0) return;
     loadVenuesByIds([...ids]).then((results) => setVenuesById((prev) => ({ ...prev, ...Object.fromEntries(results.map((v) => [v.id, v])) })));
   }, [entries]);
@@ -541,6 +610,10 @@ export function BibaPulseScreen({
               myUserId={myUserId}
               myBibroCode={myBibroCode}
               onOpenVenue={onOpenVenue}
+              onOpenTagged={(person) => {
+                if (person.id === myUserId) goToProfile();
+                else if (person.bibro_code) setViewedProfileCode(person.bibro_code);
+              }}
               onOpenDrink={onOpenDrink}
               onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}
               onUpdate={(patch) => updateEntry(entry.id, patch)}

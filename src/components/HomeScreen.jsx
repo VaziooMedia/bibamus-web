@@ -505,7 +505,7 @@ export function HomeScreen({
             const map = { drink: drinksDirectory, producer: breweriesDirectory, brand: brandsDirectory };
             return (map[objType] || []).find((x) => x.id === id) || null;
           };
-          const actionFor = (entry) => ({ product_discovered: "Découverte", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité");
+          const actionFor = (entry) => ({ product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité");
 
           return (
             <div style={{ marginBottom: "18px" }}>
