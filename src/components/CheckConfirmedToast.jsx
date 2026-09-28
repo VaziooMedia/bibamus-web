@@ -30,7 +30,7 @@ export function CheckConfirmedToast({ name, onDone, durationMs = 2500 }) {
         alignItems: "center",
         gap: "12px",
         background: COLORS.surface,
-        border: `2px solid ${COLORS.amber}`,
+        border: `2px solid ${COLORS.pinkFluo}`,
         borderRadius: "14px",
         padding: "10px 18px 10px 12px",
         boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
@@ -39,7 +39,7 @@ export function CheckConfirmedToast({ name, onDone, durationMs = 2500 }) {
         cursor: "pointer",
       }}
     >
-      <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: COLORS.amber, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: COLORS.pinkFluo, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
         <NavIcon name="check" size={16} color="#000" />
       </span>
       <span style={{ minWidth: 0 }}>
