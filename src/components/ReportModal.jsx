@@ -17,6 +17,16 @@ function ReportIcon() {
 // Raisons disponibles selon le type de fiche — "Établissement fermé définitivement" n'a de
 // sens que pour un établissement.
 function reasonsFor(entityType) {
+  // Publications et commentaires du Pulse : d'autres raisons que pour une fiche (pas de "fiche en double").
+  if (entityType === "pulse_event" || entityType === "pulse_comment") {
+    return [
+      { key: "inappropriate", label: "Contenu inapproprié", commentRequired: false },
+      { key: "spam", label: "Spam ou publicité", commentRequired: false },
+      { key: "harassment", label: "Harcèlement ou propos blessants", commentRequired: false },
+      { key: "personal_info", label: "Photo ou information personnelle sans accord", commentRequired: false },
+      { key: "other", label: "Autre raison", commentRequired: true },
+    ];
+  }
   const base = [
     { key: "suggestion", label: "Suggestion de modification", commentRequired: true },
     { key: "wrong_info", label: "Information(s) incorrecte(s)", commentRequired: true },
@@ -128,7 +138,7 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.ink, margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
                 <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-                Signaler cette fiche
+                {entityType === "pulse_event" ? "Signaler cette publication" : entityType === "pulse_comment" ? "Signaler ce commentaire" : "Signaler cette fiche"}
               </h2>
               <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "20px", cursor: "pointer" }}>
                 ✕

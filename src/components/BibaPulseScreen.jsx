@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { COLORS } from "../constants.js";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds, getSession } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
+import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -52,7 +54,7 @@ function ReactorsList({ people, emptyLabel }) {
   );
 }
 
-const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, onOpenVenue, onOpenDrink, onOpenProfile, onUpdate, initialShowComments, highlighted }, ref) {
+const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenProfile, onUpdate, initialShowComments, highlighted }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -60,6 +62,8 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
   const [comments, setComments] = useState(null);
   const [commentInput, setCommentInput] = useState("");
   const [posting, setPosting] = useState(false);
+  // Signalement en cours : { type: "pulse_event" | "pulse_comment", id }
+  const [reportTarget, setReportTarget] = useState(null);
 
   const obj = resolveObject(entry, directories);
 
@@ -244,6 +248,17 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
           </span>
           {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
         </button>
+
+        {myUserId && entry.actorId !== myUserId && (
+          <button
+            onClick={() => setReportTarget({ type: "pulse_event", id: entry.id })}
+            aria-label="Signaler cette publication"
+            title="Signaler"
+            style={{ marginLeft: "auto", display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", color: COLORS.inkSoft, cursor: "pointer" }}
+          >
+            <ReportIcon />
+          </button>
+        )}
       </div>
 
       {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
@@ -288,10 +303,20 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
                 comments.map((c) => (
                   <div key={c.id} style={{ display: "flex", gap: "8px" }}>
                     <EntityAvatar photoUrl={c.userAvatarUrl} size={24} />
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink }}>{c.userName}</span>
                       <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>{c.body}</p>
                     </div>
+                    {myUserId && c.userId !== myUserId && (
+                      <button
+                        onClick={() => setReportTarget({ type: "pulse_comment", id: c.id })}
+                        aria-label="Signaler ce commentaire"
+                        title="Signaler"
+                        style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", background: "none", border: "none", padding: "2px", color: COLORS.inkSoft, cursor: "pointer" }}
+                      >
+                        <ReportIcon />
+                      </button>
+                    )}
                   </div>
                 ))
               )}
@@ -354,6 +379,12 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
           </div>
         </div>
       )}
+
+      {reportTarget &&
+        ReactDOM.createPortal(
+          <ReportModal entityType={reportTarget.type} entityId={reportTarget.id} myBibroCode={myBibroCode} onClose={() => setReportTarget(null)} />,
+          document.body
+        )}
     </div>
   );
 });
@@ -363,6 +394,7 @@ export function BibaPulseScreen({
   breweriesDirectory = [],
   brandsDirectory = [],
   myUserId: myUserIdProp,
+  myBibroCode,
   onOpenVenue,
   onOpenDrink,
   focusEntryId,
@@ -507,6 +539,7 @@ export function BibaPulseScreen({
               entry={entry}
               directories={directories}
               myUserId={myUserId}
+              myBibroCode={myBibroCode}
               onOpenVenue={onOpenVenue}
               onOpenDrink={onOpenDrink}
               onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}

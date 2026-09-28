@@ -3349,6 +3349,7 @@ export default function App() {
                 brandsDirectory={brandsDirectory}
                 focusEntryId={focusPulseEntry?.id}
                 openCommentsOnFocus={focusPulseEntry?.openComments}
+                myBibroCode={profile.myBibroCode}
                 onOpenVenue={(id) => {
                   setScreenBeforeVenueDetail("bibaPulse");
                   setViewedVenueId(id);
