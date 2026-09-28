@@ -272,10 +272,12 @@ export async function searchBibax(query) {
   }));
 }
 
-// Pour le vrai picker de tag "Taguer un Bibax" — même vraie recherche que searchBibax, mais
-// enrichie du vrai réglage allow_story_tags de chaque personne : la vraie RPC search_bibax ne
-// le renvoie pas (on ne connaît pas son vrai corps pour l'y ajouter sans risque), donc un vrai
-// second appel direct sur profiles, fusionné côté client par id.
+// Pour le picker de tag "Taguer un Bibax" (Stories et BibaPulse) — même recherche que searchBibax, enrichie
+// de « cette personne peut-elle être taguée ? » (allowStoryTags : false = elle a restreint ses tags, ou
+// un blocage existe). La RPC search_bibax ne le renvoie pas, donc un second appel, fusionné par id.
+// Ce second appel passe par la fonction get_taggable_bibax et NON par une lecture directe de la table
+// profiles : la sécurité de cette table ne laisse lire que son propre profil, la lecture directe
+// revenait donc vide, sans erreur, et tout le monde paraissait taggable.
 export async function searchBibaxForTagging(query) {
   const [results, myBibax] = await Promise.all([searchBibax(query), loadMyBibax()]);
   // Un vrai tag Bibax ne concerne que les vrais amis déjà confirmés — pas n'importe quel
@@ -284,19 +286,15 @@ export async function searchBibaxForTagging(query) {
   const myBibaxIds = new Set(myBibax.map((b) => b.userId));
   const friendResults = results.filter((r) => myBibaxIds.has(r.id));
   if (friendResults.length === 0) return friendResults;
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, allow_story_tags")
-    .in(
-      "id",
-      friendResults.map((r) => r.id)
-    );
+  const { data, error } = await supabase.rpc("get_taggable_bibax", { p_ids: friendResults.map((r) => r.id) });
   if (error) {
     console.error("searchBibaxForTagging:", error);
+    // Par prudence, sans information on laisse choisir : le serveur écarte de toute façon, sans bruit,
+    // les personnes qui ne peuvent pas être taguées.
     return friendResults.map((r) => ({ ...r, name: r.displayName, allowStoryTags: true }));
   }
-  const byId = new Map(data.map((r) => [r.id, r.allow_story_tags]));
-  return friendResults.map((r) => ({ ...r, name: r.displayName, allowStoryTags: byId.get(r.id) !== false }));
+  const canTagById = new Map((data || []).map((r) => [r.id, r.can_tag]));
+  return friendResults.map((r) => ({ ...r, name: r.displayName, allowStoryTags: canTagById.get(r.id) !== false }));
 }
 
 // Fil de notifications — chargement, marquer comme lu(es), compteur non-lus.

@@ -87,12 +87,18 @@ function PulseContent({ entry, onOpenTagged }) {
           {tagged.map((person, i) => (
             <React.Fragment key={person.id}>
               {i > 0 && ", "}
-              <button
-                onClick={() => onOpenTagged && onOpenTagged(person)}
-                style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: onOpenTagged ? "pointer" : "default" }}
-              >
-                {[person.name, person.last_name].filter(Boolean).join(" ")}
-              </button>
+              {/* Sans code de profil (la personne a refusé l'accès à son profil via un tag) : le tag reste affiché,
+                  mais ce n'est plus un lien. */}
+              {person.bibro_code ? (
+                <button
+                  onClick={() => onOpenTagged && onOpenTagged(person)}
+                  style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: onOpenTagged ? "pointer" : "default" }}
+                >
+                  {[person.name, person.last_name].filter(Boolean).join(" ")}
+                </button>
+              ) : (
+                <span style={{ fontWeight: 700, color: COLORS.ink }}>{[person.name, person.last_name].filter(Boolean).join(" ")}</span>
+              )}
             </React.Fragment>
           ))}
         </p>

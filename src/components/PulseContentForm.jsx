@@ -35,7 +35,8 @@ export function usePulseContentForm(defaultVisibility = "public") {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Recherche des Bibax à taguer — uniquement de vrais Bibax confirmés qui acceptent d'être tagués.
+  // Recherche des Bibax à taguer — uniquement de vrais Bibax confirmés. Ceux qui ont restreint leurs tags
+  // (allowStoryTags === false) restent affichés mais GRISÉS et non sélectionnables, pour prévenir l'utilisateur.
   useEffect(() => {
     const term = tagQuery.trim();
     if (term.length < 2) {
@@ -46,7 +47,7 @@ export function usePulseContentForm(defaultVisibility = "public") {
     const timer = setTimeout(() => {
       searchBibaxForTagging(term).then((results) => {
         if (cancelled) return;
-        setTagResults(results.filter((r) => r.allowStoryTags !== false && !taggedPeople.some((t) => t.id === r.id)).slice(0, 6));
+        setTagResults(results.filter((r) => !taggedPeople.some((t) => t.id === r.id)).slice(0, 6));
       });
     }, 300);
     return () => {
@@ -190,20 +191,30 @@ export function PulseContentFields({ form }) {
           />
           {tagResults.length > 0 && (
             <div style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflow: "hidden" }}>
-              {tagResults.map((person) => (
-                <button
-                  key={person.id}
-                  onClick={() => {
-                    setTaggedPeople((prev) => [...prev, { id: person.id, name: fullNameOf(person), avatarUrl: person.avatarUrl }]);
-                    setTagQuery("");
-                    setTagResults([]);
-                  }}
-                  style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
-                >
-                  <EntityAvatar photoUrl={person.avatarUrl} size={28} />
-                  <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fullNameOf(person)}</span>
-                </button>
-              ))}
+              {tagResults.map((person) => {
+                // Un Bibax qui a restreint ses tags apparaît grisé, non sélectionnable — même rendu que dans les Stories.
+                const restricted = person.allowStoryTags === false;
+                return (
+                  <button
+                    key={person.id}
+                    disabled={restricted}
+                    title={restricted ? "Ce Bibax a restreint ses tags" : undefined}
+                    onClick={
+                      restricted
+                        ? undefined
+                        : () => {
+                            setTaggedPeople((prev) => [...prev, { id: person.id, name: fullNameOf(person), avatarUrl: person.avatarUrl }]);
+                            setTagQuery("");
+                            setTagResults([]);
+                          }
+                    }
+                    style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", cursor: restricted ? "not-allowed" : "pointer", fontSize: "13.5px", color: restricted ? COLORS.inkSoft : COLORS.ink, opacity: restricted ? 0.5 : 1 }}
+                  >
+                    <EntityAvatar photoUrl={person.avatarUrl} size={28} />
+                    <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fullNameOf(person)}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
