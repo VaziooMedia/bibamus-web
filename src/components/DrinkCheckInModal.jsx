@@ -33,6 +33,9 @@ export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, ena
   const hasRating = myRating != null;
   const [isEditingRating, setIsEditingRating] = useState(!hasRating);
   const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
+  // « Pas de note » : simple choix à bascule — la note n'est alors pas appliquée, mais la fenêtre reste ouverte
+  // pour compléter le lieu et le reste ; c'est « Confirmer le check » qui valide.
+  const [skipRating, setSkipRating] = useState(false);
   const [publishToPulse, setPublishToPulse] = useState(true);
   const [query, setQuery] = useState("");
   const [selectedVenue, setSelectedVenue] = useState(presetVenue);
@@ -69,7 +72,7 @@ export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, ena
   const filteredSpecials = q ? SPECIAL_VENUES.filter((v) => v.name.toLowerCase().includes(q.toLowerCase())) : SPECIAL_VENUES;
 
 
-  const finalizeCheck = async (skipRating) => {
+  const finalizeCheck = async () => {
     if (sending) return;
     form.setError(null);
 
@@ -134,18 +137,29 @@ export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, ena
         <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px", display: "block" }}>Ta note</label>
         {isEditingRating ? (
           <>
-            <RatingSlider value={hasRating ? myRating : 0} onLocalChange={setPendingValue} />
+            {/* « Pas de note » atténue le curseur ; le déplacer, ou retaper sur le bouton, annule ce choix. */}
+            <div style={{ opacity: skipRating ? 0.35 : 1, transition: "opacity 0.15s" }}>
+              <RatingSlider
+                value={hasRating ? myRating : 0}
+                onLocalChange={(v) => {
+                  setPendingValue(v);
+                  setSkipRating(false);
+                }}
+              />
+            </div>
             <button
-              onClick={() => finalizeCheck(true)}
-              style={{ display: "flex", alignItems: "center", width: "100%", background: "none", border: "none", borderRadius: "10px", padding: "10px 0", cursor: "pointer", textAlign: "left", marginTop: "6px" }}
+              onClick={() => setSkipRating((v) => !v)}
+              aria-pressed={skipRating}
+              style={{ display: "flex", alignItems: "center", width: "100%", background: "none", border: "none", borderRadius: "10px", padding: "5px 0", cursor: "pointer", textAlign: "left", marginTop: "6px" }}
             >
-              <span style={{ fontSize: "13px", fontWeight: 600, color: "#ef007c" }}>Pas de note</span>
+              <span style={{ fontSize: "13px", fontWeight: 600, color: skipRating ? "#fff" : "#ef007c", background: skipRating ? "#ef007c" : "none", borderRadius: "999px", padding: "5px 12px", marginLeft: "-12px" }}>Pas de note</span>
             </button>
             {hasRating && (
               <button
                 onClick={() => {
                   setPendingValue(myRating);
                   setIsEditingRating(false);
+                  setSkipRating(false);
                 }}
                 style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0, marginTop: "4px" }}
               >
@@ -295,7 +309,7 @@ export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, ena
         {form.error && <p style={{ color: COLORS.wine, fontSize: "13px", margin: "0 0 12px" }}>{form.error}</p>}
 
         <button
-          onClick={() => finalizeCheck(false)}
+          onClick={() => finalizeCheck()}
           disabled={!selectedVenue || sending}
           style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px", fontWeight: 700, color: COLORS.paper, cursor: selectedVenue && !sending ? "pointer" : "default", opacity: selectedVenue && !sending ? 1 : 0.5 }}
         >
