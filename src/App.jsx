@@ -1663,20 +1663,24 @@ export default function App() {
     setScreen("drinksDirectory");
   };
 
-  const checkInVenue = async (venueId, { publishToPulse = true } = {}) => {
+  // Check-in dans un lieu, confirmé depuis la fenêtre « Place Check-in ». Une seule publication
+  // par check-in, jamais deux, et la case « Publier » est respectée :
+  //   - avec un produit ajouté : c'est aussi un check de ce produit dans ce lieu — la publication
+  //     est celle du produit (« Découverte » ou « Check », avec le lieu) ;
+  //   - sans produit : une visite du lieu.
+  // Si publishToPulse est faux, rien n'est publié mais le passage (et le produit) sont bien
+  // enregistrés. L'émission d'événement ci-dessous ne sert qu'aux statistiques (skipPulse).
+  // Renvoie le résultat de la publication ({ ok } ou { error }), ou null si rien n'a été publié.
+  const checkInVenue = async (venueId, { publishToPulse = true, visibility = null, content = null, drink = null } = {}) => {
     // Marquage local existant, conservé tel quel (présence en temps réel sur cet appareil).
     setCheckedInVenueId(venueId);
-    emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId, skipPulse: !publishToPulse });
+    emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId, skipPulse: true });
     // Persistance réelle en base — c'est elle qui autorise ensuite à laisser un avis sur ce lieu.
     await recordVenueCheckIn(venueId);
     trackEvent("place_checked", "venue", profile.myBibroCode);
-  };
-
-  // À partir du 2e check-in, la publication BibaPulse est confirmée séparément (case cochée
-  // par défaut dans le popup de check-in) plutôt qu'automatique — voir checkInVenue ci-dessus,
-  // appelé avec publishToPulse: false dans ce cas.
-  const publishCheckInPulse = (venueId) => {
-    publishVenueCheckInToPulse(venueId);
+    if (drink) return checkInDrink(drink.id, venueId, { publishToPulse, visibility, content });
+    if (!publishToPulse) return null;
+    return publishVenueCheckInToPulse(venueId, { visibility, content });
   };
 
   // Miroir de checkInVenue, mais pour un produit — répétable (pas de marquage local "présence
@@ -2280,7 +2284,6 @@ export default function App() {
                 myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
                 onCheckIn={(opts) => checkInVenue(viewedVenueId, opts)}
-                onPublishCheckInPulse={() => publishCheckInPulse(viewedVenueId)}
                 onBack={() => {
                   if (storyResumeState) {
                     setViewedStoryAuthor(storyResumeState.stories);

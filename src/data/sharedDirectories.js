@@ -616,8 +616,8 @@ export async function recordVenueCheckIn(venueId) {
 // l'utilisateur la confirme (case cochée par défaut) dans le popup de check-in. Cette fonction
 // publie l'activité correspondante seulement à ce moment-là, séparément de emitEvent (dont le
 // insert analytics_events, lui, a déjà eu lieu au moment du check-in).
-export async function publishVenueCheckInToPulse(venueId) {
-  await createPulseEvent("venue_visit", "venue", venueId);
+export async function publishVenueCheckInToPulse(venueId, { visibility = null, content = null } = {}) {
+  return createPulseEvent("venue_visit", "venue", venueId, { visibility, content });
 }
 
 // Même principe que recordVenueCheckIn/publishVenueCheckInToPulse, mais pour un produit —

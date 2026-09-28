@@ -25,7 +25,7 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, onPublishCheckInPulse, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, claimsEnabled = true }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
 
@@ -122,20 +122,22 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
   const [showCheckInConfirm, setShowCheckInConfirm] = useState(false);
   const [checkInMyRating, setCheckInMyRating] = useState(null);
 
+  // La fenêtre « Place Check-in » s'ouvre à chaque check-in ; le check n'est enregistré qu'à sa
+  // confirmation. La question complète ("donne ton avis") n'est posée qu'une seule fois, juste
+  // après le premier check-in — si l'utilisateur a déjà une note sur ce lieu, la fenêtre propose
+  // seulement un lien discret pour revenir sur l'avis déjà donné.
   const handleCheckIn = async () => {
+    setCheckInMyRating(await loadMyVenueRating(venue.id));
+    setShowCheckInConfirm(true);
+  };
+
+  const handleCheckInConfirmed = async (result) => {
+    setShowCheckInConfirm(false);
+    if (!result) return; // fenêtre fermée sans confirmer : rien n'est enregistré
     setJustCheckedIn(true);
-    // On ne pose la question complète ("donne ton avis") qu'une seule fois — si l'utilisateur
-    // a déjà une note sur ce lieu, ce check-in n'en redemande pas une, il propose juste un
-    // popup léger (publication BibaPulse + lien discret pour revenir sur l'avis déjà donné).
-    const existingRating = await loadMyVenueRating(venue.id);
-    if (existingRating == null) {
-      await onCheckIn(venue);
-      setShowRatingModal(true);
-    } else {
-      await onCheckIn(venue, { publishToPulse: false });
-      setCheckInMyRating(existingRating);
-      setShowCheckInConfirm(true);
-    }
+    const pulseResult = await onCheckIn({ publishToPulse: result.publishToPulse, visibility: result.visibility, content: result.content, drink: result.drink });
+    if (pulseResult && pulseResult.error) alert("Ton check-in est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
+    if (checkInMyRating == null || result.modifyRating) setShowRatingModal(true);
   };
 
   return (
@@ -604,18 +606,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
       {claimsEnabled && claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       {showRatingModal && <VenueRatingModal venueId={venue.id} venueName={venue.name} onClose={() => setShowRatingModal(false)} />}
       {showCheckInConfirm && (
-        <VenueCheckInConfirmModal
-          venueName={venue.name}
-          myRating={checkInMyRating}
-          onClose={(publish) => {
-            setShowCheckInConfirm(false);
-            if (publish) onPublishCheckInPulse && onPublishCheckInPulse();
-          }}
-          onModifyRating={() => {
-            setShowCheckInConfirm(false);
-            setShowRatingModal(true);
-          }}
-        />
+        <VenueCheckInConfirmModal venueName={venue.name} myRating={checkInMyRating} onClose={handleCheckInConfirmed} />
       )}
 
       {showActionsMenu && (
