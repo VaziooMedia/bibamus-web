@@ -4,11 +4,12 @@ import { NavIcon } from "./icons.jsx";
 import { uploadStoryMedia, createStory, searchBibaxForTagging, searchVenues, searchDrinks, searchBrands, searchBreweries, sendNotification } from "../data/sharedDirectories.js";
 import { MobileImageEditor } from "./MobileImageEditor.jsx";
 import { MobileTagPill } from "./MobileTagPill.jsx";
+import { TagRestrictedBadge } from "./TagRestrictedBadge.jsx";
 
 // Vrai tag "recherche + sélection unique" — vrai libellé au-dessus, vrai champ de recherche ou
 // vraie pastille choisie en dessous. Recherche dès 2 caractères, comme les autres pickers de
 // l'app.
-function TagPicker({ label, searchFn, selected, onSelect }) {
+export function TagPicker({ label, searchFn, selected, onSelect }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
@@ -53,8 +54,8 @@ function TagPicker({ label, searchFn, selected, onSelect }) {
           {results.length > 0 && (
             <div style={{ marginTop: "4px", background: COLORS.surface, borderRadius: "10px", border: `1px solid ${COLORS.paperAlt}`, overflow: "hidden" }}>
               {results.map((r) => {
-                // Un Bibax ayant désactivé "Autoriser les tags" apparaît grisé, non
-                // sélectionnable — sa vraie préférence de confidentialité prime.
+                // Un Bibax ayant désactivé "Autoriser les tags" apparaît grisé, non sélectionnable, avec le
+                // même repère « Tags x » que le sélecteur de BibaPulse — sa vraie préférence de confidentialité prime.
                 const disabled = r.allowStoryTags === false;
                 return (
                   <button
@@ -68,20 +69,24 @@ function TagPicker({ label, searchFn, selected, onSelect }) {
                           }
                     }
                     disabled={disabled}
+                    title={disabled ? "Ce Bibax a restreint ses tags" : undefined}
                     style={{
-                      display: "block",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
                       width: "100%",
                       textAlign: "left",
                       padding: "10px 12px",
                       background: "none",
                       border: "none",
-                      color: disabled ? COLORS.inkSoft : COLORS.ink,
                       fontSize: "13.5px",
                       cursor: disabled ? "not-allowed" : "pointer",
-                      opacity: disabled ? 0.5 : 1,
                     }}
                   >
-                    {r.name}
+                    <span style={{ flex: 1, minWidth: 0, color: disabled ? COLORS.inkSoft : COLORS.ink, opacity: disabled ? 0.5 : 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {r.name}
+                    </span>
+                    {disabled && <TagRestrictedBadge />}
                   </button>
                 );
               })}
