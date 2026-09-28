@@ -90,7 +90,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
       <SecurityGroup title="Confidentialité">
         <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir ce qui est visible" onClick={() => goToSubScreen("publicProfile")} />
         <SecurityRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Mes Statistiques" subtitle="Choisir ce que tes Bibax voient" onClick={() => goToSubScreen("myStats")} />
-        <SecurityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Tags de Bibax" subtitle="Stories et BibaPulse : qui peut te taguer" onClick={() => goToSubScreen("storyTagsPrivacy")} />
+        <SecurityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Tags" subtitle="Stories et BibaPulse : qui peut te taguer" onClick={() => goToSubScreen("storyTagsPrivacy")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow icon={<NavIcon name="no-entry" size={17} color={COLORS.amber} />} title="Utilisateurs bloqués" subtitle="Gérer les comptes bloqués" onClick={() => goToSubScreen("blockedUsers")} />
         </div>
@@ -196,10 +196,10 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   );
 }
 
-// Tags de Bibax — 4e sous-section de Confidentialité. Contrôle si d'autres personnes
-// peuvent vous taguer dans leurs Stories et leurs publications BibaPulse, et si un vrai tap sur ce tag peut ouvrir votre
-// profil. Un vrai tag reste affiché même profil désactivé — seul l'accès est bloqué, pas le
-// vrai tag lui-même (déjà accepté au moment où la Story a été publiée).
+// Tags — 4e sous-section de Confidentialité. Contrôle, SÉPARÉMENT pour les Stories et pour
+// BibaPulse, si d'autres personnes peuvent vous taguer, et si un tap sur ce tag peut ouvrir
+// votre profil. Un tag reste affiché même profil désactivé — seul l'accès est bloqué, pas le
+// tag lui-même (déjà accepté au moment de la publication).
 export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   const [p, setP] = useState(profile);
   const update = (patch) => {
@@ -207,17 +207,19 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
     onSaveProfile(patch);
   };
 
-  const allowTagsOn = p.allowStoryTags !== false;
-
-  // Désactiver les tags rend "accéder au profil via un tag" sans objet — les mettre en
-  // désaccord serait incohérent, vu qu'il n'y aurait alors plus jamais de tag pour y accéder.
-  const toggleAllowStoryTags = () => {
-    if (allowTagsOn) {
-      update({ allowStoryTags: false, allowProfileViaTag: false });
+  // Désactiver "Autoriser les tags" sur une surface rend son "accéder au profil via un tag"
+  // sans objet — les mettre en désaccord serait incohérent, vu qu'il n'y aurait alors plus
+  // jamais de tag, sur CETTE surface, pour y accéder. Les deux surfaces restent indépendantes
+  // l'une de l'autre.
+  const makeToggleAllowTags = (tagsField, profileField) => () => {
+    if (p[tagsField] !== false) {
+      update({ [tagsField]: false, [profileField]: false });
     } else {
-      update({ allowStoryTags: true });
+      update({ [tagsField]: true });
     }
   };
+  const toggleAllowStoryTags = makeToggleAllowTags("allowStoryTags", "allowProfileViaTag");
+  const toggleAllowPulseTags = makeToggleAllowTags("allowPulseTags", "allowProfileViaPulseTag");
 
   const ToggleRow = ({ title, description, field, disabled, onToggle }) => {
     const isOn = p[field] !== false;
@@ -256,20 +258,32 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar icon={<NavIcon name="tag" size={22} color={COLORS.amber} />}>Tags de Bibax</PageTitleWithBar>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisis si d'autres Bibax peuvent te taguer dans leurs Stories et leurs publications BibaPulse.</p>
+      <PageTitleWithBar icon={<NavIcon name="tag" size={22} color={COLORS.amber} />}>Tags</PageTitleWithBar>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisis, séparément pour les Stories et pour BibaPulse, si d'autres Bibax peuvent te taguer.</p>
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-        <ToggleRow title="Autoriser les tags" description="Tes Bibax peuvent te taguer sur leurs Stories et leurs publications BibaPulse." field="allowStoryTags" onToggle={toggleAllowStoryTags} />
+      <SecurityGroup title="Stories">
+        <ToggleRow title="Autoriser les tags" description="Tes Bibax peuvent te taguer sur leurs Stories." field="allowStoryTags" onToggle={toggleAllowStoryTags} />
         <div style={{ borderBottom: "none" }}>
           <ToggleRow
             title="Accéder à mon profil via un tag"
-            description={allowTagsOn ? "Un tap sur ton tag propose l'accès à ton profil." : "Sans tag possible, cette option n'a pas d'effet."}
+            description={p.allowStoryTags !== false ? "Un tap sur ton tag propose l'accès à ton profil." : "Sans tag possible, cette option n'a pas d'effet."}
             field="allowProfileViaTag"
-            disabled={!allowTagsOn}
+            disabled={p.allowStoryTags === false}
           />
         </div>
-      </div>
+      </SecurityGroup>
+
+      <SecurityGroup title="BibaPulse">
+        <ToggleRow title="Autoriser les tags" description="Tes Bibax peuvent te taguer sur leurs publications BibaPulse." field="allowPulseTags" onToggle={toggleAllowPulseTags} />
+        <div style={{ borderBottom: "none" }}>
+          <ToggleRow
+            title="Accéder à mon profil via un tag"
+            description={p.allowPulseTags !== false ? "Un tap sur ton tag propose l'accès à ton profil." : "Sans tag possible, cette option n'a pas d'effet."}
+            field="allowProfileViaPulseTag"
+            disabled={p.allowPulseTags === false}
+          />
+        </div>
+      </SecurityGroup>
 
       <PageFooterNav onBack={onBack} />
     </div>

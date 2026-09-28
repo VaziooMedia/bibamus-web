@@ -96,7 +96,7 @@ function TagPicker({ label, searchFn, selected, onSelect }) {
 // Les 5 vrais tags de fiche possibles, avec leur vrai symbole propre — la légende n'en a pas,
 // vu que c'est un vrai texte libre plutôt qu'une référence à une fiche précise.
 const TAG_TYPES = [
-  { key: "bibax", label: "Taguer un Bibax", symbol: "@", searchFn: searchBibaxForTagging },
+  { key: "bibax", label: "Taguer un Bibax", symbol: "@", searchFn: (q) => searchBibaxForTagging(q, "story") },
   { key: "venue", label: "Taguer un lieu", symbol: "@", searchFn: searchVenues },
   { key: "drink", label: "Taguer un produit", symbol: "#", searchFn: searchDrinks },
   { key: "brand", label: "Taguer une marque", symbol: "#", searchFn: searchBrands },

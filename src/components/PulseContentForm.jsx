@@ -45,7 +45,7 @@ export function usePulseContentForm(defaultVisibility = "public") {
     }
     let cancelled = false;
     const timer = setTimeout(() => {
-      searchBibaxForTagging(term).then((results) => {
+      searchBibaxForTagging(term, "pulse").then((results) => {
         if (cancelled) return;
         setTagResults(results.filter((r) => !taggedPeople.some((t) => t.id === r.id)).slice(0, 6));
       });

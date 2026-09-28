@@ -273,12 +273,13 @@ export async function searchBibax(query) {
 }
 
 // Pour le picker de tag "Taguer un Bibax" (Stories et BibaPulse) — même recherche que searchBibax, enrichie
-// de « cette personne peut-elle être taguée ? » (allowStoryTags : false = elle a restreint ses tags, ou
-// un blocage existe). La RPC search_bibax ne le renvoie pas, donc un second appel, fusionné par id.
-// Ce second appel passe par la fonction get_taggable_bibax et NON par une lecture directe de la table
-// profiles : la sécurité de cette table ne laisse lire que son propre profil, la lecture directe
+// de « cette personne peut-elle être taguée ? » (champ allowStoryTags, gardé sous ce nom pour ne pas
+// répercuter un renommage sur tous les appelants : false = restreinte SUR LA SURFACE DEMANDÉE, ou un
+// blocage existe). surface : "pulse" (défaut, BibaPulse) ou "story" (Stories) — les deux ont leur
+// propre réglage (voir get_taggable_bibax). Passe par cette fonction et NON par une lecture directe
+// de la table profiles : sa sécurité ne laisse lire que son propre profil, la lecture directe
 // revenait donc vide, sans erreur, et tout le monde paraissait taggable.
-export async function searchBibaxForTagging(query) {
+export async function searchBibaxForTagging(query, surface = "pulse") {
   const [results, myBibax] = await Promise.all([searchBibax(query), loadMyBibax()]);
   // Un vrai tag Bibax ne concerne que les vrais amis déjà confirmés — pas n'importe quel
   // utilisateur de l'app (searchBibax est une vraie recherche globale, réutilisée ailleurs pour
@@ -286,7 +287,7 @@ export async function searchBibaxForTagging(query) {
   const myBibaxIds = new Set(myBibax.map((b) => b.userId));
   const friendResults = results.filter((r) => myBibaxIds.has(r.id));
   if (friendResults.length === 0) return friendResults;
-  const { data, error } = await supabase.rpc("get_taggable_bibax", { p_ids: friendResults.map((r) => r.id) });
+  const { data, error } = await supabase.rpc("get_taggable_bibax", { p_ids: friendResults.map((r) => r.id), p_surface: surface });
   if (error) {
     console.error("searchBibaxForTagging:", error);
     // Par prudence, sans information on laisse choisir : le serveur écarte de toute façon, sans bruit,
@@ -805,6 +806,8 @@ export async function loadMyProfile(userId) {
     shareTwitch: data.share_twitch,
     allowStoryTags: data.allow_story_tags,
     allowProfileViaTag: data.allow_profile_via_tag,
+    allowPulseTags: data.allow_pulse_tags,
+    allowProfileViaPulseTag: data.allow_profile_via_pulse_tag,
     shareStatsOverview: data.share_stats_overview,
     shareStatsRecords: data.share_stats_records,
     shareStatsDrinks: data.share_stats_drinks,
@@ -905,6 +908,8 @@ export async function updateMyProfile(
     shareTwitch,
     allowStoryTags,
     allowProfileViaTag,
+    allowPulseTags,
+    allowProfileViaPulseTag,
     shareStatsOverview,
     shareStatsRecords,
     shareStatsDrinks,
@@ -996,6 +1001,8 @@ export async function updateMyProfile(
     share_twitch: shareTwitch,
     allow_story_tags: allowStoryTags,
     allow_profile_via_tag: allowProfileViaTag,
+    allow_pulse_tags: allowPulseTags,
+    allow_profile_via_pulse_tag: allowProfileViaPulseTag,
     share_stats_overview: shareStatsOverview,
     share_stats_records: shareStatsRecords,
     share_stats_drinks: shareStatsDrinks,
@@ -1414,7 +1421,7 @@ async function enrichStoriesWithTags(stories) {
     loadBrandsByIds(tagRows.map((r) => r.tagged_brand_id)),
     loadBreweriesByIds(tagRows.map((r) => r.tagged_producer_id)),
     bibaxCodes.length > 0
-      ? supabase.from("profiles").select("bibro_code, name, last_name, allow_profile_via_tag").in("bibro_code", bibaxCodes).then((r) => r.data || [])
+      ? supabase.rpc("get_story_tagged_bibax", { p_codes: bibaxCodes }).then((r) => r.data || [])
       : Promise.resolve([]),
   ]);
   const byId = new Map(tagRows.map((r) => [r.id, r]));
@@ -1440,9 +1447,9 @@ async function enrichStoriesWithTags(stories) {
         bibax: bibax ? [bibax.name, bibax.last_name].filter(Boolean).join(" ") : null,
       },
       // Un vrai tag Bibax reste affiché même si la personne a désactivé l'accès au profil via
-      // tag (allow_profile_via_tag) — seul le vrai clic vers la fiche doit être bloqué, pas le
-      // vrai tag lui-même (déjà accepté par la personne au moment de la publication).
-      bibaxProfileViaTagAllowed: bibax ? bibax.allow_profile_via_tag !== false : true,
+      // tag — seul le vrai clic vers la fiche doit être bloqué, pas le vrai tag lui-même (déjà
+      // accepté par la personne au moment de la publication).
+      bibaxProfileViaTagAllowed: bibax ? bibax.can_view_profile !== false : true,
     };
   });
 }
