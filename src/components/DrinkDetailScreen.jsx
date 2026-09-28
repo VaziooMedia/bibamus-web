@@ -19,7 +19,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { styleTagLabel } from "../data/styleTagLabels.js";
-import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkTotalChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -96,6 +96,18 @@ export function DrinkDetailScreen({
     let cancelled = false;
     loadMyDrinkCheckinCount(drink.id).then((n) => {
       if (!cancelled) setMyCheckCount(n);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [drink.id]);
+
+  // Nombre total de checks sur ce produit, tous les Bibax confondus — affiché à côté de "Tes checks".
+  const [totalCheckCount, setTotalCheckCount] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadDrinkTotalChecks(drink.id).then((n) => {
+      if (!cancelled) setTotalCheckCount(n);
     });
     return () => {
       cancelled = true;
@@ -351,7 +363,7 @@ export function DrinkDetailScreen({
 
         {activeTab === "infos" && (
           <>
-        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null) && (
+        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || linkedBrand || linkedProducers.length > 0) && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
               {(drink.abv != null || drink.ibu != null || drink.colorEbc != null) && (
@@ -381,31 +393,29 @@ export function DrinkDetailScreen({
                 </div>
               )}
             </div>
-          </div>
-        )}
 
-        {linkedBrand && (
-          <div style={{ marginBottom: "16px" }}>
-            <button
-              onClick={() => onOpenBrand(linkedBrand.id)}
-              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
-            >
-              <EntityAvatar photoUrl={linkedBrand.logoUrl} size={28} />
-              <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                {linkedBrand.name}
-                <CertificationIcon level={linkedBrand.certificationLevel} size={13} />
-              </span>
-            </button>
-          </div>
-        )}
+            {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null) && (linkedBrand || linkedProducers.length > 0) && (
+              <div style={{ borderBottom: `1px dashed ${COLORS.paperAlt}`, margin: "14px 0" }} />
+            )}
 
-        {linkedProducers.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-            {linkedProducers.map((p) => (
+            {linkedBrand && (
+              <button
+                onClick={() => onOpenBrand(linkedBrand.id)}
+                style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginBottom: linkedProducers.length > 0 ? "10px" : 0 }}
+              >
+                <EntityAvatar photoUrl={linkedBrand.logoUrl} size={28} />
+                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {linkedBrand.name}
+                  <CertificationIcon level={linkedBrand.certificationLevel} size={13} />
+                </span>
+              </button>
+            )}
+
+            {linkedProducers.map((p, i) => (
               <button
                 key={p.id}
                 onClick={() => onOpenBrewery(p.id)}
-                style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+                style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginTop: i > 0 ? "10px" : 0 }}
               >
                 <EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={28} />
                 <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
@@ -417,9 +427,15 @@ export function DrinkDetailScreen({
           </div>
         )}
 
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px", textAlign: "center" }}>
-          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Tes checks sur ce produit</span>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber, marginTop: "4px" }}>{myCheckCount ?? "—"}</div>
+        <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+          <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "12px", textAlign: "center" }}>
+            <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>Tes Checks</span>
+            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, marginTop: "4px" }}>{myCheckCount ?? "—"}</div>
+          </div>
+          <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "12px", textAlign: "center" }}>
+            <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>Bibax</span>
+            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, marginTop: "4px" }}>{totalCheckCount ?? "—"}</div>
+          </div>
         </div>
 
         {globalMonthCount > 0 && (

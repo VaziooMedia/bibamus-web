@@ -2938,6 +2938,17 @@ export async function loadDrinkGlobalStats(drinkId, since = null, until = null) 
   return data[0]?.quantity || 0;
 }
 
+// Nombre total de checks sur ce produit, tous les utilisateurs de Bibamus confondus, tout temps
+// confondu — chaque check compte, publié ou non sur BibaPulse (voir drink_checkins).
+export async function loadDrinkTotalChecks(drinkId) {
+  const { data, error } = await supabase.rpc("get_drink_total_checks", { p_drink_id: drinkId });
+  if (error) {
+    console.error("loadDrinkTotalChecks:", error);
+    return 0;
+  }
+  return data || 0;
+}
+
 export async function loadMyStatsForVenue(venueId, since = null, until = null) {
   const { data, error } = await supabase.rpc("get_my_stats_for_venue", {
     p_venue_id: venueId,
