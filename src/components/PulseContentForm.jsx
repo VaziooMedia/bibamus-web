@@ -12,7 +12,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
-import { NavIcon } from "./icons.jsx";
 import { searchBibaxForTagging, uploadPulsePhoto } from "../data/sharedDirectories.js";
 import { fileToResizedJpegBlob } from "../imageUtils.js";
 
@@ -219,9 +218,12 @@ export function PulseContentFields({ form }) {
                     {restricted && (
                       <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", flexShrink: 0, fontSize: "12px", fontWeight: 700, color: COLORS.pinkFluo }}>
                         Tags
-                        <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: `1.5px solid ${COLORS.pinkFluo}`, boxSizing: "border-box", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                          <NavIcon name="x" size={9} color={COLORS.pinkFluo} />
-                        </span>
+                        {/* Rond et croix sont dessinés ENSEMBLE, dans le même repère (centre exact : 8,8). Un rond en CSS avec une
+                            icône posée dedans laissait la croix décalée d'un demi-pixel : deux mesures qui s'arrondissent chacune à leur façon. */}
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ display: "block", flexShrink: 0 }}>
+                          <circle cx="8" cy="8" r="7.25" stroke={COLORS.pinkFluo} strokeWidth="1.5" />
+                          <path d="M5.375 5.375 10.625 10.625M10.625 5.375 5.375 10.625" stroke={COLORS.pinkFluo} strokeWidth="0.75" strokeLinecap="round" />
+                        </svg>
                       </span>
                     )}
                   </button>
