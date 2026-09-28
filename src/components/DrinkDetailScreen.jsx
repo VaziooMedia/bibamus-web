@@ -17,6 +17,7 @@ import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { formatDrinkFieldValue, formatMoney } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
+import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { styleTagLabel } from "../data/styleTagLabels.js";
 import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
@@ -514,6 +515,21 @@ export function DrinkDetailScreen({
             <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
           </button>
         </div>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Pulse</span>
+        </div>
+        <EntityPulseSection
+          entityType="drink"
+          entityId={drink.id}
+          myUserId={myUserId}
+          myBibroCode={myBibroCode}
+          onOpenVenue={onOpenVenue}
+          selfEntity={{ type: "drink", object: { id: drink.id, name: drink.name } }}
+        />
+      </div>
+
         {claimsEnabled && claiming && <ClaimModal entityType="drink" entityId={drink.id} entityName={drink.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 
         {showActionsMenu && (

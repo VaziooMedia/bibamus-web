@@ -10,6 +10,7 @@ import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
+import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweryById, loadVenueById } from "../data/sharedDirectories.js";
 
 export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
@@ -241,6 +242,14 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
           <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Pulse</span>
+        </div>
+        <EntityPulseSection entityType="producer" entityId={brewery.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} />
+      </div>
+
       {claimsEnabled && claiming && <ClaimModal entityType="producer" entityId={brewery.id} entityName={brewery.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 
       {showActionsMenu && (

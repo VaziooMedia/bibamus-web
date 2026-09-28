@@ -2347,6 +2347,11 @@ export default function App() {
                   setViewedBreweryId(id);
                   setScreen("breweryDetail");
                 }}
+                onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("venueDetail");
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
               />
             )}
             {screen === "venueMenuCategories" && viewedVenue && (

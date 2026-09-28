@@ -10,6 +10,7 @@ import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink, formatMoney
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
+import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
 import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, loadVenueRevenueStats, toggleFollowVenue, loadVenueFollowStatus, loadBreweryLinkedToVenue } from "../data/sharedDirectories.js";
 import { VenueCheckInConfirmModal } from "./VenueCheckInConfirmModal.jsx";
@@ -24,7 +25,7 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, claimsEnabled = true }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
 
@@ -616,6 +617,21 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
           <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Pulse</span>
+        </div>
+        <EntityPulseSection
+          entityType="venue"
+          entityId={venue.id}
+          myUserId={myUserId}
+          myBibroCode={myBibroCode}
+          onOpenDrink={onOpenDrink}
+          selfEntity={{ type: "venue", object: { id: venue.id, name: venue.name } }}
+        />
+      </div>
+
       {claimsEnabled && claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       {showCheckInConfirm && (
         <VenueCheckInConfirmModal venueName={venue.name} venuePhotoUrl={venue.profilePhotoUrl} venueEmoji={venue.avatarEmoji} myRating={checkInMyRating} onClose={handleCheckInConfirmed} />

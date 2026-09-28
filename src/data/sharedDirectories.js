@@ -3517,13 +3517,10 @@ function brandToRow(b, partial = false) {
 
 /* ---------------- BIBAPULSE ---------------- */
 
-export async function loadPulseFeed(before = null, limit = 20) {
-  const { data, error } = await supabase.rpc("get_pulse_feed", { p_limit: limit, p_before: before });
-  if (error) {
-    console.error("loadPulseFeed:", error);
-    return [];
-  }
-  return data.map((row) => ({
+// Champs communs à get_pulse_feed et get_entity_pulse (mêmes colonnes, voir pulse-4.sql) —
+// un seul mappage pour les deux, jamais dupliqué.
+function rowToPulseEntry(row) {
+  return {
     id: row.id,
     eventType: row.event_type,
     actorId: row.actor_id,
@@ -3546,7 +3543,28 @@ export async function loadPulseFeed(before = null, limit = 20) {
     createdAt: row.created_at,
     iBixed: row.i_bixed,
     iAmIncoming: row.i_am_incoming,
-  }));
+  };
+}
+
+export async function loadPulseFeed(before = null, limit = 20) {
+  const { data, error } = await supabase.rpc("get_pulse_feed", { p_limit: limit, p_before: before });
+  if (error) {
+    console.error("loadPulseFeed:", error);
+    return [];
+  }
+  return data.map(rowToPulseEntry);
+}
+
+// Pulse d'une fiche (Produit, Lieu, Producteur) — mêmes cartes que le fil principal, filtrées à
+// cette fiche. entityType : "drink" | "venue" | "producer". scope : "all" (tout ce que je peux
+// voir) ou "bibax" (mes Bibax seulement).
+export async function loadEntityPulse(entityType, entityId, scope = "all", before = null, limit = 20) {
+  const { data, error } = await supabase.rpc("get_entity_pulse", { p_entity_type: entityType, p_entity_id: entityId, p_scope: scope, p_limit: limit, p_before: before });
+  if (error) {
+    console.error("loadEntityPulse:", error);
+    return [];
+  }
+  return data.map(rowToPulseEntry);
 }
 
 export async function togglePulseBix(pulseEventId, alreadyBixed) {
