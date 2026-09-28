@@ -86,27 +86,19 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
 
   return (
     <div>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+      {/* Liste déroulante plutôt que des boutons, pour bien la distinguer des onglets principaux
+          Infos / BibaPulse, au-dessus. */}
+      <select
+        value={scope}
+        onChange={(e) => setScope(e.target.value)}
+        style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "14px" }}
+      >
         {SCOPES.map((s) => (
-          <button
-            key={s.key}
-            onClick={() => setScope(s.key)}
-            style={{
-              flex: 1,
-              background: scope === s.key ? COLORS.amber : "none",
-              color: scope === s.key ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${scope === s.key ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "9px 12px",
-              fontSize: "13px",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
+          <option key={s.key} value={s.key}>
             {s.label}
-          </button>
+          </option>
         ))}
-      </div>
+      </select>
 
       {entries === null ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
