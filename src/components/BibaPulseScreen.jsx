@@ -254,9 +254,9 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
             onClick={() => setReportTarget({ type: "pulse_event", id: entry.id })}
             aria-label="Signaler cette publication"
             title="Signaler"
-            style={{ marginLeft: "auto", display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", color: COLORS.inkSoft, cursor: "pointer" }}
+            style={{ marginLeft: "auto", display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", color: COLORS.inkSoft, opacity: 0.5, cursor: "pointer" }}
           >
-            <ReportIcon />
+            <ReportIcon size={12} />
           </button>
         )}
       </div>
@@ -312,9 +312,9 @@ const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUs
                         onClick={() => setReportTarget({ type: "pulse_comment", id: c.id })}
                         aria-label="Signaler ce commentaire"
                         title="Signaler"
-                        style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", background: "none", border: "none", padding: "2px", color: COLORS.inkSoft, cursor: "pointer" }}
+                        style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", background: "none", border: "none", padding: "2px", color: COLORS.inkSoft, opacity: 0.5, cursor: "pointer" }}
                       >
-                        <ReportIcon />
+                        <ReportIcon size={11} />
                       </button>
                     )}
                   </div>

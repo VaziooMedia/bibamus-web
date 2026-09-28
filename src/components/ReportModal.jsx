@@ -4,9 +4,9 @@ import { submitReport, trackEvent, searchDrinks, searchVenues } from "../data/sh
 
 // Icône moderne (cercle + point d'exclamation), remplace l'ancien drapeau — cohérente avec le
 // style trait fin utilisé ailleurs dans l'app.
-function ReportIcon() {
+function ReportIcon({ size = 18 }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="9" />
       <line x1="12" y1="7.5" x2="12" y2="13" />
       <circle cx="12" cy="16.5" r="0.5" fill="currentColor" />
