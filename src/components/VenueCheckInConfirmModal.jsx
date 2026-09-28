@@ -104,7 +104,8 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
         <label style={labelStyle}>Produit (facultatif)</label>
         {drink ? (
           <div style={{ marginBottom: "16px" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "5px 6px 5px 12px", fontSize: "12.5px", color: COLORS.ink }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 6px 4px 5px", fontSize: "12.5px", color: COLORS.ink }}>
+              <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={20} fallbackIcon="bottle" />
               {drink.name}
               <button
                 onClick={() => setDrink(null)}
