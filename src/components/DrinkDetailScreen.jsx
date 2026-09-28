@@ -563,6 +563,8 @@ export function DrinkDetailScreen({
       {showCheckModal && (
         <DrinkCheckInModal
           drinkName={drink.name}
+          drinkPhotoUrl={drink.photoUrl}
+          drinkEmoji={drink.avatarEmoji}
           drinkType={drink.type}
           myRating={myRating}
           enableContent

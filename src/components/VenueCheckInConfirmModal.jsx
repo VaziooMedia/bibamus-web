@@ -3,7 +3,7 @@
 // qu'à la confirmation (VenueDetailScreen.jsx) ; fermer la fenêtre sans confirmer l'annule.
 //
 // On peut y :
-//   - ajouter un produit (facultatif) : le check compte alors aussi comme un check de ce produit
+//   - ajouter un produit (sans obligation) : le check compte alors aussi comme un check de ce produit
 //     dans ce lieu — une seule publication pour le geste, celle du produit ;
 //   - publier ou non sur BibaPulse, avec qui peut le voir (« Mes Bibax » par défaut), un
 //     commentaire, une photo et des Bibax tagués ;
@@ -20,12 +20,13 @@ import React, { useState, useEffect } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
+import { CheckButtonIcon } from "./CheckButtonIcon.jsx";
 import { searchDrinks } from "../data/sharedDirectories.js";
 import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
 
 const labelStyle = { fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" };
 
-export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
+export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji, myRating, onClose }) {
   const [publishToPulse, setPublishToPulse] = useState(true);
   // Un passage dans un lieu se partage d'abord avec ses Bibax (comme avant) ; le public reste un choix.
   const form = usePulseContentForm("relations");
@@ -118,7 +119,12 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
             Place<span style={{ color: COLORS.amber }}>Check</span>
           </span>
         </h2>
-        {venueName && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 20px 0" }}>{venueName}</p>}
+        {venueName && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 20px 0" }}>
+            <EntityAvatar photoUrl={venuePhotoUrl} photoEmoji={venueEmoji} size={32} />
+            <span style={{ fontSize: "14px", fontWeight: 700, color: COLORS.ink, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venueName}</span>
+          </div>
+        )}
 
         <label style={labelStyle}>Ton avis sur ce lieu</label>
         {!editingRating ? (
@@ -129,10 +135,9 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
             <button
               onClick={() => setEditingRating(true)}
               title="Modifier mon avis"
-              style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", gap: "6px", color: COLORS.amber, fontWeight: 600, fontSize: "12.5px" }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex" }}
             >
               <NavIcon name="pencil" size={19} color={COLORS.amber} />
-              Modifier
             </button>
           </div>
         ) : (
@@ -166,7 +171,7 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
           </>
         )}
 
-        <label style={labelStyle}>Produit (facultatif)</label>
+        <label style={labelStyle}>Produit</label>
         {drink ? (
           <div style={{ marginBottom: "16px" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 6px 4px 5px", fontSize: "12.5px", color: COLORS.ink }}>
@@ -232,7 +237,12 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
           >
             {publishToPulse && <NavIcon name="check" size={13} color="#000" />}
           </span>
-          Publier dans BibaPulse
+          <span>
+            Publier dans{" "}
+            <strong style={{ fontWeight: 800 }}>
+              Biba<span style={{ color: COLORS.amber }}>Pulse</span>
+            </strong>
+          </span>
         </button>
 
         {publishToPulse && <PulseContentFields form={form} />}
@@ -242,9 +252,16 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
         <button
           onClick={() => handleConfirm()}
           disabled={sending}
-          style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px", fontWeight: 700, color: COLORS.paper, cursor: sending ? "default" : "pointer", opacity: sending ? 0.6 : 1 }}
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "11px", fontWeight: 700, color: COLORS.paper, cursor: sending ? "default" : "pointer", opacity: sending ? 0.6 : 1 }}
         >
-          {sending ? "Envoi de la photo..." : "PlaceCheck"}
+          {sending ? (
+            "Envoi de la photo..."
+          ) : (
+            <>
+              <span>PlaceCheck</span>
+              <CheckButtonIcon />
+            </>
+          )}
         </button>
       </div>
     </div>

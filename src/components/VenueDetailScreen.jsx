@@ -618,7 +618,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
       </div>
       {claimsEnabled && claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       {showCheckInConfirm && (
-        <VenueCheckInConfirmModal venueName={venue.name} myRating={checkInMyRating} onClose={handleCheckInConfirmed} />
+        <VenueCheckInConfirmModal venueName={venue.name} venuePhotoUrl={venue.profilePhotoUrl} venueEmoji={venue.avatarEmoji} myRating={checkInMyRating} onClose={handleCheckInConfirmed} />
       )}
 
       {showActionsMenu && (

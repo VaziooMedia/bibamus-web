@@ -15,6 +15,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
+import { CheckButtonIcon } from "./CheckButtonIcon.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
@@ -28,12 +29,12 @@ const SPECIAL_VENUES = [
 // enableContent : affiche les champs de publication (visibilité, commentaire, photo, Bibax tagués).
 // Le résultat renvoyé à onClose est { publishToPulse, venueId, visibility, content } — content ne
 // contient que ce qui a été renseigné : { comment, rating, photoUrl, taggedIds }.
-export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, enableContent = false, onRate, onUnrate, onClose }) {
+export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRating, presetVenue = null, enableContent = false, onRate, onUnrate, onClose }) {
   const hasRating = myRating != null;
   const [isEditingRating, setIsEditingRating] = useState(!hasRating);
   const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
   // « Pas de note » : simple choix à bascule — la note n'est alors pas appliquée, mais la fenêtre reste ouverte
-  // pour compléter le lieu et le reste ; c'est « Confirmer le check » qui valide.
+  // pour compléter le lieu et le reste ; c'est le bouton « DrinkCheck » qui valide.
   const [skipRating, setSkipRating] = useState(false);
   const [publishToPulse, setPublishToPulse] = useState(true);
   const [query, setQuery] = useState("");
@@ -131,7 +132,12 @@ export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, ena
             Drink<span style={{ color: COLORS.amber }}>Check</span>
           </span>
         </h2>
-        {drinkName && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 18px 0" }}>{drinkName}</p>}
+        {drinkName && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 18px 0" }}>
+            <EntityAvatar photoUrl={drinkPhotoUrl} photoEmoji={drinkEmoji} fallbackIcon="bottle" size={32} />
+            <span style={{ fontSize: "14px", fontWeight: 700, color: COLORS.ink, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{drinkName}</span>
+          </div>
+        )}
 
         <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px", display: "block" }}>Ta note</label>
         {isEditingRating ? (
@@ -193,10 +199,9 @@ export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, ena
                 setIsEditingRating(true);
               }}
               title="Modifier ma note"
-              style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", gap: "6px", color: COLORS.amber, fontWeight: 600, fontSize: "12.5px" }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex" }}
             >
               <NavIcon name="pencil" size={19} color={COLORS.amber} />
-              Modifier
             </button>
           </div>
         )}
@@ -299,7 +304,12 @@ export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, ena
           >
             {publishToPulse && <NavIcon name="check" size={13} color="#000" />}
           </span>
-          Publier dans BibaPulse
+          <span>
+            Publier dans{" "}
+            <strong style={{ fontWeight: 800 }}>
+              Biba<span style={{ color: COLORS.amber }}>Pulse</span>
+            </strong>
+          </span>
         </button>
 
         {enableContent && publishToPulse && <PulseContentFields form={form} />}
@@ -308,10 +318,17 @@ export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, ena
 
         <button
           onClick={() => finalizeCheck()}
-          disabled={!selectedVenue || sending}
-          style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px", fontWeight: 700, color: COLORS.paper, cursor: selectedVenue && !sending ? "pointer" : "default", opacity: selectedVenue && !sending ? 1 : 0.5 }}
+          disabled={sending}
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "11px", fontWeight: 700, color: COLORS.paper, cursor: sending ? "default" : "pointer", opacity: sending ? 0.6 : 1 }}
         >
-          {sending ? "Envoi de la photo..." : "Confirmer le check"}
+          {sending ? (
+            "Envoi de la photo..."
+          ) : (
+            <>
+              <span>DrinkCheck</span>
+              <CheckButtonIcon />
+            </>
+          )}
         </button>
       </div>
     </div>

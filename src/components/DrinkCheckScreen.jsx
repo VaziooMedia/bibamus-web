@@ -71,6 +71,8 @@ export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, on
       {checking && (
         <DrinkCheckInModal
           drinkName={checking.name}
+          drinkPhotoUrl={checking.photoUrl}
+          drinkEmoji={checking.avatarEmoji}
           drinkType={checking.type}
           myRating={ratingFor(checking)}
           presetVenue={presetVenue}

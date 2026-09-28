@@ -104,7 +104,7 @@ export function PulseContentFields({ form }) {
   const { visibility, setVisibility, comment, setComment, photo, setPhoto, tagQuery, setTagQuery, tagResults, setTagResults, taggedPeople, setTaggedPeople, fileInputRef, handlePhotoPick } = form;
   return (
     <div style={{ marginBottom: "20px" }}>
-      <label style={{ ...labelStyle, marginBottom: "8px" }}>Qui peut le voir ?</label>
+      <label style={{ ...labelStyle, marginBottom: "8px" }}>Confidentialité</label>
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         {[
           { key: "public", label: "Public" },
@@ -130,7 +130,7 @@ export function PulseContentFields({ form }) {
         ))}
       </div>
 
-      <label style={labelStyle}>Commentaire (facultatif)</label>
+      <label style={labelStyle}>Commentaire</label>
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
@@ -141,7 +141,7 @@ export function PulseContentFields({ form }) {
       />
       <p style={{ margin: "2px 0 14px", fontSize: "11px", color: COLORS.inkSoft, textAlign: "right" }}>{comment.length}/280</p>
 
-      <label style={labelStyle}>Photo (facultatif)</label>
+      <label style={labelStyle}>Photo</label>
       <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoPick} />
       {photo ? (
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
@@ -162,7 +162,7 @@ export function PulseContentFields({ form }) {
         </button>
       )}
 
-      <label style={labelStyle}>Avec (facultatif)</label>
+      <label style={labelStyle}>Bibax</label>
       {taggedPeople.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
           {taggedPeople.map((person) => (
