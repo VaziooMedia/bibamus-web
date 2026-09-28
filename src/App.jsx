@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { NavigationContext, ProfileNavContext } from "./contexts.js";
 import { EVENT_TYPES } from "./events.js";
+import { isHomeCheckScreen } from "./checkFlow.js";
 import { BottomNav } from "./components/ui.jsx";
 import { ErrorBoundary, installGlobalCrashReporting } from "./components/ErrorBoundary.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
@@ -74,6 +75,7 @@ import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBran
 import { ImportDataScreen } from "./components/ImportDataScreen.jsx";
 import { BibrosListScreen, BibroDetailScreen, BibroStatsScreen, BibroPulseScreen, AddBibroScreen, AdminUnlockScreen, MutualBibaxScreen } from "./components/BibrosScreens.jsx";
 import { DeleteAccountScreen } from "./components/DeleteAccountScreen.jsx";
+import { CheckConfirmedToast } from "./components/CheckConfirmedToast.jsx";
 import {
   loadMyTastedDrinkIds,
   setDrinkTastedServer,
@@ -279,6 +281,14 @@ export default function App() {
   const [screenBeforeSearch, setScreenBeforeSearch] = useState("home");
   const [screenBeforeDrinksDirectory, setScreenBeforeDrinksDirectory] = useState("repertoireHub");
   const [screenBeforeDrinkDetail, setScreenBeforeDrinkDetail] = useState("drinksDirectory");
+  // Parcours « Check depuis l'accueil » : "drink" (bouton DrinkCheck) ou "venue" (bouton PlaceCheck) tant que
+  // la personne est dans la recherche ou sur la fiche choisie — voir checkFlow.js. Il s'arrête dès qu'elle
+  // part ailleurs, pour ne jamais ouvrir une fenêtre de check par surprise sur une fiche ouverte plus tard.
+  const [homeCheckFlow, setHomeCheckFlow] = useState(null);
+  const [checkToast, setCheckToast] = useState(null); // { name, key } | null — popup « Check confirmé »
+  useEffect(() => {
+    if (homeCheckFlow && !isHomeCheckScreen(homeCheckFlow, screen)) setHomeCheckFlow(null);
+  }, [homeCheckFlow, screen]);
 
   // Finalise la connexion Spotify dès que la session est prête — ne peut pas se faire plus tôt,
   // l'échange du code nécessite de savoir à quel compte Bibamus l'associer.
@@ -1699,6 +1709,16 @@ export default function App() {
     return publishDrinkCheckInToPulse(drinkId, venueId, { isDiscovery: checkCount <= 1, visibility, content });
   };
 
+  // Fin du parcours « Check depuis l'accueil ». info = null : la fenêtre a été fermée sans confirmer, on reste
+  // sur la fiche. Sinon le check est confirmé : on retombe sur le Pulse principal si une publication a été
+  // faite (elle y apparaît en tête), sinon sur l'accueil — dans les deux cas avec une petite confirmation.
+  const finishHomeCheck = (info) => {
+    setHomeCheckFlow(null);
+    if (!info) return;
+    setCheckToast({ name: info.name || null, key: Date.now() });
+    setScreen(info.published ? "bibaPulse" : "home");
+  };
+
   const handleLogout = async () => {
     await signOut();
     setSession(null);
@@ -1967,6 +1987,7 @@ export default function App() {
                   setScreen("search");
                 }}
                 goToDrinkCheck={() => {
+                  setHomeCheckFlow("drink");
                   setScreenBeforeDrinksDirectory("home");
                   setScreen("drinksDirectory");
                 }}
@@ -1975,6 +1996,7 @@ export default function App() {
                   setScreen("bibaSolo");
                 }}
                 goToPlaceCheck={() => {
+                  setHomeCheckFlow("venue");
                   setScreenBeforeVenueDirectory("home");
                   setScreen("venueDirectory");
                 }}
@@ -2284,6 +2306,8 @@ export default function App() {
                 myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
                 onCheckIn={(opts) => checkInVenue(viewedVenueId, opts)}
+                autoOpenCheck={homeCheckFlow === "venue"}
+                onCheckFlowFinished={finishHomeCheck}
                 onBack={() => {
                   if (storyResumeState) {
                     setViewedStoryAuthor(storyResumeState.stories);
@@ -2352,6 +2376,8 @@ export default function App() {
                 onUnrate={() => unrateDrink(viewedDrinkId)}
                 onToggleMode={(mode) => toggleTastedServingMode(viewedDrinkId, mode)}
                 onCheckDrink={(drinkId, venueId, opts) => checkInDrink(drinkId, venueId, opts)}
+                autoOpenCheck={homeCheckFlow === "drink"}
+                onCheckFlowFinished={finishHomeCheck}
                 onBack={() => {
                   if (storyResumeState) {
                     setViewedStoryAuthor(storyResumeState.stories);
@@ -3472,6 +3498,7 @@ export default function App() {
           </div>
         </div>
       </ProfileNavContext.Provider>
+      {checkToast && <CheckConfirmedToast key={checkToast.key} name={checkToast.name} onDone={() => setCheckToast(null)} />}
       {showBarcodeScanner && (
         <BarcodeScannerModal
           myBibroCode={profile.myBibroCode}

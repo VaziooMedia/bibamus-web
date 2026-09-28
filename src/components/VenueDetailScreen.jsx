@@ -25,7 +25,7 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, claimsEnabled = true }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
 
@@ -131,13 +131,37 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
     setShowCheckInConfirm(true);
   };
 
+  // Parcours « PlaceCheck depuis l'accueil » : la fenêtre de check s'ouvre dès l'arrivée sur la fiche, et à la
+  // fin (après la question de l'avis, s'il y en a une) on repart vers le Pulse ou l'accueil — voir App.jsx.
+  const [inHomeCheckFlow, setInHomeCheckFlow] = useState(autoOpenCheck);
+  const [flowInfo, setFlowInfo] = useState(null); // résultat en attente pendant la question de l'avis
+  useEffect(() => {
+    if (autoOpenCheck) handleCheckIn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const finishHomeFlow = (info) => {
+    setInHomeCheckFlow(false);
+    setFlowInfo(null);
+    onCheckFlowFinished && onCheckFlowFinished(info);
+  };
+
   const handleCheckInConfirmed = async (result) => {
     setShowCheckInConfirm(false);
-    if (!result) return; // fenêtre fermée sans confirmer : rien n'est enregistré
+    if (!result) {
+      // Fenêtre fermée sans confirmer : rien n'est enregistré, on reste sur la fiche.
+      if (inHomeCheckFlow) finishHomeFlow(null);
+      return;
+    }
     setJustCheckedIn(true);
     const pulseResult = await onCheckIn({ publishToPulse: result.publishToPulse, visibility: result.visibility, content: result.content, drink: result.drink });
     if (pulseResult && pulseResult.error) alert("Ton check-in est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
-    if (checkInMyRating == null || result.modifyRating) setShowRatingModal(true);
+    const info = { name: venue.name, published: !!result.publishToPulse && !(pulseResult && pulseResult.error) };
+    if (checkInMyRating == null || result.modifyRating) {
+      if (inHomeCheckFlow) setFlowInfo(info);
+      setShowRatingModal(true);
+    } else if (inHomeCheckFlow) {
+      finishHomeFlow(info);
+    }
   };
 
   return (
@@ -604,7 +628,16 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
         </button>
       </div>
       {claimsEnabled && claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
-      {showRatingModal && <VenueRatingModal venueId={venue.id} venueName={venue.name} onClose={() => setShowRatingModal(false)} />}
+      {showRatingModal && (
+        <VenueRatingModal
+          venueId={venue.id}
+          venueName={venue.name}
+          onClose={() => {
+            setShowRatingModal(false);
+            if (flowInfo) finishHomeFlow(flowInfo);
+          }}
+        />
+      )}
       {showCheckInConfirm && (
         <VenueCheckInConfirmModal venueName={venue.name} myRating={checkInMyRating} onClose={handleCheckInConfirmed} />
       )}

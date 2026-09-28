@@ -41,6 +41,8 @@ export function DrinkDetailScreen({
   onRate,
   onUnrate,
   onCheckDrink,
+  autoOpenCheck = false,
+  onCheckFlowFinished,
   onBack,
   onEdit,
   onCertify,
@@ -59,7 +61,9 @@ export function DrinkDetailScreen({
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [claiming, setClaiming] = useState(false);
-  const [showCheckModal, setShowCheckModal] = useState(false);
+  // Parcours « DrinkCheck depuis l'accueil » : la fenêtre de check est déjà ouverte à l'arrivée sur la fiche.
+  const [showCheckModal, setShowCheckModal] = useState(autoOpenCheck);
+  const [inHomeCheckFlow, setInHomeCheckFlow] = useState(autoOpenCheck);
   const [justChecked, setJustChecked] = useState(false);
   const [myCheckCount, setMyCheckCount] = useState(null);
   const isBeer = BEER_TYPES.includes(drink.type);
@@ -146,7 +150,14 @@ export function DrinkDetailScreen({
 
   const handleCheckConfirmed = async (result) => {
     setShowCheckModal(false);
-    if (!result) return;
+    if (!result) {
+      // Fenêtre fermée sans confirmer : on reste sur la fiche, le parcours depuis l'accueil s'arrête là.
+      if (inHomeCheckFlow) {
+        setInHomeCheckFlow(false);
+        onCheckFlowFinished && onCheckFlowFinished(null);
+      }
+      return;
+    }
     setJustChecked(true);
     const pulseResult = await onCheckDrink(drink.id, result.venueId, {
       publishToPulse: result.publishToPulse,
@@ -157,6 +168,10 @@ export function DrinkDetailScreen({
     // Le check lui-même est enregistré ; seule la publication dans BibaPulse a échoué.
     if (pulseResult && pulseResult.error) {
       alert("Ton check est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
+    }
+    if (inHomeCheckFlow) {
+      setInHomeCheckFlow(false);
+      onCheckFlowFinished && onCheckFlowFinished({ name: drink.name, published: !!result.publishToPulse && !(pulseResult && pulseResult.error) });
     }
   };
 
