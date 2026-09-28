@@ -12,6 +12,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
+import { NavIcon } from "./icons.jsx";
 import { searchBibaxForTagging, uploadPulsePhoto } from "../data/sharedDirectories.js";
 import { fileToResizedJpegBlob } from "../imageUtils.js";
 
@@ -208,10 +209,21 @@ export function PulseContentFields({ form }) {
                             setTagResults([]);
                           }
                     }
-                    style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", cursor: restricted ? "not-allowed" : "pointer", fontSize: "13.5px", color: restricted ? COLORS.inkSoft : COLORS.ink, opacity: restricted ? 0.5 : 1 }}
+                    style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", cursor: restricted ? "not-allowed" : "pointer", fontSize: "13.5px", color: restricted ? COLORS.inkSoft : COLORS.ink, opacity: 1 }}
                   >
-                    <EntityAvatar photoUrl={person.avatarUrl} size={28} />
-                    <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fullNameOf(person)}</span>
+                    {/* Seuls le rond-profil et le nom sont atténués : le repère « Tags » qui explique le grisé reste bien visible. */}
+                    <span style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0, opacity: restricted ? 0.5 : 1 }}>
+                      <EntityAvatar photoUrl={person.avatarUrl} size={28} />
+                      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fullNameOf(person)}</span>
+                    </span>
+                    {restricted && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", flexShrink: 0, fontSize: "12px", fontWeight: 700, color: COLORS.pinkFluo }}>
+                        Tags
+                        <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: `1.5px solid ${COLORS.pinkFluo}`, boxSizing: "border-box", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                          <NavIcon name="x" size={9} color={COLORS.pinkFluo} />
+                        </span>
+                      </span>
+                    )}
                   </button>
                 );
               })}
