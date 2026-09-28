@@ -498,7 +498,9 @@ export function HomeScreen({
           const entries = pulseEntries || [];
           const resolveObject = (entry) => {
             const objType = entry.eventType === "venue_visit" ? "venue" : entry.objectType;
-            const id = entry.venueId || entry.objectId;
+            // Pour un lieu : son identifiant. Pour un produit ou une fiche : toujours l'objet lui-même,
+            // même quand la publication précise aussi le lieu où le check a été fait.
+            const id = objType === "venue" ? entry.venueId || entry.objectId : entry.objectId;
             if (objType === "venue") return venuesById[id] || null;
             const map = { drink: drinksDirectory, producer: breweriesDirectory, brand: brandsDirectory };
             return (map[objType] || []).find((x) => x.id === id) || null;

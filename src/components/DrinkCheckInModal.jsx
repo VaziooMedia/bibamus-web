@@ -19,6 +19,7 @@ import { RatingSlider } from "./RatingSlider.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { loadNearbyVenues, searchVenues, searchBibaxForTagging, uploadPulsePhoto } from "../data/sharedDirectories.js";
 import { fileToResizedJpegBlob } from "../imageUtils.js";
+import { EntityAvatar } from "./ui.jsx";
 
 const TITLE_BY_TYPE = {
   "Bières & Cidres": "Check cette bière",
@@ -32,6 +33,10 @@ const TITLE_BY_TYPE = {
 
 // Nombre maximum de Bibax tagués dans une publication (le serveur en accepte jusqu'à 10).
 const MAX_TAGS = 5;
+
+// Nom affiché d'un Bibax dans le sélecteur : prénom + nom quand le nom est visible — pour ne pas
+// confondre deux Bibax qui ont le même prénom.
+const fullNameOf = (person) => [person.name, person.lastName].filter(Boolean).join(" ");
 
 const isOnRatingScale = (v) => Number.isFinite(v) && v >= 0.25 && v <= 5 && Math.abs(v * 4 - Math.round(v * 4)) < 1e-9;
 
@@ -411,7 +416,8 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
             {taggedPeople.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
                 {taggedPeople.map((person) => (
-                  <span key={person.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "5px 6px 5px 12px", fontSize: "12.5px", color: COLORS.ink }}>
+                  <span key={person.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 6px 4px 5px", fontSize: "12.5px", color: COLORS.ink }}>
+                    <EntityAvatar photoUrl={person.avatarUrl} size={20} />
                     {person.name}
                     <button
                       onClick={() => setTaggedPeople((prev) => prev.filter((p) => p.id !== person.id))}
@@ -438,13 +444,14 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
                       <button
                         key={person.id}
                         onClick={() => {
-                          setTaggedPeople((prev) => [...prev, { id: person.id, name: person.name }]);
+                          setTaggedPeople((prev) => [...prev, { id: person.id, name: fullNameOf(person), avatarUrl: person.avatarUrl }]);
                           setTagQuery("");
                           setTagResults([]);
                         }}
-                        style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
+                        style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
                       >
-                        {person.name}
+                        <EntityAvatar photoUrl={person.avatarUrl} size={28} />
+                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fullNameOf(person)}</span>
                       </button>
                     ))}
                   </div>
