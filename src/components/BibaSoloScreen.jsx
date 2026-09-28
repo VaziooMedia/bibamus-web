@@ -6,7 +6,6 @@
 // direct au-dessus de la liste.
 // ============================================================
 import React, { useState, useEffect, useMemo } from "react";
-import ReactDOM from "react-dom";
 import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg, WaterAlertIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
@@ -14,28 +13,6 @@ import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink 
 import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
 import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
-
-class DiagErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { error: null };
-  }
-  static getDerivedStateFromError(error) {
-    return { error };
-  }
-  render() {
-    if (this.state.error) {
-      return (
-        <div style={{ background: "red", color: "white", padding: "14px", fontSize: "14px", fontWeight: 700 }}>
-          ERREUR DE RENDU CAPTURÉE : {String(this.state.error && this.state.error.message)}
-          <br />
-          {String(this.state.error && this.state.error.stack)}
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 import {
   addSoloCheckin,
   archiveSoloCheckins,
@@ -46,7 +23,6 @@ import {
   searchVenues,
   loadVenuesByIds,
   loadNearbyVenues,
-  loadVenueById,
   loadGenericDrinks,
   loadMyBibaZeroStatus,
   activateBibaZeroSolo,
@@ -202,23 +178,14 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     if (ids.length === 0) return;
     loadDrinksByIds(ids).then(setVenueDrinks);
   }, [venue]);
-  let venueMenuItems, categoryOf, venueCategories, itemsInCategory;
-  try {
-    venueMenuItems = (venue?.menu || [])
-      .filter((item) => item && item.fromDirectory && item.sourceDrinkId)
-      .map((item) => resolveMenuItem(item, venueDrinks))
-      .filter((item) => item.name)
-      .filter((item) => !bibaZeroActive || !isAlcoholicDrink(item));
-    categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
-    venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
-    itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
-  } catch (err) {
-    console.error("Erreur pendant le calcul du menu:", err);
-    venueMenuItems = [];
-    categoryOf = () => "Non classé";
-    venueCategories = [];
-    itemsInCategory = () => [];
-  }
+  const venueMenuItems = (venue?.menu || [])
+    .filter((item) => item && item.fromDirectory && item.sourceDrinkId)
+    .map((item) => resolveMenuItem(item, venueDrinks))
+    .filter((item) => item.name)
+    .filter((item) => !bibaZeroActive || !isAlcoholicDrink(item));
+  const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
+  const venueCategories = [...MENU_CATEGORIES, "Non classé"].filter((cat) => venueMenuItems.some((d) => categoryOf(d) === cat));
+  const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
   const visibleRecentDrinks = bibaZeroActive ? recentDrinks.filter((d) => !isAlcoholicDrink(d)) : recentDrinks;
 
   const q = normalize(query);
@@ -383,9 +350,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {venueMenuItems.length > 0 && (
                   <button
-                    onClick={() => {
-                      setPickMode("carte");
-                    }}
+                    onClick={() => setPickMode("carte")}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -432,12 +397,85 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               </div>
             </>
           )}
-
-          {pickMode === "carte" && (
-            <div style={{background:"lime",color:"black",fontSize:"40px",fontWeight:900,padding:"40px"}}>TEST123</div>
-              )}
           </>
           )}
+
+          {pickMode === "carte" && (
+            <>
+              <button
+                onClick={() => (activeCategory ? setActiveCategory(null) : setPickMode(null))}
+                style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: "14px" }}
+              >
+                <NavIcon name="back-triangle" size={12} color={COLORS.inkSoft} />
+                {activeCategory ? "Catégories" : "Retour"}
+              </button>
+
+              {!activeCategory ? (
+                <>
+                  <input
+                    type="text"
+                    value={carteQuery}
+                    onChange={(e) => setCarteQuery(e.target.value)}
+                    placeholder="Rechercher dans la carte..."
+                    style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", marginBottom: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
+                  />
+                  {normalize(carteQuery).length > 0 ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      {venueMenuItems
+                        .filter((d) => normalize(d.name).includes(normalize(carteQuery)))
+                        .map((item) => (
+                          <MenuItemBlock key={item.id} item={item} onClick={() => selectVenueMenuItem(item)} />
+                        ))}
+                    </div>
+                  ) : (
+                    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+                      {venueCategories.map((cat, i) => (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveCategory(cat)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            width: "100%",
+                            background: "none",
+                            border: "none",
+                            borderBottom: i === venueCategories.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
+                            padding: "14px 4px",
+                            textAlign: "left",
+                            cursor: "pointer",
+                            color: COLORS.ink,
+                            fontSize: "14px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {drinkTypeLabel(cat)}
+                          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>{itemsInCategory(cat).length} →</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={categoryQuery}
+                    onChange={(e) => setCategoryQuery(e.target.value)}
+                    placeholder={`Rechercher dans ${drinkTypeLabel(activeCategory)}...`}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", marginBottom: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
+                  />
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {itemsInCategory(activeCategory)
+                      .filter((d) => normalize(d.name).includes(normalize(categoryQuery)))
+                      .map((item) => (
+                        <MenuItemBlock key={item.id} item={item} onClick={() => selectVenueMenuItem(item)} />
+                      ))}
+                  </div>
+                </>
+              )}
+            </>
+              )}
 
           {pickMode === "generic" && (
             <>
@@ -712,18 +750,6 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
       // en cours, simplement pas retrouvé à la prochaine ouverture.
     }
   };
-  // Le vrai lieu persisté (voir plus haut) reste sinon figé sur sa vraie version au moment de
-  // la vraie sélection — si sa vraie carte a vraiment été remplie/modifiée depuis, ce vrai
-  // rafraîchissement silencieux évite de rester bloqué sur une vraie copie périmée sans menu.
-  useEffect(() => {
-    if (currentVenue?.id) {
-      loadVenueById(currentVenue.id).then((fresh) => {
-        if (fresh) setCurrentVenue(fresh);
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentVenue?.id]);
-
   const [venuePickerOpen, setVenuePickerOpen] = useState(false);
   const [nearbyVenues, setNearbyVenues] = useState([]);
   const [venueQuery, setVenueQuery] = useState("");
