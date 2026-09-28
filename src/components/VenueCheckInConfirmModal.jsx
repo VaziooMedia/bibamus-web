@@ -1,5 +1,5 @@
 // ============================================================
-// Fenêtre « Place Check-in » — affichée à CHAQUE check-in dans un lieu. Le check n'est enregistré
+// Fenêtre « PlaceCheck » — affichée à CHAQUE check-in dans un lieu. Le check n'est enregistré
 // qu'à la confirmation (VenueDetailScreen.jsx) ; fermer la fenêtre sans confirmer l'annule.
 //
 // On peut y :
@@ -18,6 +18,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
+import { EntityAvatar } from "./ui.jsx";
 import { searchDrinks } from "../data/sharedDirectories.js";
 import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
 
@@ -94,7 +95,9 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
       >
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.ink, margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          Place Check-in
+          <span>
+            Place<span style={{ color: COLORS.amber }}>Check</span>
+          </span>
         </h2>
         {venueName && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 20px 0" }}>{venueName}</p>}
 
@@ -130,10 +133,13 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
                       setDrinkQuery("");
                       setDrinkResults([]);
                     }}
-                    style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
+                    style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
                   >
-                    {d.name}
-                    {(d.brewery || d.brand) && <span style={{ display: "block", fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>{d.brewery || d.brand}</span>}
+                    <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={36} fallbackIcon="bottle" />
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
+                      {(d.brewery || d.brand) && <span style={{ display: "block", fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>{d.brewery || d.brand}</span>}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -181,7 +187,7 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
           disabled={sending}
           style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px", fontWeight: 700, color: COLORS.paper, cursor: sending ? "default" : "pointer", opacity: sending ? 0.6 : 1 }}
         >
-          {sending ? "Envoi de la photo..." : "Place Check-in"}
+          {sending ? "Envoi de la photo..." : "PlaceCheck"}
         </button>
       </div>
     </div>
