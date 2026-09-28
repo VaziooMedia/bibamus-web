@@ -91,8 +91,19 @@ export function VenueCheckInConfirmModal({ venueName, myRating, onClose }) {
           maxHeight: "92vh",
           overflowY: "auto",
           boxSizing: "border-box",
+          position: "relative",
         }}
       >
+        <button
+          onClick={() => {
+            if (!sending) onClose(null);
+          }}
+          disabled={sending}
+          aria-label="Fermer"
+          style={{ position: "absolute", top: "12px", right: "12px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", padding: 0, cursor: sending ? "default" : "pointer", opacity: sending ? 0.4 : 1 }}
+        >
+          <NavIcon name="x" size={16} color={COLORS.inkSoft} />
+        </button>
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.ink, margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
           <span>

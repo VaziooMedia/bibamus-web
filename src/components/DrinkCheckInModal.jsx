@@ -15,20 +15,11 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
+import { EntityAvatar } from "./ui.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
 import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
-
-const TITLE_BY_TYPE = {
-  "Bières & Cidres": "Check cette bière",
-  "Vins & Bulles": "Check ce vin",
-  Spiritueux: "Check ce spiritueux",
-  "Cocktails / Mocktails": "Check ce cocktail",
-  "Softs & Eaux": "Check ce soft",
-  "Boissons chaudes": "Check cette boisson chaude",
-  Snacks: "Check ce snack",
-};
 
 const SPECIAL_VENUES = [
   { id: "@home", name: "@Home" },
@@ -38,7 +29,7 @@ const SPECIAL_VENUES = [
 // enableContent : affiche les champs de publication (visibilité, commentaire, photo, Bibax tagués).
 // Le résultat renvoyé à onClose est { publishToPulse, venueId, visibility, content } — content ne
 // contient que ce qui a été renseigné : { comment, rating, photoUrl, taggedIds }.
-export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue = null, enableContent = false, onRate, onUnrate, onClose }) {
+export function DrinkCheckInModal({ drinkName, myRating, presetVenue = null, enableContent = false, onRate, onUnrate, onClose }) {
   const hasRating = myRating != null;
   const [isEditingRating, setIsEditingRating] = useState(!hasRating);
   const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
@@ -77,7 +68,6 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
   const filteredVenues = q ? searchedVenues : nearbyVenues;
   const filteredSpecials = q ? SPECIAL_VENUES.filter((v) => v.name.toLowerCase().includes(q.toLowerCase())) : SPECIAL_VENUES;
 
-  const title = TITLE_BY_TYPE[drinkType] || "Check ce produit";
 
   const finalizeCheck = async (skipRating) => {
     if (sending) return;
@@ -120,11 +110,24 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
           maxHeight: "92vh",
           overflowY: "auto",
           boxSizing: "border-box",
+          position: "relative",
         }}
       >
+        <button
+          onClick={() => {
+            if (!sending) onClose(null);
+          }}
+          disabled={sending}
+          aria-label="Fermer"
+          style={{ position: "absolute", top: "12px", right: "12px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", padding: 0, cursor: sending ? "default" : "pointer", opacity: sending ? 0.4 : 1 }}
+        >
+          <NavIcon name="x" size={16} color={COLORS.inkSoft} />
+        </button>
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.ink, margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          {title}
+          <span>
+            Drink<span style={{ color: COLORS.amber }}>Check</span>
+          </span>
         </h2>
         {drinkName && <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 18px 0" }}>{drinkName}</p>}
 
@@ -233,9 +236,10 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
                     setSelectedVenue(v);
                     setPickerOpen(false);
                   }}
-                  style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", fontWeight: 700, color: COLORS.amber }}
+                  style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", fontWeight: 700, color: COLORS.amber }}
                 >
-                  {v.name}
+                  <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} />
+                  <span style={{ minWidth: 0 }}>{v.name}</span>
                 </button>
               ))}
               {filteredVenues.length === 0 && filteredSpecials.length === 0 && (
@@ -251,10 +255,13 @@ export function DrinkCheckInModal({ drinkName, drinkType, myRating, presetVenue 
                     setSelectedVenue(v);
                     setPickerOpen(false);
                   }}
-                  style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
+                  style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
                 >
-                  {v.name}
-                  {v.city && <span style={{ color: COLORS.inkSoft }}> — {v.city}</span>}
+                  <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} />
+                  <span style={{ minWidth: 0 }}>
+                    {v.name}
+                    {v.city && <span style={{ color: COLORS.inkSoft }}> — {v.city}</span>}
+                  </span>
                 </button>
               ))}
             </div>
