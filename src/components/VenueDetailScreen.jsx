@@ -186,7 +186,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
                   title="Partager"
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
                 >
-                  <NavIcon name="share" size={28} color={COLORS.amber} />
+                  <NavIcon name="share" size={24} color={COLORS.amber} />
                 </button>
                 <span style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />
               </>
@@ -197,7 +197,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
               title={isFollowed ? "Suivi sur Pulse — ses activités apparaissent" : "Suivre sur Pulse"}
               style={{ background: "none", border: "none", cursor: togglingFollow ? "default" : "pointer", padding: 0, display: "flex" }}
             >
-              <NavIcon name="bell" size={28} color={COLORS.amber} filled={isFollowed} />
+              <NavIcon name="bell" size={24} color={COLORS.amber} filled={isFollowed} />
             </button>
             <span style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />
             <button
@@ -205,7 +205,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
               title={venue.isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
             >
-              <NavIcon name="star" size={28} color={COLORS.amber} filled={!!venue.isFavorite} />
+              <NavIcon name="star" size={24} color={COLORS.amber} filled={!!venue.isFavorite} />
             </button>
           </div>
         </div>

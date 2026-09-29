@@ -226,7 +226,7 @@ export function DrinkDetailScreen({
                   title="Partager"
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
                 >
-                  <NavIcon name="share" size={28} color={COLORS.amber} />
+                  <NavIcon name="share" size={24} color={COLORS.amber} />
                 </button>
                 <span style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />
               </>
@@ -237,7 +237,7 @@ export function DrinkDetailScreen({
               title={isFollowed ? "Suivi sur Pulse — ses activités apparaissent" : "Suivre sur Pulse"}
               style={{ background: "none", border: "none", cursor: togglingFollow ? "default" : "pointer", padding: 0, display: "flex" }}
             >
-              <NavIcon name="bell" size={28} color={COLORS.amber} filled={isFollowed} />
+              <NavIcon name="bell" size={24} color={COLORS.amber} filled={isFollowed} />
             </button>
             {(isBeer || drink.type === "Vins & Bulles" || drink.type === "Spiritueux") && !drink.isGeneric && (
               <>
@@ -247,7 +247,7 @@ export function DrinkDetailScreen({
                   title={isOnWishlist ? "Retirer de ma liste à goûter" : "Ajouter à ma liste à goûter"}
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
                 >
-                  <NavIcon name="star" size={28} color={COLORS.amber} filled={!!isOnWishlist} />
+                  <NavIcon name="star" size={24} color={COLORS.amber} filled={!!isOnWishlist} />
                 </button>
               </>
             )}
