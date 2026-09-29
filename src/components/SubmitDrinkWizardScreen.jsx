@@ -170,11 +170,14 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
 
   const goToStep3 = async () => {
     setSubmitting(true);
-    if (variant.volumeCl.trim().length > 0) {
+    // Le code-barre à lui seul justifie déjà d'enregistrer le conditionnement — avant, seul un
+    // volume rempli déclenchait l'enregistrement, et un code-barre seul (sans volume, souvent
+    // laissé vide) disparaissait silencieusement sans jamais être sauvegardé.
+    if (variant.volumeCl.trim().length > 0 || variant.barcode.trim().length > 0) {
       await createDrinkVariant({
         drinkId,
         container: variant.container,
-        volumeMl: parseFloat(variant.volumeCl) * 10,
+        volumeMl: variant.volumeCl.trim().length > 0 ? parseFloat(variant.volumeCl) * 10 : null,
         barcode: variant.barcode.trim() || null,
         marketCountry: null,
       });
