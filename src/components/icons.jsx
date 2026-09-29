@@ -708,6 +708,16 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
         </svg>
       );
+    // Symbole de partage standard (flèche sortant d'une boîte) — reconnaissable sans ambiguïté,
+    // le même que celui du menu de partage natif d'iOS.
+    case "share":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M12 15V3" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M7.5 7.5 12 3l4.5 4.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     case "palette":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">

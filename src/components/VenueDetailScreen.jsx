@@ -6,6 +6,8 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { COLORS, VENUE_TYPES } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { shareEntity, canShareEntity } from "../shareEntity.js";
+
 import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink, formatMoney } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
@@ -178,6 +180,18 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
           </div>
           {venue.subtitle && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
           <div style={{ position: "absolute", top: "26px", right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+            {canShareEntity() && (
+              <>
+                <button
+                  onClick={() => shareEntity({ title: venue.name, text: `Découvre ${venue.name} sur Bibamus !` })}
+                  title="Partager"
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+                >
+                  <NavIcon name="share" size={28} color={COLORS.amber} />
+                </button>
+                <span style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />
+              </>
+            )}
             <button
               onClick={handleToggleFollow}
               disabled={togglingFollow}

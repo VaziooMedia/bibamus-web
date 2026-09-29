@@ -13,6 +13,8 @@ import React, { useState, useEffect } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { shareEntity, canShareEntity } from "../shareEntity.js";
+
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { formatDrinkFieldValue, formatMoney } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
@@ -218,6 +220,18 @@ export function DrinkDetailScreen({
           </div>
           {SUBTYPE_LABELS[drink.beverageSubtype] && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{SUBTYPE_LABELS[drink.beverageSubtype]}</p>}
           <div style={{ position: "absolute", top: "26px", right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+            {canShareEntity() && (
+              <>
+                <button
+                  onClick={() => shareEntity({ title: drink.name, text: `Découvre ${drink.name} sur Bibamus !` })}
+                  title="Partager"
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+                >
+                  <NavIcon name="share" size={28} color={COLORS.amber} />
+                </button>
+                <span style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />
+              </>
+            )}
             <button
               onClick={handleToggleFollow}
               disabled={togglingFollow}
