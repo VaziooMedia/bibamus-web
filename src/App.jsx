@@ -283,6 +283,10 @@ export default function App() {
   const [screenBeforeSearch, setScreenBeforeSearch] = useState("home");
   const [screenBeforeDrinksDirectory, setScreenBeforeDrinksDirectory] = useState("repertoireHub");
   const [screenBeforeDrinkDetail, setScreenBeforeDrinkDetail] = useState("drinksDirectory");
+  // Corrige un défaut : la fiche Marque/Producteur revenait toujours à son propre annuaire, quel que
+  // soit l'endroit d'où on l'avait ouverte (ex. depuis une fiche Produit).
+  const [screenBeforeBrandDetail, setScreenBeforeBrandDetail] = useState("brandDirectory");
+  const [screenBeforeBreweryDetail, setScreenBeforeBreweryDetail] = useState("breweryDirectory");
   // Parcours « Check depuis l'accueil » : "drink" (bouton DrinkCheck) ou "venue" (bouton PlaceCheck) tant que
   // la personne est dans la recherche ou sur la fiche choisie — voir checkFlow.js. Il s'arrête dès qu'elle
   // part ailleurs, pour ne jamais ouvrir une fenêtre de check par surprise sur une fiche ouverte plus tard.
@@ -2345,6 +2349,7 @@ export default function App() {
                 onCleanupDuplicates={() => cleanupDuplicates(viewedVenueId)}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
+                  setScreenBeforeBreweryDetail("venueDetail");
                   setScreen("breweryDetail");
                 }}
                 onOpenDrink={(id) => {
@@ -2417,10 +2422,12 @@ export default function App() {
                 onDeletePhoto={() => deletePhotoForDrink(viewedDrinkId)}
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);
+                  setScreenBeforeBrandDetail("drinkDetail");
                   setScreen("brandDetail");
                 }}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
+                  setScreenBeforeBreweryDetail("drinkDetail");
                   setScreen("breweryDetail");
                 }}
                 onOpenVenue={(id) => {
@@ -2602,10 +2609,12 @@ export default function App() {
                 }}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
+                  setScreenBeforeBreweryDetail("search");
                   setScreen("breweryDetail");
                 }}
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);
+                  setScreenBeforeBrandDetail("search");
                   setScreen("brandDetail");
                 }}
                 onOpenBibaxProfile={(code) => {
@@ -3032,6 +3041,7 @@ export default function App() {
                 onBack={() => setScreen("repertoireHub")}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
+                  setScreenBeforeBreweryDetail("breweries");
                   setScreen("breweryDetail");
                 }}
                 onRename={(id, name) => {
@@ -3062,6 +3072,7 @@ export default function App() {
                 onBack={() => setScreen("repertoireHub")}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
+                  setScreenBeforeBreweryDetail("breweryDirectory");
                   setScreen("breweryDetail");
                 }}
                 activeCountry={activeBreweryCountry}
@@ -3087,6 +3098,7 @@ export default function App() {
                 onBack={() => setScreen("repertoireHub")}
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);
+                  setScreenBeforeBrandDetail("brandDirectory");
                   setScreen("brandDetail");
                 }}
                 activeCountry={activeBrandCountry}
@@ -3113,6 +3125,7 @@ export default function App() {
                 onBack={() => setScreen("repertoireHub")}
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);
+                  setScreenBeforeBrandDetail("brands");
                   setScreen("brandDetail");
                 }}
                 onRename={(id, name) => {
@@ -3146,7 +3159,7 @@ export default function App() {
                     setStoryResumeState(null);
                     setScreen("home");
                   } else {
-                    setScreen("breweryDirectory");
+                    setScreen(screenBeforeBreweryDetail);
                   }
                 }}
                 onOpenDrink={(id) => {
@@ -3155,6 +3168,7 @@ export default function App() {
                 }}
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);
+                  setScreenBeforeBrandDetail("breweryDetail");
                   setScreen("brandDetail");
                 }}
                 onOpenVenue={(id) => {
@@ -3191,7 +3205,7 @@ export default function App() {
                     setStoryResumeState(null);
                     setScreen("home");
                   } else {
-                    setScreen("brandDirectory");
+                    setScreen(screenBeforeBrandDetail);
                   }
                 }}
                 onOpenDrink={(id) => {
@@ -3200,6 +3214,7 @@ export default function App() {
                 }}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
+                  setScreenBeforeBreweryDetail("brandDetail");
                   setScreen("breweryDetail");
                 }}
                 onSuggestEdit={(name) => suggestBrandEdit(viewedBrandId, name)}
@@ -3548,9 +3563,11 @@ export default function App() {
               setScreen("drinkDetail");
             } else if (kind === "brand") {
               setViewedBrandId(id);
+              setScreenBeforeBrandDetail("brandDirectory");
               setScreen("brandDetail");
             } else if (kind === "producer") {
               setViewedBreweryId(id);
+              setScreenBeforeBreweryDetail("breweryDirectory");
               setScreen("breweryDetail");
             }
           }}
@@ -3577,9 +3594,11 @@ export default function App() {
               setScreen("drinkDetail");
             } else if (entityType === "brand") {
               setViewedBrandId(entityId);
+              setScreenBeforeBrandDetail("brandDirectory");
               setScreen("brandDetail");
             } else if (entityType === "producer") {
               setViewedBreweryId(entityId);
+              setScreenBeforeBreweryDetail("breweryDirectory");
               setScreen("breweryDetail");
             }
           }}
