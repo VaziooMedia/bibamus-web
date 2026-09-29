@@ -91,7 +91,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
       <select
         value={scope}
         onChange={(e) => setScope(e.target.value)}
-        style={{ width: "145px", boxSizing: "border-box", padding: "4px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "10px", marginBottom: "14px" }}
+        style={{ width: "145px", boxSizing: "border-box", padding: "4px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "9px", marginBottom: "14px" }}
       >
         {SCOPES.map((s) => (
           <option key={s.key} value={s.key}>

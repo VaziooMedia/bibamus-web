@@ -278,18 +278,6 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
 
       {activeTab === "infos" && (
         <>
-        {linkedProducer && (
-          <button
-            onClick={() => onOpenBrewery(linkedProducer.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "16px" }}
-          >
-            <EntityAvatar photoUrl={linkedProducer.profilePhotoUrl} photoEmoji={linkedProducer.avatarEmoji} size={28} />
-            <span>
-              <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>EXPLOITÉ PAR</span>
-              <span style={{ fontWeight: 700, fontSize: "14px" }}>{linkedProducer.name}</span>
-            </span>
-          </button>
-        )}
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
         {venue.venueTypes && venue.venueTypes.length > 0 && (
           <>
@@ -310,7 +298,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
                 </span>
               ))}
             </div>
-            <div style={{ height: "1px", background: COLORS.paperAlt, margin: "12px 0" }} />
+            <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "12px 0" }} />
           </>
         )}
         <div
@@ -355,6 +343,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
             </>
           )}
         </div>
+        {(hasAmenities || hasSocials) && <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, margin: "12px 0" }} />}
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             {venue.hasWifi && (
@@ -505,6 +494,21 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
           )}
           </div>
         </div>
+        {linkedProducer && (
+          <>
+            <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "12px 0" }} />
+            <button
+              onClick={() => onOpenBrewery(linkedProducer.id)}
+              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%" }}
+            >
+              <EntityAvatar photoUrl={linkedProducer.profilePhotoUrl} photoEmoji={linkedProducer.avatarEmoji} size={28} />
+              <span>
+                <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>EXPLOITÉ PAR</span>
+                <span style={{ fontWeight: 700, fontSize: "14px" }}>{linkedProducer.name}</span>
+              </span>
+            </button>
+          </>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "20px" }}>
