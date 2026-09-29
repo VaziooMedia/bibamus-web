@@ -7,7 +7,6 @@ import { COLORS, VENUE_TYPES } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
-
 import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink, formatMoney } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
@@ -246,18 +245,6 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
             📝 Une modification de la fiche est proposée, en attente de validation.
           </div>
         )}
-        {linkedProducer && (
-          <button
-            onClick={() => onOpenBrewery(linkedProducer.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "16px" }}
-          >
-            <EntityAvatar photoUrl={linkedProducer.profilePhotoUrl} photoEmoji={linkedProducer.avatarEmoji} size={28} />
-            <span>
-              <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>EXPLOITÉ PAR</span>
-              <span style={{ fontWeight: 700, fontSize: "14px" }}>{linkedProducer.name}</span>
-            </span>
-          </button>
-        )}
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         {[
           { key: "infos", label: "Infos" },
@@ -291,7 +278,41 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
 
       {activeTab === "infos" && (
         <>
+        {linkedProducer && (
+          <button
+            onClick={() => onOpenBrewery(linkedProducer.id)}
+            style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "16px" }}
+          >
+            <EntityAvatar photoUrl={linkedProducer.profilePhotoUrl} photoEmoji={linkedProducer.avatarEmoji} size={28} />
+            <span>
+              <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>EXPLOITÉ PAR</span>
+              <span style={{ fontWeight: 700, fontSize: "14px" }}>{linkedProducer.name}</span>
+            </span>
+          </button>
+        )}
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
+        {venue.venueTypes && venue.venueTypes.length > 0 && (
+          <>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {venue.venueTypes.map((code) => (
+                <span
+                  key={code}
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: "999px",
+                    border: `1.5px solid ${COLORS.paperAlt}`,
+                    color: COLORS.chalkWhite,
+                    fontSize: "11px",
+                    fontWeight: 600,
+                  }}
+                >
+                  {VENUE_TYPES.find((t) => t.code === code)?.fr || code}
+                </span>
+              ))}
+            </div>
+            <div style={{ height: "1px", background: COLORS.paperAlt, margin: "12px 0" }} />
+          </>
+        )}
         <div
           style={{
             display: "grid",
@@ -484,28 +505,6 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
           )}
           </div>
         </div>
-        {(hasAmenities || hasSocials) && venue.venueTypes && venue.venueTypes.length > 0 && (
-          <div style={{ height: "1px", background: COLORS.paperAlt, margin: "12px 0" }} />
-        )}
-        {venue.venueTypes && venue.venueTypes.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: hasAmenities || hasSocials ? "0" : "12px" }}>
-            {venue.venueTypes.map((code) => (
-              <span
-                key={code}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: "999px",
-                  border: `1.5px solid ${COLORS.paperAlt}`,
-                  color: COLORS.chalkWhite,
-                  fontSize: "11px",
-                  fontWeight: 600,
-                }}
-              >
-                {VENUE_TYPES.find((t) => t.code === code)?.fr || code}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "20px" }}>

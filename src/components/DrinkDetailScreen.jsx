@@ -14,7 +14,6 @@ import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
-
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { formatDrinkFieldValue, formatMoney } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
@@ -329,21 +328,6 @@ export function DrinkDetailScreen({
           </div>
         )}
 
-        {drink.styles?.length > 0 && (
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-              {drink.styles.map((code) => (
-                <span
-                  key={code}
-                  style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "5px 10px", fontSize: "11.5px", fontWeight: 600, color: COLORS.ink }}
-                >
-                  {styleTagLabel(code)}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
           {[
             { key: "infos", label: "Infos" },
@@ -381,7 +365,26 @@ export function DrinkDetailScreen({
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
             <div style={{ fontSize: "13px" }}>
               {[
-                (drink.abv != null || drink.ibu != null || drink.colorEbc != null) && (
+                drink.styles?.length > 0 && {
+                  key: "styles",
+                  sep: null,
+                  node: (
+                    <div key="styles" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {drink.styles.map((code) => (
+                        <span
+                          key={code}
+                          style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "5px 10px", fontSize: "11.5px", fontWeight: 600, color: COLORS.ink }}
+                        >
+                          {styleTagLabel(code)}
+                        </span>
+                      ))}
+                    </div>
+                  ),
+                },
+                (drink.abv != null || drink.ibu != null || drink.colorEbc != null) && {
+                  key: "abv",
+                  sep: "green",
+                  node: (
                   <div key="abv" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                     {drink.abv != null && (
                       <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -401,8 +404,12 @@ export function DrinkDetailScreen({
                     )}
                     {drink.colorEbc != null && <span>{drink.colorEbc} EBC</span>}
                   </div>
-                ),
-                (drink.originCity || drink.originRegion || drink.nationality) && (
+                  ),
+                },
+                (drink.originCity || drink.originRegion || drink.nationality) && {
+                  key: "origin",
+                  sep: "grey",
+                  node: (
                   <div key="origin" style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
                     <NavIcon name="map-pin" size={15} color={COLORS.amber} />
                     <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
@@ -416,20 +423,33 @@ export function DrinkDetailScreen({
                       )}
                     </div>
                   </div>
-                ),
-                drink.launchYear && (
+                  ),
+                },
+                drink.launchYear && {
+                  key: "launch",
+                  sep: "grey",
+                  node: (
                   <div key="launch" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <NavIcon name="calendar" size={15} color={COLORS.amber} />
                     Lancé en {drink.launchYear}
                   </div>
-                ),
+                  ),
+                },
               ]
                 .filter(Boolean)
                 .map((row, i) => (
-                  <React.Fragment key={i}>
-                    {/* Une barre grisée sépare chaque ligne présente de la précédente (jamais avant la 1re). */}
-                    {i > 0 && <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, margin: "10px 0" }} />}
-                    {row}
+                  <React.Fragment key={row.key}>
+                    {/* Chaque ligne présente se sépare de la précédente (jamais avant la 1re) : en
+                        vert entre les styles et le reste, en gris entre les lignes techniques. */}
+                    {i > 0 && (
+                      <div
+                        style={{
+                          borderBottom: row.sep === "green" ? `2px solid ${COLORS.amber}` : `1px solid ${COLORS.paperAlt}`,
+                          margin: row.sep === "green" ? "14px 0" : "10px 0",
+                        }}
+                      />
+                    )}
+                    {row.node}
                   </React.Fragment>
                 ))}
             </div>
