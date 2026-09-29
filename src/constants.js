@@ -657,6 +657,7 @@ export const COUNTRIES = [
   "Pays-Bas",
   "Algérie",
   "Autriche",
+  "Bermudes",
   "Bulgarie",
   "Canada",
   "Chypre",
