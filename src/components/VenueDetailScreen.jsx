@@ -178,7 +178,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
             <CertificationIcon level={venue.certificationLevel} size={17} />
           </div>
           {venue.subtitle && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
-          <div style={{ position: "absolute", top: "26px", right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ position: "absolute", top: "32px", right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
             {canShareEntity() && (
               <>
                 <button

@@ -218,7 +218,7 @@ export function DrinkDetailScreen({
             <CertificationIcon level={drink.certificationLevel} size={17} />
           </div>
           {SUBTYPE_LABELS[drink.beverageSubtype] && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{SUBTYPE_LABELS[drink.beverageSubtype]}</p>}
-          <div style={{ position: "absolute", top: "26px", right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ position: "absolute", top: "32px", right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
             {canShareEntity() && (
               <>
                 <button
@@ -267,8 +267,9 @@ export function DrinkDetailScreen({
               }}
             >
               <NavIcon name="star" size={14} color={COLORS.amber} filled />
-              <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>
-                {ratingAverage.toFixed(1).replace(".", ",")}/5 - {ratingValues.length} avis
+              <span style={{ fontSize: "11px" }}>
+                <span style={{ color: COLORS.chalkWhite }}>{ratingAverage.toFixed(1).replace(".", ",")}/5</span>
+                <span style={{ color: COLORS.inkSoft }}> - {ratingValues.length} avis</span>
               </span>
             </div>
           </div>
