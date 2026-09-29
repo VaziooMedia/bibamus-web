@@ -7,7 +7,7 @@
 //     dans ce lieu — une seule publication pour le geste, celle du produit ;
 //   - publier ou non sur BibaPulse, avec qui peut le voir (« Mes Bibax » par défaut), un
 //     commentaire, une photo et des Bibax tagués ;
-//   - donner, modifier ou retirer son avis sur le lieu : liste déroulante, « Pas d'avis » par défaut.
+//   - donner, modifier ou retirer son avis sur le lieu : liste déroulante, « Pas encore d'avis de ta part » par défaut (en rose fluo).
 //     Un avis déjà donné est VERROUILLÉ : la liste n'apparaît pas d'office, seulement l'avis actuel et un
 //     bouton « Modifier » — c'est à l'utilisateur de demander à le revoir.
 //
@@ -34,7 +34,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
   const [drink, setDrink] = useState(null); // { id, name }
   const [drinkQuery, setDrinkQuery] = useState("");
   const [drinkResults, setDrinkResults] = useState([]);
-  // Avis sur le lieu : « Pas d'avis » (null) par défaut, ou l'avis déjà donné.
+  // Avis sur le lieu : « Pas encore d'avis de ta part » (null) par défaut, ou l'avis déjà donné.
   const existingRating = myRating == null ? null : myRating;
   const [rating, setRating] = useState(existingRating);
   // Un avis déjà donné est verrouillé par défaut : la liste n'apparaît que si l'utilisateur demande à le revoir.
@@ -145,11 +145,11 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
             <select
               value={rating == null ? "" : String(rating)}
               onChange={(e) => setRating(e.target.value === "" ? null : Number(e.target.value))}
-              style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: existingRating != null ? "8px" : "16px" }}
+              style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: rating == null ? "#ef007c" : COLORS.ink, fontSize: "14px", marginBottom: existingRating != null ? "8px" : "16px" }}
             >
-              <option value="">Pas d'avis</option>
+              <option value="" style={{ color: "#ef007c" }}>Pas encore d'avis de ta part</option>
               {RATING_LABELS.map((level) => (
-                <option key={level.value} value={level.value}>
+                <option key={level.value} value={level.value} style={{ color: COLORS.ink }}>
                   {level.fr}
                 </option>
               ))}
