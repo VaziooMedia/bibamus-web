@@ -196,6 +196,7 @@ export function SubmitBreweryWizardScreen({ breweriesDirectory, onDone, onCancel
       producerTypes,
       producerProfiles,
       status: "to_process",
+      createdVia: "app",
     });
     if (!created) {
       setSaving(false);

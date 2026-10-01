@@ -199,6 +199,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
       venueTypes,
       ...amenities,
       status: "to_process",
+      createdVia: "app",
       menu: [],
       likes: [],
     });

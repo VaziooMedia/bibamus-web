@@ -151,6 +151,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
       type,
       beverageSubtype: subtypeOptions ? beverageSubtype : null,
       status: "to_process",
+      createdVia: "app",
     });
     setSubmitting(false);
     if (!ok) {

@@ -1715,6 +1715,7 @@ function rowToVenue(row) {
 function venueToRow(v, partial = false) {
   const row = {
     name: v.name,
+    created_via: v.createdVia,
     subtitle: v.subtitle,
     street_name: v.streetName,
     street_number: v.streetNumber,
@@ -3180,6 +3181,7 @@ function rowToDrink(row) {
 function drinkToRow(d, partial = false) {
   const row = {
     name: d.name,
+    created_via: d.createdVia,
     type: DRINK_TYPE_LABEL_TO_CODE[d.type] || d.type,
     beverage_subtype: d.beverageSubtype,
     brewery: d.brewery,
@@ -3383,6 +3385,7 @@ function rowToBrewery(row) {
 function breweryToRow(b, partial = false) {
   const row = {
     name: b.name,
+    created_via: b.createdVia,
     country: COUNTRY_LABEL_TO_CODE[b.country] || b.country,
     status: b.status,
     certification_level: b.certificationLevel,
@@ -3507,6 +3510,7 @@ function rowToBrand(row) {
 function brandToRow(b, partial = false) {
   const row = {
     name: b.name,
+    created_via: b.createdVia,
     producer_ids: b.producerIds,
     // Garde l'ancien champ à un seul producteur approximativement à jour (le premier de la
     // liste), au cas où quelque chose le lirait encore ailleurs sans que ce soit encore repéré.

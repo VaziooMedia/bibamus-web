@@ -118,6 +118,7 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
       brandTypes,
       producerIds: selectedProducers.map((p) => p.id),
       status: "to_process",
+      createdVia: "app",
     });
     if (!created) {
       setSaving(false);
