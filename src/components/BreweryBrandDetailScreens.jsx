@@ -11,7 +11,7 @@ import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
-import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweryById, loadVenueById } from "../data/sharedDirectories.js";
+import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById } from "../data/sharedDirectories.js";
 
 export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
   const [editing, setEditing] = useState(false);
@@ -353,11 +353,11 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
     loadDrinksByBrand(brand.name).then(setRelatedDrinks);
   }, [brand.name]);
 
-  const [producer, setProducer] = useState(null);
+  const [producers, setProducers] = useState([]);
   useEffect(() => {
-    if (brand.producerId) loadBreweryById(brand.producerId).then(setProducer);
-    else setProducer(null);
-  }, [brand.producerId]);
+    if (brand.producerIds?.length > 0) loadBreweriesByIds(brand.producerIds).then(setProducers);
+    else setProducers([]);
+  }, [brand.producerIds]);
 
   const submitEdit = () => {
     onSuggestEdit(nameValue);
@@ -436,21 +436,24 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
         </div>
       )}
 
-      {producer && (
+      {producers.length > 0 && (
         <>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-            SON PRODUCTEUR
+            SES PRODUCTEURS
           </div>
-          <button
-            onClick={() => onOpenBrewery(producer.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "20px" }}
-          >
-            <EntityAvatar photoUrl={producer.profilePhotoUrl} photoEmoji={producer.avatarEmoji} size={28} />
-            <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-              {producer.name}
-              <CertificationIcon level={producer.certificationLevel} size={13} />
-            </span>
-          </button>
+          {producers.map((producer) => (
+            <button
+              key={producer.id}
+              onClick={() => onOpenBrewery(producer.id)}
+              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "8px" }}
+            >
+              <EntityAvatar photoUrl={producer.profilePhotoUrl} photoEmoji={producer.avatarEmoji} size={28} />
+              <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                {producer.name}
+                <CertificationIcon level={producer.certificationLevel} size={13} />
+              </span>
+            </button>
+          ))}
         </>
       )}
 

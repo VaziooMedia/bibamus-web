@@ -2321,7 +2321,7 @@ export async function loadDrinksByBrand(brandName) {
 // producer_ids), en plus des fonctions ci-dessus qui restent basées sur le nom.
 export async function loadBrandsByProducer(producerId) {
   if (!producerId) return [];
-  const { data, error } = await supabase.from("brands_directory").select("*").eq("producer_id", producerId).order("name");
+  const { data, error } = await supabase.from("brands_directory").select("*").contains("producer_ids", [producerId]).order("name");
   if (error) {
     console.error("loadBrandsByProducer:", error);
     return [];
@@ -3488,7 +3488,7 @@ function rowToBrand(row) {
     translations: row.translations || [],
     id: row.id,
     name: row.name,
-    producerId: row.producer_id,
+    producerIds: row.producer_ids || [],
     originCountry: COUNTRY_CODE_TO_LABEL[row.origin_country] || row.origin_country,
     originRegion: row.origin_region,
     originCity: row.origin_city,
@@ -3507,7 +3507,10 @@ function rowToBrand(row) {
 function brandToRow(b, partial = false) {
   const row = {
     name: b.name,
-    producer_id: b.producerId,
+    producer_ids: b.producerIds,
+    // Garde l'ancien champ à un seul producteur approximativement à jour (le premier de la
+    // liste), au cas où quelque chose le lirait encore ailleurs sans que ce soit encore repéré.
+    producer_id: b.producerIds?.[0] || null,
     origin_country: COUNTRY_LABEL_TO_CODE[b.originCountry] || b.originCountry,
     origin_region: b.originRegion,
     origin_city: b.originCity,

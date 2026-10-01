@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, loadBreweriesDirectory } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
-import { SearchableSelect } from "./SearchableSelect.jsx";
+import { SearchableMultiSelect } from "./SearchableSelect.jsx";
 import { COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a"]);
@@ -93,7 +93,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     instagramUrl: brand?.instagramUrl || "",
     tiktokUrl: brand?.tiktokUrl || "",
     snapchatUrl: brand?.snapchatUrl || "",
-    producerId: brand?.producerId || null,
+    producerIds: brand?.producerIds || [],
     brandOwner: brand?.brandOwner || "",
   });
   const [logoUrl, setLogoUrl] = useState(brand?.logoUrl || null);
@@ -124,7 +124,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     instagramUrl: form.instagramUrl.trim(),
     tiktokUrl: form.tiktokUrl.trim(),
     snapchatUrl: form.snapchatUrl.trim(),
-    producerId: form.producerId,
+    producerIds: form.producerIds,
     brandOwner: form.brandOwner.trim(),
     logoUrl,
     status,
@@ -231,9 +231,9 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
 
         <div style={separatorStyle} />
         <SectionTitle>Producteur / Propriétaire</SectionTitle>
-        <label style={labelStyle}>Producteur actuel</label>
+        <label style={labelStyle}>Producteur(s) — plusieurs possibles</label>
         <div style={{ marginBottom: "12px" }}>
-          <SearchableSelect options={producerOptions} value={form.producerId} onChange={(id) => set("producerId", id)} placeholder="Chercher un producteur..." />
+          <SearchableMultiSelect options={producerOptions} values={form.producerIds} onChange={(ids) => set("producerIds", ids)} placeholder="Chercher un producteur..." />
         </div>
         <label style={labelStyle}>Propriétaire de la marque</label>
         <input value={form.brandOwner} onChange={(e) => set("brandOwner", e.target.value)} onBlur={capitalizeOnBlur("brandOwner")} style={fieldStyle} />

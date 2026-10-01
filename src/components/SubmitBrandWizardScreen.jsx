@@ -93,10 +93,13 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
   const [brandTypes, setBrandTypes] = useState([]);
   const toggleBrandType = (code) => setBrandTypes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
 
-  // Page 6 — Producteur actuel (facultatif, vrai lien relationnel unique)
+  // Page 6 — Producteur(s) actuel(s) (facultatif, plusieurs possibles en cas de collaboration)
   const [producerQuery, setProducerQuery] = useState("");
-  const [selectedProducer, setSelectedProducer] = useState(null);
-  const producerResults = producerQuery.trim().length >= 2 ? breweriesDirectory.filter((p) => normalize(p.name).includes(normalize(producerQuery.trim()))).slice(0, 8) : [];
+  const [selectedProducers, setSelectedProducers] = useState([]);
+  const producerResults =
+    producerQuery.trim().length >= 2
+      ? breweriesDirectory.filter((p) => normalize(p.name).includes(normalize(producerQuery.trim())) && !selectedProducers.some((sp) => sp.id === p.id)).slice(0, 8)
+      : [];
 
   // Vraie confirmation finale — rien n'est créé avant que l'utilisateur clique "OK" ici.
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -113,7 +116,7 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
       originCity: originCity.trim() || null,
       classifications,
       brandTypes,
-      producerId: selectedProducer?.id || null,
+      producerIds: selectedProducers.map((p) => p.id),
       status: "to_process",
     });
     if (!created) {
@@ -257,48 +260,45 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
           </PrimaryButton>
         }
       >
-        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif.</p>
-        {selectedProducer ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "10px 14px" }}>
-            <EntityAvatar photoUrl={selectedProducer.profilePhotoUrl} photoEmoji={selectedProducer.avatarEmoji} size={28} />
-            <span style={{ flex: 1, fontSize: "14px", fontWeight: 700 }}>{selectedProducer.name}</span>
-            <button onClick={() => setSelectedProducer(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif — plusieurs producteurs possibles, en cas de collaboration.</p>
+        {selectedProducers.map((p) => (
+          <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "10px 14px", marginBottom: "8px" }}>
+            <EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={28} />
+            <span style={{ flex: 1, fontSize: "14px", fontWeight: 700 }}>{p.name}</span>
+            <button onClick={() => setSelectedProducers((prev) => prev.filter((sp) => sp.id !== p.id))} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
               <NavIcon name="x" size={15} color={COLORS.inkSoft} />
             </button>
           </div>
-        ) : (
-          <>
-            <input type="text" value={producerQuery} onChange={(e) => setProducerQuery(e.target.value)} placeholder="Rechercher un producteur..." style={inputStyle} />
-            {producerResults.length > 0 && (
-              <div style={{ marginTop: "8px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-                {producerResults.map((p, i) => (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      setSelectedProducer(p);
-                      setProducerQuery("");
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      width: "100%",
-                      background: "none",
-                      border: "none",
-                      borderBottom: i === producerResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
-                      padding: "10px 4px",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      color: COLORS.ink,
-                    }}
-                  >
-                    <EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={26} />
-                    <span style={{ fontSize: "13.5px", fontWeight: 600 }}>{p.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
+        ))}
+        <input type="text" value={producerQuery} onChange={(e) => setProducerQuery(e.target.value)} placeholder="Rechercher un producteur..." style={inputStyle} />
+        {producerResults.length > 0 && (
+          <div style={{ marginTop: "8px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+            {producerResults.map((p, i) => (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setSelectedProducers((prev) => [...prev, p]);
+                  setProducerQuery("");
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  borderBottom: i === producerResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
+                  padding: "10px 4px",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  color: COLORS.ink,
+                }}
+              >
+                <EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={26} />
+                <span style={{ fontSize: "13.5px", fontWeight: 600 }}>{p.name}</span>
+              </button>
+            ))}
+          </div>
         )}
       </StepShell>
 

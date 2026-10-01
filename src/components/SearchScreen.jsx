@@ -342,7 +342,7 @@ export function SearchScreen({
                     <ResultRow
                       key={b.id}
                       title={b.name}
-                      subtitle={breweriesDirectory.find((br) => br.id === b.producerId)?.name}
+                      subtitle={(b.producerIds || []).map((id) => breweriesDirectory.find((br) => br.id === id)?.name).filter(Boolean).join(", ")}
                       avatar={<EntityAvatar photoUrl={b.logoUrl} size={36} fallbackIcon="tag" />}
                       onClick={() => onOpenBrand(b.id)}
                       last={i === brandResults.length - 1}
