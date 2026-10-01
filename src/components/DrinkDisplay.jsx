@@ -8,6 +8,7 @@ import { COLORS, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, NON_ALCO
 import { CountryFlagImg } from "./icons.jsx";
 import bioIconUrl from "../assets/brand/bio.svg";
 import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
+import genericIconUrl from "../assets/brand/generic-icon-green.svg";
 
 export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "Sans gluten" }) {
   return (
@@ -48,6 +49,15 @@ export function getDrinkBadgeItems(drink, { hideCountry = false, size = 11 } = {
   }
   if (GLUTEN_BIO_ELIGIBLE_TYPES.includes(drink.type) && drink.bio) {
     items.push({ key: "bio", label: <img src={bioIconUrl} alt="Bio" style={{ width: `${size + 3}px`, height: `${size + 3}px`, display: "block" }} />, icon: true, title: "Bio", filter: { kind: "bio" } });
+  }
+  if (drink.isGeneric) {
+    items.push({
+      key: "generic",
+      label: <img src={genericIconUrl} alt="Générique" style={{ width: `${size + 3}px`, height: `${size + 3}px`, display: "block" }} />,
+      icon: true,
+      title: "Produit générique — sans marque précise",
+      filter: { kind: "generic" },
+    });
   }
   return items;
 }
