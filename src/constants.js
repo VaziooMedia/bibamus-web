@@ -35,7 +35,6 @@ export const DRINK_TYPES = [
   "Softs & Eaux",
   "Boissons chaudes",
   "Snacks",
-  "Génériques",
 ];
 
 export const MENU_CATEGORIES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Shots", "Cocktails / Mocktails", "Softs & Eaux", "Boissons chaudes", "Snacks"];
