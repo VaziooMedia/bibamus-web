@@ -115,6 +115,7 @@ export const resolveMenuItem = (item, drinksDirectory) => {
     nationality: master.nationality,
     glutenFree: master.glutenFree,
     bio: master.bio,
+    isGeneric: master.isGeneric,
     countsAsDrinkId: master.countsAsDrinkId || null,
   };
 };

@@ -3,7 +3,7 @@
 // le prototype Claude. L'ancienne fonction fetchRoom (basée sur
 // window.storage) est remplacée par loadSalon (Supabase).
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount } from "./ui.jsx";
@@ -12,16 +12,9 @@ import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges } from "./DrinkDisplay.jsx";
 import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
-import { loadGenericDrinks } from "../data/sharedDirectories.js";
-import genericIconUrl from "../assets/brand/generic-icon-green.svg";
 
 export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraftFriends, draftOrders, setDraftOrders, activeFriendId, setActiveFriendId, bibros, myBibroCode, onBack, onSeeTicket, onUseBibaBobJoker }) {
   const [activeCategory, setActiveCategory] = useState(null);
-  const isGenericView = activeCategory === "__generic__";
-  const [genericDrinks, setGenericDrinks] = useState([]);
-  useEffect(() => {
-    if (isGenericView && genericDrinks.length === 0) loadGenericDrinks().then(setGenericDrinks);
-  }, [isGenericView]); // eslint-disable-line react-hooks/exhaustive-deps
   const [query, setQuery] = useState("");
   const [showBibazard, setShowBibazard] = useState(false);
   const [jokerUnlockedFor, setJokerUnlockedFor] = useState(null); // friendId currently spending their joker
@@ -175,17 +168,6 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const searching = q.length > 0;
   const searchResultsAll = searching ? visibleMenu.filter((d) => normalizeForSearch(d.name).includes(q)) : [];
   const searchResultsInCategory = searching && activeCategory ? itemsIn(activeCategory).filter((d) => normalizeForSearch(d.name).includes(q)) : [];
-
-  // Produits génériques (ex. "1 bière au choix") — pas liés à la carte de ce lieu, donc chargés à
-  // part (loadGenericDrinks) et traités comme une catégorie de plus, pour réutiliser tel quel tout
-  // l'affichage/la recherche déjà en place — même filtre "sans alcool" que le reste du menu.
-  const visibleGenericDrinks = activeFriendFiltered ? genericDrinks.filter((d) => !isAlcoholicDrink(d)) : genericDrinks;
-  const categoryItems = isGenericView ? visibleGenericDrinks : itemsIn(activeCategory);
-  const categorySearchResults = isGenericView
-    ? (searching ? visibleGenericDrinks.filter((d) => normalizeForSearch(d.name).includes(q)) : [])
-    : searchResultsInCategory;
-  const categoryTitle = !activeCategory ? "" : isGenericView ? "PRODUITS GÉNÉRIQUES" : drinkTypeLabel(activeCategory).toUpperCase();
-  const categorySearchPlaceholder = !activeCategory ? "" : isGenericView ? "Rechercher un produit générique" : `Rechercher dans les ${drinkTypeLabel(activeCategory)}`;
 
   const DrinkCard = ({ drink }) => {
     const count = countForFriendDrink(activeFriendId, drink.id);
@@ -473,9 +455,9 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               </button>
           <div style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-            {categoryTitle}
+            {drinkTypeLabel(activeCategory).toUpperCase()}
           </div>
-          {categoryItems.length > 4 && (
+          {itemsIn(activeCategory).length > 4 && (
             <>
               <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} style={{ width: "100%" }}>
                 {isOpenBar ? "Valider la tournée →" : "Valider la commande →"}
@@ -483,25 +465,23 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               <div style={{ marginBottom: "16px" }} />
             </>
           )}
-          {categoryItems.length > 6 && (
+          {itemsIn(activeCategory).length > 6 && (
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={categorySearchPlaceholder}
+              placeholder={`Rechercher dans les ${drinkTypeLabel(activeCategory)}`}
               style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "12px" }}
             />
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
             {searching ? (
-              categorySearchResults.length === 0 ? (
-                <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>
-                  {isGenericView ? "Aucun produit générique trouvé." : "Aucune boisson trouvée dans cette catégorie."}
-                </p>
+              searchResultsInCategory.length === 0 ? (
+                <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucune boisson trouvée dans cette catégorie.</p>
               ) : (
-                categorySearchResults.map((drink) => <DrinkCard key={drink.id} drink={drink} />)
+                searchResultsInCategory.map((drink) => <DrinkCard key={drink.id} drink={drink} />)
               )
             ) : (
-              categoryItems.map((drink) => <DrinkCard key={drink.id} drink={drink} />)
+              itemsIn(activeCategory).map((drink) => <DrinkCard key={drink.id} drink={drink} />)
             )}
           </div>
         </>
@@ -570,26 +550,6 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{uncategorizedCount} →</span>
             </button>
           )}
-          <button
-            onClick={() => goToCategory("__generic__")}
-            style={{
-              textAlign: "left",
-              background: COLORS.surface,
-              border: `2px solid ${COLORS.paperAlt}`,
-              borderRadius: "10px",
-              padding: "12px 14px",
-              cursor: "pointer",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "14.5px" }}>
-              <img src={genericIconUrl} alt="" style={{ height: "16px", width: "auto", display: "block" }} />
-              Produits génériques
-            </span>
-            <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
-          </button>
         </div>
           )}
         </>
