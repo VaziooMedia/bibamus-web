@@ -256,7 +256,24 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
         </span>
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
+      {/* Reste visible en permanence pendant le défilement — sans ça, on ajoute des boissons à
+          l'aveugle une fois que la liste des produits a poussé les noms hors de l'écran. Défile
+          horizontalement plutôt que de s'empiler sur plusieurs lignes, pour garder une hauteur
+          fixe même avec beaucoup de participants. */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 5,
+          background: COLORS.paper,
+          display: "flex",
+          flexWrap: "nowrap",
+          overflowX: "auto",
+          gap: "6px",
+          padding: "8px 0",
+          marginBottom: "4px",
+        }}
+      >
         {draftFriends.map((f) => {
           const isActive = f.id === activeFriendId;
           const count = ordersForFriend(f.id).length;
@@ -270,22 +287,23 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "4px",
+                flexShrink: 0,
                 background: isPaused ? COLORS.paperAlt : hasOrdered ? COLORS.amber : COLORS.burgundy,
                 color: isPaused ? COLORS.inkSoft : hasOrdered ? COLORS.paper : "#fff",
-                border: isPaused ? `2px solid ${COLORS.paperAlt}` : isActive ? "2px solid #fff" : `2px solid ${hasOrdered ? COLORS.amber : COLORS.burgundy}`,
+                border: isPaused ? `1.5px solid ${COLORS.paperAlt}` : isActive ? "1.5px solid #fff" : `1.5px solid ${hasOrdered ? COLORS.amber : COLORS.burgundy}`,
                 borderRadius: "999px",
-                padding: "8px 8px 8px 16px",
+                padding: "5px 5px 5px 10px",
                 fontWeight: 600,
-                fontSize: "14px",
+                fontSize: "12.5px",
                 cursor: isPaused ? "default" : "pointer",
+                whiteSpace: "nowrap",
               }}
             >
-              <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                {isPaused && <NavIcon name="pause" size={12} color={COLORS.burgundy} />}
+              <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                {isPaused && <NavIcon name="pause" size={11} color={COLORS.burgundy} />}
                 {f.name}
-                {f.isSelf && <span style={{ fontSize: "11px", opacity: 0.75 }}> (vous)</span>}
-                {count > 0 && <span style={{ marginLeft: "6px", fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.85 }}>({count})</span>}
+                {count > 0 && <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.85 }}>({count})</span>}
               </span>
               {f.code && bibaBobStatus[f.code] && (
                 <span style={{ display: "inline-flex", verticalAlign: "middle" }}>
@@ -302,11 +320,11 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                     background: "rgba(0,0,0,0.18)",
                     border: "none",
                     borderRadius: "50%",
-                    width: "20px",
-                    height: "20px",
+                    width: "16px",
+                    height: "16px",
                     cursor: "pointer",
                     color: hasOrdered ? COLORS.paper : "#fff",
-                    fontSize: "12px",
+                    fontSize: "11px",
                     lineHeight: 1,
                     flexShrink: 0,
                   }}
