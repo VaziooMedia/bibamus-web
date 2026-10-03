@@ -1609,6 +1609,33 @@ export default function App() {
     return removed;
   };
 
+  // BibAtlas (le répertoire global des produits) comble les trous d'une carte jamais à 100% à
+  // jour — un participant y trouve un produit absent de la carte du lieu et l'y ajoute lui-même,
+  // avec le volume et le prix qu'il fixe. L'ajout rejoint la vraie carte du lieu, de façon
+  // définitive (pas seulement cette tournée) — addedVia/addedByBibroCode permettent à une future
+  // interface de gestion Business de repérer ces ajouts en attente de relecture par le gérant.
+  const addBibAtlasProduct = async (venueId, source, { volumeCl, price }) => {
+    const venue = venuesById[venueId] || (await loadVenuesByIds([venueId]))[0];
+    if (!venue) return null;
+    const newEntry = {
+      id: nextId(),
+      fromDirectory: true,
+      sourceDrinkId: source.id,
+      servingMode: "",
+      volumes: [{ id: nextId(), cl: volumeCl ?? null, price: price ?? 0, isDefault: true }],
+      addedVia: "bibAtlas",
+      addedByBibroCode: profile.myBibroCode,
+    };
+    const newMenu = [...(venue.menu || []), newEntry];
+    updatePublicVenue(venueId, { menu: newMenu });
+    setVenuesById((prev) => ({ ...prev, [venueId]: { ...prev[venueId], menu: newMenu } }));
+    // Un id local propre à cet événement, jamais celui de la vraie entrée de carte — même
+    // logique que createEvent lors de la copie initiale de la carte dans un nouvel événement.
+    const localEntry = { ...resolveMenuItem(newEntry, [source]), id: `local-${Date.now()}-${Math.random()}` };
+    updateEvent(activeEventId, (e) => ({ ...e, menu: [...e.menu, localEntry] }));
+    return localEntry;
+  };
+
   const [drinksDirQuery, setDrinksDirQuery] = useState("");
   const [drinksDirCategory, setDrinksDirCategory] = useState(null);
   const [drinksDirTagFilter, setDrinksDirTagFilter] = useState(null);
@@ -2207,6 +2234,7 @@ export default function App() {
                 onBack={() => setScreen("eventDashboard")}
                 onSeeTicket={() => setScreen("roundTicket")}
                 onUseBibaBobJoker={(code) => useBibaBobJoker(activeEventId, code)}
+                onAddBibAtlasProduct={(source, volumePrice) => addBibAtlasProduct(currentEvent?.venueId, source, volumePrice)}
               />
             )}
             {screen === "roundTicket" && currentEvent && (

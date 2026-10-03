@@ -3,8 +3,8 @@
 // le prototype Claude. L'ancienne fonction fetchRoom (basée sur
 // window.storage) est remplacée par loadSalon (Supabase).
 // ============================================================
-import React, { useState } from "react";
-import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES } from "../constants.js";
+import React, { useState, useEffect } from "react";
+import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES, DRINK_VOLUMES_CL } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { BibaxSearchPicker } from "./Pickers.jsx";
@@ -12,6 +12,7 @@ import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
 import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
+import { searchDrinks } from "../data/sharedDirectories.js";
 
 // Un même produit peut exister sur la carte en plusieurs volumes ("Jupiler" 25cl. et 33cl.,
 // jusqu'ici deux blocs distincts) — regroupés ici sous un seul nom, triés du plus petit volume
@@ -152,9 +153,29 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
   );
 }
 
-export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraftFriends, draftOrders, setDraftOrders, activeFriendId, setActiveFriendId, bibros, myBibroCode, onBack, onSeeTicket, onUseBibaBobJoker }) {
+export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraftFriends, draftOrders, setDraftOrders, activeFriendId, setActiveFriendId, bibros, myBibroCode, onBack, onSeeTicket, onUseBibaBobJoker, onAddBibAtlasProduct }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [zeroOnly, setZeroOnly] = useState(false);
+
+  // BibAtlas : la carte d'un lieu n'est jamais garantie à 100% à jour — ce comble le trou en
+  // cherchant directement dans le répertoire global, pour un produit absent de cette carte.
+  const [bibAtlasQuery, setBibAtlasQuery] = useState("");
+  const [bibAtlasResults, setBibAtlasResults] = useState([]);
+  const [bibAtlasPicked, setBibAtlasPicked] = useState(null);
+  const [bibAtlasVolume, setBibAtlasVolume] = useState("");
+  const [bibAtlasPrice, setBibAtlasPrice] = useState("");
+  const [bibAtlasSaving, setBibAtlasSaving] = useState(false);
+  useEffect(() => {
+    const q = bibAtlasQuery.trim();
+    if (q.length < 2) {
+      setBibAtlasResults([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      searchDrinks(q, 8).then(setBibAtlasResults);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [bibAtlasQuery]);
   const [query, setQuery] = useState("");
   const [showBibazard, setShowBibazard] = useState(false);
   const [jokerUnlockedFor, setJokerUnlockedFor] = useState(null); // friendId currently spending their joker
@@ -335,6 +356,22 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const countFor = (cat) => visibleMenu.filter((d) => categoryOf(d) === cat).length;
   const itemsIn = (cat) => visibleMenu.filter((d) => categoryOf(d) === cat);
   const uncategorizedCount = countFor("Non classé");
+
+  const handleConfirmBibAtlasAdd = async () => {
+    if (!bibAtlasPicked) return;
+    setBibAtlasSaving(true);
+    const volumeCl = bibAtlasVolume ? parseFloat(bibAtlasVolume) : null;
+    const price = isOpenBar ? 0 : parseFloat(bibAtlasPrice.replace(",", ".")) || 0;
+    const created = await onAddBibAtlasProduct(bibAtlasPicked, { volumeCl, price });
+    setBibAtlasSaving(false);
+    if (!created) return;
+    setBibAtlasPicked(null);
+    setBibAtlasQuery("");
+    setBibAtlasResults([]);
+    // Direction la catégorie du produit tout juste ajouté, pour pouvoir le commander dans la
+    // foulée — sans ça, il faudrait le rechercher une seconde fois dans sa propre catégorie.
+    goToCategory(categoryOf(created));
+  };
 
   const q = normalizeForSearch(query.trim());
   const searching = q.length > 0;
@@ -698,7 +735,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
             <span style={{ position: "relative", width: "40px", height: "22px", borderRadius: "999px", background: zeroOnly ? COLORS.amber : COLORS.paperAlt, flexShrink: 0, transition: "background 0.15s" }}>
               <span style={{ position: "absolute", top: "2px", left: zeroOnly ? "20px" : "2px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
             </span>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.ink, textAlign: "left" }}>0.0% Produits sans alcool uniquement</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.ink, textAlign: "left" }}>Produits sans alcool uniquement</span>
           </button>
           {searching ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
@@ -709,6 +746,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               )}
             </div>
           ) : (
+        <>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
           {MENU_CATEGORIES.map((cat) => (
             <button
@@ -756,6 +794,83 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
             </button>
           )}
         </div>
+
+        {/* La carte d'un lieu n'est jamais garantie à 100% à jour — BibAtlas (le répertoire
+            global) comble ce trou pour un produit absent de cette carte précise. */}
+        <div style={{ marginTop: "4px", paddingTop: "16px", borderTop: `1px solid ${COLORS.paperAlt}`, marginBottom: "16px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "8px" }}>Produit absent de la carte ? Cherchez-le dans BibAtlas</div>
+          <input
+            value={bibAtlasQuery}
+            onChange={(e) => setBibAtlasQuery(e.target.value)}
+            placeholder="Chercher dans BibAtlas..."
+            style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box" }}
+          />
+          {bibAtlasResults.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px" }}>
+              {bibAtlasResults.map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => {
+                    setBibAtlasPicked(d);
+                    setBibAtlasVolume("");
+                    setBibAtlasPrice("");
+                  }}
+                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}
+                >
+                  <span style={{ fontWeight: 600, fontSize: "14px", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
+                  <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{drinkTypeLabel(d.type)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {bibAtlasPicked && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", zIndex: 50 }} onClick={() => !bibAtlasSaving && setBibAtlasPicked(null)}>
+            <div style={{ background: COLORS.paper, width: "100%", borderRadius: "16px 16px 0 0", padding: "20px", boxSizing: "border-box" }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ fontWeight: 700, fontSize: "16px", marginBottom: "4px" }}>{bibAtlasPicked.name}</div>
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "0 0 16px 0" }}>Ce produit rejoindra définitivement la carte de ce lieu — le gérant pourra l'ajuster par la suite.</p>
+
+              <label style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft, display: "block", marginBottom: "4px" }}>Volume</label>
+              <select
+                value={bibAtlasVolume}
+                onChange={(e) => setBibAtlasVolume(e.target.value)}
+                style={{ padding: "10px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", width: "100%", boxSizing: "border-box", marginBottom: "14px" }}
+              >
+                <option value="">Non défini</option>
+                {DRINK_VOLUMES_CL.map((v) => (
+                  <option key={v} value={v}>
+                    {String(v).replace(".", ",")} cl.
+                  </option>
+                ))}
+              </select>
+
+              {!isOpenBar && (
+                <>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft, display: "block", marginBottom: "4px" }}>Prix</label>
+                  <input
+                    value={bibAtlasPrice}
+                    onChange={(e) => setBibAtlasPrice(e.target.value)}
+                    inputMode="decimal"
+                    placeholder="0,00"
+                    style={{ padding: "10px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", width: "100%", boxSizing: "border-box", marginBottom: "14px" }}
+                  />
+                </>
+              )}
+
+              <PrimaryButton onClick={handleConfirmBibAtlasAdd} disabled={bibAtlasSaving} style={{ width: "100%", marginBottom: "8px" }}>
+                {bibAtlasSaving ? "Ajout..." : "Ajouter à la carte"}
+              </PrimaryButton>
+              <button
+                onClick={() => !bibAtlasSaving && setBibAtlasPicked(null)}
+                style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", cursor: "pointer", width: "100%", padding: "8px" }}
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        )}
+        </>
           )}
         </>
       )}
