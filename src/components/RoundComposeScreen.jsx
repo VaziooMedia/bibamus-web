@@ -324,6 +324,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           30% { transform: scale(1.35); }
           100% { transform: scale(1); }
         }
+        .round-friends-bar::-webkit-scrollbar { display: none; }
       `}</style>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px", marginTop: "-6px" }}>
@@ -337,6 +338,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           horizontalement plutôt que de s'empiler sur plusieurs lignes, pour garder une hauteur
           fixe même avec beaucoup de participants. */}
       <div
+        className="round-friends-bar"
         style={{
           position: "sticky",
           top: 0,
@@ -348,6 +350,8 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           gap: "6px",
           padding: "8px 0",
           marginBottom: "4px",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
         }}
       >
         {draftFriends.map((f) => {
@@ -633,19 +637,19 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               onClick={() => mainScrollRef?.current?.scrollTo(0, 0)}
               title="Remonter en haut de la liste"
               aria-label="Remonter en haut de la liste"
-              style={{ width: "42px", height: "42px", borderRadius: "50%", border: "none", background: COLORS.surface, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              style={{ width: "32px", height: "32px", borderRadius: "50%", border: "none", background: COLORS.surface, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
             >
               <span style={{ display: "flex", transform: "rotate(90deg)" }}>
-                <NavIcon name="back-triangle" size={18} color={COLORS.amber} />
+                <NavIcon name="back-triangle" size={13} color={COLORS.amber} />
               </span>
             </button>
             <button
               onClick={() => goToCategory(null)}
               title="Toutes les catégories"
               aria-label="Toutes les catégories"
-              style={{ width: "42px", height: "42px", borderRadius: "50%", border: "none", background: COLORS.amber, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              style={{ width: "32px", height: "32px", borderRadius: "50%", border: "none", background: COLORS.amber, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
             >
-              <NavIcon name="back-triangle" size={18} color={COLORS.paper} />
+              <NavIcon name="back-triangle" size={13} color={COLORS.paper} />
             </button>
           </div>
         </>
