@@ -690,24 +690,15 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           )}
           <button
             onClick={() => setZeroOnly((z) => !z)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              width: "100%",
-              background: zeroOnly ? COLORS.amber : "transparent",
-              color: zeroOnly ? COLORS.paper : COLORS.inkSoft,
-              border: `1.5px solid ${zeroOnly ? COLORS.amber : COLORS.inkSoft}`,
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontSize: "13px",
-              fontWeight: 700,
-              cursor: "pointer",
-              marginBottom: "12px",
-            }}
+            role="switch"
+            aria-checked={zeroOnly}
+            style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", background: "none", border: "none", padding: "4px 0", cursor: "pointer", marginBottom: "12px" }}
           >
-            0.0% Produits sans alcool uniquement
+            {/* Piste + curseur qui glisse — pas un simple bouton qui change de couleur */}
+            <span style={{ position: "relative", width: "40px", height: "22px", borderRadius: "999px", background: zeroOnly ? COLORS.amber : COLORS.paperAlt, flexShrink: 0, transition: "background 0.15s" }}>
+              <span style={{ position: "absolute", top: "2px", left: zeroOnly ? "20px" : "2px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+            </span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.ink, textAlign: "left" }}>0.0% Produits sans alcool uniquement</span>
           </button>
           {searching ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
