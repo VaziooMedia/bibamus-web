@@ -19,7 +19,7 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
-import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree } from "../utils.js";
+import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, flattenMenu } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
@@ -266,7 +266,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
 
   const caloriesInfo = event.personalOrders.reduce(
     (acc, order) => {
-      const drink = event.menu.find((d) => d.id === order.drinkId);
+      const drink = findMenuEntryById(event.menu, order.drinkId);
       const kcal = drink ? kcalForDrink(drink) : null;
       if (kcal != null) acc.total += kcal;
       else acc.missing += 1;
@@ -944,9 +944,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
               {(() => {
                 const q = normalizeForSearch(personalDrinkQuery.trim());
                 const searching = q.length > 0;
-                const list = searching
-                  ? event.menu.filter((d) => normalizeForSearch(d.name).includes(q))
-                  : event.menu.filter((d) => countPersonal(d.id) > 0);
+                const flatEventMenu = flattenMenu(event.menu);
+                const list = searching ? flatEventMenu.filter((d) => normalizeForSearch(d.name).includes(q)) : flatEventMenu.filter((d) => countPersonal(d.id) > 0);
                 if (list.length === 0) {
                   return searching ? (
                     <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", margin: 0 }}>Aucune boisson ne correspond.</p>

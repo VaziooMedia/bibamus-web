@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
-import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink } from "../utils.js";
+import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById } from "../utils.js";
 import { loadVenuesByIds } from "../data/sharedDirectories.js";
 
 export function EventHistoryDetailScreen({ event, displayTotal, roundsSum, onBack, openVenue, onReopen, onDelete, onDeleteRound }) {
@@ -46,7 +46,7 @@ export function EventHistoryDetailScreen({ event, displayTotal, roundsSum, onBac
 
   const caloriesInfo = event.personalOrders.reduce(
     (acc, order) => {
-      const drink = event.menu.find((d) => d.id === order.drinkId);
+      const drink = findMenuEntryById(event.menu, order.drinkId);
       const kcal = drink ? kcalForDrink(drink) : null;
       if (kcal != null) acc.total += kcal;
       else acc.missing += 1;
@@ -55,7 +55,7 @@ export function EventHistoryDetailScreen({ event, displayTotal, roundsSum, onBac
     { total: 0, missing: 0 }
   );
 
-  const drinkName = (id) => event.menu.find((d) => d.id === id)?.name || id;
+  const drinkName = (id) => findMenuEntryById(event.menu, id)?.name || id;
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>

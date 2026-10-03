@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { COLORS, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PrimaryButton, MoneyAmount } from "./ui.jsx";
-import { formatMoney } from "../utils.js";
+import { formatMoney, findMenuEntryById } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 
 export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, onFinish }) {
@@ -26,10 +26,10 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
     };
   }, [event.salonCode]);
 
-  const drinkName = (id) => event.menu.find((d) => d.id === id)?.name || id;
-  const drinkPrice = (id) => event.menu.find((d) => d.id === id)?.price || 0;
+  const drinkName = (id) => findMenuEntryById(event.menu, id)?.name || id;
+  const drinkPrice = (id) => findMenuEntryById(event.menu, id)?.price || 0;
   const drinkVolume = (id) => {
-    const d = event.menu.find((d) => d.id === id);
+    const d = findMenuEntryById(event.menu, id);
     return d && VOLUME_DISPLAY_TYPES.includes(d.type) ? d.volumeCl || null : null;
   };
   const ordersForFriend = (friendId) => draftOrders.filter((o) => o.friendId === friendId);

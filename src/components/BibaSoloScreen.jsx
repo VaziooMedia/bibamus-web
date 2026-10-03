@@ -32,7 +32,7 @@ import {
   saveWaterAlertSoloSettings,
   upsertPushSubscription,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import beerIconUrl from "../assets/brand/beer.svg";
@@ -178,7 +178,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     if (ids.length === 0) return;
     loadDrinksByIds(ids).then(setVenueDrinks);
   }, [venue]);
-  const venueMenuItems = (venue?.menu || [])
+  const venueMenuItems = flattenMenu(venue?.menu || [])
     .filter((item) => item && item.fromDirectory && item.sourceDrinkId)
     .map((item) => resolveMenuItem(item, venueDrinks))
     .filter((item) => item.name)

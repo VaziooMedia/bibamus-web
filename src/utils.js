@@ -98,6 +98,34 @@ export const normalizeMenuItemType = (type) => {
   return DRINK_TYPE_MIGRATIONS[type] || type;
 };
 
+// Une entrée de carte porte désormais plusieurs volumes (champ volumes) au lieu d'un seul
+// volumeCl/price posés directement dessus — les entrées déjà enregistrées avant ce changement
+// n'ont que l'ancienne forme ; on la retrouve ici sans jamais la réécrire.
+export const normalizeVolumes = (item) => item.volumes || [{ id: item.id, cl: item.volumeCl ?? null, price: item.price ?? 0, isDefault: true }];
+
+// Une entrée de la carte porte potentiellement plusieurs volumes — on en fait ici un "produit
+// virtuel" par volume, avec un identifiant composé entréeId::volumeId, pour que le reste de
+// l'écran continue de raisonner sur une simple liste de produits. findMenuEntryById sait
+// retrouver le bon volume à partir de cet identifiant composé quand on affiche une commande.
+export const flattenMenu = (menu) =>
+  menu.flatMap((entry) => normalizeVolumes(entry).map((v) => ({ ...entry, id: `${entry.id}::${v.id}`, volumeCl: v.cl, price: v.price })));
+
+// Un identifiant de commande (drinkId) désigne soit directement une entrée de la carte (ancien
+// format à un seul volume), soit un volume précis au sein d'une entrée qui en a plusieurs —
+// repéré par un identifiant composé "entréeId::volumeId". Centralise cette résolution pour que
+// chaque écran qui affiche le nom/prix d'une commande n'ait pas à connaître cette distinction.
+export const findMenuEntryById = (menu, id) => {
+  if (!id) return null;
+  const direct = menu.find((d) => d.id === id);
+  if (direct) return direct;
+  const [entryId, volId] = id.split("::");
+  const entry = menu.find((d) => d.id === entryId);
+  if (!entry) return null;
+  const vol = normalizeVolumes(entry).find((v) => v.id === volId);
+  if (!vol) return null;
+  return { ...entry, volumeCl: vol.cl, price: vol.price };
+};
+
 export const resolveMenuItem = (item, drinksDirectory) => {
   if (!item.fromDirectory || !item.sourceDrinkId) return item;
   const master = drinksDirectory.find((d) => d.id === item.sourceDrinkId);

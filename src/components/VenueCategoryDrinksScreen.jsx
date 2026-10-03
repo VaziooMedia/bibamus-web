@@ -7,7 +7,7 @@ import { COLORS, SERVING_MODE_LABELS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
-import { resolveMenuItem, formatMoney } from "../utils.js";
+import { resolveMenuItem, formatMoney, flattenMenu } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
@@ -26,7 +26,10 @@ const badgeStyle = {
 export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const seenIds = new Set();
-  const items = (venue?.menu || [])
+  // Une entrée à plusieurs volumes devient ici plusieurs lignes affichées — une par volume,
+  // chacune avec son propre prix — puisque c'est une simple consultation de la carte, sans
+  // sélecteur interactif comme dans l'écran de composition d'une tournée.
+  const items = flattenMenu(venue?.menu || [])
     .map((d) => resolveMenuItem(d, drinksDirectory))
     .filter((d) => categoryOf(d) === category)
     .filter((d) => !seenIds.has(d.id) && seenIds.add(d.id));

@@ -10,7 +10,7 @@ import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount } from "./ui.jsx"
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges } from "./DrinkDisplay.jsx";
-import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch } from "../utils.js";
+import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 
 // Un même produit peut exister sur la carte en plusieurs volumes ("Jupiler" 25cl. et 33cl.,
@@ -240,7 +240,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
     // vite sur un autre produit pendant la fenêtre de 450ms.
     setTimeout(() => setFlash((current) => (current?.token === token ? null : current)), 450);
     if (jokerUnlockedFor === activeFriendId) {
-      const drink = event.menu.find((d) => d.id === drinkId);
+      const drink = findMenuEntryById(event.menu, drinkId);
       if (drink && isAlcoholicDrink(drink)) {
         onUseBibaBobJoker(activeFriend.code);
         setJokerUnlockedFor(null);
@@ -286,7 +286,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const canValidateRound = draftOrders.length > 0;
 
   const roundTotal = draftOrders.reduce((sum, o) => {
-    const d = event.menu.find((m) => m.id === o.drinkId);
+    const d = findMenuEntryById(event.menu, o.drinkId);
     return sum + (d ? d.price : 0);
   }, 0);
 
@@ -296,7 +296,8 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
 
   // BibaBOB: while filtered, the person currently being ordered for only sees non-alcoholic
   // products across every browsing path — categories, search, and favorites alike.
-  const visibleMenu = activeFriendFiltered ? event.menu.filter((d) => !isAlcoholicDrink(d)) : event.menu;
+  const flatMenu = flattenMenu(event.menu);
+  const visibleMenu = activeFriendFiltered ? flatMenu.filter((d) => !isAlcoholicDrink(d)) : flatMenu;
 
   const favoriteDrinks = Object.entries(orderCounts)
     .sort((a, b) => b[1] - a[1])
