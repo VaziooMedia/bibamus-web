@@ -106,9 +106,15 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
     mainScrollRef?.current?.scrollTo(0, 0);
   };
 
+  // Confirmation visuelle brève sur le bouton "+" lui-même — le compteur par produit, lui, revient
+  // à 0 dès que le participant actif change juste après (comportement normal), ce qui donnait
+  // l'impression qu'aucun clic n'avait été pris en compte. token force un nouveau cycle
+  // d'animation même en cas de clics rapides et répétés sur le même produit.
+  const [flash, setFlash] = useState(null);
   const addOrder = (drinkId) => {
     if (!activeFriendId) return;
     setDraftOrders((prev) => [...prev, { id: nextId(), friendId: activeFriendId, drinkId }]);
+    setFlash({ drinkId, token: Date.now() });
     if (jokerUnlockedFor === activeFriendId) {
       const drink = event.menu.find((d) => d.id === drinkId);
       if (drink && isAlcoholicDrink(drink)) {
@@ -212,8 +218,20 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           </button>
           <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "16px", minWidth: "16px", textAlign: "center" }}>{count}</span>
           <button
+            key={flash?.drinkId === drink.id ? flash.token : "idle"}
             onClick={() => addOrder(drink.id)}
-            style={{ width: "30px", height: "30px", borderRadius: "8px", border: "none", background: COLORS.amber, color: COLORS.paper, fontSize: "17px", cursor: "pointer", fontWeight: 700 }}
+            style={{
+              width: "30px",
+              height: "30px",
+              borderRadius: "8px",
+              border: "none",
+              background: COLORS.amber,
+              color: COLORS.paper,
+              fontSize: "17px",
+              cursor: "pointer",
+              fontWeight: 700,
+              animation: flash?.drinkId === drink.id ? "round-add-flash 0.4s ease-out" : "none",
+            }}
           >
             +
           </button>
@@ -224,6 +242,13 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
 
   return (
     <div style={{ padding: "22px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <style>{`
+        @keyframes round-add-flash {
+          0% { transform: scale(1); }
+          30% { transform: scale(1.35); }
+          100% { transform: scale(1); }
+        }
+      `}</style>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px", marginTop: "-6px" }}>
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "24px", fontWeight: 800, color: COLORS.amber }}>
@@ -483,6 +508,29 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
             ) : (
               itemsIn(activeCategory).map((drink) => <DrinkCard key={drink.id} drink={drink} />)
             )}
+          </div>
+          {/* Une catégorie fournie peut faire défiler longtemps avant d'atteindre de nouveau la
+              flèche de retour tout en haut — ces deux raccourcis flottants restent accessibles
+              quelle que soit la position de scroll dans la liste. */}
+          <div style={{ position: "fixed", bottom: "90px", right: "16px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 10 }}>
+            <button
+              onClick={() => mainScrollRef?.current?.scrollTo(0, 0)}
+              title="Remonter en haut de la liste"
+              aria-label="Remonter en haut de la liste"
+              style={{ width: "42px", height: "42px", borderRadius: "50%", border: "none", background: COLORS.surface, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              <span style={{ display: "flex", transform: "rotate(90deg)" }}>
+                <NavIcon name="back-triangle" size={18} color={COLORS.amber} />
+              </span>
+            </button>
+            <button
+              onClick={() => goToCategory(null)}
+              title="Toutes les catégories"
+              aria-label="Toutes les catégories"
+              style={{ width: "42px", height: "42px", borderRadius: "50%", border: "none", background: COLORS.amber, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              <NavIcon name="back-triangle" size={18} color={COLORS.paper} />
+            </button>
           </div>
         </>
       ) : (
