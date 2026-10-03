@@ -13,6 +13,122 @@ import { BobBadge, DrinkBadges } from "./DrinkDisplay.jsx";
 import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 
+// Un même produit peut exister sur la carte en plusieurs volumes ("Jupiler" 25cl. et 33cl.,
+// jusqu'ici deux blocs distincts) — regroupés ici sous un seul nom, triés du plus petit volume
+// au plus grand ; la sélection du volume se fait dans la carte elle-même (GroupedDrinkCard).
+function groupDrinksByName(items) {
+  const groups = [];
+  const byName = new Map();
+  for (const item of items) {
+    const existing = byName.get(item.name);
+    if (existing) {
+      existing.push(item);
+    } else {
+      const variants = [item];
+      byName.set(item.name, variants);
+      groups.push({ key: item.name, variants });
+    }
+  }
+  for (const g of groups) g.variants.sort((a, b) => (a.volumeCl || 0) - (b.volumeCl || 0));
+  return groups;
+}
+
+// Définie hors du corps de RoundComposeScreen (pas comme avant) — sinon React la traite comme un
+// nouveau type de composant à chaque rendu du parent, et démonte/remonte entièrement chaque carte
+// au moindre changement d'état ailleurs sur l'écran, ce qui effacerait le volume choisi ici à
+// chaque fois.
+function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpenBar, currency, removeLastOrderFor, addOrder, flash }) {
+  const [selectedId, setSelectedId] = useState(variants[0].id);
+  const selected = variants.find((v) => v.id === selectedId) || variants[0];
+  const count = countForFriendDrink(activeFriendId, selected.id);
+  const hasVolume = VOLUME_DISPLAY_TYPES.includes(selected.type) && selected.volumeCl;
+  const hasMultipleVolumes = variants.length > 1;
+
+  return (
+    <div
+      style={{
+        background: count > 0 ? COLORS.surfaceAlt : COLORS.paperAlt,
+        border: `2px solid ${count > 0 ? COLORS.amber : "transparent"}`,
+        borderRadius: "12px",
+        padding: "8px 10px",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+        <div style={{ fontWeight: 600, fontSize: "14px", minWidth: 0 }}>{selected.name}</div>
+        {!isOpenBar && (
+          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "14px", color: COLORS.ink, flexShrink: 0 }}>
+            <MoneyAmount value={selected.price} currency={currency} jetonIcon="pink" />
+          </span>
+        )}
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "3px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", minWidth: 0 }}>
+          <DrinkBadges drink={selected} size={10} />
+        </div>
+        {(selected.abv != null || selected.brewery) && (
+          <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, flexShrink: 0, textAlign: "right" }}>
+            {[selected.abv != null ? `${selected.abv.toFixed(1)}% ABV` : null, selected.brewery || null].filter(Boolean).join(" · ")}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "6px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", minWidth: 0 }}>
+          {hasMultipleVolumes
+            ? variants.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => setSelectedId(v.id)}
+                  style={{
+                    background: v.id === selectedId ? COLORS.amber : "transparent",
+                    color: v.id === selectedId ? COLORS.paper : COLORS.inkSoft,
+                    border: `1.5px solid ${v.id === selectedId ? COLORS.amber : COLORS.inkSoft}`,
+                    borderRadius: "999px",
+                    padding: "2px 8px",
+                    fontSize: "11.5px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {v.volumeCl} cl.
+                </button>
+              ))
+            : hasVolume && <span style={{ fontSize: "12.5px", fontWeight: 800, color: COLORS.amber }}>{selected.volumeCl} cl.</span>}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          <button
+            onClick={() => removeLastOrderFor(activeFriendId, selected.id)}
+            disabled={count === 0}
+            style={{ width: "28px", height: "28px", borderRadius: "8px", border: "none", background: count === 0 ? "transparent" : COLORS.paperAlt, color: COLORS.inkSoft, fontSize: "16px", cursor: count === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+          >
+            −
+          </button>
+          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", minWidth: "14px", textAlign: "center" }}>{count}</span>
+          <button
+            key={flash?.drinkId === selected.id ? flash.token : "idle"}
+            onClick={() => addOrder(selected.id)}
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "8px",
+              border: "none",
+              background: COLORS.amber,
+              color: COLORS.paper,
+              fontSize: "16px",
+              cursor: "pointer",
+              fontWeight: 700,
+              animation: flash?.drinkId === selected.id ? "round-add-flash 0.4s ease-out" : "none",
+            }}
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraftFriends, draftOrders, setDraftOrders, activeFriendId, setActiveFriendId, bibros, myBibroCode, onBack, onSeeTicket, onUseBibaBobJoker }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [query, setQuery] = useState("");
@@ -152,6 +268,21 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
 
   const countForFriendDrink = (friendId, drinkId) => draftOrders.filter((o) => o.friendId === friendId && o.drinkId === drinkId).length;
   const ordersForFriend = (friendId) => draftOrders.filter((o) => o.friendId === friendId);
+
+  const renderGroupedDrinks = (items) =>
+    groupDrinksByName(items).map((group) => (
+      <GroupedDrinkCard
+        key={group.key}
+        variants={group.variants}
+        activeFriendId={activeFriendId}
+        countForFriendDrink={countForFriendDrink}
+        isOpenBar={isOpenBar}
+        currency={event.currency}
+        removeLastOrderFor={removeLastOrderFor}
+        addOrder={addOrder}
+        flash={flash}
+      />
+    ));
   const canValidateRound = draftOrders.length > 0;
 
   const roundTotal = draftOrders.reduce((sum, o) => {
@@ -183,70 +314,6 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const searchResultsAll = searching ? visibleMenu.filter((d) => normalizeForSearch(d.name).includes(q)) : [];
   const searchResultsInCategory = searching && activeCategory ? itemsIn(activeCategory).filter((d) => normalizeForSearch(d.name).includes(q)) : [];
 
-  const DrinkCard = ({ drink }) => {
-    const count = countForFriendDrink(activeFriendId, drink.id);
-    return (
-      <div
-        key={drink.id}
-        style={{
-          background: count > 0 ? COLORS.surfaceAlt : COLORS.paperAlt,
-          border: `2px solid ${count > 0 ? COLORS.amber : "transparent"}`,
-          borderRadius: "12px",
-          padding: "10px 12px",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: "14px", display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap" }}>
-              {drink.name}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", marginTop: "2px" }}>
-              {drink.volumeCl && VOLUME_DISPLAY_TYPES.includes(drink.type) && <span style={{ fontSize: "12.5px", fontWeight: 800, color: COLORS.amber }}>{drink.volumeCl} cl.</span>}
-              <DrinkBadges drink={drink} size={10} />
-            </div>
-            {(drink.abv != null || drink.brewery) && (
-              <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "2px" }}>
-                {[drink.abv != null ? `${drink.abv.toFixed(1)}% ABV` : null, drink.brewery || null].filter(Boolean).join(" · ")}
-              </div>
-            )}
-          </div>
-          {!isOpenBar && (
-            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "14px", color: COLORS.ink, flexShrink: 0 }}>
-              <MoneyAmount value={drink.price} currency={event.currency} jetonIcon="pink" />
-            </span>
-          )}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
-          <button
-            onClick={() => removeLastOrderFor(activeFriendId, drink.id)}
-            disabled={count === 0}
-            style={{ width: "30px", height: "30px", borderRadius: "8px", border: "none", background: count === 0 ? "transparent" : COLORS.paperAlt, color: COLORS.inkSoft, fontSize: "17px", cursor: count === 0 ? "default" : "pointer", fontWeight: 700 }}
-          >
-            −
-          </button>
-          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "16px", minWidth: "16px", textAlign: "center" }}>{count}</span>
-          <button
-            key={flash?.drinkId === drink.id ? flash.token : "idle"}
-            onClick={() => addOrder(drink.id)}
-            style={{
-              width: "30px",
-              height: "30px",
-              borderRadius: "8px",
-              border: "none",
-              background: COLORS.amber,
-              color: COLORS.paper,
-              fontSize: "17px",
-              cursor: "pointer",
-              fontWeight: 700,
-              animation: flash?.drinkId === drink.id ? "round-add-flash 0.4s ease-out" : "none",
-            }}
-          >
-            +
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div style={{ padding: "22px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -498,9 +565,19 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ color: COLORS.amber }}>★</span> Favoris
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
-            {favoriteDrinks.map((drink) => (
-              <DrinkCard key={drink.id} drink={drink} />
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "18px" }}>
+            {groupDrinksByName(favoriteDrinks).map((group) => (
+              <GroupedDrinkCard
+                key={group.key}
+                variants={group.variants}
+                activeFriendId={activeFriendId}
+                countForFriendDrink={countForFriendDrink}
+                isOpenBar={isOpenBar}
+                currency={event.currency}
+                removeLastOrderFor={removeLastOrderFor}
+                addOrder={addOrder}
+                flash={flash}
+              />
             ))}
           </div>
         </>
@@ -541,10 +618,10 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               searchResultsInCategory.length === 0 ? (
                 <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucune boisson trouvée dans cette catégorie.</p>
               ) : (
-                searchResultsInCategory.map((drink) => <DrinkCard key={drink.id} drink={drink} />)
+                renderGroupedDrinks(searchResultsInCategory)
               )
             ) : (
-              itemsIn(activeCategory).map((drink) => <DrinkCard key={drink.id} drink={drink} />)
+              renderGroupedDrinks(itemsIn(activeCategory))
             )}
           </div>
           {/* Une catégorie fournie peut faire défiler longtemps avant d'atteindre de nouveau la
@@ -586,7 +663,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               {searchResultsAll.length === 0 ? (
                 <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucune boisson trouvée.</p>
               ) : (
-                searchResultsAll.map((drink) => <DrinkCard key={drink.id} drink={drink} />)
+                renderGroupedDrinks(searchResultsAll)
               )}
             </div>
           ) : (
