@@ -291,9 +291,17 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                 flexShrink: 0,
                 background: isPaused ? COLORS.paperAlt : hasOrdered ? COLORS.amber : COLORS.burgundy,
                 color: isPaused ? COLORS.inkSoft : hasOrdered ? COLORS.paper : "#fff",
-                border: isPaused ? `1.5px solid ${COLORS.paperAlt}` : isActive ? "1.5px solid #fff" : `1.5px solid ${hasOrdered ? COLORS.amber : COLORS.burgundy}`,
+                // Sélectionné : contour blanc classique sur fond bordeaux — mais sur fond vert
+                // fluo (déjà servi), le blanc s'y distingue mal, donc rose fluo à la place.
+                border: isPaused
+                  ? `1.5px solid ${COLORS.paperAlt}`
+                  : isActive
+                  ? `1.5px solid ${hasOrdered ? COLORS.pinkFluo : "#fff"}`
+                  : `1.5px solid ${hasOrdered ? COLORS.amber : COLORS.burgundy}`,
                 borderRadius: "999px",
-                padding: "5px 5px 5px 10px",
+                // Symétrique des deux côtés : sans ça, le nom de l'utilisateur lui-même (seul,
+                // sans croix de suppression à droite) paraît décentré vers la gauche.
+                padding: "5px 10px",
                 fontWeight: 600,
                 fontSize: "12.5px",
                 cursor: isPaused ? "default" : "pointer",
@@ -322,6 +330,10 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                     borderRadius: "50%",
                     width: "16px",
                     height: "16px",
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     cursor: "pointer",
                     color: hasOrdered ? COLORS.paper : "#fff",
                     fontSize: "11px",
