@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES, DRINK_VOLUMES_CL } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount } from "./ui.jsx";
+import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } from "./ui.jsx";
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
@@ -17,6 +17,10 @@ import { searchDrinks } from "../data/sharedDirectories.js";
 // Un même produit peut exister sur la carte en plusieurs volumes ("Jupiler" 25cl. et 33cl.,
 // jusqu'ici deux blocs distincts) — regroupés ici sous un seul nom, triés du plus petit volume
 // au plus grand ; la sélection du volume se fait dans la carte elle-même (GroupedDrinkCard).
+// Même libellés que SearchScreen.jsx, pour la sous-catégorie d'un résultat BibAtlas — plus
+// précis que la catégorie ("Bières & Cidres") elle-même, déjà connue depuis le contexte.
+const SUBTYPE_LABELS = { biere: "Bière", cidre: "Cidre", poire: "Poiré", vin: "Vin", vin_effervescent: "Vin effervescent" };
+
 function groupDrinksByName(items) {
   const groups = [];
   const byName = new Map();
@@ -56,29 +60,93 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
         padding: "8px 10px",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
-          <div style={{ fontWeight: 600, fontSize: "14px", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selected.name}</div>
-          {hasInfo && (
-            <button
-              onClick={() => setShowInfo((s) => !s)}
-              title={showInfo ? "Masquer les détails" : "Voir les détails (degré, origine, producteur)"}
-              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0, opacity: showInfo ? 1 : 0.6 }}
-            >
-              <NavIcon name="info" size={14} color={COLORS.amber} />
-            </button>
-          )}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+        <EntityAvatar photoUrl={selected.photoUrl} photoEmoji={selected.avatarEmoji} size={40} fallbackIcon="bottle" />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
+              <div style={{ fontWeight: 600, fontSize: "14px", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selected.name}</div>
+              {hasInfo && (
+                <button
+                  onClick={() => setShowInfo((s) => !s)}
+                  title={showInfo ? "Masquer les détails" : "Voir les détails (degré, origine, producteur)"}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0, opacity: showInfo ? 1 : 0.6 }}
+                >
+                  <NavIcon name="info" size={14} color={COLORS.amber} />
+                </button>
+              )}
+            </div>
+            {!isOpenBar && (
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "14px", color: COLORS.ink, flexShrink: 0 }}>
+                <MoneyAmount value={selected.price} currency={currency} jetonIcon="pink" />
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", minWidth: 0 }}>
+              {hasMultipleVolumes
+                ? variants.map((v) => (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedId(v.id)}
+                      style={{
+                        background: v.id === selectedId ? COLORS.amber : "transparent",
+                        color: v.id === selectedId ? COLORS.paper : COLORS.inkSoft,
+                        border: `1.5px solid ${v.id === selectedId ? COLORS.amber : COLORS.inkSoft}`,
+                        borderRadius: "999px",
+                        padding: "2px 8px",
+                        fontSize: "11.5px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {v.volumeCl} cl.
+                    </button>
+                  ))
+                : hasVolume && (
+                    // Même style "pilule" que les volumes sélectionnés multiples — pas une simple
+                    // couleur de texte — même si rien n'est cliquable ici, un seul volume existant.
+                    <span style={{ background: COLORS.amber, color: COLORS.paper, border: `1.5px solid ${COLORS.amber}`, borderRadius: "999px", padding: "2px 8px", fontSize: "11.5px", fontWeight: 700 }}>
+                      {selected.volumeCl} cl.
+                    </span>
+                  )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+              <button
+                onClick={() => removeLastOrderFor(activeFriendId, selected.id)}
+                disabled={count === 0}
+                style={{ width: "28px", height: "28px", borderRadius: "8px", border: "none", background: count === 0 ? "transparent" : COLORS.paperAlt, color: COLORS.inkSoft, fontSize: "16px", cursor: count === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+              >
+                −
+              </button>
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", minWidth: "14px", textAlign: "center" }}>{count}</span>
+              <button
+                key={flash?.drinkId === selected.id ? flash.token : "idle"}
+                onClick={() => addOrder(selected.id)}
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: COLORS.amber,
+                  color: COLORS.paper,
+              fontSize: "16px",
+              cursor: "pointer",
+              fontWeight: 700,
+              animation: flash?.drinkId === selected.id ? "round-add-flash 0.4s ease-out" : "none",
+            }}
+          >
+            +
+              </button>
+            </div>
+          </div>
         </div>
-        {!isOpenBar && (
-          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "14px", color: COLORS.ink, flexShrink: 0 }}>
-            <MoneyAmount value={selected.price} currency={currency} jetonIcon="pink" />
-          </span>
-        )}
       </div>
 
       {showInfo && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
             {selected.abv != null && <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{selected.abv.toFixed(1)}% ABV</span>}
             {selected.abv != null && getDrinkBadgeItems(selected, { size: 10 }).length > 0 && (
               <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
@@ -90,65 +158,6 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
           {selected.brewery && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "3px" }}>{selected.brewery}</div>}
         </>
       )}
-
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "6px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", minWidth: 0 }}>
-          {hasMultipleVolumes
-            ? variants.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => setSelectedId(v.id)}
-                  style={{
-                    background: v.id === selectedId ? COLORS.amber : "transparent",
-                    color: v.id === selectedId ? COLORS.paper : COLORS.inkSoft,
-                    border: `1.5px solid ${v.id === selectedId ? COLORS.amber : COLORS.inkSoft}`,
-                    borderRadius: "999px",
-                    padding: "2px 8px",
-                    fontSize: "11.5px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  {v.volumeCl} cl.
-                </button>
-              ))
-            : hasVolume && (
-                // Même style "pilule" que les volumes sélectionnés multiples — pas une simple
-                // couleur de texte — même si rien n'est cliquable ici, un seul volume existant.
-                <span style={{ background: COLORS.amber, color: COLORS.paper, border: `1.5px solid ${COLORS.amber}`, borderRadius: "999px", padding: "2px 8px", fontSize: "11.5px", fontWeight: 700 }}>
-                  {selected.volumeCl} cl.
-                </span>
-              )}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-          <button
-            onClick={() => removeLastOrderFor(activeFriendId, selected.id)}
-            disabled={count === 0}
-            style={{ width: "28px", height: "28px", borderRadius: "8px", border: "none", background: count === 0 ? "transparent" : COLORS.paperAlt, color: COLORS.inkSoft, fontSize: "16px", cursor: count === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-          >
-            −
-          </button>
-          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", minWidth: "14px", textAlign: "center" }}>{count}</span>
-          <button
-            key={flash?.drinkId === selected.id ? flash.token : "idle"}
-            onClick={() => addOrder(selected.id)}
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "8px",
-              border: "none",
-              background: COLORS.amber,
-              color: COLORS.paper,
-              fontSize: "16px",
-              cursor: "pointer",
-              fontWeight: 700,
-              animation: flash?.drinkId === selected.id ? "round-add-flash 0.4s ease-out" : "none",
-            }}
-          >
-            +
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -815,10 +824,13 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                     setBibAtlasVolume("");
                     setBibAtlasPrice("");
                   }}
-                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}
+                  style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "14px", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
-                  <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{drinkTypeLabel(d.type)}</span>
+                  <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={36} fallbackIcon="bottle" />
+                  <span style={{ fontWeight: 600, fontSize: "14px", minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
+                  {/* Sous-catégorie (ex. "Bière") plutôt que la catégorie elle-même (ex. "Bières &
+                      Cidres") — déjà connue, puisqu'on cherche depuis une catégorie donnée. */}
+                  <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{SUBTYPE_LABELS[d.beverageSubtype] || drinkTypeLabel(d.type)}</span>
                 </button>
               ))}
             </div>
