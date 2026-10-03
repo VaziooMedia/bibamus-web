@@ -38,7 +38,7 @@ function groupDrinksByName(items) {
 // au moindre changement d'état ailleurs sur l'écran, ce qui effacerait le volume choisi ici à
 // chaque fois.
 function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpenBar, currency, removeLastOrderFor, addOrder, flash }) {
-  const [selectedId, setSelectedId] = useState(variants[0].id);
+  const [selectedId, setSelectedId] = useState(() => (variants.find((v) => v.isDefault) || variants[0]).id);
   const [showInfo, setShowInfo] = useState(false);
   const selected = variants.find((v) => v.id === selectedId) || variants[0];
   const count = countForFriendDrink(activeFriendId, selected.id);
@@ -77,11 +77,12 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
 
       {showInfo && (
         <>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "4px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", minWidth: 0 }}>
-              <DrinkBadges drink={selected} size={10} />
-            </div>
-            {selected.abv != null && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{selected.abv.toFixed(1)}% ABV</div>}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
+            {selected.abv != null && <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{selected.abv.toFixed(1)}% ABV</span>}
+            {selected.abv != null && getDrinkBadgeItems(selected, { size: 10 }).length > 0 && (
+              <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
+            )}
+            <DrinkBadges drink={selected} size={10} />
           </div>
           {/* Sur sa propre ligne, dédiée — un nom de producteur peut être long, et le nom du
               produit lui-même l'est parfois déjà trop pour partager une ligne avec autre chose. */}
@@ -110,7 +111,13 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
                   {v.volumeCl} cl.
                 </button>
               ))
-            : hasVolume && <span style={{ fontSize: "12.5px", fontWeight: 800, color: COLORS.amber }}>{selected.volumeCl} cl.</span>}
+            : hasVolume && (
+                // Même style "pilule" que les volumes sélectionnés multiples — pas une simple
+                // couleur de texte — même si rien n'est cliquable ici, un seul volume existant.
+                <span style={{ background: COLORS.amber, color: COLORS.paper, border: `1.5px solid ${COLORS.amber}`, borderRadius: "999px", padding: "2px 8px", fontSize: "11.5px", fontWeight: 700 }}>
+                  {selected.volumeCl} cl.
+                </span>
+              )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
           <button

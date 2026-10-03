@@ -108,7 +108,7 @@ export const normalizeVolumes = (item) => item.volumes || [{ id: item.id, cl: it
 // l'écran continue de raisonner sur une simple liste de produits. findMenuEntryById sait
 // retrouver le bon volume à partir de cet identifiant composé quand on affiche une commande.
 export const flattenMenu = (menu) =>
-  menu.flatMap((entry) => normalizeVolumes(entry).map((v) => ({ ...entry, id: `${entry.id}::${v.id}`, volumeCl: v.cl, price: v.price })));
+  menu.flatMap((entry) => normalizeVolumes(entry).map((v) => ({ ...entry, id: `${entry.id}::${v.id}`, volumeCl: v.cl, price: v.price, isDefault: v.isDefault })));
 
 // Un identifiant de commande (drinkId) désigne soit directement une entrée de la carte (ancien
 // format à un seul volume), soit un volume précis au sein d'une entrée qui en a plusieurs —
