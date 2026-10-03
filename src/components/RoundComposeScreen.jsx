@@ -114,7 +114,15 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const addOrder = (drinkId) => {
     if (!activeFriendId) return;
     setDraftOrders((prev) => [...prev, { id: nextId(), friendId: activeFriendId, drinkId }]);
-    setFlash({ drinkId, token: Date.now() });
+    const token = Date.now();
+    setFlash({ drinkId, token });
+    // Sans ce nettoyage, flash reste accroché indéfiniment — DrinkCard est redéfini à chaque
+    // rendu de ce composant, donc React démonte/remonte entièrement les cartes au moindre
+    // changement d'état (même un simple clic sur une étiquette de participant), et un flash
+    // jamais effacé rejoue l'animation à chaque fois, sur un produit auquel on n'a pourtant
+    // rien touché. Le token comparé ici évite d'effacer un flash plus récent si on enchaîne
+    // vite sur un autre produit pendant la fenêtre de 450ms.
+    setTimeout(() => setFlash((current) => (current?.token === token ? null : current)), 450);
     if (jokerUnlockedFor === activeFriendId) {
       const drink = event.menu.find((d) => d.id === drinkId);
       if (drink && isAlcoholicDrink(drink)) {
@@ -296,7 +304,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                 border: isPaused
                   ? `1.5px solid ${COLORS.paperAlt}`
                   : isActive
-                  ? `1.5px solid ${hasOrdered ? COLORS.pinkFluo : "#fff"}`
+                  ? `2.5px solid ${hasOrdered ? COLORS.pinkFluo : "#fff"}`
                   : `1.5px solid ${hasOrdered ? COLORS.amber : COLORS.burgundy}`,
                 borderRadius: "999px",
                 // Symétrique des deux côtés : sans ça, le nom de l'utilisateur lui-même (seul,
