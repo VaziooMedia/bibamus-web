@@ -9,7 +9,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
-import { BobBadge, DrinkBadges } from "./DrinkDisplay.jsx";
+import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
 import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 
@@ -39,10 +39,12 @@ function groupDrinksByName(items) {
 // chaque fois.
 function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpenBar, currency, removeLastOrderFor, addOrder, flash }) {
   const [selectedId, setSelectedId] = useState(variants[0].id);
+  const [showInfo, setShowInfo] = useState(false);
   const selected = variants.find((v) => v.id === selectedId) || variants[0];
   const count = countForFriendDrink(activeFriendId, selected.id);
   const hasVolume = VOLUME_DISPLAY_TYPES.includes(selected.type) && selected.volumeCl;
   const hasMultipleVolumes = variants.length > 1;
+  const hasInfo = selected.abv != null || selected.brewery || getDrinkBadgeItems(selected, { size: 10 }).length > 0;
 
   return (
     <div
@@ -53,8 +55,19 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
         padding: "8px 10px",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
-        <div style={{ fontWeight: 600, fontSize: "14px", minWidth: 0 }}>{selected.name}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: "14px", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selected.name}</div>
+          {hasInfo && (
+            <button
+              onClick={() => setShowInfo((s) => !s)}
+              title={showInfo ? "Masquer les détails" : "Voir les détails (degré, origine, producteur)"}
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0, opacity: showInfo ? 1 : 0.6 }}
+            >
+              <NavIcon name="info" size={14} color={COLORS.amber} />
+            </button>
+          )}
+        </div>
         {!isOpenBar && (
           <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "14px", color: COLORS.ink, flexShrink: 0 }}>
             <MoneyAmount value={selected.price} currency={currency} jetonIcon="pink" />
@@ -62,16 +75,19 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "3px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", minWidth: 0 }}>
-          <DrinkBadges drink={selected} size={10} />
-        </div>
-        {(selected.abv != null || selected.brewery) && (
-          <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, flexShrink: 0, textAlign: "right" }}>
-            {[selected.abv != null ? `${selected.abv.toFixed(1)}% ABV` : null, selected.brewery || null].filter(Boolean).join(" · ")}
+      {showInfo && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "4px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", minWidth: 0 }}>
+              <DrinkBadges drink={selected} size={10} />
+            </div>
+            {selected.abv != null && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{selected.abv.toFixed(1)}% ABV</div>}
           </div>
-        )}
-      </div>
+          {/* Sur sa propre ligne, dédiée — un nom de producteur peut être long, et le nom du
+              produit lui-même l'est parfois déjà trop pour partager une ligne avec autre chose. */}
+          {selected.brewery && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "3px" }}>{selected.brewery}</div>}
+        </>
+      )}
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "6px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", minWidth: 0 }}>
