@@ -50,12 +50,15 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
   const [confirmClear, setConfirmClear] = useState(false);
 
   const refresh = useCallback(async () => {
-    const list = await loadMyConversations(50, null, showArchived);
-    if (list === null) {
+    const rawList = await loadMyConversations(50, null, showArchived);
+    if (rawList === null) {
       setFailed(true);
       return;
     }
     setFailed(false);
+    // Un salon reçoit une fenêtre dès sa création, même sans aucun message échangé — on ne
+    // l'affiche dans Ping qu'une fois qu'une vraie discussion y a réellement commencé.
+    const list = rawList.filter((c) => c.kind !== "salon" || c.lastMessageAt);
     setConversations(list);
     const ids = list.flatMap((c) => c.memberIds).filter((id) => id !== myUserId);
     if (ids.length > 0) {
