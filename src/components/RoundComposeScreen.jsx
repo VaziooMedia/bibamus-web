@@ -154,6 +154,7 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
 
 export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraftFriends, draftOrders, setDraftOrders, activeFriendId, setActiveFriendId, bibros, myBibroCode, onBack, onSeeTicket, onUseBibaBobJoker }) {
   const [activeCategory, setActiveCategory] = useState(null);
+  const [zeroOnly, setZeroOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [showBibazard, setShowBibazard] = useState(false);
   const [jokerUnlockedFor, setJokerUnlockedFor] = useState(null); // friendId currently spending their joker
@@ -320,7 +321,9 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   // BibaBOB: while filtered, the person currently being ordered for only sees non-alcoholic
   // products across every browsing path — categories, search, and favorites alike.
   const flatMenu = flattenMenu(event.menu);
-  const visibleMenu = activeFriendFiltered ? flatMenu.filter((d) => !isAlcoholicDrink(d)) : flatMenu;
+  // Le filtre BibaBob (participant au défi zéro alcool) et ce bouton manuel visent le même
+  // résultat — l'un ou l'autre suffit à déclencher le filtrage, sans s'exclure mutuellement.
+  const visibleMenu = activeFriendFiltered || zeroOnly ? flatMenu.filter((d) => !isAlcoholicDrink(d)) : flatMenu;
 
   const favoriteDrinks = Object.entries(orderCounts)
     .sort((a, b) => b[1] - a[1])
@@ -450,14 +453,13 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
             </div>
           );
         })}
+        <button
+          onClick={() => setAddPeopleOpen((o) => !o)}
+          style={{ background: "none", border: `1.5px dashed ${COLORS.inkSoft}`, borderRadius: "999px", padding: "5px 10px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer", flexShrink: 0 }}
+        >
+          {addPeopleOpen ? "▲" : "+"}
+        </button>
       </div>
-
-      <button
-        onClick={() => setAddPeopleOpen((o) => !o)}
-        style={{ background: "none", border: `1.5px dashed ${COLORS.inkSoft}`, borderRadius: "999px", padding: "7px 14px", fontSize: "14px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer", alignSelf: "flex-start", marginBottom: "14px" }}
-      >
-        {addPeopleOpen ? "▲" : "+"}
-      </button>
 
       {addPeopleOpen && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
@@ -686,6 +688,27 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
               style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "12px" }}
             />
           )}
+          <button
+            onClick={() => setZeroOnly((z) => !z)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              width: "100%",
+              background: zeroOnly ? COLORS.amber : "transparent",
+              color: zeroOnly ? COLORS.paper : COLORS.inkSoft,
+              border: `1.5px solid ${zeroOnly ? COLORS.amber : COLORS.inkSoft}`,
+              borderRadius: "999px",
+              padding: "8px 14px",
+              fontSize: "13px",
+              fontWeight: 700,
+              cursor: "pointer",
+              marginBottom: "12px",
+            }}
+          >
+            0.0% Produits sans alcool uniquement
+          </button>
           {searching ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
               {searchResultsAll.length === 0 ? (
