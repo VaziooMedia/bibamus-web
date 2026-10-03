@@ -242,6 +242,9 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
   };
 
   const personalTotal = event.personalOrders.length;
+  // Tous les verres de TOUT le salon (toutes tournées, tous participants confondus) — distinct de
+  // personalTotal (celui de l'utilisateur courant seul), pour les "Statistiques générales".
+  const sessionTotal = event.rounds.reduce((sum, r) => sum + r.orders.length, 0);
 
   const openClubPicker = () => {
     setClubPickerOpen(true);
@@ -1240,8 +1243,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           <>
           <div style={{ display: "flex", marginTop: "10px" }}>
             <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
-              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal > 1 ? "S" : ""}</div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{sessionTotal}</div>
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{sessionTotal > 1 ? "S" : ""}</div>
             </div>
             <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
@@ -1368,8 +1371,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         <>
           <div style={{ display: "flex", marginTop: "10px" }}>
             <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
-              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal > 1 ? "S" : ""}</div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{sessionTotal}</div>
+              <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{sessionTotal > 1 ? "S" : ""}</div>
             </div>
             <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
