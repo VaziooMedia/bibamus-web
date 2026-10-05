@@ -7,6 +7,7 @@
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS, DRINK_TYPES, COUNTRIES } from "../constants.js";
+import { CONTAINER_TYPES } from "../data/beerCiderStyles.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariant, lookupBarcode, loadDrinksByIds, searchDrinks } from "../data/sharedDirectories.js";
@@ -21,14 +22,9 @@ const WINE_SUBTYPES = [
   { code: "vin", fr: "Vin" },
   { code: "vin_effervescent", fr: "Vin effervescent" },
 ];
-const CONTAINER_TYPES = [
-  { code: "bouteille_verre", fr: "Bouteille verre" },
-  { code: "bouteille_pet", fr: "Bouteille PET" },
-  { code: "canette", fr: "Canette" },
-  { code: "fut", fr: "Fût" },
-  { code: "bag_in_box", fr: "Bag-in-Box" },
-  { code: "brique", fr: "Brique" },
-];
+// Liste commune avec la plateforme de gestion (beerCiderStyles.js). Le générique "bouteille"
+// (matière non précisée) n'est pas proposé ici : l'utilisateur sait si c'est du verre ou du PET.
+const APP_CONTAINERS = CONTAINER_TYPES.filter((c) => c.code !== "bouteille");
 
 function StepShell({ step, totalSteps, title, onBack, onPrevious, children, footer }) {
   return (
@@ -127,7 +123,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   const step2Valid = abv.trim().length > 0 && !isNaN(parseFloat(abv));
 
   // Page 3 — Code-barre + contenant + volume (facultatif, un seul conditionnement)
-  const [variant, setVariant] = useState({ container: CONTAINER_TYPES[0].code, volumeCl: "", barcode: "" });
+  const [variant, setVariant] = useState({ container: APP_CONTAINERS[0].code, volumeCl: "", barcode: "" });
   // Le conditionnement déjà enregistré en base (id + empreinte de ce qui a été saisi) : repasser par
   // cette étape après un "Précédent" ne doit pas le réinsérer une seconde fois.
   const [savedVariant, setSavedVariant] = useState(null);
@@ -373,7 +369,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
           <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
             <select value={variant.container} onChange={(e) => setVariant((v) => ({ ...v, container: e.target.value }))} style={{ ...inputStyle, flex: 1.4, padding: "10px 8px" }}>
-              {CONTAINER_TYPES.map((c) => (
+              {APP_CONTAINERS.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.fr}
                 </option>

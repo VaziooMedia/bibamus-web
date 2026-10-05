@@ -633,13 +633,20 @@ export const ALLERGENS = [
   { code: "arachide", fr: "Arachide" },
 ];
 
+// Liste UNIQUE des contenants, partagée par l'assistant d'ajout de produit (app), l'onglet Ajout
+// rapide, les conditionnements (Niveau 2) et les millésimes. Elle regroupe tout ce qui existait
+// déjà en base sous trois listes différentes — aucune valeur enregistrée n'est donc orpheline.
+// "bouteille" (matière non précisée) reste en premier : c'est le défaut historique de l'admin.
 export const CONTAINER_TYPES = [
   { code: "bouteille", fr: "Bouteille" },
+  { code: "bouteille_verre", fr: "Bouteille verre" },
+  { code: "bouteille_pet", fr: "Bouteille PET" },
   { code: "canette", fr: "Canette" },
   { code: "fut", fr: "Fût" },
   { code: "keykeg", fr: "KeyKeg" },
   { code: "bag_in_box", fr: "Bag-in-box" },
   { code: "growler", fr: "Growler" },
+  { code: "brique", fr: "Brique" },
   { code: "autre", fr: "Autre" },
 ];
 export const COMMON_VOLUMES_CL = [20, 25, 33, 35.5, 44, 50, 75, 100, 2000, 3000, 5000];
