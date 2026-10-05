@@ -74,64 +74,73 @@ export function DrinksDirectoryScreen({
   // ci-dessus, pas des produits eux-mêmes).
   const showingList = searching || (activeCategory && (!useLetterTier || activeLetter));
 
+  // --- Pagination ---------------------------------------------------------------------------
+  // Tout l'état "vivant" de la pagination est dans des refs : une réponse tardive, un double
+  // déclenchement de l'observateur ou un re-rendu ne peuvent ainsi jamais la corrompre.
+  //  - generationRef : change à chaque NOUVELLE liste (catégorie, lettre, recherche, filtre,
+  //    rafraîchissement). Toute réponse venue d'une liste précédente est ignorée — sinon elle
+  //    s'ajoutait à la nouvelle (produits d'une autre lettre, pages en double).
+  //  - loadingRef : une requête (première page OU suite) est en cours. loadMore ne part jamais
+  //    tant que la première page n'est pas arrivée : le repère de défilement est visible dès que
+  //    la liste s'affiche, encore vide, et il redemandait alors la page 0, ajoutée à la suite de la
+  //    première -> la liste entière apparaissait deux fois, et la page 1 disparaissait.
+  //  - pageRef : la prochaine page à demander, comptée — et non plus déduite de la longueur de la
+  //    liste, qui devenait fausse dès qu'un doublon s'y glissait.
+  const generationRef = React.useRef(0);
+  const loadingRef = React.useRef(false);
+  const hasMoreRef = React.useRef(true);
+  const pageRef = React.useRef(0);
+  const loadParamsRef = React.useRef({});
+
+  // Filet de sécurité : jamais deux fois le même produit, même si le serveur renvoie deux pages
+  // qui se chevauchent (tri instable sur des noms identiques).
+  const mergeUnique = (prev, results) => {
+    const seen = new Set(prev.map((x) => x.id));
+    return [...prev, ...results.filter((x) => !seen.has(x.id))];
+  };
+
   useEffect(() => {
-    if (!showingList) {
-      setItems([]);
-      setHasMore(true);
-      return;
-    }
-    let cancelled = false;
+    const generation = ++generationRef.current;
+    pageRef.current = 0;
+    hasMoreRef.current = true;
+    loadingRef.current = false;
     setItems([]);
     setHasMore(true);
-    loadDrinksDirectoryPage({
+    setLoadingMore(false);
+    if (!showingList) return;
+    const params = {
       type: activeCategory || null,
       letter: useLetterTier && activeLetter ? activeLetter : null,
       query: searching ? q : null,
       tagKind: activeTagFilter?.kind || null,
       tagValue: activeTagFilter?.value || null,
-      page: 0,
-      pageSize: PAGE_SIZE,
-    }).then((results) => {
-      if (cancelled) return;
-      setItems(results);
-      setHasMore(results.length === PAGE_SIZE);
-    });
-    return () => {
-      cancelled = true;
     };
+    loadParamsRef.current = params;
+    loadingRef.current = true;
+    loadDrinksDirectoryPage({ ...params, page: 0, pageSize: PAGE_SIZE }).then((results) => {
+      if (generation !== generationRef.current) return;
+      setItems(mergeUnique([], results));
+      pageRef.current = 1;
+      hasMoreRef.current = results.length === PAGE_SIZE;
+      setHasMore(hasMoreRef.current);
+      loadingRef.current = false;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showingList, activeCategory, activeLetter, useLetterTier, searching, q, activeTagFilter, refreshTick]);
 
-  const loadingMoreRef = React.useRef(false);
-  const hasMoreRef = React.useRef(true);
-  const itemsRef = React.useRef([]);
-  const loadParamsRef = React.useRef({});
-  useEffect(() => {
-    loadingMoreRef.current = loadingMore;
-    hasMoreRef.current = hasMore;
-    itemsRef.current = items;
-    loadParamsRef.current = { activeCategory, useLetterTier, activeLetter, searching, q, activeTagFilter };
-  }, [loadingMore, hasMore, items, activeCategory, useLetterTier, activeLetter, searching, q, activeTagFilter]);
-
   const loadMore = async () => {
-    if (loadingMoreRef.current || !hasMoreRef.current) return;
-    loadingMoreRef.current = true;
+    if (loadingRef.current || !hasMoreRef.current) return;
+    loadingRef.current = true;
     setLoadingMore(true);
-    const { activeCategory: cat, useLetterTier: ult, activeLetter: al, searching: s, q: query, activeTagFilter: tf } = loadParamsRef.current;
-    const nextPage = Math.floor(itemsRef.current.length / PAGE_SIZE);
-    const results = await loadDrinksDirectoryPage({
-      type: cat || null,
-      letter: ult && al ? al : null,
-      query: s ? query : null,
-      tagKind: tf?.kind || null,
-      tagValue: tf?.value || null,
-      page: nextPage,
-      pageSize: PAGE_SIZE,
-    });
-    setItems((prev) => [...prev, ...results]);
-    setHasMore(results.length === PAGE_SIZE);
+    const generation = generationRef.current;
+    const page = pageRef.current;
+    const results = await loadDrinksDirectoryPage({ ...loadParamsRef.current, page, pageSize: PAGE_SIZE });
+    if (generation !== generationRef.current) return;
+    pageRef.current = page + 1;
     hasMoreRef.current = results.length === PAGE_SIZE;
-    loadingMoreRef.current = false;
+    setItems((prev) => mergeUnique(prev, results));
+    setHasMore(hasMoreRef.current);
+    loadingRef.current = false;
     setLoadingMore(false);
   };
 
@@ -200,6 +209,7 @@ export function DrinksDirectoryScreen({
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
             {d.name}
+            {d.status === "complete" && <VerifiedBadge size={15} title="Produit vérifié par un administrateur" />}
             {d.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
@@ -236,9 +246,6 @@ export function DrinksDirectoryScreen({
             )
           )}
         </div>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", flexShrink: 0, marginLeft: "10px" }}>
-        {d.status === "complete" && <VerifiedBadge size={15} />}
       </div>
     </button>
   );
