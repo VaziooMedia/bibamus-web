@@ -66,7 +66,7 @@ export function DrinkFormScreen({ drink, breweriesDirectory, onRegisterBrewery, 
       </h1>
       {!drink && (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-          Ta proposition sera visible et utilisable immédiatement. Un badge "en attente" s'affichera jusqu'à validation par un administrateur.
+          Ta proposition sera visible et utilisable immédiatement, puis vérifiée par un administrateur.
         </p>
       )}
       {suggestMode && (

@@ -6,7 +6,7 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS, GENERIC_BRAND_LABEL } from "../constants.js";
-import { VerifiedBadge, NavIcon } from "./icons.jsx";
+import { NavIcon } from "./icons.jsx";
 import { normalizeForSearch, normalizeForDuplicateCheck, drinkTypeLabel, ensureLeafletLoaded } from "../utils.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
 
@@ -242,7 +242,6 @@ export function BrandSearchSelect({ value, onChange, brands, onRegister, placeho
                 }}
               >
                 {b.name}
-                {b.status === "complete" && <VerifiedBadge size={13} />}
               </button>
             ))}
             {query.trim() && !exactMatch && (

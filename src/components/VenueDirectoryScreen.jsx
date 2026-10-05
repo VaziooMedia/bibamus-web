@@ -7,7 +7,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, CountryFlagImg, VerifiedBadge, CertificationIcon } from "./icons.jsx";
+import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { sameVenueByNameCity, formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
@@ -82,48 +82,77 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
   // pays" ni "choisir une ville" (celles-là n'ont besoin que des comptages ci-dessus).
   const showingList = searching || activeCity;
 
+  // --- Pagination ---------------------------------------------------------------------------
+  // Tout l'état "vivant" de la pagination est dans des refs : une réponse tardive, un double
+  // déclenchement de l'observateur ou un re-rendu ne peuvent ainsi jamais la corrompre.
+  //  - generationRef : change à chaque NOUVELLE liste (pays, ville, recherche, rafraîchissement).
+  //    Toute réponse venue d'une liste précédente est ignorée — sinon elle s'ajoutait à la nouvelle
+  //    (lieux d'une autre ville, pages en double).
+  //  - loadingRef : une requête (première page OU suite) est en cours. loadMore ne part jamais tant
+  //    que la première page n'est pas arrivée : le repère de défilement est visible dès que la
+  //    liste s'affiche, encore vide, et il redemandait alors la page 0, ajoutée à la suite de la
+  //    première -> la liste entière apparaissait deux fois, et la page 1 disparaissait.
+  //  - pageRef : la prochaine page à demander, comptée — et non plus déduite de la longueur de la
+  //    liste, qui devenait fausse dès qu'un doublon s'y glissait.
+  const generationRef = React.useRef(0);
+  const loadingRef = React.useRef(false);
+  const hasMoreRef = React.useRef(true);
+  const pageRef = React.useRef(0);
+  const loadParamsRef = React.useRef({});
+
+  // Filet de sécurité : jamais deux fois le même lieu, même si le serveur renvoie deux pages qui
+  // se chevauchent (tri instable sur des noms identiques).
+  const mergeUnique = (prev, results) => {
+    const seen = new Set(prev.map((x) => x.id));
+    return [...prev, ...results.filter((x) => !seen.has(x.id))];
+  };
+
   useEffect(() => {
-    if (!showingList) {
-      setItems([]);
-      setHasMore(true);
-      return;
-    }
-    let cancelled = false;
+    const generation = ++generationRef.current;
+    pageRef.current = 0;
+    hasMoreRef.current = true;
+    loadingRef.current = false;
     setItems([]);
     setHasMore(true);
-    loadVenuesDirectoryPage({
+    setLoadingMore(false);
+    if (!showingList) return;
+    const params = {
       country: !searching ? activeCountry : null,
       city: !searching ? activeCity : null,
       query: searching ? q : null,
-      page: 0,
-      pageSize: PAGE_SIZE,
-    }).then((results) => {
-      if (cancelled) return;
-      setItems(results);
-      setHasMore(results.length === PAGE_SIZE);
-    });
-    return () => {
-      cancelled = true;
     };
+    loadParamsRef.current = params;
+    loadingRef.current = true;
+    loadVenuesDirectoryPage({ ...params, page: 0, pageSize: PAGE_SIZE }).then((results) => {
+      if (generation !== generationRef.current) return;
+      setItems(mergeUnique([], results));
+      pageRef.current = 1;
+      hasMoreRef.current = results.length === PAGE_SIZE;
+      setHasMore(hasMoreRef.current);
+      loadingRef.current = false;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showingList, activeCountry, activeCity, searching, q, refreshTick]);
 
   const loadMore = async () => {
-    if (loadingMore || !hasMore) return;
+    if (loadingRef.current || !hasMoreRef.current) return;
+    loadingRef.current = true;
     setLoadingMore(true);
-    const nextPage = Math.floor(items.length / PAGE_SIZE);
-    const results = await loadVenuesDirectoryPage({
-      country: !searching ? activeCountry : null,
-      city: !searching ? activeCity : null,
-      query: searching ? q : null,
-      page: nextPage,
-      pageSize: PAGE_SIZE,
-    });
-    setItems((prev) => [...prev, ...results]);
-    setHasMore(results.length === PAGE_SIZE);
+    const generation = generationRef.current;
+    const page = pageRef.current;
+    const results = await loadVenuesDirectoryPage({ ...loadParamsRef.current, page, pageSize: PAGE_SIZE });
+    if (generation !== generationRef.current) return;
+    pageRef.current = page + 1;
+    hasMoreRef.current = results.length === PAGE_SIZE;
+    setItems((prev) => mergeUnique(prev, results));
+    setHasMore(hasMoreRef.current);
+    loadingRef.current = false;
     setLoadingMore(false);
   };
 
+  // L'observateur n'est créé qu'une seule fois par repère (pas à chaque changement de données :
+  // chaque nouvel observateur détectait aussitôt le repère comme visible et redéclenchait un
+  // chargement, en cascade). Les valeurs à jour sont lues via les refs ci-dessus.
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node) return;
@@ -136,7 +165,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
     observer.observe(node);
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sentinelRef.current, items.length, hasMore, loadingMore]);
+  }, [sentinelRef.current]);
 
   const alreadyAdded = (v) =>
     myVenues.some((mv) => mv.isFavorite && mv.sourcePublicVenueId === v.id) ||
@@ -167,10 +196,6 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent
         <div>
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}>
             {v.name}
-            {v.status === "complete" && <VerifiedBadge size={15} />}
-            {v.status === "to_process" && (
-              <span style={{ fontSize: "10.5px", color: COLORS.wine, fontWeight: 700, verticalAlign: "middle" }}>EN ATTENTE</span>
-            )}
           </div>
           {v.subtitle && (
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.chalkWhite, fontStyle: "italic", fontWeight: 600, marginTop: "1px" }}>

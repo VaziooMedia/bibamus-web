@@ -4,7 +4,6 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { VerifiedBadge } from "./icons.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { searchDrinksByType } from "../data/sharedDirectories.js";
@@ -102,7 +101,6 @@ export function DrinkDirectoryPicker({ type, onPick }) {
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink, flexWrap: "wrap" }}>
                   {d.name}
-                  {d.status === "complete" && <VerifiedBadge size={13} />}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "1px" }}>
                   <DrinkBadges drink={d} />

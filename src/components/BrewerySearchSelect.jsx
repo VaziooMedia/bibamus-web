@@ -5,7 +5,6 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { VerifiedBadge } from "./icons.jsx";
 import { normalizeForSearch, normalizeForDuplicateCheck } from "../utils.js";
 
 export function BrewerySearchSelect({ value, onChange, breweries, onRegister, placeholder = "Sélectionner une brasserie..." }) {
@@ -170,7 +169,6 @@ export function BrewerySearchSelect({ value, onChange, breweries, onRegister, pl
                   >
                     {b.name}
                     {b.country && <span style={{ fontSize: "12px", fontWeight: 500, color: COLORS.inkSoft }}>{b.country}</span>}
-                    {b.status === "complete" && <VerifiedBadge size={13} />}
                   </button>
                 ))}
                 {query.trim() && !exactMatch && (

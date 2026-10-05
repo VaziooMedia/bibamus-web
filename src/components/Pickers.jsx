@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, VerifiedBadge } from "./icons.jsx";
+import { NavIcon } from "./icons.jsx";
 import { normalizeForSearch, capitalizeFirst, sameVenueByNameCity } from "../utils.js";
 import { searchVenues } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
@@ -438,7 +438,6 @@ export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
                       {v.name}
-                      {v.status === "complete" && <VerifiedBadge size={13} />}
                     </div>
                     <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>
                       {[v.city, alreadyTracked(v) ? "✓ déjà utilisé" : null].filter(Boolean).join(" · ")}

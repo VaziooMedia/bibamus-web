@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, VerifiedBadge, CountryFlagImg } from "./icons.jsx";
+import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton } from "./ui.jsx";
 import { normalizeForSearch, searchEntities } from "../utils.js";
 import { loadBrandDominantNationalities } from "../data/sharedDirectories.js";
@@ -120,8 +120,6 @@ export function BreweriesAdminScreen({ breweries, isAdmin, onBack, onOpenBrewery
             <button onClick={() => onOpenBrewery(b.id)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontWeight: 700, fontSize: "14.5px", color: COLORS.ink }}>{b.name}</span>
-                {b.status === "complete" && <VerifiedBadge size={14} />}
-                {b.status === "to_process" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
                 {b.pendingContributionsCount > 0 && <span style={{ fontSize: "12px" }} title="Une modification est proposée">📝</span>}
               </div>
             </button>
@@ -420,8 +418,6 @@ export function BrandsAdminScreen({ brands, isAdmin, onBack, onOpenBrand, onRena
             <button onClick={() => onOpenBrand(b.id)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontWeight: 700, fontSize: "14.5px", color: COLORS.ink }}>{b.name}</span>
-                {b.status === "complete" && <VerifiedBadge size={14} />}
-                {b.status === "to_process" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
                 {b.pendingContributionsCount > 0 && <span style={{ fontSize: "12px" }} title="Une modification est proposée">📝</span>}
               </div>
             </button>

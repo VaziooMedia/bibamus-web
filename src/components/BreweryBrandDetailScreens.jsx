@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS } from "../constants.js";
-import { VerifiedBadge, NavIcon, CertificationIcon } from "./icons.jsx";
+import { NavIcon, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
@@ -215,8 +215,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
             >
               <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                 {d.name}
-                {d.status === "complete" && <VerifiedBadge size={13} />}
-                {d.status === "to_process" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
                 <DrinkBadges drink={d} />
@@ -475,8 +473,6 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
             >
               <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                 {d.name}
-                {d.status === "complete" && <VerifiedBadge size={13} />}
-                {d.status === "to_process" && <span style={{ fontSize: "10px", color: COLORS.wine, fontWeight: 700 }}>EN ATTENTE</span>}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
                 <DrinkBadges drink={d} />

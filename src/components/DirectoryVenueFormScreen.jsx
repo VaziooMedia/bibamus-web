@@ -145,8 +145,8 @@ export function DirectoryVenueFormScreen({ venue, breweriesDirectory, onRegister
       {!menuOnly && !venue && (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
           {addIntent
-            ? "Il sera ajouté à tes lieux favoris immédiatement — et visible dans le répertoire tout de suite, avec un badge \"en attente\" jusqu'à vérification par un administrateur."
-            : "Il sera visible et utilisable immédiatement, avec un badge \"en attente\" jusqu'à vérification par un administrateur."}
+            ? "Il sera ajouté à tes lieux favoris immédiatement — et visible dans le répertoire tout de suite, avant d'être vérifié par un administrateur."
+            : "Il sera visible et utilisable immédiatement, puis vérifié par un administrateur."}
         </p>
       )}
       {!menuOnly && suggestMode && (
