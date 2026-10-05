@@ -3083,7 +3083,11 @@ export async function loadDrinkVariants(drinkId) {
   return data.map(rowToVariant);
 }
 
-export async function createDrinkVariant({ drinkId, container, volumeMl, barcode, marketCountry }) {
+// Même écriture que createDrinkVariant, mais qui RENDORT l'erreur au lieu de l'avaler : l'assistant
+// d'ajout de produit en a besoin pour dire à l'utilisateur pourquoi un code-barre n'a pas été
+// enregistré (déjà pris par un autre produit, droits insuffisants...) — avant, ce refus était
+// ignoré, le produit se créait normalement et seul le code-barre disparaissait, sans un mot.
+export async function createDrinkVariantChecked({ drinkId, container, volumeMl, barcode, marketCountry }) {
   const row = {
     id: `variant-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     product_id: drinkId,
@@ -3096,15 +3100,28 @@ export async function createDrinkVariant({ drinkId, container, volumeMl, barcode
   const { data, error } = await supabase.from("drink_barcodes").insert(row).select().single();
   if (error) {
     console.error("createDrinkVariant:", error);
-    return null;
+    return { error };
   }
-  return rowToVariant(data);
+  return { variant: rowToVariant(data) };
 }
 
-export async function updateDrinkVariant(id, { container, volumeMl, barcode, marketCountry }) {
+export async function createDrinkVariant(args) {
+  const { variant } = await createDrinkVariantChecked(args);
+  return variant || null;
+}
+
+export async function updateDrinkVariantChecked(id, { container, volumeMl, barcode, marketCountry }) {
   const patch = { container: container || null, volume_ml: volumeMl || null, barcode: barcode || null, market_country: marketCountry || null };
   const { error } = await supabase.from("drink_barcodes").update(patch).eq("id", id);
-  if (error) console.error("updateDrinkVariant:", error);
+  if (error) {
+    console.error("updateDrinkVariant:", error);
+    return { error };
+  }
+  return { ok: true };
+}
+
+export async function updateDrinkVariant(id, fields) {
+  await updateDrinkVariantChecked(id, fields);
 }
 
 export async function deleteDrinkVariant(id) {

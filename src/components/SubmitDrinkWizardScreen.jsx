@@ -9,7 +9,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS, DRINK_TYPES, COUNTRIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariant, searchDrinks } from "../data/sharedDirectories.js";
+import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariant, lookupBarcode, loadDrinksByIds, searchDrinks } from "../data/sharedDirectories.js";
 import { normalizeForDuplicateCheck } from "../utils.js";
 
 const BEER_CIDER_SUBTYPES = [
@@ -61,6 +61,25 @@ function StepShell({ step, totalSteps, title, onBack, onPrevious, children, foot
 const inputStyle = { width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" };
 const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
 
+// Un code-barre ne désigne qu'UN conditionnement d'UN produit (contrainte d'unicité en base). Quand
+// l'écriture est refusée, on dit pourquoi — et, si le code est déjà pris, par quel produit.
+async function describeVariantError(error, barcode) {
+  if (error.code === "23505") {
+    let ownerName = null;
+    const found = barcode ? await lookupBarcode(barcode) : null;
+    if (found?.productId) {
+      const [owner] = await loadDrinksByIds([found.productId]);
+      ownerName = owner?.name || null;
+    }
+    const who = ownerName ? `au produit « ${ownerName} »` : "à un autre produit";
+    return `Ce code-barre est déjà associé ${who}. Un code-barre ne peut désigner qu'un seul produit : si c'est le même, abandonnez cet ajout ; sinon vérifiez le code, ou laissez le champ code-barre vide pour continuer sans.`;
+  }
+  if (error.code === "42501") {
+    return "Le conditionnement n'a pas pu être enregistré : droits insuffisants pour cette écriture. Vous pouvez laisser le champ code-barre vide pour continuer.";
+  }
+  return `Le conditionnement n'a pas pu être enregistré (${error.code || "erreur"} — ${error.message}). Vous pouvez laisser le champ code-barre vide pour continuer.`;
+}
+
 export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, onDone, onCancel }) {
   const [step, setStep] = useState(1);
   const [drinkId, setDrinkId] = useState(null);
@@ -109,6 +128,9 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
 
   // Page 3 — Code-barre + contenant + volume (facultatif, un seul conditionnement)
   const [variant, setVariant] = useState({ container: CONTAINER_TYPES[0].code, volumeCl: "", barcode: "" });
+  // Le conditionnement déjà enregistré en base (id + empreinte de ce qui a été saisi) : repasser par
+  // cette étape après un "Précédent" ne doit pas le réinsérer une seconde fois.
+  const [savedVariant, setSavedVariant] = useState(null);
 
   // Page 4 — Pays
   const [nationality, setNationality] = useState("");
@@ -170,19 +192,39 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   };
 
   const goToStep3 = async () => {
-    setSubmitting(true);
-    // Le code-barre à lui seul justifie déjà d'enregistrer le conditionnement — avant, seul un
-    // volume rempli déclenchait l'enregistrement, et un code-barre seul (sans volume, souvent
-    // laissé vide) disparaissait silencieusement sans jamais être sauvegardé.
-    if (variant.volumeCl.trim().length > 0 || variant.barcode.trim().length > 0) {
-      await createDrinkVariant({
-        drinkId,
-        container: variant.container,
-        volumeMl: variant.volumeCl.trim().length > 0 ? parseFloat(variant.volumeCl) * 10 : null,
-        barcode: variant.barcode.trim() || null,
-        marketCountry: null,
-      });
+    const hasInput = variant.volumeCl.trim().length > 0 || variant.barcode.trim().length > 0;
+    if (!hasInput) {
+      // Champs vidés après un premier enregistrement : le conditionnement ne doit pas survivre.
+      if (savedVariant) {
+        await deleteDrinkVariant(savedVariant.id);
+        setSavedVariant(null);
+      }
+      setStep(4);
+      return;
     }
+    const key = JSON.stringify([variant.container, variant.volumeCl.trim(), variant.barcode.trim()]);
+    if (savedVariant && savedVariant.key === key) {
+      setStep(4);
+      return;
+    }
+    setSubmitting(true);
+    // Le code-barre à lui seul justifie d'enregistrer le conditionnement. Et surtout : un refus de
+    // la base n'est plus ignoré — avant, le produit se créait normalement et seul le code-barre
+    // disparaissait en silence ; l'utilisateur voit maintenant pourquoi, et reste sur cette étape.
+    const fields = {
+      container: variant.container,
+      volumeMl: variant.volumeCl.trim().length > 0 ? parseFloat(variant.volumeCl) * 10 : null,
+      barcode: variant.barcode.trim() || null,
+      marketCountry: null,
+    };
+    const result = savedVariant ? await updateDrinkVariantChecked(savedVariant.id, fields) : await createDrinkVariantChecked({ drinkId, ...fields });
+    if (result.error) {
+      const message = await describeVariantError(result.error, fields.barcode);
+      setSubmitting(false);
+      alert(message);
+      return;
+    }
+    setSavedVariant({ id: savedVariant ? savedVariant.id : result.variant.id, key });
     setSubmitting(false);
     setStep(4);
   };
