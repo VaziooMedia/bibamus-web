@@ -22,9 +22,6 @@ const WINE_SUBTYPES = [
   { code: "vin", fr: "Vin" },
   { code: "vin_effervescent", fr: "Vin effervescent" },
 ];
-// Liste commune avec la plateforme de gestion (beerCiderStyles.js). Le générique "bouteille"
-// (matière non précisée) n'est pas proposé ici : l'utilisateur sait si c'est du verre ou du PET.
-const APP_CONTAINERS = CONTAINER_TYPES.filter((c) => c.code !== "bouteille");
 
 function StepShell({ step, totalSteps, title, onBack, onPrevious, children, footer }) {
   return (
@@ -123,7 +120,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   const step2Valid = abv.trim().length > 0 && !isNaN(parseFloat(abv));
 
   // Page 3 — Code-barre + contenant + volume (facultatif, un seul conditionnement)
-  const [variant, setVariant] = useState({ container: APP_CONTAINERS[0].code, volumeCl: "", barcode: "" });
+  const [variant, setVariant] = useState({ container: CONTAINER_TYPES[0].code, volumeCl: "", barcode: "" });
   // Le conditionnement déjà enregistré en base (id + empreinte de ce qui a été saisi) : repasser par
   // cette étape après un "Précédent" ne doit pas le réinsérer une seconde fois.
   const [savedVariant, setSavedVariant] = useState(null);
@@ -369,7 +366,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
           <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
             <select value={variant.container} onChange={(e) => setVariant((v) => ({ ...v, container: e.target.value }))} style={{ ...inputStyle, flex: 1.4, padding: "10px 8px" }}>
-              {APP_CONTAINERS.map((c) => (
+              {CONTAINER_TYPES.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.fr}
                 </option>
