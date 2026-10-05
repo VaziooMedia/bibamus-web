@@ -141,6 +141,10 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   const [producerQuery, setProducerQuery] = useState("");
   const [selectedProducers, setSelectedProducers] = useState([]);
   const [saving, setSaving] = useState(false);
+  // Vraie confirmation finale, comme pour les lieux, marques et producteurs : rien n'est validé tant
+  // que l'utilisateur n'a pas cliqué "OK" ici — et, tant que ce n'est pas fait, quitter l'écran
+  // supprime le brouillon créé dès l'étape 1 (voir validatedRef).
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
 
   const normalize = (s) => (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
   const brandResults = brandQuery.trim().length >= 2 ? brandsDirectory.filter((b) => normalize(b.name).includes(normalize(brandQuery))).slice(0, 8) : [];
@@ -244,6 +248,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
     });
     validatedRef.current = true;
     setSaving(false);
+    setShowConfirmPopup(false);
     onDone(drinkId);
   };
 
@@ -425,6 +430,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   }
 
   return (
+    <>
     <StepShell
       step={5}
       totalSteps={5}
@@ -432,8 +438,8 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
       onBack={handleAbandon}
       onPrevious={() => setStep(4)}
       footer={
-        <PrimaryButton onClick={handleFinalSubmit} disabled={saving} style={{ width: "100%" }}>
-          {saving ? "Enregistrement..." : "Valider"}
+        <PrimaryButton onClick={() => setShowConfirmPopup(true)} style={{ width: "100%" }}>
+          Valider
         </PrimaryButton>
       }
     >
@@ -524,5 +530,23 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
         </div>
       )}
     </StepShell>
+
+      {showConfirmPopup && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", zIndex: 2000 }}>
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "16px", padding: "24px", maxWidth: "360px" }}>
+            <p style={{ fontSize: "14.5px", color: COLORS.ink, margin: "0 0 20px 0", lineHeight: 1.6 }}>
+              Merci pour ta contribution !
+              <br />
+              Il sera vérifié prochainement.
+              <br />
+              En attendant, il est déjà disponible sur Bib<span style={{ color: COLORS.amber }}>Atlas</span>.
+            </p>
+            <PrimaryButton onClick={handleFinalSubmit} disabled={saving} style={{ width: "100%" }}>
+              {saving ? "Enregistrement..." : "OK"}
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
