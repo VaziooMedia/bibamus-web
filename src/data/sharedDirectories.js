@@ -2296,6 +2296,17 @@ export async function loadDrinksDirectoryPage({ type = null, letter = null, quer
   return data.map(rowToDrink);
 }
 
+// Styles de bières & cidres ajoutés à la main depuis la plateforme de gestion, en complément de la
+// liste figée (voir data/styleTagLabels.js).
+export async function loadCustomBeerCiderStyles() {
+  const { data, error } = await supabase.from("custom_beer_cider_styles").select("code, fr, group_title");
+  if (error) {
+    console.error("loadCustomBeerCiderStyles:", error);
+    return [];
+  }
+  return data.map((r) => ({ code: r.code, fr: r.fr, groupTitle: r.group_title }));
+}
+
 // Fiche producteur/marque — tous les produits d'une brasserie ou d'une marque donnée, jamais le
 // répertoire complet pour ça.
 export async function loadDrinksByBrewery(breweryName) {

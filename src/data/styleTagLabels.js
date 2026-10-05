@@ -466,10 +466,26 @@ export const WINE_EFFERVESCENT_STYLE_GROUPS = [
 
 const ALL_STYLE_GROUPS = [...BEER_CIDER_STYLE_GROUPS, ...WINE_STYLE_GROUPS, ...WINE_EFFERVESCENT_STYLE_GROUPS];
 
+// Styles de bières & cidres ajoutés à la main depuis la plateforme de gestion (table
+// custom_beer_cider_styles) : l'app ne les connaît pas à la compilation. Elle les charge à la
+// demande (voir la fiche produit) et les mémorise ici.
+const customStyleLabels = {};
+
+export function registerCustomStyleLabels(list) {
+  list.forEach((s) => {
+    customStyleLabels[s.code] = s.fr;
+  });
+}
+
+// Vrai si le libellé de ce code est connu (liste figée ou style ajouté déjà chargé).
+export function hasStyleLabel(code) {
+  return code in customStyleLabels || ALL_STYLE_GROUPS.some((g) => g.tags.some((t) => t.code === code));
+}
+
 export function styleTagLabel(code) {
   for (const group of ALL_STYLE_GROUPS) {
     const tag = group.tags.find((t) => t.code === code);
     if (tag) return tag.fr;
   }
-  return code;
+  return customStyleLabels[code] || code;
 }

@@ -19,8 +19,8 @@ import { formatDrinkFieldValue, formatMoney } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
-import { styleTagLabel } from "../data/styleTagLabels.js";
-import { loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkTotalChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
+import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkTotalChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -70,6 +70,23 @@ export function DrinkDetailScreen({
   const [justChecked, setJustChecked] = useState(false);
   const [myCheckCount, setMyCheckCount] = useState(null);
   const isBeer = BEER_TYPES.includes(drink.type);
+
+  // Styles ajoutés à la main depuis la gestion : l'app ne les connaît pas à la compilation. On ne va
+  // les chercher en base que si CE produit porte un style inconnu de la liste figée — la grande
+  // majorité des produits n'en ont aucun : aucune requête en plus pour eux.
+  const [, setStyleLabelsTick] = useState(0);
+  const unknownStylesKey = (drink.styles || []).filter((code) => !hasStyleLabel(code)).join(",");
+  useEffect(() => {
+    if (!unknownStylesKey) return;
+    let cancelled = false;
+    loadCustomBeerCiderStyles().then((list) => {
+      registerCustomStyleLabels(list);
+      if (!cancelled) setStyleLabelsTick((t) => t + 1);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [unknownStylesKey]);
 
   // Cloche de notification — ses activités apparaissent dans ton fil Pulse, comme pour un lieu.
   const [isFollowed, setIsFollowed] = useState(false);
