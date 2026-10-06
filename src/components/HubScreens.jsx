@@ -7,6 +7,7 @@ import React from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard } from "./ui.jsx";
+import { AiIcon } from "./AiIcon.jsx";
 
 export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibArena, goToBibaSolo }) {
   return (
@@ -163,7 +164,7 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
           }}
           style={{ display: "flex", flexShrink: 0 }}
         >
-          <NavIcon name="scan-line" size={18} color={COLORS.amber} />
+          <AiIcon size={22} />
         </span>
       </button>
 

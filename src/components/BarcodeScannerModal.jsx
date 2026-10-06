@@ -4,6 +4,7 @@ import { NavIcon } from "./icons.jsx";
 import { lookupBarcode, associateBarcode, searchDrinks } from "../data/sharedDirectories.js";
 import { LabelScanModal } from "./LabelScanModal.jsx";
 import { captureSharpestFrame } from "../labelScanCapture.js";
+import { BARCODE_SCAN_ENABLED } from "../featureFlags.js";
 
 const COUNTDOWN_SECONDS = 3;
 
@@ -73,18 +74,21 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         // existe techniquement dans window, mais ne détecte plus rien de fiable. ZXing ne
         // dépend d'aucune API navigateur expérimentale et fonctionne de façon identique
         // partout.
-        const { BrowserMultiFormatReader } = await import("@zxing/browser");
-        const { DecodeHintType, BarcodeFormat } = await import("@zxing/library");
-        const hints = new Map();
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-          BarcodeFormat.EAN_13,
-          BarcodeFormat.EAN_8,
-          BarcodeFormat.UPC_A,
-          BarcodeFormat.UPC_E,
-          BarcodeFormat.CODE_128,
-        ]);
-        const reader = new BrowserMultiFormatReader(hints);
-        readerRef.current = reader;
+        let reader = null;
+        if (BARCODE_SCAN_ENABLED) {
+          const { BrowserMultiFormatReader } = await import("@zxing/browser");
+          const { DecodeHintType, BarcodeFormat } = await import("@zxing/library");
+          const hints = new Map();
+          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+            BarcodeFormat.EAN_13,
+            BarcodeFormat.EAN_8,
+            BarcodeFormat.UPC_A,
+            BarcodeFormat.UPC_E,
+            BarcodeFormat.CODE_128,
+          ]);
+          reader = new BrowserMultiFormatReader(hints);
+          readerRef.current = reader;
+        }
 
         // Un premier flux générique (facingMode) sert uniquement à obtenir la permission —
         // sans elle, les labels de caméra restent vides et enumerateDevices ne peut pas
@@ -124,65 +128,67 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
           setFlashSupported(false);
         }
 
-        pollRef.current = setInterval(async () => {
-          if (cancelled || !videoRef.current) return;
-          try {
-            const video = videoRef.current;
-            const vw = video.videoWidth;
-            const vh = video.videoHeight;
-            if (!vw || !vh) return;
-            // Zone de lecture réduite au centre (là où le cadre affiché à l'écran pointe),
-            // agrandie x2 avant analyse — un code-barres photographié loin n'occupe qu'une
-            // petite portion de l'image entière, avec trop peu de pixels réels pour que le
-            // décodeur distingue ses barres fines. Rogner puis agrandir ne donne pas plus de
-            // détail qui n'existait pas, mais présente le même détail réel à une résolution
-            // relative bien plus grande, ce qui aide concrètement le décodeur. Les deux ratios
-            // s'inversent en orientation verticale — même zone en surface, pour suivre un
-            // code-barres imprimé debout sur l'emballage.
-            const isVertical = orientationRef.current === "vertical";
-            const cropWidthRatio = isVertical ? 0.32 : 0.75;
-            const cropHeightRatio = isVertical ? 0.85 : 0.28;
-            const sw = vw * cropWidthRatio;
-            const sh = vh * cropHeightRatio;
-            const sx = (vw - sw) / 2;
-            const sy = (vh - sh) / 2;
-            const canvas = cropCanvasRef.current;
-            const ctx = canvas.getContext("2d");
-            canvas.width = sw * 2;
-            canvas.height = sh * 2;
-            ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-
-            // Le flux caméra brut d'un mobile ne rapporte pas toujours ses pixels dans le même
-            // sens que l'aperçu affiché à l'écran — cela varie selon l'appareil. Plutôt que de
-            // parier sur un sens de rotation précis, on essaie systématiquement les deux : le
-            // cadrage tel quel, puis pivoté à 90°. Peu importe lequel correspond réellement au
-            // sens du code sur l'emballage, l'un des deux le lira.
-            let result = null;
+        if (BARCODE_SCAN_ENABLED) {
+          pollRef.current = setInterval(async () => {
+            if (cancelled || !videoRef.current) return;
             try {
-              result = await reader.decodeFromCanvas(canvas);
-            } catch (e) {
-              const rotated = document.createElement("canvas");
-              rotated.width = canvas.height;
-              rotated.height = canvas.width;
-              const rctx = rotated.getContext("2d");
-              rctx.translate(rotated.width / 2, rotated.height / 2);
-              rctx.rotate(Math.PI / 2);
-              rctx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+              const video = videoRef.current;
+              const vw = video.videoWidth;
+              const vh = video.videoHeight;
+              if (!vw || !vh) return;
+              // Zone de lecture réduite au centre (là où le cadre affiché à l'écran pointe),
+              // agrandie x2 avant analyse — un code-barres photographié loin n'occupe qu'une
+              // petite portion de l'image entière, avec trop peu de pixels réels pour que le
+              // décodeur distingue ses barres fines. Rogner puis agrandir ne donne pas plus de
+              // détail qui n'existait pas, mais présente le même détail réel à une résolution
+              // relative bien plus grande, ce qui aide concrètement le décodeur. Les deux ratios
+              // s'inversent en orientation verticale — même zone en surface, pour suivre un
+              // code-barres imprimé debout sur l'emballage.
+              const isVertical = orientationRef.current === "vertical";
+              const cropWidthRatio = isVertical ? 0.32 : 0.75;
+              const cropHeightRatio = isVertical ? 0.85 : 0.28;
+              const sw = vw * cropWidthRatio;
+              const sh = vh * cropHeightRatio;
+              const sx = (vw - sw) / 2;
+              const sy = (vh - sh) / 2;
+              const canvas = cropCanvasRef.current;
+              const ctx = canvas.getContext("2d");
+              canvas.width = sw * 2;
+              canvas.height = sh * 2;
+              ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+              // Le flux caméra brut d'un mobile ne rapporte pas toujours ses pixels dans le même
+              // sens que l'aperçu affiché à l'écran — cela varie selon l'appareil. Plutôt que de
+              // parier sur un sens de rotation précis, on essaie systématiquement les deux : le
+              // cadrage tel quel, puis pivoté à 90°. Peu importe lequel correspond réellement au
+              // sens du code sur l'emballage, l'un des deux le lira.
+              let result = null;
               try {
-                result = await reader.decodeFromCanvas(rotated);
-              } catch (e2) {
-                // toujours rien de lisible dans cette image, dans aucun des deux sens
+                result = await reader.decodeFromCanvas(canvas);
+              } catch (e) {
+                const rotated = document.createElement("canvas");
+                rotated.width = canvas.height;
+                rotated.height = canvas.width;
+                const rctx = rotated.getContext("2d");
+                rctx.translate(rotated.width / 2, rotated.height / 2);
+                rctx.rotate(Math.PI / 2);
+                rctx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+                try {
+                  result = await reader.decodeFromCanvas(rotated);
+                } catch (e2) {
+                  // toujours rien de lisible dans cette image, dans aucun des deux sens
+                }
               }
+              if (result) {
+                const code = result.getText();
+                setScannedCode(code);
+                handleScan(code);
+              }
+            } catch (e) {
+              // une frame sans code lisible n'est pas une erreur — on continue simplement
             }
-            if (result) {
-              const code = result.getText();
-              setScannedCode(code);
-              handleScan(code);
-            }
-          } catch (e) {
-            // une frame sans code lisible n'est pas une erreur — on continue simplement
-          }
-        }, 400);
+          }, 400);
+        }
       } catch (e) {
         console.error("Barcode scanner:", e);
         if (!cancelled) setPhase("error");
@@ -312,7 +318,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.ink, display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-          Scanner un code-barres
+          {BARCODE_SCAN_ENABLED ? "Scanner un code-barres" : "Lire une étiquette"}
         </span>
         <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "22px", cursor: "pointer" }}>
           ✕
@@ -328,26 +334,28 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
                 <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: COLORS.amber, color: "#000", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "38px" }}>{countdown}</div>
               </div>
             )}
-            <button
-              onClick={() => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))}
-              title="Basculer l'orientation du cadre"
-              style={{
-                position: "absolute",
-                top: "10px",
-                left: "10px",
-                width: "38px",
-                height: "38px",
-                borderRadius: "50%",
-                background: "rgba(0,0,0,0.5)",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-              }}
-            >
-              <NavIcon name="repeat" size={18} color={COLORS.chalkWhite} />
-            </button>
+            {BARCODE_SCAN_ENABLED && (
+              <button
+                onClick={() => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))}
+                title="Basculer l'orientation du cadre"
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  left: "10px",
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "50%",
+                  background: "rgba(0,0,0,0.5)",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <NavIcon name="repeat" size={18} color={COLORS.chalkWhite} />
+              </button>
+            )}
             {flashSupported && (
               <button
                 onClick={toggleFlash}
@@ -372,16 +380,18 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             {/* Zone visée par la détection — mêmes proportions que le rognage réellement analysé,
                 pour que le cadre affiché corresponde à la vraie zone lue. Pivote selon le sens
                 du code-barres sur l'emballage. */}
-            <div
-              style={
-                orientation === "vertical"
-                  ? { position: "absolute", top: "7.5%", left: "34%", width: "32%", height: "85%", border: `4px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
-                  : { position: "absolute", top: "36%", left: "12.5%", width: "75%", height: "28%", border: `4px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
-              }
-            />
+            {BARCODE_SCAN_ENABLED && (
+              <div
+                style={
+                  orientation === "vertical"
+                    ? { position: "absolute", top: "7.5%", left: "34%", width: "32%", height: "85%", border: `4px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
+                    : { position: "absolute", top: "36%", left: "12.5%", width: "75%", height: "28%", border: `4px solid ${COLORS.amber}`, borderRadius: "8px", pointerEvents: "none" }
+                }
+              />
+            )}
             <canvas ref={cropCanvasRef} style={{ display: "none" }} />
           </div>
-          <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", marginTop: "16px", textAlign: "center" }}>Aligne le code-barres dans le cadre</p>
+          {BARCODE_SCAN_ENABLED && <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", marginTop: "16px", textAlign: "center" }}>Aligne le code-barres dans le cadre</p>}
           <button
             onClick={captureLabel}
             disabled={capturing}
@@ -391,12 +401,14 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             {capturing ? "Capture…" : "Lire l'étiquette"}
           </button>
           {captureError && <p style={{ color: COLORS.inkSoft, fontSize: "12.5px", margin: "8px 0 0", textAlign: "center" }}>{captureError}</p>}
-          <button
-            onClick={() => setPhase("manualEntry")}
-            style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "10px" }}
-          >
-            Entrer le code manuellement
-          </button>
+          {BARCODE_SCAN_ENABLED && (
+            <button
+              onClick={() => setPhase("manualEntry")}
+              style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "10px" }}
+            >
+              Entrer le code manuellement
+            </button>
+          )}
           <button
             onClick={openLabelScan}
             style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "6px" }}

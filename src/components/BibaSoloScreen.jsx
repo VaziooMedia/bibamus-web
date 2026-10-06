@@ -38,6 +38,7 @@ import carteIconUrl from "../assets/brand/carte.svg";
 import beerIconUrl from "../assets/brand/beer.svg";
 import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
+import { AiIcon } from "./AiIcon.jsx";
 
 function normalize(str) {
   return (str || "")
@@ -275,7 +276,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                 />
                 <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />
                 <button onClick={() => setScannerOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
-                  <NavIcon name="scan-line" size={18} color={COLORS.amber} />
+                  <AiIcon size={22} />
                 </button>
               </div>
 

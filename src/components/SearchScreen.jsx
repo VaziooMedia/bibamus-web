@@ -12,6 +12,7 @@ import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { formatAddress } from "../utils.js";
 import { searchBibax, searchDrinks, searchVenues } from "../data/sharedDirectories.js";
+import { AiIcon } from "./AiIcon.jsx";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
 // de gestion — les autres (Soft, Spiritueux...) n'en ont pas encore ; on laisse alors vide
@@ -249,7 +250,7 @@ export function SearchScreen({
             </button>
             <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />
             <button onClick={goToScan} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
-              <NavIcon name="scan-line" size={18} color={COLORS.amber} />
+              <AiIcon size={22} />
             </button>
           </div>
         </div>

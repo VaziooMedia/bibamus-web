@@ -7,11 +7,12 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES } from "../constants.js";
-import { NavIcon, CountryFlagImg, VerifiedBadge, CertificationIcon } from "./icons.jsx";
+import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { drinkTypeLabel, drinkSummaryParts } from "../utils.js";
 import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage } from "../data/sharedDirectories.js";
+import { AiIcon } from "./AiIcon.jsx";
 
 const PAGE_SIZE = 40;
 const LETTER_THRESHOLD = 20;
@@ -209,7 +210,6 @@ export function DrinksDirectoryScreen({
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
             {d.name}
-            {d.status === "complete" && <VerifiedBadge size={15} title="Produit vérifié par un administrateur" />}
             {d.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
@@ -338,7 +338,7 @@ export function DrinksDirectoryScreen({
         />
         <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />
         <button onClick={goToScanBarcode} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
-          <NavIcon name="scan-line" size={18} color={COLORS.amber} />
+          <AiIcon size={22} />
         </button>
       </div>
 
