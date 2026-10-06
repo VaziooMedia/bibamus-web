@@ -164,7 +164,7 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
           }}
           style={{ display: "flex", flexShrink: 0 }}
         >
-          <AiIcon size={22} />
+          <AiIcon size={28} bleed />
         </span>
       </button>
 

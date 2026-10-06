@@ -5,6 +5,7 @@ import { lookupBarcode, associateBarcode, searchDrinks } from "../data/sharedDir
 import { LabelScanModal } from "./LabelScanModal.jsx";
 import { captureSharpestFrame } from "../labelScanCapture.js";
 import { BARCODE_SCAN_ENABLED } from "../featureFlags.js";
+import { AiIcon } from "./AiIcon.jsx";
 
 const COUNTDOWN_SECONDS = 3;
 
@@ -38,6 +39,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
   const [countdown, setCountdown] = useState(null); // 3, 2, 1 pendant le décompte avant la capture, sinon null
   const phaseRef = useRef("scanning");
   const captureRunRef = useRef(0); // identifie la capture en cours ; l'incrémenter l'annule
+  const captureLabelRef = useRef(null); // toujours la dernière version de captureLabel, pour que l'ouverture de la caméra lance le décompte
   const [scannedCode, setScannedCode] = useState(null);
   const [orientation, setOrientation] = useState("horizontal"); // horizontal | vertical — sens du code-barres sur l'emballage
   const [flashOn, setFlashOn] = useState(false);
@@ -127,6 +129,9 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         } catch (e) {
           setFlashSupported(false);
         }
+
+        // Sans lecture des codes-barres, la caméra n'a qu'un usage : le décompte 3-2-1 démarre dès son ouverture.
+        if (!BARCODE_SCAN_ENABLED && !cancelled) captureLabelRef.current?.();
 
         if (BARCODE_SCAN_ENABLED) {
           pollRef.current = setInterval(async () => {
@@ -313,6 +318,8 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
     onFoundDrink(drink.id);
   };
 
+  captureLabelRef.current = captureLabel;
+
   return (
     <div style={{ position: "fixed", inset: 0, background: COLORS.paper, zIndex: 1000, display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
@@ -397,7 +404,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             disabled={capturing}
             style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px 24px", fontWeight: 700, fontSize: "14px", color: COLORS.paper, cursor: "pointer", marginTop: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", opacity: capturing ? 0.6 : 1 }}
           >
-            <NavIcon name="camera" size={18} color={COLORS.paper} />
+            <AiIcon size={22} tone="dark" />
             {capturing ? "Capture…" : "Lire l'étiquette"}
           </button>
           {captureError && <p style={{ color: COLORS.inkSoft, fontSize: "12.5px", margin: "8px 0 0", textAlign: "center" }}>{captureError}</p>}
@@ -411,7 +418,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
           )}
           <button
             onClick={openLabelScan}
-            style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "6px" }}
+            style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "26px" }}
           >
             Choisir une photo existante
           </button>
@@ -507,9 +514,14 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
               : null
           }
           onClose={() => {
+            if (!BARCODE_SCAN_ENABLED) {
+              onClose(); // sans codes-barres, la caméra relancerait aussitôt son décompte : fermer l'écran de lecture quitte le scan
+              return;
+            }
             setLabelFrame(null);
             setPhase(labelReturnPhase);
           }}
+          onExit={onClose}
           onFoundDrink={onFoundDrink}
         />
       )}

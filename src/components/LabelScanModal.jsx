@@ -92,7 +92,7 @@ function CandidateCard({ cand, highlighted = false, disabled = false, onChoose }
   );
 }
 
-export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, myBibroCode = null, initialPhoto = null, onRetake = null }) {
+export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, myBibroCode = null, initialPhoto = null, onRetake = null, onExit = null }) {
   const [phase, setPhase] = useState(initialPhoto ? "reading" : "capture"); // capture | reading | retake | confirm | results | none | error
   const [stage, setStage] = useState("reading"); // pendant « reading » : lecture de l'image, puis recherche
   const [searched, setSearched] = useState({ text: "", abv: null, manual: false }); // ce qui a réellement été cherché
@@ -222,6 +222,14 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
     if (file) startReading(file);
   };
 
+  // « Annuler » : on arrête la lecture et on quitte le scan (onExit : le scanner entier ; à défaut, cet écran).
+  const exitReading = () => {
+    runRef.current += 1;
+    abortRef.current?.abort();
+    (onExit || onClose)();
+  };
+
+  // « Recommencer » : on arrête la lecture et on repart de la caméra (ou de l'écran de photo), qui relance son décompte.
   const cancelReading = () => {
     runRef.current += 1;
     abortRef.current?.abort();
@@ -327,9 +335,14 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                   "Lecture de l'étiquette…"
                 )}</p>
               <p style={noteStyle}>{slow && stage === "reading" ? "Cela prend plus de temps que d'habitude. Merci de patienter." : "Quelques secondes."}</p>
-              <button onClick={cancelReading} style={{ ...linkBtn, marginTop: "14px" }}>
-                Annuler
-              </button>
+              <div style={{ marginTop: "22px", display: "flex", gap: "10px" }}>
+                <button onClick={exitReading} style={bottomBtn}>
+                  Annuler
+                </button>
+                <button onClick={cancelReading} style={bottomBtn}>
+                  Recommencer
+                </button>
+              </div>
             </div>
           )}
 

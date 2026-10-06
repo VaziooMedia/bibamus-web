@@ -250,7 +250,7 @@ export function SearchScreen({
             </button>
             <span style={{ width: "1px", height: "20px", background: COLORS.paperAlt, flexShrink: 0 }} />
             <button onClick={goToScan} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex" }}>
-              <AiIcon size={22} />
+              <AiIcon size={28} bleed />
             </button>
           </div>
         </div>
