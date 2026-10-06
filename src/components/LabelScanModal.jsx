@@ -3,7 +3,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { associateBarcode } from "../data/sharedDirectories.js";
 import { prepareLabelPhoto } from "../labelScanPhoto.js";
-import { readLabelPhoto, searchDrinksByLabel, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
+import { readLabelPhoto, searchDrinksByLabel, reportLabelSearch, reportLabelOutcome, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
 
 // Lecture d'une étiquette par photo — complément du scan de code-barres pour les boissons sans code
 // lisible, ou dont le code est inconnu. L'IA ne fait que LIRE l'étiquette ; c'est l'utilisateur qui
@@ -44,6 +44,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   const [slow, setSlow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [abvOpen, setAbvOpen] = useState(false); // le degré est facultatif : le champ n'apparaît que s'il a été lu ou demandé
 
   const cameraRef = useRef(null);
   const libraryRef = useRef(null);
@@ -51,9 +52,20 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   const abortRef = useRef(null);
   const photoUrlRef = useRef(null);
   const busyRef = useRef(false); // garde synchrone : un double clic sur un produit ne l'associe qu'une fois
+  const scanIdRef = useRef(null); // lecture en cours dans le journal (null si la photo n'était pas exploitable)
+  const outcomeLoggedRef = useRef(true); // true quand l'issue de la lecture en cours est déjà enregistrée
+
+  // Une lecture lisible quittée sans produit choisi ni « aucun de ceux-là » est enregistrée comme abandonnée.
+  const abandonCurrent = () => {
+    if (scanIdRef.current && !outcomeLoggedRef.current) {
+      outcomeLoggedRef.current = true;
+      reportLabelOutcome({ scanId: scanIdRef.current, outcome: "abandoned" });
+    }
+  };
 
   useEffect(
     () => () => {
+      abandonCurrent();
       runRef.current += 1;
       abortRef.current?.abort();
       if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current);
@@ -74,6 +86,8 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   };
 
   const startReading = async (file) => {
+    abandonCurrent();
+    scanIdRef.current = null;
     const run = ++runRef.current;
     setPhase("reading");
     setSlow(false);
@@ -97,8 +111,11 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
         setPhase("retake");
         return;
       }
+      scanIdRef.current = res.scanId;
+      outcomeLoggedRef.current = false;
       setQuery(buildLabelQuery(res.reading));
       setAbvText(res.suggestedAbv != null ? String(res.suggestedAbv).replace(".", ",") : "");
+      setAbvOpen(false);
       setPhase("confirm");
     } catch (e) {
       clearTimeout(slowTimer);
@@ -121,6 +138,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   };
 
   const retake = () => {
+    abandonCurrent();
     setReading(null);
     setCandidates([]);
     setPhase("capture");
@@ -129,13 +147,17 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   const search = async () => {
     if (!query.trim() || searching) return;
     setSearching(true);
-    const res = await searchDrinksByLabel(query, parseAbv(abvText));
+    const abv = parseAbv(abvText);
+    const res = await searchDrinksByLabel(query, abv);
     setSearching(false);
     if (!res.ok) {
       fail(res.code, "confirm");
       return;
     }
-    setCandidates(res.candidates.slice(0, MAX_CANDIDATES));
+    const shown = res.candidates.slice(0, MAX_CANDIDATES);
+    setCandidates(shown);
+    outcomeLoggedRef.current = false; // une nouvelle recherche repart de zéro dans le journal
+    reportLabelSearch({ scanId: scanIdRef.current, text: query.trim(), abv, shownIds: shown.map((d) => d.id) });
     setPhase("results");
   };
 
@@ -149,12 +171,19 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
       busyRef.current = false;
       setBusy(false);
     }
+    outcomeLoggedRef.current = true;
+    reportLabelOutcome({ scanId: scanIdRef.current, outcome: "chosen", drinkId: drink.id });
     onFoundDrink(drink.id);
+  };
+
+  const chooseNone = () => {
+    outcomeLoggedRef.current = true;
+    reportLabelOutcome({ scanId: scanIdRef.current, outcome: "none" });
+    setPhase("none");
   };
 
   const uncertain = reading ? uncertainFieldLabels(reading) : [];
   const advice = reading ? photoAdvice(reading) : null;
-  const abvMissing = reading && reading.abv_percent == null && !abvText.trim();
 
   return (
     <div style={{ position: "fixed", inset: 0, background: COLORS.paper, zIndex: 1100, display: "flex", flexDirection: "column" }}>
@@ -224,11 +253,18 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               </label>
               <input id="label-text" value={query} onChange={(e) => setQuery(e.target.value)} style={inputStyle} />
               {!query.trim() && <p style={{ ...noteStyle, color: COLORS.amber }}>Aucun texte n'a pu être lu : saisissez le nom du produit.</p>}
-              <label htmlFor="label-abv" style={labelStyle}>
-                Degré (% vol.)
-              </label>
-              <input id="label-abv" value={abvText} onChange={(e) => setAbvText(e.target.value)} inputMode="decimal" placeholder="Ex. 6,8" style={{ ...inputStyle, maxWidth: "140px" }} />
-              {abvMissing && <p style={{ ...noteStyle, color: COLORS.amber }}>Degré non lu sur la photo : saisissez-le si vous le connaissez, il aide à départager les variantes.</p>}
+              {abvOpen || abvText.trim() ? (
+                <>
+                  <label htmlFor="label-abv" style={labelStyle}>
+                    Degré (% vol., facultatif)
+                  </label>
+                  <input id="label-abv" value={abvText} onChange={(e) => setAbvText(e.target.value)} inputMode="decimal" placeholder="Ex. 6,8" style={{ ...inputStyle, maxWidth: "140px" }} />
+                </>
+              ) : (
+                <button onClick={() => setAbvOpen(true)} style={{ ...linkBtn, padding: "10px 0 0", display: "block" }}>
+                  Ajouter le degré (facultatif)
+                </button>
+              )}
               {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
               {reading?.container_volume_ml != null && <p style={noteStyle}>Volume lu : {String(reading.container_volume_ml / 10).replace(".", ",")} cl (à vérifier).</p>}
               {advice && <p style={noteStyle}>{advice}</p>}
@@ -264,7 +300,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               </div>
               <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
                 {candidates.length > 0 && (
-                  <button onClick={() => setPhase("none")} style={linkBtn}>
+                  <button onClick={chooseNone} style={linkBtn}>
                     Aucun de ceux-là
                   </button>
                 )}

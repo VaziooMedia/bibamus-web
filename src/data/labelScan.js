@@ -52,7 +52,7 @@ export async function readLabelPhoto(imageBase64, { signal } = {}) {
       return { ok: false, code: code || "network" };
     }
     if (!data?.reading) return { ok: false, code: "invalid_output" };
-    return { ok: true, reading: data.reading, suggestedQuery: data.suggested_query || "", suggestedAbv: data.suggested_abv ?? null, remaining: data.remaining ?? null };
+    return { ok: true, scanId: data.scan_id || null, reading: data.reading, suggestedQuery: data.suggested_query || "", suggestedAbv: data.suggested_abv ?? null, remaining: data.remaining ?? null };
   } catch (e) {
     if (timedOut) return { ok: false, code: "timeout" };
     if (signal?.aborted) return { ok: false, code: "aborted" };
@@ -76,18 +76,45 @@ export async function searchDrinksByLabel(query, abv = null, limit = 5) {
   return { ok: true, candidates: (data || []).map((r) => ({ id: r.id, name: r.name, brewery: r.brewery, abv: r.abv, type: r.type, score: r.score })) };
 }
 
+/* ---------------- Mesure continue : ce que l'utilisateur confirme et choisit ----------------
+   Enregistré dans le journal des lectures (sans image), pour savoir si le bon produit était proposé, à quelle place, et ce
+   qui a été corrigé. Ne bloque jamais l'écran : un échec d'enregistrement est ignoré. */
+
+// Une recherche vient d'être faite avec ce texte (éventuellement corrigé), ce degré, et ces produits proposés dans l'ordre.
+export function reportLabelSearch({ scanId, text, abv = null, shownIds = [] }) {
+  if (!scanId) return Promise.resolve(false);
+  return supabase
+    .rpc("report_label_search", { p_scan_id: scanId, p_confirmed_text: text, p_confirmed_abv: Number.isFinite(abv) ? abv : null, p_shown_ids: shownIds })
+    .then(({ error }) => !error)
+    .catch(() => false);
+}
+
+// Issue de la lecture : « chosen » (produit choisi), « none » (aucun de ceux-là) ou « abandoned » (fermé sans choisir).
+export function reportLabelOutcome({ scanId, outcome, drinkId = null }) {
+  if (!scanId) return Promise.resolve(false);
+  return supabase
+    .rpc("report_label_outcome", { p_scan_id: scanId, p_outcome: outcome, p_chosen_drink_id: outcome === "chosen" ? drinkId : null })
+    .then(({ error }) => !error)
+    .catch(() => false);
+}
+
 /* ---------------- Aides de présentation ---------------- */
+
+// Valeurs que l'IA écrit parfois à la place d'un champ vide (« null », « N/A »…) : elles ne sont jamais un nom de produit.
+const EMPTY_VALUES = ["null", "undefined", "none", "n/a", "nil"];
+const isEmptyText = (v) => typeof v !== "string" || !v.trim() || EMPTY_VALUES.includes(v.trim().toLowerCase());
+const DROPPED_WORDS = new Set(["null", "undefined"]);
 
 const normalizeWord = (w) => w.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 // Retire les mots répétés (« MALMEDY TRIPLE Triple » → « MALMEDY TRIPLE »), sans tenir compte des
-// majuscules ni des accents, et les signes seuls (« - »).
+// majuscules ni des accents, les signes seuls (« - ») et les mots « null » / « undefined » laissés par l'IA.
 export function dedupeWords(text) {
   const seen = new Set();
   const out = [];
   for (const w of String(text || "").split(/\s+/)) {
     const k = normalizeWord(w);
-    if (!k || seen.has(k)) continue;
+    if (!k || seen.has(k) || DROPPED_WORDS.has(k)) continue;
     seen.add(k);
     out.push(w);
   }
@@ -98,13 +125,13 @@ export function dedupeWords(text) {
 // ranger dans ces champs mais a lu du texte (étiquette en partie cachée), on propose ce texte brut
 // (lignes complètes seulement, 8 mots au plus) pour que l'utilisateur le corrige.
 export function buildLabelQuery(reading) {
-  const parts = [reading?.brand_text, reading?.product_name_text, reading?.variant_text].filter((x) => typeof x === "string" && x.trim());
+  const parts = [reading?.brand_text, reading?.product_name_text, reading?.variant_text].filter((x) => !isEmptyText(x));
   const joined = dedupeWords(parts.join(" "));
   if (joined) return joined;
   const lines = String(reading?.raw_label_text || "")
     .split("\n")
     .map((l) => l.trim())
-    .filter((l) => l && !/[\[\]]|\.\.\./.test(l));
+    .filter((l) => !isEmptyText(l) && !/[\[\]]|\.\.\./.test(l));
   return dedupeWords(lines.join(" ")).split(" ").filter(Boolean).slice(0, 8).join(" ");
 }
 
