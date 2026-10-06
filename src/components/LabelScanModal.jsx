@@ -39,6 +39,11 @@ const inputStyle = { padding: "12px 14px", borderRadius: "10px", border: `2px so
 const labelStyle = { display: "block", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, margin: "14px 0 6px" };
 const noteStyle = { fontSize: "12.5px", color: COLORS.inkSoft, margin: "8px 0 0", lineHeight: 1.45 };
 const separator = { height: "1px", background: "rgba(135, 146, 166, 0.35)", margin: "26px 0" }; // barre grisée
+// Le nom « BibAtlas », avec « Atlas » en vert fluo. plain : tout dans la couleur du texte voisin (sur le bouton vert
+// fluo, un « Atlas » vert fluo serait invisible).
+function BibAtlas({ plain = false }) {
+  return plain ? <>BibAtlas</> : <>Bib<span style={{ color: COLORS.amber }}>Atlas</span></>;
+}
 // Petit point vert fluo qui sépare deux éléments d'une même ligne.
 function Dot() {
   return <span data-dot="1" aria-hidden="true" style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0, display: "inline-block" }} />;
@@ -316,7 +321,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               {photoUrl && <img src={photoUrl} alt="Photo de l'étiquette" style={{ height: "140px", borderRadius: "12px", objectFit: "cover", marginBottom: "14px" }} />}
               <p style={{ color: COLORS.ink, fontSize: "15px", fontWeight: 700, margin: "0 0 6px" }}>{stage === "searching" ? (
                   <>
-                    Recherche dans Bib<span style={{ color: COLORS.amber }}>Atlas</span>…
+                    Recherche dans <BibAtlas />…
                   </>
                 ) : (
                   "Lecture de l'étiquette…"
@@ -370,7 +375,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                 <button onClick={search} disabled={!query.trim() || searching} style={{ ...primaryBtn, width: "100%", opacity: !query.trim() || searching ? 0.5 : 1 }}>
                   <NavIcon name="search" size={18} color={COLORS.paper} />
-                  {searching ? "Recherche…" : "Chercher dans Bibamus"}
+                  {searching ? "Recherche…" : <>Chercher dans <BibAtlas plain /></>}
                 </button>
                 <button onClick={retake} style={linkBtn}>
                   Reprendre la photo
@@ -400,7 +405,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               </div>
               {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber, margin: "0 0 30px" }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
               {candidates.length === 0 ? (
-                <p style={sectionTitle}>Aucun produit proche trouvé dans Bibamus.</p>
+                <p style={sectionTitle}>Aucun produit proche trouvé dans <BibAtlas />.</p>
               ) : (
                 <>
                   <p style={sectionTitle}>Est-ce bien ce produit ?</p>
@@ -435,7 +440,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
 
           {phase === "none" && (
             <div style={{ textAlign: "center", paddingTop: "24px" }}>
-              <p style={{ color: COLORS.ink, fontSize: "14px", margin: "0 0 8px" }}>Ce produit ne semble pas encore exister dans Bibamus.</p>
+              <p style={{ color: COLORS.ink, fontSize: "14px", margin: "0 0 8px" }}>Ce produit ne semble pas encore exister dans <BibAtlas />.</p>
               <p style={noteStyle}>Vous pouvez modifier le texte lu pour relancer la recherche, ou reprendre la photo.</p>
               <div style={{ marginTop: "18px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                 <button onClick={() => setPhase("confirm")} style={primaryBtn}>
