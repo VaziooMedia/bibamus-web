@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
+import { EntityAvatar } from "./ui.jsx";
+import { getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { associateBarcode } from "../data/sharedDirectories.js";
 import { prepareLabelPhoto } from "../labelScanPhoto.js";
-import { readLabelPhoto, searchDrinksByLabel, reportLabelSearch, reportLabelOutcome, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
+import { readLabelPhoto, searchDrinksByLabel, enrichCandidates, reportLabelSearch, reportLabelOutcome, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
 
 // Lecture d'une étiquette par photo — complément du scan de code-barres pour les boissons sans code
 // lisible, ou dont le code est inconnu. L'IA ne fait que LIRE l'étiquette ; c'est l'utilisateur qui
@@ -36,6 +38,42 @@ const linkBtn = { background: "none", border: "none", color: COLORS.amber, fontS
 const inputStyle = { padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "16px", width: "100%", boxSizing: "border-box", background: COLORS.surface, color: COLORS.ink };
 const labelStyle = { display: "block", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, margin: "14px 0 6px" };
 const noteStyle = { fontSize: "12.5px", color: COLORS.inkSoft, margin: "8px 0 0", lineHeight: 1.45 };
+const sectionTitle = { color: COLORS.ink, fontSize: "14px", fontWeight: 700, margin: "0 0 12px" };
+const bottomBtn = { flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "13px 10px", color: COLORS.amber, fontWeight: 700, fontSize: "14px", cursor: "pointer" };
+
+// Un produit proposé, reconnaissable d'un coup d'œil : rond-profil (photo du produit, ou l'icône de bouteille), puis
+// trois lignes : le nom ; le drapeau, l'ABV et les étiquettes (0.0 %, bio, sans gluten) ; les producteurs. Le rond-profil
+// est centré sur ces trois lignes. highlighted : cadre vert fluo, pour le produit le plus probable.
+function CandidateCard({ cand, highlighted = false, disabled = false, onChoose }) {
+  const drink = cand.drink;
+  const items = drink ? getDrinkBadgeItems(drink, { size: 11 }) : [];
+  const country = items.find((it) => it.key === "country");
+  const badges = items.filter((it) => it.key !== "country");
+  // un produit sans alcool l'indique déjà par son étiquette « 0.0% » : pas de « 0,0 % » en double
+  const abvText = cand.abv != null && cand.abv > 0.5 ? `${Number(cand.abv).toFixed(1).replace(".", ",")} %` : null;
+  const producers = (cand.producers || []).join(" · ");
+  return (
+    <button
+      data-candidate={cand.id}
+      onClick={onChoose}
+      disabled={disabled}
+      style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", textAlign: "left", background: COLORS.surface, border: `2px solid ${highlighted ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "12px", padding: "12px", cursor: "pointer", color: COLORS.ink, opacity: disabled ? 0.6 : 1 }}
+    >
+      <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={52} fallbackIcon="bottle" />
+      <span style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: 0, flex: 1 }}>
+        <span style={{ fontWeight: 700, fontSize: "15px", overflowWrap: "anywhere" }}>{cand.name}</span>
+        {(country || abvText || badges.length > 0) && (
+          <span style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+            {country && renderDrinkBadgeItem(country, { drink, size: 11 })}
+            {abvText && <span style={{ fontSize: "12.5px", color: COLORS.ink, fontWeight: 600 }}>{abvText}</span>}
+            {badges.map((it) => renderDrinkBadgeItem(it, { drink, size: 11 }))}
+          </span>
+        )}
+        {producers && <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, overflowWrap: "anywhere" }}>{producers}</span>}
+      </span>
+    </button>
+  );
+}
 
 export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, myBibroCode = null, initialPhoto = null, onRetake = null }) {
   const [phase, setPhase] = useState(initialPhoto ? "reading" : "capture"); // capture | reading | retake | confirm | results | none | error
@@ -103,7 +141,9 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
       return false;
     }
     const shown = res.candidates.slice(0, MAX_CANDIDATES);
-    setCandidates(shown);
+    const detailed = await enrichCandidates(shown); // photo, pays, étiquettes, producteurs : ne retarde jamais plus de 1,5 s
+    if (run !== null && run !== runRef.current) return false;
+    setCandidates(detailed);
     setSearched({ text: text.trim(), abv, manual });
     outcomeLoggedRef.current = false; // une nouvelle recherche repart de zéro dans le journal
     reportLabelSearch({ scanId: scanIdRef.current, text: text.trim(), abv, shownIds: shown.map((d) => d.id) });
@@ -329,35 +369,39 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                   <strong style={{ color: COLORS.ink }}>{searched.text}</strong>
                   {searched.abv != null ? ` · ${String(searched.abv).replace(".", ",")} %` : ""}
                 </span>
-                <button onClick={() => setPhase("confirm")} style={{ ...linkBtn, flexShrink: 0, padding: "2px 4px" }}>
+                <button onClick={() => setPhase("confirm")} style={{ ...linkBtn, flexShrink: 0, padding: "2px 4px", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                  <NavIcon name="pencil" size={13} color={COLORS.amber} />
                   Modifier
                 </button>
               </div>
               {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber, margin: "0 0 10px" }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
-              <p style={{ color: COLORS.ink, fontSize: "14px", fontWeight: 700, margin: "0 0 12px" }}>{candidates.length > 0 ? "Est-ce l'un de ces produits ?" : "Aucun produit proche trouvé dans Bibamus."}</p>
-              {scannedBarcode && candidates.length > 0 && <p style={{ ...noteStyle, margin: "0 0 12px" }}>Le code-barres que vous venez de scanner sera associé au produit choisi.</p>}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {candidates.map((d) => (
-                  <button
-                    key={d.id}
-                    onClick={() => choose(d)}
-                    disabled={busy}
-                    style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "12px 14px", cursor: "pointer", color: COLORS.ink, fontSize: "14px", fontWeight: 600, opacity: busy ? 0.6 : 1 }}
-                  >
-                    {d.name}
-                    {d.brewery && <span style={{ color: COLORS.inkSoft, fontWeight: 500 }}> · {d.brewery}</span>}
-                    {d.abv != null && <span style={{ color: COLORS.inkSoft, fontWeight: 500 }}> · {String(d.abv).replace(".", ",")} %</span>}
-                  </button>
-                ))}
-              </div>
-              <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+              {candidates.length === 0 ? (
+                <p style={sectionTitle}>Aucun produit proche trouvé dans Bibamus.</p>
+              ) : (
+                <>
+                  <p style={sectionTitle}>Est-ce bien ce produit ?</p>
+                  <CandidateCard cand={candidates[0]} highlighted disabled={busy} onChoose={() => choose(candidates[0])} />
+                  {candidates.length > 1 && (
+                    <>
+                      <p style={{ ...sectionTitle, margin: "20px 0 12px" }}>Ou est-ce l'un de ces produits ?</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {candidates.slice(1).map((d) => (
+                          <CandidateCard key={d.id} cand={d} disabled={busy} onChoose={() => choose(d)} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {scannedBarcode && <p style={{ ...noteStyle, margin: "14px 0 0" }}>Le code-barres que vous venez de scanner sera associé au produit choisi.</p>}
+                </>
+              )}
+              <div style={{ marginTop: "18px", display: "flex", gap: "10px" }}>
                 {candidates.length > 0 && (
-                  <button onClick={chooseNone} style={linkBtn}>
-                    Aucun de ceux-là
+                  <button onClick={chooseNone} style={bottomBtn}>
+                    Aucun
                   </button>
                 )}
-                <button onClick={retake} style={linkBtn}>
-                  Reprendre la photo
+                <button onClick={retake} style={bottomBtn}>
+                  Reprendre
                 </button>
               </div>
             </div>

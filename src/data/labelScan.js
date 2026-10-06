@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient.js";
+import { loadDrinksByIds, loadBreweriesByIds } from "./sharedDirectories.js";
 
 /* ---------------- LECTURE D'ÉTIQUETTE PAR IA ----------------
    La photo (déjà préparée, voir labelScanPhoto.js) est lue par la fonction serveur « read-label » :
@@ -74,6 +75,37 @@ export async function searchDrinksByLabel(query, abv = null, limit = 5) {
     return { ok: false, code: "search" };
   }
   return { ok: true, candidates: (data || []).map((r) => ({ id: r.id, name: r.name, brewery: r.brewery, abv: r.abv, type: r.type, score: r.score })) };
+}
+
+// Complète les produits proposés avec ce qu'il faut pour les reconnaître d'un coup d'œil : photo (rond-profil), pays,
+// ABV, étiquettes (0.0 %, bio, sans gluten) et noms des producteurs. Ne retarde jamais les résultats : au bout de
+// timeoutMs, ou si le chargement échoue, les produits sont affichés avec ce que la recherche a déjà donné.
+// Retourne la même liste, chaque produit ayant en plus { drink: fiche complète ou null, producers: [noms] }.
+export async function enrichCandidates(candidates, { timeoutMs = 1500 } = {}) {
+  const basic = candidates.map((c) => ({ ...c, drink: null, producers: c.brewery ? [c.brewery] : [] }));
+  if (basic.length === 0) return basic;
+  const load = (async () => {
+    const drinks = await loadDrinksByIds(candidates.map((c) => c.id));
+    if (!drinks.length) return basic;
+    const byId = new Map(drinks.map((d) => [d.id, d]));
+    const producerIds = [...new Set(drinks.flatMap((d) => d.producerIds || []))];
+    const producers = producerIds.length ? await loadBreweriesByIds(producerIds) : [];
+    const nameById = new Map(producers.map((p) => [p.id, p.name]));
+    return candidates.map((c) => {
+      const drink = byId.get(c.id) || null;
+      const names = (drink?.producerIds || []).map((id) => nameById.get(id)).filter(Boolean);
+      return { ...c, drink, producers: names.length ? names : c.brewery ? [c.brewery] : [] };
+    });
+  })().catch(() => basic);
+  let timer;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(basic), timeoutMs);
+  });
+  try {
+    return await Promise.race([load, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /* ---------------- Mesure continue : ce que l'utilisateur confirme et choisit ----------------
