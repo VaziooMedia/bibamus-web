@@ -77,6 +77,13 @@ export async function searchDrinksByLabel(query, abv = null, limit = 5) {
   return { ok: true, candidates: (data || []).map((r) => ({ id: r.id, name: r.name, brewery: r.brewery, abv: r.abv, type: r.type, score: r.score })) };
 }
 
+// Degré d'alcool tel que l'app l'affiche : « % » collé au chiffre, virgule décimale, aucune décimale quand elle est à zéro
+// (9 → « 9% », 8,5 → « 8,5% »). L'affichage « 9% ABV » en ajoute le suffixe.
+export function formatAbvPercent(abv) {
+  const rounded = Math.round(Number(abv) * 10) / 10;
+  return `${String(rounded).replace(".", ",")}%`;
+}
+
 // Complète les produits proposés avec ce qu'il faut pour les reconnaître d'un coup d'œil : photo (rond-profil), pays,
 // ABV, étiquettes (0.0 %, bio, sans gluten) et noms des producteurs. Ne retarde jamais les résultats : au bout de
 // timeoutMs, ou si le chargement échoue, les produits sont affichés avec ce que la recherche a déjà donné.

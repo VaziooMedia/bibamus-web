@@ -5,6 +5,8 @@ import { lookupBarcode, associateBarcode, searchDrinks } from "../data/sharedDir
 import { LabelScanModal } from "./LabelScanModal.jsx";
 import { captureSharpestFrame } from "../labelScanCapture.js";
 
+const COUNTDOWN_SECONDS = 3;
+
 // Pour une boisson sans code-barres lisible, ou dont le code est inconnu, l'écran « Lire une étiquette »
 // (LabelScanModal) lit l'étiquette ; un code inconnu est alors associé au produit choisi. Depuis la caméra en
 // direct du scanner, le bouton « Lire l'étiquette » prend une courte rafale d'images, garde la plus nette et
@@ -27,6 +29,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
   const [labelFrame, setLabelFrame] = useState(null); // image prise par la caméra du scanner (null : l'écran passe par l'appareil photo ou la photothèque)
   const [capturing, setCapturing] = useState(false);
   const [captureError, setCaptureError] = useState(null);
+  const [countdown, setCountdown] = useState(null); // 3, 2, 1 pendant le décompte avant la capture, sinon null
   const phaseRef = useRef("scanning");
   const captureRunRef = useRef(0); // identifie la capture en cours ; l'incrémenter l'annule
   const [scannedCode, setScannedCode] = useState(null);
@@ -231,29 +234,37 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
     []
   );
 
-  // « Lire l'étiquette » : courte rafale d'images de la caméra en direct, la plus nette part à la lecture. On demande
-  // d'abord plus de pixels pour lire les petits textes ; si l'appareil refuse, la résolution actuelle est gardée.
-  // Un code-barres trouvé pendant la capture (le scanner tourne toujours) l'annule.
+  // « Lire l'étiquette » : un décompte de 3 secondes laisse le temps de placer l'étiquette devant la caméra, puis une
+  // courte rafale d'images de la caméra en direct, dont la plus nette part à la lecture. On demande plus de pixels
+  // pour lire les petits textes dès le début du décompte (la caméra a ainsi fini de s'ajuster au moment de la
+  // capture) ; si l'appareil refuse, la résolution actuelle est gardée. Quitter l'écran, ou un code-barres trouvé
+  // pendant ce temps (le scanner tourne toujours), annule la capture.
   const captureLabel = async () => {
     const video = videoRef.current;
     if (!video || capturing) return;
     const run = ++captureRunRef.current;
+    const stopped = () => run !== captureRunRef.current || phaseRef.current !== "scanning";
     setCapturing(true);
     setCaptureError(null);
     try {
       try {
         await trackRef.current?.applyConstraints({ width: { ideal: 1920 }, height: { ideal: 1080 } });
-        await new Promise((r) => setTimeout(r, 250));
       } catch (e) {
         // résolution non modifiable sur cet appareil : on garde celle du flux actuel
       }
+      for (let n = COUNTDOWN_SECONDS; n >= 1; n--) {
+        setCountdown(n);
+        await new Promise((r) => setTimeout(r, 1000));
+        if (stopped()) return;
+      }
+      setCountdown(null);
       const w = video.videoWidth;
       const h = video.videoHeight;
       const res = await captureSharpestFrame({
         width: w,
         height: h,
         draw: (ctx) => ctx.drawImage(video, 0, 0, w, h),
-        isCancelled: () => run !== captureRunRef.current || phaseRef.current !== "scanning",
+        isCancelled: stopped,
       });
       if (run !== captureRunRef.current) return;
       if (!res.ok) {
@@ -264,7 +275,10 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
       setLabelReturnPhase("scanning");
       setPhase("label");
     } finally {
-      if (run === captureRunRef.current) setCapturing(false);
+      if (run === captureRunRef.current) {
+        setCapturing(false);
+        setCountdown(null);
+      }
     }
   };
 
@@ -304,6 +318,11 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 20px" }}>
           <div style={{ width: "100%", maxWidth: "360px", borderRadius: "16px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, position: "relative" }}>
             <video ref={videoRef} style={{ width: "100%", display: "block", background: "#000" }} muted playsInline />
+            {countdown != null && (
+              <div role="timer" aria-label={`Capture dans ${countdown} seconde${countdown > 1 ? "s" : ""}`} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: COLORS.amber, color: "#000", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "38px" }}>{countdown}</div>
+              </div>
+            )}
             <button
               onClick={() => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))}
               title="Basculer l'orientation du cadre"
