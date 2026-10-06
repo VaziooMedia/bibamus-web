@@ -2,6 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { lookupBarcode, associateBarcode, searchDrinks } from "../data/sharedDirectories.js";
+import { LabelScanModal } from "./LabelScanModal.jsx";
+
+// Pour une boisson sans code-barres lisible, ou dont le code est inconnu, l'écran « Lire une étiquette »
+// (LabelScanModal) permet de photographier l'étiquette ; un code inconnu est alors associé au produit choisi.
 
 // Scanner de code-barres — un code-barres n'est qu'un raccourci vers une fiche existante,
 // jamais un déclencheur de création automatique. Code connu → direction directe vers la fiche.
@@ -15,7 +19,8 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
   const pollRef = useRef(null);
   const cropCanvasRef = useRef(null);
   const orientationRef = useRef("horizontal");
-  const [phase, setPhase] = useState("scanning"); // scanning | notFound | associating | error | manualEntry
+  const [phase, setPhase] = useState("scanning"); // scanning | notFound | associating | error | manualEntry | label
+  const [labelReturnPhase, setLabelReturnPhase] = useState("scanning"); // étape à retrouver en quittant « Lire une étiquette »
   const [scannedCode, setScannedCode] = useState(null);
   const [orientation, setOrientation] = useState("horizontal"); // horizontal | vertical — sens du code-barres sur l'emballage
   const [flashOn, setFlashOn] = useState(false);
@@ -177,6 +182,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
 
   const handleScan = async (code) => {
     stopEverything();
+    setScannedCode(code); // aussi pour un code saisi à la main : sinon il n'est ni affiché ni associé au produit choisi
     const match = await lookupBarcode(code);
     if (match) {
       onFoundDrink(match.productId);
@@ -197,6 +203,12 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
     } catch (e) {
       console.error("toggleFlash:", e);
     }
+  };
+
+  // Passer en phase « label » arrête la caméra (le nettoyage de l'effet de scan s'exécute) ; la quitter la relance.
+  const openLabelScan = () => {
+    setLabelReturnPhase(phase);
+    setPhase("label");
   };
 
   const [filtered, setFiltered] = useState([]);
@@ -295,6 +307,12 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
           >
             Entrer le code manuellement
           </button>
+          <button
+            onClick={openLabelScan}
+            style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "6px" }}
+          >
+            Pas de code-barres ? Photographier l'étiquette
+          </button>
         </div>
       )}
 
@@ -333,6 +351,12 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
               Code <strong>{scannedCode}</strong> pas encore connu de Bibamus. Quelle boisson venez-vous de scanner ?
             </p>
           </div>
+          <button
+            onClick={openLabelScan}
+            style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "10px", padding: "11px 14px", marginBottom: "12px", color: COLORS.amber, fontSize: "14px", fontWeight: 700, cursor: "pointer" }}
+          >
+            Identifier avec une photo de l'étiquette
+          </button>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -365,6 +389,15 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             {query.trim() && filtered.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "13px", textAlign: "center", marginTop: "20px" }}>Aucun résultat.</p>}
           </div>
         </div>
+      )}
+
+      {phase === "label" && (
+        <LabelScanModal
+          scannedBarcode={labelReturnPhase === "notFound" ? scannedCode : null}
+          myBibroCode={myBibroCode}
+          onClose={() => setPhase(labelReturnPhase)}
+          onFoundDrink={onFoundDrink}
+        />
       )}
     </div>
   );
