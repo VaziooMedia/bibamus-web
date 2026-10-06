@@ -282,7 +282,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
     onFoundDrink(drink.id);
   };
 
-  // « Ajouter » : aucun des produits proposés ne correspond. Le journal le garde (« none »), puis l'ajout de produit
+  // « Ajouter » : aucun des produits proposés ne correspond (ou aucun produit n'a été trouvé). Le journal le garde (« none »), puis l'ajout de produit
   // s'ouvre, comme avec le bouton « + » de BibAtlas/Produits (onAddDrink : fourni par l'écran qui a ouvert le scan).
   const addProduct = () => {
     outcomeLoggedRef.current = true;
@@ -441,7 +441,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               )}
               {candidates.length > 0 && <div data-separator="1" style={separator} />}
               <div style={{ marginTop: candidates.length > 0 ? 0 : "18px", display: "flex", gap: "10px" }}>
-                {candidates.length > 0 && onAddDrink && (
+                {onAddDrink && (
                   <button onClick={addProduct} style={bottomBtn}>
                     Ajouter
                   </button>
