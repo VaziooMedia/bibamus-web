@@ -3,9 +3,12 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { lookupBarcode, associateBarcode, searchDrinks } from "../data/sharedDirectories.js";
 import { LabelScanModal } from "./LabelScanModal.jsx";
+import { captureSharpestFrame } from "../labelScanCapture.js";
 
 // Pour une boisson sans code-barres lisible, ou dont le code est inconnu, l'écran « Lire une étiquette »
-// (LabelScanModal) permet de photographier l'étiquette ; un code inconnu est alors associé au produit choisi.
+// (LabelScanModal) lit l'étiquette ; un code inconnu est alors associé au produit choisi. Depuis la caméra en
+// direct du scanner, le bouton « Lire l'étiquette » prend une courte rafale d'images, garde la plus nette et
+// la fait lire tout de suite : pas d'appareil photo à ouvrir, pas de photo à valider.
 
 // Scanner de code-barres — un code-barres n'est qu'un raccourci vers une fiche existante,
 // jamais un déclencheur de création automatique. Code connu → direction directe vers la fiche.
@@ -21,6 +24,11 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
   const orientationRef = useRef("horizontal");
   const [phase, setPhase] = useState("scanning"); // scanning | notFound | associating | error | manualEntry | label
   const [labelReturnPhase, setLabelReturnPhase] = useState("scanning"); // étape à retrouver en quittant « Lire une étiquette »
+  const [labelFrame, setLabelFrame] = useState(null); // image prise par la caméra du scanner (null : l'écran passe par l'appareil photo ou la photothèque)
+  const [capturing, setCapturing] = useState(false);
+  const [captureError, setCaptureError] = useState(null);
+  const phaseRef = useRef("scanning");
+  const captureRunRef = useRef(0); // identifie la capture en cours ; l'incrémenter l'annule
   const [scannedCode, setScannedCode] = useState(null);
   const [orientation, setOrientation] = useState("horizontal"); // horizontal | vertical — sens du code-barres sur l'emballage
   const [flashOn, setFlashOn] = useState(false);
@@ -207,8 +215,57 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
 
   // Passer en phase « label » arrête la caméra (le nettoyage de l'effet de scan s'exécute) ; la quitter la relance.
   const openLabelScan = () => {
+    setLabelFrame(null);
     setLabelReturnPhase(phase);
     setPhase("label");
+  };
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
+  useEffect(
+    () => () => {
+      captureRunRef.current += 1; // quitter le scanner annule une capture en cours
+    },
+    []
+  );
+
+  // « Lire l'étiquette » : courte rafale d'images de la caméra en direct, la plus nette part à la lecture. On demande
+  // d'abord plus de pixels pour lire les petits textes ; si l'appareil refuse, la résolution actuelle est gardée.
+  // Un code-barres trouvé pendant la capture (le scanner tourne toujours) l'annule.
+  const captureLabel = async () => {
+    const video = videoRef.current;
+    if (!video || capturing) return;
+    const run = ++captureRunRef.current;
+    setCapturing(true);
+    setCaptureError(null);
+    try {
+      try {
+        await trackRef.current?.applyConstraints({ width: { ideal: 1920 }, height: { ideal: 1080 } });
+        await new Promise((r) => setTimeout(r, 250));
+      } catch (e) {
+        // résolution non modifiable sur cet appareil : on garde celle du flux actuel
+      }
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      const res = await captureSharpestFrame({
+        width: w,
+        height: h,
+        draw: (ctx) => ctx.drawImage(video, 0, 0, w, h),
+        isCancelled: () => run !== captureRunRef.current || phaseRef.current !== "scanning",
+      });
+      if (run !== captureRunRef.current) return;
+      if (!res.ok) {
+        if (res.code !== "cancelled") setCaptureError("Impossible de capturer l'image. Réessayez.");
+        return;
+      }
+      setLabelFrame(new File([res.blob], "etiquette.jpg", { type: "image/jpeg" }));
+      setLabelReturnPhase("scanning");
+      setPhase("label");
+    } finally {
+      if (run === captureRunRef.current) setCapturing(false);
+    }
   };
 
   const [filtered, setFiltered] = useState([]);
@@ -302,8 +359,17 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
           </div>
           <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", marginTop: "16px", textAlign: "center" }}>Aligne le code-barres dans le cadre</p>
           <button
+            onClick={captureLabel}
+            disabled={capturing}
+            style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "13px 24px", fontWeight: 700, fontSize: "14px", color: COLORS.paper, cursor: "pointer", marginTop: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", opacity: capturing ? 0.6 : 1 }}
+          >
+            <NavIcon name="camera" size={18} color={COLORS.paper} />
+            {capturing ? "Capture…" : "Lire l'étiquette"}
+          </button>
+          {captureError && <p style={{ color: COLORS.inkSoft, fontSize: "12.5px", margin: "8px 0 0", textAlign: "center" }}>{captureError}</p>}
+          <button
             onClick={() => setPhase("manualEntry")}
-            style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "6px" }}
+            style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "10px" }}
           >
             Entrer le code manuellement
           </button>
@@ -311,7 +377,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             onClick={openLabelScan}
             style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "13px", fontWeight: 600, textDecoration: "underline", cursor: "pointer", marginTop: "6px" }}
           >
-            Pas de code-barres ? Photographier l'étiquette
+            Choisir une photo existante
           </button>
         </div>
       )}
@@ -395,7 +461,19 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         <LabelScanModal
           scannedBarcode={labelReturnPhase === "notFound" ? scannedCode : null}
           myBibroCode={myBibroCode}
-          onClose={() => setPhase(labelReturnPhase)}
+          initialPhoto={labelFrame}
+          onRetake={
+            labelFrame
+              ? () => {
+                  setLabelFrame(null);
+                  setPhase("scanning");
+                }
+              : null
+          }
+          onClose={() => {
+            setLabelFrame(null);
+            setPhase(labelReturnPhase);
+          }}
           onFoundDrink={onFoundDrink}
         />
       )}

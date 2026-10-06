@@ -10,8 +10,13 @@ import { readLabelPhoto, searchDrinksByLabel, reportLabelSearch, reportLabelOutc
 // confirme le texte lu (1re validation), puis qui choisit le produit parmi les propositions (2e
 // validation). Rien n'est jamais lié ni créé tout seul.
 //
-// Étapes (phase) : capture → reading → confirm → results, avec retake (photo inexploitable),
-// none (aucune proposition choisie) et error.
+// Étapes (phase) : capture → reading → results, avec confirm (modifier le texte lu), retake (photo
+// inexploitable), none (aucune proposition choisie) et error. Après la lecture, la recherche part toute seule
+// avec le texte lu : le texte reste affiché en haut des résultats, modifiable d'un geste (« Modifier »).
+//
+// Deux entrées : une image déjà prise par la caméra intégrée du scanner (initialPhoto, la lecture démarre tout de
+// suite) ou l'écran « capture » (appareil photo de l'iPhone, ou photo existante). onRetake, quand il est fourni,
+// ramène à la caméra du scanner au lieu de l'écran « capture ».
 //
 // Si un code-barres inconnu vient d'être scanné (scannedBarcode), il est associé au produit choisi,
 // exactement comme dans la recherche manuelle du scanner : le prochain scan sera immédiat.
@@ -32,8 +37,10 @@ const inputStyle = { padding: "12px 14px", borderRadius: "10px", border: `2px so
 const labelStyle = { display: "block", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, margin: "14px 0 6px" };
 const noteStyle = { fontSize: "12.5px", color: COLORS.inkSoft, margin: "8px 0 0", lineHeight: 1.45 };
 
-export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, myBibroCode = null }) {
-  const [phase, setPhase] = useState("capture"); // capture | reading | retake | confirm | results | none | error
+export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, myBibroCode = null, initialPhoto = null, onRetake = null }) {
+  const [phase, setPhase] = useState(initialPhoto ? "reading" : "capture"); // capture | reading | retake | confirm | results | none | error
+  const [stage, setStage] = useState("reading"); // pendant « reading » : lecture de l'image, puis recherche
+  const [searched, setSearched] = useState({ text: "", abv: null, manual: false }); // ce qui a réellement été cherché
   const [photoUrl, setPhotoUrl] = useState(null);
   const [reading, setReading] = useState(null);
   const [query, setQuery] = useState("");
@@ -54,6 +61,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   const busyRef = useRef(false); // garde synchrone : un double clic sur un produit ne l'associe qu'une fois
   const scanIdRef = useRef(null); // lecture en cours dans le journal (null si la photo n'était pas exploitable)
   const outcomeLoggedRef = useRef(true); // true quand l'issue de la lecture en cours est déjà enregistrée
+  const startedRef = useRef(false);
 
   // Une lecture lisible quittée sans produit choisi ni « aucun de ceux-là » est enregistrée comme abandonnée.
   const abandonCurrent = () => {
@@ -85,11 +93,30 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
     setPhase("error");
   };
 
+  // Cherche dans le catalogue puis affiche les résultats ; sert à la recherche automatique après la lecture
+  // (run : lecture en cours, pour ignorer une réponse tardive) et à la recherche après correction du texte.
+  const runSearch = async (text, abv, { run = null, manual = false } = {}) => {
+    const res = await searchDrinksByLabel(text, abv);
+    if (run !== null && run !== runRef.current) return false;
+    if (!res.ok) {
+      fail(res.code, "confirm");
+      return false;
+    }
+    const shown = res.candidates.slice(0, MAX_CANDIDATES);
+    setCandidates(shown);
+    setSearched({ text: text.trim(), abv, manual });
+    outcomeLoggedRef.current = false; // une nouvelle recherche repart de zéro dans le journal
+    reportLabelSearch({ scanId: scanIdRef.current, text: text.trim(), abv, shownIds: shown.map((d) => d.id) });
+    setPhase("results");
+    return true;
+  };
+
   const startReading = async (file) => {
     abandonCurrent();
     scanIdRef.current = null;
     const run = ++runRef.current;
     setPhase("reading");
+    setStage("reading");
     setSlow(false);
     let slowTimer = null;
     try {
@@ -113,10 +140,17 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
       }
       scanIdRef.current = res.scanId;
       outcomeLoggedRef.current = false;
-      setQuery(buildLabelQuery(res.reading));
-      setAbvText(res.suggestedAbv != null ? String(res.suggestedAbv).replace(".", ",") : "");
+      const text = buildLabelQuery(res.reading);
+      const abv = Number.isFinite(res.suggestedAbv) ? res.suggestedAbv : null;
+      setQuery(text);
+      setAbvText(abv != null ? String(abv).replace(".", ",") : "");
       setAbvOpen(false);
-      setPhase("confirm");
+      if (!text.trim()) {
+        setPhase("confirm"); // rien de lisible : à l'utilisateur de saisir le nom
+        return;
+      }
+      setStage("searching");
+      await runSearch(text, abv, { run });
     } catch (e) {
       clearTimeout(slowTimer);
       if (run !== runRef.current) return;
@@ -134,6 +168,10 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   const cancelReading = () => {
     runRef.current += 1;
     abortRef.current?.abort();
+    if (onRetake) {
+      onRetake();
+      return;
+    }
     setPhase("capture");
   };
 
@@ -141,25 +179,28 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
     abandonCurrent();
     setReading(null);
     setCandidates([]);
+    if (onRetake) {
+      onRetake();
+      return;
+    }
     setPhase("capture");
   };
 
   const search = async () => {
     if (!query.trim() || searching) return;
     setSearching(true);
-    const abv = parseAbv(abvText);
-    const res = await searchDrinksByLabel(query, abv);
+    await runSearch(query, parseAbv(abvText), { manual: true });
     setSearching(false);
-    if (!res.ok) {
-      fail(res.code, "confirm");
-      return;
-    }
-    const shown = res.candidates.slice(0, MAX_CANDIDATES);
-    setCandidates(shown);
-    outcomeLoggedRef.current = false; // une nouvelle recherche repart de zéro dans le journal
-    reportLabelSearch({ scanId: scanIdRef.current, text: query.trim(), abv, shownIds: shown.map((d) => d.id) });
-    setPhase("results");
   };
+
+  // L'image venue de la caméra du scanner démarre sa lecture dès l'ouverture de l'écran.
+  useEffect(() => {
+    if (initialPhoto && !startedRef.current) {
+      startedRef.current = true;
+      startReading(initialPhoto);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const choose = async (drink) => {
     if (busyRef.current) return;
@@ -221,8 +262,8 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
           {phase === "reading" && (
             <div style={{ textAlign: "center", paddingTop: "24px" }}>
               {photoUrl && <img src={photoUrl} alt="Photo de l'étiquette" style={{ height: "140px", borderRadius: "12px", objectFit: "cover", marginBottom: "14px" }} />}
-              <p style={{ color: COLORS.ink, fontSize: "15px", fontWeight: 700, margin: "0 0 6px" }}>Lecture de l'étiquette…</p>
-              <p style={noteStyle}>{slow ? "Cela prend plus de temps que d'habitude. Merci de patienter." : "Quelques secondes."}</p>
+              <p style={{ color: COLORS.ink, fontSize: "15px", fontWeight: 700, margin: "0 0 6px" }}>{stage === "searching" ? "Recherche dans Bibamus…" : "Lecture de l'étiquette…"}</p>
+              <p style={noteStyle}>{slow && stage === "reading" ? "Cela prend plus de temps que d'habitude. Merci de patienter." : "Quelques secondes."}</p>
               <button onClick={cancelReading} style={{ ...linkBtn, marginTop: "14px" }}>
                 Annuler
               </button>
@@ -282,6 +323,17 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
 
           {phase === "results" && (
             <div style={{ paddingTop: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "10px", marginBottom: "10px" }}>
+                <span style={{ fontSize: "13px", color: COLORS.inkSoft, minWidth: 0, overflowWrap: "anywhere" }}>
+                  {searched.manual ? "Cherché : " : "Lu : "}
+                  <strong style={{ color: COLORS.ink }}>{searched.text}</strong>
+                  {searched.abv != null ? ` · ${String(searched.abv).replace(".", ",")} %` : ""}
+                </span>
+                <button onClick={() => setPhase("confirm")} style={{ ...linkBtn, flexShrink: 0, padding: "2px 4px" }}>
+                  Modifier
+                </button>
+              </div>
+              {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber, margin: "0 0 10px" }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
               <p style={{ color: COLORS.ink, fontSize: "14px", fontWeight: 700, margin: "0 0 12px" }}>{candidates.length > 0 ? "Est-ce l'un de ces produits ?" : "Aucun produit proche trouvé dans Bibamus."}</p>
               {scannedBarcode && candidates.length > 0 && <p style={{ ...noteStyle, margin: "0 0 12px" }}>Le code-barres que vous venez de scanner sera associé au produit choisi.</p>}
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -304,9 +356,6 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                     Aucun de ceux-là
                   </button>
                 )}
-                <button onClick={() => setPhase("confirm")} style={linkBtn}>
-                  Modifier le texte lu
-                </button>
                 <button onClick={retake} style={linkBtn}>
                   Reprendre la photo
                 </button>
@@ -337,7 +386,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               <p style={{ color: COLORS.ink, fontSize: "14px", margin: "0 0 8px" }}>{labelErrorMessage(errorCode)}</p>
               <div style={{ marginTop: "18px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                 {errorCode !== "daily_limit" && errorCode !== "unauthorized" && (
-                  <button onClick={() => setPhase(errorBack)} style={primaryBtn}>
+                  <button onClick={() => (errorBack === "capture" && onRetake ? onRetake() : setPhase(errorBack))} style={primaryBtn}>
                     Réessayer
                   </button>
                 )}
