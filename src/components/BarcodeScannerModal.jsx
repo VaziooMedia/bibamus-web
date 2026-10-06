@@ -7,6 +7,11 @@ import { captureSharpestFrame } from "../labelScanCapture.js";
 
 const COUNTDOWN_SECONDS = 3;
 
+// Le nom « BibAtlas », avec « Atlas » en vert fluo.
+function BibAtlas() {
+  return <>Bib<span style={{ color: COLORS.amber }}>Atlas</span></>;
+}
+
 // Pour une boisson sans code-barres lisible, ou dont le code est inconnu, l'écran « Lire une étiquette »
 // (LabelScanModal) lit l'étiquette ; un code inconnu est alors associé au produit choisi. Depuis la caméra en
 // direct du scanner, le bouton « Lire l'étiquette » prend une courte rafale d'images, garde la plus nette et
@@ -433,7 +438,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 20px 20px 20px", overflow: "hidden" }}>
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
             <p style={{ fontSize: "13px", color: COLORS.ink, margin: 0 }}>
-              Code <strong>{scannedCode}</strong> pas encore connu de Bibamus. Quelle boisson venez-vous de scanner ?
+              Code <strong>{scannedCode}</strong> pas encore connu de <BibAtlas />. Quelle boisson venez-vous de scanner ?
             </p>
           </div>
           <button
