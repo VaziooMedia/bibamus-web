@@ -5,7 +5,7 @@ import { EntityAvatar } from "./ui.jsx";
 import { getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { associateBarcode } from "../data/sharedDirectories.js";
 import { prepareLabelPhoto } from "../labelScanPhoto.js";
-import { readLabelPhoto, searchDrinksByLabel, enrichCandidates, formatAbvPercent, reportLabelSearch, reportLabelOutcome, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
+import { readLabelPhoto, searchDrinksByLabel, arrangeCandidates, enrichCandidates, formatAbvPercent, reportLabelSearch, reportLabelOutcome, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
 
 // Lecture d'une étiquette par photo — complément du scan de code-barres pour les boissons sans code
 // lisible, ou dont le code est inconnu. L'IA ne fait que LIRE l'étiquette ; c'est l'utilisateur qui
@@ -101,6 +101,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   const [query, setQuery] = useState("");
   const [abvText, setAbvText] = useState("");
   const [candidates, setCandidates] = useState([]);
+  const [tiedCount, setTiedCount] = useState(1); // combien de produits de tête sont à égalité (1 : un seul est le plus probable)
   const [errorCode, setErrorCode] = useState(null);
   const [errorBack, setErrorBack] = useState("capture");
   const [slow, setSlow] = useState(false);
@@ -157,10 +158,12 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
       fail(res.code, "confirm");
       return false;
     }
-    const shown = res.candidates.slice(0, MAX_CANDIDATES);
+    // Si plusieurs produits correspondent aussi bien au texte lu (même score), on les montre tous, sans en désigner un seul.
+    const { shown, tiedCount: tied } = arrangeCandidates(res.candidates, { maxShown: MAX_CANDIDATES });
     const detailed = await enrichCandidates(shown); // photo, pays, étiquettes, producteurs : ne retarde jamais plus de 1,5 s
     if (run !== null && run !== runRef.current) return false;
     setCandidates(detailed);
+    setTiedCount(tied);
     setSearched({ text: text.trim(), abv, manual });
     outcomeLoggedRef.current = false; // une nouvelle recherche repart de zéro dans le journal
     reportLabelSearch({ scanId: scanIdRef.current, text: text.trim(), abv, shownIds: shown.map((d) => d.id) });
@@ -244,6 +247,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
     abandonCurrent();
     setReading(null);
     setCandidates([]);
+    setTiedCount(1);
     if (onRetake) {
       onRetake();
       return;
@@ -423,14 +427,20 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                 <p style={sectionTitle}>Aucun produit proche trouvé dans <BibAtlas />.</p>
               ) : (
                 <>
-                  <p style={sectionTitle}>Est-ce bien ce produit ?</p>
-                  <CandidateCard cand={candidates[0]} highlighted disabled={busy} onChoose={() => choose(candidates[0])} />
-                  {candidates.length > 1 && (
+                  {/* Un seul produit en tête : « Est-ce bien ce produit ? », cadre vert fluo. Plusieurs à égalité : aucun n'est désigné
+                      (pas de cadre vert, qui affirmerait une certitude qu'on n'a pas) ; on les montre tous. */}
+                  <p data-tie={tiedCount >= 2 ? "1" : "0"} style={sectionTitle}>{tiedCount >= 2 ? "Lequel de ces produits ?" : "Est-ce bien ce produit ?"}</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {candidates.slice(0, Math.max(tiedCount, 1)).map((d) => (
+                      <CandidateCard key={d.id} cand={d} highlighted={tiedCount < 2} disabled={busy} onChoose={() => choose(d)} />
+                    ))}
+                  </div>
+                  {candidates.length > Math.max(tiedCount, 1) && (
                     <>
                       <div data-separator="1" style={separator} />
                       <p style={{ ...sectionTitle, margin: "0 0 14px" }}>Ou est-ce l'un de ces produits ?</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                        {candidates.slice(1).map((d) => (
+                        {candidates.slice(Math.max(tiedCount, 1)).map((d) => (
                           <CandidateCard key={d.id} cand={d} disabled={busy} onChoose={() => choose(d)} />
                         ))}
                       </div>

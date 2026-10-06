@@ -77,6 +77,32 @@ export async function searchDrinksByLabel(query, abv = null, limit = 5) {
   return { ok: true, candidates: (data || []).map((r) => ({ id: r.id, name: r.name, brewery: r.brewery, abv: r.abv, type: r.type, score: r.score })) };
 }
 
+// Égalité : deux produits sont « à égalité » quand la recherche leur donne le même score, c'est-à-dire que le texte lu ne
+// permet pas de les départager (ex. « Jupiler » seul correspond aussi bien à Red, Blue, Apple et 0.0 %). La tolérance est
+// sous la précision des scores (3 décimales) : seuls des scores identiques sont à égalité, jamais deux scores voisins.
+export const TIE_EPSILON = 0.0005;
+export const MAX_TIED_SHOWN = 5;
+
+const byNameThenId = (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "fr", { sensitivity: "base", numeric: true }) || String(a.id).localeCompare(String(b.id));
+
+// Ordonne les produits proposés pour l'affichage. Retourne { shown, tiedCount } :
+//  - sans égalité en tête : les maxShown meilleurs, dans l'ordre de la recherche, tiedCount = 1 (le premier est « le bon » probable) ;
+//  - avec égalité en tête : tous les produits à égalité d'abord (maxTied au plus), dans un ordre stable (alphabétique, jamais
+//    au hasard), puis les suivants s'il reste de la place ; tiedCount = nombre de produits à égalité affichés (≥ 2).
+// Si un score manque ou n'est pas un nombre, on ne prétend rien : même affichage que sans égalité.
+export function arrangeCandidates(candidates, { maxShown = 3, maxTied = MAX_TIED_SHOWN } = {}) {
+  const list = Array.isArray(candidates) ? candidates : [];
+  const plain = { shown: list.slice(0, maxShown), tiedCount: 1 };
+  const scores = list.map((c) => (c?.score == null || c.score === "" ? NaN : Number(c.score)));
+  if (list.length < 2 || scores.some((s) => !Number.isFinite(s))) return plain;
+  const floor = Math.max(...scores) - TIE_EPSILON;
+  const tied = list.filter((_, i) => scores[i] >= floor);
+  if (tied.length < 2) return plain;
+  const rest = list.filter((_, i) => scores[i] < floor);
+  const tiedShown = [...tied].sort(byNameThenId).slice(0, maxTied);
+  return { shown: [...tiedShown, ...rest].slice(0, Math.max(maxShown, tiedShown.length)), tiedCount: tiedShown.length };
+}
+
 // Degré d'alcool tel que l'app l'affiche : « % » collé au chiffre, virgule décimale, aucune décimale quand elle est à zéro
 // (9 → « 9% », 8,5 → « 8,5% »). L'affichage « 9% ABV » en ajoute le suffixe.
 export function formatAbvPercent(abv) {
