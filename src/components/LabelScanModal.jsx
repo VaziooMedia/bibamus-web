@@ -13,7 +13,7 @@ import { readLabelPhoto, searchDrinksByLabel, enrichCandidates, formatAbvPercent
 // validation). Rien n'est jamais lié ni créé tout seul.
 //
 // Étapes (phase) : capture → reading → results, avec confirm (modifier le texte lu), retake (photo
-// inexploitable), none (aucune proposition choisie) et error. Après la lecture, la recherche part toute seule
+// inexploitable), error. Après la lecture, la recherche part toute seule
 // avec le texte lu : le texte reste affiché en haut des résultats, modifiable d'un geste (« Modifier »).
 //
 // Deux entrées : une image déjà prise par la caméra intégrée du scanner (initialPhoto, la lecture démarre tout de
@@ -92,8 +92,8 @@ function CandidateCard({ cand, highlighted = false, disabled = false, onChoose }
   );
 }
 
-export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, myBibroCode = null, initialPhoto = null, onRetake = null, onExit = null }) {
-  const [phase, setPhase] = useState(initialPhoto ? "reading" : "capture"); // capture | reading | retake | confirm | results | none | error
+export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, myBibroCode = null, initialPhoto = null, onRetake = null, onExit = null, onAddDrink = null }) {
+  const [phase, setPhase] = useState(initialPhoto ? "reading" : "capture"); // capture | reading | retake | confirm | results | error
   const [stage, setStage] = useState("reading"); // pendant « reading » : lecture de l'image, puis recherche
   const [searched, setSearched] = useState({ text: "", abv: null, manual: false }); // ce qui a réellement été cherché
   const [photoUrl, setPhotoUrl] = useState(null);
@@ -282,10 +282,12 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
     onFoundDrink(drink.id);
   };
 
-  const chooseNone = () => {
+  // « Ajouter » : aucun des produits proposés ne correspond. Le journal le garde (« none »), puis l'ajout de produit
+  // s'ouvre, comme avec le bouton « + » de BibAtlas/Produits (onAddDrink : fourni par l'écran qui a ouvert le scan).
+  const addProduct = () => {
     outcomeLoggedRef.current = true;
     reportLabelOutcome({ scanId: scanIdRef.current, outcome: "none" });
-    setPhase("none");
+    onAddDrink?.();
   };
 
   const uncertain = reading ? uncertainFieldLabels(reading) : [];
@@ -439,31 +441,13 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               )}
               {candidates.length > 0 && <div data-separator="1" style={separator} />}
               <div style={{ marginTop: candidates.length > 0 ? 0 : "18px", display: "flex", gap: "10px" }}>
-                {candidates.length > 0 && (
-                  <button onClick={chooseNone} style={bottomBtn}>
-                    Aucun
+                {candidates.length > 0 && onAddDrink && (
+                  <button onClick={addProduct} style={bottomBtn}>
+                    Ajouter
                   </button>
                 )}
                 <button onClick={retake} style={bottomBtn}>
                   Reprendre
-                </button>
-              </div>
-            </div>
-          )}
-
-          {phase === "none" && (
-            <div style={{ textAlign: "center", paddingTop: "24px" }}>
-              <p style={{ color: COLORS.ink, fontSize: "14px", margin: "0 0 8px" }}>Ce produit ne semble pas encore exister dans <BibAtlas />.</p>
-              <p style={noteStyle}>Vous pouvez modifier le texte lu pour relancer la recherche, ou reprendre la photo.</p>
-              <div style={{ marginTop: "18px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                <button onClick={() => setPhase("confirm")} style={primaryBtn}>
-                  Modifier le texte lu
-                </button>
-                <button onClick={retake} style={linkBtn}>
-                  Reprendre la photo
-                </button>
-                <button onClick={onClose} style={linkBtn}>
-                  Fermer
                 </button>
               </div>
             </div>

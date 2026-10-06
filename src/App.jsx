@@ -3475,6 +3475,7 @@ export default function App() {
               <BibaSoloScreen
                 myUserId={session.user.id}
                 myBibroCode={profile.myBibroCode}
+                onAddDrink={() => setScreen("submitDrink")}
                 onRateDrink={rateDrinkStandalone}
                 onUnrateDrink={unrateDrinkStandalone}
                 onOpenDrink={(id) => {
@@ -3563,6 +3564,11 @@ export default function App() {
       {showBarcodeScanner && (
         <BarcodeScannerModal
           myBibroCode={profile.myBibroCode}
+          onAddDrink={() => {
+            setShowBarcodeScanner(false);
+            setScanMode("direct");
+            setScreen("submitDrink");
+          }}
           onClose={() => {
             setShowBarcodeScanner(false);
             setScanMode("direct");

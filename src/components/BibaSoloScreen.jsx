@@ -595,6 +595,14 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
         <BarcodeScannerModal
           myBibroCode={myUserId}
           onClose={() => setScannerOpen(false)}
+          onAddDrink={
+            onAddDrink
+              ? () => {
+                  setScannerOpen(false);
+                  onAddDrink();
+                }
+              : null
+          }
           onFoundDrink={async (drinkId) => {
             setScannerOpen(false);
             const [d] = await loadDrinksByIds([drinkId]);
@@ -718,7 +726,7 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, onSave, onBack }) {
   );
 }
 
-export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onOpenDrink, onBack }) {
+export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onOpenDrink, onBack, onAddDrink }) {
   const [checkins, setCheckins] = useState(null);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);

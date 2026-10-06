@@ -23,7 +23,7 @@ function BibAtlas() {
 // jamais un déclencheur de création automatique. Code connu → direction directe vers la fiche.
 // Code inconnu → recherche manuelle dans le répertoire, puis association du code à la fiche
 // choisie, pour que le prochain scan de ce même conditionnement soit immédiat.
-export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
+export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink, onAddDrink = null }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
   const streamRef = useRef(null);
@@ -522,6 +522,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink }) {
             setPhase(labelReturnPhase);
           }}
           onExit={onClose}
+          onAddDrink={onAddDrink}
           onFoundDrink={onFoundDrink}
         />
       )}
