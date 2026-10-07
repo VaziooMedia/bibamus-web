@@ -146,8 +146,9 @@ export function typeLabelOf(c) {
   return (raw && (TYPE_LABELS[raw] || String(raw))) || "Autres";
 }
 
-// Range des produits en blocs, un par type de boisson, dans l'ordre où chaque type apparaît pour la première fois (donc le type
-// du produit le plus consommé d'abord). Retourne [{ label, items }] ; chaque produit garde sa place dans son bloc.
+// Range des produits en blocs, un par type de boisson : le type qui compte le plus de produits d'abord ; à nombre égal, dans l'ordre
+// où chaque type apparaît pour la première fois (donc celui du produit le plus consommé, puis alphabétique). Retourne
+// [{ label, items }] ; dans un bloc, les produits gardent l'ordre reçu.
 export function groupByType(items) {
   const groups = new Map();
   for (const c of Array.isArray(items) ? items : []) {
@@ -155,7 +156,7 @@ export function groupByType(items) {
     if (!groups.has(label)) groups.set(label, { label, items: [] });
     groups.get(label).items.push(c);
   }
-  return [...groups.values()];
+  return [...groups.values()].sort((a, b) => b.items.length - a.items.length); // le tri est stable : à effectif égal, l'ordre d'apparition reste
 }
 
 // Combien de fois la personne connectée a consommé chacun de ces produits (BibaSolo, checks de produits, salons : la même
