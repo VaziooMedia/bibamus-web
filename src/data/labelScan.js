@@ -104,15 +104,15 @@ export function findTopTie(candidates) {
 }
 
 // Ordonne les produits proposés pour l'affichage. counts : Map « id du produit → nombre de fois consommé par la personne »
-// (voir loadMyDrinkCounts), ou null si on ne la connaît pas. Retourne { shown, tiedCount } :
-//  - sans égalité en tête : les maxShown meilleurs, dans l'ordre de la recherche, tiedCount = 1 (le premier est « le bon » probable) ;
-//  - avec égalité en tête : tous les produits à égalité d'abord (maxTied au plus) — les plus consommés par la personne d'abord, puis
-//    par ordre alphabétique, jamais au hasard — puis les suivants s'il reste de la place.
-//    · tiedCount = nombre de produits à égalité affichés (≥ 2) : aucun n'est désigné ;
-//    · sauf si l'historique tranche nettement (voir HISTORY_*) : tiedCount = 1, le premier est mis en avant, les autres produits
-//      à égalité restent affichés juste après.
-//  - more : les produits à égalité qui dépassent maxTied, dans le même ordre (consommés d'abord, puis alphabétique) : ils ne sont pas
-//    affichés d'emblée mais rangés dans des blocs repliés (voir groupByType). Toujours [] sans égalité.
+// (voir loadMyDrinkCounts), ou null si on ne la connaît pas. Retourne { shown, tiedCount, more } :
+//  - sans égalité en tête : les maxShown meilleurs, dans l'ordre de la recherche, tiedCount = 1 (le premier est « le bon » probable),
+//    more = [] ;
+//  - avec égalité en tête, le doute est certain : le texte lu ne permet pas de départager ces produits. Sauf si l'historique de la
+//    personne tranche nettement (voir HISTORY_*), AUCUN produit n'est proposé en carte : shown = [], et tous les produits à égalité
+//    vont dans more — les plus consommés d'abord, puis par ordre alphabétique, jamais au hasard — pour être rangés en blocs repliés
+//    (voir groupByType). tiedCount = nombre de produits à égalité (≥ 2) ;
+//  - avec égalité en tête mais un historique net : le premier est mis en avant (tiedCount = 1), suivi des autres produits à égalité
+//    (maxTied au plus) puis des suivants s'il reste de la place ; les produits à égalité en trop vont dans more.
 export function arrangeCandidates(candidates, { maxShown = 3, maxTied = MAX_TIED_SHOWN, counts = null } = {}) {
   const list = Array.isArray(candidates) ? candidates : [];
   const tied = findTopTie(list);
@@ -120,12 +120,12 @@ export function arrangeCandidates(candidates, { maxShown = 3, maxTied = MAX_TIED
   const known = counts instanceof Map ? counts : null;
   const timesOf = (c) => (known && Number.isFinite(known.get(String(c.id))) ? known.get(String(c.id)) : 0);
   const sorted = [...tied].sort((a, b) => timesOf(b) - timesOf(a) || byNameThenId(a, b));
+  const decided = timesOf(sorted[0]) >= HISTORY_MIN_CHECKS && timesOf(sorted[0]) >= HISTORY_DOMINANCE * timesOf(sorted[1]);
+  if (!decided) return { shown: [], tiedCount: sorted.length, more: sorted };
   const tiedShown = sorted.slice(0, maxTied);
-  const more = sorted.slice(maxTied);
   const inTie = new Set(tied);
   const rest = list.filter((c) => !inTie.has(c));
-  const decided = timesOf(sorted[0]) >= HISTORY_MIN_CHECKS && timesOf(sorted[0]) >= HISTORY_DOMINANCE * timesOf(sorted[1]);
-  return { shown: [...tiedShown, ...rest].slice(0, Math.max(maxShown, tiedShown.length)), tiedCount: decided ? 1 : tiedShown.length, more };
+  return { shown: [...tiedShown, ...rest].slice(0, Math.max(maxShown, tiedShown.length)), tiedCount: 1, more: sorted.slice(maxTied) };
 }
 
 // Types de boisson : la base garde un code (« softs_eaux »), l'app affiche un libellé (« Softs & Eaux »). Les fiches complètes

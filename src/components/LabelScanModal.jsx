@@ -430,24 +430,27 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                 </button>
               </div>
               {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber, margin: "0 0 30px" }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
-              {candidates.length === 0 ? (
+              {candidates.length === 0 && moreCandidates.length === 0 ? (
                 <p style={sectionTitle}>Aucun produit proche trouvé dans <BibAtlas />.</p>
               ) : (
                 <>
-                  {/* Un seul produit en tête : « Est-ce bien ce produit ? », cadre vert fluo. Plusieurs à égalité : aucun n'est désigné
-                      (pas de cadre vert, qui affirmerait une certitude qu'on n'a pas) ; on les montre tous. */}
+                  {/* Un seul produit en tête (ou que l'historique désigne nettement) : « Est-ce bien ce produit ? », cadre vert fluo, suivi des
+                      autres cartes. Plusieurs à égalité sans historique net : le doute est certain, donc aucune carte (ni cadre vert, qui
+                      affirmerait une certitude qu'on n'a pas) : on passe directement aux listes déroulantes (un bloc par type). */}
                   <p data-tie={tiedCount >= 2 ? "1" : "0"} style={sectionTitle}>{tiedCount >= 2 ? "Lequel de ces produits ?" : "Est-ce bien ce produit ?"}</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {candidates.slice(0, Math.max(tiedCount, 1)).map((d) => (
-                      <CandidateCard key={d.id} cand={d} highlighted={tiedCount < 2} disabled={busy} onChoose={() => choose(d)} />
-                    ))}
-                  </div>
-                  {candidates.length > Math.max(tiedCount, 1) && (
+                  {candidates.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {candidates.slice(0, 1).map((d) => (
+                        <CandidateCard key={d.id} cand={d} highlighted disabled={busy} onChoose={() => choose(d)} />
+                      ))}
+                    </div>
+                  )}
+                  {candidates.length > 1 && (
                     <>
                       <div data-separator="1" style={separator} />
                       <p style={{ ...sectionTitle, margin: "0 0 14px" }}>Ou est-ce l'un de ces produits ?</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                        {candidates.slice(Math.max(tiedCount, 1)).map((d) => (
+                        {candidates.slice(1).map((d) => (
                           <CandidateCard key={d.id} cand={d} disabled={busy} onChoose={() => choose(d)} />
                         ))}
                       </div>
@@ -455,11 +458,21 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                   )}
                   {moreCandidates.length > 0 && (
                     <>
-                      <div data-separator="1" style={separator} />
-                      <p data-more-title="1" style={{ ...sectionTitle, margin: "0 0 14px" }}>Autres produits de la marque</p>
+                      {candidates.length > 0 && (
+                        <>
+                          <div data-separator="1" style={separator} />
+                          <p data-more-title="1" style={{ ...sectionTitle, margin: "0 0 14px" }}>Autres produits de la marque</p>
+                        </>
+                      )}
                       {groupByType(moreCandidates).map((g) => (
                         <div key={g.label} data-block={g.label}>
-                          <CollapsibleSection title={`${g.label} (${g.items.length})`}>
+                          <CollapsibleSection
+                            title={
+                              <span>
+                                {g.label} (<span data-block-count="1" style={{ color: COLORS.amber }}>{g.items.length}</span>)
+                              </span>
+                            }
+                          >
                             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                               {g.items.map((d) => (
                                 <CandidateCard key={d.id} cand={d} disabled={busy} onChoose={() => choose(d)} />
@@ -473,8 +486,8 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                   {scannedBarcode && <p style={{ ...noteStyle, margin: "14px 0 0" }}>Le code-barres que vous venez de scanner sera associé au produit choisi.</p>}
                 </>
               )}
-              {candidates.length > 0 && <div data-separator="1" style={separator} />}
-              <div style={{ marginTop: candidates.length > 0 ? 0 : "18px", display: "flex", gap: "10px" }}>
+              {(candidates.length > 0 || moreCandidates.length > 0) && <div data-separator="1" style={separator} />}
+              <div style={{ marginTop: candidates.length > 0 || moreCandidates.length > 0 ? 0 : "18px", display: "flex", gap: "10px" }}>
                 {onAddDrink && (
                   <button onClick={addProduct} style={bottomBtn}>
                     Ajouter
