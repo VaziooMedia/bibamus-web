@@ -5,7 +5,7 @@ import { EntityAvatar } from "./ui.jsx";
 import { getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { associateBarcode } from "../data/sharedDirectories.js";
 import { prepareLabelPhoto } from "../labelScanPhoto.js";
-import { readLabelPhoto, searchDrinksByLabel, arrangeCandidates, enrichCandidates, formatAbvPercent, reportLabelSearch, reportLabelOutcome, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
+import { readLabelPhoto, searchDrinksByLabel, arrangeWithHistory, SEARCH_LIMIT, enrichCandidates, formatAbvPercent, reportLabelSearch, reportLabelOutcome, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
 
 // Lecture d'une étiquette par photo — complément du scan de code-barres pour les boissons sans code
 // lisible, ou dont le code est inconnu. L'IA ne fait que LIRE l'étiquette ; c'est l'utilisateur qui
@@ -152,14 +152,16 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   // Cherche dans le catalogue puis affiche les résultats ; sert à la recherche automatique après la lecture
   // (run : lecture en cours, pour ignorer une réponse tardive) et à la recherche après correction du texte.
   const runSearch = async (text, abv, { run = null, manual = false } = {}) => {
-    const res = await searchDrinksByLabel(text, abv);
+    const res = await searchDrinksByLabel(text, abv, SEARCH_LIMIT);
     if (run !== null && run !== runRef.current) return false;
     if (!res.ok) {
       fail(res.code, "confirm");
       return false;
     }
-    // Si plusieurs produits correspondent aussi bien au texte lu (même score), on les montre tous, sans en désigner un seul.
-    const { shown, tiedCount: tied } = arrangeCandidates(res.candidates, { maxShown: MAX_CANDIDATES });
+    // Si plusieurs produits correspondent aussi bien au texte lu (même score), on les montre tous, ceux que la personne a déjà
+    // consommés d'abord ; le premier n'est mis en avant que si son historique tranche nettement. Sans égalité : rien ne change.
+    const { shown, tiedCount: tied } = await arrangeWithHistory(res.candidates, { maxShown: MAX_CANDIDATES });
+    if (run !== null && run !== runRef.current) return false;
     const detailed = await enrichCandidates(shown); // photo, pays, étiquettes, producteurs : ne retarde jamais plus de 1,5 s
     if (run !== null && run !== runRef.current) return false;
     setCandidates(detailed);
