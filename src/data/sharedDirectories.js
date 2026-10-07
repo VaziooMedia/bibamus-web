@@ -417,8 +417,11 @@ export function subscribeToMyNotifications(userId, onNewNotification) {
 
 // BibaSolo — historique continu, sans notion de session. addSoloCheckin enregistre une
 // consommation ; loadMySoloCheckins charge l'historique (aujourd'hui par défaut).
-export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl) {
-  const { error } = await supabase.from("solo_checkins").insert({ user_id: userId, drink_id: drinkId, price: price || null, venue_id: venueId || null, volume_cl: volumeCl || null });
+export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl, currency = "euro") {
+  const row = { user_id: userId, drink_id: drinkId, price: price || null, venue_id: venueId || null, volume_cl: volumeCl || null };
+  // « euro » est la valeur par défaut de la colonne : seuls les jetons s'envoient explicitement.
+  if (currency === "jeton") row.currency = "jeton";
+  const { error } = await supabase.from("solo_checkins").insert(row);
   if (error) return { error: error.message };
   return { ok: true };
 }
@@ -437,6 +440,7 @@ export async function loadMySoloCheckins(sinceIso, excludeArchived = false) {
     drinkId: row.drink_id,
     venueId: row.venue_id,
     price: row.price,
+    currency: row.currency === "jeton" ? "jeton" : "euro",
     volumeCl: row.volume_cl,
     createdAt: row.created_at,
   }));

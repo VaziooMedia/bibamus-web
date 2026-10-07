@@ -9,7 +9,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg, WaterAlertIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
-import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink } from "./ui.jsx";
+import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink, MoneyAmount } from "./ui.jsx";
 import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
 import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
@@ -169,6 +169,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [selectedDrink, setSelectedDrink] = useState(null);
   const [volume, setVolume] = useState("");
   const [price, setPrice] = useState("");
+  const [currency, setCurrency] = useState("euro"); // "euro" | "jeton" — monnaie dans laquelle le verre a été payé
   const [saving, setSaving] = useState(false);
 
   // Trois portes d'entrée distinctes une fois qu'un lieu est choisi, comme dans un salon : sa
@@ -237,6 +238,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     setSelectedDrink({ id: item.sourceDrinkId, name: item.name, photoUrl: item.photoUrl, avatarEmoji: master?.avatarEmoji });
     setVolume(item.volumeCl ? String(item.volumeCl) : String(defaultVolumeOf(master) ?? VOLUME_FALLBACK_CL));
     if (item.price != null) setPrice(String(item.price).replace(".", ","));
+    // Une carte tarifée en jetons : le prix repris ici est un nombre de jetons, pas des euros.
+    if (venue?.defaultCurrency === "jeton") setCurrency("jeton");
   };
 
   const [error, setError] = useState(null);
@@ -249,7 +252,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     setSaving(true);
     setError(null);
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
-    const result = await addSoloCheckin(myUserId, selectedDrink.id, isHome ? null : parseFloat(price.replace(",", ".")), venue?.id, volumeNum);
+    const result = await addSoloCheckin(myUserId, selectedDrink.id, isHome ? null : parseFloat(price.replace(",", ".")), venue?.id, volumeNum, currency);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -582,13 +585,40 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
           {!isHome && (
             <>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Prix payé (€)</label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "6px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft }}>Prix payé</label>
+                <div role="group" aria-label="Monnaie" style={{ display: "flex", gap: "6px" }}>
+                  {[
+                    ["euro", "€"],
+                    ["jeton", "Jetons"],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={currency === key}
+                      onClick={() => setCurrency(key)}
+                      style={{
+                        background: currency === key ? COLORS.amber : COLORS.surface,
+                        border: `2px solid ${currency === key ? COLORS.amber : COLORS.paperAlt}`,
+                        borderRadius: "999px",
+                        padding: "4px 12px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: currency === key ? COLORS.paper : COLORS.ink,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <input
                 type="text"
                 inputMode="decimal"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="ex. 4,50"
+                placeholder={currency === "jeton" ? "ex. 2" : "ex. 4,50"}
                 autoFocus
                 style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "18px" }}
               />
@@ -905,17 +935,18 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   }, [checkins, recentDrinkIds]);
 
   const totals = useMemo(() => {
-    if (!checkins) return { count: 0, price: 0, kcal: 0 };
+    if (!checkins) return { count: 0, price: 0, jetons: 0, kcal: 0 };
     return checkins.reduce(
       (acc, c) => {
         const drink = drinksById[String(c.drinkId)];
         return {
           count: acc.count + 1,
-          price: acc.price + (c.price || 0),
+          price: acc.price + (c.currency === "jeton" ? 0 : c.price || 0),
+          jetons: acc.jetons + (c.currency === "jeton" ? c.price || 0 : 0),
           kcal: acc.kcal + (drink ? drinkCalories(drink, c.volumeCl) : 0),
         };
       },
-      { count: 0, price: 0, kcal: 0 }
+      { count: 0, price: 0, jetons: 0, kcal: 0 }
     );
   }, [checkins, drinksById]);
 
@@ -1298,8 +1329,18 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>{totals.count <= 1 ? "Verre" : "Verres"}</div>
         </div>
         <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "center" }}>
-          <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>
-            {totals.price.toFixed(2)} <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+          {/* Euros et jetons ne s'additionnent pas : deux lignes quand les deux ont servi aujourd'hui. */}
+          <div data-spent="1" style={{ fontSize: totals.price > 0 && totals.jetons > 0 ? "16px" : "22px", fontWeight: 800, color: COLORS.amber }}>
+            {(totals.price > 0 || totals.jetons === 0) && (
+              <div>
+                {totals.price.toFixed(2)} <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+              </div>
+            )}
+            {totals.jetons > 0 && (
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <MoneyAmount value={totals.jetons} currency="jeton" jetonIcon="pink" jetonIconSize={totals.price > 0 ? 15 : 20} />
+              </div>
+            )}
           </div>
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>Dépensé</div>
         </div>
@@ -1385,7 +1426,13 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                     </button>
                     {c.price != null && (
                       <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px", flexShrink: 0 }}>
-                        {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+                        {c.currency === "jeton" ? (
+                          <MoneyAmount value={c.price} currency="jeton" jetonIcon="pink" jetonIconSize={14} />
+                        ) : (
+                          <>
+                            {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+                          </>
+                        )}
                       </span>
                     )}
                   </div>
