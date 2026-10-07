@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
+import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { associateBarcode } from "../data/sharedDirectories.js";
 import { prepareLabelPhoto } from "../labelScanPhoto.js";
-import { readLabelPhoto, searchDrinksByLabel, arrangeWithHistory, SEARCH_LIMIT, enrichCandidates, formatAbvPercent, reportLabelSearch, reportLabelOutcome, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
+import { readLabelPhoto, searchDrinksByLabel, arrangeWithHistory, groupByType, SEARCH_LIMIT, enrichCandidates, formatAbvPercent, reportLabelSearch, reportLabelOutcome, buildLabelQuery, uncertainFieldLabels, photoAdvice, unusablePhotoMessage, labelErrorMessage } from "../data/labelScan.js";
 
 // Lecture d'une étiquette par photo — complément du scan de code-barres pour les boissons sans code
 // lisible, ou dont le code est inconnu. L'IA ne fait que LIRE l'étiquette ; c'est l'utilisateur qui
@@ -102,6 +103,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
   const [abvText, setAbvText] = useState("");
   const [candidates, setCandidates] = useState([]);
   const [tiedCount, setTiedCount] = useState(1); // combien de produits de tête sont à égalité (1 : un seul est le plus probable)
+  const [moreCandidates, setMoreCandidates] = useState([]); // produits à égalité qui ne tiennent pas dans les cartes : rangés en blocs repliés
   const [errorCode, setErrorCode] = useState(null);
   const [errorBack, setErrorBack] = useState("capture");
   const [slow, setSlow] = useState(false);
@@ -160,11 +162,13 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
     }
     // Si plusieurs produits correspondent aussi bien au texte lu (même score), on les montre tous, ceux que la personne a déjà
     // consommés d'abord ; le premier n'est mis en avant que si son historique tranche nettement. Sans égalité : rien ne change.
-    const { shown, tiedCount: tied } = await arrangeWithHistory(res.candidates, { maxShown: MAX_CANDIDATES });
+    // Quand l'égalité dépasse ce qu'on affiche en cartes, les produits en trop ne sont pas perdus : ils vont dans des blocs repliés.
+    const { shown, tiedCount: tied, more } = await arrangeWithHistory(res.candidates, { maxShown: MAX_CANDIDATES });
     if (run !== null && run !== runRef.current) return false;
-    const detailed = await enrichCandidates(shown); // photo, pays, étiquettes, producteurs : ne retarde jamais plus de 1,5 s
+    const detailedAll = await enrichCandidates([...shown, ...more]); // photo, pays, étiquettes, producteurs : ne retarde jamais plus de 1,5 s
     if (run !== null && run !== runRef.current) return false;
-    setCandidates(detailed);
+    setCandidates(detailedAll.slice(0, shown.length));
+    setMoreCandidates(detailedAll.slice(shown.length));
     setTiedCount(tied);
     setSearched({ text: text.trim(), abv, manual });
     outcomeLoggedRef.current = false; // une nouvelle recherche repart de zéro dans le journal
@@ -249,6 +253,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
     abandonCurrent();
     setReading(null);
     setCandidates([]);
+    setMoreCandidates([]);
     setTiedCount(1);
     if (onRetake) {
       onRetake();
@@ -446,6 +451,23 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                           <CandidateCard key={d.id} cand={d} disabled={busy} onChoose={() => choose(d)} />
                         ))}
                       </div>
+                    </>
+                  )}
+                  {moreCandidates.length > 0 && (
+                    <>
+                      <div data-separator="1" style={separator} />
+                      <p data-more-title="1" style={{ ...sectionTitle, margin: "0 0 14px" }}>Autres produits de la marque</p>
+                      {groupByType(moreCandidates).map((g) => (
+                        <div key={g.label} data-block={g.label}>
+                          <CollapsibleSection title={`${g.label} (${g.items.length})`}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                              {g.items.map((d) => (
+                                <CandidateCard key={d.id} cand={d} disabled={busy} onChoose={() => choose(d)} />
+                              ))}
+                            </div>
+                          </CollapsibleSection>
+                        </div>
+                      ))}
                     </>
                   )}
                   {scannedBarcode && <p style={{ ...noteStyle, margin: "14px 0 0" }}>Le code-barres que vous venez de scanner sera associé au produit choisi.</p>}
