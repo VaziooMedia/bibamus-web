@@ -68,10 +68,10 @@ const VOLUME_FALLBACK_CL = "25";
 
 // Mise en page des champs « Volume » et « prix » : même largeur pour les deux, égale à celle des deux
 // onglets « € » et « Jetons » réunis (2 × CURRENCY_TAB_W + l'écart entre eux).
-const CURRENCY_TAB_W = 64;
+const CURRENCY_TAB_W = 54;
 const CURRENCY_TAB_GAP = 6;
 const ENCODE_BLOCK_W = 2 * CURRENCY_TAB_W + CURRENCY_TAB_GAP;
-const ENCODE_HEADER_H = 28; // hauteur commune de la ligne au-dessus des champs (libellé « Volume » / onglets)
+const ENCODE_HEADER_H = 24; // hauteur commune de la ligne au-dessus des champs (libellé « Volume » / onglets)
 const encodeInputStyle = {
   width: "100%",
   boxSizing: "border-box",
@@ -581,7 +581,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               border: `2px solid ${COLORS.amber}`,
               borderRadius: "12px",
               padding: "5px 12px",
-              marginBottom: "18px",
+              marginTop: "18px",
+              marginBottom: "32px",
             }}
           >
             <EntityAvatar photoUrl={selectedDrink.photoUrl} photoEmoji={selectedDrink.avatarEmoji} size={28} fallbackIcon="bottle" />
@@ -619,7 +620,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                         background: currency === key ? COLORS.amber : COLORS.surface,
                         border: `2px solid ${currency === key ? COLORS.amber : COLORS.paperAlt}`,
                         borderRadius: "999px",
-                        fontSize: "12px",
+                        fontSize: "10.5px",
                         fontWeight: 700,
                         color: currency === key ? COLORS.paper : COLORS.ink,
                         cursor: "pointer",
@@ -629,7 +630,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                     </button>
                   ))}
                 </div>
-                <input type="text" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0,00" autoFocus style={encodeInputStyle} />
+                <input type="text" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder={currency === "jeton" ? "0" : "0,00"} autoFocus style={encodeInputStyle} />
               </div>
             )}
           </div>
