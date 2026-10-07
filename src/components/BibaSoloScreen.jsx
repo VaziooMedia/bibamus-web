@@ -61,6 +61,18 @@ function formatTimeOnly(iso) {
   return new Date(iso).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" });
 }
 
+// Volume à pré-remplir pour un produit : le « Volume par défaut » encodé sur sa fiche dans la
+// plateforme de gestion (default_volume_cl), à défaut l'ancien champ volume_cl de l'app. Si la
+// fiche n'en porte aucun, VOLUME_FALLBACK_CL reste le dernier recours.
+const VOLUME_FALLBACK_CL = "25";
+function defaultVolumeOf(drink) {
+  for (const v of [drink?.defaultVolumeCl, drink?.volumeCl]) {
+    const n = Number(v);
+    if (v != null && v !== "" && Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
+
 function drinkCalories(drink, volumeCl) {
   if (!drink?.kcalPer100ml) return 0;
   const volume = volumeCl || drink.volumeCl || 25;
@@ -214,25 +226,30 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
   const selectDrink = (d) => {
     setSelectedDrink(d);
-    setVolume(d.volumeCl ? String(d.volumeCl) : "25");
+    setVolume(String(defaultVolumeOf(d) ?? VOLUME_FALLBACK_CL));
   };
 
   // Choisir un item de la carte du lieu — pré-remplit aussi le prix et le volume réellement
-  // pratiqués là-bas, modifiables ensuite comme d'habitude.
+  // pratiqués là-bas, modifiables ensuite comme d'habitude. Si la carte ne précise pas le
+  // volume, c'est celui par défaut de la fiche du produit qui s'applique.
   const selectVenueMenuItem = (item) => {
-    setSelectedDrink({ id: item.sourceDrinkId, name: item.name });
-    setVolume(item.volumeCl ? String(item.volumeCl) : "25");
+    const master = venueDrinks.find((m) => m.id === item.sourceDrinkId);
+    setSelectedDrink({ id: item.sourceDrinkId, name: item.name, photoUrl: item.photoUrl, avatarEmoji: master?.avatarEmoji });
+    setVolume(item.volumeCl ? String(item.volumeCl) : String(defaultVolumeOf(master) ?? VOLUME_FALLBACK_CL));
     if (item.price != null) setPrice(String(item.price).replace(".", ","));
   };
 
   const [error, setError] = useState(null);
 
+  // À la maison (@Home), on boit ce qu'il y a dans son frigo : rien n'est payé, donc pas de prix.
+  const isHome = venue?.id === "@home";
+
   const handleSubmit = async () => {
-    if (!selectedDrink || !price) return;
+    if (!selectedDrink || (!isHome && !price)) return;
     setSaving(true);
     setError(null);
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
-    const result = await addSoloCheckin(myUserId, selectedDrink.id, parseFloat(price.replace(",", ".")), venue?.id, volumeNum);
+    const result = await addSoloCheckin(myUserId, selectedDrink.id, isHome ? null : parseFloat(price.replace(",", ".")), venue?.id, volumeNum);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -546,7 +563,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               marginBottom: "18px",
             }}
           >
-            <NavIcon name="bottle" size={18} color={COLORS.amber} />
+            <EntityAvatar photoUrl={selectedDrink.photoUrl} photoEmoji={selectedDrink.avatarEmoji} size={36} fallbackIcon="bottle" />
             <span style={{ flex: 1, fontSize: "14px", fontWeight: 700 }}>{selectedDrink.name}</span>
             <button onClick={() => setSelectedDrink(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
               <NavIcon name="x" size={15} color={COLORS.inkSoft} />
@@ -560,19 +577,23 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
             value={volume}
             onChange={(e) => setVolume(e.target.value)}
             placeholder="ex. 25"
-            style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "18px" }}
+            style={{ width: "110px", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "18px" }}
           />
 
-          <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Prix payé (€)</label>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="ex. 4,50"
-            autoFocus
-            style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "18px" }}
-          />
+          {!isHome && (
+            <>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Prix payé (€)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="ex. 4,50"
+                autoFocus
+                style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "18px" }}
+              />
+            </>
+          )}
 
           {venue && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "18px" }}>
@@ -583,7 +604,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
           {error && <p style={{ fontSize: "12.5px", color: "#FF3B3B", marginTop: "10px" }}>{error}</p>}
 
-          <PrimaryButton onClick={handleSubmit} disabled={!price || saving} style={{ width: "100%", marginTop: "24px" }}>
+          <PrimaryButton onClick={handleSubmit} disabled={(!isHome && !price) || saving} style={{ width: "100%", marginTop: "24px" }}>
             {saving ? "Enregistrement..." : "Ajouter"}
           </PrimaryButton>
         </>
