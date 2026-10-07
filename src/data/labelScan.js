@@ -111,18 +111,51 @@ export function findTopTie(candidates) {
 //    · tiedCount = nombre de produits à égalité affichés (≥ 2) : aucun n'est désigné ;
 //    · sauf si l'historique tranche nettement (voir HISTORY_*) : tiedCount = 1, le premier est mis en avant, les autres produits
 //      à égalité restent affichés juste après.
+//  - more : les produits à égalité qui dépassent maxTied, dans le même ordre (consommés d'abord, puis alphabétique) : ils ne sont pas
+//    affichés d'emblée mais rangés dans des blocs repliés (voir groupByType). Toujours [] sans égalité.
 export function arrangeCandidates(candidates, { maxShown = 3, maxTied = MAX_TIED_SHOWN, counts = null } = {}) {
   const list = Array.isArray(candidates) ? candidates : [];
   const tied = findTopTie(list);
-  if (tied.length < 2) return { shown: list.slice(0, maxShown), tiedCount: 1 };
+  if (tied.length < 2) return { shown: list.slice(0, maxShown), tiedCount: 1, more: [] };
   const known = counts instanceof Map ? counts : null;
   const timesOf = (c) => (known && Number.isFinite(known.get(String(c.id))) ? known.get(String(c.id)) : 0);
   const sorted = [...tied].sort((a, b) => timesOf(b) - timesOf(a) || byNameThenId(a, b));
   const tiedShown = sorted.slice(0, maxTied);
+  const more = sorted.slice(maxTied);
   const inTie = new Set(tied);
   const rest = list.filter((c) => !inTie.has(c));
   const decided = timesOf(sorted[0]) >= HISTORY_MIN_CHECKS && timesOf(sorted[0]) >= HISTORY_DOMINANCE * timesOf(sorted[1]);
-  return { shown: [...tiedShown, ...rest].slice(0, Math.max(maxShown, tiedShown.length)), tiedCount: decided ? 1 : tiedShown.length };
+  return { shown: [...tiedShown, ...rest].slice(0, Math.max(maxShown, tiedShown.length)), tiedCount: decided ? 1 : tiedShown.length, more };
+}
+
+// Types de boisson : la base garde un code (« softs_eaux »), l'app affiche un libellé (« Softs & Eaux »). Les fiches complètes
+// (enrichCandidates) portent déjà le libellé ; cette table ne sert que de repli quand la fiche n'a pas pu être chargée.
+// Même correspondance que DRINK_TYPE_CODE_TO_LABEL dans sharedDirectories.js.
+const TYPE_LABELS = {
+  bieres_cidres: "Bières & Cidres",
+  vins_bulles: "Vins & Bulles",
+  spiritueux: "Spiritueux",
+  cocktails_mocktails: "Cocktails / Mocktails",
+  softs_eaux: "Softs & Eaux",
+  boissons_chaudes: "Boissons chaudes",
+  snacks: "Snacks",
+  generiques: "Génériques",
+};
+export function typeLabelOf(c) {
+  const raw = c?.drink?.type || c?.type;
+  return (raw && (TYPE_LABELS[raw] || String(raw))) || "Autres";
+}
+
+// Range des produits en blocs, un par type de boisson, dans l'ordre où chaque type apparaît pour la première fois (donc le type
+// du produit le plus consommé d'abord). Retourne [{ label, items }] ; chaque produit garde sa place dans son bloc.
+export function groupByType(items) {
+  const groups = new Map();
+  for (const c of Array.isArray(items) ? items : []) {
+    const label = typeLabelOf(c);
+    if (!groups.has(label)) groups.set(label, { label, items: [] });
+    groups.get(label).items.push(c);
+  }
+  return [...groups.values()];
 }
 
 // Combien de fois la personne connectée a consommé chacun de ces produits (BibaSolo, checks de produits, salons : la même
