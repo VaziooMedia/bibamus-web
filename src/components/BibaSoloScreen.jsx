@@ -65,6 +65,24 @@ function formatTimeOnly(iso) {
 // plateforme de gestion (default_volume_cl), à défaut l'ancien champ volume_cl de l'app. Si la
 // fiche n'en porte aucun, VOLUME_FALLBACK_CL reste le dernier recours.
 const VOLUME_FALLBACK_CL = "25";
+
+// Mise en page des champs « Volume » et « prix » : même largeur pour les deux, égale à celle des deux
+// onglets « € » et « Jetons » réunis (2 × CURRENCY_TAB_W + l'écart entre eux).
+const CURRENCY_TAB_W = 64;
+const CURRENCY_TAB_GAP = 6;
+const ENCODE_BLOCK_W = 2 * CURRENCY_TAB_W + CURRENCY_TAB_GAP;
+const ENCODE_HEADER_H = 28; // hauteur commune de la ligne au-dessus des champs (libellé « Volume » / onglets)
+const encodeInputStyle = {
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "12px 14px",
+  borderRadius: "12px",
+  border: `2px solid ${COLORS.paperAlt}`,
+  background: COLORS.surface,
+  color: COLORS.ink,
+  fontSize: "14px",
+  textAlign: "center",
+};
 function defaultVolumeOf(drink) {
   for (const v of [drink?.defaultVolumeCl, drink?.volumeCl]) {
     const n = Number(v);
@@ -562,32 +580,29 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               background: COLORS.surface,
               border: `2px solid ${COLORS.amber}`,
               borderRadius: "12px",
-              padding: "12px 14px",
+              padding: "5px 12px",
               marginBottom: "18px",
             }}
           >
-            <EntityAvatar photoUrl={selectedDrink.photoUrl} photoEmoji={selectedDrink.avatarEmoji} size={36} fallbackIcon="bottle" />
+            <EntityAvatar photoUrl={selectedDrink.photoUrl} photoEmoji={selectedDrink.avatarEmoji} size={28} fallbackIcon="bottle" />
             <span style={{ flex: 1, fontSize: "14px", fontWeight: 700 }}>{selectedDrink.name}</span>
             <button onClick={() => setSelectedDrink(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
               <NavIcon name="x" size={15} color={COLORS.inkSoft} />
             </button>
           </div>
 
-          <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Volume (cl)</label>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={volume}
-            onChange={(e) => setVolume(e.target.value)}
-            placeholder="ex. 25"
-            style={{ width: "110px", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "18px" }}
-          />
+          {/* Volume à gauche, prix à droite (avec son choix € / Jetons au-dessus) : mêmes largeurs, valeurs centrées. */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "18px" }}>
+            <div data-encode="volume" style={{ flex: `0 1 ${ENCODE_BLOCK_W}px`, minWidth: 0 }}>
+              <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", marginBottom: "6px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft }}>Volume (cl)</label>
+              </div>
+              <input type="text" inputMode="decimal" value={volume} onChange={(e) => setVolume(e.target.value)} placeholder="00" style={encodeInputStyle} />
+            </div>
 
-          {!isHome && (
-            <>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "6px" }}>
-                <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft }}>Prix payé</label>
-                <div role="group" aria-label="Monnaie" style={{ display: "flex", gap: "6px" }}>
+            {!isHome && (
+              <div data-encode="price" style={{ flex: `0 1 ${ENCODE_BLOCK_W}px`, minWidth: 0 }}>
+                <div role="group" aria-label="Monnaie" style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${CURRENCY_TAB_GAP}px`, marginBottom: "6px" }}>
                   {[
                     ["euro", "€"],
                     ["jeton", "Jetons"],
@@ -598,10 +613,12 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                       aria-pressed={currency === key}
                       onClick={() => setCurrency(key)}
                       style={{
+                        flex: 1,
+                        minWidth: 0,
+                        padding: 0,
                         background: currency === key ? COLORS.amber : COLORS.surface,
                         border: `2px solid ${currency === key ? COLORS.amber : COLORS.paperAlt}`,
                         borderRadius: "999px",
-                        padding: "4px 12px",
                         fontSize: "12px",
                         fontWeight: 700,
                         color: currency === key ? COLORS.paper : COLORS.ink,
@@ -612,18 +629,10 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                     </button>
                   ))}
                 </div>
+                <input type="text" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0,00" autoFocus style={encodeInputStyle} />
               </div>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder={currency === "jeton" ? "ex. 2" : "ex. 4,50"}
-                autoFocus
-                style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", marginBottom: "18px" }}
-              />
-            </>
-          )}
+            )}
+          </div>
 
           {venue && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "18px" }}>
