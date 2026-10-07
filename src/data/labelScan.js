@@ -77,6 +77,94 @@ export async function searchDrinksByLabel(query, abv = null, limit = 5) {
   return { ok: true, candidates: (data || []).map((r) => ({ id: r.id, name: r.name, brewery: r.brewery, abv: r.abv, type: r.type, score: r.score })) };
 }
 
+// Égalité : deux produits sont « à égalité » quand la recherche leur donne le même score, c'est-à-dire que le texte lu ne
+// permet pas de les départager (ex. « Jupiler » seul correspond aussi bien à Red, Blue, Apple et 0.0 %). La tolérance est
+// sous la précision des scores (3 décimales) : seuls des scores identiques sont à égalité, jamais deux scores voisins.
+export const TIE_EPSILON = 0.0005;
+export const MAX_TIED_SHOWN = 5;
+// Nombre de produits demandés à la recherche : assez pour voir toute une égalité (la fonction SQL plafonne à 20).
+export const SEARCH_LIMIT = 20;
+// Historique : parmi des produits à égalité, l'un d'eux n'est mis en avant (« Est-ce bien ce produit ? », cadre vert) que si la
+// personne l'a déjà consommé au moins HISTORY_MIN_CHECKS fois ET au moins HISTORY_DOMINANCE fois plus que le suivant.
+// En dessous, l'égalité reste affichée comme telle (aucun cadre), mais les produits déjà consommés passent en premier.
+export const HISTORY_MIN_CHECKS = 2; // au moins 1 : sans historique connu, rien n'est jamais « tranché »
+export const HISTORY_DOMINANCE = 2;
+
+const byNameThenId = (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "fr", { sensitivity: "base", numeric: true }) || String(a.id).localeCompare(String(b.id));
+
+// Les produits de tête à égalité de score (au moins 2), ou [] s'il n'y a pas d'égalité. Si un score manque ou n'est pas un
+// nombre, on ne prétend rien : [].
+export function findTopTie(candidates) {
+  const list = Array.isArray(candidates) ? candidates : [];
+  const scores = list.map((c) => (c?.score == null || c.score === "" ? NaN : Number(c.score)));
+  if (list.length < 2 || scores.some((s) => !Number.isFinite(s))) return [];
+  const floor = Math.max(...scores) - TIE_EPSILON;
+  const tied = list.filter((_, i) => scores[i] >= floor);
+  return tied.length >= 2 ? tied : [];
+}
+
+// Ordonne les produits proposés pour l'affichage. counts : Map « id du produit → nombre de fois consommé par la personne »
+// (voir loadMyDrinkCounts), ou null si on ne la connaît pas. Retourne { shown, tiedCount } :
+//  - sans égalité en tête : les maxShown meilleurs, dans l'ordre de la recherche, tiedCount = 1 (le premier est « le bon » probable) ;
+//  - avec égalité en tête : tous les produits à égalité d'abord (maxTied au plus) — les plus consommés par la personne d'abord, puis
+//    par ordre alphabétique, jamais au hasard — puis les suivants s'il reste de la place.
+//    · tiedCount = nombre de produits à égalité affichés (≥ 2) : aucun n'est désigné ;
+//    · sauf si l'historique tranche nettement (voir HISTORY_*) : tiedCount = 1, le premier est mis en avant, les autres produits
+//      à égalité restent affichés juste après.
+export function arrangeCandidates(candidates, { maxShown = 3, maxTied = MAX_TIED_SHOWN, counts = null } = {}) {
+  const list = Array.isArray(candidates) ? candidates : [];
+  const tied = findTopTie(list);
+  if (tied.length < 2) return { shown: list.slice(0, maxShown), tiedCount: 1 };
+  const known = counts instanceof Map ? counts : null;
+  const timesOf = (c) => (known && Number.isFinite(known.get(String(c.id))) ? known.get(String(c.id)) : 0);
+  const sorted = [...tied].sort((a, b) => timesOf(b) - timesOf(a) || byNameThenId(a, b));
+  const tiedShown = sorted.slice(0, maxTied);
+  const inTie = new Set(tied);
+  const rest = list.filter((c) => !inTie.has(c));
+  const decided = timesOf(sorted[0]) >= HISTORY_MIN_CHECKS && timesOf(sorted[0]) >= HISTORY_DOMINANCE * timesOf(sorted[1]);
+  return { shown: [...tiedShown, ...rest].slice(0, Math.max(maxShown, tiedShown.length)), tiedCount: decided ? 1 : tiedShown.length };
+}
+
+// Combien de fois la personne connectée a consommé chacun de ces produits (BibaSolo, checks de produits, salons : la même
+// source que « Mes statistiques »). Retourne une Map id → nombre (les produits jamais consommés n'y figurent pas), ou null si on
+// ne peut pas le savoir (panne, fonction absente, trop lent) : l'appelant affiche alors l'égalité sans historique.
+export async function loadMyDrinkCounts(ids, { timeoutMs = 1500 } = {}) {
+  const list = [...new Set((ids || []).map(String))].slice(0, 50);
+  if (list.length === 0) return new Map();
+  const call = Promise.resolve(supabase.rpc("get_my_drink_counts", { p_drink_ids: list }))
+    .then(({ data, error }) => {
+      if (error) {
+        console.warn("loadMyDrinkCounts:", error.message);
+        return null;
+      }
+      return new Map((data || []).map((r) => [String(r.drink_id), Number(r.n) || 0]));
+    })
+    .catch(() => null);
+  let timer;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(null), timeoutMs);
+  });
+  try {
+    return await Promise.race([call, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// arrangeCandidates avec l'historique de la personne, demandé seulement s'il y a une égalité (sinon rien n'est lu). Ne bloque
+// jamais : sans réponse de l'historique, on affiche l'égalité sans lui. loadCounts : remplaçable pour les essais.
+export async function arrangeWithHistory(candidates, { maxShown = 3, maxTied = MAX_TIED_SHOWN, loadCounts = loadMyDrinkCounts } = {}) {
+  const tied = findTopTie(candidates);
+  if (tied.length < 2) return arrangeCandidates(candidates, { maxShown, maxTied });
+  let counts = null;
+  try {
+    counts = await loadCounts(tied.map((c) => c.id));
+  } catch (e) {
+    counts = null;
+  }
+  return arrangeCandidates(candidates, { maxShown, maxTied, counts });
+}
+
 // Degré d'alcool tel que l'app l'affiche : « % » collé au chiffre, virgule décimale, aucune décimale quand elle est à zéro
 // (9 → « 9% », 8,5 → « 8,5% »). L'affichage « 9% ABV » en ajoute le suffixe.
 export function formatAbvPercent(abv) {
