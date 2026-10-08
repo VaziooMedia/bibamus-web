@@ -69,6 +69,22 @@ const VOLUME_FALLBACK_CL = "25";
 // Nombre de « Lieux proches de toi » proposés sous @Home et @Event quand on choisit un lieu.
 const NEARBY_VENUES_COUNT = 2;
 
+// Étiquettes de lieu fines, identiques pour @Home, @Event et les lieux proches (24 px de haut).
+const VENUE_PILL_STYLE = {
+  display: "flex",
+  alignItems: "center",
+  gap: "5px",
+  background: COLORS.surface,
+  border: `2px solid ${COLORS.amber}`,
+  borderRadius: "999px",
+  padding: "2px 10px 2px 3px",
+  fontSize: "10.5px",
+  fontWeight: 700,
+  color: COLORS.ink,
+  cursor: "pointer",
+};
+const VENUE_PILL_ICON_STYLE = { display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 };
+
 // Mise en page des champs « Volume » et « prix » : même largeur pour les deux, égale à celle des deux
 // onglets « € » et « Jetons » réunis (2 × CURRENCY_TAB_W + l'écart entre eux).
 const CURRENCY_TAB_W = 54;
@@ -1225,45 +1241,15 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
       {venuePickerOpen && (
         <div style={{ marginBottom: "18px" }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
-            <button
-              onClick={() => pickVenue({ id: "@home", name: "@Home" })}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                background: COLORS.surface,
-                border: `2px solid ${COLORS.amber}`,
-                borderRadius: "999px",
-                padding: "8px 14px",
-                fontSize: "13px",
-                fontWeight: 700,
-                color: COLORS.ink,
-                cursor: "pointer",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
-                <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+            <button onClick={() => pickVenue({ id: "@home", name: "@Home" })} style={VENUE_PILL_STYLE}>
+              <span style={VENUE_PILL_ICON_STYLE}>
+                <NavIcon name="map-pin" size={10} color={COLORS.amber} />
               </span>
               @Home
             </button>
-            <button
-              onClick={() => pickVenue({ id: "@event", name: "@Event" })}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                background: COLORS.surface,
-                border: `2px solid ${COLORS.amber}`,
-                borderRadius: "999px",
-                padding: "8px 14px",
-                fontSize: "13px",
-                fontWeight: 700,
-                color: COLORS.ink,
-                cursor: "pointer",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
-                <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+            <button onClick={() => pickVenue({ id: "@event", name: "@Event" })} style={VENUE_PILL_STYLE}>
+              <span style={VENUE_PILL_ICON_STYLE}>
+                <NavIcon name="map-pin" size={10} color={COLORS.amber} />
               </span>
               @Event
             </button>
@@ -1277,21 +1263,9 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                     key={v.id}
                     onClick={() => pickVenue(v)}
                     data-nearby-venue="1"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                      background: COLORS.surface,
-                      border: `2px solid ${COLORS.amber}`,
-                      borderRadius: "999px",
-                      padding: "2px 10px 2px 3px",
-                      fontSize: "10.5px",
-                      fontWeight: 700,
-                      color: COLORS.ink,
-                      cursor: "pointer",
-                    }}
+                    style={VENUE_PILL_STYLE}
                   >
-                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+                    <span style={VENUE_PILL_ICON_STYLE}>
                       <NavIcon name="map-pin" size={10} color={COLORS.amber} />
                     </span>
                     {v.name}
