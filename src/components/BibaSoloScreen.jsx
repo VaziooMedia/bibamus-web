@@ -1334,7 +1334,13 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <div data-spent="1" style={{ fontSize: totals.price > 0 && totals.jetons > 0 ? "16px" : "22px", fontWeight: 800, color: COLORS.amber }}>
             {(totals.price > 0 || totals.jetons === 0) && (
               <div>
-                {totals.price.toFixed(2)} <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+                {/* Le nombre est centré dans le bloc ; le sigle € est posé juste à sa droite sans entrer dans le centrage. */}
+                <span data-spent-amount="1" style={{ position: "relative", display: "inline-block" }}>
+                  {totals.price.toFixed(2)}
+                  <span data-spent-symbol="1" style={{ position: "absolute", left: "100%", top: 0, marginLeft: "4px" }}>
+                    <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+                  </span>
+                </span>
               </div>
             )}
             {totals.jetons > 0 && (
@@ -1402,10 +1408,9 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                         disabled={!drink || !onOpenDrink}
                         style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
                       >
-                        {/* Ligne 1 — produit + volume */}
+                        {/* Ligne 1 — produit (le volume est en tête de la ligne 2) */}
                         <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
                           <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
-                          {c.volumeCl && <span style={{ fontSize: "12px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>{c.volumeCl}cl.</span>}
                         </div>
                       </button>
                       {c.price != null && (
@@ -1420,9 +1425,10 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                         </span>
                       )}
                     </div>
-                    {/* Ligne 2 — drapeau + % ABV + icône Bio + icône Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
+                    {/* Ligne 2 — volume + drapeau + % ABV + icône Bio + icône Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
                     {(() => {
                       const mentionParts = [];
+                      if (c.volumeCl) mentionParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
                       if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
                       if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
                       if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
