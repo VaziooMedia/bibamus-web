@@ -93,6 +93,10 @@ const QUICK_VENUE_IDS = ["@home", "@event"];
 // Icônes Bio / Gluten free de la ligne 2 du journal : les mêmes que sur les fiches, passées en gris
 // (même teinte que le texte voisin).
 const MENTION_ICON_STYLE = { height: "14px", width: "auto", display: "block", filter: "grayscale(1) brightness(0.72)" };
+// L'icône Bio a sa feuille en haut et ses lettres en bas : sans correction, ses lettres tombent ~1,8 px sous la
+// ligne de base du texte voisin. Remontée de 2,7 px (mesuré à l'écran), ses lettres posent sur la même ligne de base
+// que « % ABV » ; la feuille dépasse au-dessus, dans l'interligne.
+const BIO_ICON_STYLE = { ...MENTION_ICON_STYLE, transform: "translateY(-2.7px)" };
 
 // Mise en page des champs « Volume » et « prix » : même largeur pour les deux, égale à celle des deux
 // onglets « € » et « Jetons » réunis (2 × CURRENCY_TAB_W + l'écart entre eux).
@@ -1421,7 +1425,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                       const mentionParts = [];
                       if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
                       if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
-                      if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={MENTION_ICON_STYLE} />);
+                      if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
                       if (showMentions && drink.glutenFree) mentionParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
                       if (mentionParts.length === 0) return null;
                       return (
@@ -1441,9 +1445,16 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                         </button>
                       );
                     })()}
-                    {/* Ligne 3 — date + heure (séparées par un point vert fluo), croix à l'extrême droite */}
-                    <div data-journal-line="3" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
+                    {/* Ligne 3 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
+                    {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
+                      <div data-journal-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
+                        <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
+                      </div>
+                    )}
+                    {/* Ligne 4 (3 quand il n'y a pas de lieu) — date + heure (points vert fluo), décalées vers la droite juste avant la croix, croix à l'extrême droite */}
+                    <div data-journal-line="date" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px" }}>
+                      <div data-journal-datetime="1" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap", justifyContent: "flex-end" }}>
                         {[formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
                           <React.Fragment key={idx}>
                             {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
@@ -1455,13 +1466,6 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                         <NavIcon name="x" size={14} color={COLORS.paperAlt} />
                       </button>
                     </div>
-                    {/* Ligne 4 — lieu, avec l'icône de lieu en vert fluo devant (rien pour @Home et @Event) */}
-                    {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
-                      <div data-journal-line="4" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
-                        <NavIcon name="map-pin" size={12} color={COLORS.amber} />
-                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               );
