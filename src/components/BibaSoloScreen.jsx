@@ -66,6 +66,9 @@ function formatTimeOnly(iso) {
 // fiche n'en porte aucun, VOLUME_FALLBACK_CL reste le dernier recours.
 const VOLUME_FALLBACK_CL = "25";
 
+// Nombre de « Lieux proches de toi » proposés sous @Home et @Event quand on choisit un lieu.
+const NEARBY_VENUES_COUNT = 2;
+
 // Mise en page des champs « Volume » et « prix » : même largeur pour les deux, égale à celle des deux
 // onglets « € » et « Jetons » réunis (2 × CURRENCY_TAB_W + l'écart entre eux).
 const CURRENCY_TAB_W = 54;
@@ -875,7 +878,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        loadNearbyVenues(pos.coords.latitude, pos.coords.longitude, 500, 5).then(setNearbyVenues);
+        loadNearbyVenues(pos.coords.latitude, pos.coords.longitude, 500, NEARBY_VENUES_COUNT).then(setNearbyVenues);
       },
       () => {},
       { timeout: 8000, maximumAge: 300000 }
@@ -1273,22 +1276,23 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                   <button
                     key={v.id}
                     onClick={() => pickVenue(v)}
+                    data-nearby-venue="1"
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
+                      gap: "5px",
                       background: COLORS.surface,
                       border: `2px solid ${COLORS.amber}`,
                       borderRadius: "999px",
-                      padding: "8px 14px",
-                      fontSize: "11px",
+                      padding: "2px 10px 2px 3px",
+                      fontSize: "10.5px",
                       fontWeight: 700,
                       color: COLORS.ink,
                       cursor: "pointer",
                     }}
                   >
-                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
-                      <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
+                      <NavIcon name="map-pin" size={10} color={COLORS.amber} />
                     </span>
                     {v.name}
                   </button>
