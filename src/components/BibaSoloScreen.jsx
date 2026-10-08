@@ -819,7 +819,7 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, onSave, onBack }) {
   );
 }
 
-export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onOpenDrink, onBack, onAddDrink }) {
+export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onOpenDrink, onBack, onAddDrink }) {
   const [checkins, setCheckins] = useState(null);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
@@ -1032,6 +1032,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         onBack={() => setCheckingDrinks(false)}
         onRateDrink={onRateDrink}
         onUnrateDrink={onUnrateDrink}
+        onCheckDrink={onCheckDrink}
       />
     );
   }

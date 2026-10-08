@@ -1356,13 +1356,15 @@ export default function App() {
   // Même chose que rateDrink/unrateDrink, mais prenant le vrai produit directement en
   // paramètre plutôt que de compter sur viewedDrink — utilisé par Drink Check, qui note
   // depuis un salon sans être passé par la fiche détail du produit.
-  const rateDrinkStandalone = (drinkId, value, drink) => {
+  // skipDiscoveryPulse : même rôle que pour rateDrink — la note vient du formulaire de check, qui publie
+  // lui-même UNE seule carte.
+  const rateDrinkStandalone = (drinkId, value, drink, { skipDiscoveryPulse = false } = {}) => {
     updateDrink(drinkId, {
       ratings: { ...(drink.ratings || {}), [profile.myBibroCode]: value },
       ratingDates: { ...(drink.ratingDates || {}), [profile.myBibroCode]: Date.now() },
     });
     if (BEER_TYPES.includes(drink.type) && !tastedDrinkIds.includes(drinkId)) {
-      toggleTastedDrink(drinkId);
+      toggleTastedDrink(drinkId, { skipPulse: skipDiscoveryPulse });
     }
   };
 
@@ -1751,6 +1753,18 @@ export default function App() {
     // Le check vient d'être enregistré : s'il est le seul, c'est le premier de cette personne.
     const checkCount = await loadMyDrinkCheckinCount(drinkId);
     return publishDrinkCheckInToPulse(drinkId, venueId, { isDiscovery: checkCount <= 1, visibility, content });
+  };
+
+  // Check depuis l'écran Drink Check de BibaSolo : la fenêtre est la même que sur les fiches produit (photo,
+  // commentaire, visibilité, Bibax tagués), mais le verre est DÉJÀ dans le journal — on n'enregistre donc pas de
+  // drink_checkins en plus (il serait compté deux fois dans Mes Statistiques) : on publie seulement la carte
+  // « Check » dans BibaPulse (jamais « Découverte », qu'on ne sait pas établir sans ce compteur). Renvoie le
+  // résultat de la publication ({ ok } ou { error }), ou null si rien n'a été publié.
+  const publishDrinkCheckFromList = async (drinkId, venueId, { publishToPulse = true, visibility = null, content = null } = {}) => {
+    emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: true });
+    trackEvent("drink_checked", "drink", profile.myBibroCode);
+    if (!publishToPulse) return null;
+    return publishDrinkCheckInToPulse(drinkId, venueId, { isDiscovery: false, visibility, content });
   };
 
   // Fin du parcours « Check depuis l'accueil ». info = null : la fenêtre a été fermée sans confirmer, on reste
@@ -3478,6 +3492,7 @@ export default function App() {
                 onAddDrink={() => setScreen("submitDrink")}
                 onRateDrink={rateDrinkStandalone}
                 onUnrateDrink={unrateDrinkStandalone}
+                onCheckDrink={publishDrinkCheckFromList}
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail("bibaSolo");
                   setViewedDrinkId(id);
