@@ -7,7 +7,7 @@
 // ============================================================
 import React, { useState, useEffect, useMemo } from "react";
 import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
-import { NavIcon, CountryFlagImg, WaterAlertIcon } from "./icons.jsx";
+import { NavIcon, CountryFlagImg, WaterAlertIcon, TokenPinkIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink, MoneyAmount } from "./ui.jsx";
 import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
@@ -819,6 +819,12 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, onSave, onBack }) {
   );
 }
 
+// Nombre de jetons affiché comme partout ailleurs dans l'app (MoneyAmount) : au dixième près, sans « .0 » (les demi-jetons existent : 1.5).
+const formatJetonCount = (value) => {
+  const n = Math.round(value * 10) / 10;
+  return n % 1 === 0 ? n : n.toFixed(1);
+};
+
 export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onOpenDrink, onBack, onAddDrink }) {
   const [checkins, setCheckins] = useState(null);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
@@ -1345,8 +1351,14 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
               </div>
             )}
             {totals.jetons > 0 && (
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <MoneyAmount value={totals.jetons} currency="jeton" jetonIcon="pink" jetonIconSize={totals.price > 0 ? 15 : 20} />
+              <div>
+                {/* Comme le €, le nombre de jetons est centré dans le bloc ; l'icône rose est posée juste à sa droite sans entrer dans le centrage. */}
+                <span data-spent-jeton-amount="1" style={{ position: "relative", display: "inline-block" }}>
+                  {formatJetonCount(totals.jetons)}
+                  <span data-spent-jeton-symbol="1" style={{ position: "absolute", left: "100%", top: "50%", transform: "translateY(-50%)", marginLeft: "4px", display: "flex" }}>
+                    <TokenPinkIcon size={totals.price > 0 ? 15 : 20} />
+                  </span>
+                </span>
               </div>
             )}
           </div>
@@ -1459,9 +1471,9 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                         <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
                       </div>
                     )}
-                    {/* Ligne 4 (3 quand il n'y a pas de lieu) — date + heure (points vert fluo), décalées vers la droite juste avant la croix, croix à l'extrême droite */}
-                    <div data-journal-line="date" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px" }}>
-                      <div data-journal-datetime="1" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                    {/* Ligne 4 (3 quand il n'y a pas de lieu) — date + heure (points vert fluo) à gauche, croix de suppression à l'extrême droite */}
+                    <div data-journal-line="date" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                      <div data-journal-datetime="1" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
                         {[formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
                           <React.Fragment key={idx}>
                             {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}

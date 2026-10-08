@@ -1755,9 +1755,10 @@ export default function App() {
     return publishDrinkCheckInToPulse(drinkId, venueId, { isDiscovery: checkCount <= 1, visibility, content });
   };
 
-  // Check depuis l'écran Drink Check de BibaSolo : la fenêtre est la même que sur les fiches produit (photo,
-  // commentaire, visibilité, Bibax tagués), mais le verre est DÉJÀ dans le journal — on n'enregistre donc pas de
-  // drink_checkins en plus (il serait compté deux fois dans Mes Statistiques) : on publie seulement la carte
+  // Check depuis l'écran Drink Check (BibaSolo et salons) : la fenêtre est la même que sur les fiches produit (photo,
+  // commentaire, visibilité, Bibax tagués), mais le verre est DÉJÀ compté (journal BibaSolo = solo_checkins, salon =
+  // round_orders) — on n'enregistre donc pas de drink_checkins en plus (la vue consumption_events le compterait
+  // une 2e fois : verres, kcal, classements) : on publie seulement la carte
   // « Check » dans BibaPulse (jamais « Découverte », qu'on ne sait pas établir sans ce compteur). Renvoie le
   // résultat de la publication ({ ok } ou { error }), ou null si rien n'a été publié.
   const publishDrinkCheckFromList = async (drinkId, venueId, { publishToPulse = true, visibility = null, content = null } = {}) => {
@@ -2221,6 +2222,7 @@ export default function App() {
                 onBack={() => setScreen("eventDashboard")}
                 onRateDrink={rateDrinkStandalone}
                 onUnrateDrink={unrateDrinkStandalone}
+                onCheckDrink={publishDrinkCheckFromList}
               />
             )}
             {screen === "bibaMusic" && currentEvent && (
