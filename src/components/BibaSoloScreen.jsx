@@ -1368,40 +1368,60 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                   key={c.id}
                   style={{
                     display: "flex",
-                    flexDirection: "column",
-                    gap: "4px",
+                    alignItems: "flex-start",
+                    gap: "10px",
                     padding: "12px 0",
                     borderBottom: i === checkins.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    <button
-                      onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-                      disabled={!drink || !onOpenDrink}
-                      style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
-                    >
-                      <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />
-                    </button>
-                    <button
-                      onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-                      disabled={!drink || !onOpenDrink}
-                      style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
-                    >
-                      {/* Ligne 1 — produit + volume */}
-                      <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                        <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
-                        {c.volumeCl && <span style={{ fontSize: "12px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>{c.volumeCl}cl.</span>}
-                      </div>
-                      {/* Ligne 2 — mentions + drapeau, séparés par un point vert fluo */}
-                      {(() => {
-                        const mentionParts = [];
-                        if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
-                        if (showMentions && drink.bio) mentionParts.push(<span key="bio">Bio</span>);
-                        if (showMentions && drink.glutenFree) mentionParts.push(<span key="gf">Sans gluten</span>);
-                        if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
-                        if (mentionParts.length === 0) return null;
-                        return (
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, marginTop: "3px", flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+                    disabled={!drink || !onOpenDrink}
+                    style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
+                  >
+                    <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />
+                  </button>
+                  {/* À droite du rond : 3 lignes qui se suivent, sans ligne vide entre elles */}
+                  <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                      <button
+                        onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+                        disabled={!drink || !onOpenDrink}
+                        style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
+                      >
+                        {/* Ligne 1 — produit + volume */}
+                        <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                          <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
+                          {c.volumeCl && <span style={{ fontSize: "12px", fontWeight: 700, color: COLORS.amber, flexShrink: 0 }}>{c.volumeCl}cl.</span>}
+                        </div>
+                      </button>
+                      {c.price != null && (
+                        <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px", flexShrink: 0 }}>
+                          {c.currency === "jeton" ? (
+                            <MoneyAmount value={c.price} currency="jeton" jetonIcon="pink" jetonIconSize={14} />
+                          ) : (
+                            <>
+                              {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {/* Ligne 2 — drapeau + % ABV + Bio + Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
+                    {(() => {
+                      const mentionParts = [];
+                      if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
+                      if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
+                      if (showMentions && drink.bio) mentionParts.push(<span key="bio">Bio</span>);
+                      if (showMentions && drink.glutenFree) mentionParts.push(<span key="gf">Gluten free</span>);
+                      if (mentionParts.length === 0) return null;
+                      return (
+                        <button
+                          onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+                          disabled={!drink || !onOpenDrink}
+                          style={{ display: "block", width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
+                        >
+                          <div data-journal-line="2" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
                             {mentionParts.map((part, idx) => (
                               <React.Fragment key={idx}>
                                 {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
@@ -1409,34 +1429,23 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                               </React.Fragment>
                             ))}
                           </div>
-                        );
-                      })()}
-                    </button>
-                    {c.price != null && (
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px", flexShrink: 0 }}>
-                        {c.currency === "jeton" ? (
-                          <MoneyAmount value={c.price} currency="jeton" jetonIcon="pink" jetonIconSize={14} />
-                        ) : (
-                          <>
-                            {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
-                          </>
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  {/* Ligne 3 — lieu + date + heure (séparés par un point vert fluo), croix à l'extrême droite */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginLeft: "50px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
-                      {[venue?.name, formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
-                        <React.Fragment key={idx}>
-                          {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
-                          <span>{part}</span>
-                        </React.Fragment>
-                      ))}
+                        </button>
+                      );
+                    })()}
+                    {/* Ligne 3 — lieu (s'il y en a un) + date + heure (séparés par un point vert fluo), croix à l'extrême droite */}
+                    <div data-journal-line="3" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
+                        {[venue?.name, formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
+                          <React.Fragment key={idx}>
+                            {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                            <span>{part}</span>
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <button onClick={() => handleDelete(c.id)} style={{ display: "flex", background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px -4px -4px 0", flexShrink: 0 }}>
+                        <NavIcon name="x" size={14} color={COLORS.paperAlt} />
+                      </button>
                     </div>
-                    <button onClick={() => handleDelete(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}>
-                      <NavIcon name="x" size={14} color={COLORS.paperAlt} />
-                    </button>
                   </div>
                 </div>
               );
