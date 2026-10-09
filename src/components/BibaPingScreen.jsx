@@ -56,9 +56,11 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
       return;
     }
     setFailed(false);
-    // Un salon reçoit une fenêtre dès sa création, même sans aucun message échangé — on ne
-    // l'affiche dans Ping qu'une fois qu'une vraie discussion y a réellement commencé.
-    const list = rawList.filter((c) => c.kind !== "salon" || c.lastMessageAt);
+    // Un salon reçoit une conversation dès sa création, même sans aucun message échangé, et la
+    // base y inscrit déjà une date de "dernier message" : s'y fier ferait apparaître un bloc vide
+    // pour chaque nouveau salon. On ne l'affiche dans Ping qu'une fois qu'un vrai message (texte
+    // ou photo) y a été envoyé — c'est-à-dire dès que l'aperçu cesse de dire "Aucun message".
+    const list = rawList.filter((c) => c.kind !== "salon" || c.lastMessageBody || c.lastMessageHasMedia);
     setConversations(list);
     const ids = list.flatMap((c) => c.memberIds).filter((id) => id !== myUserId);
     if (ids.length > 0) {
