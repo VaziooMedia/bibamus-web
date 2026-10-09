@@ -293,8 +293,11 @@ export function SalonTabsScreen(props) {
     { key: "chat", suffix: "Ping", badge: chatUnread },
   ];
 
+  // Une ligne de séparation au-dessus et en dessous des trois boutons (même trait que les autres séparateurs).
   const tabBar = (
-    <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+    <div style={{ marginBottom: "10px" }}>
+    <div style={{ height: "1px", background: COLORS.paperAlt, marginBottom: "10px" }} />
+    <div style={{ display: "flex", gap: "6px" }}>
       {tabs.map((t) => {
         const active = tab === t.key;
         return (
@@ -329,6 +332,8 @@ export function SalonTabsScreen(props) {
           </button>
         );
       })}
+    </div>
+    <div style={{ height: "1px", background: COLORS.paperAlt, marginTop: "10px" }} />
     </div>
   );
 

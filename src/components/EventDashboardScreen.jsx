@@ -1603,7 +1603,11 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                     </div>
                     <div style={{ marginTop: "4px", fontSize: "12.5px", color: COLORS.inkSoft, display: "flex", flexDirection: "column", gap: "2px" }}>
                       {person.items.map((it) => (
-                        <div key={it.drinkId}>{`- ${it.name}${it.volumeCl != null ? ` ${String(it.volumeCl).replace(".", ",")} cl.` : ""} ×${it.count}`}</div>
+                        <div key={it.drinkId} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
+                          <span style={{ minWidth: 0 }}>{`- ${it.name}${it.volumeCl != null ? ` ${String(it.volumeCl).replace(".", ",")} cl.` : ""}`}</span>
+                          {/* La quantité en bout de ligne : toutes alignées sur le bord droit de la carte, comme « n verres ». */}
+                          <span style={{ flexShrink: 0 }}>{`×${it.count}`}</span>
+                        </div>
                       ))}
                     </div>
                   </div>
