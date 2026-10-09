@@ -10,7 +10,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_VOLUMES_CL } from "../constants.js";
 import { EntityAvatar, PrimaryButton } from "./ui.jsx";
-import { drinkTypeLabel, isAlcoholicDrink, findMenuEntryById } from "../utils.js";
+import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent } from "../utils.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
 
 // Même libellés que RoundComposeScreen / SearchScreen, pour la sous-catégorie d'un résultat.
@@ -49,7 +49,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
       existing.count += 1;
       existing.lastServeId = h.id;
     } else {
-      const entry = findMenuEntryById(event.menu || [], h.drinkId);
+      const entry = findEntryForEvent(event, h.drinkId);
       groups.push({ drinkId: h.drinkId, entry, count: 1, lastServeId: h.id });
     }
   });

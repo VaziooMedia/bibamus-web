@@ -126,6 +126,11 @@ export const findMenuEntryById = (menu, id) => {
   return { ...entry, volumeCl: vol.cl, price: vol.price };
 };
 
+// L'entrée de carte d'un verre : la carte du salon, puis la carte @Home mémorisée (event.homeMenu).
+// Changer de lieu remplace toute la carte du salon ; les produits pris chez soi en « Je me sers »
+// sont donc gardés à part, pour que les verres déjà bus gardent leur nom, leur volume et leurs kcal.
+export const findEntryForEvent = (event, id) => findMenuEntryById(event?.menu || [], id) || findMenuEntryById(event?.homeMenu || [], id);
+
 // Produits du répertoire que cette personne a consommés dans ce salon — ce que liste le Drink
 // Check. Deux pièges évités ici : (1) un identifiant de commande est le plus souvent composé
 // "entréeId::volumeId" (voir flattenMenu), il faut donc passer par findMenuEntryById et non un
@@ -148,7 +153,7 @@ export const directoryDrinkIdsConsumedBy = (event, myBibroCode) => {
   });
   const sourceIds = [];
   orderIds.forEach((id) => {
-    const entry = findMenuEntryById(event.menu || [], id);
+    const entry = findEntryForEvent(event, id);
     if (entry?.fromDirectory && entry?.sourceDrinkId && !sourceIds.includes(entry.sourceDrinkId)) sourceIds.push(entry.sourceDrinkId);
   });
   return sourceIds;
@@ -167,7 +172,7 @@ export const homeDrinksByPerson = (event) => {
       person = { code: h.code, name: participant?.name || h.name || h.code, total: 0, items: new Map() };
       people.set(h.code, person);
     }
-    const entry = findMenuEntryById(event.menu || [], h.drinkId);
+    const entry = findEntryForEvent(event, h.drinkId);
     const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, count: 0 };
     item.count += 1;
     person.items.set(h.drinkId, item);
@@ -238,9 +243,42 @@ export const buildHomeServe = (event, source, { volumeCl = null } = {}, me = {})
 export const withHomeServe = (e, newEntry, homeDrink) => ({
   ...e,
   menu: newEntry && !(e.menu || []).some((d) => d.id === newEntry.id) ? [...(e.menu || []), newEntry] : e.menu,
+  homeMenu: newEntry && !(e.homeMenu || []).some((d) => d.id === newEntry.id) ? [...(e.homeMenu || []), newEntry] : e.homeMenu || [],
   homeDrinks: [...(e.homeDrinks || []), homeDrink],
 });
 export const withoutHomeDrink = (e, serveId) => ({ ...e, homeDrinks: (e.homeDrinks || []).filter((h) => h.id !== serveId) });
+
+// Changer de lieu dans les réglages de la session. La carte du salon est remplacée par celle du
+// nouveau lieu (vide pour @Home / @Event), SAUF que la carte @Home — les produits pris en « Je me
+// sers » — est mémorisée en quittant @Home et rétablie en y revenant : sans cela, les verres déjà
+// bus perdaient leur nom et leurs kcal. `venueMenu` : la carte déjà résolue du nouveau lieu.
+const mergeById = (a, b) => [...(a || []), ...(b || []).filter((d) => !(a || []).some((x) => x.id === d.id))];
+export const withVenueChange = (e, { mode, currency, jetonUnitValue, selectedVenueId, venueMenu }) => {
+  const toHome = selectedVenueId === "@home";
+  // Un ancien salon @Home n'a pas encore de carte mémorisée : sa carte actuelle EST la carte @Home.
+  const homeMenu = e.isHome ? mergeById(e.homeMenu, e.menu) : e.homeMenu || [];
+  return {
+    ...e,
+    mode,
+    currency,
+    jetonUnitValue,
+    venueId: toHome ? null : selectedVenueId || null,
+    isHome: toHome,
+    menu: toHome ? homeMenu : venueMenu || [],
+    homeMenu,
+  };
+};
+
+// Écran « Réglages de la session » : choisir un lieu applique la même règle qu'à la création du
+// salon — @Home = Mode LIBER (open bar, en euros : chacun boit ce qu'il y a, pas de prix) ;
+// quitter @Home, c'est revenir au Mode ORBIS (tournées). Tout autre changement de lieu laisse le
+// mode et la monnaie tels que la personne les a réglés. Renvoie { eventMode, currency, venueId }.
+export const settingsAfterPlacePick = ({ eventMode, currency, venueId }, pickedId) => {
+  const next = pickedId === venueId ? null : pickedId;
+  if (next === "@home") return { eventMode: "openbar", currency: "euro", venueId: next };
+  if (venueId === "@home") return { eventMode: "tournees", currency, venueId: next };
+  return { eventMode, currency, venueId: next };
+};
 
 // ------------------------------------------------------------
 // Lignes de statistiques (round_orders) d'un salon : une tournée, ou un verre pris hors tournée.
@@ -595,6 +633,7 @@ export const normalizeEvent = (e) => ({
   knownFriends: e.knownFriends || [],
   personalOrders: e.personalOrders || [],
   homeDrinks: e.homeDrinks || [],
+  homeMenu: e.homeMenu || [],
   ticketPurchases: e.ticketPurchases || [],
   participants: e.participants || [],
   playlist: e.playlist || [],
