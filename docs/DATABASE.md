@@ -51,7 +51,7 @@ L'app est développée en français uniquement ; le détail de l'état réel est
 
 | Source | Table | Ce que représente une ligne | Prix / monnaie |
 |---|---|---|---|
-| Commandes de salon | `round_orders` (lignes avec `user_id`) | un verre commandé dans une tournée, ou pris par la personne elle-même dans un salon @Home (« Je me sers », une ligne par verre) | `unit_price` / `currency` ; `paid` vient de `round_payments` |
+| Commandes de salon | `round_orders` (lignes avec `user_id`) | un verre commandé dans une tournée, pris hors tournée (« Ajouter une boisson hors tournée », une ligne par verre, sans prix), ou pris par la personne elle-même dans un salon @Home (« Je me sers », une ligne par verre) | `unit_price` / `currency` ; `paid` vient de `round_payments` |
 | BibaSolo | `solo_checkins` | un verre enregistré dans le journal BibaSolo | `price` / `currency` (`'euro'` ou `'jeton'`) |
 | Checks de produit | `drink_checkins` | un check de produit fait depuis une fiche ou depuis l'accueil | aucun (NULL) |
 | Visites de lieu | `venue_checkins` | une visite (pas de produit : `drink_id` NULL) | aucun (NULL) |

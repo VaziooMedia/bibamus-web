@@ -33,7 +33,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrink, onRemoveHomeDrink, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onGoToDrinkCheck, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink, tabBar, tokButton }) {
+export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrink, onRemoveHomeDrink, onRecordPersonalDrink, onRemovePersonalDrink, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onGoToDrinkCheck, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, tabBar, tokButton }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -328,29 +328,26 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
   const additionTips = (event.tip || 0) + (event.tipsCollected || 0);
 
   const addPersonal = (drinkId) => {
+    const orderId = nextId();
     updateEvent(event.id, (e) => ({
       ...e,
-      personalOrders: [...e.personalOrders, { id: nextId(), drinkId, timestamp: Date.now() }],
+      personalOrders: [...e.personalOrders, { id: orderId, drinkId, timestamp: Date.now() }],
     }));
     // Alimente vraiment les stats (calories, nombre de verres) — reçue gratuitement, donc sans
-    // prix, mais elle compte comme une vraie consommation. drink_id doit être le vrai identifiant
-    // du catalogue (jamais l'id local du menu de l'événement), sinon l'enregistrement échoue en
-    // silence, comme pour les tournées BibaRoom.
-    const drink = (event.menu || []).find((d) => d.id === drinkId);
-    // "@home"/"@event" sont de vraies lignes dans public_venues — transmis littéralement pour
-    // apparaître dans les mêmes stats de lieux que BibaSolo, plutôt que réduits à null.
-    const realVenueId = event.isHome ? "@home" : event.venueId === "@event" ? "@event" : event.venueId || null;
-    const realDrinkId = drink?.fromDirectory && drink?.sourceDrinkId ? drink.sourceDrinkId : null;
-    if (realDrinkId) onCheckDrink(realDrinkId, realVenueId, { volumeCl: drink?.volumeCl ?? null });
+    // prix, mais elle compte comme une vraie consommation (voir recordPersonalDrink dans App.jsx).
+    onRecordPersonalDrink?.(orderId, drinkId);
   };
 
   const removeLastPersonalFor = (drinkId) => {
+    // Un verre venu d'une tournée (roundId) est compté avec cette tournée, pas ici.
+    const last = [...event.personalOrders].reverse().find((o) => o.drinkId === drinkId);
     updateEvent(event.id, (e) => {
       const idx = [...e.personalOrders].reverse().findIndex((o) => o.drinkId === drinkId);
       if (idx === -1) return e;
       const realIdx = e.personalOrders.length - 1 - idx;
       return { ...e, personalOrders: e.personalOrders.filter((_, i) => i !== realIdx) };
     });
+    if (last && !last.roundId) onRemovePersonalDrink?.(last.id);
   };
 
   const countPersonal = (drinkId) => event.personalOrders.filter((o) => o.drinkId === drinkId).length;
