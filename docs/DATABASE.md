@@ -1,7 +1,7 @@
 # DATABASE — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-08. Noms de tables, fonctions et fonctions Edge vérifiés dans le code de l'app et dans les scripts SQL livrés.
+> Dernière mise à jour : 2026-10-09 (2026-10-08 pour l'essentiel ; les sections i18n, BibaPulse et plateforme de gestion ont été alignées sur les autres documents). Noms de tables, fonctions et fonctions Edge vérifiés dans le code de l'app et dans les scripts SQL livrés.
 
 **À quoi sert ce fichier** : c'est la carte de la base — ce que représente chaque table, vue ou fonction, ce qui compte comme quoi, qui peut lire ou écrire. La base elle-même (Supabase) reste la source de vérité pour les colonnes exactes ; ce fichier donne le *sens*, celui qu'on ne retrouve pas en lisant une colonne (par exemple : « un check de produit est un verre consommé »). À lire avant de toucher à une table, une vue ou une fonction. Les sujets propres à un autre document (BibaPulse, Bibax, BibaRoom, Stories, sécurité) sont seulement nommés ici : voir `BIBAPULSE.md`, `BIBAX.md`, `BIBAROOM.md`, `STORIES.md`, `SECURITY.md`.
 
@@ -20,11 +20,11 @@ La base de données Bibamus repose sur **quatre piliers**, reliés entre eux :
 
 ## Architecture i18n
 
-Pensée dès le départ pour être prête à l'international, même si l'app est développée en français pour l'instant :
+L'app est développée en français uniquement ; le détail de l'état réel est dans `MULTILINGUAL.md`. Côté base, ce qui existe vraiment :
 
-- **Taxonomies** (types de produits, styles bière/cidre, tags) : codes techniques stables + libellés français dans des fichiers JS (`constants.js`, `beerCiderStyles.js`) **mirroré** dans Supabase (`taxonomy_terms` + `taxonomy_terms_translations`) — 53 groupes de taxonomie au total
-- **Noms d'entités** (produits, marques, producteurs, établissements) : tables de traduction dédiées — `product_translations`, `brand_translations`, `producer_translations`, `establishment_translations`
-- Cible : EN/NL/DE pour l'app grand public ; la plateforme de gestion peut rester français-only pour l'instant (bilingue FR/EN envisageable plus tard, non urgent)
+- **Taxonomies** (styles bière/cidre/vin, tags) : codes techniques stables + libellés français dans des fichiers JS (`beerCiderStyles.js`, `styleTagLabels.js`), plus la table `custom_beer_cider_styles` pour les styles ajoutés à la main (une seule colonne de libellé, `fr`). Aucune table miroir `taxonomy_terms` ni `taxonomy_terms_translations` n'est présente dans le code ni dans les scripts livrés.
+- **Noms d'entités** (produits, marques, producteurs, établissements) : colonnes de la fiche elle-même — `alternate_name`, `translations` (jsonb, tableau `{ lang, value }`) et `aliases`, toutes agrégées dans `search_text` pour la recherche. Aucune table `*_translations` n'est présente dans le code ni dans les scripts livrés.
+- Cible : EN/NL/DE pour l'app grand public ; la plateforme de gestion peut rester français-only pour l'instant (bilingue FR/EN envisageable plus tard, non urgent). Rien n'est encore traduit.
 
 ## Fiches produits
 
@@ -89,7 +89,7 @@ Conséquence à garder en tête : **ajouter une ligne dans une de ces tables = c
 | Domaine | Tables | Notes |
 |---|---|---|
 | Profils et relations | `profiles`, `tasted_drinks` | relations Bibax : fonctions `send_bibax_request`, `respond_bibax_request`, `get_my_bibax`, `block_user`… (voir `BIBAX.md`) |
-| BibaPulse | `pulse_incoming`, `pulse_bix`, `pulse_comments` | fil : `get_pulse_feed`, `get_entity_pulse`, `get_pulse_comments` ; publication : fonction Edge `create-pulse-event` ; photos : `upload-pulse-photo`, `moderate-and-upload-photo` (voir `BIBAPULSE.md`) |
+| BibaPulse | `pulse_events`, `pulse_bix`, `pulse_incoming`, `pulse_sante`, `pulse_comments` | fil : `get_pulse_feed`, `get_entity_pulse`, `get_pulse_comments` ; publication : fonction Edge `create-pulse-event` ; photos : `upload-pulse-photo`, `moderate-and-upload-photo` (voir `BIBAPULSE.md`) |
 | Stories | `stories`, `official_stories`, `story_bix` | voir `STORIES.md` |
 | Messagerie | `conversations`, `conversation_members`, `messages`, `message_reactions` | `get_my_conversations`, `can_message`, `ensure_salon_conversation` |
 | Notifications | `notifications_feed`, `push_subscriptions` | `send_notification` ; envoi push : fonction Edge `send-push-notification` |
@@ -108,7 +108,7 @@ Conséquence à garder en tête : **ajouter une ligne dans une de ces tables = c
 
 ## Plateforme de gestion (admin.bibamus.app)
 
-Dépôt séparé (`Bibamus-Management`), pensée pour encoder/vérifier plus rapidement que sur mobile. Même backend Supabase que l'app principale. Ajouts prévus non encore construits : gestion des utilisateurs, suivi des paiements/abonnements (une fois un modèle de monétisation en place).
+Dépôt séparé (`Bibamus-Management`), pensée pour encoder/vérifier plus rapidement que sur mobile. Même backend Supabase que l'app principale (très probable, non prouvé depuis ce dépôt). Elle gère déjà les fiches, les utilisateurs, la modération, les propositions de l'IA, les styles personnalisés, les drapeaux de fonctionnalités et la discussion d'équipe ; voir `ADMIN-PLATFORM.md`. Non encore construits : suivi des paiements/abonnements (une fois un modèle de monétisation en place) et approbation des revendications de fiche.
 
 ## Connu comme incomplet / non construit
 
