@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
-import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById } from "../utils.js";
+import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent } from "../utils.js";
 import { loadVenuesByIds } from "../data/sharedDirectories.js";
 
 export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, roundsSum, onBack, openVenue, onReopen, onDelete, onDeleteRound }) {
@@ -48,7 +48,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
   const myOrderEntries = [...event.personalOrders, ...(event.homeDrinks || []).filter((h) => !!myBibroCode && h.code === myBibroCode)];
   const caloriesInfo = myOrderEntries.reduce(
     (acc, order) => {
-      const drink = findMenuEntryById(event.menu, order.drinkId);
+      const drink = findEntryForEvent(event, order.drinkId);
       const kcal = drink ? kcalForDrink(drink) : null;
       if (kcal != null) acc.total += kcal;
       else acc.missing += 1;
@@ -57,7 +57,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
     { total: 0, missing: 0 }
   );
 
-  const drinkName = (id) => findMenuEntryById(event.menu, id)?.name || id;
+  const drinkName = (id) => findEntryForEvent(event, id)?.name || id;
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>

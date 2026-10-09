@@ -150,7 +150,7 @@ import {
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons, declineSalonInvite } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, roundOrderRows, personalDrinkRecord, personalRoundId } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -3069,19 +3069,12 @@ export default function App() {
                       // Lieu inchangé — on ne touche pas à la carte déjà en place.
                       return { ...e, mode, currency, jetonUnitValue };
                     }
-                    const menu =
+                    const venueMenu =
                       venue && venue.menu && venue.menu.length
                         ? venue.menu.map((d) => ({ ...resolveMenuItem(d, venueDrinks), id: `local-${Date.now()}-${Math.random()}` }))
                         : [];
-                    return {
-                      ...e,
-                      mode,
-                      currency,
-                      jetonUnitValue,
-                      venueId: isHome ? null : selectedVenueId || null,
-                      isHome,
-                      menu,
-                    };
+                    // La carte @Home est mémorisée en quittant @Home et rétablie en y revenant.
+                    return withVenueChange(e, { mode, currency, jetonUnitValue, selectedVenueId, venueMenu });
                   });
                   setScreen("eventDashboard");
                 }}

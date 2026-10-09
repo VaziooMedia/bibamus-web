@@ -11,7 +11,7 @@ import settingsIconUrl from "../assets/brand/settings-icon.png";
 import tokIconUrl from "../assets/brand/tok.svg";
 import { PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
-import { formatDate } from "../utils.js";
+import { formatDate, settingsAfterPlacePick } from "../utils.js";
 import { loadMyStories, upsertPushSubscription } from "../data/sharedDirectories.js";
 import { loadSalonTokEnabled, setSalonTokEnabled } from "../data/toks.js";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
@@ -254,9 +254,20 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
     }
   };
 
+  // Choisir un lieu : même règle qu'à la création du salon (voir settingsAfterPlacePick) — @Home
+  // met le Mode LIBER (open bar, en euros) par défaut ; quitter @Home revient au Mode ORBIS.
+  const pickPlace = (id) => {
+    const next = settingsAfterPlacePick({ eventMode, currency, venueId: selectedVenueId }, id);
+    setEventMode(next.eventMode);
+    setCurrency(next.currency);
+    setSelectedVenueId(next.venueId);
+  };
+
   const pickFromDirectory = (publicVenueOrDraft) => {
     const resolved = onResolvePublicVenue(publicVenueOrDraft);
-    setSelectedVenueId(resolved.id);
+    // Depuis le répertoire, on choisit toujours : re-toucher le lieu déjà lié ne le décoche pas.
+    if (resolved.id === selectedVenueId) return;
+    pickPlace(resolved.id);
   };
 
   const linkedVenueLabel =
@@ -282,7 +293,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
           <button
-            onClick={() => setSelectedVenueId(selectedVenueId === "@home" ? null : "@home")}
+            onClick={() => pickPlace("@home")}
             style={{
               background: selectedVenueId === "@home" ? COLORS.amber : COLORS.surface,
               color: selectedVenueId === "@home" ? COLORS.paper : COLORS.ink,
@@ -297,7 +308,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
             @Home
           </button>
           <button
-            onClick={() => setSelectedVenueId(selectedVenueId === "@event" ? null : "@event")}
+            onClick={() => pickPlace("@event")}
             style={{
               background: selectedVenueId === "@event" ? COLORS.amber : COLORS.surface,
               color: selectedVenueId === "@event" ? COLORS.paper : COLORS.ink,
@@ -314,7 +325,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
           {venues.map((v) => (
             <button
               key={v.id}
-              onClick={() => setSelectedVenueId(selectedVenueId === v.id ? null : v.id)}
+              onClick={() => pickPlace(v.id)}
               style={{
                 background: selectedVenueId === v.id ? COLORS.amber : COLORS.surface,
                 color: selectedVenueId === v.id ? COLORS.paper : COLORS.ink,
@@ -484,7 +495,8 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
         onClick={() =>
           onSave(
             eventMode,
-            eventMode === "tournees" || eventMode === "cagnotte" ? currency : eventMode === "addition" ? "euro" : event.currency,
+            // Chez soi, tout est en euros (comme à la création) ; sinon open bar garde la monnaie du salon.
+            selectedVenueId === "@home" && eventMode === "openbar" ? "euro" : eventMode === "tournees" || eventMode === "cagnotte" ? currency : eventMode === "addition" ? "euro" : event.currency,
             event.jetonUnitValue || 0,
             selectedVenueId
           )

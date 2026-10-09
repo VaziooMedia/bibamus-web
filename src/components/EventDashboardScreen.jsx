@@ -19,7 +19,7 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
-import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, flattenMenu, homeDrinksByPerson } from "../utils.js";
+import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson } from "../utils.js";
 import { HomeServeSheet } from "./HomeServeSheet.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
@@ -295,7 +295,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
 
   const caloriesInfo = myOrderEntries.reduce(
     (acc, order) => {
-      const drink = findMenuEntryById(event.menu, order.drinkId);
+      const drink = findEntryForEvent(event, order.drinkId);
       const kcal = drink ? kcalForDrink(drink) : null;
       if (kcal != null) acc.total += kcal;
       else acc.missing += 1;
