@@ -147,7 +147,7 @@ import {
   loadDrinkLinkedEntities,
   sendNotification,
 } from "./data/sharedDirectories.js";
-import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons } from "./data/salons.js";
+import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons, declineSalonInvite } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree } from "./utils.js";
@@ -946,10 +946,7 @@ export default function App() {
       await joinSalon(salonCode);
       return;
     }
-    const salonData = await loadSalon(salonCode);
-    if (!salonData) return;
-    const updated = { ...salonData, pendingBibaxInvites: (salonData.pendingBibaxInvites || []).filter((p) => p.userId !== session.user.id), updatedAt: Date.now() };
-    await saveSalon(salonCode, updated);
+    await declineSalonInvite(salonCode);
   };
 
   // Jalon 1 BibaPlay — pas encore de vraie logique de jeu, juste créer/rejoindre/démarrer.

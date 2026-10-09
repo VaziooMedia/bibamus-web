@@ -54,7 +54,7 @@ Classés par nature, pour s'y retrouver :
 
 ## Connu comme non résolu
 
-- **Table `salons`** : aucun script livré ne définit son modèle d'accès. Une décision consciente est nécessaire — rejoindre par code doit-il fonctionner sans compte connecté ? (l'app actuelle exige déjà une session) — avant d'écrire la règle. Voir aussi `BIBAROOM.md`.
+- **Table `salons`** : l'app y accède désormais uniquement par des fonctions serveur ; la fermeture de l'accès direct à la table (réservé aux participants et aux administrateurs) est en cours de déploiement dans Supabase, hors dépôt, et sera confirmée ici une fois vérifiée. Rejoindre par code exige un compte connecté. Voir `BIBAROOM.md`.
 - **Extensions dans le schéma `public`** (PostGIS ; `unaccent` et `pg_trgm` aussi) : signalé par l'auditeur, mais déplacement jugé trop risqué (toute la logique de proximité et de recherche en dépend) — laissé tel quel volontairement.
 - **Protection contre les mots de passe compromis** désactivée dans les réglages Supabase Auth (Authentication → Password Security) — à activer manuellement, ce n'est pas du SQL.
 - **Clé d'autocomplétion d'adresse** : la clé Geoapify est lue par le navigateur (variable d'environnement `VITE_`, donc visible dans l'app). Elle doit être restreinte par domaine chez le fournisseur ; cette restriction n'est pas vérifiable depuis le code.

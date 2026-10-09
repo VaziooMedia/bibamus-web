@@ -1270,10 +1270,10 @@ export async function loadClubStats(clubId) {
   const salons = await loadClubSalons(clubId);
   if (salons.length === 0) return { totalRounds: 0, memberStats: [] };
 
-  const { data: salonRows, error } = await supabase
-    .from("salons")
-    .select("code, data")
-    .in("code", salons.map((s) => s.salonCode));
+  // Une ligne par tournée des salons rattachés au club (nom de l'acheteur). La table des salons
+  // n'est plus lisible directement par un membre du club qui n'y participe pas : la fonction
+  // serveur ne renvoie que ce qu'il faut, et seulement aux membres actifs du club.
+  const { data: roundRows, error } = await supabase.rpc("get_club_round_buyers", { p_club_id: clubId });
   if (error) {
     console.error("loadClubStats:", error);
     return { totalRounds: 0, memberStats: [] };
@@ -1281,14 +1281,11 @@ export async function loadClubStats(clubId) {
 
   const roundsByBuyerName = {};
   let totalRounds = 0;
-  for (const row of salonRows) {
-    const rounds = row.data?.rounds || [];
-    for (const round of rounds) {
-      totalRounds++;
-      const buyer = round.buyerName;
-      if (!buyer) continue;
-      roundsByBuyerName[buyer] = (roundsByBuyerName[buyer] || 0) + 1;
-    }
+  for (const row of roundRows || []) {
+    totalRounds++;
+    const buyer = row.buyer_name;
+    if (!buyer) continue;
+    roundsByBuyerName[buyer] = (roundsByBuyerName[buyer] || 0) + 1;
   }
 
   return {
