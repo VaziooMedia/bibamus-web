@@ -150,7 +150,7 @@ import {
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons, declineSalonInvite } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, roundOrderRows, personalDrinkRecord, personalRoundId } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -795,18 +795,7 @@ export default function App() {
     // venues-and-tips.sql) — on les transmet donc littéralement, ce qui les fait apparaître dans
     // les mêmes stats de lieux que BibaSolo, plutôt que de les réduire à null comme avant.
     const realVenueId = currentEvent?.isHome ? "@home" : currentEvent?.venueId === "@event" ? "@event" : currentEvent?.venueId || null;
-    const ordersForLog = draftOrders.map((o) => {
-      const friend = draftFriends.find((f) => f.id === o.friendId);
-      const drink = (currentEvent?.menu || []).find((d) => d.id === o.drinkId);
-      return {
-        bibro_code: friend?.code || null,
-        guest_name: friend?.code ? null : friend?.name || null,
-        drink_id: drink?.fromDirectory && drink?.sourceDrinkId ? drink.sourceDrinkId : null,
-        unit_price: drink?.price ?? null,
-        unit_volume_cl: drink?.volumeCl ?? null,
-        unit_kcal_per_100ml: drink?.kcalPer100ml ?? null,
-      };
-    });
+    const ordersForLog = roundOrderRows(currentEvent?.menu || [], draftOrders, draftFriends);
     recordRoundOrders(ordersForLog, { venueId: realVenueId, eventId: activeEventId, roundId: round.id, currency: currentEvent?.currency, paid: round.settledDirectly !== false });
 
     // Pourboire — n'existe que sur une tournée déjà réglée directement (tip vaut toujours 0
@@ -841,6 +830,23 @@ export default function App() {
     updateEvent(ev.id, (e) => withoutHomeDrink(e, serveId));
     deleteRoundOrders(serveId);
   };
+
+  // Un verre que JE prends hors tournée (« Ajouter une boisson hors tournée ») : enregistré en
+  // statistiques comme un verre de tournée (round_orders, sans prix, à mon nom), avec un identifiant
+  // propre à ce tap pour pouvoir le retirer seul. Aucune carte BibaPulse n'est publiée ici : c'est le
+  // rôle du Drink Check.
+  const recordPersonalDrink = (orderId, drinkId) => {
+    const ev = events.find((e) => e.id === activeEventId);
+    if (!ev) return;
+    const rec = personalDrinkRecord(ev, orderId, drinkId, profile.myBibroCode);
+    if (!rec) return;
+    const realVenueId = ev.isHome ? "@home" : ev.venueId === "@event" ? "@event" : ev.venueId || null;
+    recordRoundOrders([rec.order], { venueId: realVenueId, eventId: ev.id, roundId: rec.roundId, currency: ev.currency, paid: true });
+  };
+
+  // Le « − » : delete_round_orders ne supprime que MES lignes, donc un verre de quelqu'un d'autre (ou un
+  // verre venu d'une tournée, jamais enregistré sous cet identifiant) n'est jamais touché.
+  const removePersonalDrinkRecord = (orderId) => deleteRoundOrders(personalRoundId(orderId));
 
   const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants, clubId) => {
     const isSalon = screen === "newSalonEvent";
@@ -2199,7 +2205,8 @@ export default function App() {
                 onDeleteRound={(roundId) => deleteRound(activeEventId, roundId)}
                 onEditRound={(roundId, updates) => editRound(activeEventId, roundId, updates)}
                 onPayTabAmount={(amount) => payTabAmount(activeEventId, amount, profile.name)}
-                onCheckDrink={(drinkId, venueId, opts) => checkInDrink(drinkId, venueId, opts)}
+                onRecordPersonalDrink={recordPersonalDrink}
+                onRemovePersonalDrink={removePersonalDrinkRecord}
                 onActivateBibaBob={(code, name, tolerance, pin) => activateBibaBob(activeEventId, code, name, tolerance, pin)}
                 onDeactivateBibaBob={(code) => deactivateBibaBob(activeEventId, code)}
                 onGoToBibaMusic={() => setScreen("bibaMusic")}

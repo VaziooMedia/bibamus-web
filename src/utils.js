@@ -242,6 +242,47 @@ export const withHomeServe = (e, newEntry, homeDrink) => ({
 });
 export const withoutHomeDrink = (e, serveId) => ({ ...e, homeDrinks: (e.homeDrinks || []).filter((h) => h.id !== serveId) });
 
+// ------------------------------------------------------------
+// Lignes de statistiques (round_orders) d'un salon : une tournée, ou un verre pris hors tournée.
+//
+// Un identifiant de commande est le plus souvent COMPOSÉ « entréeId::volumeId » (voir flattenMenu) :
+// il faut donc le résoudre avec findMenuEntryById, jamais avec un simple menu.find(d => d.id === …),
+// qui ne trouve rien — les lignes partaient alors sans produit, sans prix, sans volume ni calories.
+// drink_id doit être le vrai identifiant du catalogue (drinks_directory), jamais l'id local de la carte
+// du salon ; une entrée qui ne vient pas du répertoire n'a pas de produit à compter (drink_id NULL).
+// ------------------------------------------------------------
+const statsRowFor = (drink) => ({
+  drink_id: drink?.fromDirectory && drink?.sourceDrinkId ? drink.sourceDrinkId : null,
+  unit_price: drink?.price ?? null,
+  unit_volume_cl: drink?.volumeCl ?? null,
+  unit_kcal_per_100ml: drink?.kcalPer100ml ?? null,
+});
+
+// Une ligne par verre commandé dans la tournée. Chaque participant est résolu vers son vrai compte
+// Bibax quand il en a un (via son code), sinon seulement son prénom (invité sans compte).
+export const roundOrderRows = (menu, orders, friends) =>
+  (orders || []).map((o) => {
+    const friend = (friends || []).find((f) => f.id === o.friendId);
+    return {
+      bibro_code: friend?.code || null,
+      guest_name: friend?.code ? null : friend?.name || null,
+      ...statsRowFor(findMenuEntryById(menu || [], o.drinkId)),
+    };
+  });
+
+// Identifiant de « tournée » propre à un verre pris hors tournée : record_round_orders refuse deux fois le
+// même, et c'est ce qui permet de retirer ce verre seul (delete_round_orders) si on se trompe de tap.
+export const personalRoundId = (orderId) => `perso-${orderId}`;
+
+// Le verre que JE prends hors tournée : une ligne à mon nom, sans prix (reçu gratuitement), qui compte
+// comme une vraie consommation. Rien à enregistrer sans compte Bibax ni produit du répertoire.
+export const personalDrinkRecord = (event, orderId, drinkId, myBibroCode) => {
+  if (!myBibroCode) return null;
+  const row = statsRowFor(findMenuEntryById(event.menu || [], drinkId));
+  if (!row.drink_id) return null;
+  return { roundId: personalRoundId(orderId), order: { bibro_code: myBibroCode, guest_name: null, ...row, unit_price: null } };
+};
+
 export const computeMissingVenueItems = (event, venue, drinksDirectory) => {
   if (!venue || !venue.menu) return [];
   return venue.menu
