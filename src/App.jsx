@@ -150,7 +150,7 @@ import {
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons, declineSalonInvite } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -817,6 +817,29 @@ export default function App() {
     }
 
     setScreen("eventDashboard");
+  };
+
+  // @Home — « Je me sers » : un verre pris par moi, sans tournée. Chez soi il n'y a pas de carte
+  // à télécharger : le produit vient de BibAtlas et rejoint la carte de CE salon (jamais celle
+  // d'un lieu). Le verre est rangé dans event.homeDrinks avec mon code, pour que le salon voie qui
+  // a bu quoi sans que les verres des uns écrasent ceux des autres. Il est aussi enregistré en
+  // statistiques (round_orders, lieu @home, sans prix) avec un identifiant propre par verre, pour
+  // pouvoir le retirer seul. drink_id est le vrai identifiant du catalogue, comme pour les tournées.
+  const serveHomeDrink = (source, { volumeCl = null } = {}) => {
+    const ev = events.find((e) => e.id === activeEventId);
+    if (!ev || !ev.isHome || !source?.id || !profile.myBibroCode) return;
+    const { newEntry, homeDrink, order } = buildHomeServe(ev, source, { volumeCl }, { code: profile.myBibroCode, name: profile.name });
+    updateEvent(ev.id, (e) => withHomeServe(e, newEntry, homeDrink));
+    recordRoundOrders([order], { venueId: "@home", eventId: ev.id, roundId: homeDrink.id, currency: ev.currency, paid: true });
+  };
+
+  // Retire l'un de MES verres (une erreur de tap) — jamais celui de quelqu'un d'autre.
+  const removeHomeDrink = (serveId) => {
+    const ev = events.find((e) => e.id === activeEventId);
+    const target = (ev?.homeDrinks || []).find((h) => h.id === serveId);
+    if (!ev || !target || target.code !== profile.myBibroCode) return;
+    updateEvent(ev.id, (e) => withoutHomeDrink(e, serveId));
+    deleteRoundOrders(serveId);
   };
 
   const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants, clubId) => {
@@ -2152,6 +2175,8 @@ export default function App() {
                 event={events.find((e) => e.id === activeEventId)}
                 venue={venuesById[events.find((e) => e.id === activeEventId)?.venueId] || null}
                 onNewRound={startNewRound}
+                onServeHomeDrink={serveHomeDrink}
+                onRemoveHomeDrink={removeHomeDrink}
                 onManageMenu={() => setScreen("menuSetup")}
                 onBack={() => setScreen("home")}
                 updateEvent={updateEvent}
@@ -2197,17 +2222,7 @@ export default function App() {
             )}
             {screen === "drinkCheck" && currentEvent && (
               <DrinkCheckScreen
-                drinkIds={(() => {
-                  const localIds = new Set();
-                  (currentEvent.rounds || []).forEach((r) => {
-                    (r.orders || []).filter((o) => o.friendId === "self").forEach((o) => localIds.add(o.drinkId));
-                  });
-                  (currentEvent.personalOrders || []).forEach((o) => localIds.add(o.drinkId));
-                  return [...localIds]
-                    .map((localId) => (currentEvent.menu || []).find((d) => d.id === localId))
-                    .filter((d) => d?.fromDirectory && d?.sourceDrinkId)
-                    .map((d) => d.sourceDrinkId);
-                })()}
+                drinkIds={directoryDrinkIdsConsumedBy(currentEvent, profile.myBibroCode)}
                 presetVenue={(() => {
                   const venue = venuesById[currentEvent?.venueId] || null;
                   if (venue) return { id: currentEvent.venueId, name: venue.name };
@@ -2998,6 +3013,7 @@ export default function App() {
               <EventHistoryDetailScreen
                 event={events.find((e) => e.id === viewedHistoryEventId)}
                 displayTotal={0}
+                myBibroCode={profile.myBibroCode}
                 roundsSum={(events.find((e) => e.id === viewedHistoryEventId)?.rounds || []).reduce((s, r) => s + (r.total || 0), 0)}
                 onBack={() => setScreen("eventHistory")}
                 openVenue={(id) => {

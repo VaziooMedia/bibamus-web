@@ -126,6 +126,58 @@ export const findMenuEntryById = (menu, id) => {
   return { ...entry, volumeCl: vol.cl, price: vol.price };
 };
 
+// Produits du répertoire que cette personne a consommés dans ce salon — ce que liste le Drink
+// Check. Deux pièges évités ici : (1) un identifiant de commande est le plus souvent composé
+// "entréeId::volumeId" (voir flattenMenu), il faut donc passer par findMenuEntryById et non un
+// simple menu.find(d => d.id === …), qui ne trouve jamais rien ; (2) dans une tournée lancée par
+// quelqu'un d'autre, "self" désigne cette autre personne — mes verres sont ceux dont le
+// participant porte MON code (ou, pour une très ancienne tournée sans code, l'entrée "moi").
+export const directoryDrinkIdsConsumedBy = (event, myBibroCode) => {
+  const orderIds = new Set();
+  (event.rounds || []).forEach((r) => {
+    (r.orders || []).forEach((o) => {
+      const friend = (r.friends || []).find((f) => f.id === o.friendId);
+      const isMine = friend ? (!!myBibroCode && friend.code === myBibroCode) || (!!friend.isSelf && !friend.code) : o.friendId === "self";
+      if (isMine) orderIds.add(o.drinkId);
+    });
+  });
+  (event.personalOrders || []).forEach((o) => orderIds.add(o.drinkId));
+  // @Home : chaque verre « Je me sers » porte le code de la personne qui l'a pris.
+  (event.homeDrinks || []).forEach((h) => {
+    if (myBibroCode && h.code === myBibroCode) orderIds.add(h.drinkId);
+  });
+  const sourceIds = [];
+  orderIds.forEach((id) => {
+    const entry = findMenuEntryById(event.menu || [], id);
+    if (entry?.fromDirectory && entry?.sourceDrinkId && !sourceIds.includes(entry.sourceDrinkId)) sourceIds.push(entry.sourceDrinkId);
+  });
+  return sourceIds;
+};
+
+// @Home — ce que chaque personne a bu, par participant puis par produit (et volume), pour l'écran
+// du salon. Les plus servis d'abord ; à égalité, par prénom. Un verre est une entrée de
+// event.homeDrinks : { id, code, name, drinkId, timestamp }.
+export const homeDrinksByPerson = (event) => {
+  const people = new Map();
+  (event.homeDrinks || []).forEach((h) => {
+    if (!h || !h.code) return;
+    let person = people.get(h.code);
+    if (!person) {
+      const participant = (event.participants || []).find((p) => p.code === h.code);
+      person = { code: h.code, name: participant?.name || h.name || h.code, total: 0, items: new Map() };
+      people.set(h.code, person);
+    }
+    const entry = findMenuEntryById(event.menu || [], h.drinkId);
+    const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, count: 0 };
+    item.count += 1;
+    person.items.set(h.drinkId, item);
+    person.total += 1;
+  });
+  return [...people.values()]
+    .map((p) => ({ ...p, items: [...p.items.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)) }))
+    .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+};
+
 export const resolveMenuItem = (item, drinksDirectory) => {
   if (!item.fromDirectory || !item.sourceDrinkId) return item;
   const master = drinksDirectory.find((d) => d.id === item.sourceDrinkId);
@@ -147,6 +199,48 @@ export const resolveMenuItem = (item, drinksDirectory) => {
     countsAsDrinkId: master.countsAsDrinkId || null,
   };
 };
+
+// @Home — prépare « Je me sers » (fonction pure, testée à part). Renvoie : la nouvelle entrée de
+// carte à ajouter au salon (null si ce produit existe déjà à ce volume, ajouté par moi ou par
+// quelqu'un d'autre), le verre à ranger dans event.homeDrinks, et la ligne de statistiques
+// (round_orders : lieu @home, donc sans prix). drink_id est le vrai identifiant du catalogue.
+export const buildHomeServe = (event, source, { volumeCl = null } = {}, me = {}) => {
+  const cl = volumeCl ?? null;
+  let entry = null;
+  let vol = null;
+  for (const d of event.menu || []) {
+    if (!(d.fromDirectory && d.sourceDrinkId === source.id)) continue;
+    const v = normalizeVolumes(d).find((x) => (x.cl ?? null) === cl);
+    if (v) {
+      entry = d;
+      vol = v;
+      break;
+    }
+  }
+  let newEntry = null;
+  if (!entry) {
+    newEntry = resolveMenuItem(
+      { id: `local-${Date.now()}-${Math.random()}`, fromDirectory: true, sourceDrinkId: source.id, servingMode: "", volumes: [{ id: nextId(), cl, price: 0, isDefault: true }] },
+      [source]
+    );
+    entry = newEntry;
+    vol = newEntry.volumes[0];
+  }
+  const serveId = `home-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return {
+    newEntry,
+    homeDrink: { id: serveId, code: me.code, name: me.name, drinkId: `${entry.id}::${vol.id}`, timestamp: Date.now() },
+    order: { bibro_code: me.code, guest_name: null, drink_id: source.id, unit_price: null, unit_volume_cl: cl, unit_kcal_per_100ml: source.kcalPer100ml ?? entry.kcalPer100ml ?? null },
+  };
+};
+
+// Applique / annule un « Je me sers » sur l'état du salon (fonctions pures, partagées avec les tests).
+export const withHomeServe = (e, newEntry, homeDrink) => ({
+  ...e,
+  menu: newEntry && !(e.menu || []).some((d) => d.id === newEntry.id) ? [...(e.menu || []), newEntry] : e.menu,
+  homeDrinks: [...(e.homeDrinks || []), homeDrink],
+});
+export const withoutHomeDrink = (e, serveId) => ({ ...e, homeDrinks: (e.homeDrinks || []).filter((h) => h.id !== serveId) });
 
 export const computeMissingVenueItems = (event, venue, drinksDirectory) => {
   if (!venue || !venue.menu) return [];
@@ -459,6 +553,7 @@ export const normalizeEvent = (e) => ({
   rounds: e.rounds || [],
   knownFriends: e.knownFriends || [],
   personalOrders: e.personalOrders || [],
+  homeDrinks: e.homeDrinks || [],
   ticketPurchases: e.ticketPurchases || [],
   participants: e.participants || [],
   playlist: e.playlist || [],
