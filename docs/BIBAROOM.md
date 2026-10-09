@@ -49,7 +49,7 @@ Un salon est dans **un** des quatre modes ; les noms « ORBIS », « ARCA », «
 - **Tournées** : composition d'un tour (`RoundComposeScreen`), ticket récapitulatif (`RoundTicketScreen` : « offert par » un lieu ou un tiers, règlement direct ou sur la note, total comptoir, propositions de pourboire), paiements partiels, cagnotte (`PotCard`), addition partagée (`SplitBillCard`), rotation du payeur.
 - **Devises** : `euro` ou `jeton` (avec `jetonUnitValue`).
 - **Suivi calorique** : calculé sur le volume ; un bouton œil masque l'affichage mais n'est **pas mémorisé**. Il n'y a pas de réglage à la création du salon. L'unité (kcal / Cal) est un réglage de profil.
-- **Messagerie** : une conversation par salon (`ensure_salon_conversation`).
+- **Messagerie** : une conversation par salon (`ensure_salon_conversation`), créée dès l'ouverture du salon. Dans la liste BibaPing, un salon n'apparaît qu'une fois qu'un message (texte ou photo) y a été envoyé : le filtre porte sur le contenu du dernier message (`lastMessageBody` / `lastMessageHasMedia`) et non sur sa date, que la base renseigne déjà à la création **(base)**. Les groupes et les tête-à-tête restent listés même vides.
 - **Tok** : action rapide entre participants, activable par salon (`salon_tok_settings`).
 - **Clubs** : un salon peut être rattaché à un BibaClub (`biba_club_salons`) ; les membres du club sont ajoutés aux amis connus.
 - **Drink Check** : l'écran `DrinkCheckScreen` (partagé avec BibaSolo) liste les boissons commandées par l'utilisateur dans le salon et ses commandes personnelles ; le lieu est pré-réglé (@Home, @Event ou le lieu lié). Il enregistre la note et publie une carte `drink_checked` **sans** créer de `drink_checkins` (le verre est déjà compté dans `round_orders`) — voir `DATABASE.md`.

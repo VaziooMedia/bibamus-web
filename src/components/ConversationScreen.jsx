@@ -545,13 +545,14 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
             padding: 0,
           }}
         >
-          {/* Blanche sur le fond vert du bouton prêt à envoyer. Aucun SVG blanc n'existe :
-              le filtre force n'importe quelle couleur source en blanc pur. Au repos, l'icône
-              garde sa couleur d'origine, atténuée. */}
+          {/* Noire sur le fond vert du bouton prêt à envoyer : bien plus lisible que du blanc.
+              Le SVG de la marque est une image (sa couleur n'est pas modifiable directement) :
+              brightness(0) ramène n'importe quelle couleur source au noir pur. Au repos,
+              l'icône garde sa couleur d'origine, atténuée. */}
           <img
             src={bibaPingIconUrl}
             alt=""
-            style={{ height: "20px", filter: draft.trim() ? "brightness(0) invert(1)" : "none", opacity: draft.trim() ? 1 : 0.5 }}
+            style={{ height: "20px", filter: draft.trim() ? "brightness(0)" : "none", opacity: draft.trim() ? 1 : 0.5 }}
           />
         </button>
       </div>
