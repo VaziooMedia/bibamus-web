@@ -126,6 +126,30 @@ export const findMenuEntryById = (menu, id) => {
   return { ...entry, volumeCl: vol.cl, price: vol.price };
 };
 
+// Produits du répertoire que cette personne a consommés dans ce salon — ce que liste le Drink
+// Check. Deux pièges évités ici : (1) un identifiant de commande est le plus souvent composé
+// "entréeId::volumeId" (voir flattenMenu), il faut donc passer par findMenuEntryById et non un
+// simple menu.find(d => d.id === …), qui ne trouve jamais rien ; (2) dans une tournée lancée par
+// quelqu'un d'autre, "self" désigne cette autre personne — mes verres sont ceux dont le
+// participant porte MON code (ou, pour une très ancienne tournée sans code, l'entrée "moi").
+export const directoryDrinkIdsConsumedBy = (event, myBibroCode) => {
+  const orderIds = new Set();
+  (event.rounds || []).forEach((r) => {
+    (r.orders || []).forEach((o) => {
+      const friend = (r.friends || []).find((f) => f.id === o.friendId);
+      const isMine = friend ? (!!myBibroCode && friend.code === myBibroCode) || (!!friend.isSelf && !friend.code) : o.friendId === "self";
+      if (isMine) orderIds.add(o.drinkId);
+    });
+  });
+  (event.personalOrders || []).forEach((o) => orderIds.add(o.drinkId));
+  const sourceIds = [];
+  orderIds.forEach((id) => {
+    const entry = findMenuEntryById(event.menu || [], id);
+    if (entry?.fromDirectory && entry?.sourceDrinkId && !sourceIds.includes(entry.sourceDrinkId)) sourceIds.push(entry.sourceDrinkId);
+  });
+  return sourceIds;
+};
+
 export const resolveMenuItem = (item, drinksDirectory) => {
   if (!item.fromDirectory || !item.sourceDrinkId) return item;
   const master = drinksDirectory.find((d) => d.id === item.sourceDrinkId);

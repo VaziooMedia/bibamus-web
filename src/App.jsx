@@ -150,7 +150,7 @@ import {
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons, declineSalonInvite } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -2197,17 +2197,7 @@ export default function App() {
             )}
             {screen === "drinkCheck" && currentEvent && (
               <DrinkCheckScreen
-                drinkIds={(() => {
-                  const localIds = new Set();
-                  (currentEvent.rounds || []).forEach((r) => {
-                    (r.orders || []).filter((o) => o.friendId === "self").forEach((o) => localIds.add(o.drinkId));
-                  });
-                  (currentEvent.personalOrders || []).forEach((o) => localIds.add(o.drinkId));
-                  return [...localIds]
-                    .map((localId) => (currentEvent.menu || []).find((d) => d.id === localId))
-                    .filter((d) => d?.fromDirectory && d?.sourceDrinkId)
-                    .map((d) => d.sourceDrinkId);
-                })()}
+                drinkIds={directoryDrinkIdsConsumedBy(currentEvent, profile.myBibroCode)}
                 presetVenue={(() => {
                   const venue = venuesById[currentEvent?.venueId] || null;
                   if (venue) return { id: currentEvent.venueId, name: venue.name };
