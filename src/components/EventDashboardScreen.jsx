@@ -43,7 +43,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
   const [showMyStats, setShowMyStats] = usePersistedToggle(event.id, "mesStats", true);
   const [showSessionStats, setShowSessionStats] = usePersistedToggle(event.id, "statsGenerales", true);
   const [showMyJetons, setShowMyJetons] = usePersistedToggle(event.id, "mesJetons", false);
-  // @Home : « Qui a bu quoi » remplace la liste des tournées, et « Je me sers » la création d'une tournée.
+  // @Home : « Qui a bu quoi » remplace la liste des tournées, et « Next Drink » la création d'une tournée.
   const [showWhoDrank, setShowWhoDrank] = usePersistedToggle(event.id, "quiABu", true);
   const [homeServeOpen, setHomeServeOpen] = useState(false);
   const [roomStories, setRoomStories] = useState([]);
@@ -523,7 +523,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
           </span>
         </button>
 
-        {/* Chez soi, pas de carte à gérer : tout passe par BibAtlas (« Je me sers »). */}
+        {/* Chez soi, pas de carte à gérer : tout passe par BibAtlas (« Next Drink »). */}
         {!event.isHome && (
         <button
           onClick={onManageMenu}
@@ -609,6 +609,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
         </button>
         )}
 
+        {/* Chez soi, sans « Produits », la rangée n'a plus que trois éléments : ZERO et WaterAlert restent groupés. Ailleurs, le groupe est transparent et la rangée se répartit comme avant. */}
+        <div style={event.isHome ? { display: "flex", gap: "10px" } : { display: "contents" }}>
         <div style={{ position: "relative" }}>
         <button
           onClick={() => setBibaZeroMenuOpen((o) => !o)}
@@ -698,6 +700,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
         >
           <WaterAlertIcon size={20} dark={event.waterAlert?.enabled} />
         </button>
+        </div>
         </div>
       </div>
 
@@ -804,7 +807,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             <NavIcon name="pause" size={15} color={COLORS.jetonFluo} /> Session en pause
           </span>
         ) : event.isHome ? (
-          "Je me sers"
+          "Next Drink"
         ) : (
           "+ Nouvelle tournée"
         )}
@@ -1598,8 +1601,10 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                         {person.total} verre{person.total > 1 ? "s" : ""}
                       </span>
                     </div>
-                    <div style={{ marginTop: "4px", fontSize: "12.5px", color: COLORS.inkSoft }}>
-                      {person.items.map((it) => `${it.name}${it.volumeCl != null ? ` ${String(it.volumeCl).replace(".", ",")} cl.` : ""} ×${it.count}`).join(" · ")}
+                    <div style={{ marginTop: "4px", fontSize: "12.5px", color: COLORS.inkSoft, display: "flex", flexDirection: "column", gap: "2px" }}>
+                      {person.items.map((it) => (
+                        <div key={it.drinkId}>{`- ${it.name}${it.volumeCl != null ? ` ${String(it.volumeCl).replace(".", ",")} cl.` : ""} ×${it.count}`}</div>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -1873,7 +1878,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             <NavIcon name="pause" size={15} color={COLORS.jetonFluo} /> Session en pause
           </span>
         ) : event.isHome ? (
-          "Je me sers"
+          "Next Drink"
         ) : (
           "+ Nouvelle tournée"
         )}
