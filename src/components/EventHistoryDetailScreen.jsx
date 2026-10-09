@@ -10,7 +10,7 @@ import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
 import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById } from "../utils.js";
 import { loadVenuesByIds } from "../data/sharedDirectories.js";
 
-export function EventHistoryDetailScreen({ event, displayTotal, roundsSum, onBack, openVenue, onReopen, onDelete, onDeleteRound }) {
+export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, roundsSum, onBack, openVenue, onReopen, onDelete, onDeleteRound }) {
   const [venue, setVenue] = useState(null);
   useEffect(() => {
     if (!event.venueId) {
@@ -44,7 +44,9 @@ export function EventHistoryDetailScreen({ event, displayTotal, roundsSum, onBac
     })
   );
 
-  const caloriesInfo = event.personalOrders.reduce(
+  // Mes verres : hors tournée / en tournée, plus — chez soi (@Home) — ceux où je me suis servi.
+  const myOrderEntries = [...event.personalOrders, ...(event.homeDrinks || []).filter((h) => !!myBibroCode && h.code === myBibroCode)];
+  const caloriesInfo = myOrderEntries.reduce(
     (acc, order) => {
       const drink = findMenuEntryById(event.menu, order.drinkId);
       const kcal = drink ? kcalForDrink(drink) : null;
@@ -117,10 +119,10 @@ export function EventHistoryDetailScreen({ event, displayTotal, roundsSum, onBac
         </div>
       )}
 
-      {(event.personalOrders.length > 0 || caloriesInfo.total > 0) && (
+      {(myOrderEntries.length > 0 || caloriesInfo.total > 0) && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
           <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes verres ce jour-là</div>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px" }}>{event.personalOrders.length}</div>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px" }}>{myOrderEntries.length}</div>
           {caloriesInfo.total > 0 && (
             <div style={{ fontSize: "12px", color: COLORS.inkSoft }}>
               ≈ {caloriesInfo.total} kcal{caloriesInfo.missing > 0 && ` (${caloriesInfo.missing} sans info)`}

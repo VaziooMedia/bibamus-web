@@ -19,7 +19,8 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
-import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, flattenMenu } from "../utils.js";
+import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, flattenMenu, homeDrinksByPerson } from "../utils.js";
+import { HomeServeSheet } from "./HomeServeSheet.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
@@ -32,7 +33,7 @@ import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 // du point de vue de la session dans son ensemble.
 const waterAlertSessionInitialized = new Set();
 
-export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onGoToDrinkCheck, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink, tabBar, tokButton }) {
+export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrink, onRemoveHomeDrink, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onGoToDrinkCheck, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, onCheckDrink, tabBar, tokButton }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
@@ -42,6 +43,9 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
   const [showMyStats, setShowMyStats] = usePersistedToggle(event.id, "mesStats", true);
   const [showSessionStats, setShowSessionStats] = usePersistedToggle(event.id, "statsGenerales", true);
   const [showMyJetons, setShowMyJetons] = usePersistedToggle(event.id, "mesJetons", false);
+  // @Home : « Qui a bu quoi » remplace la liste des tournées, et « Je me sers » la création d'une tournée.
+  const [showWhoDrank, setShowWhoDrank] = usePersistedToggle(event.id, "quiABu", true);
+  const [homeServeOpen, setHomeServeOpen] = useState(false);
   const [roomStories, setRoomStories] = useState([]);
   const [salonToast, setSalonToast] = useState(null);
   const shownNoticeIdsRef = React.useRef(new Set());
@@ -241,7 +245,10 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
     setPurchaseQty("");
   };
 
-  const personalTotal = event.personalOrders.length;
+  // Mes verres : ceux pris hors tournée / dans les tournées, plus — chez soi — ceux où je me suis servi.
+  const myHomeDrinks = (event.homeDrinks || []).filter((h) => h.code === myBibroCode);
+  const myOrderEntries = [...event.personalOrders, ...myHomeDrinks];
+  const personalTotal = myOrderEntries.length;
   // Tous les verres de TOUT le salon (toutes tournées, tous participants confondus) — distinct de
   // personalTotal (celui de l'utilisateur courant seul), pour les "Statistiques générales".
   const sessionTotal = event.rounds.reduce((sum, r) => sum + r.orders.length, 0);
@@ -264,7 +271,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
     setClubPickerOpen(false);
   };
 
-  const caloriesInfo = event.personalOrders.reduce(
+  const caloriesInfo = myOrderEntries.reduce(
     (acc, order) => {
       const drink = findMenuEntryById(event.menu, order.drinkId);
       const kcal = drink ? kcalForDrink(drink) : null;
@@ -761,7 +768,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
 
 
       <PrimaryButton
-        onClick={onNewRound}
+        onClick={event.isHome ? () => setHomeServeOpen(true) : onNewRound}
         disabled={event.paused}
         style={{
           width: "100%",
@@ -774,6 +781,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
             <NavIcon name="pause" size={15} color={COLORS.jetonFluo} /> Session en pause
           </span>
+        ) : event.isHome ? (
+          "Je me sers"
         ) : (
           "+ Nouvelle tournée"
         )}
@@ -910,6 +919,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
         )}
       </div>
 
+      {!event.isHome && (
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <button
           onClick={() => setShowPersonalDetail((s) => !s)}
@@ -987,6 +997,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           </div>
         )}
       </div>
+      )}
 
       {isAddition && <SplitBillCard event={event} updateEvent={updateEvent} />}
 
@@ -1535,6 +1546,44 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
       )}
 
 
+      {event.isHome && (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
+          <button
+            onClick={() => setShowWhoDrank((s) => !s)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginBottom: showWhoDrank ? "8px" : 0 }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ width: "4px", height: "16px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+              <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Qui a bu quoi</span>
+            </span>
+            <span style={{ display: "inline-flex", transform: `rotate(${showWhoDrank ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+              <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+            </span>
+          </button>
+          {showWhoDrank && (
+            <>
+              {homeDrinksByPerson(event).length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", margin: 0 }}>Personne ne s'est encore servi.</p>}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {homeDrinksByPerson(event).map((person) => (
+                  <div key={person.code} style={{ background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", fontSize: "14px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <strong>{person.name}</strong>
+                      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber }}>
+                        {person.total} verre{person.total > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div style={{ marginTop: "4px", fontSize: "12.5px", color: COLORS.inkSoft }}>
+                      {person.items.map((it) => `${it.name}${it.volumeCl != null ? ` ${String(it.volumeCl).replace(".", ",")} cl.` : ""} ×${it.count}`).join(" · ")}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {(!event.isHome || event.rounds.length > 0) && (
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
         <button
           onClick={() => setShowRoundsList((s) => !s)}
@@ -1780,11 +1829,12 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           </>
         )}
       </div>
+      )}
 
       <SalonSection event={event} updateEvent={updateEvent} myName={myName} profile={profile} myBibroCode={myBibroCode} bibros={bibros} onLeaveSalon={onLeaveSalon} onCloseEvent={onCloseEvent} />
 
       <PrimaryButton
-        onClick={onNewRound}
+        onClick={event.isHome ? () => setHomeServeOpen(true) : onNewRound}
         disabled={event.paused}
         style={{
           width: "100%",
@@ -1796,6 +1846,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
           <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
             <NavIcon name="pause" size={15} color={COLORS.jetonFluo} /> Session en pause
           </span>
+        ) : event.isHome ? (
+          "Je me sers"
         ) : (
           "+ Nouvelle tournée"
         )}
@@ -1805,6 +1857,18 @@ export function EventDashboardScreen({ event, venue, onNewRound, onManageMenu, o
       <BackFooterLink onClick={onBack} />
 
       {waterAlertModalOpen && <WaterAlertModal onClose={() => setWaterAlertModalOpen(false)} />}
+
+      {homeServeOpen && event.isHome && (
+        <HomeServeSheet
+          event={event}
+          myBibroCode={myBibroCode}
+          myPaused={amIPaused}
+          zeroMode={!!myBibaBob}
+          onServe={onServeHomeDrink}
+          onRemove={onRemoveHomeDrink}
+          onClose={() => setHomeServeOpen(false)}
+        />
+      )}
 
     </div>
   );
