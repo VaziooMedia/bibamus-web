@@ -108,6 +108,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
       return;
     }
     const wa = event.waterAlert;
+    if (event.isHome) return; // chez soi, le rappel se compte en verres personnels (voir plus bas)
     if (!wa || !wa.enabled || wa.mode !== "rounds") return;
     const since = event.rounds.length - (wa.lastReminderRoundCount || 0);
     if (since >= (wa.everyRounds || 3) && waterAlertClaimedForCount.current !== event.rounds.length) {
@@ -249,9 +250,30 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
   const myHomeDrinks = (event.homeDrinks || []).filter((h) => h.code === myBibroCode);
   const myOrderEntries = [...event.personalOrders, ...myHomeDrinks];
   const personalTotal = myOrderEntries.length;
+
+  // Water Alert — salon @Home : pas de tournées, donc « toutes les N tournées » se lit « tous les N
+  // verres personnels » : la fenêtre se déclenche quand JE me suis servi N verres depuis le dernier
+  // rappel (ou depuis mon arrivée sur l'écran). Chaque personne compte les siens, rien n'est
+  // partagé. Rappel visuel seulement : la notification serveur reste liée aux vraies tournées.
+  const waterAlertHomeBaseline = React.useRef(null);
+  const myHomeDrinkCount = myHomeDrinks.length;
+  useEffect(() => {
+    if (!event.isHome) return;
+    const wa = event.waterAlert;
+    if (waterAlertHomeBaseline.current === null || !wa || !wa.enabled || wa.mode !== "rounds") {
+      waterAlertHomeBaseline.current = myHomeDrinkCount;
+      return;
+    }
+    if (myHomeDrinkCount < waterAlertHomeBaseline.current) waterAlertHomeBaseline.current = myHomeDrinkCount; // verre retiré
+    if (myHomeDrinkCount - waterAlertHomeBaseline.current >= (wa.everyRounds || 3)) {
+      waterAlertHomeBaseline.current = myHomeDrinkCount;
+      setWaterAlertModalOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myHomeDrinkCount, event.isHome, event.waterAlert?.enabled, event.waterAlert?.mode, event.waterAlert?.everyRounds]);
   // Tous les verres de TOUT le salon (toutes tournées, tous participants confondus) — distinct de
   // personalTotal (celui de l'utilisateur courant seul), pour les "Statistiques générales".
-  const sessionTotal = event.rounds.reduce((sum, r) => sum + r.orders.length, 0);
+  const sessionTotal = event.rounds.reduce((sum, r) => sum + r.orders.length, 0) + (event.homeDrinks || []).length;
 
   const openClubPicker = () => {
     setClubPickerOpen(true);
@@ -504,6 +526,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
           </span>
         </button>
 
+        {/* Chez soi, pas de carte à gérer : tout passe par BibAtlas (« Je me sers »). */}
+        {!event.isHome && (
         <button
           onClick={onManageMenu}
           style={{ position: "relative", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "4px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px 9px", fontWeight: 600, fontSize: "11px", color: COLORS.ink, cursor: "pointer" }}
@@ -586,6 +610,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             )
           )}
         </button>
+        )}
 
         <div style={{ position: "relative" }}>
         <button
@@ -1145,7 +1170,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{personalTotal}</div>
             <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{personalTotal > 1 ? "S" : ""}</div>
           </div>
-          {(
+          {!event.isHome && (
             <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
                 <MoneyAmount value={myCagnotteTotal} currency={event.currency} centered jetonIconSize={28} jetonIcon="pink" />
@@ -1182,7 +1207,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
           </div>
         </div>
 
-        {(event.rounds.length > 0 || myContribution > 0) && (
+        {!event.isHome && (event.rounds.length > 0 || myContribution > 0) && (
           <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, fontSize: "12.5px", color: COLORS.inkSoft }}>
             {event.rounds.length > 0 && !isCagnotte && !isAddition && (
               <div style={{ marginBottom: myRounds.length > 0 || myContribution > 0 ? "8px" : 0 }}>
@@ -1256,6 +1281,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{sessionTotal}</div>
               <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{sessionTotal > 1 ? "S" : ""}</div>
             </div>
+            {!event.isHome && (
             <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
                 <MoneyAmount
@@ -1268,8 +1294,9 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
               </div>
               <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>DÉPENSÉS</div>
             </div>
+            )}
           </div>
-          {event.finalTotal == null && cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips > 0 && (
+          {!event.isHome && event.finalTotal == null && cagnottePaidByPot + cagnotteDirect + cagnottePending + cagnotteTips > 0 && (
             <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>
               {cagnottePaidByPot > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", width: "180px", fontSize: "12.5px", color: COLORS.inkSoft }}>
@@ -1384,15 +1411,17 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{sessionTotal}</div>
               <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>VERRE{sessionTotal > 1 ? "S" : ""}</div>
             </div>
+            {!event.isHome && (
             <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
                 <MoneyAmount value={event.currency === "jeton" ? sessionJetonSpend : sessionRoundsTotal} currency={event.currency} centered jetonIconSize={28} jetonIcon="cyan" />
               </div>
               <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>{(event.currency === "jeton" ? sessionJetonSpend : sessionRoundsTotal) > 0 ? "DÉPENSÉS" : "DÉPENSÉ"}</div>
             </div>
+            )}
           </div>
 
-          {event.currency !== "jeton" && (
+          {!event.isHome && event.currency !== "jeton" && (
             <>
               {event.finalTotal == null && event.rounds.length > 0 && (isAddition ? additionPending + additionPaid + additionTips > 0 : sessionRoundsTotal > 0) && (
                 <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.chalkWhite}25`, display: "flex", flexDirection: "column" }}>

@@ -459,6 +459,8 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
 
   return (
     <>
+    {/* Chez soi, il n'y a pas de tournée à suggérer : chacun se sert. */}
+    {!event.isHome && (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
       <button
         onClick={() => setShowSuggestion((s) => !s)}
@@ -509,6 +511,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
       </>
       )}
     </div>
+    )}
 
     <div style={{ display: "flex", gap: "12px", marginBottom: "16px", alignItems: "stretch" }}>
       <div
