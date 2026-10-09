@@ -32,6 +32,10 @@ Plusieurs correctifs ont échoué silencieusement parce qu'une instruction en fi
 - **Bucket `pulse-photos`** : public, 5 Mo, JPEG / PNG / WebP, aucune écriture directe (tout passe par la fonction Edge `upload-pulse-photo`, authentifiée, avec contrôle Google Cloud Vision).
 - **Vue `consumption_events`** : recréée en conservant ses options de sécurité (`bibamus-sql-solo-jetons.sql`).
 
+### Vérifiés dans la base (résultat de requête, scripts non livrés dans le dépôt)
+
+- **Table `salons` fermée à ceux qui n'y participent pas** (vérifié le 2026-10-09 par la liste des règles d'accès de la table). Lecture directe : les participants du salon et les administrateurs ; écriture directe : les administrateurs seulement ; aucun droit pour les visiteurs non connectés. L'app n'accède plus jamais à la table elle-même : elle passe par des fonctions serveur (`get_salon`, `save_salon`, `decline_salon_invite`, `get_club_round_buyers`), qui contrôlent l'appelant. Les fonctions voisines qui touchent un salon (`get_my_active_salons`, `ensure_salon_conversation`, `claim_water_alert_round_reminder`, `send_salon_invite`) vérifient elles aussi qui les appelle, et ne sont plus exécutables par les visiteurs. Les mises à jour en direct continuent d'arriver aux participants. Les scripts qui ont appliqué ces changements ne sont **pas** dans le dépôt (public) : ils décrivent l'état d'avant. Voir `BIBAROOM.md`.
+
 ### Déclarés (appliqués dans Supabase, scripts non livrés)
 
 - **RLS activée sur 8 tables publiques**, lecture publique conservée, écriture retirée du client. Tables citées par l'ancienne version : `taxonomy_terms`, `taxonomy_terms_translations`, `product_translations`, `brand_translations`, `producer_translations`, `establishment_translations`, `drink_barcodes` et `spatial_ref_sys`. Pour cette dernière (table système PostGIS), la RLS est impossible à activer : laissée telle quelle. **Attention** : les six premières tables n'apparaissent ni dans l'app ni dans les scripts livrés (voir `MULTILINGUAL.md`) ; et `drink_barcodes` a depuis une écriture ouverte aux connectés (voir plus haut).
@@ -54,7 +58,6 @@ Classés par nature, pour s'y retrouver :
 
 ## Connu comme non résolu
 
-- **Table `salons`** : l'app y accède désormais uniquement par des fonctions serveur ; la fermeture de l'accès direct à la table (réservé aux participants et aux administrateurs) est en cours de déploiement dans Supabase, hors dépôt, et sera confirmée ici une fois vérifiée. Rejoindre par code exige un compte connecté. Voir `BIBAROOM.md`.
 - **Extensions dans le schéma `public`** (PostGIS ; `unaccent` et `pg_trgm` aussi) : signalé par l'auditeur, mais déplacement jugé trop risqué (toute la logique de proximité et de recherche en dépend) — laissé tel quel volontairement.
 - **Protection contre les mots de passe compromis** désactivée dans les réglages Supabase Auth (Authentication → Password Security) — à activer manuellement, ce n'est pas du SQL.
 - **Clé d'autocomplétion d'adresse** : la clé Geoapify est lue par le navigateur (variable d'environnement `VITE_`, donc visible dans l'app). Elle doit être restreinte par domaine chez le fournisseur ; cette restriction n'est pas vérifiable depuis le code.
