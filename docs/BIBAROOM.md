@@ -38,7 +38,7 @@ Un salon est dans **un** des quatre modes ; les noms « ORBIS », « ARCA », «
 - Chaque modification réécrit **tout** le JSON : en cas de modifications simultanées depuis deux appareils, la dernière arrivée l'emporte. La synchronisation temps réel écoute les `UPDATE` de la ligne.
 - La liste locale des salons (`bibamus-events`) est aussi gardée dans le navigateur.
 - **Multi-appareil** : `get_my_active_salons(p_bibro_code)` (appelée au chargement puis toutes les 30 secondes) retrouve les salons où l'utilisateur figure dans le JSON des participants ; elle **ajoute** les salons absents de la liste locale, sans jamais mettre à jour un salon déjà connu.
-- Modèle d'accès de la table `salons` (règles RLS) : **(base)**, à trancher — voir `SECURITY.md`.
+- **Accès** : l'app ne lit ni n'écrit la table `salons` directement (`src/data/salons.js`). Elle passe par des fonctions serveur **(base)** : `get_salon(code)` (lecture, y compris pour rejoindre : le code reste le « mot de passe » du salon), `save_salon(code, data)` (création et mise à jour : réservée aux participants, à une personne qui se rajoute sans retirer personne, ou au créateur d'un nouveau salon), `decline_salon_invite(code)` (retire sa propre invitation en attente) et `get_club_round_buyers(club)` (statistiques de club, membres actifs seulement). Modèle visé pour la table elle-même : lisible par ses participants et les administrateurs seulement **(base)** — voir `SECURITY.md`.
 
 ## Fonctionnement
 
@@ -89,10 +89,10 @@ Voir `STORIES.md` — **une seule Story collective par salon**, accessible via l
 
 ## Connu comme incomplet / non construit
 
-- **Modèle d'accès à la table `salons`** : aucun script livré ne le définit ; une décision sur le modèle voulu est en attente (rejoindre par code doit-il fonctionner sans compte ? — l'app actuelle exige déjà une session). Voir `SECURITY.md`.
+- **Modèle d'accès à la table `salons`** : appliqué dans Supabase, hors dépôt (aucun script livré dans `src/` ou `docs/`). Rejoindre par code exige un compte connecté. Les participants sont lus dans le JSON (`participants[].code`), pas dans les membres de la conversation du salon. Voir `SECURITY.md`.
 - BibArena : carte « Soon », aucun écran. BibaFree : abandonné (le besoin solo est servi par BibaSolo).
 - Rejoindre rapidement depuis l'accueil : non câblé. Totaux des écrans d'historique : codés à 0. Rangée « Bibax en salon » de l'accueil : toujours vide.
 - Lien salon ↔ carte Pulse (`room_salon_code`) jamais renseigné.
 - BibaMusic : un non-MC ne peut pas retirer ses propres morceaux.
-- Code mort et commentaires périmés : `BibaMusicSection.jsx`, `salons.js` (« 4 caractères »), `DashboardParts.jsx` (« QR en texte brut »), `BibaMusicScreen.jsx` (« centralisé dans App.jsx »).
-- Non vérifiable faute de scripts **(base)** : définition de `salons` et de ses règles d'accès, `get_my_active_salons`, `ensure_salon_conversation`, `record_round_orders` et les fonctions voisines, tables `round_tips` et `biba_club_salons`.
+- Code mort et commentaires périmés : `BibaMusicSection.jsx`, `DashboardParts.jsx` (« QR en texte brut »), `BibaMusicScreen.jsx` (« centralisé dans App.jsx »).
+- Non vérifiable faute de scripts **(base)** : définition de `salons` et de ses règles d'accès, `get_salon`, `save_salon`, `get_my_active_salons`, `ensure_salon_conversation`, `record_round_orders` et les fonctions voisines, tables `round_tips` et `biba_club_salons`.

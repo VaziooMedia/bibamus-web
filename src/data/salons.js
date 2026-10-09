@@ -1,7 +1,7 @@
 // ============================================================
 // Accès au salon partagé (BibaRoom) — le cœur du "tester ensemble".
 //
-// Chaque salon est une seule ligne (clé = code à 4 caractères),
+// Chaque salon est une seule ligne (clé = code à 6 caractères),
 // avec tout son contenu (tournées, participants, jetons...) dans
 // un seul bloc JSON — comme avant côté Claude, mais cette fois
 // stocké dans une vraie base, et surtout synchronisé en LIVE entre
@@ -25,30 +25,46 @@ export async function loadMyActiveSalons(bibroCode) {
   return data.map((row) => row.data);
 }
 
+// Lecture d'un salon à partir de son code — le code à 6 caractères reste le "mot de passe" pour
+// rejoindre un salon, c'est ce qui permet de le lire avant d'en être participant. Passe par une
+// fonction serveur : la table elle-même n'est lisible que par les participants (voir
+// bibamus-sql-salons-A-fonctions.sql et -C-fermeture-table.sql).
 export async function loadSalon(code) {
-  const { data, error } = await supabase.from("salons").select("data").eq("code", code).maybeSingle();
+  const { data, error } = await supabase.rpc("get_salon", { p_code: code });
   if (error) {
     // Un second essai avant d'abandonner — un couac réseau ponctuel (observé sur Safari juste
     // après un rechargement de page) ne doit pas obliger la personne à recliquer elle-même.
     console.error("loadSalon (1ère tentative):", error);
-    const retry = await supabase.from("salons").select("data").eq("code", code).maybeSingle();
+    const retry = await supabase.rpc("get_salon", { p_code: code });
     if (retry.error) {
       console.error("loadSalon (2ème tentative):", retry.error);
       return null;
     }
-    return retry.data ? retry.data.data : null;
+    return retry.data ?? null;
   }
-  return data ? data.data : null;
+  return data ?? null;
 }
 
+// Création et mise à jour passent par la même fonction serveur, qui décide qui a le droit
+// d'écrire : un participant, quelqu'un qui rejoint (il se rajoute sans retirer personne), ou le
+// créateur d'un nouveau salon. Elle refuse le reste, avec une erreur simplement journalisée
+// ici (comme avant, aucune fenêtre d'erreur : l'appelant décide quoi afficher).
 export async function createSalon(code, eventData) {
-  const { error } = await supabase.from("salons").insert({ code, data: eventData });
+  const { error } = await supabase.rpc("save_salon", { p_code: code, p_data: eventData });
   if (error) console.error("createSalon:", error);
 }
 
 export async function saveSalon(code, eventData) {
-  const { error } = await supabase.from("salons").upsert({ code, data: eventData, updated_at: new Date().toISOString() });
+  const { error } = await supabase.rpc("save_salon", { p_code: code, p_data: eventData });
   if (error) console.error("saveSalon:", error);
+}
+
+// Décliner une invitation à rejoindre : retire seulement MON invitation en attente du salon.
+// Une personne invitée n'est pas encore participante, elle ne peut donc pas passer par
+// saveSalon pour ça.
+export async function declineSalonInvite(code) {
+  const { error } = await supabase.rpc("decline_salon_invite", { p_code: code });
+  if (error) console.error("declineSalonInvite:", error);
 }
 
 const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";

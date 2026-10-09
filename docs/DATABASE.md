@@ -80,7 +80,7 @@ Conséquence à garder en tête : **ajouter une ligne dans une de ces tables = c
 
 ## Salons (BibaRoom) et commandes
 
-- **`salons`** : une ligne par salon, avec son code et l'état du salon (un seul bloc JSON synchronisé en temps réel) ; les codes de salon ne sont jamais réutilisés.
+- **`salons`** : une ligne par salon, avec son code et l'état du salon (un seul bloc JSON synchronisé en temps réel) ; les codes de salon ne sont jamais réutilisés. L'app y accède par `get_salon`, `save_salon`, `decline_salon_invite` et `get_club_round_buyers` **(base)**, jamais en direct.
 - **Commandes** : chaque commande de tournée est aussi enregistrée en lignes individuelles interrogeables — `round_orders` (une ligne par verre : produit, lieu, prix unitaire, monnaie, volume, kcal), avec les paiements (`round_payments`, `mark_round_paid`, `record_partial_payment`) et les pourboires (`record_round_tip`). Fonctions d'écriture : `record_round_orders`, `delete_round_orders`, `delete_round_orders_by_event`, `delete_round_tip(s_by_event)`.
 - Détails du fonctionnement d'un salon : voir `BIBAROOM.md`.
 
