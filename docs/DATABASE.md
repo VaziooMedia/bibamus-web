@@ -94,7 +94,7 @@ Conséquence à garder en tête : **ajouter une ligne dans une de ces tables = c
 | Messagerie | `conversations`, `conversation_members`, `messages`, `message_reactions` | `get_my_conversations`, `can_message`, `ensure_salon_conversation` |
 | Notifications | `notifications_feed`, `push_subscriptions` | `send_notification` ; envoi push : fonction Edge `send-push-notification` |
 | Clubs | `biba_clubs`, `biba_club_members`, `biba_club_posts`, `biba_club_salons` | |
-| Jeux | `predict_games` | pronostics |
+| Jeux | `predict_games` | pronostics de BibaPlay (une ligne par partie, code à 6 caractères, tout le jeu dans un bloc JSON synchronisé en temps réel, comme les salons) ; l'app n'y accède plus directement : lecture par `get_predict_game(code)`, création et mise à jour par `save_predict_game(code, data, salon lié)` (`src/data/predictGames.js`) ; seule l'écoute en direct reste branchée sur la table |
 | Contribution et modération | `data_contributions`, `entity_reports`, `entity_claims`, `ai_proposals` | `ai_proposals` : propositions de l'IA de la plateforme de gestion, jamais écrites automatiquement dans les fiches (validation manuelle d'un administrateur) |
 | Pilotage | `feature_flags`, `feature_flag_overrides`, `market_config`, `analytics_events`, `crash_reports`, `support_messages` | |
 | Compte | — | suppression du compte : fonction Edge `delete-my-account` |

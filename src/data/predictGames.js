@@ -19,29 +19,38 @@
 import { supabase } from "../supabaseClient.js";
 import { randomCode } from "../utils.js";
 
+// Lecture d'une partie à partir de son code — le code à 6 caractères reste le « mot de passe » pour
+// la rejoindre, c'est ce qui permet de la lire avant d'en être participant. Passe par une fonction
+// serveur : la table elle-même n'est lisible que par les participants (voir
+// bibamus-sql-predict-A-fonctions.sql et -C-fermeture-table.sql).
 export async function loadPredictGame(code) {
-  const { data, error } = await supabase.from("predict_games").select("data").eq("code", code).maybeSingle();
+  const { data, error } = await supabase.rpc("get_predict_game", { p_code: code });
   if (error) {
     // Un second essai avant d'abandonner — même précaution que loadSalon face à un couac
     // réseau ponctuel.
     console.error("loadPredictGame (1ère tentative):", error);
-    const retry = await supabase.from("predict_games").select("data").eq("code", code).maybeSingle();
+    const retry = await supabase.rpc("get_predict_game", { p_code: code });
     if (retry.error) {
       console.error("loadPredictGame (2ème tentative):", retry.error);
       return null;
     }
-    return retry.data ? retry.data.data : null;
+    return retry.data ?? null;
   }
-  return data ? data.data : null;
+  return data ?? null;
 }
 
+// Création et mise à jour passent par la même fonction serveur, qui décide qui a le droit d'écrire :
+// un participant ou l'hôte, quelqu'un qui rejoint (il se rajoute sans retirer personne), un membre du
+// salon auquel la partie est liée, ou le créateur d'une nouvelle partie. Elle refuse le reste, avec une
+// erreur simplement journalisée ici (comme avant, aucune fenêtre d'erreur : l'appelant décide quoi
+// afficher). Le salon lié n'est transmis qu'à la création.
 export async function createPredictGame(code, gameData, linkedSalonCode) {
-  const { error } = await supabase.from("predict_games").insert({ code, data: gameData, linked_salon_code: linkedSalonCode || null });
+  const { error } = await supabase.rpc("save_predict_game", { p_code: code, p_data: gameData, p_linked_salon_code: linkedSalonCode || null });
   if (error) console.error("createPredictGame:", error);
 }
 
 export async function savePredictGame(code, gameData) {
-  const { error } = await supabase.from("predict_games").upsert({ code, data: gameData, updated_at: new Date().toISOString() });
+  const { error } = await supabase.rpc("save_predict_game", { p_code: code, p_data: gameData });
   if (error) console.error("savePredictGame:", error);
 }
 
