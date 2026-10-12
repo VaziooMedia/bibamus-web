@@ -45,7 +45,7 @@ Colonnes écrites par l'app : `author_id`, `context_type`, `context_id` (code du
 
 ### Réactions
 
-Table `story_bix`, une ligne par réaction (`story_id`, `user_id`) en écriture directe ; le compteur et l'état « j'ai Bixé » viennent des fonctions de lecture. **L'interface n'affiche qu'un compteur**, pas la liste de qui a Bixé. Le cœur est rose `#FF2C8F`.
+Table `story_bix`, une ligne par réaction (`story_id`, `user_id`) en écriture directe, chacun ne gérant que ses propres lignes (**(base)**, règle vérifiée le 2026-10-09 : la lecture directe n'est plus publique) ; le compteur et l'état « j'ai Bixé » viennent des fonctions de lecture. **L'interface n'affiche qu'un compteur**, pas la liste de qui a Bixé. Le cœur est rose `#FF2C8F`.
 
 ## Stockage média
 
@@ -95,4 +95,4 @@ Outil publicitaire d'administrateur : auteur fixe « Bibamus », moins de 24 h, 
 - Compteur de Bix absent à l'ouverture depuis une notification.
 - Contrôle de visibilité de `get_story_by_id` : une revue de sécurité est en cours (voir `SECURITY.md`).
 - Souvenirs / récapitulatifs automatiques de soirée : non construits.
-- Non vérifiable faute de scripts **(base)** : création et règles d'accès de `stories` et `story_bix`, corps de `get_room_stories`, `get_pulse_stories`, `get_my_stories`, `set_story_pulse_sharing`, configuration du bucket `stories`, fonction Edge `moderate-and-upload-photo`, table `media_assets`.
+- Non vérifiable faute de scripts **(base)** : création de `stories` et de `story_bix`, règles d'accès de `stories`, corps de `get_room_stories`, `get_pulse_stories`, `get_my_stories`, `set_story_pulse_sharing`, configuration du bucket `stories`, fonction Edge `moderate-and-upload-photo`, table `media_assets`.
