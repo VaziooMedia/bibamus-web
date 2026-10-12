@@ -57,7 +57,7 @@ Table `custom_beer_cider_styles` : code préfixé `perso_`, nom unique (casse et
 
 | Domaine | Éléments |
 |---|---|
-| Discussion d'équipe | `admin_chat_messages` (destinataire par rôle **ou** par identifiants, jamais les deux ; `scope` = `team`, `users` ou `business`), `admin_chat_reactions`, `admin_chat_archived_conversations`, `admin_read_markers` (clés `chat_team:<clé>`, `chat_clients`, `chat_business`). Suppressions en cascade avec le profil. Le modèle d'accès de ces tables est à revoir (voir `SECURITY.md`). |
+| Discussion d'équipe | `admin_chat_messages` (destinataire par rôle **ou** par identifiants, jamais les deux ; `scope` = `team`, `users` ou `business`), `admin_chat_reactions`, `admin_chat_archived_conversations`, `admin_read_markers` (clés `chat_team:<clé>`, `chat_clients`, `chat_business`). Suppressions en cascade avec le profil. Accès aux messages et aux réactions réservé aux rôles de l'équipe (vérifié le 2026-10-09, voir `SECURITY.md`) ; pas de règle de suppression. |
 | Drapeaux de fonctionnalités | `feature_flags` (script `nouveaux-feature-flags` : `nav_bibaping_visible`, `nav_atlas_visible`, `stories_enabled`, `claims_enabled`, `maintenance_mode` faux par défaut ; descriptions dans `descriptions-flags`) ; l'app lit aussi `signups_enabled`, `nav_bibameet_visible`, `nav_bibapulse_visible`, `nav_games_visible`. Surcharges par pays : `feature_flag_overrides`. |
 | Configuration de marché | `market_config` (unique sur `(country_code, config_key)`), dont `minimum_age` par pays — voir le risque de clé dans `GEOLOCATION.md`. |
 | Signalements | `entity_reports` (temps réel, script `schema-realtime-entity-reports`) ; écran « Signalements », masquer / rétablir, masquage automatique à 3 signalants (voir `BIBAPULSE.md`). |
