@@ -38,6 +38,7 @@ Plusieurs correctifs ont échoué silencieusement parce qu'une instruction en fi
 - **Chat interne de l'équipe** (`admin_chat_messages`, `admin_chat_reactions`) : lecture et écriture réservées aux rôles de l'équipe (vérifié le 2026-10-09). Il n'existe pas de règle de suppression : une suppression réelle n'est pas possible depuis l'app (décision à prendre).
 - **Exécution des fonctions `SECURITY DEFINER`** : les droits des visiteurs non connectés ont été retirés (vérifié le 2026-10-09), sauf pour les annuaires publics voulus et un petit nombre de fonctions encore en revue. Les comptes connectés gardent l'accès.
 - **`story_bix`** (« Bixé » sur une story) : la lecture directe de la table n'est plus publique ; chacun ne gère que ses propres lignes. Le compteur et l'état « j'ai Bixé » passent par les fonctions de lecture (vérifié le 2026-10-09). Voir `STORIES.md`.
+- **Journal de débogage WaterAlert** (`water_alert_debug_log`) : fermé aux visiteurs et aux comptes connectés ordinaires (protection par ligne ; lecture réservée aux administrateurs ; seules des fonctions du serveur y écrivent). Vérifié le 2026-10-12 par la liste des tables sans protection d'accès.
 
 ### Déclarés (appliqués dans Supabase, scripts non livrés)
 
