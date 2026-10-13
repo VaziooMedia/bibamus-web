@@ -135,6 +135,7 @@ import {
   publishDrinkCheckInToPulse,
   loadDrinksByIds,
   sendPushNotification,
+  createSalonInviteNotification,
   countMyRatedDrinks,
   loadVenuesByIds,
   recordRoundOrders,
@@ -848,7 +849,7 @@ export default function App() {
   // verre venu d'une tournée, jamais enregistré sous cet identifiant) n'est jamais touché.
   const removePersonalDrinkRecord = (orderId) => deleteRoundOrders(personalRoundId(orderId));
 
-  const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants, clubId) => {
+  const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants, clubId, invitedBibros = []) => {
     const isSalon = screen === "newSalonEvent";
     const isHome = venueId === "@home";
     const isEventPlace = venueId === "@event";
@@ -904,6 +905,22 @@ export default function App() {
         newEvent.knownFriends = Array.from(new Set([...(newEvent.knownFriends || []), ...memberNames]));
       }
       await createSalon(code, newEvent);
+      // Les Bibax choisis à la création sont invités comme depuis le tableau de bord de l'event : une
+      // invitation dans leur fil de notifications et un push. Le salon doit déjà exister (le serveur
+      // vérifie que je suis l'un de ses participants), d'où l'envoi après sa création. Celui dont
+      // l'invitation échoue n'apparaît pas comme « Invité » : l'hôte peut le réinviter depuis « Participants ».
+      const invited = [];
+      for (const b of invitedBibros) {
+        if (!b?.userId) continue;
+        const ok = await createSalonInviteNotification(b.userId, code, newEvent.name);
+        if (!ok) continue;
+        sendPushNotification([b.code], "BibaRoom", `${profile.name} t'invite à rejoindre "${newEvent.name}"`);
+        invited.push({ userId: b.userId, name: b.name, invitedAt: Date.now() });
+      }
+      if (invited.length > 0) {
+        newEvent.pendingBibaxInvites = invited;
+        await saveSalon(code, newEvent);
+      }
       if (clubId) await linkSalonToClub(clubId, code, session.user.id);
       emitEvent(EVENT_TYPES.BIBAROOM_CREATED, { actorBibroCode: profile.myBibroCode, entityType: "salon", entityId: newEvent.id, payload: { salonCode: code } });
     }
