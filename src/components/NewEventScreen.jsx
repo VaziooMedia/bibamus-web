@@ -21,6 +21,10 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
   const [selectedVenueId, setSelectedVenueId] = useState(null);
   const [eventMode, setEventMode] = useState("tournees");
   const [participants, setParticipants] = useState([]);
+  // Bibax choisis dans « Participants » d'un BibaRoom : ils reçoivent une vraie invitation (et un push)
+  // une fois le salon créé, comme depuis le tableau de bord de l'event. Un événement solo, lui, n'a pas
+  // de salon : le nom choisi y reste un simple nom.
+  const [invitedBibros, setInvitedBibros] = useState([]);
   const [myClubs, setMyClubs] = useState(null);
   const [selectedClubId, setSelectedClubId] = useState(null);
   const [directoryOpenCount, setDirectoryOpenCount] = useState(0);
@@ -96,7 +100,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
     setLoading(true);
     setError("");
     try {
-      await onCreate(name.trim(), currency, date, parseFloat(jetonUnitValue) || 0, selectedVenueId, eventMode, participants, selectedClubId);
+      await onCreate(name.trim(), currency, date, parseFloat(jetonUnitValue) || 0, selectedVenueId, eventMode, participants, selectedClubId, isSalon ? invitedBibros : []);
     } catch (e) {
       setError("Un problème est survenu. Réessayez.");
       setLoading(false);
@@ -231,7 +235,21 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
       <SectionTitle>Participants</SectionTitle>
       <div style={{ marginBottom: "20px" }}>
-        <ParticipantsEditor names={participants} onChange={setParticipants} bibros={bibros} />
+        <ParticipantsEditor
+          names={participants}
+          onChange={setParticipants}
+          bibros={bibros}
+          pendingInvites={isSalon ? invitedBibros.map((b) => ({ userId: b.userId, name: b.name })) : []}
+          onCancelInvite={isSalon ? (userId) => setInvitedBibros((prev) => prev.filter((b) => b.userId !== userId)) : undefined}
+          onInviteBibax={
+            isSalon
+              ? (b) =>
+                  setInvitedBibros((prev) =>
+                    prev.some((x) => x.userId === b.userId) ? prev : [...prev, { userId: b.userId, code: b.code, name: capitalizeFirst(b.alias || b.name) }]
+                  )
+              : undefined
+          }
+        />
       </div>
       <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-14px", marginBottom: "20px" }}>
         Tu pourras toujours en ajouter plus tard.
