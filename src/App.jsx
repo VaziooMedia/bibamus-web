@@ -955,11 +955,20 @@ export default function App() {
         systemNotices: [...(salonData.systemNotices || []), notice].slice(-10),
         updatedAt: Date.now(),
       };
-      await saveSalon(salonCode, updated);
+      // Le push « bien arrivé » part AVANT le départ : le serveur n'accepte de notifier que des gens
+      // avec qui je partage un salon encore ouvert, et une fois retiré de la liste je n'en fais plus
+      // partie. On l'attend (pour que le serveur ait fini ce contrôle avant le départ) mais au plus
+      // 4 s : quitter le salon ne doit jamais rester bloqué à cause d'une notification.
       if (noticeType === "safe") {
         const others = (salonData.participants || []).filter((p) => p.code !== profile.myBibroCode);
-        if (others.length > 0) sendPushNotification(others.map((p) => p.code), "BibaRoom", `${profile.name} signale être bien ${genderAgree(profile.gender, "arrivé", "arrivée")} à destination.`);
+        if (others.length > 0) {
+          await Promise.race([
+            sendPushNotification(others.map((p) => p.code), "BibaRoom", `${profile.name} signale être bien ${genderAgree(profile.gender, "arrivé", "arrivée")} à destination.`).catch((e) => console.error("leaveSalon push:", e)),
+            new Promise((resolve) => setTimeout(resolve, 4000)),
+          ]);
+        }
       }
+      await saveSalon(salonCode, updated);
     }
     setEvents((prev) => prev.filter((e) => e.id !== eventId));
     setActiveEventId(null);
