@@ -1,7 +1,7 @@
 # STORIES — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-09. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de la table `stories`, de `story_bix` et de la plupart des fonctions de lecture), donc non revérifié.
+> Dernière mise à jour : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de la table `stories`, de `story_bix` et de la plupart des fonctions de lecture), donc non revérifié.
 
 ---
 
@@ -64,7 +64,7 @@ Le drapeau `stories_enabled` masque les boutons « + » de l'accueil **et** du s
 
 Une Story peut porter une légende et des **tags** de cinq types : Bibax (`@`), lieu (`@`), produit (`#`), marque (`#`), producteur (`#`). Chaque tag est une pastille (`MobileTagPill`) **positionnée librement** dans le cadre 9:16 (position, échelle, rotation, couleur, inversion — `tag_positions`), la légende étant elle-même un tag déplaçable.
 
-- Taguer un Bibax envoie une notification `story_tag` ; elle ouvre directement la Story, même après les 24 h.
+- Taguer un Bibax envoie une notification `story_tag` ; elle ouvre directement la Story, même après les 24 h. Le serveur (`send_notification`, vérifié dans la base le 2026-10-13) ne l'envoie que si la Story est celle de l'auteur et porte ce tag, si le Bibax est confirmé, non bloqué dans un sens ni dans l'autre et n'a pas refusé les tags dans les Stories, et une seule fois par Story ; sinon, rien n'est envoyé et l'app n'en est pas avertie. Le texte d'aperçu n'est pas conservé.
 - Confidentialité : `profiles.allow_story_tags` (qui peut être tagué) et `profiles.allow_profile_via_tag` (le tag mène-t-il à son profil), vrai par défaut ; un Bibax qui refuse les tags apparaît grisé dans le sélecteur.
 
 ## Visionneuse (`StoryViewer`)
