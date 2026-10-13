@@ -1,7 +1,7 @@
 # PROFIL — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-09. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
+> Dernière mise à jour : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
 
 ---
 
@@ -49,7 +49,7 @@ Chaque information du profil a son interrupteur, qui décide si elle est visible
 
 Colonne liée : `birth_date_share_precision` (`full` ou `dayMonth`) — « Date complète » / « Jour et mois seulement » ; avec `dayMonth`, la date reçue est de la forme `--MM-DD`, l'âge n'est pas calculé et le masquage de l'année se fait côté serveur **(base)**. `share_age` : l'âge est calculé côté client à partir de la date, et masqué si `share_age` est faux.
 
-**Effets côté serveur lisibles dans les scripts livrés** : `share_prenom`, `share_nom` et `share_surnom` (recherche par nom et nom affiché dans BibaPulse), `share_country` et `share_city` (recherche par nom : pays et ville mis à `null` si faux). L'effet des autres colonnes (`share_email`, `share_birth_date`, `share_bio`, les 10 réseaux, les 5 statistiques) se joue dans des fonctions dont le corps n'est pas livré **(base)**.
+**Effets côté serveur lisibles dans les scripts livrés** : `share_prenom`, `share_nom` et `share_surnom` (recherche par nom et nom affiché dans BibaPulse), `share_country` et `share_city` (recherche par nom : pays et ville mis à `null` si faux). Les suggestions de Bibax (`get_bibax_suggestions`) appliquent aussi `share_nom`, `share_surnom`, `share_city` (ville, localité et proximité) et `share_country`. L'effet des autres colonnes (`share_email`, `share_birth_date`, `share_bio`, les 10 réseaux, les 5 statistiques) se joue dans des fonctions dont le corps n'est pas livré **(base)**.
 
 **Règle fixe, qui n'est pas un réglage** : les statistiques financières et sur les calories ne sont jamais visibles par les autres.
 
