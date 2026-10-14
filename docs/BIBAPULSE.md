@@ -23,6 +23,10 @@ Colonnes lues par les fonctions SQL : `id`, `actor_id`, `actor_type`, `event_typ
 
 `room_salon_code` existe mais le client ne le renseigne jamais : une carte n'est pas rattachée à un salon.
 
+### Accès aux tables
+
+Vérifié dans la base le 2026-10-14 (voir `SECURITY.md`) : `pulse_events`, `pulse_comments`, `pulse_bix`, `pulse_incoming` et `pulse_sante` ne se **lisent** plus directement que par leur auteur (et par les administrateurs pour les activités et les commentaires) ; aucun accès de lecture pour les visiteurs. Toutes les lectures de l'app passent par des fonctions du serveur (`get_pulse_feed`, `get_entity_pulse`, `get_bibax_pulse_activity`, `get_pulse_comments`, `get_pulse_reactors`), qui appliquent la règle de visibilité et les blocages. L'app n'écrit directement que dans `pulse_comments`, `pulse_bix` et `pulse_incoming`.
+
 ### Pipeline de création
 
 Le client n'écrit **jamais** directement dans `pulse_events` : tout passe par la fonction Edge `create-pulse-event`.
@@ -82,9 +86,9 @@ Trois réactions, chacune sur sa table dédiée (jamais un simple compteur : tou
 | **J'arrive !** | `pulse_incoming` | `venue_visit` uniquement | Grisé (visible mais désactivé) pour l'auteur du check. |
 | **Cheers !** | `pulse_sante` | `product_discovered` uniquement | Une carte `drink_checked` n'a pas de Cheers. |
 
-Écriture : `pulse_bix` et `pulse_incoming` en écriture directe depuis le client ; Cheers par la fonction `toggle_pulse_sante(p_pulse_event_id)`. Le compteur affiché vient des colonnes `bix_count`, `incoming_count`, `sante_count` de `pulse_events`, tenues à jour par des déclencheurs `sync_pulse_*_count` **(base)**, tout comme `last_bixer_name`. Le client met à jour le compteur de façon optimiste, sans traiter les erreurs.
+Écriture : `pulse_bix` et `pulse_incoming` en écriture directe depuis le client ; Cheers par la fonction `toggle_pulse_sante(p_pulse_event_id)`. Le compteur affiché vient des colonnes `bix_count`, `incoming_count`, `sante_count` de `pulse_events`, tenues à jour par des déclencheurs du serveur `refresh_pulse_*_count` et `sync_pulse_*_count` **(base)**, tout comme `last_bixer_name` (deux séries qui écrivent les mêmes colonnes : à ranger plus tard). Ces fonctions s'exécutent avec les droits du serveur (vérifié dans la base le 2026-10-14) : le compteur est juste quelle que soit la personne qui réagit. Le compteur de commentaires ne compte que les commentaires affichés (ni supprimés, ni retirés) ; « Bixé par » montre le dernier Bix encore présent, en « Prénom Nom ». Le client met à jour le compteur de façon optimiste, sans traiter les erreurs.
 
-La ligne-résumé sous les boutons (« Bixé par X et N autres Bibax », « N Bibax arrive/arrivent », « N Cheers ») ouvre la liste des réacteurs (`get_pulse_reactors`, **(base)** pour son corps) : feuille basse défilante avec les onglets « Bix (n) », « J'arrive ! (n) » (si `venue_visit`) et « Cheers ! (n) » (si `product_discovered`).
+La ligne-résumé sous les boutons (« Bixé par X et N autres Bibax », « N Bibax arrive/arrivent », « N Cheers ») ouvre la liste des réacteurs (`get_pulse_reactors`, qui ne renvoie rien si la carte n'est pas visible pour l'appelant et n'affiche pas les personnes bloquées) : feuille basse défilante avec les onglets « Bix (n) », « J'arrive ! (n) » (si `venue_visit`) et « Cheers ! (n) » (si `product_discovered`).
 
 ## Fonctions SQL et RPC
 
@@ -92,9 +96,10 @@ La ligne-résumé sous les boutons (« Bixé par X et N autres Bibax », « N Bi
 |---|---|---|
 | `get_pulse_feed(p_limit, p_before)` | Fil principal, 20 cartes par page | `security definer` ; vide pour un visiteur non connecté ; règle de visibilité ci-dessus ; remplace `metadata.tagged_ids` par `metadata.tagged` (nom + code Bibax) |
 | `get_entity_pulse(...)` | Fil d'une fiche | Voir « Fil de fiche » |
-| `get_pulse_reactors(p_pulse_event_id)` | Liste des réacteurs (`kind` : `bix`, `incoming`, `sante`) | **(base)** |
+| `get_pulse_reactors(p_pulse_event_id)` | Liste des réacteurs (`kind` : `bix`, `incoming`, `sante`) | Connectés seulement ; vide si la carte n'est pas visible pour l'appelant (même règle que le fil) ; exclut les utilisateurs bloqués. Vérifié dans la base le 2026-10-14 (script non livré) |
 | `toggle_pulse_sante(p_pulse_event_id)` | Bascule Cheers | **(base)** |
-| `get_pulse_comments(p_pulse_event_id)` | Commentaires d'une carte | Exclut supprimés, retirés et utilisateurs bloqués |
+| `get_pulse_comments(p_pulse_event_id)` | Commentaires d'une carte | Connectés seulement ; vide si la carte n'est pas visible pour l'appelant ; exclut supprimés, retirés et utilisateurs bloqués. Vérifié dans la base le 2026-10-14 (script non livré) |
+| `get_pulse_event_preview(p_pulse_event_id)` | Aperçu « Check @ lieu » d'une carte, pour le texte des notifications | Réservée au serveur (déclencheurs de notification) ; non appelable depuis l'app |
 | `toggle_notify_pulse(p_target_code)` | Cloche « Suivre sur Pulse » d'un Bibax | **(base)** |
 | `toggle_follow_venue` / `toggle_follow_drink` | Cloche d'un lieu / d'un produit | **(base)** |
 | `get_bibax_pulse_activity(p_target_user_id, p_before)` | Activité d'un Bibax sur sa fiche | **(base)** |
@@ -102,7 +107,7 @@ La ligne-résumé sous les boutons (« Bixé par X et N autres Bibax », « N Bi
 
 ## Commentaires
 
-Table `pulse_comments` : `id`, `pulse_event_id`, `user_id`, `body`, `created_at`, `deleted_at`, `moderation_status`. Chargés à la demande, au premier dépliage (le fil ne renvoie que `comments_count`), triés du plus ancien au plus récent. Écriture directe depuis le client. Le bouton est une pastille icône « bulle » + compteur (vert fluo dès qu'il y a un commentaire) ; « Commenter ... » est le texte d'aide du champ de saisie, une fois la zone dépliée. Pas de limite de longueur côté application.
+Table `pulse_comments` : `id`, `pulse_event_id`, `user_id`, `body`, `created_at`, `deleted_at`, `moderation_status`. Chargés à la demande, au premier dépliage (le fil ne renvoie que `comments_count`), triés du plus ancien au plus récent. Écriture directe depuis le client ; **aucune lecture directe** (voir « Accès aux tables » ci-dessous). Le bouton est une pastille icône « bulle » + compteur (vert fluo dès qu'il y a un commentaire) ; « Commenter ... » est le texte d'aide du champ de saisie, une fois la zone dépliée. Pas de limite de longueur côté application.
 
 ## Modération
 
@@ -158,4 +163,4 @@ Une Story partagée d'un salon vers BibaPulse n'apparaît **pas** dans le fil de
 - Pas de rafraîchissement automatique du Pulse de fiche, de l'aperçu d'accueil, des commentaires et des réacteurs ouverts.
 - Pas de limite de longueur côté application sur les commentaires.
 - `private` accepté par le serveur mais non proposé ; `toggleFollow` (suivi d'un Bibax à sens unique) sans appelant.
-- Non vérifiable faute de scripts **(base)** : création des tables Pulse et leurs règles d'accès, déclencheurs `sync_pulse_*_count`, corps de `get_pulse_reactors`, `toggle_pulse_sante`, `toggle_notify_pulse`, `get_bibax_pulse_activity`, `can_moderate`, création des notifications `pulse_*`.
+- Non vérifiable faute de scripts **(base)** : création des tables Pulse et leurs règles d'accès en écriture (les règles de lecture et les fonctions de compteurs ont été relues dans la base le 2026-10-14, scripts non livrés), `toggle_pulse_sante`, `toggle_notify_pulse`, `get_bibax_pulse_activity`, `can_moderate`, création des notifications `pulse_*`.
