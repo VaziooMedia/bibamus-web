@@ -1,7 +1,7 @@
 # SÉCURITÉ — Documentation as-built
 
 > Documente l'état réel des correctifs de sécurité appliqués, pas un historique de conversation. À mettre à jour à chaque nouveau correctif.
-> Dernière mise à jour : 2026-10-14 (lectures de Stories, lectures et écritures de BibaPulse). Chaque ligne indique son niveau de preuve : **vérifié** (lu dans le code de l'app ou dans un script SQL / une fonction Edge livré) ou **déclaré** (appliqué dans Supabase d'après l'ancienne version de ce document ; aucun script livré ne permet de le rejouer ni de le vérifier).
+> Dernière mise à jour : 2026-10-15 (colonnes réservées de la table des profils ; avant : lectures de Stories, lectures et écritures de BibaPulse). Chaque ligne indique son niveau de preuve : **vérifié** (lu dans le code de l'app ou dans un script SQL / une fonction Edge livré) ou **déclaré** (appliqué dans Supabase d'après l'ancienne version de ce document ; aucun script livré ne permet de le rejouer ni de le vérifier).
 
 > **Règle de publication.** Le dépôt `bibamus-web` est **public**. Ce fichier décrit ce qui est corrigé et les décisions en attente, mais **jamais** de détail exploitable (ni clé, ni faille décrite pas à pas). Le détail des points à examiner est tenu dans une note privée, hors du dépôt.
 
@@ -55,6 +55,7 @@ Plusieurs correctifs ont échoué silencieusement parce qu'une instruction en fi
   - **Modification et suppression** : modifier un commentaire ou une activité par l'API est réservé aux administrateurs, et plus personne ne supprime un commentaire ou une activité par l'API. L'app n'utilise aucune de ces modifications ; la modération (masquer / rétablir) et le masquage automatique passent par des fonctions du serveur, qui ne sont pas concernées. Un auteur ne peut donc plus réécrire sa propre activité ni modifier ses commentaires directement.
   - La règle interne de visibilité est exécutable par les comptes connectés (elle ne répond que pour la personne connectée) ; les visiteurs n'y ont pas accès.
   - Testé sur une copie locale (écritures comparées à un calcul indépendant de la visibilité sur plusieurs comptes et activités, notifications et compteurs vérifiés, variantes volontairement cassées du script pour vérifier que les tests les détectent). Un retour arrière a été préparé et testé. Les scripts ne sont **pas** dans le dépôt (public). Voir `BIBAPULSE.md`.
+- **Profil : colonnes réservées** (vérifié dans la base le 2026-10-15 par le contrôle du script ; relecture du code de l'app : aucun écran n'écrit ces colonnes) : la garde posée sur la table des profils (fonction `protect_role_field`, déclencheur avant modification) couvre désormais, en plus du rôle, du droit de modération et de l'état actif, les colonnes de blocage (motif et date), le code Bibax, la date d'inscription et l'état d'approbation Business. Chacune est réservée aux rôles habilités ; un compte ordinaire ne modifie que ses champs de profil libres. Les comparaisons de la garde sont sûres face à une valeur vide, et les écritures faites par le serveur lui-même ne sont pas concernées. Lecture de la table : chacun ne lit que sa propre ligne (les administrateurs lisent toutes les lignes).
 
 ### Déclarés (appliqués dans Supabase, scripts non livrés)
 
@@ -75,6 +76,7 @@ Classés par nature, pour s'y retrouver :
 - **Garde par rôle** : `pulse-8-details-signalement`, `pulse-9-action-moderation` (`can_moderate()`).
 - **Anti-usurpation et masquage automatique** : `pulse-7-regles-moderation` ; contrainte de types : `pulse-6-preparation-moderation`.
 - **Bucket** : `pulse-10-dossier-photos`.
+- **Garde de la table des profils** : `profiles-A-gardes` (avec son `retour-arriere`).
 
 ## Connu comme non résolu
 
