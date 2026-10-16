@@ -76,11 +76,13 @@ Classés par nature, pour s'y retrouver :
 - **Fonctions avec garde de connexion et `search_path`** : `pulse-2`, `-3`, `-4`, `-5`, `-11`, `tags-2`, `-3`, `-4`, `fix-bibax-roles*`.
 - **Garde par rôle** : `pulse-8-details-signalement`, `pulse-9-action-moderation` (`can_moderate()`).
 - **Clubs : lecture réservée aux membres** (vérifié dans la base le 2026-10-16 par le contrôle du script, et dans l'app : mes clubs, ouverture d'un club, membres, fil) : un club, sa liste de membres, ses publications et les salons qui lui sont rattachés ne sont lisibles que par ses membres (les demandes en attente seulement par les modérateurs et administrateurs, publications et salons par les membres actifs) ; les visiteurs non connectés ne lisent rien. Des fonctions serveur (rejoindre un club en contrôlant le code d'invitation, lire le code réservé aux modérateurs, aperçu d'un club) sont prêtes pour l'écran « Rejoindre » ; une dernière étape, à faire après leur mise en ligne dans l'app, achèvera le contrôle de l'adhésion côté serveur. Testé sur une copie locale (toutes les combinaisons d'acteurs et de clubs comparées à un calcul indépendant, parcours de l'app avant et après, variantes volontairement cassées du script pour vérifier que les tests les détectent). Un retour arrière a été préparé et testé. Les scripts ne sont **pas** dans le dépôt (public).
+- **Clubs : suppression d'un compte** (vérifié dans la base le 2026-10-16 par le contrôle du script ; l'écran de l'app pour nommer un administrateur et la mise à jour de la fonction de suppression de compte restent à faire) : supprimer le compte du créateur d'un club ne supprime plus le club ; l'administrateur unique d'un club qui compte d'autres membres actifs doit d'abord nommer un autre administrateur, sinon la suppression de son compte est refusée sans rien supprimer ; un club dont la personne est le seul membre actif disparaît avec elle. Testé sur une copie locale (toutes les combinaisons comparées à un calcul indépendant, suppressions simultanées, variantes volontairement cassées du script). Un retour arrière a été préparé et testé. Les scripts ne sont **pas** dans le dépôt (public).
 - **Anti-usurpation et masquage automatique** : `pulse-7-regles-moderation` ; contrainte de types : `pulse-6-preparation-moderation`.
 - **Bucket** : `pulse-10-dossier-photos`.
 - **Garde de la table des profils** : `profiles-A-gardes` (avec son `retour-arriere`).
 - **Écritures des clubs** : `clubs-A-droits` (avec son `retour-arriere`).
 - **Lecture des clubs** : `clubs-B-lecture` (avec son `retour-arriere`).
+- **Suppression de compte et clubs** : `clubs-C-suppression-de-compte` (avec son `retour-arriere`).
 
 ## Connu comme non résolu
 
