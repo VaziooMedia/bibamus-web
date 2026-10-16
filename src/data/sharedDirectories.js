@@ -1199,6 +1199,14 @@ export async function updateClubMemberRole(clubId, userId, role) {
   return { ok: true };
 }
 
+// Nommer un membre administrateur : passe par la fonction serveur, qui vérifie que l'appelant est
+// administrateur actif du club et que la personne nommée en est membre actif.
+export async function setClubAdmin(clubId, userId) {
+  const { error } = await supabase.rpc("set_club_admin", { p_club_id: clubId, p_user_id: userId, p_make_admin: true });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function removeClubMember(clubId, userId) {
   const { error } = await supabase.from("biba_club_members").delete().eq("club_id", clubId).eq("user_id", userId);
   if (error) return { error: error.message };
