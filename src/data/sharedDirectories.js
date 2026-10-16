@@ -1069,15 +1069,26 @@ function generateInviteCode() {
 
 export async function createClub({ name, description, photoUrl, category, visibility, joinMode }, userId) {
   const inviteCode = joinMode === "invite" ? generateInviteCode() : null;
-  const { data: club, error } = await supabase
+  // L'identifiant est choisi ici pour ne pas avoir à relire la ligne créée : le code d'invitation
+  // n'est plus lisible directement dans la table (il passe par get_club_invite_code).
+  const clubId = crypto.randomUUID();
+  const { error } = await supabase
     .from("biba_clubs")
-    .insert({ name, description: description || null, photo_url: photoUrl || null, category: category || null, visibility, join_mode: joinMode, invite_code: inviteCode, created_by: userId })
-    .select()
-    .single();
+    .insert({ id: clubId, name, description: description || null, photo_url: photoUrl || null, category: category || null, visibility, join_mode: joinMode, invite_code: inviteCode, created_by: userId });
   if (error) return { error: error.message };
-  const { error: memberError } = await supabase.from("biba_club_members").insert({ club_id: club.id, user_id: userId, role: "admin", status: "active" });
+  const { error: memberError } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "admin", status: "active" });
   if (memberError) return { error: memberError.message };
-  return { ok: true, clubId: club.id };
+  return { ok: true, clubId };
+}
+
+// Colonnes d'un club lisibles directement dans la table (tout sauf le code d'invitation).
+const CLUB_COLUMNS = "id, name, description, photo_url, category, visibility, join_mode, created_by, created_at";
+
+// Code d'invitation d'un club : réservé aux modérateurs et administrateurs du club (contrôlé côté serveur).
+export async function getClubInviteCode(clubId) {
+  const { data, error } = await supabase.rpc("get_club_invite_code", { p_club_id: clubId });
+  if (error) return { error: error.message };
+  return { code: data || null };
 }
 
 function rowToClub(row) {
@@ -1089,7 +1100,6 @@ function rowToClub(row) {
     category: row.category,
     visibility: row.visibility,
     joinMode: row.join_mode,
-    inviteCode: row.invite_code,
     createdBy: row.created_by,
     createdAt: row.created_at,
   };
@@ -1099,7 +1109,7 @@ function rowToClub(row) {
 export async function loadMyClubs(userId) {
   const { data, error } = await supabase
     .from("biba_club_members")
-    .select("role, biba_clubs(*)")
+    .select(`role, biba_clubs(${CLUB_COLUMNS})`)
     .eq("user_id", userId)
     .eq("status", "active");
   if (error) {
@@ -1110,7 +1120,7 @@ export async function loadMyClubs(userId) {
 }
 
 export async function loadClubDetail(clubId) {
-  const { data, error } = await supabase.from("biba_clubs").select("*").eq("id", clubId).single();
+  const { data, error } = await supabase.from("biba_clubs").select(CLUB_COLUMNS).eq("id", clubId).single();
   if (error) {
     console.error("loadClubDetail:", error);
     return null;
@@ -1144,26 +1154,11 @@ export async function loadClubMembers(clubId) {
 // Rejoindre — comportement différent selon join_mode : "open" ajoute directement, "request" crée
 // une demande en attente, "invite" vérifie le code fourni avant d'ajouter directement.
 export async function joinClub(clubId, userId, { inviteCode } = {}) {
-  const { data: club, error: clubError } = await supabase.from("biba_clubs").select("join_mode, invite_code").eq("id", clubId).single();
-  if (clubError) return { error: clubError.message };
-
-  if (club.join_mode === "invite") {
-    if (!inviteCode || inviteCode.toUpperCase() !== club.invite_code) return { error: "Code d'invitation invalide." };
-    const { error } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "member", status: "active" });
-    if (error) return { error: error.message };
-    return { ok: true, status: "active" };
-  }
-
-  if (club.join_mode === "open") {
-    const { error } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "member", status: "active" });
-    if (error) return { error: error.message };
-    return { ok: true, status: "active" };
-  }
-
-  // "request" — en attente de validation par un admin/modérateur
-  const { error } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "member", status: "pending" });
+  // Le mode d'adhésion et le code d'invitation sont contrôlés côté serveur (join_club) ; la fonction
+  // renvoie l'état obtenu : "active" ou "pending". userId n'est plus utilisé : le serveur prend l'appelant.
+  const { data, error } = await supabase.rpc("join_club", { p_club_id: clubId, p_invite_code: inviteCode || null });
   if (error) return { error: error.message };
-  return { ok: true, status: "pending" };
+  return { ok: true, status: data };
 }
 
 export async function loadPendingClubRequests(clubId) {

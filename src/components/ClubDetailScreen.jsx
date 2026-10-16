@@ -16,6 +16,7 @@ import {
   deleteClubPost,
   loadClubStats,
   loadPendingClubRequests,
+  getClubInviteCode,
   approveClubMember,
   rejectClubMember,
   updateClubMemberRole,
@@ -50,6 +51,7 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
   const [joinError, setJoinError] = useState(null);
   const [inviteCodeInput, setInviteCodeInput] = useState("");
   const [memberActionError, setMemberActionError] = useState(null);
+  const [inviteCode, setInviteCode] = useState(null);
 
   const refreshMembers = () => loadClubMembers(clubId).then(setMembers);
 
@@ -76,6 +78,11 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
   useEffect(() => {
     if (isAdminOrMod) loadPendingClubRequests(clubId).then(setPending);
   }, [isAdminOrMod, clubId]);
+
+  // Le code d'invitation n'est plus dans la fiche du club : le serveur le donne aux seuls modérateurs et administrateurs.
+  useEffect(() => {
+    if (isAdminOrMod && club?.joinMode === "invite") getClubInviteCode(clubId).then((result) => setInviteCode(result.code || null));
+  }, [isAdminOrMod, club?.joinMode, clubId]);
 
   const handlePost = async () => {
     if (!postBody.trim()) return;
@@ -271,10 +278,10 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
                 </div>
               )}
 
-              {club.joinMode === "invite" && isAdminOrMod && club.inviteCode && (
+              {club.joinMode === "invite" && isAdminOrMod && inviteCode && (
                 <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "18px", textAlign: "center" }}>
                   <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "0 0 6px" }}>Code d'invitation à partager</p>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", letterSpacing: "4px" }}>{club.inviteCode}</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", letterSpacing: "4px" }}>{inviteCode}</div>
                 </div>
               )}
 
