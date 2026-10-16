@@ -33,14 +33,29 @@ export function DeleteAccountScreen({ onBack, onAccountDeleted }) {
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
         <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: "0 0 10px 0", fontWeight: 700 }}>Cette action est définitive et irréversible. Voici ce qui va se passer :</p>
+        <p style={{ fontSize: "13px", color: COLORS.ink, margin: "0 0 4px 0", fontWeight: 700 }}>Supprimé définitivement</p>
         <ul style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0, paddingLeft: "18px", lineHeight: 1.6 }}>
-          <li>Votre profil, votre email et votre code Bibax seront supprimés définitivement</li>
+          <li>Votre profil, votre email, votre code Bibax et votre photo de profil</li>
           <li>Vous ne pourrez plus vous reconnecter avec ce compte</li>
+          <li>Votre journal (bières goûtées, check-ins, scans d'étiquettes)</li>
+          <li>Vos activités BibaPulse (cartes, photos, réactions, commentaires), vos Stories et vos réactions</li>
+          <li>Vos relations (Bibax, blocages, suivis) et vos notifications</li>
           <li>
-            Les établissements, produits ou marques que vous avez ajoutés à la Database <strong>resteront visibles</strong> (utiles à la communauté), mais ne seront plus associés à votre
+            Vos messages envoyés, <strong>y compris chez leurs destinataires</strong>, avec leurs photos
+          </li>
+          <li>
+            Vos publications et votre place dans vos BibaClubs. Si vous êtes le seul membre actif d'un club, ce club est supprimé avec vous. Si vous en êtes le seul administrateur et qu'il compte
+            d'autres membres actifs, vous devez d'abord nommer un autre administrateur.
+          </li>
+        </ul>
+        <p style={{ fontSize: "13px", color: COLORS.ink, margin: "12px 0 4px 0", fontWeight: 700 }}>Conservé</p>
+        <ul style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0, paddingLeft: "18px", lineHeight: 1.6 }}>
+          <li>
+            Les établissements, produits ou marques que vous avez ajoutés à la Database, avec leurs photos, <strong>restent visibles</strong> (utiles à la communauté) mais ne sont plus liés à votre
             compte
           </li>
-          <li>Votre historique de contributions et de signalements reste conservé de façon anonyme, à des fins d'audit</li>
+          <li>Vos signalements restent, sans lien avec votre compte</li>
+          <li>Un journal de sécurité interne (qui a modifié quelle fiche, et quand) est conservé 12 mois à des fins de sécurité et peut contenir votre identifiant pendant cette durée</li>
         </ul>
       </div>
 
