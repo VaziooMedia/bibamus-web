@@ -253,10 +253,11 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
         <NotifRow
           icon={<NavIcon name="info" size={17} color={COLORS.amber} />}
           title="Actualités Bibamus"
-          subtitle="Nouveautés de l'app et annonces"
-          checked={pushOn && p.notifNews !== false}
-          disabled={!pushOn}
-          onChange={(v) => update({ notifNews: v })}
+          subtitle="Pas encore disponible"
+          disabled
+          badge="Bientôt"
+          checked={false}
+          onChange={() => {}}
         />
         <div style={{ borderBottom: "none" }}>
           <NotifRow
