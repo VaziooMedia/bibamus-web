@@ -1191,6 +1191,25 @@ export async function respondClubInvitation(invitationId, accept) {
   return { status: data };
 }
 
+// Mes invitations refusées que je peux encore reprendre (refus fait par erreur) : moins de 30 jours,
+// l'invitant est toujours dans le club et toujours mon Bibax, je ne suis pas déjà dans le club.
+export async function loadMyDeclinedClubInvitations() {
+  const { data, error } = await supabase.rpc("get_my_declined_club_invitations");
+  if (error) {
+    console.error("loadMyDeclinedClubInvitations:", error);
+    return { error: error.message };
+  }
+  return { invitations: (data || []).map((r) => ({ id: r.id, clubId: r.club_id })) };
+}
+
+// Changer d'avis après un refus : l'invitation redevient « en attente » (le club n'est pas prévenu).
+// Le serveur renvoie "pending" (reprise faite) ou "expired" (plus valable, rien n'est changé).
+export async function reopenClubInvitation(invitationId) {
+  const { data, error } = await supabase.rpc("reopen_club_invitation", { p_invitation_id: invitationId });
+  if (error) return { error: error.message };
+  return { status: data };
+}
+
 // Inviter un de mes Bibax dans un club dont je suis membre. Le serveur contrôle tout (membre actif,
 // Bibax accepté, pas déjà dans le club, limite journalière).
 export async function sendClubInvitation(clubId, inviteeId) {
