@@ -6,12 +6,22 @@
 // interrupteur muet est pire qu'absent, puisqu'il laisse croire qu'on a coupé
 // une notification qui continue d'arriver.
 //
+// Ce que l'écran règle, et ce qu'il ne règle pas :
+//   - Les pastilles dans l'app (BibaPing, cloche) et le centre de notifications
+//     ne dépendent d'aucun réglage : ils sont toujours actifs.
+//   - Les réglages ne concernent que l'alerte "push" envoyée sur le téléphone.
+//
 // Aujourd'hui, deux réglages seulement sont branchés :
-//   - "Notifications push" : demande la permission et enregistre le jeton FCM
-//     de l'appareil (voir firebaseClient.js). Sur iPhone, ne fonctionne que si
-//     l'app a été ajoutée à l'écran d'accueil (iOS 16.4+).
-//   - "Messages" : respecté côté serveur par get_message_push_targets, qui
-//     écarte des destinataires ceux qui l'ont désactivé.
+//   - "Notifications push" (bloc "Sur cet appareil") : demande la permission et
+//     enregistre le jeton FCM de l'appareil (voir firebaseClient.js). Sur iPhone,
+//     ne fonctionne que si l'app a été ajoutée à l'écran d'accueil (iOS 16.4+).
+//     C'est l'interrupteur général : il remplace l'ancien "Autoriser les
+//     notifications" (profil.notif_enabled), que le serveur lit toujours et que
+//     l'activation du push remet à vrai.
+//   - "Messages" (bloc "Alertes à recevoir") : respecté côté serveur par
+//     get_message_push_targets, qui écarte des destinataires ceux qui l'ont
+//     désactivé.
+// Les alertes par sujet sont grisées tant que le push est coupé.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
@@ -87,62 +97,67 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
     setP((prev) => ({ ...prev, ...patch }));
     onSaveProfile(patch);
   };
-  const masterEnabled = p.notifEnabled !== false;
 
   // Le toggle "Notifications push" ne se fie pas au profil (jamais vraiment persisté côté
   // serveur) mais à l'existence réelle d'une souscription push enregistrée pour ce compte —
   // sinon il pouvait sembler se désactiver tout seul au rechargement.
-  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushRegistered, setPushRegistered] = useState(null); // null = pas encore vérifié
   useEffect(() => {
-    hasActivePushSubscription().then(setPushEnabled);
+    hasActivePushSubscription().then(setPushRegistered);
   }, []);
+  // Le serveur n'envoie rien à un compte dont notif_enabled vaut faux (ancien interrupteur
+  // "Autoriser les notifications", disparu de l'écran) : même avec une souscription, le push
+  // est alors réellement coupé, et l'écran doit l'afficher tel quel.
+  const pushOn = pushRegistered === true && p.notifEnabled !== false;
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="bell" size={22} color={COLORS.amber} />}>Notifications</PageTitleWithBar>
 
-      <NotifGroup>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 18px" }}>
+        Dans l'app, tu vois toujours tes nouveautés (pastilles, centre de notifications). Les réglages ci-dessous ne concernent que les alertes envoyées sur ton téléphone.
+      </p>
+
+      <NotifGroup title="Sur cet appareil">
         <div style={{ borderBottom: "none" }}>
           <NotifRow
-            icon={<NavIcon name="bell" size={17} color={COLORS.amber} />}
-            title="Autoriser les notifications"
-            subtitle="Recevoir des notifications de Bibamus"
-            checked={p.notifEnabled !== false}
-            onChange={(v) => update({ notifEnabled: v })}
+            icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />}
+            title="Notifications push"
+            subtitle="Sur iPhone, ajoute d'abord Bibamus à ton écran d'accueil"
+            checked={pushOn}
+            onChange={async (v) => {
+              if (v) {
+                const token = await requestNotificationPermissionAndGetToken();
+                if (token) {
+                  await upsertPushSubscription(token, "web");
+                  setPushRegistered(true);
+                  // Un compte qui avait coupé l'ancien interrupteur général le retrouve actif.
+                  if (p.notifEnabled === false) update({ notifEnabled: true });
+                } else if (Notification?.permission === "denied") {
+                  alert("Notifications refusées — active-les dans les réglages de ton navigateur ou de ton téléphone pour Bibamus.");
+                }
+              } else {
+                await deleteMyPushSubscriptions();
+                setPushRegistered(false);
+              }
+            }}
           />
         </div>
       </NotifGroup>
 
-      <NotifGroup title="Activités">
-        <NotifRow
-          icon={<NavIcon name="smartphone" size={17} color={COLORS.amber} />}
-          title="Notifications push"
-          subtitle="Sur iPhone, ajoute d'abord Bibamus à ton écran d'accueil"
-          checked={pushEnabled}
-          onChange={async (v) => {
-            if (v) {
-              const token = await requestNotificationPermissionAndGetToken();
-              if (token) {
-                await upsertPushSubscription(token, "web");
-                setPushEnabled(true);
-              } else if (Notification?.permission === "denied") {
-                alert("Notifications refusées — active-les dans les réglages de ton navigateur ou de ton téléphone pour Bibamus.");
-              }
-            } else {
-              await deleteMyPushSubscriptions();
-              setPushEnabled(false);
-            }
-          }}
-        />
+      <NotifGroup title="Alertes à recevoir">
+        {pushRegistered !== null && !pushOn && (
+          <div style={{ fontSize: "12px", color: COLORS.inkSoft, padding: "12px 4px 0" }}>Active d'abord « Notifications push » pour choisir tes alertes.</div>
+        )}
         {/* Seul réglage de cette liste, avec les notifications push, à piloter réellement
             quelque chose : le serveur écarte des destinataires ceux qui l'ont désactivé. */}
         <NotifRow
           icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
           title="Messages"
           subtitle="Messages reçus dans BibaPing"
-          checked={masterEnabled && p.notifMessages !== false}
-          disabled={!masterEnabled}
+          checked={pushOn && p.notifMessages !== false}
+          disabled={!pushOn}
           onChange={(v) => update({ notifMessages: v })}
         />
         <NotifRow
@@ -226,8 +241,8 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
           icon={<NavIcon name="info" size={17} color={COLORS.amber} />}
           title="Actualités Bibamus"
           subtitle="Nouveautés de l'app et annonces"
-          checked={masterEnabled && p.notifNews !== false}
-          disabled={!masterEnabled}
+          checked={pushOn && p.notifNews !== false}
+          disabled={!pushOn}
           onChange={(v) => update({ notifNews: v })}
         />
         <div style={{ borderBottom: "none" }}>
