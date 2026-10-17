@@ -119,9 +119,19 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
     refreshMembers();
   };
 
+  // Quitter le club. Si l'on en est la seule personne, le quitter le supprime : on le dit et on demande
+  // confirmation, d'après la liste des membres relue juste avant d'agir (elle a pu bouger depuis l'affichage).
   const handleLeave = async () => {
     setMemberActionError(null);
-    const result = await leaveClub(clubId, myUserId);
+    const fresh = await loadClubMembers(clubId);
+    const list = fresh.length > 0 ? fresh : members || [];
+    const alone = !list.some((m) => m.status === "active" && m.userId !== myUserId);
+    if (alone) {
+      const pending = list.filter((m) => m.status === "pending" && m.userId !== myUserId).length;
+      const extra = pending > 0 ? " et les demandes d'entrée en attente" : "";
+      if (!window.confirm(`Vous êtes la seule personne de ce club : le quitter le supprimera définitivement, avec ses publications${extra}. Continuer ?`)) return;
+    }
+    const result = await leaveClub(clubId);
     if (result.error) {
       setMemberActionError(result.error);
       return;
@@ -356,12 +366,12 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
 
               {memberActionError && <p style={{ fontSize: "12px", color: "#FF3B3B", margin: "14px 0 0" }}>{memberActionError}</p>}
 
-              {(myMembership?.role !== "admin" || otherActiveAdminExists) && (
+              {(myMembership?.role !== "admin" || otherActiveAdminExists || !otherActiveMemberExists) && (
                 <button
                   onClick={handleLeave}
                   style={{ background: "none", border: "none", color: "#FF3B3B", fontSize: "13px", fontWeight: 600, cursor: "pointer", marginTop: "18px" }}
                 >
-                  Quitter le club
+                  {otherActiveMemberExists ? "Quitter le club" : "Quitter et supprimer le club"}
                 </button>
               )}
               {myMembership?.role === "admin" && !otherActiveAdminExists && otherActiveMemberExists && (
