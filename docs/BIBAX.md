@@ -1,7 +1,7 @@
 # BIBAX — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-09. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
+> Dernière mise à jour : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
 
 ---
 
@@ -61,7 +61,9 @@ La liste locale (`bibamus-bibros`, dans le navigateur) garde aussi des champs pu
 
 ## Suggestions et proximité
 
-`get_bibax_suggestions(p_limit)` retient un candidat si **au moins un Bibax en commun** (sans limite de distance), **ou** s'il habite à **30 km ou moins** (distance arrondie à l'entier, mesurée entre les coordonnées enregistrées des profils avec PostGIS), **ou** si ses coordonnées manquent et qu'il est dans le **même pays**. Tri : le plus de Bibax en commun d'abord, puis le plus proche. Elle exclut les comptes qui ne sont pas `role = 'user'` (administrateurs et contacts Business), les Bibax déjà confirmés et toute relation en cours. Elle **ne filtre pas** les utilisateurs bloqués.
+`get_bibax_suggestions(p_limit)` retient un candidat si **au moins un Bibax en commun** (sans limite de distance), **ou** s'il habite à **30 km ou moins** (distance arrondie à l'entier, mesurée entre les coordonnées enregistrées des profils avec PostGIS), **ou** si sa distance est inconnue et qu'il est dans le **même pays**. Tri : le plus de Bibax en commun d'abord, puis le plus proche. Elle exclut les comptes qui ne sont pas `role = 'user'` (administrateurs et contacts Business), les Bibax déjà confirmés, toute relation en cours et les utilisateurs **bloqués dans un sens ou dans l'autre**.
+
+Elle respecte les réglages de partage de la personne suggérée, comme la recherche par nom (mise en place et vérifiée dans la base le 2026-10-13, comportement testé en local) : le prénom est toujours renvoyé ; le nom de famille seulement si `share_nom`, le surnom seulement si `share_surnom`, la ville **et la localité** seulement si `share_city`, le pays seulement si `share_country` (un réglage vide compte comme non partagé). La proximité n'est utilisée que pour ceux qui partagent leur ville : sans `share_city`, la distance n'est ni calculée ni affichée, et le repli « même pays » ne joue que si `share_country`. Les Bibax en commun retiennent un candidat dans tous les cas.
 
 Affichage : « N Bibax en commun », sinon « à X km » (unité fixe en km).
 
@@ -105,7 +107,7 @@ Un Bibax peut être tagué dans une carte BibaPulse et dans une Story, sous rés
 - `toggle_follow` (suivi à sens unique d'un Bibax) : fonction présente, aucune interface. La cloche « Suivre sur Pulse » (`toggle_notify_pulse`) est son remplaçant, mais son état n'est **jamais chargé** : elle s'affiche toujours éteinte à l'ouverture de la fiche.
 - `remove_bibax` (par identifiant) importée, jamais appelée ; le retrait par code n'attend pas son résultat — en cas d'échec, la synchronisation de 30 s ré-ajoute l'entrée.
 - Pinterest et Twitch des Bibax confirmés ne sont pas synchronisés.
-- Le blocage n'est possible que depuis la fiche d'un Bibax confirmé (pas depuis un profil public, une demande reçue ou une suggestion), et les suggestions ne filtrent pas les bloqués.
-- Aucun contrôle côté serveur du réglage `allow_story_tags` n'a été retrouvé à l'insertion d'une Story qui tague un Bibax (le tri ne se fait que dans le sélecteur). Pour BibaPulse, le contrôle existe dans la fonction Edge.
+- Le blocage n'est possible que depuis la fiche d'un Bibax confirmé (pas depuis un profil public, une demande reçue ou une suggestion) ; les suggestions, elles, écartent les bloqués dans les deux sens.
+- Aucun contrôle côté serveur du réglage `allow_story_tags` n'a été retrouvé à l'insertion d'une Story qui tague un Bibax (le tri ne se fait que dans le sélecteur) ; seule la **notification** du tag le respecte désormais (`send_notification`, vérifié dans la base le 2026-10-13). Pour BibaPulse, le contrôle existe dans la fonction Edge.
 - Éditeur de `locality` absent de l'interface réelle.
 - Non vérifiable faute de scripts **(base)** : corps de toutes les fonctions de relation, valeurs de `status`, colonne d'horodatage, génération du code Bibax, déclencheur de création de compte (valeur enregistrée dans `profiles.country`), effet exact de `block_user`.

@@ -787,8 +787,6 @@ export const DRINK_FIELD_LABELS = {
 };
 export const MONTH_NAMES_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
-export const ADMIN_PASSPHRASE = "bibamus-admin"; // Mehdi: change this string any time you want a new passphrase.
-
 export const LANGUAGES = [{ code: "fr", label: "Français" }];
 
 export const BREWERY_FIELD_LABELS = { name: "Nom", country: "Pays d'origine" };

@@ -1,7 +1,7 @@
 # STORIES — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-09. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de la table `stories`, de `story_bix` et de la plupart des fonctions de lecture), donc non revérifié.
+> Dernière mise à jour : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de la table `stories`, de `story_bix` et de la plupart des fonctions de lecture), donc non revérifié.
 
 ---
 
@@ -28,17 +28,18 @@ Colonnes écrites par l'app : `author_id`, `context_type`, `context_id` (code du
 
 - Écriture directe depuis le client : **insert** et **delete** uniquement. Il n'y a aucun `update` : le partage / retrait de BibaPulse passe par une fonction.
 - **Aucune lecture directe** de la table : tout passe par des fonctions (la règle d'accès de la table bloque la lecture directe). Règles d'accès de la table : **(base)**.
+- **Les fonctions de lecture contrôlent l'appelant** (vérifié dans la base et dans l'app le 2026-10-14, script non livré) : une Story n'est rendue que si l'appelant a le droit de la voir (la sienne, une Story où il est tagué, une Story d'un salon dont il est participant, ou une Story partagée dans BibaPulse selon sa visibilité), sans blocage dans un sens ou dans l'autre ; elles ne sont plus exécutables par les visiteurs. Voir `SECURITY.md`.
 
 ### Fonctions (appels réels)
 
 | Fonction | Rôle | Script livré |
 |---|---|---|
-| `get_room_stories(p_salon_code)` | Stories actives d'un salon | non |
-| `get_pulse_stories()` | Stories de l'accueil : les `global` des Bibax confirmés + les `room` partagées dans BibaPulse | non |
+| `get_room_stories(p_salon_code)` | Stories actives d'un salon (réservée aux participants du salon) | non |
+| `get_pulse_stories()` | Stories de l'accueil : les `global` des Bibax confirmés + les `room` partagées dans BibaPulse (sans les personnes bloquées) | non |
 | `set_story_pulse_sharing(p_story_id, p_shared)` | Partager / retirer de BibaPulse | non |
 | `get_my_stories()` | Stories de l'utilisateur (avec expiration) | non |
-| `get_story_by_id(p_id)` | Ouvrir une Story précise depuis une notification de tag, y compris expirée | oui |
-| `get_story_tags(p_ids)` | Tags d'une liste de Stories | oui |
+| `get_story_by_id(p_id)` | Ouvrir une Story précise depuis une notification de tag, y compris expirée ; ne rend la Story que si l'appelant peut la voir | version d'origine livrée, remplacée dans la base le 2026-10-14 (script non livré) |
+| `get_story_tags(p_ids)` | Tags d'une liste de Stories (seulement celles que l'appelant peut voir) | version d'origine livrée, remplacée dans la base le 2026-10-14 (script non livré) |
 | `get_story_tagged_bibax(p_codes)` | Noms et accès profil des Bibax tagués | oui (`bibamus-sql-tags-3-…`) |
 
 `get_story_by_id` ne renvoie pas le compteur de Bix : une Story ouverte depuis une notification affiche 0.
@@ -64,7 +65,7 @@ Le drapeau `stories_enabled` masque les boutons « + » de l'accueil **et** du s
 
 Une Story peut porter une légende et des **tags** de cinq types : Bibax (`@`), lieu (`@`), produit (`#`), marque (`#`), producteur (`#`). Chaque tag est une pastille (`MobileTagPill`) **positionnée librement** dans le cadre 9:16 (position, échelle, rotation, couleur, inversion — `tag_positions`), la légende étant elle-même un tag déplaçable.
 
-- Taguer un Bibax envoie une notification `story_tag` ; elle ouvre directement la Story, même après les 24 h.
+- Taguer un Bibax envoie une notification `story_tag` ; elle ouvre directement la Story, même après les 24 h. Le serveur (`send_notification`, vérifié dans la base le 2026-10-13) ne l'envoie que si la Story est celle de l'auteur et porte ce tag, si le Bibax est confirmé, non bloqué dans un sens ni dans l'autre et n'a pas refusé les tags dans les Stories, et une seule fois par Story ; sinon, rien n'est envoyé et l'app n'en est pas avertie. Le texte d'aperçu n'est pas conservé.
 - Confidentialité : `profiles.allow_story_tags` (qui peut être tagué) et `profiles.allow_profile_via_tag` (le tag mène-t-il à son profil), vrai par défaut ; un Bibax qui refuse les tags apparaît grisé dans le sélecteur.
 
 ## Visionneuse (`StoryViewer`)
@@ -93,6 +94,5 @@ Outil publicitaire d'administrateur : auteur fixe « Bibamus », moins de 24 h, 
 - Contexte `arena` : aucun code de création.
 - Préférences Stories non branchées : durée d'affichage et les réglages par défaut (lieu, public) pour salon et arène ; les cases de création s'initialisent en dur.
 - Compteur de Bix absent à l'ouverture depuis une notification.
-- Contrôle de visibilité de `get_story_by_id` : une revue de sécurité est en cours (voir `SECURITY.md`).
 - Souvenirs / récapitulatifs automatiques de soirée : non construits.
-- Non vérifiable faute de scripts **(base)** : création de `stories` et de `story_bix`, règles d'accès de `stories`, corps de `get_room_stories`, `get_pulse_stories`, `get_my_stories`, `set_story_pulse_sharing`, configuration du bucket `stories`, fonction Edge `moderate-and-upload-photo`, table `media_assets`.
+- Non vérifiable faute de scripts **(base)** : création de `stories` et de `story_bix`, règles d'accès de `stories`, `get_my_stories`, `set_story_pulse_sharing`, configuration du bucket `stories`, fonction Edge `moderate-and-upload-photo`, table `media_assets`.
