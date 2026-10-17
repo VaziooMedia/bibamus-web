@@ -1,7 +1,7 @@
 # GÉOLOCALISATION — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. Consolide ce qui était auparavant réparti entre BIBAX.md et DATABASE.md. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-09. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de PostGIS, de `get_nearby_venues` et des fonctions Edge de géocodage), donc non revérifié.
+> Dernière mise à jour : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de PostGIS, de `get_nearby_venues` et des fonctions Edge de géocodage), donc non revérifié.
 
 ---
 
@@ -45,7 +45,7 @@
 
 ## PostGIS — proximité Bibax
 
-- `get_bibax_suggestions(p_limit)` retient un candidat avec au moins un Bibax en commun (sans limite de distance), **ou** à 30 km ou moins (distance arrondie à l'entier), **ou** sans coordonnées mais dans le même pays. Affichage « à X km » quand il n'y a pas de Bibax en commun (unité fixe en km). Détails : `BIBAX.md`.
+- `get_bibax_suggestions(p_limit)` retient un candidat avec au moins un Bibax en commun (sans limite de distance), **ou** à 30 km ou moins (distance arrondie à l'entier), **ou** sans distance connue mais dans le même pays. Affichage « à X km » quand il n'y a pas de Bibax en commun (unité fixe en km). La proximité ne joue que pour les personnes qui partagent leur ville (`share_city`), et le repli par pays que pour celles qui partagent leur pays (`share_country`) ; les bloqués sont exclus. Détails : `BIBAX.md`.
 - **Alimentation des coordonnées du profil** : `geocodeCityForProfile` est appelée quand la ville ou le pays changent, mais le résultat reste dans l'état de l'app — **le client ne l'envoie jamais à la base**. Si `profiles.latitude` / `longitude` sont renseignées, c'est par un autre mécanisme **(base)**.
 - **Risque de non-déclenchement** : le géocodage cherche le code ISO avec `COUNTRY_ISO_CODES` indexé par code interne (`belgique`), alors que les écrans de profil enregistrent un libellé (`Belgique`). Dans ce cas la recherche ne trouve rien et le géocodage ne part pas. Deux tables `COUNTRY_ISO_CODES` coexistent (`constants.js`, par code interne ; `icons.jsx`, par libellé). La valeur réellement stockée dans `profiles.country` : **(base)**.
 

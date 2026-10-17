@@ -16,9 +16,11 @@ import {
   deleteClubPost,
   loadClubStats,
   loadPendingClubRequests,
+  getClubInviteCode,
   approveClubMember,
   rejectClubMember,
   updateClubMemberRole,
+  setClubAdmin,
   removeClubMember,
   leaveClub,
   joinClub,
@@ -48,6 +50,8 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
   const [joinBusy, setJoinBusy] = useState(false);
   const [joinError, setJoinError] = useState(null);
   const [inviteCodeInput, setInviteCodeInput] = useState("");
+  const [memberActionError, setMemberActionError] = useState(null);
+  const [inviteCode, setInviteCode] = useState(null);
 
   const refreshMembers = () => loadClubMembers(clubId).then(setMembers);
 
@@ -66,10 +70,19 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
   const myMembership = members?.find((m) => m.userId === myUserId);
   const isMember = myMembership?.status === "active";
   const isAdminOrMod = isMember && (myMembership.role === "admin" || myMembership.role === "moderator");
+  const isAdmin = isMember && myMembership.role === "admin";
+  // Un administrateur ne peut quitter le club que s'il reste un autre administrateur actif.
+  const otherActiveAdminExists = (members || []).some((m) => m.status === "active" && m.role === "admin" && m.userId !== myUserId);
+  const otherActiveMemberExists = (members || []).some((m) => m.status === "active" && m.userId !== myUserId);
 
   useEffect(() => {
     if (isAdminOrMod) loadPendingClubRequests(clubId).then(setPending);
   }, [isAdminOrMod, clubId]);
+
+  // Le code d'invitation n'est plus dans la fiche du club : le serveur le donne aux seuls modérateurs et administrateurs.
+  useEffect(() => {
+    if (isAdminOrMod && club?.joinMode === "invite") getClubInviteCode(clubId).then((result) => setInviteCode(result.code || null));
+  }, [isAdminOrMod, club?.joinMode, clubId]);
 
   const handlePost = async () => {
     if (!postBody.trim()) return;
@@ -80,6 +93,28 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
       setPostBody("");
       loadClubPosts(clubId).then(setPosts);
     }
+  };
+
+  const handleMakeAdmin = async (member) => {
+    const name = [member.name, member.lastName].filter(Boolean).join(" ") || "cette personne";
+    if (!window.confirm(`Nommer ${name} administrateur du club ? Elle pourra gérer les membres et nommer d'autres administrateurs.`)) return;
+    setMemberActionError(null);
+    const result = await setClubAdmin(clubId, member.userId);
+    if (result.error) {
+      setMemberActionError(result.error);
+      return;
+    }
+    refreshMembers();
+  };
+
+  const handleLeave = async () => {
+    setMemberActionError(null);
+    const result = await leaveClub(clubId, myUserId);
+    if (result.error) {
+      setMemberActionError(result.error);
+      return;
+    }
+    onBack();
   };
 
   const handleJoin = async () => {
@@ -243,10 +278,10 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
                 </div>
               )}
 
-              {club.joinMode === "invite" && isAdminOrMod && club.inviteCode && (
+              {club.joinMode === "invite" && isAdminOrMod && inviteCode && (
                 <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "18px", textAlign: "center" }}>
                   <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "0 0 6px" }}>Code d'invitation à partager</p>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", letterSpacing: "4px" }}>{club.inviteCode}</div>
+                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", letterSpacing: "4px" }}>{inviteCode}</div>
                 </div>
               )}
 
@@ -259,6 +294,14 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
                       <span style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: "13.5px", fontWeight: 700 }}>{[m.name, m.lastName].filter(Boolean).join(" ") || "Quelqu'un"}</div>
                         <div style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>{ROLE_LABEL[m.role]}</div>
+                        {isAdmin && m.userId !== myUserId && m.role !== "admin" && (
+                          <button
+                            onClick={() => handleMakeAdmin(m)}
+                            style={{ background: "none", border: "none", padding: "4px 0 0", fontSize: "11.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer", textAlign: "left" }}
+                          >
+                            Nommer admin
+                          </button>
+                        )}
                       </span>
                       {isAdminOrMod && m.userId !== myUserId && m.role !== "admin" && (
                         <>
@@ -289,13 +332,20 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
                   ))}
               </div>
 
-              {myMembership?.role !== "admin" && (
+              {memberActionError && <p style={{ fontSize: "12px", color: "#FF3B3B", margin: "14px 0 0" }}>{memberActionError}</p>}
+
+              {(myMembership?.role !== "admin" || otherActiveAdminExists) && (
                 <button
-                  onClick={() => leaveClub(clubId, myUserId).then(() => onBack())}
+                  onClick={handleLeave}
                   style={{ background: "none", border: "none", color: "#FF3B3B", fontSize: "13px", fontWeight: 600, cursor: "pointer", marginTop: "18px" }}
                 >
                   Quitter le club
                 </button>
+              )}
+              {myMembership?.role === "admin" && !otherActiveAdminExists && otherActiveMemberExists && (
+                <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "18px 0 0" }}>
+                  Vous êtes le seul administrateur : nommez d'abord un autre administrateur pour pouvoir quitter le club.
+                </p>
               )}
             </div>
           )}

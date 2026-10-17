@@ -7,6 +7,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { uploadClubPhoto, createClub } from "../data/sharedDirectories.js";
+import { fileToResizedJpegBlob } from "../imageUtils.js";
 
 const CATEGORIES = ["Sport", "Amis", "Travail", "Famille", "Étudiants", "Autre"];
 
@@ -26,8 +27,21 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Ce fichier n'est pas une image.");
+      return;
+    }
     setUploadingPhoto(true);
-    const result = await uploadClubPhoto(myUserId, file);
+    // La photo est réduite en JPEG avant l'envoi (une photo de téléphone brute est trop lourde pour la vérification de contenu).
+    let blob;
+    try {
+      blob = await fileToResizedJpegBlob(file);
+    } catch (_) {
+      setUploadingPhoto(false);
+      setError("Impossible de lire cette photo.");
+      return;
+    }
+    const result = await uploadClubPhoto(myUserId, blob);
     setUploadingPhoto(false);
     if (result.error) {
       setError(result.error);

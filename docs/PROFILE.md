@@ -1,7 +1,7 @@
 # PROFIL — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-09. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
+> Dernière mise à jour : 2026-10-13 (2026-10-15 pour les colonnes réservées). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
 
 ---
 
@@ -27,7 +27,7 @@ Colonnes lues et écrites par l'app (`loadMyProfile` / `updateMyProfile`) :
 - **Notifications** : `notif_enabled`, `notif_mentions`, `notif_comments`, `notif_new_bibax`, `notif_messages`, `notif_invitations`, `notif_bibax_activity`, `notif_news`, `notif_partners`, `notif_email_summary` (+ `_frequency`, `_address`). Seuls « Notifications push » (permission navigateur + jeton FCM) et « Messages » sont réellement branchés ; les autres lignes sont grisées « Bientôt ». La colonne `notification_prefs` (jsonb) concerne uniquement les **administrateurs** (cloche de la plateforme de gestion) : l'app ne l'utilise pas.
 - **Préférences** : `pref_distance_unit`, `pref_temperature_unit`, `pref_volume_unit`, `pref_weight_unit`, `pref_energy_unit` (kcal / Cal — la seule réellement appliquée), `pref_time_format_24h`, `pref_venue_sort`, `pref_autoplay_previews`, `pref_vibrations`, `pref_confirm_checkin`, `salon_display_mode` (`firstName` ou `nickname` : affichage dans les salons, l'initiale du nom s'ajoute en cas de doublon).
 - **Stories** : `story_view_duration_seconds`, `story_default_*` — lues et enregistrées mais **non appliquées** (voir `STORIES.md`).
-- **Compte** : `active`, `blocked_reason`, `blocked_until` (lues, jamais utilisées par l'app utilisateur).
+- **Compte** : `active`, `blocked_reason`, `blocked_until` (lues, jamais utilisées par l'app utilisateur). Ces colonnes, ainsi que `role`, `can_moderate`, `bibro_code`, `created_at`, `business_status` et `business_label`, sont **réservées** : seules les personnes habilitées peuvent les modifier, par une garde en base (voir `SECURITY.md`). L'app ne les écrit jamais.
 - **BibaZERO / WaterAlert en BibaSolo** : `biba_zero_active`, `biba_zero_tolerance`, `biba_zero_joker_used`, `biba_zero_pin`, `water_alert_solo`.
 - **Réglages de tags** : `allow_story_tags`, `allow_profile_via_tag`, `allow_pulse_tags`, `allow_profile_via_pulse_tag` (vrai par défaut — voir `BIBAX.md`).
 - Côté serveur seulement : `display_name_field` (règle d'affichage du nom dans les cartes : `fullName`, `firstNameInitial` ou `nickname`), ni lu ni écrit par l'app.
@@ -49,7 +49,7 @@ Chaque information du profil a son interrupteur, qui décide si elle est visible
 
 Colonne liée : `birth_date_share_precision` (`full` ou `dayMonth`) — « Date complète » / « Jour et mois seulement » ; avec `dayMonth`, la date reçue est de la forme `--MM-DD`, l'âge n'est pas calculé et le masquage de l'année se fait côté serveur **(base)**. `share_age` : l'âge est calculé côté client à partir de la date, et masqué si `share_age` est faux.
 
-**Effets côté serveur lisibles dans les scripts livrés** : `share_prenom`, `share_nom` et `share_surnom` (recherche par nom et nom affiché dans BibaPulse), `share_country` et `share_city` (recherche par nom : pays et ville mis à `null` si faux). L'effet des autres colonnes (`share_email`, `share_birth_date`, `share_bio`, les 10 réseaux, les 5 statistiques) se joue dans des fonctions dont le corps n'est pas livré **(base)**.
+**Effets côté serveur lisibles dans les scripts livrés** : `share_prenom`, `share_nom` et `share_surnom` (recherche par nom et nom affiché dans BibaPulse), `share_country` et `share_city` (recherche par nom : pays et ville mis à `null` si faux). Les suggestions de Bibax (`get_bibax_suggestions`) appliquent aussi `share_nom`, `share_surnom`, `share_city` (ville, localité et proximité) et `share_country`. L'effet des autres colonnes (`share_email`, `share_birth_date`, `share_bio`, les 10 réseaux, les 5 statistiques) se joue dans des fonctions dont le corps n'est pas livré **(base)**.
 
 **Règle fixe, qui n'est pas un réglage** : les statistiques financières et sur les calories ne sont jamais visibles par les autres.
 
