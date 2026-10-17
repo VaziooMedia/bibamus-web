@@ -7,13 +7,13 @@
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
-import { loadInvitableBibax, sendClubInvitation } from "../data/sharedDirectories.js";
+import { loadInvitableBibax, sendClubInvitation, pushClubInvitation } from "../data/sharedDirectories.js";
 
 const FILTER_FROM = 6; // au-delà de ce nombre de Bibax, un champ de recherche apparaît
 
 const fullName = (b) => [b.name, b.lastName].filter(Boolean).join(" ") || "Quelqu'un";
 
-export function InviteBibaxPanel({ clubId }) {
+export function InviteBibaxPanel({ clubId, clubName, myName }) {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState(null);
   const [loadError, setLoadError] = useState(null);
@@ -45,6 +45,8 @@ export function InviteBibaxPanel({ clubId }) {
       return;
     }
     setList((l) => (l || []).map((b) => (b.userId === bibax.userId ? { ...b, alreadyInvited: true } : b)));
+    // La notification du fil est créée par le serveur ; ici, la notification du téléphone (sans attendre).
+    pushClubInvitation(bibax.userId, myName, clubName);
   };
 
   const needle = filter.trim().toLowerCase();

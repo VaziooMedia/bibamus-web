@@ -13,6 +13,7 @@
 
 import { supabase } from "../supabaseClient.js";
 import { normalizeSearchText } from "../utils.js";
+import { loadBibroCodes } from "./profiles.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
@@ -1216,6 +1217,23 @@ export async function loadInvitableBibax(clubId) {
   }));
   bibax.sort((a, b) => [a.name, a.lastName].filter(Boolean).join(" ").localeCompare([b.name, b.lastName].filter(Boolean).join(" "), "fr", { sensitivity: "base" }));
   return { bibax };
+}
+
+// Notification sur le téléphone de la personne invitée. La notification du fil est créée par le
+// serveur au moment de l'invitation ; ici on ne fait que prévenir le téléphone. Le serveur n'envoie
+// que si les réglages de la personne l'autorisent (Bibax accepté, notifications non coupées), et un
+// échec ici ne doit jamais gêner l'invitation.
+export async function pushClubInvitation(inviteeId, inviterName, clubName) {
+  try {
+    const codes = await loadBibroCodes([inviteeId]);
+    const code = codes[inviteeId];
+    if (!code) return false;
+    await sendPushNotification([code], "BibaClub", `${inviterName || "Un de vos Bibax"} vous invite à rejoindre le BibaClub « ${clubName || "sans nom"} »`);
+    return true;
+  } catch (e) {
+    console.error("pushClubInvitation:", e);
+    return false;
+  }
 }
 
 export async function loadClubMembers(clubId) {

@@ -50,7 +50,7 @@ function entryLabel(club) {
   return club.joinMode === "request" ? "Privé · sur invitation, arrivées validées" : "Privé · sur invitation";
 }
 
-export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
+export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfile }) {
   const [club, setClub] = useState(null);
   const [clubLoaded, setClubLoaded] = useState(false);
   const [members, setMembers] = useState(null);
@@ -153,7 +153,7 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
     return (
       <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Ce club est introuvable.</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Ce club est introuvable, ou l'invitation n'est plus valable.</p>
       </div>
     );
   }
@@ -305,7 +305,7 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
                 </div>
               )}
 
-              <InviteBibaxPanel clubId={clubId} />
+              <InviteBibaxPanel clubId={clubId} clubName={club.name} myName={myName} />
 
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
                 {members

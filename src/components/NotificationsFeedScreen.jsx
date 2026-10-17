@@ -8,7 +8,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
-import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests, respondBibaxRequest, respondNotification, getSession } from "../data/sharedDirectories.js";
+import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests, respondBibaxRequest, respondNotification, getSession, loadMyClubInvitations } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
@@ -21,6 +21,7 @@ const TYPE_LABELS = (myGender) => ({
   bibax_accepted: "a accepté votre demande Bibax",
   salon_invite: "t'invite à rejoindre un BibaRoom",
   salon_invite_accepted: "a rejoint ton BibaRoom",
+  club_invitation: "vous invite à rejoindre un BibaClub",
   // La vraie conjugaison suit le vrai genre du destinataire (celui qui reçoit et lit la
   // notification), pas celui de l'auteur du tag.
   story_tag: `vous a ${myGender === "female" ? "taguée" : "tagué"} dans une Story`,
@@ -41,7 +42,7 @@ function timeAgo(iso) {
   return `Il y a ${days} j`;
 }
 
-export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxProfile, onRespondSalonInvite, myGender, onOpenTaggedStory }) {
+export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxProfile, onRespondSalonInvite, myGender, onOpenTaggedStory, onOpenClub }) {
   const [notifications, setNotifications] = useState(null);
   const [pendingBibax, setPendingBibax] = useState([]);
   const [respondedIds, setRespondedIds] = useState({});
@@ -50,6 +51,10 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
   // les fiches s'ouvrent à partir d'un code.
   const [bibroCodes, setBibroCodes] = useState({});
   const [viewedProfileCode, setViewedProfileCode] = useState(null);
+  // Clubs pour lesquels j'ai encore une invitation en attente (null tant que ce n'est pas connu).
+  // La notification, elle, reste dans le fil une fois l'invitation traitée ou périmée : c'est cette
+  // liste qui dit si l'on peut encore y répondre.
+  const [liveInviteClubIds, setLiveInviteClubIds] = useState(null);
   // Mon propre rond de profil mène à MON profil. L'écran ne reçoit pas mon identifiant, on le
   // lit donc depuis la session plutôt que de le faire descendre depuis le routeur.
   const [myUserId, setMyUserId] = useState(null);
@@ -62,6 +67,11 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
   useEffect(() => {
     loadMyNotifications().then(async (list) => {
       setNotifications(list);
+      if (list.some((n) => n.type === "club_invitation")) {
+        loadMyClubInvitations().then((r) => {
+          if (!r.error) setLiveInviteClubIds(new Set(r.invitations.map((i) => i.clubId)));
+        });
+      }
       const unreadIds = list.filter((n) => !n.read).map((n) => n.id);
       if (unreadIds.length > 0) markAllNotificationsRead();
       const actorIds = list.map((n) => n.actorId).filter(Boolean);
@@ -87,6 +97,8 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
     // Un tag dans une Story ouvre directement cette Story précise — sinon la personne devrait
     // la retrouver elle-même dans la barre de Stories, parmi toutes les autres.
     else if (n.type === "story_tag" && n.entityId && onOpenTaggedStory) onOpenTaggedStory(n.entityId);
+    // Une invitation dans un BibaClub ouvre la page de ce club, où l'on accepte ou refuse.
+    else if (n.type === "club_invitation" && n.entityId && onOpenClub) onOpenClub(n.entityId);
   };
 
   const respondBibax = async (n, accept) => {
@@ -178,6 +190,11 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                     {n.previewText && n.type !== "story_tag" && (
                       <div style={{ fontSize: "12.5px", color: COLORS.ink, marginTop: "4px", fontStyle: "italic", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         « {n.previewText} »
+                      </div>
+                    )}
+                    {n.type === "club_invitation" && liveInviteClubIds !== null && (
+                      <div style={{ fontSize: "12px", color: liveInviteClubIds.has(n.entityId) ? COLORS.amber : COLORS.inkSoft, marginTop: "6px", fontWeight: 600 }}>
+                        {liveInviteClubIds.has(n.entityId) ? "Touchez pour répondre à l'invitation." : "Cette invitation n'est plus en attente."}
                       </div>
                     )}
                     {responded && (
