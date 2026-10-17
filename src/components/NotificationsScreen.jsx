@@ -11,7 +11,7 @@
 //     ne dépendent d'aucun réglage : ils sont toujours actifs.
 //   - Les réglages ne concernent que l'alerte "push" envoyée sur le téléphone.
 //
-// Aujourd'hui, deux réglages seulement sont branchés :
+// Aujourd'hui, trois réglages seulement sont branchés :
 //   - "Notifications push" (bloc "Sur cet appareil") : demande la permission et
 //     enregistre le jeton FCM de l'appareil (voir firebaseClient.js). Sur iPhone,
 //     ne fonctionne que si l'app a été ajoutée à l'écran d'accueil (iOS 16.4+).
@@ -21,6 +21,10 @@
 //   - "Messages" (bloc "Alertes à recevoir") : respecté côté serveur par
 //     get_message_push_targets, qui écarte des destinataires ceux qui l'ont
 //     désactivé.
+//   - "Invitations BibaClub" (bloc "Alertes à recevoir") : respecté côté serveur par
+//     get_club_invitation_push_target, que l'app de la personne qui invite interroge
+//     avant d'envoyer l'alerte. L'invitation reste toujours dans le centre de
+//     notifications (avec Accepter / Refuser) et sur les pastilles.
 // Les alertes par sujet sont grisées tant que le push est coupé.
 // ============================================================
 import React, { useState, useEffect } from "react";
@@ -150,8 +154,9 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
         {pushRegistered !== null && !pushOn && (
           <div style={{ fontSize: "12px", color: COLORS.inkSoft, padding: "12px 4px 0" }}>Active d'abord « Notifications push » pour choisir tes alertes.</div>
         )}
-        {/* Seul réglage de cette liste, avec les notifications push, à piloter réellement
-            quelque chose : le serveur écarte des destinataires ceux qui l'ont désactivé. */}
+        {/* Seuls réglages de cette liste, avec les notifications push, à piloter réellement
+            quelque chose : Messages et Invitations BibaClub (le serveur écarte des destinataires
+            ceux qui les ont désactivés). */}
         <NotifRow
           icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
           title="Messages"
@@ -159,6 +164,14 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
           checked={pushOn && p.notifMessages !== false}
           disabled={!pushOn}
           onChange={(v) => update({ notifMessages: v })}
+        />
+        <NotifRow
+          icon={<NavIcon name="crown" size={17} color={COLORS.amber} />}
+          title="Invitations BibaClub"
+          subtitle="Quand un Bibax t'invite à rejoindre un BibaClub"
+          checked={pushOn && p.notifClubInvitations !== false}
+          disabled={!pushOn}
+          onChange={(v) => update({ notifClubInvitations: v })}
         />
         <NotifRow
           icon={<NavIcon name="tag" size={17} color={COLORS.amber} />}

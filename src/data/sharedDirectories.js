@@ -13,7 +13,6 @@
 
 import { supabase } from "../supabaseClient.js";
 import { normalizeSearchText } from "../utils.js";
-import { loadBibroCodes } from "./profiles.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
@@ -775,6 +774,7 @@ export async function loadMyProfile(userId) {
     notifNewBibax: data.notif_new_bibax,
     notifMessages: data.notif_messages,
     notifInvitations: data.notif_invitations,
+    notifClubInvitations: data.notif_club_invitations,
     notifBibaxActivity: data.notif_bibax_activity,
     notifNews: data.notif_news,
     notifPartners: data.notif_partners,
@@ -877,6 +877,7 @@ export async function updateMyProfile(
     notifNewBibax,
     notifMessages,
     notifInvitations,
+    notifClubInvitations,
     notifBibaxActivity,
     notifNews,
     notifPartners,
@@ -970,6 +971,7 @@ export async function updateMyProfile(
     notif_new_bibax: notifNewBibax,
     notif_messages: notifMessages,
     notif_invitations: notifInvitations,
+    notif_club_invitations: notifClubInvitations,
     notif_bibax_activity: notifBibaxActivity,
     notif_news: notifNews,
     notif_partners: notifPartners,
@@ -1251,13 +1253,20 @@ export async function loadInvitableBibax(clubId, { search = "", limit = 50, offs
 }
 
 // Notification sur le téléphone de la personne invitée. La notification du fil est créée par le
-// serveur au moment de l'invitation ; ici on ne fait que prévenir le téléphone. Le serveur n'envoie
-// que si les réglages de la personne l'autorisent (Bibax accepté, notifications non coupées), et un
-// échec ici ne doit jamais gêner l'invitation.
-export async function pushClubInvitation(inviteeId, inviterName, clubName) {
+// serveur au moment de l'invitation ; ici on ne fait que prévenir le téléphone. L'app demande
+// d'abord au serveur (get_club_invitation_push_target) si elle peut alerter la personne invitée :
+// il répond avec son code Bibax, ou rien si elle a coupé ses notifications ou l'interrupteur
+// « Invitations BibaClub ». Il ne répond qu'à la personne qui vient d'envoyer l'invitation. Les
+// autres contrôles (Bibax accepté, pas de blocage) restent faits par le serveur d'envoi. Un échec
+// ici ne doit jamais gêner l'invitation.
+export async function pushClubInvitation(invitationId, inviterName, clubName) {
   try {
-    const codes = await loadBibroCodes([inviteeId]);
-    const code = codes[inviteeId];
+    if (!invitationId) return false;
+    const { data: code, error } = await supabase.rpc("get_club_invitation_push_target", { p_invitation_id: invitationId });
+    if (error) {
+      console.error("pushClubInvitation:", error);
+      return false;
+    }
     if (!code) return false;
     await sendPushNotification([code], "BibaClub", `${inviterName || "Un de vos Bibax"} vous invite à rejoindre le BibaClub « ${clubName || "sans nom"} »`);
     return true;
