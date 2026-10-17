@@ -114,7 +114,7 @@ export function InviteBibaxPanel({ clubId, clubName, myName }) {
     }
     setList((l) => (l || []).map((b) => (b.userId === bibax.userId ? { ...b, alreadyInvited: true } : b)));
     // La notification du fil est créée par le serveur ; ici, la notification du téléphone (sans attendre).
-    pushClubInvitation(bibax.userId, myName, clubName);
+    pushClubInvitation(result.invitationId, myName, clubName);
   };
 
   const showSearch = manyBibax || query !== "" || activeTerm !== "";
