@@ -6,7 +6,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
-import { loadMyClubs } from "../data/sharedDirectories.js";
+import { loadMyClubs, findClubByCode, searchPublicClubs } from "../data/sharedDirectories.js";
 
 function ClubRow({ club, subtitle, onClick }) {
   return (
@@ -35,12 +35,78 @@ function ClubRow({ club, subtitle, onClick }) {
   );
 }
 
+const JOIN_MODE_LABEL = { invite: "Sur invitation (code)", request: "Sur demande", open: "Ouvert" };
+const STATUS_LABEL = { active: "Membre", pending: "Demande en attente" };
+
+const inputStyle = {
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "10px 12px",
+  borderRadius: "10px",
+  border: `2px solid ${COLORS.paperAlt}`,
+  background: COLORS.paper,
+  color: COLORS.ink,
+  fontSize: "14px",
+};
+
 export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub }) {
   const [myClubs, setMyClubs] = useState(null);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeBusy, setCodeBusy] = useState(false);
+  const [codeError, setCodeError] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchBusy, setSearchBusy] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const searchSeq = React.useRef(0);
 
   useEffect(() => {
     loadMyClubs(myUserId).then(setMyClubs);
   }, [myUserId]);
+
+  // Recherche parmi les clubs publics : lancée 0,4 s après la dernière frappe, à partir de 2 caractères.
+  useEffect(() => {
+    const text = searchInput.trim();
+    searchSeq.current += 1;
+    const seq = searchSeq.current;
+    setSearchError(null);
+    if (text.length < 2) {
+      setSearchResults(null);
+      setSearchBusy(false);
+      return undefined;
+    }
+    setSearchBusy(true);
+    const timer = setTimeout(async () => {
+      const result = await searchPublicClubs(text);
+      if (seq !== searchSeq.current) return; // une recherche plus récente a pris le relais
+      setSearchBusy(false);
+      if (result.error) {
+        setSearchError("La recherche a échoué. Réessayez dans un instant.");
+        setSearchResults(null);
+        return;
+      }
+      setSearchResults(result.clubs);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const handleCode = async () => {
+    const code = codeInput.trim();
+    if (!code) return;
+    setCodeBusy(true);
+    setCodeError(null);
+    const result = await findClubByCode(code);
+    setCodeBusy(false);
+    if (result.error) {
+      setCodeError(result.error);
+      return;
+    }
+    if (!result.clubId) {
+      setCodeError("Aucun club ne correspond à ce code.");
+      return;
+    }
+    onOpenClub(result.clubId, { inviteCode: code });
+  };
 
   const roleLabel = { admin: "Admin", moderator: "Modérateur", member: "Membre" };
 
@@ -75,6 +141,61 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub
       ) : (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "24px" }}>Vous n'êtes membre d'aucun BibaClub pour l'instant.</p>
       )}
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
+        <div style={{ fontSize: "14.5px", fontWeight: 700, marginBottom: "4px" }}>Rejoindre avec un code</div>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 10px 0" }}>Vous avez reçu le code d'invitation d'un club ? Saisissez-le ici.</p>
+        <input
+          value={codeInput}
+          onChange={(e) => {
+            setCodeInput(e.target.value.toUpperCase());
+            setCodeError(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleCode();
+          }}
+          placeholder="Code d'invitation"
+          maxLength={12}
+          autoCapitalize="characters"
+          autoCorrect="off"
+          style={{ ...inputStyle, marginBottom: "10px" }}
+        />
+        {codeError && <p style={{ fontSize: "12px", color: "#FF3B3B", margin: "0 0 10px 0" }}>{codeError}</p>}
+        <PrimaryButton onClick={handleCode} disabled={codeBusy || !codeInput.trim()} style={{ width: "100%" }}>
+          {codeBusy ? "..." : "Trouver le club"}
+        </PrimaryButton>
+      </div>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
+        <div style={{ fontSize: "14.5px", fontWeight: 700, marginBottom: "4px" }}>Rechercher un club public</div>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 10px 0" }}>Cherchez par nom parmi les clubs publics (2 lettres au minimum).</p>
+        <input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Nom du club"
+          maxLength={60}
+          autoCorrect="off"
+          style={inputStyle}
+        />
+        {searchError && <p style={{ fontSize: "12px", color: "#FF3B3B", margin: "10px 0 0 0" }}>{searchError}</p>}
+        {searchBusy && <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "10px 0 0 0" }}>Recherche...</p>}
+        {!searchBusy && searchResults && searchResults.length === 0 && (
+          <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "10px 0 0 0" }}>Aucun club public ne correspond.</p>
+        )}
+        {!searchBusy && searchResults && searchResults.length > 0 && (
+          <div style={{ marginTop: "6px" }}>
+            {searchResults.map((c, i) => (
+              <div key={c.id} style={{ borderBottom: i === searchResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}` }}>
+                <ClubRow
+                  club={c}
+                  subtitle={[c.category, STATUS_LABEL[c.myStatus] || JOIN_MODE_LABEL[c.joinMode]].filter(Boolean).join(" · ")}
+                  onClick={() => onOpenClub(c.id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <PageFooterNav onBack={onBack} />
     </div>
