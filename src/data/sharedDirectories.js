@@ -1346,8 +1346,13 @@ export async function removeClubMember(clubId, userId) {
   return { ok: true };
 }
 
-export async function leaveClub(clubId, userId) {
-  return removeClubMember(clubId, userId);
+// Quitter un club : passe par la fonction serveur, qui répond « left » (on a quitté, le club continue) ou
+// « deleted » (on était la seule personne active du club : il est supprimé avec elle). Ses refus sont
+// renvoyés tels quels (par exemple : administrateur unique d'un club qui compte d'autres membres actifs).
+export async function leaveClub(clubId) {
+  const { data, error } = await supabase.rpc("leave_club", { p_club_id: clubId });
+  if (error) return { error: error.message };
+  return { status: data };
 }
 
 // Fil du club — vraies publications des membres (l'activité automatique façon BibaPulse se
