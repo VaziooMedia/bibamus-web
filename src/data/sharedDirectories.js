@@ -1200,14 +1200,27 @@ export async function sendClubInvitation(clubId, inviteeId) {
 }
 
 // Mes Bibax que je peux inviter dans ce club (ni déjà dedans, ni ayant refusé récemment).
-export async function loadInvitableBibax(clubId) {
-  const { data, error } = await supabase.rpc("list_invitable_bibax", { p_club_id: clubId });
+// Le serveur fait la recherche (sur le nom affiché, sans tenir compte des accents ni des majuscules),
+// le tri par nom et la pagination : il n'y a donc aucun plafond caché, quel que soit le nombre de
+// Bibax. On demande une personne de plus que la taille de page pour savoir s'il y a une suite.
+export async function loadInvitableBibax(clubId, { search = "", limit = 50, offset = 0 } = {}) {
+  const wanted = Math.floor(Number(limit));
+  const pageSize = Number.isFinite(wanted) && wanted >= 1 ? Math.min(wanted, 499) : 50; // le serveur plafonne chaque appel à 500
+  const term = String(search || "").trim();
+  const { data, error } = await supabase.rpc("list_invitable_bibax", {
+    p_club_id: clubId,
+    p_search: term || null,
+    p_limit: pageSize + 1,
+    p_offset: Math.max(Math.floor(Number(offset)) || 0, 0),
+  });
   if (error) {
     console.error("loadInvitableBibax:", error);
     return { error: error.message };
   }
-  const rows = data || [];
+  const all = data || [];
+  const rows = all.slice(0, pageSize);
   const profilesById = await loadProfilesById(rows.map((r) => r.user_id));
+  // Ordre du serveur conservé tel quel (c'est lui qui trie, page après page).
   const bibax = rows.map((r) => ({
     userId: r.user_id,
     alreadyInvited: !!r.already_invited,
@@ -1215,8 +1228,7 @@ export async function loadInvitableBibax(clubId) {
     lastName: profilesById[r.user_id]?.last_name || null,
     avatarUrl: profilesById[r.user_id]?.avatar_url || null,
   }));
-  bibax.sort((a, b) => [a.name, a.lastName].filter(Boolean).join(" ").localeCompare([b.name, b.lastName].filter(Boolean).join(" "), "fr", { sensitivity: "base" }));
-  return { bibax };
+  return { bibax, hasMore: all.length > pageSize, received: rows.length };
 }
 
 // Notification sur le téléphone de la personne invitée. La notification du fil est créée par le
