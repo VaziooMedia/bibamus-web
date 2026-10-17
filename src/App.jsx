@@ -279,7 +279,6 @@ export default function App() {
   const [screenBeforeVenueDetail, setScreenBeforeVenueDetail] = useState("venueDirectory");
   const [screenBeforeBibaSolo, setScreenBeforeBibaSolo] = useState("sessionHub");
   const [viewedClubId, setViewedClubId] = useState(null);
-  const [viewedClubInviteCode, setViewedClubInviteCode] = useState("");
   const [spotifyReturnContext, setSpotifyReturnContext] = useState({ screen: "connectSpotify", eventId: null });
   const [screenBeforeVenueDirectory, setScreenBeforeVenueDirectory] = useState("repertoireHub");
   const [screenBeforeSearch, setScreenBeforeSearch] = useState("home");
@@ -2551,9 +2550,8 @@ export default function App() {
               <BibaClubsListScreen
                 myUserId={session.user.id}
                 onBack={() => setScreen("profile")}
-                onOpenClub={(clubId, options) => {
+                onOpenClub={(clubId) => {
                   setViewedClubId(clubId);
-                  setViewedClubInviteCode(options?.inviteCode || "");
                   setScreen("clubDetail");
                 }}
                 onCreateClub={() => setScreen("createClub")}
@@ -2565,13 +2563,12 @@ export default function App() {
                 onBack={() => setScreen("bibaClubsList")}
                 onCreated={(clubId) => {
                   setViewedClubId(clubId);
-                  setViewedClubInviteCode("");
                   setScreen("clubDetail");
                 }}
               />
             )}
             {screen === "clubDetail" && viewedClubId && (
-              <ClubDetailScreen clubId={viewedClubId} myUserId={session.user.id} initialInviteCode={viewedClubInviteCode} onBack={() => setScreen("bibaClubsList")} />
+              <ClubDetailScreen clubId={viewedClubId} myUserId={session.user.id} onBack={() => setScreen("bibaClubsList")} />
             )}
             {screen === "myPhotos" && <MyPhotosScreen onBack={() => setScreen("profile")} />}
             {screen === "myInfo" && (
