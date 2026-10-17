@@ -38,8 +38,9 @@ function timeAgo(iso) {
 const ROLE_LABEL = { admin: "Admin", moderator: "Modérateur", member: "Membre" };
 const CATEGORY_LABEL = { Sport: "Sport", Amis: "Amis", Travail: "Travail", Famille: "Famille", Étudiants: "Étudiants", Autre: "Autre" };
 
-export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
+export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, initialInviteCode = "" }) {
   const [club, setClub] = useState(null);
+  const [clubLoaded, setClubLoaded] = useState(false);
   const [members, setMembers] = useState(null);
   const [tab, setTab] = useState("feed");
   const [posts, setPosts] = useState(null);
@@ -49,14 +50,17 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
   const [pending, setPending] = useState([]);
   const [joinBusy, setJoinBusy] = useState(false);
   const [joinError, setJoinError] = useState(null);
-  const [inviteCodeInput, setInviteCodeInput] = useState("");
+  const [inviteCodeInput, setInviteCodeInput] = useState((initialInviteCode || "").toUpperCase());
   const [memberActionError, setMemberActionError] = useState(null);
   const [inviteCode, setInviteCode] = useState(null);
 
   const refreshMembers = () => loadClubMembers(clubId).then(setMembers);
 
   useEffect(() => {
-    loadClubDetail(clubId).then(setClub);
+    loadClubDetail(clubId).then((c) => {
+      setClub(c);
+      setClubLoaded(true);
+    });
     refreshMembers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId]);
@@ -127,7 +131,18 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile }) {
       return;
     }
     refreshMembers();
+    // Devenu membre, la fiche complète du club est lisible : on la recharge.
+    loadClubDetail(clubId).then((c) => c && setClub(c));
   };
+
+  if (clubLoaded && !club) {
+    return (
+      <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+        <PageHeader onBack={onBack} />
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Ce club est introuvable.</p>
+      </div>
+    );
+  }
 
   if (!club || members === null) {
     return (
