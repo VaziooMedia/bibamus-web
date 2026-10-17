@@ -279,7 +279,8 @@ export default function App() {
   const [screenBeforeVenueDetail, setScreenBeforeVenueDetail] = useState("venueDirectory");
   const [screenBeforeBibaSolo, setScreenBeforeBibaSolo] = useState("sessionHub");
   const [viewedClubId, setViewedClubId] = useState(null);
-  const [viewedClubInviteCode, setViewedClubInviteCode] = useState("");
+  // Écran où ramène la flèche retour de la page d'un club (liste des clubs, ou fil de notifications quand on y arrive par une invitation).
+  const [clubDetailBack, setClubDetailBack] = useState("bibaClubsList");
   const [spotifyReturnContext, setSpotifyReturnContext] = useState({ screen: "connectSpotify", eventId: null });
   const [screenBeforeVenueDirectory, setScreenBeforeVenueDirectory] = useState("repertoireHub");
   const [screenBeforeSearch, setScreenBeforeSearch] = useState("home");
@@ -2551,9 +2552,9 @@ export default function App() {
               <BibaClubsListScreen
                 myUserId={session.user.id}
                 onBack={() => setScreen("profile")}
-                onOpenClub={(clubId, options) => {
+                onOpenClub={(clubId) => {
                   setViewedClubId(clubId);
-                  setViewedClubInviteCode(options?.inviteCode || "");
+                  setClubDetailBack("bibaClubsList");
                   setScreen("clubDetail");
                 }}
                 onCreateClub={() => setScreen("createClub")}
@@ -2565,13 +2566,13 @@ export default function App() {
                 onBack={() => setScreen("bibaClubsList")}
                 onCreated={(clubId) => {
                   setViewedClubId(clubId);
-                  setViewedClubInviteCode("");
+                  setClubDetailBack("bibaClubsList");
                   setScreen("clubDetail");
                 }}
               />
             )}
             {screen === "clubDetail" && viewedClubId && (
-              <ClubDetailScreen clubId={viewedClubId} myUserId={session.user.id} initialInviteCode={viewedClubInviteCode} onBack={() => setScreen("bibaClubsList")} />
+              <ClubDetailScreen clubId={viewedClubId} myUserId={session.user.id} myName={profile.name} onBack={() => setScreen(clubDetailBack)} />
             )}
             {screen === "myPhotos" && <MyPhotosScreen onBack={() => setScreen("profile")} />}
             {screen === "myInfo" && (
@@ -3550,6 +3551,11 @@ export default function App() {
                 onBack={() => setScreen("home")}
                 onRespondSalonInvite={respondSalonInviteFn}
                 myGender={profile.gender}
+                onOpenClub={(clubId) => {
+                  setViewedClubId(clubId);
+                  setClubDetailBack("notificationsFeed");
+                  setScreen("clubDetail");
+                }}
                 onOpenTaggedStory={async (storyId) => {
                   const story = await loadStoryById(storyId);
                   if (story) {

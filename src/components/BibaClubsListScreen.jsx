@@ -1,12 +1,13 @@
 // ============================================================
-// "Mes BibaClub" — liste des clubs dont on est membre, recherche
-// de clubs publics à rejoindre, et accès à la création.
+// "Mes BibaClub" — invitations reçues, liste des clubs dont on est
+// membre, recherche de clubs publics à rejoindre, et accès à la création.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
-import { loadMyClubs, findClubByCode, searchPublicClubs } from "../data/sharedDirectories.js";
+import { loadMyClubs, loadMyClubInvitations, searchPublicClubs } from "../data/sharedDirectories.js";
+import { ClubInvitationCard } from "./ClubInvitationCard.jsx";
 
 function ClubRow({ club, subtitle, onClick }) {
   return (
@@ -35,7 +36,7 @@ function ClubRow({ club, subtitle, onClick }) {
   );
 }
 
-const JOIN_MODE_LABEL = { invite: "Sur invitation (code)", request: "Sur demande", open: "Ouvert" };
+const JOIN_MODE_LABEL = { invite: "Sur invitation", request: "Sur demande", open: "Ouvert" };
 const STATUS_LABEL = { active: "Membre", pending: "Demande en attente" };
 
 const inputStyle = {
@@ -51,9 +52,7 @@ const inputStyle = {
 
 export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub }) {
   const [myClubs, setMyClubs] = useState(null);
-  const [codeInput, setCodeInput] = useState("");
-  const [codeBusy, setCodeBusy] = useState(false);
-  const [codeError, setCodeError] = useState(null);
+  const [invitations, setInvitations] = useState([]);
   const [searchInput, setSearchInput] = useState("");
   const [searchResults, setSearchResults] = useState(null);
   const [searchBusy, setSearchBusy] = useState(false);
@@ -62,6 +61,8 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub
 
   useEffect(() => {
     loadMyClubs(myUserId).then(setMyClubs);
+    // Une erreur de chargement des invitations ne bloque pas la liste : on n'affiche simplement rien.
+    loadMyClubInvitations().then((result) => setInvitations(result.invitations || []));
   }, [myUserId]);
 
   // Recherche parmi les clubs publics : lancée 0,4 s après la dernière frappe, à partir de 2 caractères.
@@ -90,22 +91,9 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const handleCode = async () => {
-    const code = codeInput.trim();
-    if (!code) return;
-    setCodeBusy(true);
-    setCodeError(null);
-    const result = await findClubByCode(code);
-    setCodeBusy(false);
-    if (result.error) {
-      setCodeError(result.error);
-      return;
-    }
-    if (!result.clubId) {
-      setCodeError("Aucun club ne correspond à ce code.");
-      return;
-    }
-    onOpenClub(result.clubId, { inviteCode: code });
+  // Invitation acceptée : le club rejoint apparaît tout de suite dans « Mes BibaClub ».
+  const handleInvitationResponded = (_invitation, status) => {
+    if (status === "active") loadMyClubs(myUserId).then(setMyClubs);
   };
 
   const roleLabel = { admin: "Admin", moderator: "Modérateur", member: "Membre" };
@@ -126,6 +114,17 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub
         + Créer un BibaClub
       </PrimaryButton>
 
+      {invitations.length > 0 && (
+        <div style={{ marginBottom: "22px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px" }}>
+            Invitations reçues ({invitations.length})
+          </div>
+          {invitations.map((inv) => (
+            <ClubInvitationCard key={inv.id} invitation={inv} onOpenClub={(id) => onOpenClub(id)} onResponded={handleInvitationResponded} />
+          ))}
+        </div>
+      )}
+
       {myClubs === null ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Chargement...</p>
       ) : myClubs.length > 0 ? (
@@ -139,36 +138,16 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub
           </div>
         </div>
       ) : (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "24px" }}>Vous n'êtes membre d'aucun BibaClub pour l'instant.</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "24px" }}>
+          Vous n'êtes membre d'aucun BibaClub pour l'instant. Créez le vôtre, ou attendez l'invitation d'un de vos Bibax.
+        </p>
       )}
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
-        <div style={{ fontSize: "14.5px", fontWeight: 700, marginBottom: "4px" }}>Rejoindre avec un code</div>
-        <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 10px 0" }}>Vous avez reçu le code d'invitation d'un club ? Saisissez-le ici.</p>
-        <input
-          value={codeInput}
-          onChange={(e) => {
-            setCodeInput(e.target.value.toUpperCase());
-            setCodeError(null);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleCode();
-          }}
-          placeholder="Code d'invitation"
-          maxLength={12}
-          autoCapitalize="characters"
-          autoCorrect="off"
-          style={{ ...inputStyle, marginBottom: "10px" }}
-        />
-        {codeError && <p style={{ fontSize: "12px", color: "#FF3B3B", margin: "0 0 10px 0" }}>{codeError}</p>}
-        <PrimaryButton onClick={handleCode} disabled={codeBusy || !codeInput.trim()} style={{ width: "100%" }}>
-          {codeBusy ? "..." : "Trouver le club"}
-        </PrimaryButton>
-      </div>
-
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
-        <div style={{ fontSize: "14.5px", fontWeight: 700, marginBottom: "4px" }}>Rechercher un club public</div>
-        <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 10px 0" }}>Cherchez par nom parmi les clubs publics (2 lettres au minimum).</p>
+        <div style={{ fontSize: "14.5px", fontWeight: 700, marginBottom: "4px" }}>Découvrir des clubs publics</div>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 10px 0" }}>
+          Cherchez par nom (2 lettres au minimum). Un club privé n'apparaît jamais ici : on n'y entre que sur invitation d'un Bibax membre.
+        </p>
         <input
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}

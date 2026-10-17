@@ -1,13 +1,15 @@
 // ============================================================
 // Page d'un BibaClub — en-tête (photo, nom, catégorie), puis 3
 // onglets : Fil (publications des membres), Membres (liste +
-// rôles + demandes en attente), Stats (calculées à partir des
-// salons rattachés).
+// rôles + arrivées à valider + invitation de Bibax), Stats
+// (calculées à partir des salons rattachés).
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
+import { ClubInvitationCard } from "./ClubInvitationCard.jsx";
+import { InviteBibaxPanel } from "./InviteBibaxPanel.jsx";
 import {
   loadClubDetail,
   loadClubMembers,
@@ -16,7 +18,7 @@ import {
   deleteClubPost,
   loadClubStats,
   loadPendingClubRequests,
-  getClubInviteCode,
+  loadMyClubInvitations,
   approveClubMember,
   rejectClubMember,
   updateClubMemberRole,
@@ -38,7 +40,17 @@ function timeAgo(iso) {
 const ROLE_LABEL = { admin: "Admin", moderator: "Modérateur", member: "Membre" };
 const CATEGORY_LABEL = { Sport: "Sport", Amis: "Amis", Travail: "Travail", Famille: "Famille", Étudiants: "Étudiants", Autre: "Autre" };
 
-export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, initialInviteCode = "" }) {
+// Comment on entre dans le club, en quelques mots (sous le nom du club).
+function entryLabel(club) {
+  if (club.visibility === "public") {
+    if (club.joinMode === "request") return "Public · sur demande";
+    if (club.joinMode === "invite") return "Public · sur invitation";
+    return "Public · accès libre";
+  }
+  return club.joinMode === "request" ? "Privé · sur invitation, arrivées validées" : "Privé · sur invitation";
+}
+
+export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfile }) {
   const [club, setClub] = useState(null);
   const [clubLoaded, setClubLoaded] = useState(false);
   const [members, setMembers] = useState(null);
@@ -50,9 +62,9 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, init
   const [pending, setPending] = useState([]);
   const [joinBusy, setJoinBusy] = useState(false);
   const [joinError, setJoinError] = useState(null);
-  const [inviteCodeInput, setInviteCodeInput] = useState((initialInviteCode || "").toUpperCase());
   const [memberActionError, setMemberActionError] = useState(null);
-  const [inviteCode, setInviteCode] = useState(null);
+  // Mon invitation en attente dans ce club, s'il y en a une (la carte garde la main une fois la réponse donnée).
+  const [invitation, setInvitation] = useState(null);
 
   const refreshMembers = () => loadClubMembers(clubId).then(setMembers);
 
@@ -62,6 +74,7 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, init
       setClubLoaded(true);
     });
     refreshMembers();
+    loadMyClubInvitations().then((result) => setInvitation((result.invitations || []).find((i) => i.clubId === clubId) || null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId]);
 
@@ -82,11 +95,6 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, init
   useEffect(() => {
     if (isAdminOrMod) loadPendingClubRequests(clubId).then(setPending);
   }, [isAdminOrMod, clubId]);
-
-  // Le code d'invitation n'est plus dans la fiche du club : le serveur le donne aux seuls modérateurs et administrateurs.
-  useEffect(() => {
-    if (isAdminOrMod && club?.joinMode === "invite") getClubInviteCode(clubId).then((result) => setInviteCode(result.code || null));
-  }, [isAdminOrMod, club?.joinMode, clubId]);
 
   const handlePost = async () => {
     if (!postBody.trim()) return;
@@ -121,10 +129,16 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, init
     onBack();
   };
 
+  // Réponse à l'invitation : devenu membre (ou en attente de validation), on recharge la page.
+  const handleInvitationResponded = () => {
+    refreshMembers();
+    loadClubDetail(clubId).then((c) => c && setClub(c));
+  };
+
   const handleJoin = async () => {
     setJoinBusy(true);
     setJoinError(null);
-    const result = await joinClub(clubId, myUserId, { inviteCode: inviteCodeInput });
+    const result = await joinClub(clubId);
     setJoinBusy(false);
     if (result.error) {
       setJoinError(result.error);
@@ -139,7 +153,7 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, init
     return (
       <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Ce club est introuvable.</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Ce club est introuvable, ou l'invitation n'est plus valable.</p>
       </div>
     );
   }
@@ -163,33 +177,31 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, init
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{club.name}</h1>
           <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>
             {club.category && `${CATEGORY_LABEL[club.category] || club.category} · `}
-            {club.visibility === "public" ? "Public" : "Privé"}
+            {entryLabel(club)}
           </div>
         </div>
       </div>
       {club.description && <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>{club.description}</p>}
 
       {!isMember && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
-          {myMembership?.status === "pending" ? (
-            <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Votre demande est en attente de validation.</p>
-          ) : (
-            <>
-              {club.joinMode === "invite" && (
-                <input
-                  value={inviteCodeInput}
-                  onChange={(e) => setInviteCodeInput(e.target.value.toUpperCase())}
-                  placeholder="Code d'invitation"
-                  style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.paper, color: COLORS.ink, fontSize: "14px", marginBottom: "10px" }}
-                />
-              )}
-              {joinError && <p style={{ fontSize: "12px", color: "#FF3B3B", marginBottom: "10px" }}>{joinError}</p>}
-              <PrimaryButton onClick={handleJoin} disabled={joinBusy || (club.joinMode === "invite" && !inviteCodeInput.trim())} style={{ width: "100%" }}>
-                {joinBusy ? "..." : club.joinMode === "request" ? "Demander à rejoindre" : "Rejoindre"}
-              </PrimaryButton>
-            </>
-          )}
-        </div>
+        myMembership?.status === "pending" ? (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
+            <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Votre entrée est en attente de validation par un administrateur du club.</p>
+          </div>
+        ) : invitation ? (
+          <ClubInvitationCard invitation={invitation} onResponded={handleInvitationResponded} compact />
+        ) : club.visibility === "public" && club.joinMode !== "invite" ? (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
+            {joinError && <p style={{ fontSize: "12px", color: "#FF3B3B", marginBottom: "10px" }}>{joinError}</p>}
+            <PrimaryButton onClick={handleJoin} disabled={joinBusy} style={{ width: "100%" }}>
+              {joinBusy ? "..." : club.joinMode === "request" ? "Demander à rejoindre" : "Rejoindre"}
+            </PrimaryButton>
+          </div>
+        ) : (
+          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
+            <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>On n'entre dans ce club que sur invitation d'un de ses membres.</p>
+          </div>
+        )
       )}
 
       {isMember && (
@@ -267,7 +279,7 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, init
             <div style={{ flex: 1, overflowY: "auto" }}>
               {isAdminOrMod && pending.length > 0 && (
                 <div style={{ marginBottom: "18px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Demandes en attente</label>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Arrivées à valider</label>
                   <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "0 14px" }}>
                     {pending.map((p, i) => (
                       <div
@@ -293,12 +305,7 @@ export function ClubDetailScreen({ clubId, myUserId, onBack, onOpenProfile, init
                 </div>
               )}
 
-              {club.joinMode === "invite" && isAdminOrMod && inviteCode && (
-                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "18px", textAlign: "center" }}>
-                  <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "0 0 6px" }}>Code d'invitation à partager</p>
-                  <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", letterSpacing: "4px" }}>{inviteCode}</div>
-                </div>
-              )}
+              <InviteBibaxPanel clubId={clubId} clubName={club.name} myName={myName} />
 
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
                 {members

@@ -1,6 +1,6 @@
 // ============================================================
 // Créer un BibaClub — nom, photo, description, catégorie,
-// visibilité et mode d'adhésion.
+// visibilité (Privé / Public) et validation des nouveaux membres.
 // ============================================================
 import React, { useState, useRef } from "react";
 import { COLORS } from "../constants.js";
@@ -16,7 +16,8 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(null);
   const [visibility, setVisibility] = useState("private");
-  const [joinMode, setJoinMode] = useState("invite");
+  // Validation des arrivées par un administrateur ou un modérateur (désactivée par défaut).
+  const [validateArrivals, setValidateArrivals] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -54,7 +55,7 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
     if (!name.trim()) return;
     setSaving(true);
     setError(null);
-    const result = await createClub({ name: name.trim(), description: description.trim(), photoUrl, category, visibility, joinMode }, myUserId);
+    const result = await createClub({ name: name.trim(), description: description.trim(), photoUrl, category, visibility, joinMode: validateArrivals ? "request" : "open" }, myUserId);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -72,6 +73,17 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
     color: active ? COLORS.paper : COLORS.ink,
     fontSize: "13px",
     fontWeight: 700,
+    cursor: "pointer",
+  });
+
+  const visibilityCard = (active) => ({
+    width: "100%",
+    textAlign: "left",
+    padding: "12px 14px",
+    borderRadius: "12px",
+    border: `2px solid ${active ? COLORS.amber : COLORS.paperAlt}`,
+    background: active ? COLORS.amber : "none",
+    color: active ? COLORS.paper : COLORS.ink,
     cursor: "pointer",
   });
 
@@ -130,32 +142,51 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
         ))}
       </div>
 
-      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Visibilité</label>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
-        <button onClick={() => setVisibility("private")} style={optionButton(visibility === "private")}>
-          Privé
-        </button>
-        <button onClick={() => setVisibility("public")} style={optionButton(visibility === "public")}>
-          Public
-        </button>
+      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Qui peut trouver le club ?</label>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
+        {[
+          { value: "private", title: "Privé", text: "Invisible : le club n'apparaît nulle part. On n'y entre que sur invitation d'un membre." },
+          { value: "public", title: "Public", text: "Visible dans la recherche. Chacun peut le rejoindre, ou y être invité par un membre." },
+        ].map((o) => (
+          <button key={o.value} onClick={() => setVisibility(o.value)} aria-pressed={visibility === o.value} style={{ ...visibilityCard(visibility === o.value) }}>
+            <div style={{ fontSize: "14px", fontWeight: 700 }}>{o.title}</div>
+            <div style={{ fontSize: "11.5px", marginTop: "2px", opacity: 0.9 }}>{o.text}</div>
+          </button>
+        ))}
       </div>
 
-      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Comment rejoint-on ce club ?</label>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-        <button onClick={() => setJoinMode("invite")} style={optionButton(joinMode === "invite")}>
-          Code d'invitation
-        </button>
-        <button onClick={() => setJoinMode("request")} style={optionButton(joinMode === "request")}>
-          Sur demande
-        </button>
-        <button onClick={() => setJoinMode("open")} style={optionButton(joinMode === "open")}>
-          Libre
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "13.5px", fontWeight: 700 }}>Valider les nouveaux membres</div>
+          <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "2px" }}>
+            {visibility === "private"
+              ? "Un administrateur ou un modérateur approuve chaque personne invitée par un simple membre."
+              : "Un administrateur ou un modérateur approuve chaque demande d'adhésion, et chaque personne invitée par un simple membre."}
+          </div>
+        </div>
+        <button
+          role="switch"
+          aria-checked={validateArrivals}
+          aria-label="Valider les nouveaux membres"
+          onClick={() => setValidateArrivals(!validateArrivals)}
+          style={{
+            width: "48px",
+            height: "28px",
+            borderRadius: "14px",
+            border: "none",
+            background: validateArrivals ? COLORS.amber : COLORS.paperAlt,
+            position: "relative",
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+        >
+          <span style={{ position: "absolute", top: "3px", left: validateArrivals ? "23px" : "3px", width: "22px", height: "22px", borderRadius: "50%", background: COLORS.paper, transition: "left 0.15s" }} />
         </button>
       </div>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
-        {joinMode === "invite" && "Un code à 6 caractères sera généré — à partager avec qui vous voulez."}
-        {joinMode === "request" && "Toute personne peut demander à rejoindre — un admin ou modérateur valide chaque demande."}
-        {joinMode === "open" && "Toute personne qui trouve le club peut le rejoindre directement."}
+      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "0 0 20px" }}>
+        {validateArrivals
+          ? "Les arrivées attendent un accord. Les personnes invitées par un administrateur ou un modérateur entrent directement."
+          : "Les arrivées sont directes."}
       </p>
 
       {error && <p style={{ fontSize: "12.5px", color: "#FF3B3B", marginBottom: "12px" }}>{error}</p>}

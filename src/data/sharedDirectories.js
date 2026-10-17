@@ -13,6 +13,7 @@
 
 import { supabase } from "../supabaseClient.js";
 import { normalizeSearchText } from "../utils.js";
+import { loadBibroCodes } from "./profiles.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
@@ -1060,36 +1061,22 @@ export async function uploadClubPhoto(userId, blob) {
   return { url: data.url };
 }
 
-function generateInviteCode() {
-  const alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-  let out = "";
-  for (let i = 0; i < 6; i++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  return out;
-}
-
+// Création d'un club. « visibility » : "private" (invisible, on y entre sur invitation d'un membre) ou
+// "public" (visible dans la recherche). « joinMode » : "open" (les arrivées sont directes) ou "request"
+// (un administrateur ou un modérateur valide les arrivées).
 export async function createClub({ name, description, photoUrl, category, visibility, joinMode }, userId) {
-  const inviteCode = joinMode === "invite" ? generateInviteCode() : null;
-  // L'identifiant est choisi ici pour ne pas avoir à relire la ligne créée : le code d'invitation
-  // n'est plus lisible directement dans la table (il passe par get_club_invite_code).
   const clubId = crypto.randomUUID();
   const { error } = await supabase
     .from("biba_clubs")
-    .insert({ id: clubId, name, description: description || null, photo_url: photoUrl || null, category: category || null, visibility, join_mode: joinMode, invite_code: inviteCode, created_by: userId });
+    .insert({ id: clubId, name, description: description || null, photo_url: photoUrl || null, category: category || null, visibility, join_mode: joinMode, created_by: userId });
   if (error) return { error: error.message };
   const { error: memberError } = await supabase.from("biba_club_members").insert({ club_id: clubId, user_id: userId, role: "admin", status: "active" });
   if (memberError) return { error: memberError.message };
   return { ok: true, clubId };
 }
 
-// Colonnes d'un club lisibles directement dans la table (tout sauf le code d'invitation).
+// Colonnes d'un club lisibles directement dans la table (tout sauf l'ancien code d'invitation, à retirer de la base).
 const CLUB_COLUMNS = "id, name, description, photo_url, category, visibility, join_mode, created_by, created_at";
-
-// Code d'invitation d'un club : réservé aux modérateurs et administrateurs du club (contrôlé côté serveur).
-export async function getClubInviteCode(clubId) {
-  const { data, error } = await supabase.rpc("get_club_invite_code", { p_club_id: clubId });
-  if (error) return { error: error.message };
-  return { code: data || null };
-}
 
 function rowToClub(row) {
   return {
@@ -1163,11 +1150,90 @@ export async function searchPublicClubs(query) {
   return { clubs: (data || []).map(previewRowToClub) };
 }
 
-// Club « sur invitation » qui porte ce code. Le serveur compte les essais ratés et refuse au-delà d'une limite.
-export async function findClubByCode(code) {
-  const { data, error } = await supabase.rpc("find_club_by_code", { p_code: code });
+// Noms d'affichage d'une liste d'identifiants (prénom + nom), pour les écrans d'invitation.
+async function loadProfilesById(userIds) {
+  if (userIds.length === 0) return {};
+  const { data } = await supabase.rpc("get_profiles_basic", { p_ids: userIds });
+  return Object.fromEntries((data || []).map((a) => [a.id, a]));
+}
+
+// Invitations en attente que j'ai reçues (le serveur écarte celles qui ne sont plus valables).
+export async function loadMyClubInvitations() {
+  const { data, error } = await supabase.rpc("get_my_club_invitations");
+  if (error) {
+    console.error("loadMyClubInvitations:", error);
+    return { error: error.message };
+  }
+  const rows = data || [];
+  const profilesById = await loadProfilesById([...new Set(rows.map((r) => r.inviter_id))]);
+  return {
+    invitations: rows.map((r) => ({
+      id: r.id,
+      clubId: r.club_id,
+      clubName: r.club_name,
+      clubDescription: r.club_description,
+      clubPhotoUrl: r.club_photo_url,
+      clubCategory: r.club_category,
+      clubVisibility: r.club_visibility,
+      clubJoinMode: r.club_join_mode,
+      inviterId: r.inviter_id,
+      inviterName: [profilesById[r.inviter_id]?.display_name, profilesById[r.inviter_id]?.last_name].filter(Boolean).join(" ") || null,
+      createdAt: r.created_at,
+    })),
+  };
+}
+
+// Répondre à une invitation. Le serveur renvoie : "active" (je suis dans le club), "pending" (un
+// administrateur doit valider mon entrée), "declined" (refusée) ou "expired" (plus valable).
+export async function respondClubInvitation(invitationId, accept) {
+  const { data, error } = await supabase.rpc("respond_club_invitation", { p_invitation_id: invitationId, p_accept: !!accept });
   if (error) return { error: error.message };
-  return { clubId: data || null };
+  return { status: data };
+}
+
+// Inviter un de mes Bibax dans un club dont je suis membre. Le serveur contrôle tout (membre actif,
+// Bibax accepté, pas déjà dans le club, limite journalière).
+export async function sendClubInvitation(clubId, inviteeId) {
+  const { data, error } = await supabase.rpc("send_club_invitation", { p_club_id: clubId, p_invitee_id: inviteeId });
+  if (error) return { error: error.message };
+  return { invitationId: data };
+}
+
+// Mes Bibax que je peux inviter dans ce club (ni déjà dedans, ni ayant refusé récemment).
+export async function loadInvitableBibax(clubId) {
+  const { data, error } = await supabase.rpc("list_invitable_bibax", { p_club_id: clubId });
+  if (error) {
+    console.error("loadInvitableBibax:", error);
+    return { error: error.message };
+  }
+  const rows = data || [];
+  const profilesById = await loadProfilesById(rows.map((r) => r.user_id));
+  const bibax = rows.map((r) => ({
+    userId: r.user_id,
+    alreadyInvited: !!r.already_invited,
+    name: profilesById[r.user_id]?.display_name || null,
+    lastName: profilesById[r.user_id]?.last_name || null,
+    avatarUrl: profilesById[r.user_id]?.avatar_url || null,
+  }));
+  bibax.sort((a, b) => [a.name, a.lastName].filter(Boolean).join(" ").localeCompare([b.name, b.lastName].filter(Boolean).join(" "), "fr", { sensitivity: "base" }));
+  return { bibax };
+}
+
+// Notification sur le téléphone de la personne invitée. La notification du fil est créée par le
+// serveur au moment de l'invitation ; ici on ne fait que prévenir le téléphone. Le serveur n'envoie
+// que si les réglages de la personne l'autorisent (Bibax accepté, notifications non coupées), et un
+// échec ici ne doit jamais gêner l'invitation.
+export async function pushClubInvitation(inviteeId, inviterName, clubName) {
+  try {
+    const codes = await loadBibroCodes([inviteeId]);
+    const code = codes[inviteeId];
+    if (!code) return false;
+    await sendPushNotification([code], "BibaClub", `${inviterName || "Un de vos Bibax"} vous invite à rejoindre le BibaClub « ${clubName || "sans nom"} »`);
+    return true;
+  } catch (e) {
+    console.error("pushClubInvitation:", e);
+    return false;
+  }
 }
 
 export async function loadClubMembers(clubId) {
@@ -1193,12 +1259,11 @@ export async function loadClubMembers(clubId) {
   }));
 }
 
-// Rejoindre — comportement différent selon join_mode : "open" ajoute directement, "request" crée
-// une demande en attente, "invite" vérifie le code fourni avant d'ajouter directement.
-export async function joinClub(clubId, userId, { inviteCode } = {}) {
-  // Le mode d'adhésion et le code d'invitation sont contrôlés côté serveur (join_club) ; la fonction
-  // renvoie l'état obtenu : "active" ou "pending". userId n'est plus utilisé : le serveur prend l'appelant.
-  const { data, error } = await supabase.rpc("join_club", { p_club_id: clubId, p_invite_code: inviteCode || null });
+// Rejoindre un club public. Le serveur contrôle tout (join_club) et renvoie l'état obtenu : "active"
+// (club ouvert) ou "pending" (club « sur demande » : un administrateur valide). Un club privé ne se
+// rejoint que par une invitation (respondClubInvitation). userId n'est plus utilisé : le serveur prend l'appelant.
+export async function joinClub(clubId) {
+  const { data, error } = await supabase.rpc("join_club", { p_club_id: clubId });
   if (error) return { error: error.message };
   return { ok: true, status: data };
 }
