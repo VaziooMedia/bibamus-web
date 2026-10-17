@@ -1120,12 +1120,54 @@ export async function loadMyClubs(userId) {
 }
 
 export async function loadClubDetail(clubId) {
-  const { data, error } = await supabase.from("biba_clubs").select(CLUB_COLUMNS).eq("id", clubId).single();
+  const { data, error } = await supabase.from("biba_clubs").select(CLUB_COLUMNS).eq("id", clubId).maybeSingle();
   if (error) {
     console.error("loadClubDetail:", error);
     return null;
   }
-  return rowToClub(data);
+  if (data) return rowToClub(data);
+  // Pas (encore) membre : la fiche du club n'est pas lisible directement, mais son aperçu l'est (club_preview).
+  return loadClubPreview(clubId);
+}
+
+// Aperçu d'un club (nom, photo, mode d'adhésion, état de la personne) : sert à l'écran « Rejoindre ».
+function previewRowToClub(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    photoUrl: row.photo_url,
+    category: row.category,
+    visibility: row.visibility,
+    joinMode: row.join_mode,
+    myStatus: row.my_status || null,
+  };
+}
+
+export async function loadClubPreview(clubId) {
+  const { data, error } = await supabase.rpc("club_preview", { p_club_id: clubId });
+  if (error) {
+    console.error("loadClubPreview:", error);
+    return null;
+  }
+  return data && data.length > 0 ? previewRowToClub(data[0]) : null;
+}
+
+// Recherche parmi les clubs « Public » (par nom, au moins 2 caractères) : le serveur ne renvoie que ceux-là.
+export async function searchPublicClubs(query) {
+  const { data, error } = await supabase.rpc("search_public_clubs", { p_query: query });
+  if (error) {
+    console.error("searchPublicClubs:", error);
+    return { error: error.message };
+  }
+  return { clubs: (data || []).map(previewRowToClub) };
+}
+
+// Club « sur invitation » qui porte ce code. Le serveur compte les essais ratés et refuse au-delà d'une limite.
+export async function findClubByCode(code) {
+  const { data, error } = await supabase.rpc("find_club_by_code", { p_code: code });
+  if (error) return { error: error.message };
+  return { clubId: data || null };
 }
 
 export async function loadClubMembers(clubId) {
