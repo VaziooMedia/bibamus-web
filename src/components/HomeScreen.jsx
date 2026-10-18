@@ -11,7 +11,7 @@ import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
-import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds, pulseClubName } from "../data/sharedDirectories.js";
 import { loadMyUnreadMessageCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
@@ -62,6 +62,7 @@ export function HomeScreen({
   onOpenBibaxProfile,
   onOpenVenue,
   onOpenDrink,
+  onOpenClub,
   breweriesDirectory = [],
   brandsDirectory = [],
   pulseStoriesRefreshKey,
@@ -546,6 +547,9 @@ export function HomeScreen({
                     const objType = entry.eventType === "venue_visit" ? "venue" : entry.objectType;
                     const openHandler = objType === "venue" ? onOpenVenue : objType === "drink" ? onOpenDrink : null;
                     const objClickable = obj && openHandler;
+                    // Carte « a rejoint le BibaClub Y » : le nom du club est dans la carte elle-même.
+                    const isClubJoin = entry.eventType === "club_joined";
+                    const clubName = isClubJoin ? pulseClubName(entry) : null;
                     return (
                       <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
                         <button
@@ -559,13 +563,28 @@ export function HomeScreen({
                             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
                           </p>
                           <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
-                            {actionFor(entry)} @{" "}
-                            {objClickable ? (
-                              <button onClick={() => openHandler(obj.id)} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
-                                {objName}
-                              </button>
+                            {isClubJoin ? (
+                              <>
+                                A rejoint le BibaClub{" "}
+                                {clubName && onOpenClub && entry.objectId ? (
+                                  <button onClick={() => onOpenClub(entry.objectId)} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                                    {clubName}
+                                  </button>
+                                ) : (
+                                  <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
+                                )}
+                              </>
                             ) : (
-                              <strong style={{ color: COLORS.amber }}>{objName}</strong>
+                              <>
+                                {actionFor(entry)} @{" "}
+                                {objClickable ? (
+                                  <button onClick={() => openHandler(obj.id)} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                                    {objName}
+                                  </button>
+                                ) : (
+                                  <strong style={{ color: COLORS.amber }}>{objName}</strong>
+                                )}
+                              </>
                             )}
                           </p>
                         </div>

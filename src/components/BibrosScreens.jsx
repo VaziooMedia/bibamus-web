@@ -33,6 +33,7 @@ import {
   loadBibaxStatsSocial,
   loadVenuesByIds,
   loadDrinksByIds,
+  pulseClubName,
 } from "../data/sharedDirectories.js";
 import { openDirectConversation } from "../data/messaging.js";
 import { ConversationScreen } from "./ConversationScreen.jsx";
@@ -41,6 +42,19 @@ import { PERIODS, MONTH_NAMES } from "./MyStatsScreen.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
+
+// Texte d'une ligne d'activité BibaPulse d'un Bibax (page d'activité et extrait de sa fiche).
+// « club_joined » : le nom du club est inscrit dans la carte elle-même.
+function pulseActivityLabel(e) {
+  if (e.eventType === "venue_visit") return "📍 A visité un lieu";
+  if (e.eventType === "product_discovered") return "🍹 A découvert un produit";
+  if (e.eventType === "drink_checked") return "🍹 A checké un produit";
+  if (e.eventType === "club_joined") {
+    const clubName = pulseClubName(e);
+    return clubName ? `A rejoint le BibaClub ${clubName}` : "A rejoint un BibaClub";
+  }
+  return e.eventType;
+}
 
 // Demandes reçues (à confirmer/refuser) et suggestions (Bibax en commun, localisation
 // partagée) — façon Facebook : un simple "Confirmer" ou "Ajouter" suffit.
@@ -658,7 +672,7 @@ export function BibroPulseScreen({ bibro, onBack }) {
           {pulseActivity.map((e) => (
             <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
               <div>
-                {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType === "drink_checked" ? "🍹 A checké un produit" : e.eventType}
+                {pulseActivityLabel(e)}
               </div>
               <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{formatMemberSince(e.createdAt)}</div>
             </div>
@@ -1137,7 +1151,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
           {pulseExcerpt.map((e) => (
             <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
               <div>
-                {e.eventType === "venue_visit" ? "📍 A visité un lieu" : e.eventType === "product_discovered" ? "🍹 A découvert un produit" : e.eventType === "drink_checked" ? "🍹 A checké un produit" : e.eventType}
+                {pulseActivityLabel(e)}
               </div>
               <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{formatMemberSince(e.createdAt)}</div>
             </div>

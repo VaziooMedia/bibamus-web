@@ -528,6 +528,7 @@ export default function App() {
       allowProfileViaTag: profile.allowProfileViaTag,
       allowPulseTags: profile.allowPulseTags,
       allowProfileViaPulseTag: profile.allowProfileViaPulseTag,
+      pulseAnnounceClubJoins: profile.pulseAnnounceClubJoins,
       shareStatsOverview: profile.shareStatsOverview,
       shareStatsRecords: profile.shareStatsRecords,
       shareStatsDrinks: profile.shareStatsDrinks,
@@ -621,6 +622,7 @@ export default function App() {
     profile.allowProfileViaTag,
     profile.allowPulseTags,
     profile.allowProfileViaPulseTag,
+    profile.pulseAnnounceClubJoins,
     profile.shareStatsOverview,
     profile.shareStatsRecords,
     profile.shareStatsDrinks,
@@ -2073,6 +2075,11 @@ export default function App() {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
+                onOpenClub={(clubId) => {
+                  setViewedClubId(clubId);
+                  setClubDetailBack("home");
+                  setScreen("clubDetail");
+                }}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 openEvent={(id) => {
@@ -3520,6 +3527,11 @@ export default function App() {
                   setScreenBeforeDrinkDetail("bibaPulse");
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
+                }}
+                onOpenClub={(clubId) => {
+                  setViewedClubId(clubId);
+                  setClubDetailBack("bibaPulse");
+                  setScreen("clubDetail");
                 }}
               />
             )}
