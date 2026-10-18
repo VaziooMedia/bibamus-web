@@ -118,6 +118,15 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
     refreshMembers();
   };
 
+  // Retirer un membre : on demande confirmation avant d'agir (la croix est petite, un tap par erreur
+  // retirerait la personne aussitôt).
+  const handleRemoveMember = async (member) => {
+    const name = [member.name, member.lastName].filter(Boolean).join(" ") || "cette personne";
+    if (!window.confirm(`Retirer ${name} du club ? Cette personne ne sera plus membre.`)) return;
+    await removeClubMember(clubId, member.userId);
+    refreshMembers();
+  };
+
   // Quitter le club. Si l'on en est la seule personne, le quitter le supprime : on le dit et on demande
   // confirmation, d'après la liste des membres relue juste avant d'agir (elle a pu bouger depuis l'affichage).
   const handleLeave = async () => {
@@ -352,7 +361,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
                             </button>
                           )}
                           <button
-                            onClick={() => removeClubMember(clubId, m.userId).then(refreshMembers)}
+                            onClick={() => handleRemoveMember(m)}
                             style={{ background: "none", border: "none", padding: "6px", cursor: "pointer" }}
                           >
                             <NavIcon name="x" size={14} color={COLORS.inkSoft} />
