@@ -90,7 +90,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
       <SecurityGroup title="Confidentialité">
         <SecurityRow icon={<NavIcon name="eye" size={17} color={COLORS.amber} />} title="Profil public" subtitle="Choisir ce qui est visible" onClick={() => goToSubScreen("publicProfile")} />
         <SecurityRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Mes Statistiques" subtitle="Choisir ce que tes Bibax voient" onClick={() => goToSubScreen("myStats")} />
-        <SecurityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Tags" subtitle="Stories et BibaPulse : qui peut te taguer" onClick={() => goToSubScreen("storyTagsPrivacy")} />
+        <SecurityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Tags et annonces" subtitle="Qui peut te taguer, et ce que BibaPulse annonce de toi" onClick={() => goToSubScreen("storyTagsPrivacy")} />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow icon={<NavIcon name="no-entry" size={17} color={COLORS.amber} />} title="Utilisateurs bloqués" subtitle="Gérer les comptes bloqués" onClick={() => goToSubScreen("blockedUsers")} />
         </div>
@@ -258,8 +258,8 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <PageTitleWithBar icon={<NavIcon name="tag" size={22} color={COLORS.amber} />}>Tags</PageTitleWithBar>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisis, séparément pour les Stories et pour BibaPulse, si d'autres Bibax peuvent te taguer.</p>
+      <PageTitleWithBar icon={<NavIcon name="tag" size={22} color={COLORS.amber} />}>Tags et annonces</PageTitleWithBar>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisis, séparément pour les Stories et pour BibaPulse, si d'autres Bibax peuvent te taguer, et si BibaPulse annonce tes arrivées dans un BibaClub public.</p>
 
       <SecurityGroup title="Stories">
         <ToggleRow title="Autoriser les tags" description="Tes Bibax peuvent te taguer sur leurs Stories." field="allowStoryTags" onToggle={toggleAllowStoryTags} />
@@ -281,6 +281,16 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
             description={p.allowPulseTags !== false ? "Un tap sur ton tag propose l'accès à ton profil." : "Sans tag possible, cette option n'a pas d'effet."}
             field="allowProfileViaPulseTag"
             disabled={p.allowPulseTags === false}
+          />
+        </div>
+      </SecurityGroup>
+
+      <SecurityGroup title="Annonces BibaPulse">
+        <div style={{ borderBottom: "none" }}>
+          <ToggleRow
+            title="Annoncer mes arrivées dans un BibaClub public"
+            description="Quand tu rejoins un BibaClub public, tes Bibax peuvent le voir dans BibaPulse. Un club privé n'est jamais annoncé. Couper cette option n'efface pas les annonces déjà publiées : elles disparaissent quand tu quittes le club."
+            field="pulseAnnounceClubJoins"
           />
         </div>
       </SecurityGroup>

@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { COLORS } from "../constants.js";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds, getSession } from "../data/sharedDirectories.js";
+import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
@@ -107,7 +107,7 @@ function PulseContent({ entry, onOpenTagged }) {
   );
 }
 
-export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenProfile, onUpdate, initialShowComments, highlighted }, ref) {
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenProfile, onOpenClub, onUpdate, initialShowComments, highlighted }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -131,6 +131,11 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         if (entry.objectType === "drink") onOpenDrink(obj.id);
       }
     : null;
+
+  // Carte « a rejoint le BibaClub Y » : le nom du club est dans la carte, la fiche du club s'ouvre par son identifiant.
+  const isClubJoin = entry.eventType === "club_joined";
+  const clubName = isClubJoin ? pulseClubName(entry) : null;
+  const openClub = isClubJoin && onOpenClub && entry.objectId ? () => onOpenClub(entry.objectId) : null;
 
   const handleBix = () => {
     onUpdate({ iBixed: !entry.iBixed, bixCount: entry.iBixed ? entry.bixCount - 1 : entry.bixCount + 1 });
@@ -204,13 +209,28 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
           </p>
           <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
-            {pulseActionFor(entry)} @{" "}
-            {obj && openObject ? (
-              <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
-                {obj.name}
-              </button>
+            {isClubJoin ? (
+              <>
+                A rejoint le BibaClub{" "}
+                {clubName && openClub ? (
+                  <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                    {clubName}
+                  </button>
+                ) : (
+                  <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
+                )}
+              </>
             ) : (
-              <strong style={{ color: COLORS.amber }}>{obj?.name || "une fiche"}</strong>
+              <>
+                {pulseActionFor(entry)} @{" "}
+                {obj && openObject ? (
+                  <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                    {obj.name}
+                  </button>
+                ) : (
+                  <strong style={{ color: COLORS.amber }}>{obj?.name || "une fiche"}</strong>
+                )}
+              </>
             )}
             {checkVenueName && (
               <>
@@ -468,6 +488,7 @@ export function BibaPulseScreen({
   myBibroCode,
   onOpenVenue,
   onOpenDrink,
+  onOpenClub,
   focusEntryId,
   openCommentsOnFocus,
 }) {
@@ -621,6 +642,7 @@ export function BibaPulseScreen({
                 else if (person.bibro_code) setViewedProfileCode(person.bibro_code);
               }}
               onOpenDrink={onOpenDrink}
+              onOpenClub={onOpenClub}
               onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
               highlighted={entry.id === focusEntryId}

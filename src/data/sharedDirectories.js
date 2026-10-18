@@ -813,6 +813,7 @@ export async function loadMyProfile(userId) {
     allowProfileViaTag: data.allow_profile_via_tag,
     allowPulseTags: data.allow_pulse_tags,
     allowProfileViaPulseTag: data.allow_profile_via_pulse_tag,
+    pulseAnnounceClubJoins: data.pulse_announce_club_joins,
     shareStatsOverview: data.share_stats_overview,
     shareStatsRecords: data.share_stats_records,
     shareStatsDrinks: data.share_stats_drinks,
@@ -916,6 +917,7 @@ export async function updateMyProfile(
     allowProfileViaTag,
     allowPulseTags,
     allowProfileViaPulseTag,
+    pulseAnnounceClubJoins,
     shareStatsOverview,
     shareStatsRecords,
     shareStatsDrinks,
@@ -1010,6 +1012,7 @@ export async function updateMyProfile(
     allow_profile_via_tag: allowProfileViaTag,
     allow_pulse_tags: allowPulseTags,
     allow_profile_via_pulse_tag: allowProfileViaPulseTag,
+    pulse_announce_club_joins: pulseAnnounceClubJoins,
     share_stats_overview: shareStatsOverview,
     share_stats_records: shareStatsRecords,
     share_stats_drinks: shareStatsDrinks,
@@ -3746,6 +3749,13 @@ function rowToPulseEntry(row) {
     iBixed: row.i_bixed,
     iAmIncoming: row.i_am_incoming,
   };
+}
+
+// Carte « a rejoint le BibaClub Y » (club_joined) : le nom du club est inscrit dans la carte au moment de
+// l'arrivée (metadata.club_name), l'identifiant du club est l'objet de la carte (objectId).
+export function pulseClubName(entry) {
+  const name = entry && entry.metadata && typeof entry.metadata.club_name === "string" ? entry.metadata.club_name.trim() : "";
+  return name || null;
 }
 
 export async function loadPulseFeed(before = null, limit = 20) {
