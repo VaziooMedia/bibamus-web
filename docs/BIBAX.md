@@ -91,7 +91,7 @@ Trois lignes : Prénom + Nom (gras) ; surnom (vert fluo italique, sur sa ligne, 
 
 ## Tags
 
-Un Bibax peut être tagué dans une carte BibaPulse et dans une Story, sous réserve de ses réglages de confidentialité (`allow_pulse_tags`, `allow_story_tags`, `allow_profile_via_pulse_tag`, `allow_profile_via_tag`, vrai par défaut — écran Sécurité > Tags). Seuls des Bibax confirmés sont proposés, grisés s'ils refusent les tags ; le blocage est pris en compte dans les deux sens. Détails : `BIBAPULSE.md` et `STORIES.md`.
+Un Bibax peut être tagué dans une carte BibaPulse et dans une Story, sous réserve de ses réglages de confidentialité (`allow_pulse_tags`, `allow_story_tags`, `allow_profile_via_pulse_tag`, `allow_profile_via_tag`, vrai par défaut — écran Sécurité > Tags et annonces). Seuls des Bibax confirmés sont proposés, grisés s'ils refusent les tags ; le blocage est pris en compte dans les deux sens. Détails : `BIBAPULSE.md` et `STORIES.md`.
 
 ## Écrans
 

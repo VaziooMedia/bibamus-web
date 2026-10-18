@@ -1,13 +1,13 @@
 # BIBAPULSE — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-14 (accès aux tables en lecture et en écriture). Vérifié contre le code de l'app (`src/`), les scripts SQL `bibamus-sql-pulse-*` / `bibamus-sql-tags-*` et la fonction Edge `create-pulse-event` (version 5) livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
+> Dernière mise à jour : 2026-10-18 (carte « a rejoint le BibaClub », étape E4 ; avant : accès aux tables en lecture et en écriture, 2026-10-14). Vérifié contre le code de l'app (`src/`), les scripts SQL `bibamus-sql-pulse-*` / `bibamus-sql-tags-*` et la fonction Edge `create-pulse-event` (version 5) livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
 
 ---
 
 ## Principe général
 
-BibaPulse est le fil d'activité social de Bibamus. Le contenu n'est **jamais une publication libre** : il n'existe aucun écran de rédaction indépendant. Chaque carte naît d'une action réelle faite ailleurs dans l'app — checker un produit, checker un lieu, ajouter une fiche à la base.
+BibaPulse est le fil d'activité social de Bibamus. Le contenu n'est **jamais une publication libre** : il n'existe aucun écran de rédaction indépendant. Chaque carte naît d'une action réelle faite ailleurs dans l'app — checker un produit, checker un lieu, ajouter une fiche à la base, rejoindre un BibaClub public.
 
 Ce n'est plus tout à fait « automatique » : la fenêtre de check propose une case **« Publier dans BibaPulse »** (décochable) et des champs facultatifs — visibilité, commentaire, photo, note, Bibax tagués. Le même formulaire (`PulseContentForm`) sert au Drink Check et au Place Check.
 
@@ -31,7 +31,7 @@ Vérifié dans la base le 2026-10-14 (voir `SECURITY.md`) : `pulse_events`, `pul
 
 ### Pipeline de création
 
-Le client n'écrit **jamais** directement dans `pulse_events` : tout passe par la fonction Edge `create-pulse-event`.
+Le client n'écrit **jamais** directement dans `pulse_events` : tout passe par la fonction Edge `create-pulse-event`, sauf la carte « a rejoint le BibaClub » (`club_joined`), créée par un déclencheur de la base (voir plus bas).
 
 Deux chemins coexistent côté client :
 
@@ -55,6 +55,7 @@ Deux chemins coexistent côté client :
 | `drink_checked` | Check | Checks suivants d'un produit, et tout check depuis une liste BibaSolo / salon (jamais de « Découverte » depuis ces écrans) | `public` | oui / oui |
 | `venue_visit` | Check | Check d'un lieu **sans produit** | `relations` | oui / non |
 | `database_contribution` | Ajout | Ajout d'un produit, d'un lieu, d'une marque ou d'un producteur à la base | `public` | non |
+| `club_joined` | A rejoint le BibaClub Y | Une personne **devient membre actif** d'un BibaClub **public** (déclencheur de la base, pas la fonction Edge) | `relations` (jamais `public`) | non / non |
 
 Le serveur déclare aussi `drink_logged` (relations) et `badge_unlocked` (public) : aucun émetteur dans l'app.
 
@@ -66,6 +67,19 @@ Nuances à connaître :
 - Une erreur de publication n'annule jamais le check : l'utilisateur reçoit une alerte.
 - La fenêtre de check de lieu s'ouvre à chaque check-in.
 - Les `object_type` émis : `drink`, `venue`, `brand`, `producer`, `brewery` — ce dernier n'est pas résolu à l'affichage (la carte dit « une fiche »).
+
+### Carte « a rejoint le BibaClub » (`club_joined`)
+
+Créée par un déclencheur de la base (`club_member_pulse_card`, sur la table des membres de clubs), jamais par l'app ni par la fonction Edge. Script `bibamus-sql-pulse-E4-carte-arrivee-bibaclub` (voir `SECURITY.md`).
+
+- **Quand** : une personne **devient** membre actif — elle rejoint un club ouvert, accepte une invitation, ou un administrateur ou modérateur valide sa demande. Une demande « en attente » ne crée rien.
+- **Conditions** : le club est **public** (aucune carte, jamais, pour un club privé) ; la personne n'est pas la **créatrice** du club (créer n'est pas rejoindre) ; son réglage `profiles.pulse_announce_club_joins` (vrai par défaut) est vrai à ce moment-là. Pas de rattrapage : les arrivées d'avant la mise en place n'ont pas de carte.
+- **Contenu** : `object_type` = `club`, `object_id` = identifiant du club, `source_type` = `club_member`, `source_id` = identifiant de la ligne de membre, `visibility` = `relations`, `metadata` = `{ "club_name": … }` (le nom du club au moment de l'arrivée). Aucun commentaire, photo, note ni Bibax tagué.
+- **Qui la voit** : la règle des cartes `relations` (voir « Visibilité ») — la personne, et ses Bibax confirmés ; dans le fil principal seulement ceux qui ont activé la cloche « Suivre sur Pulse » pour elle ; sur sa fiche (activité d'un Bibax), tout Bibax confirmé. Jamais le public, jamais les fils de fiche (produit, lieu, producteur), jamais une personne bloquée dans le fil.
+- **Disparition** : la carte est supprimée — avec ses Bix, commentaires et Cheers — quand la personne quitte le club, en est retirée, repasse « en attente », quand le club est supprimé ou le compte supprimé. Une notification déjà reçue (par exemple un Bix) reste dans le centre de notifications, mais la carte n'existe plus : la toucher ouvre BibaPulse sans carte surlignée.
+- **Interrupteur** : « Annoncer mes arrivées dans un BibaClub public » (Sécurité > Tags et annonces). Le couper n'efface **pas** les cartes déjà publiées (elles partent quand la personne quitte le club) ; il empêche seulement les suivantes.
+- **Robustesse** : une erreur côté carte n'empêche jamais de rejoindre ou de quitter un club (avertissement dans les journaux de la base). Le contrôle du script compte les cartes incohérentes (membre disparu ou plus actif, club devenu privé, carte devenue publique) ; il doit en trouver 0.
+- **Mise en ligne** : le script SQL d'abord, puis l'app. Une ancienne version de l'app afficherait cette carte comme « Activité @ une fiche ».
 
 ### Visibilité
 
@@ -124,7 +138,7 @@ Fonction Edge `upload-pulse-photo` : authentification obligatoire ; JPEG, PNG ou
 
 ## Bibax tagués
 
-Le sélecteur ne propose que des Bibax confirmés (`get_taggable_bibax(p_ids, p_surface)` avec `'pulse'`), les personnes qui refusent les tags apparaissent grisées (badge « Tags »). Réglages de confidentialité propres à BibaPulse : `profiles.allow_pulse_tags` et `profiles.allow_profile_via_pulse_tag` (vrai par défaut), distincts de ceux des Stories ; écran Sécurité > Tags. Quand `allow_profile_via_pulse_tag` est faux, le nom reste affiché mais n'est plus un lien vers le profil. Rendu : « avec Prénom Nom, ... ».
+Le sélecteur ne propose que des Bibax confirmés (`get_taggable_bibax(p_ids, p_surface)` avec `'pulse'`), les personnes qui refusent les tags apparaissent grisées (badge « Tags »). Réglages de confidentialité propres à BibaPulse : `profiles.allow_pulse_tags` et `profiles.allow_profile_via_pulse_tag` (vrai par défaut), distincts de ceux des Stories ; écran Sécurité > Tags et annonces (qui porte aussi l'interrupteur des arrivées en BibaClub, voir plus haut). Quand `allow_profile_via_pulse_tag` est faux, le nom reste affiché mais n'est plus un lien vers le profil. Rendu : « avec Prénom Nom, ... ».
 
 ## Rafraîchissement
 
@@ -133,19 +147,19 @@ Le fil principal (`BibaPulseScreen`) se rafraîchit toutes les **10 secondes** p
 ## Affichage — carte d'activité (`PulseCard`)
 
 - **Ligne 1** : Prénom + Nom de l'auteur. C'est le **rond de profil** (avatar) qui est cliquable vers le profil, pas le nom. Le nom suit la règle `prénom + nom` de `pulse_display_name`, sans tenir compte des réglages `share_*`.
-- **Ligne 2** : action (Découverte / Check / Ajout) @ nom de l'objet en vert fluo, cliquable vers sa fiche pour un produit ou un lieu ; puis « — nom du lieu » du check (libellés spéciaux @Home et @Event, cliquable pour un vrai lieu).
+- **Ligne 2** : action (Découverte / Check / Ajout) @ nom de l'objet en vert fluo, cliquable vers sa fiche pour un produit ou un lieu ; puis « — nom du lieu » du check (libellés spéciaux @Home et @Event, cliquable pour un vrai lieu). Carte `club_joined` : « A rejoint le BibaClub » + nom du club (en vert fluo, tiré de la carte elle-même), cliquable vers la fiche du club ; Bix et commentaires comme les autres cartes, ni « J'arrive ! » ni Cheers.
 - **Haut à droite** : « À l'instant » (< 5 s), puis « Il y a X sec. / min. / h / j ».
 - Photo, commentaire, note et personnes taguées s'affichent sous la ligne 2.
 - **Signalement** : icône discrète, sur les cartes des autres.
 
 ## Fil de fiche (`EntityPulseSection`)
 
-Onglet « BibaPulse » sur les fiches **Produit**, **Lieu** et **Producteur** — pas sur la fiche **Marque**. Liste déroulante « Tout le monde » / « Mes Bibax ». Mêmes `PulseCard` que le fil. Règles de `get_entity_pulse` : comptes connectés seulement ; types `drink_checked`, `venue_visit` et `product_discovered` (jamais `database_contribution`) ; produit = cartes sur ce produit ; lieu = cartes dont l'objet **ou** le `venue_id` est ce lieu ; producteur = cartes sur les produits dont `producer_ids` contient ce producteur ; 20 résultats par page (50 au maximum par appel), bouton « Voir plus » ; `scope = 'bibax'` = Bibax acceptés uniquement, hors soi ; `scope = 'all'` = soi + public + `relations` des Bibax acceptés.
+Onglet « BibaPulse » sur les fiches **Produit**, **Lieu** et **Producteur** — pas sur la fiche **Marque**. Liste déroulante « Tout le monde » / « Mes Bibax ». Mêmes `PulseCard` que le fil. Règles de `get_entity_pulse` : comptes connectés seulement ; types `drink_checked`, `venue_visit` et `product_discovered` (jamais `database_contribution` ni `club_joined`) ; produit = cartes sur ce produit ; lieu = cartes dont l'objet **ou** le `venue_id` est ce lieu ; producteur = cartes sur les produits dont `producer_ids` contient ce producteur ; 20 résultats par page (50 au maximum par appel), bouton « Voir plus » ; `scope = 'bibax'` = Bibax acceptés uniquement, hors soi ; `scope = 'all'` = soi + public + `relations` des Bibax acceptés.
 
 ## Accès et aperçu
 
 - Onglet « BibaPulse » de la barre du bas (toujours présent) ; après un check publié depuis l'accueil, retour sur le Pulse avec une confirmation.
-- **Aperçu sur l'accueil** : les 3 dernières cartes en version réduite, sans réactions, masqué si le drapeau `nav_bibapulse_visible` vaut faux. Ce drapeau n'agit pas sur la barre du bas.
+- **Aperçu sur l'accueil** : les 3 dernières cartes en version réduite, sans réactions (une carte `club_joined` y garde le nom du club cliquable), masqué si le drapeau `nav_bibapulse_visible` vaut faux. Ce drapeau n'agit pas sur la barre du bas.
 - Onglet « Pulse » dans l'écran d'un salon : fil construit localement à partir de l'état du salon, pas à partir de `pulse_events`.
 - Cloche « Suivre sur Pulse » : sur la fiche d'un Bibax, d'un lieu et d'un produit. L'état initial de la cloche d'un Bibax est toujours « éteint » à l'ouverture de sa fiche (la propriété n'est jamais chargée). Pour un produit, aucun script livré ne montre que son suivi alimente le fil principal.
 
@@ -160,7 +174,7 @@ Une Story partagée d'un salon vers BibaPulse n'apparaît **pas** dans le fil de
 ## Connu comme incomplet / non construit
 
 - Aucun écran pour qu'un auteur masque ou supprime sa propre carte ou son commentaire (et la modification directe lui est fermée : il faudra une fonction du serveur).
-- Pas de carte Pulse pour les Stories, la création ou l'arrivée dans un BibaRoom, ni les « likes » de produit.
+- Pas de carte Pulse pour les Stories, la création ou l'arrivée dans un BibaRoom, ni les « likes » de produit. Pour les BibaClub : pas de carte à la création d'un club, ni pour un club privé ; pas de rattrapage des arrivées d'avant la mise en place de la carte ; couper l'interrupteur n'efface pas les cartes déjà publiées. Si un écran de modification de la visibilité d'un club est un jour ajouté, il devra supprimer les cartes `club_joined` du club passé en privé (le contrôle du script les signale).
 - Marques, producteurs et objets `brewery` : pas cliquables, `brewery` non résolu ; pas d'onglet BibaPulse sur la fiche Marque.
 - Pas de rafraîchissement automatique du Pulse de fiche, de l'aperçu d'accueil, des commentaires et des réacteurs ouverts.
 - Pas de limite de longueur côté application sur les commentaires.

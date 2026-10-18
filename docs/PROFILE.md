@@ -1,7 +1,7 @@
 # PROFIL — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-13 (2026-10-15 pour les colonnes réservées). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
+> Dernière mise à jour : 2026-10-18 (réglage des arrivées en BibaClub ; 2026-10-13 pour le reste, 2026-10-15 pour les colonnes réservées). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
 
 ---
 
@@ -30,6 +30,7 @@ Colonnes lues et écrites par l'app (`loadMyProfile` / `updateMyProfile`) :
 - **Compte** : `active`, `blocked_reason`, `blocked_until` (lues, jamais utilisées par l'app utilisateur). Ces colonnes, ainsi que `role`, `can_moderate`, `bibro_code`, `created_at`, `business_status` et `business_label`, sont **réservées** : seules les personnes habilitées peuvent les modifier, par une garde en base (voir `SECURITY.md`). L'app ne les écrit jamais.
 - **BibaZERO / WaterAlert en BibaSolo** : `biba_zero_active`, `biba_zero_tolerance`, `biba_zero_joker_used`, `biba_zero_pin`, `water_alert_solo`.
 - **Réglages de tags** : `allow_story_tags`, `allow_profile_via_tag`, `allow_pulse_tags`, `allow_profile_via_pulse_tag` (vrai par défaut — voir `BIBAX.md`).
+- **Annonces BibaPulse** : `pulse_announce_club_joins` (vrai par défaut) — « Annoncer mes arrivées dans un BibaClub public » (Sécurité > Tags et annonces). Quand il est vrai, rejoindre un BibaClub **public** publie dans BibaPulse la carte « A rejoint le BibaClub … », visible de tes Bibax confirmés seulement ; un club privé n'est jamais annoncé. Le couper n'efface pas les cartes déjà publiées (elles disparaissent quand tu quittes le club). Lu et enregistré par `sharedDirectories.js` (`pulseAnnounceClubJoins`) ; avant la mise en place du script, l'app l'ignore sans erreur. Voir `BIBAPULSE.md`.
 - Côté serveur seulement : `display_name_field` (règle d'affichage du nom dans les cartes : `fullName`, `firstNameInitial` ou `nickname`), ni lu ni écrit par l'app.
 
 ## Photo de profil
@@ -63,7 +64,7 @@ Il est **automatique**, déduit du rôle du compte (`role` = `admin` ou `super_a
 
 ## Autres écrans liés
 
-- **Sécurité** (`SecurityScreen`) : mot de passe, statistiques partagées, tags (`StoryTagsPrivacyScreen`, par surface BibaPulse / Stories), personnes bloquées, permissions (dont la localisation), export de ses données (profil seul, en JSON ; l'historique complet est annoncé pour plus tard).
+- **Sécurité** (`SecurityScreen`) : mot de passe, statistiques partagées, tags et annonces (`StoryTagsPrivacyScreen`, intitulé « Tags et annonces » : tags par surface BibaPulse / Stories, puis l'interrupteur des arrivées en BibaClub), personnes bloquées, permissions (dont la localisation), export de ses données (profil seul, en JSON ; l'historique complet est annoncé pour plus tard).
 - **Préférences** (`PreferencesScreen`) : unités, tri des lieux, confirmation de check-in, réglages des Stories.
 - **Apparence** : deux lignes grisées (couleur d'accent, icône de l'app), sans effet.
 - **Mes photos** (`MyPhotosScreen`) : les photos de Stories, même expirées, et leur suppression.
