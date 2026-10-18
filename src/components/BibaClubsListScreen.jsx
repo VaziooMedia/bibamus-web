@@ -36,7 +36,7 @@ function ClubRow({ club, subtitle, onClick }) {
   );
 }
 
-const JOIN_MODE_LABEL = { invite: "Sur invitation", request: "Sur demande", open: "Ouvert" };
+const JOIN_MODE_LABEL = { request: "Sur demande", open: "Ouvert" };
 const STATUS_LABEL = { active: "Membre", pending: "Demande en attente" };
 
 const inputStyle = {

@@ -1077,7 +1077,7 @@ export async function createClub({ name, description, photoUrl, category, visibi
   return { ok: true, clubId };
 }
 
-// Colonnes d'un club lisibles directement dans la table (tout sauf l'ancien code d'invitation, à retirer de la base).
+// Colonnes d'un club lues directement dans la table.
 const CLUB_COLUMNS = "id, name, description, photo_url, category, visibility, join_mode, created_by, created_at";
 
 function rowToClub(row) {

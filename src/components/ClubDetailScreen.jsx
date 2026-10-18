@@ -44,7 +44,6 @@ const CATEGORY_LABEL = { Sport: "Sport", Amis: "Amis", Travail: "Travail", Famil
 function entryLabel(club) {
   if (club.visibility === "public") {
     if (club.joinMode === "request") return "Public · sur demande";
-    if (club.joinMode === "invite") return "Public · sur invitation";
     return "Public · accès libre";
   }
   return club.joinMode === "request" ? "Privé · sur invitation, arrivées validées" : "Privé · sur invitation";
@@ -200,7 +199,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
           </div>
         ) : invitation ? (
           <ClubInvitationCard invitation={invitation} onResponded={handleInvitationResponded} compact />
-        ) : club.visibility === "public" && club.joinMode !== "invite" ? (
+        ) : club.visibility === "public" ? (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
             {joinError && <p style={{ fontSize: "12px", color: "#FF3B3B", marginBottom: "10px" }}>{joinError}</p>}
             <PrimaryButton onClick={handleJoin} disabled={joinBusy} style={{ width: "100%" }}>
