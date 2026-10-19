@@ -61,7 +61,9 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
   // Bucket privé : chaque photo est affichée via une URL signée, résolue une fois puis gardée
   // en mémoire le temps de l'écran.
   const [photoUrls, setPhotoUrls] = useState({});
-  const [uploading, setUploading] = useState(false);
+  // Photo choisie mais pas encore envoyée : { file, previewUrl, path }. `path` se remplit une fois
+  // la photo téléversée, pour qu'un nouvel essai après un échec d'envoi ne la renvoie pas.
+  const [pendingPhoto, setPendingPhoto] = useState(null);
   // Réactions des messages affichés : { [messageId]: [{ emoji, userIds }] }.
   const [reactions, setReactions] = useState({});
   // Message dont la palette est ouverte (appui long).
@@ -71,6 +73,20 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
   const bottomRef = useRef(null);
 
   const isGroup = conversation.kind !== "direct";
+
+  // L'aperçu d'une photo en attente est un lien local : on le libère dès que la photo change,
+  // part, est retirée, ou que l'écran se ferme.
+  const pendingPreviewUrl = pendingPhoto?.previewUrl;
+  useEffect(() => {
+    return () => {
+      if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+    };
+  }, [pendingPreviewUrl]);
+
+  // Changer de conversation abandonne la photo en attente : elle ne doit jamais partir dans une autre.
+  useEffect(() => {
+    setPendingPhoto(null);
+  }, [conversation.id]);
 
   // Chargement initial, puis marquage comme lu.
   useEffect(() => {
@@ -186,17 +202,33 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
     setMessages((prev) => [...older.slice().reverse(), ...(prev || [])]);
   };
 
+  // Envoie le texte, avec la photo en attente s'il y en a une (le texte devient sa légende).
   const handleSend = async () => {
     const text = draft.trim();
-    if (!text || sending) return;
+    if ((!text && !pendingPhoto) || sending) return;
     setSending(true);
-    const result = await sendMessage(conversation.id, text);
+    let photoPath = null;
+    if (pendingPhoto) {
+      photoPath = pendingPhoto.path;
+      if (!photoPath) {
+        const uploaded = await uploadMessagePhoto(conversation.id, pendingPhoto.file);
+        if (uploaded?.error) {
+          setSending(false);
+          alert(uploaded.error);
+          return;
+        }
+        photoPath = uploaded.path;
+        setPendingPhoto((prev) => (prev ? { ...prev, path: photoPath } : prev));
+      }
+    }
+    const result = await sendMessage(conversation.id, text, photoPath);
     setSending(false);
     if (result?.error) {
       alert(result.error);
       return;
     }
     setDraft("");
+    setPendingPhoto(null);
     setMessages((prev) => {
       if (!prev) return [result.message];
       if (prev.some((m) => m.id === result.message.id)) return prev;
@@ -204,31 +236,18 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
     });
   };
 
-  const handlePickPhoto = async (event) => {
+  // Choisir une photo ne l'envoie plus : elle est mise en attente, avec un aperçu, jusqu'à l'appui
+  // sur le bouton d'envoi. Choisir une autre photo remplace la précédente.
+  const handlePickPhoto = (event) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    setUploading(true);
-    const uploaded = await uploadMessagePhoto(conversation.id, file);
-    if (uploaded?.error) {
-      setUploading(false);
-      alert(uploaded.error);
-      return;
-    }
-    const result = await sendMessage(conversation.id, "", uploaded.path);
-    setUploading(false);
-    if (result?.error) {
-      alert(result.error);
-      return;
-    }
-    setMessages((prev) => {
-      if (!prev) return [result.message];
-      if (prev.some((m) => m.id === result.message.id)) return prev;
-      return [...prev, result.message];
-    });
+    setPendingPhoto({ file, previewUrl: URL.createObjectURL(file), path: null });
   };
 
   const visible = (messages || []).filter((m) => !m.deletedAt);
+  // On peut envoyer s'il y a du texte ou une photo en attente.
+  const canSend = !!draft.trim() || !!pendingPhoto;
 
   return (
     <div style={{ padding: hideHeader ? "0" : "28px 20px 0", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
@@ -466,20 +485,50 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
         </div>
       )}
 
+      {pendingPhoto && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "10px 0 0",
+            borderTop: `1px solid ${COLORS.paperAlt}`,
+            background: COLORS.paper,
+          }}
+        >
+          <img
+            src={pendingPhoto.previewUrl}
+            alt="Photo à envoyer"
+            style={{ height: "72px", maxWidth: "40%", objectFit: "cover", borderRadius: "10px", background: COLORS.surfaceAlt }}
+          />
+          <span style={{ flex: 1, minWidth: 0, fontSize: "12.5px", lineHeight: 1.4, color: COLORS.inkSoft }}>
+            Ajoute une légende si tu veux, puis appuie sur envoyer.
+          </span>
+          <button
+            onClick={() => setPendingPhoto(null)}
+            disabled={sending}
+            title="Retirer la photo"
+            style={{ flexShrink: 0, background: "none", border: "none", padding: "8px", cursor: sending ? "default" : "pointer", opacity: sending ? 0.5 : 1 }}
+          >
+            <NavIcon name="x" size={16} color={COLORS.inkSoft} />
+          </button>
+        </div>
+      )}
+
       <div
         style={{
           display: "flex",
           alignItems: "flex-end",
           gap: "8px",
           padding: "10px 0 calc(14px + env(safe-area-inset-bottom, 0px))",
-          borderTop: `1px solid ${COLORS.paperAlt}`,
+          borderTop: pendingPhoto ? "none" : `1px solid ${COLORS.paperAlt}`,
           background: COLORS.paper,
         }}
       >
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePickPhoto} style={{ display: "none" }} />
         <button
           onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
+          disabled={sending}
           title="Envoyer une photo"
           style={{
             flexShrink: 0,
@@ -491,8 +540,8 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            cursor: uploading ? "default" : "pointer",
-            opacity: uploading ? 0.5 : 1,
+            cursor: sending ? "default" : "pointer",
+            opacity: sending ? 0.5 : 1,
             padding: 0,
           }}
         >
@@ -508,7 +557,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
               handleSend();
             }
           }}
-          placeholder="Ton message..."
+          placeholder={pendingPhoto ? "Ajouter une légende..." : "Ton message..."}
           rows={1}
           style={{
             flex: 1,
@@ -528,19 +577,19 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
         />
         <button
           onClick={handleSend}
-          disabled={!draft.trim() || sending}
+          disabled={!canSend || sending}
           title="Envoyer"
           style={{
             flexShrink: 0,
             width: "40px",
             height: "40px",
             borderRadius: "50%",
-            background: draft.trim() ? COLORS.amber : COLORS.surfaceAlt,
+            background: canSend ? COLORS.amber : COLORS.surfaceAlt,
             border: "none",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            cursor: draft.trim() && !sending ? "pointer" : "default",
+            cursor: canSend && !sending ? "pointer" : "default",
             opacity: sending ? 0.5 : 1,
             padding: 0,
           }}
@@ -552,7 +601,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
           <img
             src={bibaPingIconUrl}
             alt=""
-            style={{ height: "20px", filter: draft.trim() ? "brightness(0)" : "none", opacity: draft.trim() ? 1 : 0.5 }}
+            style={{ height: "20px", filter: canSend ? "brightness(0)" : "none", opacity: canSend ? 1 : 0.5 }}
           />
         </button>
       </div>
