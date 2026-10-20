@@ -7,7 +7,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { uploadClubPhoto, createClub } from "../data/sharedDirectories.js";
-import { fileToResizedJpegBlob } from "../imageUtils.js";
+import { PhotoCropModal } from "./PhotoCropModal.jsx";
 
 const CATEGORIES = ["Sport", "Amis", "Travail", "Famille", "Étudiants", "Autre"];
 
@@ -22,9 +22,12 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [croppingFile, setCroppingFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  const handlePhotoChange = async (e) => {
+  // Choisir une photo ouvre d'abord le recadrage (comme pour la photo de profil) ; l'envoi se fait ensuite avec
+  // l'image carrée obtenue (déjà réduite en JPEG, assez légère pour la vérification de contenu).
+  const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -32,16 +35,13 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
       setError("Ce fichier n'est pas une image.");
       return;
     }
+    setError(null);
+    setCroppingFile(file);
+  };
+
+  const handleCroppedPhoto = async (blob) => {
+    setCroppingFile(null);
     setUploadingPhoto(true);
-    // La photo est réduite en JPEG avant l'envoi (une photo de téléphone brute est trop lourde pour la vérification de contenu).
-    let blob;
-    try {
-      blob = await fileToResizedJpegBlob(file);
-    } catch (_) {
-      setUploadingPhoto(false);
-      setError("Impossible de lire cette photo.");
-      return;
-    }
     const result = await uploadClubPhoto(myUserId, blob);
     setUploadingPhoto(false);
     if (result.error) {
@@ -195,6 +195,7 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
         {saving ? "Création..." : "Créer le club"}
       </PrimaryButton>
       <PageFooterNav onBack={onBack} />
+      {croppingFile && <PhotoCropModal file={croppingFile} onCancel={() => setCroppingFile(null)} onConfirm={handleCroppedPhoto} />}
     </div>
   );
 }
