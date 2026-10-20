@@ -490,28 +490,28 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "10px",
             padding: "10px 0 0",
             borderTop: `1px solid ${COLORS.paperAlt}`,
             background: COLORS.paper,
           }}
         >
+          {/* Deux zones de même largeur de part et d'autre : l'aperçu est centré, la croix reste à droite. */}
+          <div style={{ flex: 1, minWidth: 0 }} />
           <img
             src={pendingPhoto.previewUrl}
             alt="Photo à envoyer"
             style={{ height: "72px", maxWidth: "40%", objectFit: "cover", borderRadius: "10px", background: COLORS.surfaceAlt }}
           />
-          <span style={{ flex: 1, minWidth: 0, fontSize: "12.5px", lineHeight: 1.4, color: COLORS.inkSoft }}>
-            Ajoute une légende si tu veux, puis appuie sur envoyer.
-          </span>
-          <button
-            onClick={() => setPendingPhoto(null)}
-            disabled={sending}
-            title="Retirer la photo"
-            style={{ flexShrink: 0, background: "none", border: "none", padding: "8px", cursor: sending ? "default" : "pointer", opacity: sending ? 0.5 : 1 }}
-          >
-            <NavIcon name="x" size={16} color={COLORS.inkSoft} />
-          </button>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={() => setPendingPhoto(null)}
+              disabled={sending}
+              title="Retirer la photo"
+              style={{ flexShrink: 0, background: "none", border: "none", padding: "8px", cursor: sending ? "default" : "pointer", opacity: sending ? 0.5 : 1 }}
+            >
+              <NavIcon name="x" size={16} color={COLORS.inkSoft} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -557,7 +557,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
               handleSend();
             }
           }}
-          placeholder={pendingPhoto ? "Ajouter une légende..." : "Ton message..."}
+          placeholder={pendingPhoto ? "Ajouter un texte..." : "Ton message..."}
           rows={1}
           style={{
             flex: 1,
