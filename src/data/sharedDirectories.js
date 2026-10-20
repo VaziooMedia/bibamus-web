@@ -1080,6 +1080,15 @@ export async function createClub({ name, description, photoUrl, category, visibi
   return { ok: true, clubId };
 }
 
+// Changer la photo d'un club déjà créé : réservé aux administrateurs du club. Passe par la fonction serveur
+// update_club_photo, qui vérifie que la personne est administratrice active de ce club et que la photo est bien
+// une de celles qu'elle vient d'envoyer (voir uploadClubPhoto). Les refus sont renvoyés tels quels.
+export async function updateClubPhoto(clubId, photoUrl) {
+  const { error } = await supabase.rpc("update_club_photo", { p_club_id: clubId, p_photo_url: photoUrl });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 // Colonnes d'un club lues directement dans la table.
 const CLUB_COLUMNS = "id, name, description, photo_url, category, visibility, join_mode, created_by, created_at";
 

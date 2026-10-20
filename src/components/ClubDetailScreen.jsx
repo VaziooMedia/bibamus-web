@@ -4,12 +4,13 @@
 // rôles + arrivées à valider + invitation de Bibax), Stats
 // (calculées à partir des salons rattachés).
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { ClubInvitationCard } from "./ClubInvitationCard.jsx";
 import { InviteBibaxPanel } from "./InviteBibaxPanel.jsx";
+import { PhotoCropModal } from "./PhotoCropModal.jsx";
 import {
   loadClubDetail,
   loadClubMembers,
@@ -26,6 +27,8 @@ import {
   removeClubMember,
   leaveClub,
   joinClub,
+  uploadClubPhoto,
+  updateClubPhoto,
 } from "../data/sharedDirectories.js";
 
 function timeAgo(iso) {
@@ -64,6 +67,11 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
   const [memberActionError, setMemberActionError] = useState(null);
   // Mon invitation en attente dans ce club, s'il y en a une (la carte garde la main une fois la réponse donnée).
   const [invitation, setInvitation] = useState(null);
+  // Changement de la photo du club (administrateurs seulement) : choix, recadrage, envoi, enregistrement.
+  const [croppingFile, setCroppingFile] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState(null);
+  const photoInputRef = useRef(null);
 
   const refreshMembers = () => loadClubMembers(clubId).then(setMembers);
 
@@ -147,6 +155,41 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
     onBack();
   };
 
+  // Changer la photo du club : le choix ouvre d'abord le recadrage (comme pour une photo de profil) ; l'image
+  // carrée obtenue est envoyée (vérification de contenu comprise) puis enregistrée par la fonction serveur, qui
+  // refuse tout appel d'une personne qui n'est pas administratrice du club. Si l'enregistrement est refusé,
+  // l'ancienne photo reste affichée.
+  const handlePhotoChosen = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setPhotoError("Ce fichier n'est pas une image.");
+      return;
+    }
+    setPhotoError(null);
+    setCroppingFile(file);
+  };
+
+  const handleCroppedPhoto = async (blob) => {
+    setCroppingFile(null);
+    setUploadingPhoto(true);
+    setPhotoError(null);
+    const uploaded = await uploadClubPhoto(myUserId, blob);
+    if (uploaded.error) {
+      setUploadingPhoto(false);
+      setPhotoError(uploaded.error);
+      return;
+    }
+    const saved = await updateClubPhoto(clubId, uploaded.url);
+    setUploadingPhoto(false);
+    if (saved.error) {
+      setPhotoError(saved.error);
+      return;
+    }
+    setClub((c) => (c ? { ...c, photoUrl: uploaded.url } : c));
+  };
+
   // Réponse à l'invitation : devenu membre (ou en attente de validation), on recharge la page.
   const handleInvitationResponded = () => {
     refreshMembers();
@@ -190,15 +233,44 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
       <PageHeader onBack={onBack} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "14px", margin: "4px 0 14px" }}>
-        <EntityAvatar photoUrl={club.photoUrl} size={64} fallbackIcon="crown" />
+        {isAdmin ? (
+          <button
+            onClick={() => photoInputRef.current?.click()}
+            disabled={uploadingPhoto}
+            aria-label="Changer la photo du club"
+            style={{ position: "relative", width: "64px", height: "64px", padding: 0, border: "none", background: "none", borderRadius: "50%", cursor: uploadingPhoto ? "default" : "pointer", flexShrink: 0 }}
+          >
+            <EntityAvatar photoUrl={club.photoUrl} size={64} fallbackIcon="crown" />
+            {uploadingPhoto ? (
+              <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(13,27,42,0.6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#fff" }}>...</span>
+            ) : (
+              <span style={{ position: "absolute", bottom: 0, right: 0, width: "22px", height: "22px", borderRadius: "50%", background: COLORS.amber, display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${COLORS.paper}` }}>
+                <NavIcon name="camera" size={11} color={COLORS.paper} />
+              </span>
+            )}
+          </button>
+        ) : (
+          <EntityAvatar photoUrl={club.photoUrl} size={64} fallbackIcon="crown" />
+        )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{club.name}</h1>
           <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>
             {club.category && `${CATEGORY_LABEL[club.category] || club.category} · `}
             {entryLabel(club)}
           </div>
+          {isAdmin && (
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              style={{ background: "none", border: "none", padding: 0, marginTop: "4px", fontSize: "12px", fontWeight: 700, color: COLORS.amber, cursor: uploadingPhoto ? "default" : "pointer" }}
+            >
+              {club.photoUrl ? "Changer la photo" : "Ajouter une photo"}
+            </button>
+          )}
         </div>
+        {isAdmin && <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoChosen} style={{ display: "none" }} />}
       </div>
+      {isAdmin && photoError && <p style={{ fontSize: "12.5px", color: COLORS.wine, margin: "-6px 0 14px" }}>{photoError}</p>}
       {club.description && <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>{club.description}</p>}
 
       {!isMember && (
@@ -432,6 +504,8 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
           )}
         </>
       )}
+
+      {croppingFile && <PhotoCropModal file={croppingFile} onCancel={() => setCroppingFile(null)} onConfirm={handleCroppedPhoto} />}
 
       <PageFooterNav onBack={onBack} />
     </div>
