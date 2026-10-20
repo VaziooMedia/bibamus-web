@@ -568,6 +568,13 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
   const [photoError, setPhotoError] = useState(null);
   const [croppingFile, setCroppingFile] = useState(null);
   const fileInputRef = useRef(null);
+  // Supprimer la photo : retour à l'icône par défaut. On demande confirmation avant d'agir.
+  const handleRemovePhoto = () => {
+    if (!window.confirm("Supprimer ta photo de profil ? L'icône par défaut sera utilisée à la place.")) return;
+    setPhotoError(null);
+    setAvatarUrl(null);
+    onSaveProfile({ avatarUrl: null });
+  };
   const [hasActiveStory, setHasActiveStory] = useState(false);
   useEffect(() => {
     loadMyStories().then((list) => setHasActiveStory(list.some((s) => new Date(s.expiresAt) > new Date())));
@@ -607,6 +614,15 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
         >
           {avatarUrl ? "Changer la photo" : "Ajouter une photo"}
         </button>
+        {avatarUrl && (
+          <button
+            onClick={handleRemovePhoto}
+            disabled={uploadingPhoto}
+            style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "8px 14px", fontWeight: 600, fontSize: "13px", color: COLORS.wine, cursor: "pointer" }}
+          >
+            Supprimer la photo
+          </button>
+        )}
         <input
           ref={fileInputRef}
           type="file"
