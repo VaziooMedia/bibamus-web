@@ -9,6 +9,7 @@ import { NavigationContext, ProfileNavContext } from "./contexts.js";
 import { EVENT_TYPES } from "./events.js";
 import { isHomeCheckScreen } from "./checkFlow.js";
 import { BottomNav } from "./components/ui.jsx";
+import { useHideOnScroll } from "./hooks/useHideOnScroll.js";
 import { ErrorBoundary, installGlobalCrashReporting } from "./components/ErrorBoundary.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
 import { BarcodeScannerModal } from "./components/BarcodeScannerModal.jsx";
@@ -206,6 +207,16 @@ export default function App() {
   useEffect(() => {
     mainScrollRef.current?.scrollTo(0, 0);
   }, [screen]);
+
+  // Barre du bas : repliée quand on fait défiler vers le bas, de retour dès qu'on remonte. L'élément qui
+  // défile n'existe qu'une fois connecté et profil chargé : on le garde aussi en état pour que le suivi
+  // s'y accroche à ce moment-là.
+  const [mainScrollEl, setMainScrollEl] = useState(null);
+  const attachMainScroll = React.useCallback((el) => {
+    mainScrollRef.current = el;
+    setMainScrollEl(el);
+  }, []);
+  const bottomNavHidden = useHideOnScroll(mainScrollEl, screen);
 
   // BibaMusic — retour de la connexion Spotify (OAuth PKCE). Le code d'autorisation arrive en
   // paramètre d'URL sur bibamus.app/spotify-callback ; on le conserve ici jusqu'à ce que la
@@ -2042,9 +2053,10 @@ export default function App() {
               display: "flex",
               flexDirection: "column",
               paddingTop: "env(safe-area-inset-top, 0px)",
+              overflow: "hidden", // la barre du bas repliée glisse sous l'écran sans agrandir la page
             }}
           >
-            <div ref={mainScrollRef} style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", display: "flex", flexDirection: "column" }}>
+            <div ref={attachMainScroll} style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", display: "flex", flexDirection: "column" }}>
             {screen === "home" && (
               <HomeScreen
                 profile={profile}
@@ -3635,6 +3647,7 @@ export default function App() {
               onGoToSessionHub={() => setScreen("sessionHub")}
               unreadNotifications={unreadNotificationsCount}
               bibaPingVisible={featureFlags.nav_bibaping_visible !== false}
+              hidden={bottomNavHidden}
             />
           </div>
         </div>

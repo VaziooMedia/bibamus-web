@@ -389,7 +389,21 @@ export function MoneyAmount({ value, currency, centered = false, jetonIconSize =
   );
 }
 
-export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifications = 0, bibaPingVisible = true }) {
+export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifications = 0, bibaPingVisible = true, hidden = false }) {
+  // Hauteur réelle de la barre : sert à la replier complètement (la zone de contenu récupère sa place).
+  const barRef = React.useRef(null);
+  const [barHeight, setBarHeight] = useState(56);
+  React.useLayoutEffect(() => {
+    const node = barRef.current;
+    if (!node) return undefined;
+    const measure = () => setBarHeight(node.offsetHeight || 56);
+    measure();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   // Messages non lus — chargé ici plutôt que reçu en propriété : la barre est présente sur
   // tous les écrans, c'est le seul endroit qui en a besoin en permanence.
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -428,6 +442,8 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
 
   return (
     <div
+      ref={barRef}
+      aria-hidden={hidden}
       style={{
         width: "100%",
         flexShrink: 0,
@@ -436,14 +452,20 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
         display: "flex",
         justifyContent: "space-around",
         alignItems: "flex-end",
-        padding: "8px 4px calc(8px + env(safe-area-inset-bottom, 0px))",
+        padding: "4px 4px calc(6px + env(safe-area-inset-bottom, 0px))",
+        // Repliée : la barre glisse hors de l'écran et ne prend plus de place (marge négative égale
+        // à sa hauteur) ; la zone de contenu s'agrandit d'autant.
+        marginBottom: hidden ? -barHeight : 0,
+        transform: hidden ? `translateY(${barHeight}px)` : "none",
+        transition: "transform 0.25s ease, margin-bottom 0.25s ease",
+        pointerEvents: hidden ? "none" : "auto",
       }}
     >
       {items.map((item) => (
         <button
           key={item.key}
           onClick={() => onNavigate(item.key)}
-          style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1 }}
+          style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "3px 8px", flex: 1 }}
         >
           <NavIcon name={item.icon.slice(3)} size={20} color={active(item.key) ? COLORS.pinkFluo : COLORS.amber} />
           <span style={{ fontSize: "10px", fontWeight: active(item.key) ? 700 : 600 }}>
@@ -493,7 +515,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
       {bibaPingVisible && (
       <button
         onClick={() => onNavigate("bibaPing")}
-        style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1 }}
+        style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "3px 8px", flex: 1 }}
       >
         {/* Icône fournie en SVG : contrainte en hauteur uniquement, pour ne pas déformer un
             ratio non carré. Deux fichiers plutôt qu'une couleur pilotée par le code, car la
@@ -535,7 +557,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
 
       <button
         onClick={() => onNavigate("notificationsFeed")}
-        style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "4px 8px", flex: 1, position: "relative" }}
+        style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "3px 8px", flex: 1, position: "relative" }}
       >
         <span style={{ position: "relative", display: "inline-block", lineHeight: 0 }}>
           <NavIcon name="bell" size={22} color={active("notificationsFeed") ? COLORS.pinkFluo : COLORS.amber} />
