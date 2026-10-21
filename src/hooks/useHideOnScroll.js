@@ -5,6 +5,8 @@
 // - scrollEl : le conteneur qui défile (l'élément lui-même, pas une ref).
 // - resetKey : valeur qui change à chaque changement d'écran ; la barre
 //   revient alors toujours (le nouvel écran repart du haut).
+// - enabled : false sur les écrans où la barre doit rester fixe (l'accueil) ;
+//   rien n'est suivi et elle reste affichée. Vrai par défaut.
 //
 // Garde-fous :
 // - petits mouvements ignorés (le doigt qui tremble ne doit pas la faire
@@ -29,7 +31,7 @@ const MIN_SCROLL_RANGE_PX = 120; // la page doit défiler d'au moins ça pour qu
 const SETTLE_MS = 350; // durée d'ignorance après un changement (animation de la barre)
 const RECHECK_MS = 500;
 
-export function useHideOnScroll(scrollEl, resetKey) {
+export function useHideOnScroll(scrollEl, resetKey, enabled = true) {
   const [hidden, setHidden] = useState(false);
   const s = useRef({ last: 0, acc: 0, lockUntil: 0, hidden: false });
 
@@ -40,10 +42,10 @@ export function useHideOnScroll(scrollEl, resetKey) {
     s.current.hidden = false;
     s.current.lockUntil = Date.now() + SETTLE_MS;
     setHidden(false);
-  }, [resetKey]);
+  }, [resetKey, enabled]);
 
   useEffect(() => {
-    if (!scrollEl) return undefined;
+    if (!scrollEl || !enabled) return undefined;
     const st = s.current;
     st.last = scrollEl.scrollTop;
     st.acc = 0;
@@ -93,7 +95,7 @@ export function useHideOnScroll(scrollEl, resetKey) {
       scrollEl.removeEventListener("scroll", onScroll);
       clearInterval(recheck);
     };
-  }, [scrollEl]);
+  }, [scrollEl, enabled]);
 
-  return hidden;
+  return enabled && hidden;
 }

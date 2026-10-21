@@ -210,13 +210,13 @@ export default function App() {
 
   // Barre du bas : repliée quand on fait défiler vers le bas, de retour dès qu'on remonte. L'élément qui
   // défile n'existe qu'une fois connecté et profil chargé : on le garde aussi en état pour que le suivi
-  // s'y accroche à ce moment-là.
+  // s'y accroche à ce moment-là. Sur l'accueil, la barre reste fixe.
   const [mainScrollEl, setMainScrollEl] = useState(null);
   const attachMainScroll = React.useCallback((el) => {
     mainScrollRef.current = el;
     setMainScrollEl(el);
   }, []);
-  const bottomNavHidden = useHideOnScroll(mainScrollEl, screen);
+  const bottomNavHidden = useHideOnScroll(mainScrollEl, screen, screen !== "home");
 
   // BibaMusic — retour de la connexion Spotify (OAuth PKCE). Le code d'autorisation arrive en
   // paramètre d'URL sur bibamus.app/spotify-callback ; on le conserve ici jusqu'à ce que la
