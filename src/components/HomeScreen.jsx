@@ -12,7 +12,6 @@ import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds, pulseClubName } from "../data/sharedDirectories.js";
-import { loadMyUnreadMessageCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
@@ -69,18 +68,13 @@ export function HomeScreen({
   onAddStory,
   onOpenStoryAuthor,
   myUserId,
-  goToSessionHub,
   goToProfile,
-  goToRepertoireHub,
   goToGames,
   goToBibaMeet,
   goToBibaPulse,
-  goToBibaPing,
   bibaMeetVisible = true,
   bibaPulseVisible = true,
   gamesVisible = true,
-  bibaPingVisible = true,
-  atlasVisible = true,
   storiesEnabled = true,
   goToSettings,
   goToSearch,
@@ -127,22 +121,6 @@ export function HomeScreen({
     loadPulseFeed(null, 3).then(setPulseEntries);
   }, []);
 
-  // Messages non lus — alimente la pastille rouge de la tuile BibaPing. Relevé au montage,
-  // puis à chaque message reçu : sans l'abonnement temps réel, la pastille ne bougerait pas
-  // tant qu'on reste sur l'accueil.
-  const [unreadMessages, setUnreadMessages] = useState(0);
-  useEffect(() => {
-    const refresh = () => loadMyUnreadMessageCount().then(setUnreadMessages);
-    refresh();
-    // Deux sources : l'arrivée d'un message, et la lecture d'une conversation ailleurs dans
-    // l'app — cette dernière ne produit aucun événement temps réel.
-    const unsubscribe = subscribeToMyMessages(refresh);
-    const unsubscribeRead = onConversationRead(refresh);
-    return () => {
-      unsubscribe();
-      unsubscribeRead();
-    };
-  }, []);
 
   const [bibaxSuggestionsPool, setBibaxSuggestionsPool] = useState(null);
   const [addingBibaxCode, setAddingBibaxCode] = useState(null);
@@ -604,15 +582,11 @@ export function HomeScreen({
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
-        <CategoryTile icon="ti-door-enter" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Go</span></>} subtitle="Créer et rejoindre" onClick={goToSessionHub} />
         {gamesVisible && (
           <CategoryTile icon="ti-device-gamepad" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Play</span></>} subtitle="Jeux et défis autour d'un verre" onClick={goToGames} />
         )}
         {bibaMeetVisible && (
           <CategoryTile icon="ti-users" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
-        )}
-        {atlasVisible && (
-        <CategoryTile icon="ti-map" title={<><span style={{ color: COLORS.ink }}>Bib</span><span style={{ color: COLORS.amber }}>Atlas</span></>} subtitle="Lieux, produits, marques et producteurs" onClick={goToRepertoireHub} />
         )}
         <CategoryTile
           title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Cal</span></>}
@@ -620,14 +594,6 @@ export function HomeScreen({
           badge="Soon"
           disabled
         />
-        {bibaPingVisible && (
-        <CategoryTile
-          title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Ping</span></>}
-          subtitle="Messagerie Bibamus"
-          onClick={goToBibaPing}
-          countBadge={unreadMessages}
-        />
-        )}
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>
