@@ -19,6 +19,7 @@ import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
 import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
 import { SessionHubScreen, RepertoireHubScreen, ComingSoonScreen } from "./components/HubScreens.jsx";
+import { BibaxDirectoryScreen } from "./components/BibaxDirectoryScreen.jsx";
 import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
 import { EventDashboardScreen } from "./components/EventDashboardScreen.jsx";
 import { DrinkCheckScreen } from "./components/DrinkCheckScreen.jsx";
@@ -279,6 +280,13 @@ export default function App() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
   const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
+  // Écran où ramène la flèche retour de la fiche d'un Bibax ; « home » partout sauf depuis la page Bibax de BibAtlas.
+  const [screenBeforeBibaxProfile, setScreenBeforeBibaxProfile] = useState("home");
+  const openBibaxProfile = (code, backTo = "home") => {
+    setViewedBibaxProfileCode(code);
+    setScreenBeforeBibaxProfile(backTo);
+    setScreen("bibaxProfilePreview");
+  };
   const [screenBeforeBibaxSuggestions, setScreenBeforeBibaxSuggestions] = useState("home");
   const [storyCreateContext, setStoryCreateContext] = useState(null); // {contextType, contextId, returnScreen}
   const [viewedStoryAuthor, setViewedStoryAuthor] = useState(null); // {authorId, authorName, authorAvatarUrl, stories}
@@ -2075,10 +2083,7 @@ export default function App() {
                   setScreenBeforeBibaxSuggestions("home");
                   setScreen("bibaxAllSuggestions");
                 }}
-                onOpenBibaxProfile={(code) => {
-                  setViewedBibaxProfileCode(code);
-                  setScreen("bibaxProfilePreview");
-                }}
+                onOpenBibaxProfile={(code) => openBibaxProfile(code)}
                 onOpenVenue={(id) => {
                   setScreenBeforeVenueDetail("home");
                   setViewedVenueId(id);
@@ -2181,6 +2186,9 @@ export default function App() {
                   setShowBarcodeScanner(true);
                 }}
               />
+            )}
+            {screen === "bibaxDirectory" && (
+              <BibaxDirectoryScreen bibros={bibros} onOpenBibaxProfile={(code) => openBibaxProfile(code, "bibaxDirectory")} onBack={() => setScreen("atlasSearch")} />
             )}
             {screen === "newSalonEvent" && (
               <NewEventScreen
@@ -2736,10 +2744,7 @@ export default function App() {
                   setScreenBeforeBrandDetail(screen);
                   setScreen("brandDetail");
                 }}
-                onOpenBibaxProfile={(code) => {
-                  setViewedBibaxProfileCode(code);
-                  setScreen("bibaxProfilePreview");
-                }}
+                onOpenBibaxProfile={(code) => openBibaxProfile(code)}
                 goToScan={() => setShowBarcodeScanner(true)}
                 goToAtlas={() => setScreen("repertoireHub")}
                 hideBibaxAndAtlas={screen === "search" && screenBeforeSearch === "repertoireHub"}
@@ -2760,6 +2765,7 @@ export default function App() {
                   setScreenBeforeBreweryDirectory("atlasSearch");
                   setScreen("breweryDirectory");
                 }}
+                goToBibax={() => setScreen("bibaxDirectory")}
                 initialTab={searchInitialTab}
                 onBack={() => setScreen(screen === "atlasSearch" ? "home" : screenBeforeSearch)}
               />
@@ -3396,10 +3402,7 @@ export default function App() {
                     });
                   });
                 }}
-                onOpenBibaxProfile={(code) => {
-                  setViewedBibaxProfileCode(code);
-                  setScreen("bibaxProfilePreview");
-                }}
+                onOpenBibaxProfile={(code) => openBibaxProfile(code)}
                 onSeeAllSuggestions={() => {
                   setScreenBeforeBibaxSuggestions("bibrosList");
                   setScreen("bibaxAllSuggestions");
@@ -3572,10 +3575,7 @@ export default function App() {
             {screen === "bibaxAllSuggestions" && (
               <BibaxAllSuggestionsScreen
                 onBack={() => setScreen(screenBeforeBibaxSuggestions)}
-                onOpenProfile={(code) => {
-                  setViewedBibaxProfileCode(code);
-                  setScreen("bibaxProfilePreview");
-                }}
+                onOpenProfile={(code) => openBibaxProfile(code)}
               />
             )}
             {screen === "bibaSolo" && (
@@ -3616,10 +3616,7 @@ export default function App() {
                   setFocusPulseEntry({ id: entryId, openComments: !!openComments });
                   setScreen("bibaPulse");
                 }}
-                onOpenBibaxProfile={(code) => {
-                  setViewedBibaxProfileCode(code);
-                  setScreen("bibaxProfilePreview");
-                }}
+                onOpenBibaxProfile={(code) => openBibaxProfile(code)}
               />
             )}
             {screen === "bibaxProfilePreview" && viewedBibaxProfileCode && (
@@ -3631,7 +3628,7 @@ export default function App() {
                     setStoryResumeState(null);
                     setScreen("home");
                   } else {
-                    setScreen("home");
+                    setScreen(screenBeforeBibaxProfile);
                   }
                 }}
               />
@@ -3653,7 +3650,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "submitBrewery", "submitBrand", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "bibroStats", "bibroPulse", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "submitBrewery", "submitBrand", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "bibroStats", "bibroPulse", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "editVenue", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
@@ -3732,8 +3729,7 @@ export default function App() {
             setStoryResumeState({ stories: viewedStoryAuthor, index });
             setViewedStoryAuthor(null);
             if (entityType === "bibax") {
-              setViewedBibaxProfileCode(entityId);
-              setScreen("bibaxProfilePreview");
+              openBibaxProfile(entityId);
             } else if (entityType === "venue") {
               setViewedVenueId(entityId);
               setScreen("venueDetail");
