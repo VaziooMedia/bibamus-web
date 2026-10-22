@@ -26,7 +26,7 @@ function resolveObject(entry, directories) {
 // Format neutre "Nom - Action @ Objet" — évite les problèmes d'accord (masculin/féminin,
 // préposition selon le nom du lieu) qu'une vraie phrase française poserait.
 function pulseActionFor(entry) {
-  return { product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout", post: "Publication" }[entry.eventType] || "Activité";
+  return { product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
 }
 
 function timeAgo(iso) {
@@ -251,9 +251,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
                 )}
               </>
-            ) : isPost ? (
-              <strong style={{ color: COLORS.amber }}>{pulseActionFor(entry)}</strong>
-            ) : (
+            ) : isPost ? null : (
               <>
                 {pulseActionFor(entry)} @{" "}
                 {obj && openObject ? (
@@ -692,6 +690,10 @@ export function BibaPulseScreen({
     return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
   }
 
+  // Arrivée depuis une notification : la carte visée est introuvable alors que tout le fil est chargé (supprimée par son
+  // auteur, ou masquée). Une carte que je viens moi-même de supprimer ici ne compte pas.
+  const focusMissing = !!focusEntryId && entries !== null && !hasMore && !deletedIds.current.has(focusEntryId) && !entries.some((e) => e.id === focusEntryId);
+
   if (composing) {
     return <PulsePostScreen onBack={() => setComposing(false)} onPublished={handlePublished} canShareStory={storiesEnabled && !!onShareStory} />;
   }
@@ -742,6 +744,12 @@ export function BibaPulseScreen({
           </svg>
         </button>
       </div>
+
+      {focusMissing && (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", marginBottom: "10px" }}>
+          <p style={{ color: COLORS.inkSoft, fontSize: "13px", margin: 0 }}>Cette publication n'est plus disponible.</p>
+        </div>
+      )}
 
       {entries === null ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
