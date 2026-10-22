@@ -300,11 +300,11 @@ export function CategoryTile({ iconElement, title, subtitle, onClick, badge, cou
         background: COLORS.surface,
         border: `2px solid ${COLORS.paperAlt}`,
         borderRadius: "14px",
-        padding: "16px 14px",
+        padding: "12px 14px",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.55 : 1,
         position: "relative",
-        minHeight: "104px",
+        minHeight: "80px",
       }}
     >
       {badge && (

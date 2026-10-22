@@ -57,6 +57,11 @@ import flagSe from "../assets/flags/se.svg";
 import flagCh from "../assets/flags/ch.svg";
 import flagTn from "../assets/flags/tn.svg";
 import flagVe from "../assets/flags/ve.svg";
+import flagZa from "../assets/flags/za.svg";
+import flagAr from "../assets/flags/ar.svg";
+import flagAu from "../assets/flags/au.svg";
+import flagCl from "../assets/flags/cl.svg";
+import flagNz from "../assets/flags/nz.svg";
 
 const FLAG_URLS_BY_CODE = {
   be: flagBe,
@@ -104,6 +109,11 @@ const FLAG_URLS_BY_CODE = {
   ch: flagCh,
   tn: flagTn,
   ve: flagVe,
+  za: flagZa,
+  ar: flagAr,
+  au: flagAu,
+  cl: flagCl,
+  nz: flagNz,
 };
 
 // Mappe chaque nom de pays (tel que stocké dans COUNTRY_FLAGS) vers son code ISO à 2 lettres,
@@ -155,6 +165,11 @@ export const COUNTRY_ISO_CODES = {
   Suisse: "ch",
   Tunisie: "tn",
   Vénézuéla: "ve",
+  "Afrique du Sud": "za",
+  Argentine: "ar",
+  Australie: "au",
+  Chili: "cl",
+  "Nouvelle-Zélande": "nz",
 };
 
 export function CountryFlagImg({ country, size = 16, style }) {

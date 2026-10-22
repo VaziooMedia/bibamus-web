@@ -301,11 +301,11 @@ export default function App() {
   // Écran où ramène la flèche retour de la page d'un club (liste des clubs, ou fil de notifications quand on y arrive par une invitation).
   const [clubDetailBack, setClubDetailBack] = useState("bibaClubsList");
   const [spotifyReturnContext, setSpotifyReturnContext] = useState({ screen: "connectSpotify", eventId: null });
-  const [screenBeforeVenueDirectory, setScreenBeforeVenueDirectory] = useState("repertoireHub");
+  const [screenBeforeVenueDirectory, setScreenBeforeVenueDirectory] = useState("atlasSearch");
   const [screenBeforeSearch, setScreenBeforeSearch] = useState("home");
-  const [screenBeforeBreweryDirectory, setScreenBeforeBreweryDirectory] = useState("repertoireHub");
-  const [screenBeforeBrandDirectory, setScreenBeforeBrandDirectory] = useState("repertoireHub");
-  const [screenBeforeDrinksDirectory, setScreenBeforeDrinksDirectory] = useState("repertoireHub");
+  const [screenBeforeBreweryDirectory, setScreenBeforeBreweryDirectory] = useState("atlasSearch");
+  const [screenBeforeBrandDirectory, setScreenBeforeBrandDirectory] = useState("atlasSearch");
+  const [screenBeforeDrinksDirectory, setScreenBeforeDrinksDirectory] = useState("atlasSearch");
   const [screenBeforeDrinkDetail, setScreenBeforeDrinkDetail] = useState("drinksDirectory");
   // Corrige un défaut : la fiche Marque/Producteur revenait toujours à son propre annuaire, quel que
   // soit l'endroit d'où on l'avait ouverte (ex. depuis une fiche Produit).
@@ -2105,9 +2105,7 @@ export default function App() {
                   setActiveEventId(id);
                   setScreen("eventDashboard");
                 }}
-                goToSessionHub={() => setScreen("sessionHub")}
                 goToProfile={() => setScreen("profile")}
-                goToRepertoireHub={() => setScreen("repertoireHub")}
                 goToGames={() => {
                   setBibaPlayLinkedSalonCode(null);
                   setScreen("games");
@@ -2116,11 +2114,8 @@ export default function App() {
                 bibaMeetVisible={featureFlags.nav_bibameet_visible !== false}
                 bibaPulseVisible={featureFlags.nav_bibapulse_visible !== false}
                 gamesVisible={featureFlags.nav_games_visible !== false}
-                bibaPingVisible={featureFlags.nav_bibaping_visible !== false}
-                atlasVisible={featureFlags.nav_atlas_visible !== false}
                 storiesEnabled={featureFlags.stories_enabled !== false}
                 goToBibaPulse={() => setScreen("bibaPulse")}
-                goToBibaPing={() => setScreen("bibaPing")}                
                 goToSettings={() => setScreen("settings")}
                 goToSearch={() => setScreen("atlasSearch")}
                 goToDrinkCheck={() => {
