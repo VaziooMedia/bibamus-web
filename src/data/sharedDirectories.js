@@ -657,6 +657,39 @@ export async function publishPostToPulse({ visibility = null, content = null } =
   return createPulseEvent("post", null, null, { visibility, content });
 }
 
+// Partage d'une publication en Story : une Story n'accepte qu'UNE fiche de chaque sorte (un produit, une marque,
+// un producteur, un lieu) et un seul Bibax. On reprend la première fiche de chaque sorte, dans l'ordre choisi.
+// Renvoie { drink?, brand?, producer?, venue? } avec { id, name } — le format des tags de StoryCreateScreen.
+export function storyTagsFromPost(tags) {
+  const out = {};
+  (tags || []).forEach((t) => {
+    if (["drink", "brand", "producer", "venue"].includes(t.type) && !out[t.type]) out[t.type] = { id: t.id, name: t.name };
+  });
+  return out;
+}
+
+// Le premier Bibax de la publication qui accepte d'être tagué DANS UNE STORY (réglage distinct de celui de
+// BibaPulse), ou null. Au moindre doute (erreur du serveur), aucun Bibax n'est repris : on respecte son réglage.
+export async function pickStoryBibax(people) {
+  const candidates = (people || []).filter((p) => p && p.id && p.bibroCode);
+  if (candidates.length === 0) return null;
+  let data;
+  try {
+    const res = await supabase.rpc("get_taggable_bibax", { p_ids: candidates.map((p) => p.id), p_surface: "story" });
+    if (res.error) {
+      console.error("pickStoryBibax:", res.error);
+      return null;
+    }
+    data = res.data;
+  } catch (e) {
+    console.error("pickStoryBibax:", e);
+    return null;
+  }
+  const canTagById = new Map((data || []).map((r) => [r.id, r.can_tag]));
+  const found = candidates.find((p) => canTagById.get(p.id) !== false);
+  return found ? { id: found.id, name: found.name, bibroCode: found.bibroCode } : null;
+}
+
 // Recherche unifiée pour taguer une publication : produits, marques, producteurs et lieux d'un coup.
 // Renvoie [{ type, id, name, detail }] — au plus `perType` fiches de chaque sorte, dans cet ordre.
 // Seules les fiches visibles dans l'app sont proposées (même règle que le serveur à la publication).

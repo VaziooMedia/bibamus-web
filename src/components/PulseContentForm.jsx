@@ -6,8 +6,8 @@
 //   <PulseContentFields form={form} />              // les champs
 //   const built = await buildPulseContent(form, { rating, tags });   // -> { content } ou { error }
 //
-// Une publication libre (PulsePostScreen) réutilise les mêmes champs, sans la partie « Bibax » et avec son
-// propre libellé de texte (props showBibax, commentLabel, commentPlaceholder), et ajoute des tags de fiche.
+// Une publication libre (PulsePostScreen) réutilise les mêmes champs, avec son propre libellé de texte (props
+// commentLabel, commentPlaceholder), et ajoute des tags de fiche. (La prop showBibax permet de masquer la partie « Bibax ».)
 //
 // buildPulseContent envoie d'abord la photo (vérifiée côté serveur) : à appeler AVANT de valider
 // le check, pour que rien ne soit enregistré si la photo est refusée.
@@ -35,7 +35,7 @@ export function usePulseContentForm(defaultVisibility = "public") {
   const [photo, setPhoto] = useState(null); // { blob, previewUrl }
   const [tagQuery, setTagQuery] = useState("");
   const [tagResults, setTagResults] = useState([]);
-  const [taggedPeople, setTaggedPeople] = useState([]); // [{ id, name, avatarUrl }]
+  const [taggedPeople, setTaggedPeople] = useState([]); // [{ id, name, avatarUrl, bibroCode }]
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -209,7 +209,7 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
                       restricted
                         ? undefined
                         : () => {
-                            setTaggedPeople((prev) => [...prev, { id: person.id, name: fullNameOf(person), avatarUrl: person.avatarUrl }]);
+                            setTaggedPeople((prev) => [...prev, { id: person.id, name: fullNameOf(person), avatarUrl: person.avatarUrl, bibroCode: person.bibroCode }]);
                             setTagQuery("");
                             setTagResults([]);
                           }

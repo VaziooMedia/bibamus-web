@@ -152,16 +152,18 @@ function TagIcon() {
 // remplissant tout l'écran, atteindre un vrai réglage plus bas obligeait à toucher l'image
 // elle-même pour y arriver, ce qui la déplaçait à chaque fois. Les tags et la légende vivent
 // dans une vraie mini-page qui glisse depuis le bas, sans jamais faire défiler la page entière.
-export function StoryCreateScreen({ contextType, contextId, venueName, myUserId, onBack, onPublished }) {
+// initialFile / initialTags (facultatifs) : la Story s'ouvre directement dans l'éditeur, avec cette photo et ces
+// tags déjà choisis (partage d'une publication BibaPulse en Story) — tout reste modifiable avant de publier.
+export function StoryCreateScreen({ contextType, contextId, venueName, myUserId, onBack, onPublished, initialFile = null, initialTags = null }) {
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState(initialFile);
   const [tagsSheetOpen, setTagsSheetOpen] = useState(false);
   const [imageLocked, setImageLocked] = useState(false);
   const [selectedTagKey, setSelectedTagKey] = useState(null);
   const [caption, setCaption] = useState("");
   const [bgColor, setBgColor] = useState("#0D1B2A");
-  const [selectedTags, setSelectedTags] = useState({}); // { venue: {id,name}, drink: {...}, ... }
+  const [selectedTags, setSelectedTags] = useState(initialTags || {}); // { venue: {id,name}, drink: {...}, ... }
   const [tagPositions, setTagPositions] = useState({});
   const [sharedToPulse, setSharedToPulse] = useState(false);
   const [includeLocation, setIncludeLocation] = useState(true);
