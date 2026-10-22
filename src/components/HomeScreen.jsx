@@ -487,7 +487,7 @@ export function HomeScreen({
             const map = { drink: drinksDirectory, producer: breweriesDirectory, brand: brandsDirectory };
             return (map[objType] || []).find((x) => x.id === id) || null;
           };
-          const actionFor = (entry) => ({ product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout", post: "Publication" }[entry.eventType] || "Activité");
+          const actionFor = (entry) => ({ product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité");
 
           return (
             <div style={{ marginBottom: "18px" }}>
@@ -499,6 +499,7 @@ export function HomeScreen({
                 <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>
                   <span style={{ color: COLORS.ink }}>Biba</span>
                   <span style={{ color: COLORS.amber }}>Pulse</span>
+                  <span style={{ color: COLORS.inkSoft }}> - Extraits</span>
                 </span>
                 <span
                   style={{
@@ -559,10 +560,7 @@ export function HomeScreen({
                                 )}
                               </>
                             ) : isPost ? (
-                              <>
-                                <strong style={{ color: COLORS.amber }}>{actionFor(entry)}</strong>
-                                {postText && <span style={{ color: COLORS.inkSoft }}>{" — " + postText}</span>}
-                              </>
+                              postText
                             ) : (
                               <>
                                 {actionFor(entry)} @{" "}
