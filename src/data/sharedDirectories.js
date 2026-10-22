@@ -649,6 +649,58 @@ export async function publishDrinkCheckInToPulse(drinkId, venueId = null, { isDi
   return createPulseEvent(isDiscovery ? "product_discovered" : "drink_checked", "drink", drinkId, { venueId, visibility, content });
 }
 
+// Publication libre sur BibaPulse : un texte et/ou une photo, avec jusqu'à 5 tags de fiche (produits,
+// marques, producteurs, lieux). Elle n'a pas d'objet propre : tout est dans `content`
+// ({ comment, photoUrl, tags: [{ type, id }] }), vérifié par le serveur (create-pulse-event).
+// Renvoie { ok } ou { error }.
+export async function publishPostToPulse({ visibility = null, content = null } = {}) {
+  return createPulseEvent("post", null, null, { visibility, content });
+}
+
+// Recherche unifiée pour taguer une publication : produits, marques, producteurs et lieux d'un coup.
+// Renvoie [{ type, id, name, detail }] — au plus `perType` fiches de chaque sorte, dans cet ordre.
+// Seules les fiches visibles dans l'app sont proposées (même règle que le serveur à la publication).
+const isAppVisible = (row) => row.status == null || APP_VISIBLE_STATUSES.includes(row.status);
+
+export async function searchPulseTags(query, perType = 4) {
+  const q = (query || "").trim();
+  if (!q) return [];
+  // On demande un peu plus que nécessaire : le filtre de statut peut en écarter quelques-unes.
+  const fetchCount = perType + 3;
+  const [drinks, brands, producers, venues] = await Promise.all([
+    searchDrinks(q, fetchCount),
+    searchBrands(q, fetchCount),
+    searchBreweries(q, fetchCount),
+    searchVenues(q, fetchCount),
+  ]);
+  const take = (rows) => rows.filter(isAppVisible).slice(0, perType);
+  return [
+    ...take(drinks).map((d) => ({ type: "drink", id: d.id, name: d.name, detail: d.brand || d.brewery || d.type || "" })),
+    ...take(brands).map((b) => ({ type: "brand", id: b.id, name: b.name, detail: b.originCountry || "" })),
+    ...take(producers).map((b) => ({ type: "producer", id: b.id, name: b.name, detail: b.country || "" })),
+    ...take(venues).map((v) => ({ type: "venue", id: v.id, name: v.name, detail: v.city || "" })),
+  ];
+}
+
+// Noms des fiches taguées dans des publications : refs = [{ type, id }]. Renvoie { "type:id": { id, name } }.
+// Chargement par identifiants (jamais un répertoire entier) ; une fiche devenue invisible est ignorée.
+export async function loadPulseTagEntities(refs) {
+  const idsOf = (type) => [...new Set((refs || []).filter((r) => r.type === type).map((r) => r.id))];
+  const [drinks, brands, producers, venues] = await Promise.all([
+    loadDrinksByIds(idsOf("drink")),
+    loadBrandsByIds(idsOf("brand")),
+    loadBreweriesByIds(idsOf("producer")),
+    loadVenuesByIds(idsOf("venue")),
+  ]);
+  const out = {};
+  const add = (type, rows) => rows.filter(isAppVisible).forEach((r) => (out[`${type}:${r.id}`] = { id: r.id, name: r.name }));
+  add("drink", drinks);
+  add("brand", brands);
+  add("producer", producers);
+  add("venue", venues);
+  return out;
+}
+
 // Envoie une photo pour le Pulse. Le serveur vérifie le contenu (Google Vision), choisit lui-même
 // le nom et le dossier de la photo, et renvoie son adresse. La photo doit être un JPEG déjà réduit.
 export async function uploadPulsePhoto(blob) {
@@ -1753,7 +1805,7 @@ export async function deleteStory(storyId) {
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
 
 // Statuts visibles dans l'app grand public — jamais brouillon, rejeté, archivé ou doublon.
-const APP_VISIBLE_STATUSES = ["to_process", "to_fix", "complete"];
+export const APP_VISIBLE_STATUSES = ["to_process", "to_fix", "complete"];
 
 export async function loadPublicVenues() {
   const { data, error } = await supabase.from("public_venues").select("*").in("status", APP_VISIBLE_STATUSES).order("name");

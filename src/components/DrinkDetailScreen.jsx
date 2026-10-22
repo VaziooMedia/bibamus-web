@@ -659,6 +659,8 @@ export function DrinkDetailScreen({
             myUserId={myUserId}
             myBibroCode={myBibroCode}
             onOpenVenue={onOpenVenue}
+            onOpenBrand={onOpenBrand}
+            onOpenProducer={onOpenBrewery}
             selfEntity={{ type: "drink", object: { id: drink.id, name: drink.name } }}
           />
         )}

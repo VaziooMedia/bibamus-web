@@ -53,6 +53,12 @@ function pulseActivityLabel(e) {
     const clubName = pulseClubName(e);
     return clubName ? `A rejoint le BibaClub ${clubName}` : "A rejoint un BibaClub";
   }
+  // Publication libre : son texte (tronqué), ou « une photo » quand elle n'a pas de texte.
+  if (e.eventType === "post") {
+    const text = typeof e.metadata?.comment === "string" ? e.metadata.comment.replace(/\s+/g, " ").trim() : "";
+    if (!text) return "📝 A publié une photo";
+    return `📝 A publié : « ${text.length > 80 ? text.slice(0, 80).trimEnd() + "…" : text} »`;
+  }
   return e.eventType;
 }
 

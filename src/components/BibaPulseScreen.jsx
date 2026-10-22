@@ -8,6 +8,8 @@ import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
+import { PulsePostScreen } from "./PulsePostScreen.jsx";
+import { PulseTagPills, postTagsOf, usePostTagEntities } from "./PulseTags.jsx";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -24,7 +26,7 @@ function resolveObject(entry, directories) {
 // Format neutre "Nom - Action @ Objet" — évite les problèmes d'accord (masculin/féminin,
 // préposition selon le nom du lieu) qu'une vraie phrase française poserait.
 function pulseActionFor(entry) {
-  return { product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
+  return { product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout", post: "Publication" }[entry.eventType] || "Activité";
 }
 
 function timeAgo(iso) {
@@ -61,13 +63,16 @@ const SPECIAL_VENUE_LABELS = { "@home": "@Home", "@event": "@Event" };
 // Contenu d'une publication : photo, note, commentaire, Bibax tagués. Tout vient de entry.metadata,
 // déjà vérifié par le serveur (create-pulse-event) — une publication sans contenu n'affiche rien
 // de plus. Les textes passent par React (jamais interprétés comme du code).
-function PulseContent({ entry, onOpenTagged }) {
+// Une publication libre porte aussi des tags de fiche (metadata.tags) : leurs noms viennent de tagEntities
+// (voir usePostTagEntities), et une pastille mène à la fiche quand tagHandlers sait l'ouvrir.
+function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {} }) {
   const meta = entry.metadata || {};
   const comment = typeof meta.comment === "string" ? meta.comment : "";
   const photoUrl = typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null;
   const rating = typeof meta.rating === "number" ? meta.rating : null;
   const tagged = Array.isArray(meta.tagged) ? meta.tagged : [];
-  if (!comment && !photoUrl && rating === null && tagged.length === 0) return null;
+  const postTags = postTagsOf(entry).filter((t) => tagEntities[`${t.type}:${t.id}`]);
+  if (!comment && !photoUrl && rating === null && tagged.length === 0 && postTags.length === 0) return null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
@@ -81,6 +86,7 @@ function PulseContent({ entry, onOpenTagged }) {
         </div>
       )}
       {comment && <p style={{ margin: 0, fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{comment}</p>}
+      {postTags.length > 0 && <PulseTagPills tags={postTags} entities={tagEntities} handlers={tagHandlers} />}
       {tagged.length > 0 && (
         <p style={{ margin: 0, fontSize: "12.5px", color: COLORS.inkSoft }}>
           avec{" "}
@@ -107,7 +113,7 @@ function PulseContent({ entry, onOpenTagged }) {
   );
 }
 
-export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenProfile, onOpenClub, onUpdate, initialShowComments, highlighted }, ref) {
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, initialShowComments, highlighted }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -136,6 +142,10 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const isClubJoin = entry.eventType === "club_joined";
   const clubName = isClubJoin ? pulseClubName(entry) : null;
   const openClub = isClubJoin && onOpenClub && entry.objectId ? () => onOpenClub(entry.objectId) : null;
+
+  // Publication libre : pas d'objet propre, seulement des tags de fiche dans son contenu.
+  const isPost = entry.eventType === "post";
+  const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
 
   const handleBix = () => {
     onUpdate({ iBixed: !entry.iBixed, bixCount: entry.iBixed ? entry.bixCount - 1 : entry.bixCount + 1 });
@@ -220,6 +230,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
                 )}
               </>
+            ) : isPost ? (
+              <strong style={{ color: COLORS.amber }}>{pulseActionFor(entry)}</strong>
             ) : (
               <>
                 {pulseActionFor(entry)} @{" "}
@@ -248,7 +260,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       </div>
 
-      <PulseContent entry={entry} onOpenTagged={onOpenTagged} />
+      <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
         <button
@@ -488,11 +500,17 @@ export function BibaPulseScreen({
   myBibroCode,
   onOpenVenue,
   onOpenDrink,
+  onOpenBrand,
+  onOpenProducer,
   onOpenClub,
   focusEntryId,
   openCommentsOnFocus,
 }) {
   const [entries, setEntries] = useState(null);
+  // Écran de rédaction d'une publication libre (bouton « + »). Affiché ici même, comme la fiche d'un Bibax :
+  // la navigation reste interne à BibaPulse, et le fil continue de se rafraîchir en dessous.
+  const [composing, setComposing] = useState(false);
+  const topRef = React.useRef(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [focusAttempts, setFocusAttempts] = useState(0);
@@ -532,7 +550,10 @@ export function BibaPulseScreen({
     loadVenuesByIds([...ids]).then((results) => setVenuesById((prev) => ({ ...prev, ...Object.fromEntries(results.map((v) => [v.id, v])) })));
   }, [entries]);
 
-  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory };
+  // Noms des fiches taguées dans les publications libres du fil.
+  const tagEntities = usePostTagEntities(entries);
+
+  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities };
 
   useEffect(() => {
     loadPulseFeed().then((data) => {
@@ -590,12 +611,40 @@ export function BibaPulseScreen({
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
   };
 
+  // Une publication vient d'être enregistrée : on referme la rédaction et on recharge le haut du fil, pour
+  // qu'elle y apparaisse tout de suite (sans attendre le prochain rafraîchissement automatique).
+  const handlePublished = () => {
+    setComposing(false);
+    loadPulseFeed().then((data) => {
+      setEntries(data);
+      setHasMore(data.length >= 20);
+    });
+  };
+
+  // Retour de la rédaction au fil : on repart du haut de la page (le fil prend la place d'un écran plus court).
+  // Rien à faire à l'ouverture de BibaPulse, où l'application remonte déjà la page toute seule.
+  const wasComposing = React.useRef(false);
+  useEffect(() => {
+    if (composing) {
+      wasComposing.current = true;
+      return;
+    }
+    if (wasComposing.current) {
+      wasComposing.current = false;
+      if (topRef.current) topRef.current.scrollIntoView({ block: "start" });
+    }
+  }, [composing]);
+
   if (viewedProfileCode) {
     return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
   }
 
+  if (composing) {
+    return <PulsePostScreen onBack={() => setComposing(false)} onPublished={handlePublished} />;
+  }
+
   return (
-    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div ref={topRef} style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
         <span
@@ -616,6 +665,29 @@ export function BibaPulseScreen({
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Pulse</span>
         </h1>
+        <button
+          onClick={() => setComposing(true)}
+          title="Nouvelle publication"
+          aria-label="Nouvelle publication"
+          style={{
+            marginLeft: "auto",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            background: "none",
+            border: `2px solid ${COLORS.amber}`,
+            cursor: "pointer",
+            padding: 0,
+            flexShrink: 0,
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={COLORS.amber} strokeWidth="3" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
       </div>
 
       {entries === null ? (
@@ -642,6 +714,8 @@ export function BibaPulseScreen({
                 else if (person.bibro_code) setViewedProfileCode(person.bibro_code);
               }}
               onOpenDrink={onOpenDrink}
+              onOpenBrand={onOpenBrand}
+              onOpenProducer={onOpenProducer}
               onOpenClub={onOpenClub}
               onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
