@@ -3576,6 +3576,12 @@ export default function App() {
                   setViewedBreweryId(id);
                   setScreen("breweryDetail");
                 }}
+                storiesEnabled={featureFlags.stories_enabled !== false}
+                onShareStory={(draft) => {
+                  // Publication libre partagée en Story : l'éditeur s'ouvre avec sa photo et ses tags, retour sur BibaPulse.
+                  setStoryCreateContext({ contextType: "global", contextId: null, returnScreen: "bibaPulse", initialFile: draft.file, initialTags: draft.tags });
+                  setScreen("storyCreate");
+                }}
                 onOpenClub={(clubId) => {
                   setViewedClubId(clubId);
                   setClubDetailBack("bibaPulse");
@@ -3654,6 +3660,8 @@ export default function App() {
                     : null
                 }
                 myUserId={session.user.id}
+                initialFile={storyCreateContext.initialFile || null}
+                initialTags={storyCreateContext.initialTags || null}
                 onBack={() => setScreen(storyCreateContext.returnScreen)}
                 onPublished={() => {
                   setPulseStoriesRefreshKey((k) => k + 1);

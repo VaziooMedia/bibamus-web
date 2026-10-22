@@ -505,6 +505,8 @@ export function BibaPulseScreen({
   onOpenClub,
   focusEntryId,
   openCommentsOnFocus,
+  storiesEnabled = true,
+  onShareStory,
 }) {
   const [entries, setEntries] = useState(null);
   // Écran de rédaction d'une publication libre (bouton « + »). Affiché ici même, comme la fiche d'un Bibax :
@@ -613,8 +615,14 @@ export function BibaPulseScreen({
 
   // Une publication vient d'être enregistrée : on referme la rédaction et on recharge le haut du fil, pour
   // qu'elle y apparaisse tout de suite (sans attendre le prochain rafraîchissement automatique).
-  const handlePublished = () => {
+  // storyDraft ({ file, tags }) : l'auteur a coché « Partager aussi en Story » — l'application ouvre alors l'éditeur de Story.
+  const handlePublished = (storyDraft) => {
     setComposing(false);
+    // L'éditeur de Story prend tout l'écran ; au retour, BibaPulse se rouvre et recharge son fil, publication comprise.
+    if (storyDraft && onShareStory) {
+      onShareStory(storyDraft);
+      return;
+    }
     loadPulseFeed().then((data) => {
       setEntries(data);
       setHasMore(data.length >= 20);
@@ -640,7 +648,7 @@ export function BibaPulseScreen({
   }
 
   if (composing) {
-    return <PulsePostScreen onBack={() => setComposing(false)} onPublished={handlePublished} />;
+    return <PulsePostScreen onBack={() => setComposing(false)} onPublished={handlePublished} canShareStory={storiesEnabled && !!onShareStory} />;
   }
 
   return (

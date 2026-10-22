@@ -1,7 +1,7 @@
 # STORIES — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de la table `stories`, de `story_bix` et de la plupart des fonctions de lecture), donc non revérifié.
+> Dernière mise à jour : 2026-10-22 (création depuis une publication BibaPulse) ; reste : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de la table `stories`, de `story_bix` et de la plupart des fonctions de lecture), donc non revérifié.
 
 ---
 
@@ -59,7 +59,9 @@ L'app n'écrit pas directement dans le bucket : l'image part en base64 vers la f
 | **Home / global** | Aucun choix d'audience : la Story est visible par les Bibax confirmés via `get_pulse_stories`. Bouton « + » sur l'avatar de l'utilisateur, en bas à gauche. |
 | **BibaRoom** | Choix « Ce salon uniquement » (par défaut) ou « Ce salon + BibaPulse » ; case « Indiquer le lieu » (visible sur BibaPulse en 📍). Bouton « + » en bas à droite du rond du salon. |
 
-Le drapeau `stories_enabled` masque les boutons « + » de l'accueil **et** du salon.
+Le drapeau `stories_enabled` masque les boutons « + » de l'accueil **et** du salon, ainsi que la case « Partager aussi en Story » d'une publication BibaPulse.
+
+**Depuis une publication BibaPulse** : `StoryCreateScreen` accepte `initialFile` (la photo, un `File` JPEG) et `initialTags` (au format de `selectedTags` : `{ drink?, brand?, producer?, venue?, bibax? }`). Avec `initialFile`, l'éditeur s'ouvre directement sur la photo (pas d'écran de choix) et les tags reçus sont déjà posés, étagés et modifiables ; sans lui, rien ne change. `App.jsx` les transmet via `storyCreateContext` (contexte global, retour sur BibaPulse). Voir `docs/BIBAPULSE.md`, « Partager aussi en Story ».
 
 ### Tags
 
