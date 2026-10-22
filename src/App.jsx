@@ -218,6 +218,8 @@ export default function App() {
     setMainScrollEl(el);
   }, []);
   const bottomNavHidden = useHideOnScroll(mainScrollEl, screen, screen !== "home");
+  // BibaPing : une discussion ouverte cache aussi la barre du bas, pour que le champ de message descende.
+  const [bibaPingChatOpen, setBibaPingChatOpen] = useState(false);
 
   // BibaMusic — retour de la connexion Spotify (OAuth PKCE). Le code d'autorisation arrive en
   // paramètre d'URL sur bibamus.app/spotify-callback ; on le conserve ici jusqu'à ce que la
@@ -3537,6 +3539,7 @@ export default function App() {
                 myUserId={session.user.id}
                 bibros={bibros}
                 onBack={() => setScreen("home")}
+                onConversationOpenChange={setBibaPingChatOpen}
                 onOpenConversation={(id) => console.log("conversation", id)}
               />
             )}
@@ -3662,7 +3665,7 @@ export default function App() {
               onGoToSessionHub={() => setScreen("sessionHub")}
               unreadNotifications={unreadNotificationsCount}
               bibaPingVisible={featureFlags.nav_bibaping_visible !== false}
-              hidden={bottomNavHidden}
+              hidden={bottomNavHidden || bibaPingChatOpen}
             />
           </div>
         </div>

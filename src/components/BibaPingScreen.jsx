@@ -14,6 +14,10 @@
 //
 // Le bouton « + » de l'en-tête ouvre le choix d'un Bibax à qui écrire
 // (NewConversationScreen), puis la discussion avec lui.
+//
+// Quand une discussion est ouverte, la barre d'accès rapide du bas se cache pour laisser
+// descendre le champ de message : BibaPing le signale à l'application avec
+// `onConversationOpenChange`.
 // ============================================================
 import React, { useState, useEffect, useCallback } from "react";
 import { COLORS } from "../constants.js";
@@ -39,7 +43,7 @@ function timeAgo(iso) {
   return new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "short" }).format(new Date(iso));
 }
 
-export function BibaPingScreen({ myUserId, bibros = [], onBack }) {
+export function BibaPingScreen({ myUserId, bibros = [], onBack, onConversationOpenChange }) {
   // null = pas encore chargé OU échec ; le drapeau d'erreur distingue les deux.
   const [conversations, setConversations] = useState(null);
   const [profilesById, setProfilesById] = useState({});
@@ -79,6 +83,15 @@ export function BibaPingScreen({ myUserId, bibros = [], onBack }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // La barre du bas est cachée tant qu'on est dans une discussion (pas sur la fiche d'un
+  // interlocuteur, ouverte depuis elle). En quittant BibaPing, elle revient dans tous les cas.
+  const chatShown = !!openConversation && !viewedProfileCode;
+  useEffect(() => {
+    if (!onConversationOpenChange) return undefined;
+    onConversationOpenChange(chatShown);
+    return () => onConversationOpenChange(false);
+  }, [chatShown, onConversationOpenChange]);
 
   // Titre et photo : ceux de la conversation pour un groupe ou un salon, ceux
   // de l'autre participant pour un tête-à-tête.
