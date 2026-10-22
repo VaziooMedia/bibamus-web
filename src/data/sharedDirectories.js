@@ -142,6 +142,34 @@ export async function createPulseEvent(eventType, objectType, objectId, options 
   }
 }
 
+// Supprime SA publication libre (fonction Edge delete-pulse-post) : la carte, ses réactions, ses commentaires et sa
+// photo. Une carte déjà supprimée compte comme un succès. Renvoie { ok: true } ou { error }.
+export async function deleteMyPulsePost(eventId) {
+  try {
+    const { error } = await supabase.functions.invoke("delete-pulse-post", { body: { eventId } });
+    if (error) {
+      // Même lecture du vrai message que pour createPulseEvent (le message générique cache la réponse de la fonction).
+      let detail = error.message;
+      if (error.context?.json) {
+        try {
+          const body = await error.context.json();
+          detail = body?.error || JSON.stringify(body);
+        } catch (_) {
+          try {
+            detail = await error.context.text();
+          } catch (_) {}
+        }
+      }
+      console.error("deleteMyPulsePost:", detail);
+      return { error: detail };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error("deleteMyPulsePost:", e);
+    return { error: String(e?.message || e) };
+  }
+}
+
 export async function emitEvent(type, { actorBibroCode, entityType, entityId, payload, version = 1, skipPulse = false } = {}) {
   try {
     await supabase.from("analytics_events").insert({

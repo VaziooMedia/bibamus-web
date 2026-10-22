@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { COLORS } from "../constants.js";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
+import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, deleteMyPulsePost, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
@@ -113,7 +113,7 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {} 
   );
 }
 
-export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, initialShowComments, highlighted }, ref) {
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -123,6 +123,10 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const [posting, setPosting] = useState(false);
   // Signalement en cours : { type: "pulse_event" | "pulse_comment", id }
   const [reportTarget, setReportTarget] = useState(null);
+  // Suppression de SA publication libre. Le verrou évite un double envoi si l'on touche deux fois très vite.
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const deleteLock = useRef(false);
 
   const obj = resolveObject(entry, directories);
 
@@ -146,6 +150,23 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // Publication libre : pas d'objet propre, seulement des tags de fiche dans son contenu.
   const isPost = entry.eventType === "post";
   const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
+
+  const handleDelete = async () => {
+    if (deleteLock.current) return;
+    if (!window.confirm("Supprimer cette publication ? Ses réactions et ses commentaires seront supprimés aussi.")) return;
+    deleteLock.current = true;
+    setDeleting(true);
+    setDeleteError("");
+    const result = await deleteMyPulsePost(entry.id);
+    if (result.error) {
+      deleteLock.current = false;
+      setDeleting(false);
+      setDeleteError("La publication n'a pas pu être supprimée. Réessaie dans un instant.");
+      return;
+    }
+    // La carte disparaît du fil (le parent la retire de sa liste).
+    if (onDeleted) onDeleted(entry.id);
+  };
 
   const handleBix = () => {
     onUpdate({ iBixed: !entry.iBixed, bixCount: entry.iBixed ? entry.bixCount - 1 : entry.bixCount + 1 });
@@ -352,6 +373,18 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
         </button>
 
+        {myUserId && isPost && entry.actorId === myUserId && (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            aria-label="Supprimer ma publication"
+            title="Supprimer"
+            style={{ marginLeft: "auto", display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", opacity: deleting ? 0.3 : 0.6, cursor: deleting ? "default" : "pointer" }}
+          >
+            <NavIcon name="trash" size={15} color={COLORS.inkSoft} />
+          </button>
+        )}
+
         {myUserId && entry.actorId !== myUserId && (
           <button
             onClick={() => setReportTarget({ type: "pulse_event", id: entry.id })}
@@ -363,6 +396,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           </button>
         )}
       </div>
+
+      {deleteError && <p style={{ color: COLORS.wine, fontSize: "12px", margin: "8px 0 0" }}>{deleteError}</p>}
 
       {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
       liste complète des personnes concernées. */}
@@ -512,6 +547,8 @@ export function BibaPulseScreen({
   // Écran de rédaction d'une publication libre (bouton « + »). Affiché ici même, comme la fiche d'un Bibax :
   // la navigation reste interne à BibaPulse, et le fil continue de se rafraîchir en dessous.
   const [composing, setComposing] = useState(false);
+  // Cartes supprimées pendant cette visite (pour qu'un rafraîchissement déjà parti ne les ramène pas).
+  const deletedIds = useRef(new Set());
   const topRef = React.useRef(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -566,7 +603,9 @@ export function BibaPulseScreen({
     // se refléterait jamais tant qu'on ne recharge pas la page à la main. Fusionne les
     // nouvelles données dans la liste déjà chargée, sans perdre les pages plus anciennes.
     const interval = setInterval(() => {
-      loadPulseFeed().then((freshTop) => {
+      loadPulseFeed().then((freshTopAll) => {
+        // Une carte que je viens de supprimer ne revient pas, même si cette réponse a été demandée juste avant.
+        const freshTop = freshTopAll.filter((e) => !deletedIds.current.has(e.id));
         setEntries((prev) => {
           if (!prev) return freshTop;
           const freshMap = new Map(freshTop.map((e) => [e.id, e]));
@@ -611,6 +650,12 @@ export function BibaPulseScreen({
 
   const updateEntry = (id, patch) => {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  };
+
+  // Une de mes publications vient d'être supprimée : elle quitte le fil.
+  const removeEntry = (id) => {
+    deletedIds.current.add(id);
+    setEntries((prev) => (prev ? prev.filter((e) => e.id !== id) : prev));
   };
 
   // Une publication vient d'être enregistrée : on referme la rédaction et on recharge le haut du fil, pour
@@ -727,6 +772,7 @@ export function BibaPulseScreen({
               onOpenClub={onOpenClub}
               onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
+              onDeleted={removeEntry}
               highlighted={entry.id === focusEntryId}
               initialShowComments={entry.id === focusEntryId && openCommentsOnFocus}
             />

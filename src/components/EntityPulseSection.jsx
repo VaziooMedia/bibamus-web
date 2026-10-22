@@ -88,6 +88,11 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
   };
 
+  // Une de mes publications vient d'être supprimée : elle quitte la liste.
+  const removeEntry = (id) => {
+    setEntries((prev) => (prev ? prev.filter((e) => e.id !== id) : prev));
+  };
+
   if (viewedProfileCode) {
     return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
   }
@@ -135,6 +140,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
               }}
               onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
+              onDeleted={removeEntry}
             />
           ))}
 
