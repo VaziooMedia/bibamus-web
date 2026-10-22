@@ -60,7 +60,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
   const drinkName = (id) => findEntryForEvent(event, id)?.name || id;
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>
         {event.date ? formatDate(event.date).toUpperCase() : "ÉVÉNEMENT"}

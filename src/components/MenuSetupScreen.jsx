@@ -198,7 +198,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   const step = event.currency === "euro" ? "0.10" : "1";
 
   return (
-    <div style={{ padding: "24px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 24px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 4px 0" }}>
         <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />

@@ -54,7 +54,7 @@ export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, on
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 18px 0" }}>
         <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />

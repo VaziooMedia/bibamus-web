@@ -14,6 +14,7 @@ Il n'existe pas de composant commun pour les réglages : chaque écran de param�
 ## Gabarit d'application
 
 - Colonne unique centrée : `maxWidth: 480px`, `height: 100dvh`, `paddingTop: env(safe-area-inset-top)` (`App.jsx`).
+- Marge haute des pages : la ligne de l'en-tête (`PageHeader` : Retour, Accueil, avatar) est à **8 px** du haut de la zone de contenu — le conteneur racine de chaque écran à `PageHeader` porte `padding: 8px 20px 28px` (le bas reste à 28 px). Sur les fiches à grande photo (lieu, boisson, brasserie, marque), c'est la surcouche de l'en-tête qui a `padding: 8px 20px 0`. L'accueil a sa propre marge haute (20 px).
 - `html, body { overflow: hidden }` : le défilement se fait dans un conteneur interne (`mainScrollRef`), pas dans la fenêtre.
 - Viewport : `maximum-scale=1.0, user-scalable=no, viewport-fit=cover`. Les champs de saisie sont forcés à 16 px sous 480 px (évite le zoom automatique d'iOS).
 - Navigation : un état `screen` passé en propriétés `onBack` ; **pas de routeur**. Seules deux adresses sont lues : `/delete-account` et `/spotify-callback`.

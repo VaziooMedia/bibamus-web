@@ -56,7 +56,7 @@ function HelpRow({ icon, title, disabled, onClick, last }) {
 
 export function HelpSupportScreen({ onBack, goToContact, goToReport, goToAbout }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="help-circle" size={22} color={COLORS.amber} />}>Aide & support</PageTitleWithBar>
 
@@ -126,7 +126,7 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
 
   if (sent) {
     return (
-      <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
         <PageTitleWithBar icon={<NavIcon name={isReport ? "alert-triangle" : "message-square"} size={22} color={COLORS.amber} />}>{isReport ? "Signaler un problème" : "Nous écrire"}</PageTitleWithBar>
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
@@ -140,7 +140,7 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
   }
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name={isReport ? "alert-triangle" : "message-square"} size={22} color={COLORS.amber} />}>{isReport ? "Signaler un problème" : "Nous écrire"}</PageTitleWithBar>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
@@ -181,7 +181,7 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
 
 export function AboutScreen({ onBack }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1, alignItems: "center" }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1, alignItems: "center" }}>
       <div style={{ alignSelf: "flex-start", width: "100%" }}>
         <PageHeader onBack={onBack} />
       </div>

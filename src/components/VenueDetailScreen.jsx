@@ -166,7 +166,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
             background: venue.coverPhotoUrl ? `url(${venue.coverPhotoUrl}) center/cover` : COLORS.surfaceAlt,
           }}
         />
-        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
+        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "8px 20px 0" }}>
           <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>

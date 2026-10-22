@@ -26,7 +26,7 @@ export function DeleteAccountScreen({ onBack, onAccountDeleted }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>COMPTE</span>
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "36px", margin: "4px 0 18px 0", lineHeight: 1.1 }}>Supprimer mon compte</h1>

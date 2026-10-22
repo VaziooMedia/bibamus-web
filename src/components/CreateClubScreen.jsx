@@ -88,7 +88,7 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
   });
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 20px" }}>Créer un BibaClub</h1>
 

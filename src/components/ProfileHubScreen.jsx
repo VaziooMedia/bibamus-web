@@ -10,7 +10,7 @@ import settingsIconUrl from "../assets/brand/settings-icon.png";
 
 export function ProfileHubScreen({ myName, profile, bibros, checkIns, myUserId, onBack, goToMyInfo, goToMyStats, goToBibros, goToProducts, goToVenues, goToHistory, goToPhotos, goToSettings, onOpenMyStory, goToBibaClubs }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <ProfileHeader
         myName={myName}

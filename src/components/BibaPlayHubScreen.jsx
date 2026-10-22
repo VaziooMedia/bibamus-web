@@ -12,7 +12,7 @@ import predictIconUrl from "../assets/brand/predict.svg";
 
 export function BibaPlayHubScreen({ onBack, onSelectPredict }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 8px 0" }}>
         <span

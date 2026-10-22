@@ -111,7 +111,7 @@ export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, isAdmin,
   const title = searching ? "Producteurs" : activeCountry ? countryLabel(activeCountry) : "Producteurs";
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={handleBack} />
       {addIntent && !activeCountry && !searching && (
         <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>AJOUTER UN PRODUCTEUR</span>

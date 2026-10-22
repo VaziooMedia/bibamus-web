@@ -83,7 +83,7 @@ export function ImportDataScreen({ onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "28px", margin: "4px 0 8px 0" }}>Import des données</h1>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "20px" }}>

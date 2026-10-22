@@ -168,7 +168,7 @@ export function BibaPingScreen({ myUserId, bibros = [], onBack }) {
   }
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "8px 0 18px 0" }}>

@@ -138,7 +138,7 @@ export function AccountScreen({ myName, profile, myUserId, onOpenMyStory, onBack
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="user" size={22} color={COLORS.amber} />}>Compte</PageTitleWithBar>
 
@@ -264,7 +264,7 @@ export function FieldEditScreen({ field, profile, onSaveProfile, onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name={config.icon} size={22} color={COLORS.amber} />}>{config.label}</PageTitleWithBar>
 
@@ -321,7 +321,7 @@ export function GenderEditScreen({ profile, onSaveProfile, onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="user" size={22} color={COLORS.amber} />}>Genre</PageTitleWithBar>
 
@@ -391,7 +391,7 @@ export function SocialLinkEditScreen({ field, profile, onSaveProfile, onBack }) 
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={net.icon}>{net.label}</PageTitleWithBar>
 
@@ -440,7 +440,7 @@ export function SocialLinkEditScreen({ field, profile, onSaveProfile, onBack }) 
 
 export function EmailViewScreen({ profile, onBack }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="mail" size={22} color={COLORS.amber} />}>E-mail</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px" }}>
@@ -472,7 +472,7 @@ export function PhoneEditScreen({ profile, onSaveProfile, onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="phone" size={22} color={COLORS.amber} />}>Téléphone</PageTitleWithBar>
 
@@ -521,7 +521,7 @@ export function LocationEditScreen({ profile, onSaveProfile, onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="map-pin" size={22} color={COLORS.amber} />}>Pays & Commune</PageTitleWithBar>
 
@@ -581,7 +581,7 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
   }, []);
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="camera" size={22} color={COLORS.amber} />}>Photo de profil</PageTitleWithBar>
 
@@ -668,7 +668,7 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
 // des Paramètres, pour ne plus jamais avoir à corriger un titre non conforme.
 export function SettingsComingSoonScreen({ title, icon, onBack }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={icon}>{title}</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
@@ -726,7 +726,7 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="eye" size={22} color={COLORS.amber} />}>Profil public</PageTitleWithBar>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisissez ce que les autres utilisateurs peuvent voir sur votre profil.</p>
@@ -867,7 +867,7 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
 // définitive existe aujourd'hui). Écran honnête plutôt qu'un bouton qui ne ferait rien.
 export function DeactivateAccountScreen({ onBack }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="pause" size={22} color={COLORS.amber} />}>Désactiver mon compte</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>

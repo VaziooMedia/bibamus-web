@@ -106,7 +106,7 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={mode === "join" ? () => setMode(null) : onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 8px 0" }}>
         <span
@@ -314,7 +314,7 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
 
   if (game.status === "waiting") {
     return (
-      <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
         <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 22px 0" }}>
           <span
@@ -443,7 +443,7 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
   const remainingSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 4px 0" }}>
         <span

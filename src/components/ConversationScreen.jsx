@@ -250,7 +250,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
   const canSend = !!draft.trim() || !!pendingPhoto;
 
   return (
-    <div style={{ padding: hideHeader ? "0" : "28px 20px 0", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+    <div style={{ padding: hideHeader ? "0" : "8px 20px 0", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       {!hideHeader && <PageHeader onBack={onBack} />}
 
       {!hideHeader && (

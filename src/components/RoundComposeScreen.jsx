@@ -389,7 +389,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
 
 
   return (
-    <div style={{ padding: "22px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 22px", display: "flex", flexDirection: "column", flex: 1 }}>
       <style>{`
         @keyframes round-add-flash {
           0% { transform: scale(1); }

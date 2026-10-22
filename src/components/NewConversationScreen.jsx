@@ -63,7 +63,7 @@ export function NewConversationScreen({ bibros = [], onPick, onBack }) {
   const emptyText = { fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1, boxSizing: "border-box" }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1, boxSizing: "border-box" }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 18px 0" }}>
         <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />

@@ -399,7 +399,7 @@ export function SalonTabsScreen(props) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, padding: "24px 0 0" }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, padding: "8px 0 0" }}>
       <div style={{ padding: "0 20px" }}>
         <PageHeader onBack={onBack} />
       </div>
