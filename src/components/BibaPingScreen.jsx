@@ -11,15 +11,19 @@
 // évite de toucher à App.jsx pour une navigation qui reste interne à
 // BibaPing. Si une conversation doit un jour s'ouvrir depuis ailleurs (une
 // fiche Bibax, une notification), on la remontera au routeur à ce moment-là.
+//
+// Le bouton « + » de l'en-tête ouvre le choix d'un Bibax à qui écrire
+// (NewConversationScreen), puis la discussion avec lui.
 // ============================================================
 import React, { useState, useEffect, useCallback } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { loadMyConversations, loadConversationProfiles, setConversationArchived, clearConversation } from "../data/messaging.js";
+import { loadMyConversations, loadConversationProfiles, setConversationArchived, clearConversation, openDirectConversation } from "../data/messaging.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
+import { NewConversationScreen } from "./NewConversationScreen.jsx";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 
 function timeAgo(iso) {
@@ -35,12 +39,14 @@ function timeAgo(iso) {
   return new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "short" }).format(new Date(iso));
 }
 
-export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
+export function BibaPingScreen({ myUserId, bibros = [], onBack }) {
   // null = pas encore chargé OU échec ; le drapeau d'erreur distingue les deux.
   const [conversations, setConversations] = useState(null);
   const [profilesById, setProfilesById] = useState({});
   const [failed, setFailed] = useState(false);
   const [openConversation, setOpenConversation] = useState(null);
+  // « + » : l'écran où l'on choisit à qui écrire.
+  const [choosingRecipient, setChoosingRecipient] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   // Code Bibax par identifiant de compte — sert à ouvrir la fiche d'un interlocuteur.
   const [bibroCodes, setBibroCodes] = useState({});
@@ -115,6 +121,22 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
     return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
   }
 
+  // Ouvre (ou crée) le tête-à-tête avec le Bibax choisi. Renvoie null si tout va bien, sinon le
+  // message à afficher. Le titre et la photo viennent d'un profil qu'on n'a pas encore chargé
+  // pour une conversation toute neuve : on les inscrit ici à partir de la fiche du Bibax.
+  const startConversationWith = async (bibax) => {
+    const result = await openDirectConversation(bibax.userId);
+    if (!result || result.error) return "Impossible d'ouvrir la conversation pour l'instant. Réessaie plus tard.";
+    setProfilesById((prev) => ({
+      ...prev,
+      [bibax.userId]: { id: bibax.userId, displayName: bibax.firstName || bibax.name, lastName: bibax.lastName || "", avatarUrl: bibax.avatarUrl || null },
+    }));
+    setBibroCodes((prev) => ({ ...prev, [bibax.userId]: bibax.code }));
+    setOpenConversation({ id: result.id, kind: "direct", memberIds: [myUserId, bibax.userId] });
+    setChoosingRecipient(false);
+    return null;
+  };
+
   // Une conversation ouverte remplace entièrement la liste — au retour, on
   // recharge pour que le dernier message et les non-lus soient à jour.
   if (openConversation) {
@@ -139,6 +161,10 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
         }}
       />
     );
+  }
+
+  if (choosingRecipient) {
+    return <NewConversationScreen bibros={bibros} onPick={startConversationWith} onBack={() => setChoosingRecipient(false)} />;
   }
 
   return (
@@ -186,28 +212,27 @@ export function BibaPingScreen({ myUserId, onBack, onNewConversation }) {
         >
           {showArchived ? "Conversations" : "Archivées"}
         </button>
-        {onNewConversation && (
-          <button
-            onClick={onNewConversation}
-            title="Nouvelle conversation"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
-              background: "none",
-              border: `2px solid ${COLORS.amber}`,
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={COLORS.amber} strokeWidth="3" strokeLinecap="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </button>
-        )}
+        <button
+          onClick={() => setChoosingRecipient(true)}
+          title="Nouvelle conversation"
+          aria-label="Nouvelle conversation"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            background: "none",
+            border: `2px solid ${COLORS.amber}`,
+            cursor: "pointer",
+            padding: 0,
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={COLORS.amber} strokeWidth="3" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
       </div>
 
       {failed ? (

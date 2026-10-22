@@ -597,6 +597,7 @@ export function HomeScreen({
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>
+          <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
           <button
             onClick={() => setSuggestionsExpanded((e) => !e)}
             style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: suggestionsExpanded ? "8px" : 0, background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer" }}
