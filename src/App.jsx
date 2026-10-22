@@ -3535,6 +3535,7 @@ export default function App() {
                         {screen === "bibaPing" && (
               <BibaPingScreen
                 myUserId={session.user.id}
+                bibros={bibros}
                 onBack={() => setScreen("home")}
                 onOpenConversation={(id) => console.log("conversation", id)}
               />
