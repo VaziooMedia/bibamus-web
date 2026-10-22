@@ -5,11 +5,17 @@
 // Marques, Producteurs, Bibax. Un seul onglet affiché à la fois,
 // en liste complète — pensé pour rester utilisable même quand la
 // base grandit (pas de multiples listes tronquées empilées).
+//
+// Mode « atlas » (prop atlas) : l'écran BibAtlas fusionné. Même barre, mêmes
+// onglets (sans la pastille BibAtlas, puisqu'on y est déjà) ; tant qu'aucune
+// recherche n'est lancée, les blocs du répertoire s'affichent en dessous :
+// Lieux, Produits, Marques, Producteurs, Bibax. Le bloc Bibax ouvre une
+// recherche réservée aux Bibax (aucune liste complète des utilisateurs).
 // ============================================================
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
-import { EntityAvatar } from "./ui.jsx";
+import { EntityAvatar, ActionCard } from "./ui.jsx";
 import { formatAddress } from "../utils.js";
 import { searchBibax, searchDrinks, searchVenues } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
@@ -105,6 +111,11 @@ export function SearchScreen({
   goToScan,
   goToAtlas,
   hideBibaxAndAtlas = false,
+  atlas = false,
+  goToLieux,
+  goToProduits,
+  goToMarques,
+  goToProducteurs,
   initialTab = "lieux",
   onBack,
 }) {
@@ -112,6 +123,8 @@ export function SearchScreen({
   const [activeTab, setActiveTab] = useState(initialTab);
   const [bibaxResults, setBibaxResults] = useState([]);
   const [bibaxLoading, setBibaxLoading] = useState(false);
+  // Mode atlas uniquement : recherche réservée aux Bibax, ouverte par le bloc « Bibax ».
+  const [bibaxOnly, setBibaxOnly] = useState(false);
   const inputRef = useRef(null);
   // Tant que la personne n'a pas cliqué elle-même sur un onglet pour cette recherche, l'onglet
   // affiché suit automatiquement celui qui a le plus de résultats. Un clic manuel arrête ce
@@ -153,7 +166,7 @@ export function SearchScreen({
   // différence avec le comportement précédent : les alias ne sont pas (encore) inclus dans cette
   // recherche serveur, contrairement à l'ancien filtre en mémoire.
   useEffect(() => {
-    if (trimmed.length < 2) {
+    if (bibaxOnly || trimmed.length < 2) {
       setDrinkResults([]);
       return;
     }
@@ -165,11 +178,11 @@ export function SearchScreen({
       });
     }, 350);
     return () => clearTimeout(timer);
-  }, [trimmed]);
+  }, [trimmed, bibaxOnly]);
 
   // Même principe côté serveur pour les lieux.
   useEffect(() => {
-    if (trimmed.length < 2) {
+    if (bibaxOnly || trimmed.length < 2) {
       setVenueResults([]);
       return;
     }
@@ -177,7 +190,7 @@ export function SearchScreen({
       searchVenues(trimmed).then(setVenueResults);
     }, 350);
     return () => clearTimeout(timer);
-  }, [trimmed]);
+  }, [trimmed, bibaxOnly]);
 
   // Réinitialise le suivi automatique dès qu'une nouvelle requête est tapée — un clic manuel ne
   // vaut que pour la recherche en cours, pas pour toute la session.
@@ -202,12 +215,25 @@ export function SearchScreen({
   const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
   const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;
+  // Recherche réservée aux Bibax : seul l'onglet Bibax compte, sans la rangée d'onglets.
+  const shownTab = bibaxOnly ? "bibax" : activeTab;
+  const noResultsAtAll = bibaxOnly ? counts.bibax === 0 : totalResults === 0;
+  // Mode atlas : tant qu'aucune recherche n'est lancée, les blocs du répertoire prennent la place des résultats.
+  const showAtlasBlocks = atlas && !bibaxOnly && !hasQuery;
+  const openBibaxOnly = () => {
+    setBibaxOnly(true);
+    inputRef.current?.focus();
+  };
+  const leaveBibaxOnly = () => {
+    setBibaxOnly(false);
+    setQuery("");
+  };
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1, boxSizing: "border-box" }}>
       <div style={{ paddingRight: "16px", boxSizing: "border-box" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-          <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", flexShrink: 0 }}>
+          <button onClick={bibaxOnly ? leaveBibaxOnly : onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", flexShrink: 0 }}>
             <NavIcon name="back-triangle" size={18} color={COLORS.ink} />
           </button>
           <div
@@ -230,8 +256,8 @@ export function SearchScreen({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher..."
-              autoFocus
+              placeholder={bibaxOnly ? "Rechercher un Bibax..." : "Rechercher..."}
+              autoFocus={!atlas}
               style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
             />
             <button
@@ -256,10 +282,66 @@ export function SearchScreen({
         </div>
       </div>
 
-      {!hasQuery ? (
+      {showAtlasBlocks ? (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "46px",
+                height: "46px",
+                borderRadius: "50%",
+                background: COLORS.paperAlt,
+                flexShrink: 0,
+              }}
+            >
+              <NavIcon name="map" size={22} color={COLORS.amber} />
+            </span>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1 }}>
+              <span style={{ color: COLORS.ink }}>Bib</span>
+              <span style={{ color: COLORS.amber }}>Atlas</span>
+            </h1>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <ActionCard
+              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              title="Lieux"
+              subtitle="Répertoire des lieux référencés"
+              onClick={goToLieux}
+            />
+            <ActionCard
+              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              title="Produits"
+              subtitle="Répertoire des produits référencés"
+              onClick={goToProduits}
+            />
+            <ActionCard
+              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              title="Marques"
+              subtitle="Répertoire des marques référencées"
+              onClick={goToMarques}
+            />
+            <ActionCard
+              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              title="Producteurs"
+              subtitle="Répertoire des producteurs référencés"
+              onClick={goToProducteurs}
+            />
+            <ActionCard
+              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              title="Bibax"
+              subtitle="Rechercher un Bibax par son nom ou son code"
+              onClick={openBibaxOnly}
+            />
+          </div>
+        </>
+      ) : !hasQuery ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Tapez au moins 2 caractères pour lancer la recherche.</p>
       ) : (
         <>
+          {!bibaxOnly && (
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px", marginBottom: "16px" }}>
             {visibleTabs.map((t) => (
               <TagButton
@@ -273,7 +355,7 @@ export function SearchScreen({
                 }}
               />
             ))}
-            {!hideBibaxAndAtlas && (
+            {!hideBibaxAndAtlas && !atlas && (
               <button
                 onClick={goToAtlas}
                 style={{
@@ -297,21 +379,22 @@ export function SearchScreen({
               </button>
             )}
           </div>
+          )}
 
           <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto" }}>
-            {totalResults === 0 && !bibaxLoading && !drinksLoading ? (
+            {noResultsAtAll && !bibaxLoading && !drinksLoading ? (
               <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
-            ) : counts[activeTab] === 0 ? (
+            ) : counts[shownTab] === 0 ? (
               <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>
-                {activeTab === "bibax" && bibaxLoading
+                {shownTab === "bibax" && bibaxLoading
                   ? "Recherche des Bibax..."
-                  : activeTab === "produits" && drinksLoading
+                  : shownTab === "produits" && drinksLoading
                   ? "Recherche des produits..."
                   : "Aucun résultat dans cette catégorie."}
               </p>
             ) : (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
-                {activeTab === "lieux" &&
+                {shownTab === "lieux" &&
                   venueResults.map((v, i) => (
                     <ResultRow
                       key={v.id}
@@ -327,7 +410,7 @@ export function SearchScreen({
                       last={i === venueResults.length - 1}
                     />
                   ))}
-                {activeTab === "produits" &&
+                {shownTab === "produits" &&
                   drinkResults.map((d, i) => (
                     <ResultRow
                       key={d.id}
@@ -338,7 +421,7 @@ export function SearchScreen({
                       last={i === drinkResults.length - 1}
                     />
                   ))}
-                {activeTab === "marques" &&
+                {shownTab === "marques" &&
                   brandResults.map((b, i) => (
                     <ResultRow
                       key={b.id}
@@ -349,7 +432,7 @@ export function SearchScreen({
                       last={i === brandResults.length - 1}
                     />
                   ))}
-                {activeTab === "producteurs" &&
+                {shownTab === "producteurs" &&
                   breweryResults.map((b, i) => (
                     <ResultRow
                       key={b.id}
@@ -360,7 +443,7 @@ export function SearchScreen({
                       last={i === breweryResults.length - 1}
                     />
                   ))}
-                {activeTab === "bibax" &&
+                {shownTab === "bibax" &&
                   bibaxResults.map((b, i) => (
                     <ResultRow
                       key={b.id}

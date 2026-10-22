@@ -258,9 +258,12 @@ export function HomeScreen({
               cursor: "pointer",
             }}
           >
-            <img src={loupeIconUrl} alt="Search" style={{ width: "28px", height: "28px" }} />
+            <img src={loupeIconUrl} alt="BibAtlas" style={{ width: "28px", height: "28px" }} />
           </button>
-          <span style={{ fontSize: "9.5px", fontWeight: 600, color: COLORS.ink, textAlign: "center" }}>Search</span>
+          <span style={{ fontSize: "9.5px", fontWeight: 600, textAlign: "center" }}>
+            <span style={{ color: COLORS.ink }}>Bib</span>
+            <span style={{ color: COLORS.amber }}>Atlas</span>
+          </span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
