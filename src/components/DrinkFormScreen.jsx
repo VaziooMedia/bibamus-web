@@ -59,7 +59,7 @@ export function DrinkFormScreen({ drink, breweriesDirectory, onRegisterBrewery, 
   const toggleTag = (tag) => setBeerTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onCancel} />
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "0 0 6px 0" }}>
         {!drink ? "Proposer une boisson" : suggestMode ? "Suggérer une modification" : "Éditer la fiche"}

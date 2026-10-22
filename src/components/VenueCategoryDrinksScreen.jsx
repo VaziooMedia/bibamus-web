@@ -35,7 +35,7 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
     .filter((d) => !seenIds.has(d.id) && seenIds.add(d.id));
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "4px 0 2px 0", display: "flex", alignItems: "center", gap: "10px" }}>
         <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />

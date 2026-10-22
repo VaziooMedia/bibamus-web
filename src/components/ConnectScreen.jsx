@@ -81,7 +81,7 @@ export function ConnectScreen({ onBack, goToSpotify }) {
   }, []);
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="link" size={22} color={COLORS.amber} />}>Connecter</PageTitleWithBar>
 
@@ -141,7 +141,7 @@ export function SpotifyDetailScreen({ myUserId, onBack, returnScreen = "connectS
   }, []);
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<SpotifyIcon size={22} />}>Spotify</PageTitleWithBar>
 

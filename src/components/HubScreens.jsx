@@ -11,7 +11,7 @@ import { AiIcon } from "./AiIcon.jsx";
 
 export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibArena, goToBibaSolo }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
         <span
@@ -116,7 +116,7 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibA
 
 export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToManageBreweries, goToManageBrands, goToSearch, goToScanLinked }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
         <span
@@ -201,7 +201,7 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
 
 export function ComingSoonScreen({ onBack, eyebrow, title, icon, iconSize = 32, emoji, description, ideas }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       {icon ? (
         <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 10px 0" }}>

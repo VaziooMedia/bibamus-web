@@ -55,7 +55,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
             background: brewery.coverPhotoUrl ? `url(${brewery.coverPhotoUrl}) center/cover` : COLORS.surfaceAlt,
           }}
         />
-        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
+        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "8px 20px 0" }}>
           <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
@@ -372,7 +372,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
             background: brand.coverPhotoUrl ? `url(${brand.coverPhotoUrl}) center/cover` : COLORS.surfaceAlt,
           }}
         />
-        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
+        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "8px 20px 0" }}>
           <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>

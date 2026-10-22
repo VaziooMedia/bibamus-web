@@ -12,7 +12,7 @@ import { createBrand } from "../data/sharedDirectories.js";
 
 function StepShell({ step, totalSteps, title, onBack, onPrevious, children, footer }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", gap: "4px", marginBottom: "18px" }}>
         {Array.from({ length: totalSteps }).map((_, i) => (

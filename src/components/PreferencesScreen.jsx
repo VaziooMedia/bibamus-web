@@ -98,7 +98,7 @@ function ToggleRow({ icon, title, subtitle, checked, onChange, disabled, badge, 
 // Température, Tri des lieux, Durée d'affichage des Stories.
 export function ChoiceScreen({ icon, title, description, options, value, onChange, onBack }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={icon}>{title}</PageTitleWithBar>
       {description && <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>{description}</p>}
@@ -176,7 +176,7 @@ export function VolumeWeightScreen({ profile, onSaveProfile, onBack }) {
   );
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="ruler" size={22} color={COLORS.amber} />}>Unités de mesure</PageTitleWithBar>
 
@@ -249,7 +249,7 @@ export function PreferencesScreen({ profile, onSaveProfile, onBack, goToChoice, 
   const venueSortLabels = { distance: "Distance", favorites: "Favoris", popularity: "Popularité", alphabetical: "Alphabétique" };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="sliders" size={22} color={COLORS.amber} />}>Préférences</PageTitleWithBar>
 
@@ -297,7 +297,7 @@ export function StorySettingsScreen({ profile, onSaveProfile, onBack, goToChoice
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="stories" size={22} color={COLORS.amber} />}>Paramètres des Stories</PageTitleWithBar>
 

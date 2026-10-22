@@ -34,7 +34,7 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onCancel} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 8px 0" }}>
         <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />

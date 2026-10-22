@@ -212,7 +212,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
 
   if (clubLoaded && !club) {
     return (
-      <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Ce club est introuvable, ou l'invitation n'est plus valable.</p>
       </div>
@@ -221,7 +221,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
 
   if (!club || members === null) {
     return (
-      <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Chargement...</p>
       </div>
@@ -229,7 +229,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
   }
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "14px", margin: "4px 0 14px" }}>

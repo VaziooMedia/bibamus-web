@@ -115,7 +115,7 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
   const pushOn = pushRegistered === true && p.notifEnabled !== false;
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="bell" size={22} color={COLORS.amber} />}>Notifications</PageTitleWithBar>
 
@@ -309,7 +309,7 @@ export function EmailSummaryScreen({ profile, onSaveProfile, onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="at" size={22} color={COLORS.amber} />}>Récapitulatif par e-mail</PageTitleWithBar>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Recevoir un récapitulatif de vos activités.</p>

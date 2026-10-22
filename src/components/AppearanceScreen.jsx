@@ -46,7 +46,7 @@ function AppearanceRow({ icon, title, value, disabled, last }) {
 
 export function AppearanceScreen({ onBack }) {
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="brush" size={22} color={COLORS.amber} />}>Apparence</PageTitleWithBar>
 

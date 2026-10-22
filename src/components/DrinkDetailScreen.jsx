@@ -223,7 +223,7 @@ export function DrinkDetailScreen({
             transform: !drink.coverPhotoUrl && drink.photoUrl ? "scale(1.1)" : "none",
           }}
         />
-        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "20px 20px 0" }}>
+        <div style={{ position: "absolute", top: "0", left: "0", right: "0", padding: "8px 20px 0" }}>
           <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>

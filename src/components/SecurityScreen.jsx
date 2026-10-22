@@ -69,7 +69,7 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
   const emailVerified = !!session?.user?.email_confirmed_at;
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="lock" size={22} color={COLORS.amber} />}>Sécurité & confidentialité</PageTitleWithBar>
 
@@ -166,7 +166,7 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   );
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="bar-chart" size={22} color={COLORS.amber} />}>Mes Statistiques</PageTitleWithBar>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "10px" }}>Choisissez ce que vos Bibax peuvent voir de vos statistiques.</p>
@@ -256,7 +256,7 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="tag" size={22} color={COLORS.amber} />}>Tags et annonces</PageTitleWithBar>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisis, séparément pour les Stories et pour BibaPulse, si d'autres Bibax peuvent te taguer, et si BibaPulse annonce tes arrivées dans un BibaClub public.</p>
@@ -315,7 +315,7 @@ export function BlockedUsersScreen({ onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="no-entry" size={22} color={COLORS.amber} />}>Utilisateurs bloqués</PageTitleWithBar>
 
@@ -417,7 +417,7 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="check" size={22} color={COLORS.amber} />}>Permissions & consentements</PageTitleWithBar>
 
@@ -549,7 +549,7 @@ export function PasswordChangeScreen({ onBack }) {
 
   if (done) {
     return (
-      <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
         <PageHeader onBack={onBack} />
         <PageTitleWithBar icon={<NavIcon name="lock" size={22} color={COLORS.amber} />}>Mot de passe</PageTitleWithBar>
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
@@ -561,7 +561,7 @@ export function PasswordChangeScreen({ onBack }) {
   }
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="lock" size={22} color={COLORS.amber} />}>Mot de passe</PageTitleWithBar>
 
@@ -610,7 +610,7 @@ export function EmailVerifyScreen({ session, onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="mail" size={22} color={COLORS.amber} />}>E-mail vérifié</PageTitleWithBar>
 
@@ -649,7 +649,7 @@ export function ResetSessionsScreen({ onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="trash" size={22} color={COLORS.amber} />}>Réinitialiser les sessions</PageTitleWithBar>
 
@@ -701,7 +701,7 @@ export function DataExportScreen({ profile, onBack }) {
   };
 
   return (
-    <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="download" size={22} color={COLORS.amber} />}>Télécharger mes données</PageTitleWithBar>
       <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
