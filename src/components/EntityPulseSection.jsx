@@ -9,11 +9,16 @@
 // réseau, pour les publications qui la concernent directement. Forme : { type: "drink" | "venue", object }.
 // Sans effet pour une fiche Producteur : ses publications portent sur des produits différents, jamais
 // sur le producteur lui-même.
+//
+// Les publications libres qui TAGUENT cette fiche s'y affichent aussi (le serveur les ajoute au fil de la fiche).
+// Leurs propres tags (autres produits, marques, producteurs, lieux) sont des pastilles, cliquables seulement
+// pour les sortes de fiche que l'écran hôte sait ouvrir (onOpenDrink, onOpenVenue, onOpenBrand, onOpenProducer).
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { loadEntityPulse, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { PulseCard } from "./BibaPulseScreen.jsx";
+import { usePostTagEntities } from "./PulseTags.jsx";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 
@@ -23,7 +28,7 @@ const SCOPES = [
   { key: "bibax", label: "Mes Bibax" },
 ];
 
-export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode, onOpenVenue, onOpenDrink, selfEntity }) {
+export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, selfEntity }) {
   const [scope, setScope] = useState("all");
   const [entries, setEntries] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -56,7 +61,10 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries]);
 
-  const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [] };
+  // Noms des fiches taguées dans les publications libres de cette liste.
+  const tagEntities = usePostTagEntities(entries);
+
+  const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [], tagEntities };
 
   useEffect(() => {
     setEntries(null);
@@ -119,6 +127,8 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
               myBibroCode={myBibroCode}
               onOpenVenue={onOpenVenue}
               onOpenDrink={onOpenDrink}
+              onOpenBrand={onOpenBrand}
+              onOpenProducer={onOpenProducer}
               onOpenTagged={(person) => {
                 if (person.id === myUserId) goToProfile();
                 else if (person.bibro_code) setViewedProfileCode(person.bibro_code);

@@ -487,7 +487,7 @@ export function HomeScreen({
             const map = { drink: drinksDirectory, producer: breweriesDirectory, brand: brandsDirectory };
             return (map[objType] || []).find((x) => x.id === id) || null;
           };
-          const actionFor = (entry) => ({ product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité");
+          const actionFor = (entry) => ({ product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout", post: "Publication" }[entry.eventType] || "Activité");
 
           return (
             <div style={{ marginBottom: "18px" }}>
@@ -531,6 +531,9 @@ export function HomeScreen({
                     // Carte « a rejoint le BibaClub Y » : le nom du club est dans la carte elle-même.
                     const isClubJoin = entry.eventType === "club_joined";
                     const clubName = isClubJoin ? pulseClubName(entry) : null;
+                    // Publication libre : pas d'objet, seulement son texte (une ligne, tronquée).
+                    const isPost = entry.eventType === "post";
+                    const postText = isPost && typeof entry.metadata?.comment === "string" ? entry.metadata.comment.replace(/\s+/g, " ").trim() : "";
                     return (
                       <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
                         <button
@@ -543,7 +546,7 @@ export function HomeScreen({
                           <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
                           </p>
-                          <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
+                          <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink, ...(isPost ? { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } : {}) }}>
                             {isClubJoin ? (
                               <>
                                 A rejoint le BibaClub{" "}
@@ -554,6 +557,11 @@ export function HomeScreen({
                                 ) : (
                                   <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
                                 )}
+                              </>
+                            ) : isPost ? (
+                              <>
+                                <strong style={{ color: COLORS.amber }}>{actionFor(entry)}</strong>
+                                {postText && <span style={{ color: COLORS.inkSoft }}>{" — " + postText}</span>}
                               </>
                             ) : (
                               <>

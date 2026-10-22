@@ -4,7 +4,10 @@
 //
 //   const form = usePulseContentForm("public");     // état du formulaire
 //   <PulseContentFields form={form} />              // les champs
-//   const built = await buildPulseContent(form, { rating });   // -> { content } ou { error }
+//   const built = await buildPulseContent(form, { rating, tags });   // -> { content } ou { error }
+//
+// Une publication libre (PulsePostScreen) réutilise les mêmes champs, sans la partie « Bibax » et avec son
+// propre libellé de texte (props showBibax, commentLabel, commentPlaceholder), et ajoute des tags de fiche.
 //
 // buildPulseContent envoie d'abord la photo (vérifiée côté serveur) : à appeler AVANT de valider
 // le check, pour que rien ne soit enregistré si la photo est refusée.
@@ -86,12 +89,14 @@ export function usePulseContentForm(defaultVisibility = "public") {
 
 // Prépare le contenu à envoyer : seulement ce qui a été renseigné. Envoie la photo si besoin.
 // Renvoie { content } (content vaut undefined s'il n'y a rien) ou { error } si la photo est refusée.
-export async function buildPulseContent(form, { rating = null } = {}) {
+export async function buildPulseContent(form, { rating = null, tags = [] } = {}) {
   const built = {};
   const trimmedComment = form.comment.trim();
   if (trimmedComment) built.comment = trimmedComment;
   if (rating != null && isOnRatingScale(rating)) built.rating = rating;
   if (form.taggedPeople.length > 0) built.taggedIds = form.taggedPeople.map((p) => p.id);
+  // Tags de fiche d'une publication libre : seulement le type et l'identifiant (le serveur vérifie la fiche).
+  if (tags.length > 0) built.tags = tags.map((t) => ({ type: t.type, id: t.id }));
   if (form.photo) {
     const uploaded = await uploadPulsePhoto(form.photo.blob);
     if (uploaded.error) return { error: uploaded.error };
@@ -102,7 +107,7 @@ export async function buildPulseContent(form, { rating = null } = {}) {
 
 const labelStyle = { fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" };
 
-export function PulseContentFields({ form }) {
+export function PulseContentFields({ form, showBibax = true, commentLabel = "Commentaire", commentPlaceholder = "Ton avis, une anecdote..." }) {
   const { visibility, setVisibility, comment, setComment, photo, setPhoto, tagQuery, setTagQuery, tagResults, setTagResults, taggedPeople, setTaggedPeople, fileInputRef, handlePhotoPick } = form;
   return (
     <div style={{ marginBottom: "20px" }}>
@@ -132,13 +137,13 @@ export function PulseContentFields({ form }) {
         ))}
       </div>
 
-      <label style={labelStyle}>Commentaire</label>
+      <label style={labelStyle}>{commentLabel}</label>
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         maxLength={280}
         rows={3}
-        placeholder="Ton avis, une anecdote..."
+        placeholder={commentPlaceholder}
         style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontSize: "14px", fontFamily: "inherit", resize: "none" }}
       />
       <p style={{ margin: "2px 0 14px", fontSize: "11px", color: COLORS.inkSoft, textAlign: "right" }}>{comment.length}/280</p>
@@ -164,8 +169,8 @@ export function PulseContentFields({ form }) {
         </button>
       )}
 
-      <label style={labelStyle}>Bibax</label>
-      {taggedPeople.length > 0 && (
+      {showBibax && <label style={labelStyle}>Bibax</label>}
+      {showBibax && taggedPeople.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
           {taggedPeople.map((person) => (
             <span key={person.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 6px 4px 5px", fontSize: "12.5px", color: COLORS.ink }}>
@@ -182,7 +187,7 @@ export function PulseContentFields({ form }) {
           ))}
         </div>
       )}
-      {taggedPeople.length < MAX_TAGS && (
+      {showBibax && taggedPeople.length < MAX_TAGS && (
         <div style={{ position: "relative" }}>
           <input
             value={tagQuery}
