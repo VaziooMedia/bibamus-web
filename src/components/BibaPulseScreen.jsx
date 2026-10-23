@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { COLORS } from "../constants.js";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, deleteMyPulsePost, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
+import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, deleteMyPulsePost, previewMyPulseCheckDeletion, deleteMyPulseCheck, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
@@ -23,6 +23,9 @@ function resolveObject(entry, directories) {
 
 // Gabarit textuel par type d'événement — jamais de phrase figée stockée en base, uniquement
 // reconstruite ici à partir des données structurées (prêt pour une traduction future).
+// Cartes de check : celles que l'on peut supprimer soi-même, avec ou sans la consommation des statistiques.
+const CHECK_EVENT_TYPES = ["product_discovered", "drink_checked", "venue_visit"];
+
 // Format neutre "Nom - Action @ Objet" — évite les problèmes d'accord (masculin/féminin,
 // préposition selon le nom du lieu) qu'une vraie phrase française poserait.
 function pulseActionFor(entry) {
@@ -127,6 +130,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const deleteLock = useRef(false);
+  // Suppression de SON check : fenêtre de choix ouverte après l'aperçu du serveur. { withStats, choice } — withStats =
+  // une consommation de ses statistiques correspond à cette carte (3 boutons) ; choice = bouton touché, pendant l'envoi.
+  const [checkDialog, setCheckDialog] = useState(null);
 
   const obj = resolveObject(entry, directories);
 
@@ -149,6 +155,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
 
   // Publication libre : pas d'objet propre, seulement des tags de fiche dans son contenu.
   const isPost = entry.eventType === "post";
+  const isCheck = CHECK_EVENT_TYPES.includes(entry.eventType);
   const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
 
   const handleDelete = async () => {
@@ -165,6 +172,47 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       return;
     }
     // La carte disparaît du fil (le parent la retire de sa liste).
+    if (onDeleted) onDeleted(entry.id);
+  };
+
+  // Suppression de SON check : on demande d'abord au serveur si une consommation des statistiques correspond à la
+  // carte, pour ne proposer le choix « et de mes statistiques » que dans ce cas.
+  const handleDeleteCheck = async () => {
+    if (deleteLock.current) return;
+    deleteLock.current = true;
+    setDeleting(true);
+    setDeleteError("");
+    const preview = await previewMyPulseCheckDeletion(entry.id);
+    if (preview.error) {
+      deleteLock.current = false;
+      setDeleting(false);
+      setDeleteError("Le check n'a pas pu être supprimé. Réessaie dans un instant.");
+      return;
+    }
+    if (!preview.exists) {
+      // Déjà supprimé ailleurs : on retire simplement la carte du fil.
+      if (onDeleted) onDeleted(entry.id);
+      return;
+    }
+    deleteLock.current = false;
+    setDeleting(false);
+    setCheckDialog({ withStats: preview.statsMatch, choice: null });
+  };
+
+  const confirmDeleteCheck = async (alsoStats) => {
+    if (deleteLock.current) return;
+    deleteLock.current = true;
+    setDeleting(true);
+    setCheckDialog((d) => (d ? { ...d, choice: alsoStats ? "stats" : "pulse" } : d));
+    const result = await deleteMyPulseCheck(entry.id, { alsoStats });
+    if (result.error) {
+      deleteLock.current = false;
+      setDeleting(false);
+      setCheckDialog(null);
+      setDeleteError("Le check n'a pas pu être supprimé. Réessaie dans un instant.");
+      return;
+    }
+    setCheckDialog(null);
     if (onDeleted) onDeleted(entry.id);
   };
 
@@ -371,11 +419,11 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
         </button>
 
-        {myUserId && isPost && entry.actorId === myUserId && (
+        {myUserId && (isPost || isCheck) && entry.actorId === myUserId && (
           <button
-            onClick={handleDelete}
+            onClick={isPost ? handleDelete : handleDeleteCheck}
             disabled={deleting}
-            aria-label="Supprimer ma publication"
+            aria-label={isPost ? "Supprimer ma publication" : "Supprimer mon check"}
             title="Supprimer"
             style={{ marginLeft: "auto", display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", opacity: deleting ? 0.3 : 0.6, cursor: deleting ? "default" : "pointer" }}
           >
@@ -512,6 +560,63 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                 emptyLabel={reactorsTab === "bix" ? "Personne n'a encore Bix." : reactorsTab === "incoming" ? "Personne n'a encore signalé son arrivée." : "Personne n'a encore trinqué."}
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {checkDialog && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Supprimer ce check de Pulse ?"
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 300 }}
+          onClick={() => {
+            if (!deleting) setCheckDialog(null);
+          }}
+        >
+          <div
+            style={{ background: COLORS.surface, borderRadius: "16px 16px 0 0", padding: "20px 20px calc(24px + env(safe-area-inset-bottom, 0px))", width: "100%", maxWidth: "480px", boxSizing: "border-box" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.ink, margin: "0 0 14px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+              Supprimer ce check de Pulse ?
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {checkDialog.withStats ? (
+                <>
+                  <button
+                    onClick={() => confirmDeleteCheck(false)}
+                    disabled={deleting}
+                    style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: COLORS.wine, cursor: deleting ? "default" : "pointer", opacity: deleting && checkDialog.choice !== "pulse" ? 0.4 : 1 }}
+                  >
+                    {checkDialog.choice === "pulse" ? "Suppression..." : "Supprimer de Pulse seulement"}
+                  </button>
+                  <button
+                    onClick={() => confirmDeleteCheck(true)}
+                    disabled={deleting}
+                    style={{ background: COLORS.wine, border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: "#fff", cursor: deleting ? "default" : "pointer", opacity: deleting && checkDialog.choice !== "stats" ? 0.4 : 1 }}
+                  >
+                    {checkDialog.choice === "stats" ? "Suppression..." : "Supprimer de Pulse et de mes statistiques"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => confirmDeleteCheck(false)}
+                  disabled={deleting}
+                  style={{ background: COLORS.wine, border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: "#fff", cursor: deleting ? "default" : "pointer" }}
+                >
+                  {checkDialog.choice === "pulse" ? "Suppression..." : "Supprimer"}
+                </button>
+              )}
+              <button
+                onClick={() => setCheckDialog(null)}
+                disabled={deleting}
+                style={{ background: "none", border: "none", padding: "10px", fontSize: "14px", fontWeight: 700, color: COLORS.inkSoft, cursor: deleting ? "default" : "pointer", opacity: deleting ? 0.4 : 1 }}
+              >
+                Annuler
+              </button>
+            </div>
           </div>
         </div>
       )}
