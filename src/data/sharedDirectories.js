@@ -170,6 +170,54 @@ export async function deleteMyPulsePost(eventId) {
   }
 }
 
+// Appel de la fonction Edge delete-pulse-check (suppression de SON check). Renvoie { data } ou { error } ; même
+// lecture du vrai message d'erreur que pour deleteMyPulsePost.
+async function invokeDeletePulseCheck(body, label) {
+  try {
+    const { data, error } = await supabase.functions.invoke("delete-pulse-check", { body });
+    if (error) {
+      let detail = error.message;
+      if (error.context?.json) {
+        try {
+          const errBody = await error.context.json();
+          detail = errBody?.error || JSON.stringify(errBody);
+        } catch (_) {
+          try {
+            detail = await error.context.text();
+          } catch (_) {}
+        }
+      }
+      console.error(`${label}:`, detail);
+      return { error: detail };
+    }
+    if (!data || data.ok !== true) {
+      console.error(`${label}: réponse inattendue`, data);
+      return { error: "Réponse inattendue du serveur." };
+    }
+    return { data };
+  } catch (e) {
+    console.error(`${label}:`, e);
+    return { error: String(e?.message || e) };
+  }
+}
+
+// Avant de supprimer SON check : la carte existe-t-elle encore (exists) et une consommation de ses statistiques
+// correspond-elle à cette carte (statsMatch) ? Ne modifie rien. Renvoie { exists, statsMatch } ou { error }.
+export async function previewMyPulseCheckDeletion(eventId) {
+  const result = await invokeDeletePulseCheck({ eventId, mode: "preview" }, "previewMyPulseCheckDeletion");
+  if (result.error) return { error: result.error };
+  return { exists: result.data.exists === true, statsMatch: result.data.statsMatch === true };
+}
+
+// Supprime SON check de Pulse (la carte, ses réactions, ses commentaires, sa photo) et, avec alsoStats, la
+// consommation correspondante de ses statistiques. Une carte déjà supprimée compte comme un succès.
+// Renvoie { ok: true, statsRemoved } ou { error }.
+export async function deleteMyPulseCheck(eventId, { alsoStats = false } = {}) {
+  const result = await invokeDeletePulseCheck({ eventId, alsoStats: alsoStats === true }, "deleteMyPulseCheck");
+  if (result.error) return { error: result.error };
+  return { ok: true, statsRemoved: result.data.statsRemoved === true };
+}
+
 export async function emitEvent(type, { actorBibroCode, entityType, entityId, payload, version = 1, skipPulse = false } = {}) {
   try {
     await supabase.from("analytics_events").insert({
