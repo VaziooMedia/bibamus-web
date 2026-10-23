@@ -43,7 +43,8 @@ Colonnes visibles dans les scripts : `requester_id`, `requestee_id`, `status` (`
 | `block_user`, `unblock_user`, `get_my_blocked_users` | Blocage | Voir plus bas |
 | `toggle_notify_pulse(p_target_code)` | Cloche « Suivre sur Pulse » | |
 | `toggle_follow(p_target_code)` | Suivi à sens unique | Aucun appelant dans l'app |
-| `get_bibax_stats_overview / records / drinks / venues / social` | Statistiques partagées d'un Bibax | Soumises aux réglages `share_stats_*` (voir `PROFILE.md`) |
+| `get_bibax_stats_overview / records / venues` | Statistiques partagées d'un Bibax | Soumises aux réglages `share_stats_overview`, `share_stats_records`, `share_stats_venues` (voir `PROFILE.md`) ; relevées dans la base le 2026-10-23 |
+| `get_bibax_stats_drinks`, `get_bibax_stats_social` | Statistiques partagées d'un Bibax (boisson préférée, catégorie la plus consommée ; Bibax rencontrés, taille moyenne d'une sortie) | **Absentes de la base** (relevé du 2026-10-23), alors que l'app les appelle : l'appel échoue sans bruit et les blocs correspondants de la fiche d'un Bibax ne s'affichent jamais |
 | `get_taggable_bibax(p_ids, p_surface)` | Bibax qu'on peut taguer | Voir « Tags » |
 | `get_my_bibax_drink_checks(p_drink_id)` | Checks de mes Bibax sur un produit (onglet Biba360 d'une fiche produit) | Bibax confirmés seulement, uniquement ceux dont `share_stats_drinks` est vrai, jamais une personne bloquée ; voir `DATABASE.md` |
 
