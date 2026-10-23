@@ -20,7 +20,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkTotalChecks, loadMyBibaxDrinkChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadMyBibaxDrinkChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -159,14 +159,6 @@ export function DrinkDetailScreen({
     if (drink.producerIds?.length > 0) loadBreweriesByIds(drink.producerIds).then(setLinkedProducers);
     else setLinkedProducers([]);
   }, [drink.producerIds]);
-
-  // Consommé par tous les Bibax ce mois-ci — jamais d'argent ici (réservé propriétaire/admin),
-  // juste une quantité, publique.
-  const [globalMonthCount, setGlobalMonthCount] = useState(null);
-  useEffect(() => {
-    const since = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    loadDrinkGlobalStats(drink.id, since, null).then(setGlobalMonthCount);
-  }, [drink.id]);
 
   // Lieux qui le proposent — jamais la liste complète (potentiellement énorme), toujours les 5
   // plus proches de l'utilisateur. "denied" distingue le refus explicite du "pas encore demandé".
@@ -694,15 +686,6 @@ export function DrinkDetailScreen({
                     ))}
                   </div>
                 )}
-              </div>
-            )}
-
-            {globalMonthCount > 0 && (
-              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px", textAlign: "center" }}>
-                <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Consommé par tous les Bibax ce mois-ci</span>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber, marginTop: "4px" }}>
-                  {globalMonthCount} verre{globalMonthCount > 1 ? "s" : ""}
-                </div>
               </div>
             )}
           </>
