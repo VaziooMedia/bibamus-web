@@ -3290,6 +3290,26 @@ export async function loadDrinkTotalChecks(drinkId) {
   return data || 0;
 }
 
+// Onglet Biba360 d'une fiche produit : les checks de MES Bibax sur ce produit. Le serveur ne rend que les
+// Bibax dont le lien est confirmé ET qui partagent leurs statistiques « Boissons » (Sécurité > Mes statistiques),
+// ceux qui ont fait au moins un check, du plus grand nombre au plus petit. Renvoie null si la lecture échoue
+// (pour ne pas confondre une erreur avec « aucun Bibax n'a checké ce produit »).
+export async function loadMyBibaxDrinkChecks(drinkId) {
+  const { data, error } = await supabase.rpc("get_my_bibax_drink_checks", { p_drink_id: drinkId });
+  if (error || !Array.isArray(data)) {
+    console.error("loadMyBibaxDrinkChecks:", error || "réponse inattendue");
+    return null;
+  }
+  return data.map((r) => ({
+    userId: r.user_id,
+    name: r.name,
+    lastName: r.last_name,
+    nickname: r.nickname,
+    avatarUrl: r.avatar_url,
+    checkCount: r.check_count,
+  }));
+}
+
 export async function loadMyStatsForVenue(venueId, since = null, until = null) {
   const { data, error } = await supabase.rpc("get_my_stats_for_venue", {
     p_venue_id: venueId,

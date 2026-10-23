@@ -45,8 +45,9 @@ Colonnes visibles dans les scripts : `requester_id`, `requestee_id`, `status` (`
 | `toggle_follow(p_target_code)` | Suivi à sens unique | Aucun appelant dans l'app |
 | `get_bibax_stats_overview / records / drinks / venues / social` | Statistiques partagées d'un Bibax | Soumises aux réglages `share_stats_*` (voir `PROFILE.md`) |
 | `get_taggable_bibax(p_ids, p_surface)` | Bibax qu'on peut taguer | Voir « Tags » |
+| `get_my_bibax_drink_checks(p_drink_id)` | Checks de mes Bibax sur un produit (onglet Biba360 d'une fiche produit) | Bibax confirmés seulement, uniquement ceux dont `share_stats_drinks` est vrai, jamais une personne bloquée ; voir `DATABASE.md` |
 
-Aucune de ces fonctions n'a de script livré : leur corps **(base)** n'est pas vérifié. La seule exception est `get_bibax_suggestions` et `search_bibax_by_name` (scripts `bibamus-sql-fix-bibax-roles-*`).
+Aucune de ces fonctions n'a de script livré : leur corps **(base)** n'est pas vérifié. Les exceptions sont `get_bibax_suggestions` et `search_bibax_by_name` (scripts `bibamus-sql-fix-bibax-roles-*`) et `get_my_bibax_drink_checks` (script `bibamus-sql-biba360-1-checks-de-mes-bibax.sql`).
 
 ### Migration automatique
 

@@ -12,7 +12,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { PageHeader, BackFooterLink, EntityAvatar, BibaxName } from "./ui.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { formatDrinkFieldValue, formatMoney } from "../utils.js";
@@ -20,7 +20,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkTotalChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkGlobalStats, loadDrinkTotalChecks, loadMyBibaxDrinkChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -131,6 +131,22 @@ export function DrinkDetailScreen({
       cancelled = true;
     };
   }, [drink.id]);
+
+  // Checks de MES Bibax sur ce produit (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un
+  // tiret, jamais « aucun Bibax ». Le serveur ne rend que les Bibax confirmés qui partagent leurs statistiques
+  // « Boissons » — les autres n'apparaissent pas, sans que rien ne les signale.
+  const [bibaxChecks, setBibaxChecks] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    setBibaxChecks(null);
+    loadMyBibaxDrinkChecks(drink.id).then((list) => {
+      if (!cancelled) setBibaxChecks(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [drink.id]);
+  const bibaxChecksTotal = bibaxChecks ? bibaxChecks.reduce((sum, b) => sum + b.checkCount, 0) : null;
 
   const [linkedBrand, setLinkedBrand] = useState(null);
   useEffect(() => {
@@ -349,6 +365,7 @@ export function DrinkDetailScreen({
         <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
           {[
             { key: "infos", label: "Infos" },
+            { key: "biba360", label: "Biba360" },
             { key: "bibapulse", label: "BibaPulse" },
           ].map((t) => (
             <button
@@ -369,6 +386,10 @@ export function DrinkDetailScreen({
               {t.key === "bibapulse" ? (
                 <>
                   Biba<span style={{ color: activeTab === t.key ? undefined : COLORS.amber }}>Pulse</span>
+                </>
+              ) : t.key === "biba360" ? (
+                <>
+                  Biba<span style={{ color: activeTab === t.key ? undefined : COLORS.amber }}>360</span>
                 </>
               ) : (
                 t.label
@@ -511,26 +532,6 @@ export function DrinkDetailScreen({
           </div>
         )}
 
-        <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
-          <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "12px", textAlign: "center" }}>
-            <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>Tes Checks</span>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, marginTop: "4px" }}>{myCheckCount ?? "—"}</div>
-          </div>
-          <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "12px", textAlign: "center" }}>
-            <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>Bibax</span>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, marginTop: "4px" }}>{totalCheckCount ?? "—"}</div>
-          </div>
-        </div>
-
-        {globalMonthCount > 0 && (
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px", textAlign: "center" }}>
-            <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Consommé par tous les Bibax ce mois-ci</span>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber, marginTop: "4px" }}>
-              {globalMonthCount} verre{globalMonthCount > 1 ? "s" : ""}
-            </div>
-          </div>
-        )}
-
         {isAdmin && revenueStats && revenueStats.orderCount > 0 && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.wine}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
@@ -649,6 +650,55 @@ export function DrinkDetailScreen({
             <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
           </button>
         </div>
+          </>
+        )}
+
+        {activeTab === "biba360" && (
+          <>
+            <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+              <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "12px", textAlign: "center" }}>
+                <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>Tes Checks</span>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, marginTop: "4px" }}>{myCheckCount ?? "—"}</div>
+              </div>
+              <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "12px", textAlign: "center" }}>
+                <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>Bibax</span>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, marginTop: "4px" }}>{totalCheckCount ?? "—"}</div>
+              </div>
+            </div>
+
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+              <div style={{ textAlign: "center" }}>
+                <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Checks de tes Bibax</span>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber, marginTop: "4px" }}>
+                  {bibaxChecksTotal == null ? "—" : `${bibaxChecksTotal} check${bibaxChecksTotal > 1 ? "s" : ""}`}
+                </div>
+              </div>
+              {bibaxChecks && bibaxChecks.length === 0 && (
+                <div style={{ marginTop: "10px", fontSize: "13px", color: COLORS.inkSoft, textAlign: "center" }}>Aucun de tes Bibax n'a encore checké ce produit.</div>
+              )}
+              {bibaxChecks && bibaxChecks.length > 0 && (
+                <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {bibaxChecks.map((b) => (
+                    <div key={b.userId} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px" }}>
+                      <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                        {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={16} color={COLORS.amber} />}
+                      </div>
+                      <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} style={{ flex: 1, fontSize: "14px" }} />
+                      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{b.checkCount}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {globalMonthCount > 0 && (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px", textAlign: "center" }}>
+                <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Consommé par tous les Bibax ce mois-ci</span>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber, marginTop: "4px" }}>
+                  {globalMonthCount} verre{globalMonthCount > 1 ? "s" : ""}
+                </div>
+              </div>
+            )}
           </>
         )}
 
