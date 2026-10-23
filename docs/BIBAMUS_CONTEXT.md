@@ -67,6 +67,7 @@ Non construits à ce jour (cartes ou tuiles « Soon » ou « Bientôt ») : BibA
 - **Localisation des profils** : « Commune de résidence » obligatoire à l'enregistrement du profil (à l'inscription, seul le pays est demandé) ; elle est **suggérée par pays mais en texte libre** côté client (liste de 6 suggestions au plus, pas de liste fermée). « Ville / Village » optionnel en texte libre (aucun écran ne l'édite aujourd'hui). « Région » abandonnée.
 - **Nom d'utilisateur abandonné** (distinct du prénom, du nom et du surnom). Son ancienne justification — « l'ajout d'un Bibax se fait par code, jamais par recherche » — est **périmée** : on peut aussi ajouter un Bibax par QR code et par **recherche de nom** (le nom affiché respecte les réglages de partage).
 - **Horaires d'établissements** : toujours issus de Google, jamais encodés à la main dans l'app.
+- **Fiche produit à trois onglets** : « Infos », « Biba360 » (au milieu ; le « 360 » en vert fluo) et « BibaPulse ». Biba360 réunit les statistiques du produit : tes checks, le total de tous les utilisateurs, les checks de tes Bibax (total + liste nommée, du plus au moins) et la quantité du mois ; il est appelé à s'enrichir. La liste des Bibax ne montre que les Bibax confirmés qui partagent leurs statistiques « Boissons » : **aucun réglage de partage supplémentaire** (voir `DATABASE.md`, `PROFILE.md`).
 
 ## Décisions abandonnées
 

@@ -63,7 +63,7 @@ Il n'existe pas de composant commun pour les réglages : chaque écran de param�
 Les noms de marque s'écrivent en deux temps : préfixe `ink` (`#F2F2E8`, pas un blanc pur) et suffixe `amber` (`#39FF66`). C'est la règle dominante (accueil, hubs, tuiles, barre basse, logo), **pas une règle systématique**. Écarts réels :
 
 1. Dans la barre basse, l'élément actif passe son suffixe en `pinkFluo`.
-2. L'onglet « BibaPulse » actif sur fond vert n'a pas de couleur explicite de suffixe (il hérite du texte sombre).
+2. Les onglets « BibaPulse » et « Biba360 » (fiche produit) actifs sur fond vert n'ont pas de couleur explicite de suffixe (ils héritent du texte sombre).
 3. Variante monochrome sur bouton vert (`LabelScanModal`).
 4. La coupure n'est pas toujours après « Biba » : « Bib|Atlas », « Bib|Arena », « Biba|x », « Drink|Check », « Place|Check ».
 5. Plusieurs noms sont écrits d'une seule couleur dans un texte courant ou un titre (« Créer un BibaClub », « Mes BibaClub », « BibaMusic », « ce BibaRoom »).
