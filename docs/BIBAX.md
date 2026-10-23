@@ -44,11 +44,12 @@ Colonnes visibles dans les scripts : `requester_id`, `requestee_id`, `status` (`
 | `toggle_notify_pulse(p_target_code)` | Cloche « Suivre sur Pulse » | |
 | `toggle_follow(p_target_code)` | Suivi à sens unique | Aucun appelant dans l'app |
 | `get_bibax_stats_overview / records / venues` | Statistiques partagées d'un Bibax | Soumises aux réglages `share_stats_overview`, `share_stats_records`, `share_stats_venues` (voir `PROFILE.md`) ; relevées dans la base le 2026-10-23 |
-| `get_bibax_stats_drinks`, `get_bibax_stats_social` | Statistiques partagées d'un Bibax (boisson préférée, catégorie la plus consommée ; Bibax rencontrés, taille moyenne d'une sortie) | **Absentes de la base** (relevé du 2026-10-23), alors que l'app les appelle : l'appel échoue sans bruit et les blocs correspondants de la fiche d'un Bibax ne s'affichent jamais |
+| `get_bibax_stats_drinks(p_user_id, p_since, p_until)` | Boisson préférée et catégorie la plus consommée d'un Bibax | Créée le 2026-10-23 (script `bibamus-sql-biba360-4-stats-boissons-d-un-bibax.sql`) : ne rend rien sauf si l'appelant est la personne elle-même, ou un Bibax **confirmé** non bloqué d'une personne dont `share_stats_drinks` est vrai. La catégorie est le code technique (`drinks_directory.type`, ex. `bieres_cidres`) : `loadBibaxStatsDrinks` le traduit en libellé |
+| `get_bibax_stats_social` | Bibax rencontrés, taille moyenne d'une sortie | **Absente de la base** (relevé du 2026-10-23), alors que l'app l'appelle : l'appel échoue sans bruit et le bloc correspondant de la fiche d'un Bibax ne s'affiche jamais. Les chiffres équivalents de Mes Statistiques sont calculés côté app à partir de l'historique local |
 | `get_taggable_bibax(p_ids, p_surface)` | Bibax qu'on peut taguer | Voir « Tags » |
 | `get_my_bibax_drink_checks(p_drink_id)` | Checks de mes Bibax sur un produit (onglet Biba360 d'une fiche produit) | Bibax confirmés seulement, uniquement ceux dont `share_stats_drinks` est vrai, jamais une personne bloquée ; voir `DATABASE.md` |
 
-Aucune de ces fonctions n'a de script livré : leur corps **(base)** n'est pas vérifié. Les exceptions sont `get_bibax_suggestions` et `search_bibax_by_name` (scripts `bibamus-sql-fix-bibax-roles-*`) et `get_my_bibax_drink_checks` (script `bibamus-sql-biba360-1-checks-de-mes-bibax.sql`).
+Aucune de ces fonctions n'a de script livré : leur corps **(base)** n'est pas vérifié. Les exceptions sont `get_bibax_suggestions` et `search_bibax_by_name` (scripts `bibamus-sql-fix-bibax-roles-*`) `get_my_bibax_drink_checks` (script `bibamus-sql-biba360-1-checks-de-mes-bibax.sql`) et `get_bibax_stats_drinks` (script `bibamus-sql-biba360-4-stats-boissons-d-un-bibax.sql`). Les corps de `get_bibax_stats_overview`, `_records` et `_venues` ont été relevés le 2026-10-23.
 
 ### Migration automatique
 

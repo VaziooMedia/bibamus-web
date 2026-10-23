@@ -3094,7 +3094,9 @@ export async function loadBibaxStatsDrinks(userId, since = null, until = null) {
   }
   const row = data[0];
   if (!row) return null;
-  return { topDrinkId: row.top_drink_id, topDrinkCount: row.top_drink_count, topCategory: row.top_category, topCategoryCount: row.top_category_count };
+  // La base rend le code technique du type de produit (ex. « bieres_cidres ») : traduit ici en libellé, comme partout.
+  const category = row.top_category ? DRINK_TYPE_CODE_TO_LABEL[row.top_category] || row.top_category : row.top_category;
+  return { topDrinkId: row.top_drink_id, topDrinkCount: row.top_drink_count, topCategory: category, topCategoryCount: row.top_category_count };
 }
 
 export async function loadBibaxStatsVenues(userId, since = null, until = null) {
