@@ -9,7 +9,7 @@
 
 « Bibax » désigne à la fois **le compte utilisateur** et **la relation mutuelle** entre deux comptes — façon Facebook (demande + confirmation), **pas** un système de suivi à sens unique. Chaque utilisateur possède un **code Bibax** personnel (colonne `profiles.bibro_code`), utilisé pour s'ajouter mutuellement. Dans le code, le mot historique « Bibro » est resté (`myBibroCode`, `BibrosScreens.jsx`, `AddBibroScreen`) : l'interface, elle, dit « Bibax ».
 
-Il n'y a pas de nom d'utilisateur distinct (décision de `BIBAMUS_CONTEXT.md`).
+Chaque compte a aussi un **nom d'utilisateur (@nom)**, copie de son code au départ (voir `PROFILE.md` et `BIBAMUS_CONTEXT.md`). Il ne sert pas encore à ajouter ou chercher un Bibax : l'ajout reste par code, par QR code ou par recherche de nom.
 
 **Trois façons d'ajouter un Bibax** (écran `AddBibroScreen`) :
 1. saisir son **code** (6 caractères, lettres majuscules et chiffres) ;

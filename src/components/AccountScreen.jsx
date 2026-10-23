@@ -10,7 +10,7 @@ import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
 import { formatDDMMYYYY } from "../utils.js";
-import { loadMyStories } from "../data/sharedDirectories.js";
+import { loadMyStories, checkMyUsername, setMyUsername } from "../data/sharedDirectories.js";
 
 const FLUO_BLUE = "#2E9EFF";
 const FLUO_RED = "#FF3B3B";
@@ -171,6 +171,7 @@ export function AccountScreen({ myName, profile, myUserId, onOpenMyStory, onBack
 
       <AccountGroup title="Profil">
         <AccountRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Photo de profil" value="" onClick={() => goToField("photo")} />
+        <AccountRow icon={<NavIcon name="at" size={17} color={COLORS.amber} />} title="Nom d'utilisateur" value={profile.username ? `@${profile.username}` : "—"} onClick={() => goToField("username")} />
         <AccountRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Prénom" value={profile.name || "—"} onClick={() => goToField("name")} />
         <AccountRow icon={<NavIcon name="user" size={17} color={COLORS.amber} />} title="Nom" value={profile.lastName || "—"} onClick={() => goToField("lastName")} />
         <AccountRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Surnom" value={profile.nickname || "—"} onClick={() => goToField("nickname")} />
@@ -449,6 +450,179 @@ export function EmailViewScreen({ profile, onBack }) {
       <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "12px" }}>
         C'est l'e-mail utilisé pour se connecter à Bibamus — il ne peut pas être modifié ici pour l'instant. Un système de changement d'e-mail de connexion est prévu séparément.
       </p>
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
+// Nom d'utilisateur (@nom). Au départ une copie du code Bibax (qui, lui, ne change jamais) ; la
+// personne peut le changer UNE seule fois. La vérification en direct et le changement passent par
+// le serveur (check_my_username / set_my_username) : l'écran n'invente aucune règle, il affiche la
+// phrase que le serveur renvoie. Comme le changement est unique, il demande une confirmation.
+// La valeur n'est jamais écrite via onSaveProfile/updateMyProfile : onSaveProfile ne met à jour
+// que l'état local une fois le serveur d'accord.
+export function UsernameEditScreen({ profile, onSaveProfile, onBack }) {
+  const current = profile.username || "";
+  const alreadyChanged = !!profile.usernameChangedAt;
+  const [value, setValue] = useState("");
+  // idle | checking | ok | refused | unavailable
+  const [status, setStatus] = useState({ state: "idle", message: "" });
+  const [confirming, setConfirming] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [justChanged, setJustChanged] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const requestId = useRef(0);
+  const typed = value.trim();
+
+  // Vérification en direct, un peu différée pour ne pas interroger le serveur à chaque touche ;
+  // une réponse arrivée après une nouvelle frappe est ignorée.
+  useEffect(() => {
+    requestId.current += 1;
+    const mine = requestId.current;
+    if (!typed) {
+      setStatus({ state: "idle", message: "" });
+      return undefined;
+    }
+    setStatus({ state: "checking", message: "" });
+    const timer = setTimeout(async () => {
+      const result = await checkMyUsername(typed);
+      if (mine !== requestId.current) return;
+      setStatus(result.ok ? { state: "ok", message: "" } : { state: result.unavailable ? "unavailable" : "refused", message: result.reason });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [typed]);
+
+  const handleConfirm = async () => {
+    setSaving(true);
+    const result = await setMyUsername(typed);
+    setSaving(false);
+    if (result.error) {
+      // Retour au formulaire avec la phrase du serveur ; il faut modifier le nom pour relancer la vérification.
+      setStatus({ state: "refused", message: result.error });
+      setConfirming(false);
+      return;
+    }
+    onSaveProfile({ username: result.username, usernameChangedAt: new Date().toISOString() });
+    setConfirming(false);
+    setJustChanged(true);
+    setValue("");
+  };
+
+  const secondaryButtonStyle = {
+    background: "none",
+    color: COLORS.ink,
+    border: `2px solid ${COLORS.paperAlt}`,
+    borderRadius: "10px",
+    padding: "12px 20px",
+    fontWeight: 700,
+    fontSize: "15px",
+    fontFamily: "'Work Sans', sans-serif",
+    cursor: "pointer",
+  };
+
+  return (
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <PageTitleWithBar icon={<NavIcon name="at" size={22} color={COLORS.amber} />}>Nom d'utilisateur</PageTitleWithBar>
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px" }}>
+        <div style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px" }}>Ton nom d'utilisateur</div>
+        <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", lineHeight: 1.2, color: COLORS.amber, overflowWrap: "anywhere" }}>{current ? `@${current}` : "—"}</div>
+      </div>
+
+      {justChanged ? (
+        <p style={{ fontSize: "13px", color: COLORS.amber, fontWeight: 600, margin: "12px 2px 0" }}>C'est fait : ton nom d'utilisateur est maintenant @{current}. Il ne peut plus être modifié.</p>
+      ) : alreadyChanged ? (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", margin: "12px 2px 0" }}>
+          <span style={{ flexShrink: 0, marginTop: "1px" }}>
+            <NavIcon name="lock" size={15} color={COLORS.inkSoft} />
+          </span>
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Tu as changé ton nom d'utilisateur le {formatDDMMYYYY(profile.usernameChangedAt)}. Il ne peut plus être modifié.</p>
+        </div>
+      ) : (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "12px 2px 0" }}>
+          Au départ, c'est une copie de ton code Bibax — ton code, lui, ne change jamais. Tu peux changer ton nom d'utilisateur <strong style={{ color: COLORS.ink }}>une seule fois</strong>.
+        </p>
+      )}
+
+      {!alreadyChanged && current && !confirming && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (status.state === "ok") setConfirming(true);
+          }}
+          style={{ marginTop: "22px" }}
+        >
+          <label htmlFor="new-username" style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>
+            Nouveau nom d'utilisateur
+          </label>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              width: "100%",
+              boxSizing: "border-box",
+              borderRadius: "12px",
+              border: `2px solid ${focused ? COLORS.amber : COLORS.paperAlt}`,
+              background: COLORS.surface,
+            }}
+          >
+            <span style={{ paddingLeft: "14px", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>@</span>
+            <input
+              id="new-username"
+              type="text"
+              value={value}
+              // On retire le « @ » du début si la personne le tape : il est déjà affiché.
+              onChange={(e) => setValue(e.target.value.replace(/^@+/, ""))}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              placeholder="ton.nom"
+              // Garde-fou seulement : les vraies limites (6 à 30 caractères) sont dites par le serveur.
+              maxLength={60}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "14px 14px 14px 4px", border: "none", outline: "none", background: "transparent", color: COLORS.ink, fontSize: "16px" }}
+            />
+          </div>
+
+          <div aria-live="polite" style={{ minHeight: "20px", marginTop: "8px", fontSize: "13px", fontWeight: 600 }}>
+            {status.state === "checking" && <span style={{ color: COLORS.inkSoft }}>Vérification…</span>}
+            {status.state === "ok" && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: COLORS.amber }}>
+                <NavIcon name="check" size={14} color={COLORS.amber} />
+                Disponible
+              </span>
+            )}
+            {(status.state === "refused" || status.state === "unavailable") && <span style={{ color: COLORS.wine }}>{status.message}</span>}
+          </div>
+
+          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "8px 2px 0" }}>
+            De 6 à 30 caractères : lettres, chiffres, point (.), tiret bas (_) et tiret (-), en commençant et en finissant par une lettre ou un chiffre. Les majuscules sont conservées à l'affichage, mais « Marie » et « marie » comptent pour le même nom.
+          </p>
+
+          <PrimaryButton disabled={status.state !== "ok"} style={{ width: "100%", marginTop: "20px" }}>
+            Changer mon nom d'utilisateur
+          </PrimaryButton>
+        </form>
+      )}
+
+      {confirming && (
+        <div style={{ marginTop: "22px", background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "16px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px" }}>Tu vas devenir</div>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", lineHeight: 1.2, color: COLORS.amber, overflowWrap: "anywhere", marginBottom: "12px" }}>@{typed}</div>
+          <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: "0 0 4px 0", fontWeight: 700 }}>Ce changement est unique.</p>
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 16px 0" }}>Une fois validé, tu ne pourras plus modifier ton nom d'utilisateur. Ton code Bibax, lui, ne change pas.</p>
+          <PrimaryButton onClick={handleConfirm} disabled={saving} style={{ width: "100%" }}>
+            {saving ? "Enregistrement..." : "Je confirme le changement"}
+          </PrimaryButton>
+          <button type="button" onClick={() => setConfirming(false)} disabled={saving} style={{ ...secondaryButtonStyle, width: "100%", marginTop: "10px", opacity: saving ? 0.55 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
+            Modifier le nom
+          </button>
+        </div>
+      )}
+
       <PageFooterNav onBack={onBack} />
     </div>
   );

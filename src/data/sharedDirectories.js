@@ -852,6 +852,34 @@ export async function lookupBibroCode(code) {
   };
 }
 
+// Nom d'utilisateur (@nom) de la personne connectée — changeable UNE seule fois. C'est le serveur
+// qui décide (format, nom réservé, déjà pris, déjà changé) : check_my_username ne modifie rien et
+// rend NULL si le nom est acceptable, sinon la phrase qui dit pourquoi ; set_my_username applique
+// les mêmes contrôles et refuse par une erreur portant la même phrase (code P0001).
+// Ces deux fonctions sont les SEULES voies d'écriture : le compte connecté ne peut pas écrire
+// profiles.username lui-même, et updateMyProfile ne l'envoie donc jamais.
+const USERNAME_UNAVAILABLE = "Impossible pour le moment. Réessaie dans un instant.";
+
+export async function checkMyUsername(name) {
+  const { data, error } = await supabase.rpc("check_my_username", { p_username: name });
+  if (error) {
+    console.error("checkMyUsername:", error);
+    return { ok: false, unavailable: true, reason: USERNAME_UNAVAILABLE };
+  }
+  return data ? { ok: false, reason: data } : { ok: true };
+}
+
+export async function setMyUsername(name) {
+  const { data, error } = await supabase.rpc("set_my_username", { p_username: name });
+  if (error) {
+    console.error("setMyUsername:", error);
+    // Seules les phrases voulues par le serveur (P0001) sont montrées telles quelles ; toute autre
+    // erreur (réseau, droits…) reste un message neutre.
+    return { error: error.code === "P0001" && error.message ? error.message : USERNAME_UNAVAILABLE };
+  }
+  return { username: data };
+}
+
 export async function signOut() {
   await supabase.auth.signOut();
 }
@@ -888,6 +916,9 @@ export async function loadMyProfile(userId) {
   }
   return {
     myBibroCode: data.bibro_code,
+    // Nom d'utilisateur (@nom) : lecture seule ici — il ne se change que par setMyUsername.
+    username: data.username || "",
+    usernameChangedAt: data.username_changed_at || null,
     registeredAt: data.created_at || null,
     name: data.name || "",
     lastName: data.last_name || "",
