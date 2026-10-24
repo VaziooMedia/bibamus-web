@@ -531,7 +531,16 @@ export function UsernameEditScreen({ profile, onSaveProfile, onBack }) {
       </div>
 
       {justChanged ? (
-        <p style={{ fontSize: "13px", color: COLORS.amber, fontWeight: 600, margin: "12px 2px 0" }}>C'est fait : ton nom d'utilisateur est maintenant @{current}. Il ne peut plus être modifié.</p>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", margin: "12px 2px 0" }}>
+          <span style={{ flexShrink: 0, marginTop: "2px" }}>
+            <NavIcon name="check" size={14} color={COLORS.amber} />
+          </span>
+          <p style={{ fontSize: "13px", color: COLORS.ink, fontWeight: 600, margin: 0 }}>
+            Ton nom d'utilisateur est maintenant <span style={{ color: COLORS.amber }}>@{current}</span>.
+            <br />
+            Il ne pourra plus être modifié.
+          </p>
+        </div>
       ) : alreadyChanged ? (
         <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", margin: "12px 2px 0" }}>
           <span style={{ flexShrink: 0, marginTop: "1px" }}>
@@ -541,7 +550,7 @@ export function UsernameEditScreen({ profile, onSaveProfile, onBack }) {
         </div>
       ) : (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "12px 2px 0" }}>
-          Au départ, c'est une copie de ton code Bibax — ton code, lui, ne change jamais. Tu peux changer ton nom d'utilisateur <strong style={{ color: COLORS.ink }}>une seule fois</strong>.
+          Tu peux modifier ton nom d'utilisateur <strong style={{ color: COLORS.ink }}>une seule fois</strong>.
         </p>
       )}
 
@@ -599,7 +608,7 @@ export function UsernameEditScreen({ profile, onSaveProfile, onBack }) {
           </div>
 
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "8px 2px 0" }}>
-            De 6 à 30 caractères : lettres, chiffres, point (.), tiret bas (_) et tiret (-), en commençant et en finissant par une lettre ou un chiffre. Les majuscules sont conservées à l'affichage, mais « Marie » et « marie » comptent pour le même nom.
+            De 6 à 30 caractères : lettres, chiffres, point (.), tiret bas (_) et tiret (-), en commençant et en finissant par une lettre ou un chiffre.
           </p>
 
           <PrimaryButton disabled={status.state !== "ok"} style={{ width: "100%", marginTop: "20px" }}>
@@ -613,12 +622,12 @@ export function UsernameEditScreen({ profile, onSaveProfile, onBack }) {
           <div style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px" }}>Tu vas devenir</div>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", lineHeight: 1.2, color: COLORS.amber, overflowWrap: "anywhere", marginBottom: "12px" }}>@{typed}</div>
           <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: "0 0 4px 0", fontWeight: 700 }}>Ce changement est unique.</p>
-          <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 16px 0" }}>Une fois validé, tu ne pourras plus modifier ton nom d'utilisateur. Ton code Bibax, lui, ne change pas.</p>
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 16px 0" }}>Une fois validé, tu ne pourras plus modifier ton nom d'utilisateur.</p>
           <PrimaryButton onClick={handleConfirm} disabled={saving} style={{ width: "100%" }}>
-            {saving ? "Enregistrement..." : "Je confirme le changement"}
+            {saving ? "Enregistrement..." : "Confirmer"}
           </PrimaryButton>
           <button type="button" onClick={() => setConfirming(false)} disabled={saving} style={{ ...secondaryButtonStyle, width: "100%", marginTop: "10px", opacity: saving ? 0.55 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
-            Modifier le nom
+            Modifier
           </button>
         </div>
       )}
