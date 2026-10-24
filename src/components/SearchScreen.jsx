@@ -6,6 +6,10 @@
 // en liste complète — pensé pour rester utilisable même quand la
 // base grandit (pas de multiples listes tronquées empilées).
 //
+// « @nom » : une saisie qui commence par « @ » cherche aussi, en plus de la recherche normale, UN seul
+// compte, lieu, marque ou producteur dont le nom d'utilisateur est exactement celui-là (pas de
+// recherche partielle). Le résultat prend place dans l'onglet qui lui correspond.
+//
 // Mode « atlas » (prop atlas) : l'écran BibAtlas fusionné. Même barre, mêmes
 // onglets (sans la pastille BibAtlas, puisqu'on y est déjà) ; tant qu'aucune
 // recherche n'est lancée, les blocs du répertoire s'affichent en dessous :
@@ -16,8 +20,8 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, ActionCard } from "./ui.jsx";
-import { formatAddress } from "../utils.js";
-import { searchBibax, searchDrinks, searchVenues } from "../data/sharedDirectories.js";
+import { formatAddress, usernameFromQuery } from "../utils.js";
+import { searchBibax, searchDrinks, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -122,7 +126,7 @@ export function SearchScreen({
 }) {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [bibaxResults, setBibaxResults] = useState([]);
+  const [bibaxSearchResults, setBibaxResults] = useState([]);
   const [bibaxLoading, setBibaxLoading] = useState(false);
   const inputRef = useRef(null);
   // Tant que la personne n'a pas cliqué elle-même sur un onglet pour cette recherche, l'onglet
@@ -134,16 +138,35 @@ export function SearchScreen({
   const q = normalize(trimmed);
   const hasQuery = trimmed.length >= 2;
 
-  const [venueResults, setVenueResults] = useState([]);
+  const [venueSearchResults, setVenueResults] = useState([]);
   const [drinkResults, setDrinkResults] = useState([]);
   const [drinksLoading, setDrinksLoading] = useState(false);
-  const brandResults = useMemo(
-    () => (q.length < 2 ? [] : brandsDirectory.filter((b) => normalize(b.name).includes(q) || (b.aliases || []).some((a) => normalize(a).includes(q)))),
-    [brandsDirectory, q]
+  // Recherche « @nom » exacte : atState garde le nom pour lequel la réponse a été reçue, et son résultat
+  // ({ kind: "venue", venue } | { kind: "brand" | "brewery", id } | { kind: "user", bibax } | null).
+  // Une réponse qui ne correspond plus à la saisie n'est jamais affichée, et « en cours » se déduit
+  // directement de la saisie (pas d'image intermédiaire « Aucun résultat »).
+  const atName = usernameFromQuery(trimmed);
+  const [atState, setAtState] = useState({ name: null, found: null });
+  const atDone = atName !== null && atState.name === atName;
+  const atFound = atDone ? atState.found : null;
+  const atLoading = atName !== null && !atDone;
+  const brandResults = useMemo(() => {
+    const found = q.length < 2 ? [] : brandsDirectory.filter((b) => normalize(b.name).includes(q) || (b.aliases || []).some((a) => normalize(a).includes(q)));
+    const exact = atFound?.kind === "brand" ? brandsDirectory.find((b) => b.id === atFound.id) : null;
+    return exact ? [exact, ...found.filter((b) => b.id !== exact.id)] : found;
+  }, [brandsDirectory, q, atFound]);
+  const breweryResults = useMemo(() => {
+    const found = q.length < 2 ? [] : breweriesDirectory.filter((b) => normalize(b.name).includes(q) || (b.aliases || []).some((a) => normalize(a).includes(q)));
+    const exact = atFound?.kind === "brewery" ? breweriesDirectory.find((b) => b.id === atFound.id) : null;
+    return exact ? [exact, ...found.filter((b) => b.id !== exact.id)] : found;
+  }, [breweriesDirectory, q, atFound]);
+  const venueResults = useMemo(
+    () => (atFound?.kind === "venue" ? [atFound.venue, ...venueSearchResults.filter((v) => v.id !== atFound.venue.id)] : venueSearchResults),
+    [venueSearchResults, atFound]
   );
-  const breweryResults = useMemo(
-    () => (q.length < 2 ? [] : breweriesDirectory.filter((b) => normalize(b.name).includes(q) || (b.aliases || []).some((a) => normalize(a).includes(q)))),
-    [breweriesDirectory, q]
+  const bibaxResults = useMemo(
+    () => (atFound?.kind === "user" ? [atFound.bibax, ...bibaxSearchResults.filter((b) => b.bibroCode !== atFound.bibax.bibroCode)] : bibaxSearchResults),
+    [bibaxSearchResults, atFound]
   );
 
   useEffect(() => {
@@ -190,6 +213,51 @@ export function SearchScreen({
     }, 350);
     return () => clearTimeout(timer);
   }, [trimmed]);
+
+  // « @nom » exact : le serveur rend au plus une ligne ; on charge ensuite ce qu'il faut pour l'afficher
+  // (la fiche du lieu, le profil de la personne) — les marques et producteurs viennent des répertoires
+  // déjà en mémoire. Une réponse arrivée après une nouvelle frappe est ignorée.
+  useEffect(() => {
+    if (!atName) {
+      setAtState((prev) => (prev.name === null ? prev : { name: null, found: null }));
+      return undefined;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      let result = null;
+      const found = await lookupUsername(atName);
+      if (found && found.kind === "venue") {
+        const [venue] = await loadVenuesByIds([found.id]);
+        if (venue) result = { kind: "venue", venue };
+      } else if (found && (found.kind === "brand" || found.kind === "brewery")) {
+        result = { kind: found.kind, id: found.id };
+      } else if (found && found.kind === "user" && !hideBibaxAndAtlas && found.bibroCode) {
+        const identity = await lookupBibroCode(found.bibroCode);
+        if (identity && identity.displayName) {
+          result = {
+            kind: "user",
+            bibax: {
+              id: found.id,
+              displayName: identity.displayName,
+              lastName: null,
+              avatarUrl: identity.avatarUrl,
+              bibroCode: found.bibroCode,
+              city: identity.city,
+              country: identity.country,
+              mutualBibaxCount: identity.mutualBibaxCount || 0,
+            },
+          };
+        }
+      }
+      if (cancelled) return;
+      setAtState({ name: atName, found: result });
+    }, 350);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [atName]);
 
   // Réinitialise le suivi automatique dès qu'une nouvelle requête est tapée — un clic manuel ne
   // vaut que pour la recherche en cours, pas pour toute la session.
@@ -368,11 +436,13 @@ export function SearchScreen({
           </div>
 
           <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto" }}>
-            {totalResults === 0 && !bibaxLoading && !drinksLoading ? (
+            {totalResults === 0 && !bibaxLoading && !drinksLoading && !atLoading ? (
               <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
             ) : counts[activeTab] === 0 ? (
               <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>
-                {activeTab === "bibax" && bibaxLoading
+                {atLoading
+                  ? "Recherche..."
+                  : activeTab === "bibax" && bibaxLoading
                   ? "Recherche des Bibax..."
                   : activeTab === "produits" && drinksLoading
                   ? "Recherche des produits..."

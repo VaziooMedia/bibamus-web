@@ -11,7 +11,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
 import { MyPhotosScreen } from "./MyPhotosScreen.jsx";
-import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
+import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery } from "../utils.js";
 import {
   loadPendingBibaxRequests,
   loadSentBibaxRequests,
@@ -23,6 +23,7 @@ import {
   loadBibaxCount,
   loadMyProfileStats,
   searchBibaxByName,
+  lookupUsername,
   toggleNotifyPulse,
   loadPulseStories,
   loadBibaxPulseActivity,
@@ -1208,6 +1209,44 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
   const [nameSearching, setNameSearching] = useState(false);
 
   useEffect(() => {
+    // « @nom » : recherche EXACTE d'un seul compte par son nom d'utilisateur (pas de recherche partielle).
+    // Le serveur rend le code Bibax du compte trouvé ; on récupère ensuite le profil comme pour un code
+    // saisi (mêmes réglages de confidentialité). Une marque, un lieu ou un producteur qui porte ce @nom
+    // n'est pas un Bibax : même réponse que « introuvable ».
+    const atName = usernameFromQuery(nameQuery);
+    if (atName) {
+      let cancelled = false;
+      setNameSearching(true);
+      const timer = setTimeout(async () => {
+        let results = [];
+        const found = await lookupUsername(atName);
+        if (found && found.kind === "user" && found.bibroCode) {
+          const identity = await onLookup(found.bibroCode);
+          if (identity && identity.displayName) {
+            results = [
+              {
+                bibroCode: found.bibroCode,
+                username: found.username,
+                displayName: identity.displayName,
+                avatarUrl: identity.avatarUrl,
+                firstName: identity.firstName,
+                lastName: identity.lastName,
+                nickname: identity.nickname,
+                city: identity.city,
+                country: identity.country,
+              },
+            ];
+          }
+        }
+        if (cancelled) return;
+        setNameResults(results);
+        setNameSearching(false);
+      }, 350);
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
+    }
     if (nameQuery.trim().length < 2) {
       setNameResults([]);
       return;
@@ -1300,7 +1339,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
           <input
             value={nameQuery}
             onChange={(e) => setNameQuery(e.target.value)}
-            placeholder="Rechercher un Bibax..."
+            placeholder="Rechercher un Bibax ou un @nom..."
             style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
           />
         </div>
@@ -1350,6 +1389,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                       {[r.firstName, r.lastName].filter(Boolean).join(" ") || r.displayName}
                     </div>
                     {r.nickname && <div style={{ fontSize: "11.5px", fontStyle: "italic", color: COLORS.amber }}>{r.nickname}</div>}
+                    {r.username && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>@{r.username}</div>}
                     {r.city && (
                       <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, display: "flex", alignItems: "center", gap: "4px" }}>
                         {r.city}
