@@ -852,6 +852,25 @@ export async function lookupBibroCode(code) {
   };
 }
 
+// Retrouve UN compte, lieu, marque ou producteur à partir de son nom d'utilisateur EXACT (« @nom »).
+// Le serveur (lookup_username) ignore la casse, le « @ » du début et les espaces autour ; il ne rend
+// rien si le nom n'existe pas, ou s'il ne doit pas être visible pour cette personne (compte bloqué
+// ou désactivé, fiche non publiée). Rend { kind, id, username, bibroCode } — kind vaut « user »,
+// « venue », « brand » ou « brewery » — ou null. bibroCode n'est rempli que pour un compte : les
+// écrans s'en servent ensuite comme pour un code saisi (lookupBibroCode, sendBibaxRequest).
+export async function lookupUsername(name) {
+  const text = (name || "").trim();
+  if (!text) return null;
+  const { data, error } = await supabase.rpc("lookup_username", { p_username: text });
+  if (error) {
+    console.error("lookupUsername:", error);
+    return null;
+  }
+  const row = data?.[0];
+  if (!row) return null;
+  return { kind: row.kind, id: row.id, username: row.username, bibroCode: row.bibro_code || null };
+}
+
 // Nom d'utilisateur (@nom) de la personne connectée — changeable UNE seule fois. C'est le serveur
 // qui décide (format, nom réservé, déjà pris, déjà changé) : check_my_username ne modifie rien et
 // rend NULL si le nom est acceptable, sinon la phrase qui dit pourquoi ; set_my_username applique

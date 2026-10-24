@@ -715,3 +715,11 @@ export function normalizeSearchText(str) {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// « @nom » tapé dans une barre de recherche : rend le nom SANS le « @ » (pour lookupUsername), ou null
+// si la saisie ne commence pas par « @ » ou n'a rien après. Une saisie normale n'est jamais touchée.
+export const usernameFromQuery = (text) => {
+  const t = (text || "").trim();
+  if (!t.startsWith("@")) return null;
+  return t.slice(1).trim() || null;
+};
