@@ -1,7 +1,7 @@
 # DATABASE — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-18 (carte BibaPulse « a rejoint le BibaClub » : lignes BibaPulse et Clubs ; 2026-10-13 pour la ligne « Notifications » ; 2026-10-09 pour le reste, 2026-10-08 pour l'essentiel ; les sections i18n, BibaPulse et plateforme de gestion ont été alignées sur les autres documents). Noms de tables, fonctions et fonctions Edge vérifiés dans le code de l'app et dans les scripts SQL livrés.
+> Dernière mise à jour : 2026-10-23 (section « Noms d'utilisateur » ; 2026-10-18 pour la carte BibaPulse « a rejoint le BibaClub » : lignes BibaPulse et Clubs ; 2026-10-13 pour la ligne « Notifications » ; 2026-10-09 pour le reste, 2026-10-08 pour l'essentiel ; les sections i18n, BibaPulse et plateforme de gestion ont été alignées sur les autres documents). Noms de tables, fonctions et fonctions Edge vérifiés dans le code de l'app et dans les scripts SQL livrés.
 
 **À quoi sert ce fichier** : c'est la carte de la base — ce que représente chaque table, vue ou fonction, ce qui compte comme quoi, qui peut lire ou écrire. La base elle-même (Supabase) reste la source de vérité pour les colonnes exactes ; ce fichier donne le *sens*, celui qu'on ne retrouve pas en lisant une colonne (par exemple : « un check de produit est un verre consommé »). À lire avant de toucher à une table, une vue ou une fonction. Les sujets propres à un autre document (BibaPulse, Bibax, BibaRoom, Stories, sécurité) sont seulement nommés ici : voir `BIBAPULSE.md`, `BIBAX.md`, `BIBAROOM.md`, `STORIES.md`, `SECURITY.md`.
 
@@ -101,6 +101,17 @@ Conséquence à garder en tête : **ajouter une ligne dans une de ces tables = c
 | Pilotage | `feature_flags`, `feature_flag_overrides`, `market_config`, `analytics_events`, `crash_reports`, `support_messages` | |
 | Compte | — | suppression du compte : fonction Edge `delete-my-account` |
 
+## Noms d'utilisateur (@nom)
+
+Un **seul espace de noms** pour les comptes, les lieux, les marques et les producteurs (décision : `BIBAMUS_CONTEXT.md`).
+
+- **Colonnes** : `profiles.username` (colonne historique réutilisée) et `profiles.username_changed_at` (NULL = jamais changé) ; `username` et `username_changed_at` sur `public_venues`, `brands_directory` et `breweries_directory`. Unicité sans égard à la casse dans chaque table (index uniques sur `lower(username)`) ; l'unicité **entre** les tables, et vis-à-vis des codes Bibax, est vérifiée par `username_is_taken(p_username, p_kind, p_id)` (`p_kind` : `user`, `venue`, `brand` ou `brewery`) : le code Bibax d'un compte reste réservé à ce compte même après un changement de nom.
+- **Valeur de départ** : copie du code Bibax pour un compte (`generate_free_code()` ; `handle_new_user` donne le même code à `bibro_code` et à `username`, et ne reprend jamais un nom venu de l'inscription) ; code aléatoire de même forme pour un lieu, une marque ou un producteur.
+- **Règles de forme** : `username_format_error(p_username, p_allow_reserved)` rend la phrase de refus, ou NULL (6 à 30 caractères ; lettres, chiffres, point, tiret bas, tiret ; début et fin par une lettre ou un chiffre ; mots réservés et tout nom contenant « bibamus » refusés, sauf avec `p_allow_reserved`, prévu pour les administrateurs).
+- **Écriture** : une garde en base (déclencheurs sur les quatre tables) refuse toute écriture directe de `username` et `username_changed_at` par un compte connecté ; seules des fonctions du serveur écrivent. Pour un compte : `check_my_username(p_username)` (NULL si le nom est acceptable, sinon la phrase qui dit pourquoi ; ne modifie rien) et `set_my_username(p_username)` (une seule fois par compte, sous un verrou commun à tout l'espace des noms, mêmes contrôles ; un refus est une erreur portant la même phrase). **À écrire** : les fonctions réservées aux administrateurs (comptes, lieux, marques, producteurs ; sans limite de changements) et le comportement de `merge_entities` face aux noms.
+- **Lecture** : `get_venues_by_ids`, `get_venues_page`, `get_venues_with_stats` et `search_venues` renvoient une ligne entière de `public_venues` ; elles rendent donc aussi `username` et `username_changed_at` (sans effet sur l'app, qui ne lit que les champs qu'elle connaît).
+- **Pas encore** : recherche ou ajout par @nom (`lookup_username`), liens `bibamus.app/@nom`, pages publiques.
+
 ## Contribution et modération
 
 - N'importe quel utilisateur peut contribuer une fiche (établissement, produit, marque, producteur) — génère un événement `database_contribution` sur BibaPulse
@@ -116,4 +127,5 @@ Dépôt séparé (`Bibamus-Management`), pensée pour encoder/vérifier plus rap
 
 - Fiches détaillées des catégories autres que Bières & Cidres et Vins & Bulles (Spiritueux en cours ; Shots, Cocktails / Mocktails, Softs & Eaux, Boissons chaudes, Snacks à faire)
 - Système de rôles complet pour verrouiller le Niveau 3 aux comptes Business
+- Noms d'utilisateur : modification par les administrateurs et par les gérants de fiches, recherche et liens par @nom (voir la section « Noms d'utilisateur »)
 - Monétisation / comptes Business eux-mêmes ; l'approbation des `entity_claims` n'existe pas encore
