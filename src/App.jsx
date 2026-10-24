@@ -153,6 +153,7 @@ import {
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons, declineSalonInvite } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
+import { useUsernameDeepLink } from "./hooks/useUsernameDeepLink.js";
 import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
@@ -1504,6 +1505,33 @@ export default function App() {
   const [viewedChoiceKey, setViewedChoiceKey] = useState(null);
   const [viewedBreweryId, setViewedBreweryId] = useState(null);
   const [viewedBrandId, setViewedBrandId] = useState(null);
+
+  // Lien bibamus.app/@nom : ouvre le compte, le lieu, la marque ou le producteur correspondant, une fois
+  // connecté et les données chargées (un lien ouvert sans être connecté est gardé jusque-là).
+  useUsernameDeepLink({
+    ready: !!session?.user?.id && profileLoaded && !loading,
+    myBibroCode: profile.myBibroCode,
+    brandsDirectory,
+    breweriesDirectory,
+    onOpenVenue: (id) => {
+      setScreenBeforeVenueDetail("home");
+      setViewedVenueId(id);
+      setScreen("venueDetail");
+    },
+    onOpenBrand: (id) => {
+      setViewedBrandId(id);
+      setScreenBeforeBrandDetail("home");
+      setScreen("brandDetail");
+    },
+    onOpenBrewery: (id) => {
+      setViewedBreweryId(id);
+      setScreenBeforeBreweryDetail("home");
+      setScreen("breweryDetail");
+    },
+    onOpenBibax: (code) => openBibaxProfile(code),
+    onOpenMyProfile: () => setScreen("profile"),
+    onNotFound: () => alert("Cette page n'existe pas ou n'est plus disponible."),
+  });
 
   useEffect(() => {
     if (viewedBreweryId && profile.isAdmin) {

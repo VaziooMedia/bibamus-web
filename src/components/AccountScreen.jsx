@@ -11,6 +11,8 @@ import { PhotoCropModal } from "./PhotoCropModal.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
 import { formatDDMMYYYY } from "../utils.js";
 import { loadMyStories, checkMyUsername, setMyUsername } from "../data/sharedDirectories.js";
+import { shareEntity, canShareEntity } from "../shareEntity.js";
+import { usernameLinkUrl } from "../usernameLinks.js";
 
 const FLUO_BLUE = "#2E9EFF";
 const FLUO_RED = "#FF3B3B";
@@ -474,6 +476,24 @@ export function UsernameEditScreen({ profile, onSaveProfile, onBack }) {
   const requestId = useRef(0);
   const typed = value.trim();
 
+  // « Ton lien » : copier le lien bibamus.app/@nom. idle | copied | failed (la confirmation disparaît seule).
+  const [copyState, setCopyState] = useState("idle");
+  const copyTimer = useRef(null);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
+  const myLink = usernameLinkUrl(current);
+  const handleCopyLink = async () => {
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(myLink);
+      ok = true;
+    } catch (e) {
+      ok = false;
+    }
+    setCopyState(ok ? "copied" : "failed");
+    clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopyState("idle"), 2500);
+  };
+
   // Vérification en direct, un peu différée pour ne pas interroger le serveur à chaque touche ;
   // une réponse arrivée après une nouvelle frappe est ignorée.
   useEffect(() => {
@@ -529,6 +549,35 @@ export function UsernameEditScreen({ profile, onSaveProfile, onBack }) {
         <div style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px" }}>Ton nom d'utilisateur</div>
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", lineHeight: 1.2, color: COLORS.amber, overflowWrap: "anywhere" }}>{current ? `@${current}` : "—"}</div>
       </div>
+
+      {current && (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginTop: "12px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px" }}>Ton lien</div>
+          <div style={{ fontWeight: 700, fontSize: "15px", lineHeight: 1.3, color: COLORS.ink, overflowWrap: "anywhere" }}>{myLink.replace(/^https?:\/\//, "")}</div>
+          <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
+            <button type="button" onClick={handleCopyLink} style={{ ...secondaryButtonStyle, flex: 1, minWidth: 0, padding: "12px 10px" }}>
+              Copier le lien
+            </button>
+            {canShareEntity() && (
+              <PrimaryButton
+                onClick={() => shareEntity({ title: "Mon profil Bibamus", text: "Ajoute-moi sur Bibamus !", url: myLink })}
+                style={{ flex: 1, minWidth: 0, padding: "12px 10px", fontSize: "15px" }}
+              >
+                Partager
+              </PrimaryButton>
+            )}
+          </div>
+          <div aria-live="polite" style={{ minHeight: "20px", marginTop: "8px", fontSize: "13px", fontWeight: 600 }}>
+            {copyState === "copied" && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: COLORS.amber }}>
+                <NavIcon name="check" size={14} color={COLORS.amber} />
+                Lien copié
+              </span>
+            )}
+            {copyState === "failed" && <span style={{ color: COLORS.wine }}>La copie a échoué sur cet appareil.</span>}
+          </div>
+        </div>
+      )}
 
       {justChanged ? (
         <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", margin: "12px 2px 0" }}>
