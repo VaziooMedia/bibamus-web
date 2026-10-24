@@ -1,5 +1,16 @@
 {
   "rewrites": [
+    {
+      "source": "/@:name([A-Za-z0-9._-]{1,60})",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Twitterbot|TelegramBot|Slackbot|Slack-ImgProxy|LinkedInBot|Discordbot|Googlebot|Google-InspectionTool|GoogleOther|bingbot|BingPreview|Applebot|DuckDuckBot|YandexBot|Baiduspider|Pinterest|redditbot|SkypeUriPreview|Embedly|vkShare|Viber|Signal|Mastodon|Iframely|[Bb]ot|[Cc]rawler|[Ss]pider|[Pp]review).*"
+        }
+      ],
+      "destination": "/api/at?name=:name"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
