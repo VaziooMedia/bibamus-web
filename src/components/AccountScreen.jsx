@@ -546,7 +546,7 @@ export function UsernameEditScreen({ profile, onSaveProfile, onBack }) {
           <span style={{ flexShrink: 0, marginTop: "1px" }}>
             <NavIcon name="lock" size={15} color={COLORS.inkSoft} />
           </span>
-          <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Tu as changé ton nom d'utilisateur le {formatDDMMYYYY(profile.usernameChangedAt)}. Il ne peut plus être modifié.</p>
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Ton nom d'utilisateur a été changé le {formatDDMMYYYY(profile.usernameChangedAt)}. Il ne peut plus être modifié.</p>
         </div>
       ) : (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "12px 2px 0" }}>
