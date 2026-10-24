@@ -12,6 +12,7 @@
 // ============================================================
 
 import { supabase } from "../supabaseClient.js";
+import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
 import { normalizeSearchText } from "../utils.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
@@ -3736,62 +3737,9 @@ export async function deleteBrewery(id) {
   if (error) console.error("deleteBrewery:", error);
 }
 
-// Même logique de frontière que pour le type de produit — bibamus-admin stocke le pays sous
-// forme de code technique (ex. "belgique"), l'app grand public affiche et compare encore sur
-// le libellé français.
-export const COUNTRY_CODE_TO_LABEL = {
-  belgique: "Belgique",
-  france: "France",
-  pays_bas: "Pays-Bas",
-  allemagne: "Allemagne",
-  luxembourg: "Luxembourg",
-  afrique_du_sud: "Afrique du Sud",
-  algerie: "Algérie",
-  argentine: "Argentine",
-  australie: "Australie",
-  autriche: "Autriche",
-  bulgarie: "Bulgarie",
-  canada: "Canada",
-  chili: "Chili",
-  chypre: "Chypre",
-  cote_d_ivoire: "Côte d'Ivoire",
-  croatie: "Croatie",
-  cuba: "Cuba",
-  danemark: "Danemark",
-  ecosse: "Écosse",
-  espagne: "Espagne",
-  estonie: "Estonie",
-  etats_unis: "États-Unis",
-  finlande: "Finlande",
-  grece: "Grèce",
-  hongrie: "Hongrie",
-  irlande: "Irlande",
-  islande: "Islande",
-  italie: "Italie",
-  japon: "Japon",
-  lettonie: "Lettonie",
-  lituanie: "Lituanie",
-  malte: "Malte",
-  maroc: "Maroc",
-  mexique: "Mexique",
-  norvege: "Norvège",
-  nouvelle_zelande: "Nouvelle-Zélande",
-  pologne: "Pologne",
-  portugal: "Portugal",
-  republique_tcheque: "République tchèque",
-  roumanie: "Roumanie",
-  royaume_uni: "Royaume-Uni",
-  senegal: "Sénégal",
-  slovaquie: "Slovaquie",
-  slovenie: "Slovénie",
-  suede: "Suède",
-  suisse: "Suisse",
-  tunisie: "Tunisie",
-  venezuela: "Vénézuéla",
-  international: "International",
-  autre: "Autre",
-};
-export const COUNTRY_LABEL_TO_CODE = Object.fromEntries(Object.entries(COUNTRY_CODE_TO_LABEL).map(([code, label]) => [label, code]));
+// Pays : code technique <-> libellé français. Les tables vivent désormais dans countryLabels.js (sans dépendance, lisible
+// aussi par la fonction Vercel des aperçus de partage) ; elles restent exportées d'ici pour tout le reste de l'app.
+export { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE };
 
 function rowToBrewery(row) {
   return {
