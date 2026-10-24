@@ -1,7 +1,7 @@
 # BIBAX — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
+> Dernière mise à jour : 2026-10-24 (recherche par @nom ; 2026-10-13 pour le reste). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
 
 ---
 
@@ -9,12 +9,13 @@
 
 « Bibax » désigne à la fois **le compte utilisateur** et **la relation mutuelle** entre deux comptes — façon Facebook (demande + confirmation), **pas** un système de suivi à sens unique. Chaque utilisateur possède un **code Bibax** personnel (colonne `profiles.bibro_code`), utilisé pour s'ajouter mutuellement. Dans le code, le mot historique « Bibro » est resté (`myBibroCode`, `BibrosScreens.jsx`, `AddBibroScreen`) : l'interface, elle, dit « Bibax ».
 
-Chaque compte a aussi un **nom d'utilisateur (@nom)**, copie de son code au départ (voir `PROFILE.md` et `BIBAMUS_CONTEXT.md`). Il ne sert pas encore à ajouter ou chercher un Bibax : l'ajout reste par code, par QR code ou par recherche de nom.
+Chaque compte a aussi un **nom d'utilisateur (@nom)**, copie de son code au départ (voir `PROFILE.md` et `BIBAMUS_CONTEXT.md`). Il sert aussi à retrouver quelqu'un par son @nom exact (quatrième façon d'ajouter un Bibax, ci-dessous).
 
-**Trois façons d'ajouter un Bibax** (écran `AddBibroScreen`) :
+**Quatre façons d'ajouter un Bibax** (écran `AddBibroScreen`) :
 1. saisir son **code** (6 caractères, lettres majuscules et chiffres) ;
 2. **scanner son QR code** ;
 3. le **rechercher par prénom, nom ou surnom** (`search_bibax_by_name`, 2 caractères minimum, 20 résultats au plus, comptes `role = 'user'` seulement, blocages exclus dans les deux sens, et chaque champ n'est cherchable que s'il est partagé : `share_prenom`, `share_nom`, `share_surnom`). La barre de recherche de l'accueil utilise aussi `search_bibax`.
+4. saisir son **@nom exact** dans ce même champ de recherche (« Rechercher un Bibax ou un @nom... ») : `lookup_username` rend le code Bibax du compte, puis le profil est lu comme pour un code saisi (`lookup_bibro_code`, mêmes réglages de confidentialité) et la demande part avec le code. La casse, le « @ » du début et les espaces autour sont ignorés ; **pas de recherche partielle** ; aucun nouveau réglage de partage. Un compte bloqué (dans un sens ou dans l'autre) ou désactivé est introuvable ; un lieu, une marque ou un producteur qui porte ce nom n'est pas un Bibax (« Aucun Bibax trouvé. »). Dans la barre de recherche de l'accueil, une saisie qui commence par « @ » ajoute en plus, à la recherche normale, le résultat exact (compte, lieu, marque ou producteur) dans l'onglet qui lui correspond.
 
 Longueur et alphabet *générés* pour `bibro_code` : **(base)** — seule la validation de saisie du client (6 caractères) est visible.
 
@@ -39,6 +40,7 @@ Colonnes visibles dans les scripts : `requester_id`, `requestee_id`, `status` (`
 | `get_bibax_suggestions(p_limit)` | Suggestions | Voir plus bas |
 | `get_bibax_relation_status(p_other_user_id)` | `none` / `sent` / `received` / `accepted` | Utilisée par l'aperçu de profil |
 | `lookup_bibro_code(p_code)` | Profil public depuis un code | `null` si introuvable ou bloqué |
+| `lookup_username(p_username)` | Retrouver un compte, un lieu, une marque ou un producteur par son @nom exact | Livrée le 2026-10-24 ; comptes connectés seulement ; rend au plus une ligne (`kind`, `id`, `username`, `bibro_code`, ce dernier seulement pour un compte) ; voir `DATABASE.md` |
 | `search_bibax_by_name(p_query)`, `search_bibax(p_query)` | Recherche | Voir plus haut |
 | `block_user`, `unblock_user`, `get_my_blocked_users` | Blocage | Voir plus bas |
 | `toggle_notify_pulse(p_target_code)` | Cloche « Suivre sur Pulse » | |
