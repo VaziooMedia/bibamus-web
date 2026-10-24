@@ -12,6 +12,26 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById } from "../data/sharedDirectories.js";
+import { shareEntity, canShareEntity } from "../shareEntity.js";
+import { usernameLinkUrl } from "../usernameLinks.js";
+
+// Bouton « Partager » des fiches producteur et marque : même icône et même emplacement que sur la fiche lieu.
+// Le lien partagé est bibamus.app/@nom de la fiche (lien général si elle n'a pas encore de @nom). Rien ne
+// s'affiche si le partage natif n'existe pas sur l'appareil.
+function ShareEntityButton({ name, username }) {
+  if (!canShareEntity()) return null;
+  return (
+    <div style={{ position: "absolute", top: "32px", right: "8px", display: "flex", alignItems: "center" }}>
+      <button
+        onClick={() => shareEntity({ title: name, text: `Découvre ${name} sur Bibamus !`, url: usernameLinkUrl(username) })}
+        title="Partager"
+        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+      >
+        <NavIcon name="share" size={24} color={COLORS.amber} />
+      </button>
+    </div>
+  );
+}
 
 export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
   const [editing, setEditing] = useState(false);
@@ -62,11 +82,14 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
           <EntityAvatar photoUrl={brewery.profilePhotoUrl} photoEmoji={brewery.avatarEmoji} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{brewery.name}</h1>
-            <CertificationIcon level={brewery.certificationLevel} size={17} />
+          <div style={{ paddingRight: canShareEntity() ? "34px" : 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{brewery.name}</h1>
+              <CertificationIcon level={brewery.certificationLevel} size={17} />
+            </div>
+            {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{brewery.country}</p>}
           </div>
-          {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{brewery.country}</p>}
+          <ShareEntityButton name={brewery.name} username={brewery.username} />
         </div>
       </div>
 
@@ -379,10 +402,13 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
           <EntityAvatar photoUrl={brand.logoUrl} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{brand.name}</h1>
-            <CertificationIcon level={brand.certificationLevel} size={17} />
+          <div style={{ paddingRight: canShareEntity() ? "34px" : 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{brand.name}</h1>
+              <CertificationIcon level={brand.certificationLevel} size={17} />
+            </div>
           </div>
+          <ShareEntityButton name={brand.name} username={brand.username} />
         </div>
       </div>
 

@@ -2031,6 +2031,8 @@ function rowToVenue(row) {
   return {
     id: row.id,
     name: row.name,
+    // Nom d'utilisateur (@nom) : lu pour les liens de partage, jamais écrit par l'app (voir venueToRow).
+    username: row.username,
     subtitle: row.subtitle,
     streetName: row.street_name,
     streetNumber: row.street_number,
@@ -3795,6 +3797,8 @@ function rowToBrewery(row) {
   return {
     id: row.id,
     name: row.name,
+    // Nom d'utilisateur (@nom) : lu pour les liens de partage, jamais écrit par l'app (voir breweryToRow).
+    username: row.username,
     aliases: row.aliases || [],
     alternateName: row.alternate_name,
     translations: row.translations || [],
@@ -3923,6 +3927,8 @@ export async function deleteBrand(id) {
 
 function rowToBrand(row) {
   return {
+    // Nom d'utilisateur (@nom) : lu pour les liens de partage, jamais écrit par l'app (voir brandToRow).
+    username: row.username,
     aliases: row.aliases || [],
     alternateName: row.alternate_name,
     translations: row.translations || [],

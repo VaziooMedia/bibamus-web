@@ -7,6 +7,7 @@ import { COLORS, VENUE_TYPES } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
+import { usernameLinkUrl } from "../usernameLinks.js";
 import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink, formatMoney } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
@@ -182,7 +183,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
             {canShareEntity() && (
               <>
                 <button
-                  onClick={() => shareEntity({ title: venue.name, text: `Découvre ${venue.name} sur Bibamus !` })}
+                  onClick={() => shareEntity({ title: venue.name, text: `Découvre ${venue.name} sur Bibamus !`, url: usernameLinkUrl(venue.username) })}
                   title="Partager"
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
                 >

@@ -1,7 +1,7 @@
 # BIBAX — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-24 (recherche par @nom ; 2026-10-13 pour le reste). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
+> Dernière mise à jour : 2026-10-24 (liens @nom, recherche par @nom ; 2026-10-13 pour le reste). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
 
 ---
 
@@ -16,6 +16,8 @@ Chaque compte a aussi un **nom d'utilisateur (@nom)**, copie de son code au dép
 2. **scanner son QR code** ;
 3. le **rechercher par prénom, nom ou surnom** (`search_bibax_by_name`, 2 caractères minimum, 20 résultats au plus, comptes `role = 'user'` seulement, blocages exclus dans les deux sens, et chaque champ n'est cherchable que s'il est partagé : `share_prenom`, `share_nom`, `share_surnom`). La barre de recherche de l'accueil utilise aussi `search_bibax`.
 4. saisir son **@nom exact** dans ce même champ de recherche (« Rechercher un Bibax ou un @nom... ») : `lookup_username` rend le code Bibax du compte, puis le profil est lu comme pour un code saisi (`lookup_bibro_code`, mêmes réglages de confidentialité) et la demande part avec le code. La casse, le « @ » du début et les espaces autour sont ignorés ; **pas de recherche partielle** ; aucun nouveau réglage de partage. Un compte bloqué (dans un sens ou dans l'autre) ou désactivé est introuvable ; un lieu, une marque ou un producteur qui porte ce nom n'est pas un Bibax (« Aucun Bibax trouvé. »). Dans la barre de recherche de l'accueil, une saisie qui commence par « @ » ajoute en plus, à la recherche normale, le résultat exact (compte, lieu, marque ou producteur) dans l'onglet qui lui correspond.
+
+**Lien de profil** : « Compte → Nom d'utilisateur » affiche « Ton lien » (`bibamus.app/@nom`), à copier ou à partager (menu de partage du système, quand l'appareil en a un). Ouvert par une personne connectée, ce lien affiche l'aperçu du profil (`lookup_username`, puis la lecture habituelle par code : mêmes réglages de confidentialité), d'où la demande de Bibax peut partir ; pour son propre compte, il ouvre « Mon profil » ; pour un compte bloqué ou désactivé, le message neutre « Cette page n'existe pas ou n'est plus disponible. ». Il n'y a pas de bouton de partage sur le profil d'un autre Bibax. Voir `BIBAMUS_CONTEXT.md` pour le déroulement complet d'un lien (connexion préalable, mémorisation 24 h).
 
 Longueur et alphabet *générés* pour `bibro_code` : **(base)** — seule la validation de saisie du client (6 caractères) est visible.
 

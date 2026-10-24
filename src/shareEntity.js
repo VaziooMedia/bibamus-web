@@ -4,18 +4,17 @@
 // l'utilisateur a installé. Aucun lien direct par réseau : ce sont ces mêmes apps qui
 // apparaissent déjà dans ce menu natif sur iPhone comme sur Safari Mac.
 //
-// L'app ne sait pas encore ouvrir une fiche précise depuis un lien (pas de vraies routes par
-// produit/lieu — tout se passe par état interne, jamais par URL) : le lien partagé pointe donc
-// vers bibamus.app en général, pas vers CETTE fiche précisément. Le nom et le texte, eux,
-// désignent bien la fiche partagée.
+// Le lien partagé pointe vers bibamus.app en général, sauf quand l'appelant fournit un lien précis
+// (url) : pour une fiche qui a un nom d'utilisateur, c'est bibamus.app/@nom (voir usernameLinks.js),
+// que l'app sait ouvrir. Les produits n'ont pas de @nom : leur partage reste le lien général.
 // ============================================================
-const BIBAMUS_URL = "https://bibamus.app";
+export const BIBAMUS_URL = "https://bibamus.app";
 
 // À appeler uniquement si canShareEntity() est vrai (voir plus bas) — sinon navigator.share
 // n'existe pas et l'appel échouerait.
-export async function shareEntity({ title, text }) {
+export async function shareEntity({ title, text, url }) {
   try {
-    await navigator.share({ title, text, url: BIBAMUS_URL });
+    await navigator.share({ title, text, url: url || BIBAMUS_URL });
     return { ok: true };
   } catch (err) {
     // L'utilisateur a fermé le menu de partage sans rien choisir — pas une vraie erreur.
