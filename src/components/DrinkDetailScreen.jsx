@@ -56,6 +56,7 @@ export function DrinkDetailScreen({
   onOpenBrand,
   onOpenBrewery,
   onOpenVenue,
+  onOpenTagFilter,
   claimsEnabled = true,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -402,14 +403,25 @@ export function DrinkDetailScreen({
                   node: (
                     <div key="styles" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                       {/* Pastille proportionnelle à la police (marges en em) : changer fontSize suffit à la redimensionner. */}
-                      {drink.styles.map((code) => (
-                        <span
-                          key={code}
-                          style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "0.45em 0.9em", fontSize: "10px", fontWeight: 600, color: COLORS.ink }}
-                        >
-                          {styleTagLabel(code)}
-                        </span>
-                      ))}
+                      {drink.styles.map((code) => {
+                        const chipStyle = { background: COLORS.paperAlt, borderRadius: "999px", padding: "0.45em 0.9em", fontSize: "10px", fontWeight: 600, color: COLORS.ink };
+                        // Toucher une pastille ouvre la liste des produits de cette catégorie limitée à ce style.
+                        return onOpenTagFilter ? (
+                          <button
+                            key={code}
+                            type="button"
+                            onClick={() => onOpenTagFilter(drink.type, { kind: "style", value: code })}
+                            title="Voir les produits de ce style"
+                            style={{ ...chipStyle, border: "none", margin: 0, cursor: "pointer" }}
+                          >
+                            {styleTagLabel(code)}
+                          </button>
+                        ) : (
+                          <span key={code} style={chipStyle}>
+                            {styleTagLabel(code)}
+                          </span>
+                        );
+                      })}
                     </div>
                   ),
                 },

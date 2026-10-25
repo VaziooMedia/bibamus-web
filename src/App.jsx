@@ -1817,12 +1817,48 @@ export default function App() {
     await refreshViewedBrandContributions(contribution.entityId);
   };
 
+  // Étiquette touchée sur une fiche produit (pour l'instant : une pastille de style) : on ouvre la
+  // liste des produits de la même catégorie, limitée à cette étiquette. La flèche retour de cette
+  // liste ramène à la fiche d'où l'on vient, et remet la liste des produits comme on l'avait laissée.
+  // Ces « excursions » forment une pile : une fiche ouverte depuis la liste filtrée peut elle-même en
+  // lancer une autre, et chaque retour dépile la plus récente.
+  const [drinkTagTrips, setDrinkTagTrips] = useState([]);
   const openTagFilter = (type, filter) => {
+    setDrinkTagTrips((prev) => [
+      ...prev,
+      {
+        drinkId: viewedDrinkId,
+        screenBeforeDrinkDetail,
+        screenBeforeDrinksDirectory,
+        dir: { category: drinksDirCategory, tagFilter: drinksDirTagFilter, letter: drinksDirLetter, query: drinksDirQuery },
+      },
+    ]);
+    setScreenBeforeDrinksDirectory("drinkDetail");
     setDrinksDirCategory(type);
     setDrinksDirTagFilter(filter);
     setDrinksDirLetter(null);
     setDrinksDirQuery("");
     setScreen("drinksDirectory");
+  };
+  // Vrai tant que la liste des produits a été ouverte depuis une fiche (toute autre entrée dans la
+  // liste — accueil, répertoire, recherche — remplace screenBeforeDrinksDirectory et met fin à ce mode).
+  const drinksDirectoryOpenedFromDrink = screenBeforeDrinksDirectory === "drinkDetail" && drinkTagTrips.length > 0;
+  const leaveDrinksDirectory = () => {
+    if (!drinksDirectoryOpenedFromDrink) {
+      setScreen(screenBeforeDrinksDirectory);
+      return;
+    }
+    const trip = drinkTagTrips[drinkTagTrips.length - 1];
+    setDrinkTagTrips((prev) => prev.slice(0, -1));
+    setDrinksDirCategory(trip.dir.category);
+    setDrinksDirTagFilter(trip.dir.tagFilter);
+    setDrinksDirLetter(trip.dir.letter);
+    setDrinksDirQuery(trip.dir.query);
+    setScreenBeforeDrinksDirectory(trip.screenBeforeDrinksDirectory);
+    setScreenBeforeDrinkDetail(trip.screenBeforeDrinkDetail);
+    if (trip.drinkId !== viewedDrinkId) setViewedDrink(null); // évite d'afficher un instant la fiche d'un autre produit
+    setViewedDrinkId(trip.drinkId);
+    setScreen("drinkDetail");
   };
 
   // Check-in dans un lieu, confirmé depuis la fenêtre « Place Check-in ». Une seule publication
@@ -2388,7 +2424,8 @@ export default function App() {
               <DrinksDirectoryScreen
                 isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
-                onBack={() => setScreen(screenBeforeDrinksDirectory)}
+                onBack={leaveDrinksDirectory}
+                openedFromDrink={drinksDirectoryOpenedFromDrink}
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail("drinksDirectory");
                   setViewedDrinkId(id);

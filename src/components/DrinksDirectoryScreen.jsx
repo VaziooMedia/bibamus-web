@@ -11,7 +11,8 @@ import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { drinkTypeLabel, drinkSummaryParts } from "../utils.js";
-import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage } from "../data/sharedDirectories.js";
+import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
+import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadCustomBeerCiderStyles } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 
 const PAGE_SIZE = 40;
@@ -21,6 +22,7 @@ export function DrinksDirectoryScreen({
   isAdmin,
   myBibroCode,
   onBack,
+  openedFromDrink = false,
   onOpenDrink,
   goToSubmit,
   goToScanBarcode,
@@ -55,7 +57,26 @@ export function DrinksDirectoryScreen({
   const q = debouncedQuery.trim();
   const searching = q.length > 0;
   const countFor = (type) => categoryCounts[type] || 0;
-  const useLetterTier = !!activeCategory && !searching && countFor(activeCategory) > LETTER_THRESHOLD;
+  // Pas de regroupement par lettre quand une étiquette filtre la liste : les comptages par lettre
+  // portent sur toute la catégorie et ne tiendraient pas compte du filtre. La liste filtrée,
+  // généralement courte, s'affiche directement.
+  const useLetterTier = !!activeCategory && !searching && !activeTagFilter && countFor(activeCategory) > LETTER_THRESHOLD;
+
+  // Libellé d'un style ajouté à la main : l'app ne le connaît pas à la compilation (voir la fiche produit).
+  // Il est déjà mémorisé quand on arrive depuis la fiche ; ce chargement ne sert que s'il ne l'est pas encore.
+  const [, setStyleLabelsTick] = useState(0);
+  const unknownStyleFilter = activeTagFilter?.kind === "style" && !hasStyleLabel(activeTagFilter.value);
+  useEffect(() => {
+    if (!unknownStyleFilter) return;
+    let cancelled = false;
+    loadCustomBeerCiderStyles().then((list) => {
+      registerCustomStyleLabels(list);
+      if (!cancelled) setStyleLabelsTick((t) => t + 1);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [unknownStyleFilter]);
 
   // Regroupement alphabétique — chargé uniquement quand une catégorie assez fournie est
   // sélectionnée, sans recherche active et sans lettre encore choisie.
@@ -166,6 +187,8 @@ export function DrinksDirectoryScreen({
 
   const goBackOneLevel = () => {
     if (searching) return onBack();
+    // Arrivé depuis une fiche par une étiquette : la flèche retour ramène à cette fiche.
+    if (openedFromDrink && activeTagFilter) return onBack();
     if (useLetterTier && activeLetter) {
       setActiveLetter(null);
       return;
@@ -309,6 +332,8 @@ export function DrinksDirectoryScreen({
             "Alcoolisé"
           ) : activeTagFilter.kind === "glutenFree" ? (
             "Sans gluten"
+          ) : activeTagFilter.kind === "style" ? (
+            styleTagLabel(activeTagFilter.value)
           ) : (
             "Bio"
           )}{" "}
