@@ -67,7 +67,14 @@ export function DrinksDirectoryScreen({
   // Libellé d'un style ajouté à la main : l'app ne le connaît pas à la compilation (voir la fiche produit).
   // Il est déjà mémorisé quand on arrive depuis la fiche ; ce chargement ne sert que s'il ne l'est pas encore.
   const [, setStyleLabelsTick] = useState(0);
-  const unknownStyleFilter = activeTagFilter?.kind === "style" && !hasStyleLabel(activeTagFilter.value);
+  // Un filtre de style peut porter plusieurs codes séparés par des virgules (« Produits communs » depuis une fiche).
+  const styleFilterCodes = activeTagFilter?.kind === "style" ? String(activeTagFilter.value || "").split(",").filter(Boolean) : [];
+  const unknownStyleFilter = styleFilterCodes.some((code) => !hasStyleLabel(code));
+  // Retirer un style du filtre ; le dernier retiré lève le filtre, comme la puce unique d'avant.
+  const removeStyleFromFilter = (code) => {
+    const rest = styleFilterCodes.filter((c) => c !== code);
+    setActiveTagFilter(rest.length > 0 ? { kind: "style", value: rest.join(",") } : null);
+  };
   useEffect(() => {
     if (!unknownStyleFilter) return;
     let cancelled = false;
@@ -329,7 +336,22 @@ export function DrinksDirectoryScreen({
         </button>
       </div>
 
-      {!searching && activeCategory && activeTagFilter && (
+      {!searching && activeCategory && activeTagFilter?.kind === "style" && styleFilterCodes.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "14px", alignSelf: "flex-start" }}>
+          {styleFilterCodes.map((code, i) => (
+            <button
+              key={code}
+              onClick={() => removeStyleFromFilter(code)}
+              style={{ background: COLORS.paperAlt, border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, cursor: "pointer" }}
+            >
+              {i === 0 ? "Filtré : " : ""}
+              {styleTagLabel(code)} ✕
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!searching && activeCategory && activeTagFilter && activeTagFilter.kind !== "style" && (
         <button
           onClick={() => setActiveTagFilter(null)}
           style={{ background: COLORS.paperAlt, border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, cursor: "pointer", marginBottom: "14px", alignSelf: "flex-start" }}
@@ -346,8 +368,6 @@ export function DrinksDirectoryScreen({
             "Alcoolisé"
           ) : activeTagFilter.kind === "glutenFree" ? (
             "Sans gluten"
-          ) : activeTagFilter.kind === "style" ? (
-            styleTagLabel(activeTagFilter.value)
           ) : (
             "Bio"
           )}{" "}
