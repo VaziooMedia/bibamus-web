@@ -89,6 +89,16 @@ export function DrinkDetailScreen({
     };
   }, [unknownStylesKey]);
 
+  // Styles sélectionnés sur la fiche (pastilles) pour la liste « Produits communs ». La sélection appartient
+  // à CE produit : si la fiche affichée change de produit, elle repart de zéro sans état périmé.
+  const [stylePick, setStylePick] = useState({ drinkId: drink.id, codes: [] });
+  const pickedStyles = stylePick.drinkId === drink.id ? stylePick.codes : [];
+  const togglePickedStyle = (code) => {
+    const next = pickedStyles.includes(code) ? pickedStyles.filter((c) => c !== code) : [...pickedStyles, code];
+    // Toujours dans l'ordre d'affichage des pastilles, quel que soit l'ordre dans lequel on les touche.
+    setStylePick({ drinkId: drink.id, codes: (drink.styles || []).filter((c) => next.includes(c)) });
+  };
+
   // Cloche de notification — ses activités apparaissent dans ton fil Pulse, comme pour un lieu.
   const [isFollowed, setIsFollowed] = useState(false);
   const [togglingFollow, setTogglingFollow] = useState(false);
@@ -404,14 +414,16 @@ export function DrinkDetailScreen({
                     <div key="styles" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                       {/* Pastille proportionnelle à la police (marges en em) : changer fontSize suffit à la redimensionner. */}
                       {drink.styles.map((code) => {
-                        const chipStyle = { background: COLORS.paperAlt, borderRadius: "999px", padding: "0.45em 0.9em", fontSize: "10px", fontWeight: 600, color: COLORS.ink };
-                        // Toucher une pastille ouvre la liste des produits de cette catégorie limitée à ce style.
+                        const picked = pickedStyles.includes(code);
+                        const chipStyle = { background: picked ? COLORS.amber : COLORS.paperAlt, borderRadius: "999px", padding: "0.45em 0.9em", fontSize: "10px", fontWeight: 600, color: picked ? COLORS.paper : COLORS.ink };
+                        // Toucher une pastille la sélectionne (ou la retire) ; le bloc « Produits communs » ci-dessous
+                        // ouvre alors la liste des produits qui portent tous les styles choisis.
                         return onOpenTagFilter ? (
                           <button
                             key={code}
                             type="button"
-                            onClick={() => onOpenTagFilter(drink.type, { kind: "style", value: code })}
-                            title="Voir les produits de ce style"
+                            aria-pressed={picked}
+                            onClick={() => togglePickedStyle(code)}
                             style={{ ...chipStyle, border: "none", margin: 0, cursor: "pointer" }}
                           >
                             {styleTagLabel(code)}
@@ -534,6 +546,22 @@ export function DrinkDetailScreen({
                 </span>
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Bloc visible seulement quand au moins un style est choisi. */}
+        {onOpenTagFilter && pickedStyles.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "12px 14px", margin: "-4px 0 16px" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.ink }}>
+              {pickedStyles.length} {pickedStyles.length > 1 ? "styles choisis" : "style choisi"}
+            </span>
+            <button
+              type="button"
+              onClick={() => onOpenTagFilter(drink.type, { kind: "style", value: pickedStyles.join(",") })}
+              style={{ background: COLORS.amber, color: COLORS.paper, border: "none", borderRadius: "10px", padding: "10px 16px", fontWeight: 700, fontSize: "14px", cursor: "pointer" }}
+            >
+              Produits communs
+            </button>
           </div>
         )}
 
