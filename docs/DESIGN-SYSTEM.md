@@ -99,7 +99,7 @@ PWA (`public/manifest.json`) : nom « Bibamus », `display: standalone`, `orient
 | `ScrollToTopButton` | Bouton rond de retour en haut (z-index 90), utilisé par 5 répertoires |
 | `useInfiniteScroll` | Pagination par observateur d'intersection : **aucun usage** hors de `ui.jsx` |
 
-Autres éléments partagés : `PageTitleWithBar` (titre h1 Urbanist 20 px avec barre verte ou pastille d'icône, défini dans `AccountScreen`), `AiIcon`, `CheckButtonIcon`, `TagRestrictedBadge`, `StarsDisplay`, `RatingSlider`, `TasteScale`, `MobileTagPill`, `CheckConfirmedToast`, `CollapsibleSection`, `ErrorBoundary` + `installGlobalCrashReporting`.
+Autres éléments partagés : `PageTitleWithBar` (titre h1 Urbanist 20 px avec barre verte ou pastille d'icône, défini dans `AccountScreen`), `AiIcon`, `CheckButtonIcon`, `TagRestrictedBadge`, `StarsDisplay`, `RatingSlider`, `TasteScale`, `MobileTagPill`, `CheckConfirmedToast`, `CollapsibleSection`, `ScrollToTopButton` (flèche flottante « Remonter en haut » des longues listes Produits, Marques, Producteurs et Lieux : visible après 400 px de défilement, cachée tout en bas ; elle cherche le plus proche ancêtre qui défile — l'appli défile dans un conteneur interne, pas dans la page), `ErrorBoundary` + `installGlobalCrashReporting`.
 
 ### `BottomNav`
 

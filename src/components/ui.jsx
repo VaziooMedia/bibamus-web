@@ -39,51 +39,72 @@ export function useInfiniteScroll(items, pageSize, resetKey) {
   return { visibleItems: items.slice(0, visibleCount), hasMore: visibleCount < items.length, sentinelRef };
 }
 
+// L'appli défile dans un conteneur interne (voir App.jsx), pas dans la page elle-même : on cherche donc
+// le plus proche ancêtre qui défile, et à défaut la page.
+function findScrollParent(node) {
+  for (let el = node ? node.parentElement : null; el && el !== document.body; el = el.parentElement) {
+    const overflowY = getComputedStyle(el).overflowY;
+    if (overflowY === "auto" || overflowY === "scroll") return el;
+  }
+  return null;
+}
+
 export function ScrollToTopButton() {
   const [visible, setVisible] = useState(false);
+  const anchorRef = React.useRef(null);
+  const scrollerRef = React.useRef(null);
 
   React.useEffect(() => {
+    const scroller = findScrollParent(anchorRef.current);
+    scrollerRef.current = scroller;
+    const target = scroller || window;
     const handler = () => {
-      const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 140;
-      setVisible(window.scrollY > 400 && !nearBottom);
+      const top = scroller ? scroller.scrollTop : window.scrollY;
+      const viewport = scroller ? scroller.clientHeight : window.innerHeight;
+      const total = scroller ? scroller.scrollHeight : document.body.scrollHeight;
+      const nearBottom = viewport + top >= total - 140;
+      setVisible(top > 400 && !nearBottom);
     };
-    window.addEventListener("scroll", handler);
+    target.addEventListener("scroll", handler);
     window.addEventListener("resize", handler);
     handler();
     return () => {
-      window.removeEventListener("scroll", handler);
+      target.removeEventListener("scroll", handler);
       window.removeEventListener("resize", handler);
     };
   }, []);
 
-  if (!visible) return null;
-
   return (
-    <button
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      style={{
-        position: "fixed",
-        right: "16px",
-        bottom: "calc(76px + env(safe-area-inset-bottom, 0px))",
-        width: "44px",
-        height: "44px",
-        borderRadius: "50%",
-        background: COLORS.surfaceAlt,
-        border: `2px solid ${COLORS.amber}`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer",
-        boxShadow: "0 4px 10px rgba(0,0,0,0.35)",
-        zIndex: 90,
-      }}
-      title="Remonter en haut"
-      aria-label="Remonter en haut"
-    >
-      <span style={{ display: "inline-flex", transform: "rotate(90deg)" }}>
-        <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
-      </span>
-    </button>
+    <>
+      <span ref={anchorRef} aria-hidden="true" style={{ display: "none" }} />
+      {visible && (
+        <button
+          onClick={() => (scrollerRef.current || window).scrollTo({ top: 0, behavior: "smooth" })}
+          style={{
+            position: "fixed",
+            right: "16px",
+            bottom: "calc(76px + env(safe-area-inset-bottom, 0px))",
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            background: COLORS.surfaceAlt,
+            border: `2px solid ${COLORS.amber}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.35)",
+            zIndex: 90,
+          }}
+          title="Remonter en haut"
+          aria-label="Remonter en haut"
+        >
+          <span style={{ display: "inline-flex", transform: "rotate(90deg)" }}>
+            <NavIcon name="back-triangle" size={16} color={COLORS.amber} />
+          </span>
+        </button>
+      )}
+    </>
   );
 }
 

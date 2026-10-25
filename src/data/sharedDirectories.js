@@ -2694,6 +2694,25 @@ export async function loadDrinksDirectoryPage({ type = null, letter = null, quer
   return data.map(rowToDrink);
 }
 
+// Nombre total de produits d'une liste, avec exactement les mêmes filtres que loadDrinksDirectoryPage
+// (la fonction SQL appelle la liste elle-même, sans pagination). Rend null si le nombre est indisponible :
+// l'écran n'affiche alors simplement pas de nombre.
+export async function loadDrinksDirectoryCount({ type = null, letter = null, query = null, tagKind = null, tagValue = null } = {}) {
+  const { data, error } = await supabase.rpc("get_drinks_count", {
+    p_type: type ? DRINK_TYPE_LABEL_TO_CODE[type] || type : null,
+    p_letter: letter,
+    p_query: query,
+    p_tag_kind: tagKind,
+    p_tag_value: tagValue,
+  });
+  if (error) {
+    console.error("loadDrinksDirectoryCount:", error);
+    return null;
+  }
+  const n = Number(data);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
 // Styles de bières & cidres ajoutés à la main depuis la plateforme de gestion, en complément de la
 // liste figée (voir data/styleTagLabels.js).
 export async function loadCustomBeerCiderStyles() {
