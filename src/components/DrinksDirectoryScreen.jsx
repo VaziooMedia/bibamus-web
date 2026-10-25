@@ -206,6 +206,9 @@ export function DrinksDirectoryScreen({
       setActiveLetter(null);
       return;
     }
+    // Arrivé depuis une fiche, même après avoir retiré les puces : la catégorie vient de la fiche, on n'est
+    // jamais passé par la liste des catégories — la flèche retour ramène directement à la fiche.
+    if (openedFromDrink) return onBack();
     if (activeCategory) {
       setActiveCategory(null);
       setActiveTagFilter(null);
