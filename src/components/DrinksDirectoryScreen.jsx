@@ -12,7 +12,7 @@ import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./u
 import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { drinkTypeLabel, drinkSummaryParts } from "../utils.js";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadCustomBeerCiderStyles } from "../data/sharedDirectories.js";
+import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadDrinksDirectoryCount, loadCustomBeerCiderStyles } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 
 const PAGE_SIZE = 40;
@@ -42,6 +42,8 @@ export function DrinksDirectoryScreen({
   const [letterCounts, setLetterCounts] = useState([]);
   const [items, setItems] = useState([]);
   const [hasMore, setHasMore] = useState(true);
+  // Nombre total de produits de la liste affichée (null tant qu'il n'est pas connu, ou s'il est indisponible).
+  const [totalCount, setTotalCount] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const sentinelRef = React.useRef(null);
 
@@ -127,6 +129,7 @@ export function DrinksDirectoryScreen({
     hasMoreRef.current = true;
     loadingRef.current = false;
     setItems([]);
+    setTotalCount(null);
     setHasMore(true);
     setLoadingMore(false);
     if (!showingList) return;
@@ -139,6 +142,9 @@ export function DrinksDirectoryScreen({
     };
     loadParamsRef.current = params;
     loadingRef.current = true;
+    loadDrinksDirectoryCount(params).then((n) => {
+      if (generation === generationRef.current) setTotalCount(n);
+    });
     loadDrinksDirectoryPage({ ...params, page: 0, pageSize: PAGE_SIZE }).then((results) => {
       if (generation !== generationRef.current) return;
       setItems(mergeUnique([], results));
@@ -273,6 +279,14 @@ export function DrinksDirectoryScreen({
     </button>
   );
 
+  // « 23 produits » au-dessus des résultats (rien s'il n'y en a aucun : le message vide suffit).
+  const countLine =
+    totalCount > 0 ? (
+      <p style={{ margin: "0 0 2px", fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>
+        {totalCount} {totalCount > 1 ? "produits" : "produit"}
+      </p>
+    ) : null;
+
   const addButton = (
     <button
       onClick={goToSubmit}
@@ -369,6 +383,7 @@ export function DrinksDirectoryScreen({
 
       {searching ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+          {countLine}
           {items.length === 0 && !loadingMore && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson trouvée.</p>}
           {items.map(renderDrinkRow)}
           {hasMore && (
@@ -406,6 +421,7 @@ export function DrinksDirectoryScreen({
         </div>
       ) : activeCategory ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+          {countLine}
           {items.length === 0 && !loadingMore && (
             <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson dans cette catégorie pour l'instant.</p>
           )}
