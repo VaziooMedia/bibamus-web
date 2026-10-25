@@ -14,7 +14,6 @@
 // ============================================================
 import { BRAND_TYPES, PRODUCER_TYPES, VENUE_TYPES } from "./constants.js";
 import { COUNTRY_CODE_TO_LABEL } from "./countryLabels.js";
-import { BIBAMUS_URL } from "./shareEntity.js";
 
 // Même forme que le lien reconnu par l'app (voir usernameFromPath dans usernameLinks.js).
 export const PUBLIC_USERNAME_PATTERN = /^[A-Za-z0-9._-]{1,60}$/;
@@ -25,7 +24,11 @@ const TYPE_LISTS = { venue: VENUE_TYPES, brand: BRAND_TYPES, brewery: PRODUCER_T
 
 export const GENERIC_TITLE = "Bibamus";
 export const GENERIC_DESCRIPTION = "L'application sociale qui connecte les gens autour des boissons, des lieux et des moments partagés.";
-export const DEFAULT_IMAGE_URL = `${BIBAMUS_URL}/icon-512.png`;
+// Adresse DÉFINITIVE du site : bibamus.app redirige (308) vers www.bibamus.app (constaté le 2026-10-25). L'adresse officielle
+// d'une page (canonical, og:url) et l'icône par défaut doivent pointer là, pas vers une adresse qui redirige elle-même.
+// Les liens de partage de l'app (BIBAMUS_URL, shareEntity.js) restent inchangés : ils passent par la redirection.
+export const PUBLIC_SITE_URL = "https://www.bibamus.app";
+export const DEFAULT_IMAGE_URL = `${PUBLIC_SITE_URL}/icon-512.png`;
 
 const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 
@@ -114,14 +117,14 @@ export function cardHeadTags(texts) {
     metaName("description", texts.description),
     metaName("robots", "index, follow"),
   ];
-  if (texts.username) lines.push(`<link rel="canonical" href="${escapeHtml(`${BIBAMUS_URL}/@${texts.username}`)}" />`);
+  if (texts.username) lines.push(`<link rel="canonical" href="${escapeHtml(`${PUBLIC_SITE_URL}/@${texts.username}`)}" />`);
   lines.push(
     metaProp("og:type", "website"),
     metaProp("og:site_name", "Bibamus"),
     metaProp("og:title", texts.title),
     metaProp("og:description", texts.description),
   );
-  if (texts.username) lines.push(metaProp("og:url", `${BIBAMUS_URL}/@${texts.username}`));
+  if (texts.username) lines.push(metaProp("og:url", `${PUBLIC_SITE_URL}/@${texts.username}`));
   lines.push(
     metaProp("og:image", image),
     metaName("twitter:card", texts.imageUrl && texts.imageIsWide ? "summary_large_image" : "summary"),
