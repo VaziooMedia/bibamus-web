@@ -9,6 +9,8 @@
 // (lookup_username) ; le lien n'est jamais ouvert deux fois. Un lien qui ne mène à rien (nom
 // inconnu, compte bloqué ou désactivé, fiche non publiée, fiche absorbée par une fusion) donne
 // toujours la même réponse neutre via onNotFound.
+// Rend { pending } : le nom du lien en attente (null s'il n'y en a pas, ou une fois ouvert). Tant que la personne n'est pas
+// connectée, l'app s'en sert pour lui montrer d'abord la carte publique de la fiche (PublicLinkGate).
 // ============================================================
 import { useState, useEffect, useRef } from "react";
 import { lookupUsername } from "../data/sharedDirectories.js";
@@ -46,4 +48,6 @@ export function useUsernameDeepLink({ ready, myBibroCode, brandsDirectory, brewe
       return h.onNotFound();
     })();
   }, [pending, ready]);
+
+  return { pending };
 }
