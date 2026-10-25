@@ -401,10 +401,11 @@ export function DrinkDetailScreen({
                   sep: null,
                   node: (
                     <div key="styles" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {/* Pastille proportionnelle à la police (marges en em) : changer fontSize suffit à la redimensionner. */}
                       {drink.styles.map((code) => (
                         <span
                           key={code}
-                          style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "5px 10px", fontSize: "11.5px", fontWeight: 600, color: COLORS.ink }}
+                          style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "0.45em 0.9em", fontSize: "10px", fontWeight: 600, color: COLORS.ink }}
                         >
                           {styleTagLabel(code)}
                         </span>
