@@ -14,8 +14,7 @@
 //     ne retient ainsi pas une page générique à la place de la vraie.
 // ============================================================
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabaseConfig.js";
-import { BIBAMUS_URL } from "./shareEntity.js";
-import { cardHeadTags, genericHeadTags, GENERIC_TITLE, injectHead, isPublicUsername, publicCardTexts } from "./publicCard.js";
+import { cardHeadTags, genericHeadTags, GENERIC_TITLE, injectHead, isPublicUsername, PUBLIC_SITE_URL, publicCardTexts } from "./publicCard.js";
 
 const TIMEOUT_MS = 3000;
 
@@ -37,7 +36,7 @@ export function trustedOrigin(host) {
   const h = String(host || "").toLowerCase();
   if (h === "bibamus.app" || h === "www.bibamus.app") return `https://${h}`;
   if (/^[a-z0-9-]+(?:\.[a-z0-9-]+)*\.vercel\.app$/.test(h)) return `https://${h}`;
-  return BIBAMUS_URL;
+  return PUBLIC_SITE_URL;
 }
 
 // Appel réseau borné dans le temps, lecture de la réponse comprise (un serveur qui répond puis se tait ne bloque pas
