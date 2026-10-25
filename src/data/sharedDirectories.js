@@ -872,6 +872,22 @@ export async function lookupUsername(name) {
   return { kind: row.kind, id: row.id, username: row.username, bibroCode: row.bibro_code || null };
 }
 
+// Carte publique d'une fiche (lieu, marque ou producteur) pour une personne SANS compte : get_public_card ne rend que
+// huit champs (genre, @nom, nom, types, ville, pays, photo, couverture), seulement pour une fiche « complet », et jamais
+// un compte (un compte et un nom inconnu donnent la même réponse : aucune ligne). Rend la ligne telle quelle (voir
+// publicCardTexts dans publicCard.js pour la mettre en texte), ou null — aussi en cas d'erreur : l'appelant montre alors
+// simplement l'écran de connexion.
+export async function loadPublicCard(name) {
+  const text = (name || "").trim();
+  if (!text) return null;
+  const { data, error } = await supabase.rpc("get_public_card", { p_username: text });
+  if (error) {
+    console.error("loadPublicCard:", error);
+    return null;
+  }
+  return data?.[0] || null;
+}
+
 // Nom d'utilisateur (@nom) de la personne connectée — changeable UNE seule fois. C'est le serveur
 // qui décide (format, nom réservé, déjà pris, déjà changé) : check_my_username ne modifie rien et
 // rend NULL si le nom est acceptable, sinon la phrase qui dit pourquoi ; set_my_username applique

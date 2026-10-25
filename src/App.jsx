@@ -18,6 +18,7 @@ import { VenueMapScreen } from "./components/VenueMapScreen.jsx";
 import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
 import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
+import { PublicLinkGate } from "./components/PublicCardScreen.jsx";
 import { SessionHubScreen, RepertoireHubScreen, ComingSoonScreen } from "./components/HubScreens.jsx";
 import { BibaxDirectoryScreen } from "./components/BibaxDirectoryScreen.jsx";
 import { VenueDirectoryScreen } from "./components/VenueDirectoryScreen.jsx";
@@ -1507,8 +1508,9 @@ export default function App() {
   const [viewedBrandId, setViewedBrandId] = useState(null);
 
   // Lien bibamus.app/@nom : ouvre le compte, le lieu, la marque ou le producteur correspondant, une fois
-  // connecté et les données chargées (un lien ouvert sans être connecté est gardé jusque-là).
-  useUsernameDeepLink({
+  // connecté et les données chargées (un lien ouvert sans être connecté est gardé jusque-là, et
+  // montre d'abord la carte publique de la fiche : voir PublicLinkGate plus bas).
+  const { pending: pendingLink } = useUsernameDeepLink({
     ready: !!session?.user?.id && profileLoaded && !loading,
     myBibroCode: profile.myBibroCode,
     brandsDirectory,
@@ -1980,7 +1982,9 @@ export default function App() {
   }
 
   if (!session) {
-    return <AuthScreen onAuthenticated={setSession} signupsEnabled={featureFlags.signups_enabled !== false} />;
+    const authScreen = <AuthScreen onAuthenticated={setSession} signupsEnabled={featureFlags.signups_enabled !== false} />;
+    // Un visiteur arrivé par un lien @nom voit d'abord la carte publique de la fiche (si elle en a une), puis l'écran de connexion.
+    return pendingLink ? <PublicLinkGate name={pendingLink} authScreen={authScreen} /> : authScreen;
   }
 
   if (loading || !profileLoaded) {

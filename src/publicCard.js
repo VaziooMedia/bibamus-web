@@ -103,6 +103,8 @@ export function publicCardTexts(card) {
     description: cleanText(`${summary}. Découvre ${name} sur Bibamus.`, 200),
     imageUrl: cover || photo || null,
     imageIsWide: Boolean(cover),
+    photoUrl: photo,
+    coverUrl: cover,
     username: isPublicUsername(card.username) ? card.username : null,
   };
 }
