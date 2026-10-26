@@ -3392,6 +3392,29 @@ export async function loadDrinkUniqueCheckers(drinkId) {
   return data;
 }
 
+// « Ton historique avec ce produit » (onglet Biba360) : MES consommations de ce produit, tous mes verres confondus
+// (checks, BibaSolo, salons — la vue consumption_events) : le nombre total, la date de la première et de la dernière,
+// mes 5 lieux les plus fréquents (un identifiant de lieu, ou « @home » / « @event ») et le nombre de lieux différents.
+// Le serveur ne rend que MES lignes. Renvoie null si la lecture échoue ou si la réponse est inattendue : la carte ne
+// s'affiche alors pas.
+export async function loadMyDrinkHistory(drinkId) {
+  const { data, error } = await supabase.rpc("get_my_drink_history", { p_drink_id: drinkId });
+  if (error || !data || typeof data !== "object" || Array.isArray(data) || !Number.isInteger(data.total) || !Array.isArray(data.venues)) {
+    console.error("loadMyDrinkHistory:", error || "réponse inattendue");
+    return null;
+  }
+  const venues = data.venues
+    .filter((v) => v && typeof v.venue_id === "string" && Number.isInteger(v.n))
+    .map((v) => ({ venueId: v.venue_id, count: v.n }));
+  return {
+    total: data.total,
+    firstAt: data.first_at || null,
+    lastAt: data.last_at || null,
+    venues,
+    venuesTotal: Number.isInteger(data.venues_total) ? data.venues_total : venues.length,
+  };
+}
+
 // Onglet Biba360 d'une fiche produit : les checks de MES Bibax sur ce produit. Le serveur ne rend que les
 // Bibax dont le lien est confirmé ET qui partagent leurs statistiques « Boissons » (Sécurité > Mes statistiques),
 // ceux qui ont fait au moins un check, du plus grand nombre au plus petit. Renvoie null si la lecture échoue

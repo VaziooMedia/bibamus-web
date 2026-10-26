@@ -15,12 +15,12 @@ import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BibaxName } from "./ui.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { formatDrinkFieldValue, formatMoney } from "../utils.js";
+import { formatDrinkFieldValue, formatMoney, formatDDMMYYYY } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyBibaxDrinkChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -44,6 +44,17 @@ function StatTiles({ tiles }) {
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: String(t.value ?? "—").length > 5 ? "17px" : "22px", color: COLORS.amber, marginTop: "4px" }}>{t.value ?? "—"}</div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// Ligne de la carte « Ton historique avec ce produit » : libellé à gauche, valeur en vert à droite. La première ligne d'un
+// groupe n'a pas de trait au-dessus.
+function HistoryRow({ label, value, first = false }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", ...(first ? {} : { borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }) }}>
+      <span style={{ flex: 1, minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{value}</span>
     </div>
   );
 }
@@ -171,6 +182,48 @@ export function DrinkDetailScreen({
       cancelled = true;
     };
   }, [drink.id]);
+
+  // « Ton historique avec ce produit » (onglet Biba360) : mes consommations de ce produit. null = lecture en cours, ou échouée :
+  // la carte ne s'affiche pas. Elle n'apparaît qu'une fois les noms des lieux connus (pas de lignes qui surgissent après coup).
+  const [myHistory, setMyHistory] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    setMyHistory(null);
+    loadMyDrinkHistory(drink.id).then(async (h) => {
+      if (!h || h.total <= 0) {
+        if (!cancelled) setMyHistory(h);
+        return;
+      }
+      // « @home » et « @event » ne sont pas des lieux de l'annuaire : on ne les demande jamais.
+      const ids = h.venues.map((v) => v.venueId).filter((id) => id !== "@home" && id !== "@event");
+      let venues = [];
+      if (ids.length > 0) {
+        try {
+          venues = await loadVenuesByIds(ids);
+        } catch (e) {
+          console.error("loadMyDrinkHistory (noms des lieux):", e);
+        }
+      }
+      if (cancelled) return;
+      const venueNames = {};
+      venues.forEach((v) => {
+        venueNames[v.id] = v.name;
+      });
+      setMyHistory({ ...h, venueNames });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [drink.id]);
+  const historyFirstDate = myHistory ? formatDDMMYYYY(myHistory.firstAt) : "";
+  const historyLastDate = myHistory && myHistory.total > 1 ? formatDDMMYYYY(myHistory.lastAt) : "";
+  const historyShowLast = historyLastDate !== "" && historyLastDate !== historyFirstDate;
+  const historyVenueRows = myHistory && myHistory.total > 0
+    ? myHistory.venues
+        .map((v) => ({ key: v.venueId, label: v.venueId === "@home" ? "@Home" : v.venueId === "@event" ? "@Event" : myHistory.venueNames?.[v.venueId], count: v.count }))
+        .filter((r) => r.label)
+    : [];
+  const historyMoreVenues = myHistory ? Math.max(0, myHistory.venuesTotal - historyVenueRows.length) : 0;
 
   // Checks de MES Bibax sur ce produit (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un
   // tiret, jamais « aucun Bibax ». Le serveur ne rend que les Bibax confirmés qui partagent leurs statistiques
@@ -741,6 +794,29 @@ export function DrinkDetailScreen({
                 ]}
               />
             </div>
+
+            {/* « Ton historique avec ce produit » : mon carnet de dégustation de ce produit (tous mes verres : checks, BibaSolo,
+                salons). Rien tant que la lecture n'a pas abouti, ni quand je ne l'ai jamais consommé. La « Dernière fois »
+                n'apparaît que s'il y a une autre date que la première. */}
+            {myHistory && myHistory.total > 0 && (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Ton historique avec ce produit</div>
+                {historyFirstDate && <HistoryRow first label="Première fois" value={historyFirstDate} />}
+                {historyShowLast && <HistoryRow first={!historyFirstDate} label="Dernière fois" value={historyLastDate} />}
+                <HistoryRow first={!historyFirstDate && !historyShowLast} label="Consommé" value={`${myHistory.total} fois`} />
+                {historyVenueRows.length > 0 && (
+                  <>
+                    <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, margin: "16px 0 4px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "12px" }}>Où tu l'as bu</div>
+                    {historyVenueRows.map((r) => <HistoryRow key={r.key} label={r.label} value={r.count} />)}
+                    {historyMoreVenues > 0 && (
+                      <div style={{ marginTop: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", textAlign: "center", fontSize: "13px", color: COLORS.inkSoft }}>
+                        {historyMoreVenues === 1 ? "et 1 autre lieu" : `et ${historyMoreVenues} autres lieux`}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Liste des Bibax qui ont checké ce produit — un bloc à part : d'autres listes (ex. les lieux où j'ai
                 consommé ce produit) pourront venir s'ajouter à côté. Rien tant que la lecture n'a pas abouti, ni quand
