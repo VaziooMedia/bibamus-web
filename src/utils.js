@@ -449,6 +449,15 @@ export const formatDDMMYYYY = (timestamp) => {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 };
 
+// Date avec le jour de la semaine abrégé devant : « mer. 14/02/2024 ».
+export const formatWeekdayDDMMYYYY = (timestamp) => {
+  if (!timestamp) return "";
+  const d = new Date(timestamp);
+  if (Number.isNaN(d.getTime())) return "";
+  const weekday = new Intl.DateTimeFormat("fr-BE", { weekday: "short" }).format(d);
+  return `${weekday} ${formatDDMMYYYY(timestamp)}`;
+};
+
 export const formatDrinkFieldValue = (field, value) => {
   if (field === "glutenFree" || field === "bio" || field === "isGeneric") return value ? "Oui" : "Non";
   if (value === null || value === undefined || value === "") return "—";
