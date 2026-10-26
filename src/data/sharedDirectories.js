@@ -3380,6 +3380,18 @@ export async function loadDrinkTotalChecks(drinkId) {
   return data || 0;
 }
 
+// Nombre de PERSONNES DIFFÉRENTES qui ont checké ce produit, tous les utilisateurs de Bibamus confondus
+// (une personne qui l'a checké dix fois compte pour une seule). Renvoie null si la lecture échoue : la carte
+// « Checks uniques » affiche alors un tiret, jamais un faux 0.
+export async function loadDrinkUniqueCheckers(drinkId) {
+  const { data, error } = await supabase.rpc("get_drink_unique_checkers", { p_drink_id: drinkId });
+  if (error || typeof data !== "number") {
+    console.error("loadDrinkUniqueCheckers:", error || "réponse inattendue");
+    return null;
+  }
+  return data;
+}
+
 // Onglet Biba360 d'une fiche produit : les checks de MES Bibax sur ce produit. Le serveur ne rend que les
 // Bibax dont le lien est confirmé ET qui partagent leurs statistiques « Boissons » (Sécurité > Mes statistiques),
 // ceux qui ont fait au moins un check, du plus grand nombre au plus petit. Renvoie null si la lecture échoue
