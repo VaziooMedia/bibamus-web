@@ -860,49 +860,6 @@ export function DrinkDetailScreen({
               </div>
             )}
 
-            {/* « Où ce produit est le plus consommé ? » : le classement des lieux (5 au plus), avec un bouton vers la fiche de
-                chacun. « Tout le monde » (chiffres anonymes) ou « Mes Bibax ». Rien tant que les lectures ne sont pas finies, ni
-                quand aucun classement n'a de lieu. Le chiffre dit où il a été consommé, pas où il est vendu aujourd'hui. */}
-            {topHasRows && (
-              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Où ce produit est le plus consommé ?</div>
-                {topShowSelect && (
-                  <select
-                    aria-label="Classement : tout le monde ou mes Bibax"
-                    value={topScope}
-                    onChange={(e) => setTopScope(e.target.value)}
-                    style={{ display: "block", width: "165px", boxSizing: "border-box", padding: "4px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "9px", margin: "0 auto 4px" }}
-                  >
-                    <option value="all">Tout le monde</option>
-                    <option value="bibax">Mes Bibax</option>
-                  </select>
-                )}
-                {topRows.length === 0 ? (
-                  <p style={{ margin: 0, padding: "14px 0 4px", textAlign: "center", fontSize: "13px", color: COLORS.inkSoft }}>
-                    {topScope === "bibax" ? "Aucun lieu à afficher chez tes Bibax pour ce produit." : "Pas encore assez de consommations pour dresser un classement."}
-                  </p>
-                ) : (
-                  <>
-                    {topRows.map((r, i) => (
-                      <div key={r.venueId} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }}>
-                        <span style={{ width: "18px", flexShrink: 0, fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", color: COLORS.inkSoft }}>{i + 1}</span>
-                        <span style={{ flex: 1, minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{r.venue.name}</span>
-                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{r.count} x</span>
-                        <button
-                          aria-label={`Voir la fiche de ${r.venue.name}`}
-                          onClick={() => onOpenVenue(r.venueId)}
-                          style={{ flexShrink: 0, background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "999px", padding: "5px 13px", fontWeight: 700, fontSize: "12.5px", color: COLORS.ink, cursor: "pointer" }}
-                        >
-                          Voir
-                        </button>
-                      </div>
-                    ))}
-                    <p style={{ margin: "14px 0 0", textAlign: "center", fontSize: "12.5px", fontStyle: "italic", color: COLORS.inkSoft }}>Indique où il a été consommé, pas forcément où il est vendu aujourd'hui.</p>
-                  </>
-                )}
-              </div>
-            )}
-
             {/* Liste des Bibax qui ont checké ce produit — un bloc à part : d'autres listes (ex. les lieux où j'ai
                 consommé ce produit) pourront venir s'ajouter à côté. Rien tant que la lecture n'a pas abouti, ni quand
                 aucun de mes Bibax n'a checké ce produit (la tuile « Bibax 0 » de « Checks uniques » le dit déjà). */}
@@ -920,6 +877,64 @@ export function DrinkDetailScreen({
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* « Où ce produit est le plus consommé ? » : le classement des lieux (5 au plus), un gros point vert devant chaque
+                nom et une flèche vers la fiche du lieu. « Tout le monde » (chiffres anonymes) ou « Mes Bibax », en deux
+                sous-onglets plus fins que les onglets principaux. Rien tant que les lectures ne sont pas finies, ni quand
+                aucun classement n'a de lieu. Placé après la liste des Bibax, en fin d'onglet. */}
+            {topHasRows && (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Où ce produit est le plus consommé ?</div>
+                {topShowSelect && (
+                  <div role="tablist" aria-label="Classement : tout le monde ou mes Bibax" style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
+                    {[
+                      { key: "all", label: "Tout le monde" },
+                      { key: "bibax", label: "Mes Bibax" },
+                    ].map((t) => (
+                      <button
+                        key={t.key}
+                        role="tab"
+                        aria-selected={topScope === t.key}
+                        onClick={() => setTopScope(t.key)}
+                        style={{
+                          flex: 1,
+                          background: topScope === t.key ? COLORS.amber : "none",
+                          color: topScope === t.key ? COLORS.paper : COLORS.ink,
+                          border: `1.5px solid ${topScope === t.key ? COLORS.amber : COLORS.paperAlt}`,
+                          borderRadius: "999px",
+                          padding: "4px 10px",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {topRows.length === 0 ? (
+                  <p style={{ margin: 0, padding: "14px 0 4px", textAlign: "center", fontSize: "13px", color: COLORS.inkSoft }}>
+                    {topScope === "bibax" ? "Aucun lieu à afficher chez tes Bibax pour ce produit." : "Pas encore assez de consommations pour dresser un classement."}
+                  </p>
+                ) : (
+                  topRows.map((r) => (
+                    <div key={r.venueId} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }}>
+                      <span aria-hidden="true" style={{ width: "12px", height: "12px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
+                      <span style={{ flex: 1, minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{r.venue.name}</span>
+                      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{r.count} x</span>
+                      <button
+                        aria-label={`Voir la fiche de ${r.venue.name}`}
+                        onClick={() => onOpenVenue(r.venueId)}
+                        style={{ flexShrink: 0, background: "none", border: "none", padding: "6px 2px 6px 6px", display: "flex", alignItems: "center", cursor: "pointer" }}
+                      >
+                        <NavIcon name="chevron-right" size={16} color={COLORS.amber} />
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </>
