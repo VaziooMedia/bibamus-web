@@ -20,7 +20,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadMyBibaxDrinkChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyBibaxDrinkChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -32,6 +32,21 @@ const SUBTYPE_LABELS = {
   vin: "Vin",
   vin_effervescent: "Vin effervescent",
 };
+
+// Rangée de tuiles chiffrées de l'onglet Biba360 (« Checks », « Checks uniques »…). Une valeur absente
+// (lecture en cours ou échouée) s'affiche en tiret.
+function StatTiles({ tiles }) {
+  return (
+    <div style={{ display: "flex", gap: "10px" }}>
+      {tiles.map((t) => (
+        <div key={t.label} style={{ flex: 1, minWidth: 0, background: COLORS.paper, border: `1.5px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 6px", textAlign: "center" }}>
+          <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>{t.label}</span>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: String(t.value ?? "—").length > 5 ? "17px" : "22px", color: COLORS.amber, marginTop: "4px" }}>{t.value ?? "—"}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function DrinkDetailScreen({
   drink,
@@ -137,6 +152,20 @@ export function DrinkDetailScreen({
     let cancelled = false;
     loadDrinkTotalChecks(drink.id).then((n) => {
       if (!cancelled) setTotalCheckCount(n);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [drink.id]);
+
+  // Nombre de personnes différentes qui ont checké ce produit, tous les utilisateurs de l'app confondus — tuile « Bibamus »
+  // de la carte « Checks uniques » (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un tiret.
+  const [uniqueCheckerCount, setUniqueCheckerCount] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    setUniqueCheckerCount(null);
+    loadDrinkUniqueCheckers(drink.id).then((n) => {
+      if (!cancelled) setUniqueCheckerCount(n);
     });
     return () => {
       cancelled = true;
@@ -692,41 +721,44 @@ export function DrinkDetailScreen({
                 utilisateurs de l'app). Un sous-bloc de plus = une entrée de plus dans cette liste. */}
             <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
               <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Checks</div>
-              <div style={{ display: "flex", gap: "10px" }}>
-                {[
+              <StatTiles
+                tiles={[
                   { label: "You", value: myCheckCount },
                   { label: "Bibax", value: bibaxChecksTotal },
                   { label: "Bibamus", value: totalCheckCount },
-                ].map((t) => (
-                  <div key={t.label} style={{ flex: 1, minWidth: 0, background: COLORS.paper, border: `1.5px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 6px", textAlign: "center" }}>
-                    <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}>{t.label}</span>
-                    <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: String(t.value ?? "—").length > 5 ? "17px" : "22px", color: COLORS.amber, marginTop: "4px" }}>{t.value ?? "—"}</div>
-                  </div>
-                ))}
-              </div>
+                ]}
+              />
+            </div>
+
+            {/* « Checks uniques » : le nombre de PERSONNES différentes (et non de checks). Pas de tuile « You » : pour moi, ce
+                serait toujours 0 ou 1. Bibax = les Bibax de la liste ci-dessous ; Bibamus = tous les utilisateurs de l'app. */}
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+              <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Checks uniques</div>
+              <StatTiles
+                tiles={[
+                  { label: "Bibax", value: bibaxChecks ? bibaxChecks.length : null },
+                  { label: "Bibamus", value: uniqueCheckerCount },
+                ]}
+              />
             </div>
 
             {/* Liste des Bibax qui ont checké ce produit — un bloc à part : d'autres listes (ex. les lieux où j'ai
-                consommé ce produit) pourront venir s'ajouter à côté. Rien tant que la lecture n'a pas abouti. */}
-            {bibaxChecks && (
+                consommé ce produit) pourront venir s'ajouter à côté. Rien tant que la lecture n'a pas abouti, ni quand
+                aucun de mes Bibax n'a checké ce produit (la tuile « Bibax 0 » de « Checks uniques » le dit déjà). */}
+            {bibaxChecks && bibaxChecks.length > 0 && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
                 <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft }}>Tes Bibax qui ont checké ce produit</div>
-                {bibaxChecks.length === 0 && (
-                  <div style={{ marginTop: "12px", fontSize: "13px", color: COLORS.inkSoft, textAlign: "center" }}>Aucun de tes Bibax n'a encore checké ce produit.</div>
-                )}
-                {bibaxChecks.length > 0 && (
-                  <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                    {bibaxChecks.map((b) => (
-                      <div key={b.userId} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px" }}>
-                        <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                          {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={16} color={COLORS.amber} />}
-                        </div>
-                        <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} style={{ flex: 1, fontSize: "14px" }} />
-                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{b.checkCount}</span>
+                <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {bibaxChecks.map((b) => (
+                    <div key={b.userId} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px" }}>
+                      <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                        {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={16} color={COLORS.amber} />}
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} style={{ flex: 1, fontSize: "14px" }} />
+                      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{b.checkCount}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </>
