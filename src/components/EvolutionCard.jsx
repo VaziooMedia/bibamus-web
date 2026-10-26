@@ -16,6 +16,7 @@
 import React, { useState, useRef, useLayoutEffect } from "react";
 import { COLORS } from "../constants.js";
 import { formatWeekdayDDMMYYYY } from "../utils.js";
+import { BlockTitle } from "./ui.jsx";
 
 const PERIODS = [
   { key: "d7", label: "7 jours", long: "les 7 derniers jours" },
@@ -146,7 +147,7 @@ export function EvolutionCard({ evolution }) {
 
   return (
     <div data-evo="section">
-      <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Check Trends</div>
+      <BlockTitle style={{ marginBottom: "12px" }}>Check Trends</BlockTitle>
       <div role="tablist" aria-label="Période du graphique" style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {PERIODS.map((p) => (
           <button

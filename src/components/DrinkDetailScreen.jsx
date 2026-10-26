@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, BackFooterLink, EntityAvatar, BibaxName } from "./ui.jsx";
+import { PageHeader, BackFooterLink, EntityAvatar, BibaxName, BlockTitle } from "./ui.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { formatDrinkFieldValue, formatMoney, formatWeekdayDDMMYYYY } from "../utils.js";
@@ -971,7 +971,7 @@ export function DrinkDetailScreen({
                    abouti, ni quand moins de 2 personnes ont consommé le produit : la section et sa barre disparaissent alors. */}
             <div data-checks-card="" style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
               <div>
-                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Checks</div>
+                <BlockTitle style={{ marginBottom: "10px" }}>Checks</BlockTitle>
                 <StatTiles
                   tiles={[
                     { label: "You", value: myCheckCount },
@@ -982,7 +982,7 @@ export function DrinkDetailScreen({
               </div>
               <SectionDivider />
               <div>
-                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Unique Checks</div>
+                <BlockTitle style={{ marginBottom: "10px" }}>Unique Checks</BlockTitle>
                 <StatTiles
                   tiles={[
                     { label: "Bibax", value: bibaxChecks ? bibaxChecks.length : null },
@@ -1003,13 +1003,13 @@ export function DrinkDetailScreen({
                 n'apparaît que s'il y a une autre date que la première. */}
             {myHistory && myHistory.total > 0 && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Ton historique avec ce produit</div>
+                <BlockTitle style={{ marginBottom: "12px" }}>Ton historique avec ce produit</BlockTitle>
                 {historyFirstDate && <HistoryRow first normal label="Première fois" value={historyFirstDate} />}
                 {historyShowLast && <HistoryRow first={!historyFirstDate} normal label="Dernière fois" value={historyLastDate} />}
                 <HistoryRow first={!historyFirstDate && !historyShowLast} label="Consommé" value={<TimesValue count={myHistory.total} />} />
                 {historyVenueRows.length > 0 && (
                   <>
-                    <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, margin: "16px 0 4px", borderTop: `1px solid ${COLORS.amber}`, paddingTop: "12px" }}>Où tu l'as bu</div>
+                    <BlockTitle style={{ margin: "16px 0 4px", borderTop: `1px solid ${COLORS.amber}`, paddingTop: "12px" }}>Où tu l'as bu</BlockTitle>
                     {historyVenueRows.map((r) => (
                       <HistoryRow
                         key={r.key}
@@ -1034,7 +1034,7 @@ export function DrinkDetailScreen({
                 aucun de mes Bibax n'a checké ce produit (la tuile « Bibax 0 » de « Unique Checks » le dit déjà). */}
             {bibaxChecks && bibaxChecks.length > 0 && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft }}>Tes Bibax qui ont checké ce produit</div>
+                <BlockTitle>Tes Bibax qui ont checké ce produit</BlockTitle>
                 <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
                   {bibaxChecks.map((b) => (
                     <div key={b.userId} data-anchor={`bibax:${b.userId}`} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px" }}>
@@ -1058,7 +1058,7 @@ export function DrinkDetailScreen({
                 aucun classement n'a de lieu. Placé après la liste des Bibax, en fin d'onglet. */}
             {topHasRows && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Où ce produit est le plus consommé ?</div>
+                <BlockTitle style={{ marginBottom: "12px" }}>Où ce produit est le plus consommé ?</BlockTitle>
                 {topShowSelect && (
                   <div role="tablist" aria-label="Classement : tout le monde ou mes Bibax" style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
                     {[
