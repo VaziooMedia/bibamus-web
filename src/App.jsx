@@ -10,6 +10,7 @@ import { EVENT_TYPES } from "./events.js";
 import { isHomeCheckScreen } from "./checkFlow.js";
 import { BottomNav } from "./components/ui.jsx";
 import { useHideOnScroll } from "./hooks/useHideOnScroll.js";
+import { useDrinkReturnMemo } from "./hooks/useDrinkReturnMemo.js";
 import { ErrorBoundary, installGlobalCrashReporting } from "./components/ErrorBoundary.jsx";
 import { HomeScreen } from "./components/HomeScreen.jsx";
 import { BarcodeScannerModal } from "./components/BarcodeScannerModal.jsx";
@@ -207,8 +208,13 @@ export default function App() {
   // défilant) — sans ça, un écran hérite de la position de défilement laissée par le précédent,
   // au lieu de toujours démarrer en haut.
   const mainScrollRef = React.useRef(null);
+  // Retour sur la fiche produit depuis un lieu ou un profil Bibax ouvert via l'onglet Biba360 : la fiche se replace
+  // elle-même (même onglet, même hauteur), on ne remonte donc pas en haut.
+  const drinkReturn = useDrinkReturnMemo(screen);
   useEffect(() => {
+    if (drinkReturn.keepsScroll(screen, viewedDrinkId)) return;
     mainScrollRef.current?.scrollTo(0, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
 
   // Barre du bas : repliée quand on fait défiler vers le bas, de retour dès qu'on remonte. L'élément qui
@@ -2622,11 +2628,18 @@ export default function App() {
                   setScreenBeforeBreweryDetail("drinkDetail");
                   setScreen("breweryDetail");
                 }}
-                onOpenVenue={(id) => {
+                onOpenVenue={(id, returnMemo) => {
+                  drinkReturn.remember(viewedDrinkId, returnMemo);
                   setViewedVenueId(id);
                   setScreenBeforeVenueDetail("drinkDetail");
                   setScreen("venueDetail");
                 }}
+                onOpenBibax={(code, returnMemo) => {
+                  drinkReturn.remember(viewedDrinkId, returnMemo);
+                  openBibaxProfile(code, "drinkDetail");
+                }}
+                returnMemo={drinkReturn.memoFor(viewedDrinkId)}
+                onReturnMemoConsumed={drinkReturn.forget}
               />
             )}
             {screen === "profile" && (
