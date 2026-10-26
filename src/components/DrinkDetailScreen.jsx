@@ -20,7 +20,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -224,6 +224,48 @@ export function DrinkDetailScreen({
         .filter((r) => r.label)
     : [];
   const historyMoreVenues = myHistory ? Math.max(0, myHistory.venuesTotal - historyVenueRows.length) : 0;
+
+  // « Où ce produit est le plus consommé ? » (onglet Biba360) : deux classements de lieux, « Tout le monde » et « Mes Bibax ».
+  // null = lecture en cours ; { all, bibax } une fois les deux lectures finies et les noms des lieux connus (pas de lignes qui
+  // surgissent après coup). Un classement dont la lecture a échoué vaut null : on ne le propose pas, plutôt que de dire « aucun
+  // lieu ». Une ligne dont le nom du lieu est introuvable est écartée ; si aucun nom ne peut être lu, la carte n'apparaît pas.
+  const [topVenues, setTopVenues] = useState(null);
+  const [topScope, setTopScope] = useState("all");
+  useEffect(() => {
+    let cancelled = false;
+    setTopVenues(null);
+    Promise.all([loadDrinkTopVenues(drink.id), loadMyBibaxDrinkVenues(drink.id)]).then(async ([all, bibax]) => {
+      const ids = [...new Set([...(all || []), ...(bibax || [])].map((r) => r.venueId))];
+      let venues = [];
+      if (ids.length > 0) {
+        try {
+          venues = await loadVenuesByIds(ids);
+        } catch (e) {
+          console.error("loadDrinkTopVenues (noms des lieux):", e);
+        }
+      }
+      if (cancelled) return;
+      const byId = {};
+      venues.forEach((v) => {
+        byId[v.id] = v;
+      });
+      const withVenue = (list) => (list ? list.map((r) => ({ ...r, venue: byId[r.venueId] })).filter((r) => r.venue) : null);
+      const a = withVenue(all);
+      const b = withVenue(bibax);
+      setTopVenues({ all: a, bibax: b });
+      // On ouvre sur « Tout le monde », sauf s'il est vide ou illisible alors que « Mes Bibax » a des lieux.
+      setTopScope(a && a.length > 0 ? "all" : b && b.length > 0 ? "bibax" : "all");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [drink.id]);
+  const topAll = topVenues ? topVenues.all : null;
+  const topBibax = topVenues ? topVenues.bibax : null;
+  const topHasRows = (topAll && topAll.length > 0) || (topBibax && topBibax.length > 0);
+  // Le sélecteur n'existe que si les deux classements ont pu être lus ; sinon on montre celui qui existe, sans choix.
+  const topShowSelect = topAll !== null && topBibax !== null;
+  const topRows = (topScope === "all" ? topAll : topBibax) || [];
 
   // Checks de MES Bibax sur ce produit (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un
   // tiret, jamais « aucun Bibax ». Le serveur ne rend que les Bibax confirmés qui partagent leurs statistiques
@@ -813,6 +855,49 @@ export function DrinkDetailScreen({
                         {historyMoreVenues === 1 ? "et 1 autre lieu" : `et ${historyMoreVenues} autres lieux`}
                       </div>
                     )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* « Où ce produit est le plus consommé ? » : le classement des lieux (5 au plus), avec un bouton vers la fiche de
+                chacun. « Tout le monde » (chiffres anonymes) ou « Mes Bibax ». Rien tant que les lectures ne sont pas finies, ni
+                quand aucun classement n'a de lieu. Le chiffre dit où il a été consommé, pas où il est vendu aujourd'hui. */}
+            {topHasRows && (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Où ce produit est le plus consommé ?</div>
+                {topShowSelect && (
+                  <select
+                    aria-label="Classement : tout le monde ou mes Bibax"
+                    value={topScope}
+                    onChange={(e) => setTopScope(e.target.value)}
+                    style={{ display: "block", width: "165px", boxSizing: "border-box", padding: "4px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "9px", margin: "0 auto 4px" }}
+                  >
+                    <option value="all">Tout le monde</option>
+                    <option value="bibax">Mes Bibax</option>
+                  </select>
+                )}
+                {topRows.length === 0 ? (
+                  <p style={{ margin: 0, padding: "14px 0 4px", textAlign: "center", fontSize: "13px", color: COLORS.inkSoft }}>
+                    {topScope === "bibax" ? "Aucun lieu à afficher chez tes Bibax pour ce produit." : "Pas encore assez de consommations pour dresser un classement."}
+                  </p>
+                ) : (
+                  <>
+                    {topRows.map((r, i) => (
+                      <div key={r.venueId} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }}>
+                        <span style={{ width: "18px", flexShrink: 0, fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", color: COLORS.inkSoft }}>{i + 1}</span>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{r.venue.name}</span>
+                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{r.count} x</span>
+                        <button
+                          aria-label={`Voir la fiche de ${r.venue.name}`}
+                          onClick={() => onOpenVenue(r.venueId)}
+                          style={{ flexShrink: 0, background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "999px", padding: "5px 13px", fontWeight: 700, fontSize: "12.5px", color: COLORS.ink, cursor: "pointer" }}
+                        >
+                          Voir
+                        </button>
+                      </div>
+                    ))}
+                    <p style={{ margin: "14px 0 0", textAlign: "center", fontSize: "12.5px", fontStyle: "italic", color: COLORS.inkSoft }}>Indique où il a été consommé, pas forcément où il est vendu aujourd'hui.</p>
                   </>
                 )}
               </div>
