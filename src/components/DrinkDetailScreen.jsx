@@ -36,7 +36,7 @@ const SUBTYPE_LABELS = {
   vin_effervescent: "Vin effervescent",
 };
 
-// Rangée de tuiles chiffrées de l'onglet Biba360 (« Checks », « Checks uniques »…). Une valeur absente
+// Rangée de tuiles chiffrées de l'onglet Biba360 (« Checks », « Unique Checks »…). Une valeur absente
 // (lecture en cours ou échouée) s'affiche en tiret.
 function StatTiles({ tiles }) {
   return (
@@ -51,7 +51,7 @@ function StatTiles({ tiles }) {
   );
 }
 
-// Barre verte fluo entre deux sections du bloc « Checks » (Checks, Checks uniques, Évolution des Checks) : 1 px, avec 16 px
+// Barre verte fluo entre deux sections du bloc « Checks » (Checks, Unique Checks, Check Trends) : 1 px, avec 16 px
 // d'air au-dessus et au-dessous — le trait vert de « Où tu l'as bu » de l'historique.
 function SectionDivider() {
   return <hr data-sep="" style={{ height: 0, border: "none", borderTop: `1px solid ${COLORS.amber}`, margin: "16px 0" }} />;
@@ -69,7 +69,8 @@ function TimesValue({ count }) {
 }
 
 // Bouton rond « > » discret : un petit chevron vert fluo dans un fin cercle de 18 px, pour qu'on voie quand même que c'est un
-// bouton qui ouvre la fiche d'un lieu ou le profil d'un Bibax. La zone de toucher déborde du cercle d'environ 7 px tout autour (32 px au total), sans
+// bouton qui ouvre la fiche d'un lieu ou le profil d'un Bibax. Il se pose juste à côté du nom (8 px après lui), jamais en bout de
+// ligne après le chiffre. La zone de toucher déborde du cercle d'environ 7 px tout autour (32 px au total), sans
 // rien changer à la mise en page.
 function GoButton({ label, onClick }) {
   return (
@@ -86,13 +87,15 @@ function GoButton({ label, onClick }) {
 
 // Ligne de la carte « Ton historique avec ce produit » : libellé à gauche, valeur en vert à droite. La première ligne d'un
 // groupe n'a pas de trait au-dessus. `normal` : valeur en police normale (Work Sans 400, 16 px — l'Urbanist de l'app n'existe qu'à partir de 600, donc jamais « normal »), pour les dates. `go` : bouton rond
-// vers la fiche du lieu ; `reserveGo` garde sa place (sans bouton) pour que les valeurs restent alignées entre les lignes.
-function HistoryRow({ label, value, first = false, normal = false, go = null, reserveGo = false, anchor }) {
+// vers la fiche du lieu, posé juste à côté du nom ; la valeur reste seule à droite, alignée d'une ligne à l'autre.
+function HistoryRow({ label, value, first = false, normal = false, go = null, anchor }) {
   return (
     <div data-anchor={anchor} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", ...(first ? {} : { borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }) }}>
-      <span style={{ flex: 1, minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{label}</span>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{label}</span>
+        {go ? <GoButton label={go.label} onClick={go.onClick} /> : null}
+      </div>
       <span style={{ ...(normal ? { fontFamily: "'Work Sans', sans-serif", fontWeight: 400, fontSize: "16px" } : { fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }), color: COLORS.amber, flexShrink: 0 }}>{value}</span>
-      {go ? <GoButton label={go.label} onClick={go.onClick} /> : reserveGo ? <span aria-hidden="true" style={{ width: "18px", flexShrink: 0 }} /> : null}
     </div>
   );
 }
@@ -223,7 +226,7 @@ export function DrinkDetailScreen({
   }, [drink.id]);
 
   // Nombre de personnes différentes qui ont checké ce produit, tous les utilisateurs de l'app confondus — tuile « Bibamus »
-  // de la carte « Checks uniques » (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un tiret.
+  // de la section « Unique Checks » (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un tiret.
   const [uniqueCheckerCount, setUniqueCheckerCount] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -236,7 +239,7 @@ export function DrinkDetailScreen({
     };
   }, [drink.id]);
 
-  // « Évolution des Checks » (onglet Biba360) : la courbe de la popularité du produit (tous les utilisateurs, anonyme). null = lecture
+  // « Check Trends » (onglet Biba360) : la courbe de la popularité du produit (tous les utilisateurs, anonyme). null = lecture
   // en cours, ou échouée : rien ne s'affiche. Une réponse vide (moins de 2 personnes ont consommé ce produit) ne montre rien non plus.
   const [evolution, setEvolution] = useState(null);
   useEffect(() => {
@@ -306,7 +309,6 @@ export function DrinkDetailScreen({
         .filter((r) => r.label)
     : [];
   const historyMoreVenues = myHistory ? Math.max(0, myHistory.venuesTotal - historyVenueRows.length) : 0;
-  const historyAnyGo = historyVenueRows.some((r) => r.isVenue);
 
   // « Où ce produit est le plus consommé ? » (onglet Biba360) : deux classements de lieux, « Tout le monde » et « Mes Bibax ».
   // null = lecture en cours ; { all, bibax } une fois les deux lectures finies et les noms des lieux connus (pas de lignes qui
@@ -962,9 +964,9 @@ export function DrinkDetailScreen({
 
             {/* Un seul bloc « Checks », en trois sections séparées par une barre verte fluo :
                 1. « Checks » : You (mes checks), Bibax (ceux de mes Bibax), Bibamus (tous les utilisateurs de l'app) ;
-                2. « Checks uniques » : le nombre de PERSONNES différentes (et non de checks). Pas de tuile « You » : pour moi,
+                2. « Unique Checks » : le nombre de PERSONNES différentes (et non de checks). Pas de tuile « You » : pour moi,
                    ce serait toujours 0 ou 1. Bibax = les Bibax de la liste plus bas ; Bibamus = tous les utilisateurs de l'app ;
-                3. « Évolution des Checks » : la courbe de la popularité du produit au fil du temps (7 jours, 30 jours, 12 mois,
+                3. « Check Trends » : la courbe de la popularité du produit au fil du temps (7 jours, 30 jours, 12 mois,
                    tout l'historique), tous les utilisateurs confondus, en chiffres anonymes. Rien tant que la lecture n'a pas
                    abouti, ni quand moins de 2 personnes ont consommé le produit : la section et sa barre disparaissent alors. */}
             <div data-checks-card="" style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
@@ -980,7 +982,7 @@ export function DrinkDetailScreen({
               </div>
               <SectionDivider />
               <div>
-                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Checks uniques</div>
+                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Unique Checks</div>
                 <StatTiles
                   tiles={[
                     { label: "Bibax", value: bibaxChecks ? bibaxChecks.length : null },
@@ -1015,7 +1017,6 @@ export function DrinkDetailScreen({
                         label={r.label}
                         value={r.count}
                         go={r.isVenue ? { label: `Voir la fiche de ${r.label}`, onClick: () => openVenueFromBiba360(`hist:${r.key}`, r.key) } : null}
-                        reserveGo={historyAnyGo && !r.isVenue}
                       />
                     ))}
                     {historyMoreVenues > 0 && (
@@ -1030,7 +1031,7 @@ export function DrinkDetailScreen({
 
             {/* Liste des Bibax qui ont checké ce produit — un bloc à part : d'autres listes (ex. les lieux où j'ai
                 consommé ce produit) pourront venir s'ajouter à côté. Rien tant que la lecture n'a pas abouti, ni quand
-                aucun de mes Bibax n'a checké ce produit (la tuile « Bibax 0 » de « Checks uniques » le dit déjà). */}
+                aucun de mes Bibax n'a checké ce produit (la tuile « Bibax 0 » de « Unique Checks » le dit déjà). */}
             {bibaxChecks && bibaxChecks.length > 0 && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
                 <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft }}>Tes Bibax qui ont checké ce produit</div>
@@ -1040,9 +1041,11 @@ export function DrinkDetailScreen({
                       <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                         {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={16} color={COLORS.amber} />}
                       </div>
-                      <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} style={{ flex: 1, fontSize: "14px" }} />
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                        <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} style={{ fontSize: "14px" }} />
+                        <GoButton label={`Voir le profil de ${[b.name, b.lastName].filter(Boolean).join(" ") || b.nickname || "ce Bibax"}`} onClick={() => openBibaxFromBiba360(b.userId)} />
+                      </div>
                       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{b.checkCount}</span>
-                      <GoButton label={`Voir le profil de ${[b.name, b.lastName].filter(Boolean).join(" ") || b.nickname || "ce Bibax"}`} onClick={() => openBibaxFromBiba360(b.userId)} />
                     </div>
                   ))}
                 </div>
@@ -1092,9 +1095,11 @@ export function DrinkDetailScreen({
                   topRows.map((r) => (
                     <div key={r.venueId} data-anchor={`top:${r.venueId}`} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }}>
                       <span aria-hidden="true" style={{ width: "8px", height: "8px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
-                      <span style={{ flex: 1, minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{r.venue.name}</span>
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{r.venue.name}</span>
+                        <GoButton label={`Voir la fiche de ${r.venue.name}`} onClick={() => openVenueFromBiba360(`top:${r.venueId}`, r.venueId, topScope)} />
+                      </div>
                       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}><TimesValue count={r.count} /></span>
-                      <GoButton label={`Voir la fiche de ${r.venue.name}`} onClick={() => openVenueFromBiba360(`top:${r.venueId}`, r.venueId, topScope)} />
                     </div>
                   ))
                 )}
