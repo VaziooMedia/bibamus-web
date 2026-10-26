@@ -1,5 +1,5 @@
 // ============================================================
-// Section « Évolution des Checks » (dernière des trois sections du bloc « Checks » de l'onglet Biba360 d'une fiche produit ;
+// Section « Check Trends » (dernière des trois sections du bloc « Checks » de l'onglet Biba360 d'une fiche produit ;
 // l'écran hôte fournit le cadre du bloc et la barre verte au-dessus) : une courbe de la popularité du produit au fil du
 // temps, avec quatre périodes au choix — 7 jours et 30 jours (un point par jour), 12 mois et « Tout » l'historique (un point
 // par mois). Chiffres anonymes de tous les utilisateurs (tous les verres : checks, BibaSolo, salons), voir
@@ -146,7 +146,7 @@ export function EvolutionCard({ evolution }) {
 
   return (
     <div data-evo="section">
-      <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Évolution des Checks</div>
+      <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Check Trends</div>
       <div role="tablist" aria-label="Période du graphique" style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {PERIODS.map((p) => (
           <button
