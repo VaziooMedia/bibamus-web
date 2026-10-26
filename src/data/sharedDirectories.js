@@ -3435,6 +3435,33 @@ export async function loadMyBibaxDrinkChecks(drinkId) {
   }));
 }
 
+// « Où ce produit est le plus consommé ? » (onglet Biba360) : jusqu'à 5 lieux de l'annuaire, du plus au moins consommé,
+// avec le nombre de consommations (la vue consumption_events : checks, BibaSolo, salons). Le serveur n'envoie jamais les
+// lieux rapides « @home » / « @event », ni les verres sans lieu — on les écarte quand même ici : un « @… » n'est pas un
+// lieu qu'on peut demander ou ouvrir. Renvoie null si la lecture échoue : on ne confond pas une erreur avec « aucun lieu ».
+async function loadDrinkVenueRanking(rpcName, drinkId) {
+  const { data, error } = await supabase.rpc(rpcName, { p_drink_id: drinkId });
+  if (error || !Array.isArray(data)) {
+    console.error(`${rpcName}:`, error || "réponse inattendue");
+    return null;
+  }
+  return data
+    .filter((r) => r && typeof r.venue_id === "string" && !r.venue_id.startsWith("@") && Number.isInteger(r.check_count))
+    .map((r) => ({ venueId: r.venue_id, count: r.check_count }));
+}
+
+// Classement « Tout le monde » : tous les utilisateurs de l'app, en chiffres anonymes (un lieu n'est listé qu'à partir de
+// 2 personnes différentes — règle appliquée par le serveur).
+export function loadDrinkTopVenues(drinkId) {
+  return loadDrinkVenueRanking("get_drink_top_venues", drinkId);
+}
+
+// Classement « Mes Bibax » : seulement mes Bibax confirmés, non bloqués, qui partagent à la fois leurs statistiques
+// « Boissons » et « Lieux » (Sécurité > Mes statistiques) — règle appliquée par le serveur. Jamais le nom d'un Bibax.
+export function loadMyBibaxDrinkVenues(drinkId) {
+  return loadDrinkVenueRanking("get_my_bibax_drink_venues", drinkId);
+}
+
 export async function loadMyStatsForVenue(venueId, since = null, until = null) {
   const { data, error } = await supabase.rpc("get_my_stats_for_venue", {
     p_venue_id: venueId,
