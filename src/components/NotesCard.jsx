@@ -12,9 +12,10 @@ import React from "react";
 import { COLORS } from "../constants.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 
-// « 4,3/5 » : une décimale, virgule. C'est aussi le format de la bannière de la fiche (elle l'utilise), pour que les deux
-// ne puissent jamais différer.
-export const formatRating = (value) => `${value.toFixed(1).replace(".", ",")}/5`;
+// « 3,25/5 » : deux décimales, virgule. Les notes se donnent au quart d'étoile (0,25 ; 3,25…) : avec une seule décimale,
+// 3,25 s'afficherait « 3,3 » et 0,25 « 0,3 ». C'est aussi le format de la bannière de la fiche (elle l'utilise), pour que les
+// deux ne puissent jamais différer.
+export const formatRating = (value) => `${value.toFixed(2).replace(".", ",")}/5`;
 
 function NoteRow({ label, value, count = null, first = false }) {
   const has = typeof value === "number" && isFinite(value);
