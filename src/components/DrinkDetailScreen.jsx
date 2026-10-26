@@ -51,6 +51,12 @@ function StatTiles({ tiles }) {
   );
 }
 
+// Barre verte fluo entre deux sections du bloc « Checks » (Checks, Checks uniques, Évolution des Checks) : 1 px, avec 16 px
+// d'air au-dessus et au-dessous — le trait vert de « Où tu l'as bu » de l'historique.
+function SectionDivider() {
+  return <hr data-sep="" style={{ height: 0, border: "none", borderTop: `1px solid ${COLORS.amber}`, margin: "16px 0" }} />;
+}
+
 // Valeur en vert d'une ligne de l'onglet Biba360, suivie d'un « x » en blanc (« 12 x ») : le nombre reste vert fluo, le
 // « x » (fois) est blanc.
 function TimesValue({ count }) {
@@ -954,35 +960,41 @@ export function DrinkDetailScreen({
                 de tous, la même que sur la bannière). Tout en haut de l'onglet, avant « Checks ». */}
             <NotesCard mine={myRating} bibax={bibaxRating} everyone={ratingAverage != null ? { average: ratingAverage, count: ratingValues.length } : null} />
 
-            {/* Un seul bloc « Checks », en sous-blocs : You (mes checks), Bibax (ceux de mes Bibax), Bibamus (tous les
-                utilisateurs de l'app). Un sous-bloc de plus = une entrée de plus dans cette liste. */}
-            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-              <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Checks</div>
-              <StatTiles
-                tiles={[
-                  { label: "You", value: myCheckCount },
-                  { label: "Bibax", value: bibaxChecksTotal },
-                  { label: "Bibamus", value: totalCheckCount },
-                ]}
-              />
+            {/* Un seul bloc « Checks », en trois sections séparées par une barre verte fluo :
+                1. « Checks » : You (mes checks), Bibax (ceux de mes Bibax), Bibamus (tous les utilisateurs de l'app) ;
+                2. « Checks uniques » : le nombre de PERSONNES différentes (et non de checks). Pas de tuile « You » : pour moi,
+                   ce serait toujours 0 ou 1. Bibax = les Bibax de la liste plus bas ; Bibamus = tous les utilisateurs de l'app ;
+                3. « Évolution des Checks » : la courbe de la popularité du produit au fil du temps (7 jours, 30 jours, 12 mois,
+                   tout l'historique), tous les utilisateurs confondus, en chiffres anonymes. Rien tant que la lecture n'a pas
+                   abouti, ni quand moins de 2 personnes ont consommé le produit : la section et sa barre disparaissent alors. */}
+            <div data-checks-card="" style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+              <div>
+                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Checks</div>
+                <StatTiles
+                  tiles={[
+                    { label: "You", value: myCheckCount },
+                    { label: "Bibax", value: bibaxChecksTotal },
+                    { label: "Bibamus", value: totalCheckCount },
+                  ]}
+                />
+              </div>
+              <SectionDivider />
+              <div>
+                <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Checks uniques</div>
+                <StatTiles
+                  tiles={[
+                    { label: "Bibax", value: bibaxChecks ? bibaxChecks.length : null },
+                    { label: "Bibamus", value: uniqueCheckerCount },
+                  ]}
+                />
+              </div>
+              {evolutionShown && (
+                <>
+                  <SectionDivider />
+                  <EvolutionCard key={drink.id} evolution={evolution} />
+                </>
+              )}
             </div>
-
-            {/* « Checks uniques » : le nombre de PERSONNES différentes (et non de checks). Pas de tuile « You » : pour moi, ce
-                serait toujours 0 ou 1. Bibax = les Bibax de la liste ci-dessous ; Bibamus = tous les utilisateurs de l'app. */}
-            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-              <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "10px" }}>Checks uniques</div>
-              <StatTiles
-                tiles={[
-                  { label: "Bibax", value: bibaxChecks ? bibaxChecks.length : null },
-                  { label: "Bibamus", value: uniqueCheckerCount },
-                ]}
-              />
-            </div>
-
-            {/* « Évolution des Checks » : la courbe de la popularité du produit au fil du temps (7 jours, 30 jours, 12 mois, tout
-                l'historique), tous les utilisateurs confondus, en chiffres anonymes. Juste sous « Checks uniques ». Rien tant que la
-                lecture n'a pas abouti, ni quand moins de 2 personnes ont consommé le produit. */}
-            {evolutionShown && <EvolutionCard key={drink.id} evolution={evolution} />}
 
             {/* « Ton historique avec ce produit » : mon carnet de dégustation de ce produit (tous mes verres : checks, BibaSolo,
                 salons). Rien tant que la lecture n'a pas abouti, ni quand je ne l'ai jamais consommé. La « Dernière fois »
