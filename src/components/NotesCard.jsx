@@ -11,6 +11,7 @@
 import React from "react";
 import { COLORS } from "../constants.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
+import { BlockTitle } from "./ui.jsx";
 
 // « 3,25/5 » : deux décimales, virgule. Les notes se donnent au quart d'étoile (0,25 ; 3,25…) : avec une seule décimale,
 // 3,25 s'afficherait « 3,3 » et 0,25 « 0,3 ». C'est aussi le format de la bannière de la fiche (elle l'utilise), pour que les
@@ -55,7 +56,7 @@ export function NotesCard({ mine, bibax, everyone }) {
   const some = (r) => r && r.count > 0 && typeof r.average === "number" && isFinite(r.average);
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-      <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Notes</div>
+      <BlockTitle style={{ marginBottom: "12px" }}>Notes</BlockTitle>
       <NoteRow first label="You" value={mine} />
       <NoteRow label="Bibax" value={some(bibax) ? bibax.average : null} count={some(bibax) ? bibax.count : null} />
       <NoteRow label="Bibamus" value={some(everyone) ? everyone.average : null} count={some(everyone) ? everyone.count : null} />

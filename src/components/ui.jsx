@@ -119,6 +119,18 @@ export function SectionTitle({ children }) {
   );
 }
 
+// Titre d'un bloc de l'onglet Biba360 d'une fiche produit (« Notes », « Checks », « Où ce produit est le plus consommé ? »…) :
+// en blanc cassé, aligné à gauche, précédé d'une petite barre verticale vert fluo (3 × 14 px, 8 px avant le texte).
+// `style` : l'espacement propre à chaque bloc (marges, trait au-dessus).
+export function BlockTitle({ children, style }) {
+  return (
+    <div data-block-title="" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.ink, ...style }}>
+      <span aria-hidden="true" style={{ width: "3px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+      {children}
+    </div>
+  );
+}
+
 // Affichage standard du nom d'un Bibax — prénom + nom obligatoires, surnom éventuel en plus
 // petit à côté. Utilisé partout où un Bibax est listé (relations, demandes, suggestions),
 // pour ne jamais se retrouver avec un simple prénom qui ne permet pas de reconnaître qui est
