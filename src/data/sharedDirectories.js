@@ -3462,6 +3462,42 @@ export function loadMyBibaxDrinkVenues(drinkId) {
   return loadDrinkVenueRanking("get_my_bibax_drink_venues", drinkId);
 }
 
+// « Évolution des Checks » (onglet Biba360) : les quatre séries de la courbe, d'un seul appel — 7 et 30 jours (un point par jour),
+// 12 mois et tout l'historique (un point par mois), tous les utilisateurs confondus, tous les verres (checks, BibaSolo, salons).
+// Rend { d7, d30, m12, all }, chacune une liste { date: "AAAA-MM-JJ", count } du plus ancien au plus récent (les creux valent 0), ou
+// null si la lecture échoue ou si la réponse est inattendue. Une réponse vide (moins de 2 personnes ont consommé ce produit)
+// donne quatre listes vides : l'écran n'affiche alors rien.
+const EVOLUTION_LENGTHS = { d7: 7, d30: 30, m12: 12 };
+export async function loadDrinkEvolution(drinkId) {
+  const { data, error } = await supabase.rpc("get_drink_evolution", { p_drink_id: drinkId });
+  if (error || !Array.isArray(data)) {
+    console.error("loadDrinkEvolution:", error || "réponse inattendue");
+    return null;
+  }
+  const out = { d7: [], d30: [], m12: [], all: [] };
+  for (const r of data) {
+    if (!r || !Object.prototype.hasOwnProperty.call(out, r.period) || typeof r.bucket !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(r.bucket) || !Number.isInteger(r.check_count) || r.check_count < 0) {
+      console.error("loadDrinkEvolution: ligne inattendue", r);
+      return null;
+    }
+    out[r.period].push({ date: r.bucket, count: r.check_count });
+  }
+  for (const k of Object.keys(out)) {
+    out[k].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    if (out[k].some((p, i) => i > 0 && p.date === out[k][i - 1].date)) {
+      console.error("loadDrinkEvolution: dates en double", k);
+      return null;
+    }
+  }
+  const empty = Object.values(out).every((l) => l.length === 0);
+  const complete = Object.entries(EVOLUTION_LENGTHS).every(([k, len]) => out[k].length === len) && out.all.length > 0;
+  if (!empty && !complete) {
+    console.error("loadDrinkEvolution: séries incomplètes");
+    return null;
+  }
+  return out;
+}
+
 export async function loadMyStatsForVenue(venueId, since = null, until = null) {
   const { data, error } = await supabase.rpc("get_my_stats_for_venue", {
     p_venue_id: venueId,

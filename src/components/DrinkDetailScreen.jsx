@@ -19,8 +19,9 @@ import { formatDrinkFieldValue, formatMoney, formatWeekdayDDMMYYYY } from "../ut
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
+import { EvolutionCard } from "./EvolutionCard.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
@@ -227,6 +228,21 @@ export function DrinkDetailScreen({
       cancelled = true;
     };
   }, [drink.id]);
+
+  // « Évolution des Checks » (onglet Biba360) : la courbe de la popularité du produit (tous les utilisateurs, anonyme). null = lecture
+  // en cours, ou échouée : rien ne s'affiche. Une réponse vide (moins de 2 personnes ont consommé ce produit) ne montre rien non plus.
+  const [evolution, setEvolution] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    setEvolution(null);
+    loadDrinkEvolution(drink.id).then((e) => {
+      if (!cancelled) setEvolution(e);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [drink.id]);
+  const evolutionShown = !!evolution && evolution.all.some((p) => p.count > 0);
 
   // « Ton historique avec ce produit » (onglet Biba360) : mes consommations de ce produit. null = lecture en cours, ou échouée :
   // la carte ne s'affiche pas. Elle n'apparaît qu'une fois les noms des lieux connus (pas de lignes qui surgissent après coup).
@@ -943,6 +959,11 @@ export function DrinkDetailScreen({
                 ]}
               />
             </div>
+
+            {/* « Évolution des Checks » : la courbe de la popularité du produit au fil du temps (7 jours, 30 jours, 12 mois, tout
+                l'historique), tous les utilisateurs confondus, en chiffres anonymes. Juste sous « Checks uniques ». Rien tant que la
+                lecture n'a pas abouti, ni quand moins de 2 personnes ont consommé le produit. */}
+            {evolutionShown && <EvolutionCard key={drink.id} evolution={evolution} />}
 
             {/* « Ton historique avec ce produit » : mon carnet de dégustation de ce produit (tous mes verres : checks, BibaSolo,
                 salons). Rien tant que la lecture n'a pas abouti, ni quand je ne l'ai jamais consommé. La « Dernière fois »
