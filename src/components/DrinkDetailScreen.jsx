@@ -9,7 +9,7 @@
 // check (DrinkCheckInModal) ; cette fiche n'affiche plus que la
 // moyenne, sur le bandeau photo.
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BibaxName } from "./ui.jsx";
@@ -21,6 +21,7 @@ import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
@@ -48,15 +49,54 @@ function StatTiles({ tiles }) {
   );
 }
 
-// Ligne de la carte « Ton historique avec ce produit » : libellé à gauche, valeur en vert à droite. La première ligne d'un
-// groupe n'a pas de trait au-dessus.
-function HistoryRow({ label, value, first = false }) {
+// Valeur en vert d'une ligne de l'onglet Biba360, suivie d'un « x » en blanc (« 12 x ») : le nombre reste vert fluo, le
+// « x » (fois) est blanc.
+function TimesValue({ count }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", ...(first ? {} : { borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }) }}>
+    <>
+      {count}
+      <span style={{ color: COLORS.ink }}> x</span>
+    </>
+  );
+}
+
+// Bouton rond « > » : le chevron vert fluo entouré d'un cercle, pour qu'on voie tout de suite que c'est un bouton qui ouvre
+// la fiche d'un lieu ou le profil d'un Bibax.
+function GoButton({ label, onClick }) {
+  return (
+    <button
+      aria-label={label}
+      onClick={onClick}
+      style={{ flexShrink: 0, width: "28px", height: "28px", boxSizing: "border-box", borderRadius: "50%", background: "none", border: `1.5px solid ${COLORS.amber}`, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+    >
+      <NavIcon name="chevron-right" size={14} color={COLORS.amber} />
+    </button>
+  );
+}
+
+// Ligne de la carte « Ton historique avec ce produit » : libellé à gauche, valeur en vert à droite. La première ligne d'un
+// groupe n'a pas de trait au-dessus. `normal` : valeur en police normale (Work Sans 400, 16 px — l'Urbanist de l'app n'existe qu'à partir de 600, donc jamais « normal »), pour les dates. `go` : bouton rond
+// vers la fiche du lieu ; `reserveGo` garde sa place (sans bouton) pour que les valeurs restent alignées entre les lignes.
+function HistoryRow({ label, value, first = false, normal = false, go = null, reserveGo = false, anchor }) {
+  return (
+    <div data-anchor={anchor} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", ...(first ? {} : { borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }) }}>
       <span style={{ flex: 1, minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{label}</span>
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{value}</span>
+      <span style={{ ...(normal ? { fontFamily: "'Work Sans', sans-serif", fontWeight: 400, fontSize: "16px" } : { fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }), color: COLORS.amber, flexShrink: 0 }}>{value}</span>
+      {go ? <GoButton label={go.label} onClick={go.onClick} /> : reserveGo ? <span aria-hidden="true" style={{ width: "28px", flexShrink: 0 }} /> : null}
     </div>
   );
+}
+
+// Premier parent qui défile (le conteneur de l'écran) — là où se lit la hauteur d'un élément pour y revenir.
+function findScrollParent(el) {
+  for (let n = el ? el.parentElement : null; n; n = n.parentElement) {
+    const oy = getComputedStyle(n).overflowY;
+    if (oy === "auto" || oy === "scroll") return n;
+  }
+  return document.scrollingElement || null;
+}
+function findAnchor(key) {
+  return [...document.querySelectorAll("[data-anchor]")].find((n) => n.dataset.anchor === key) || null;
 }
 
 export function DrinkDetailScreen({
@@ -82,11 +122,14 @@ export function DrinkDetailScreen({
   onOpenBrand,
   onOpenBrewery,
   onOpenVenue,
+  onOpenBibax,
+  returnMemo = null,
+  onReturnMemoConsumed,
   onOpenTagFilter,
   claimsEnabled = true,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [activeTab, setActiveTab] = useState("infos");
+  const [activeTab, setActiveTab] = useState(returnMemo?.tab || "infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -220,10 +263,11 @@ export function DrinkDetailScreen({
   const historyShowLast = historyLastDate !== "" && historyLastDate !== historyFirstDate;
   const historyVenueRows = myHistory && myHistory.total > 0
     ? myHistory.venues
-        .map((v) => ({ key: v.venueId, label: v.venueId === "@home" ? "@Home" : v.venueId === "@event" ? "@Event" : myHistory.venueNames?.[v.venueId], count: v.count }))
+        .map((v) => ({ key: v.venueId, isVenue: v.venueId !== "@home" && v.venueId !== "@event", label: v.venueId === "@home" ? "@Home" : v.venueId === "@event" ? "@Event" : myHistory.venueNames?.[v.venueId], count: v.count }))
         .filter((r) => r.label)
     : [];
   const historyMoreVenues = myHistory ? Math.max(0, myHistory.venuesTotal - historyVenueRows.length) : 0;
+  const historyAnyGo = historyVenueRows.some((r) => r.isVenue);
 
   // « Où ce produit est le plus consommé ? » (onglet Biba360) : deux classements de lieux, « Tout le monde » et « Mes Bibax ».
   // null = lecture en cours ; { all, bibax } une fois les deux lectures finies et les noms des lieux connus (pas de lignes qui
@@ -231,6 +275,8 @@ export function DrinkDetailScreen({
   // lieu ». Une ligne dont le nom du lieu est introuvable est écartée ; si aucun nom ne peut être lu, la carte n'apparaît pas.
   const [topVenues, setTopVenues] = useState(null);
   const [topScope, setTopScope] = useState("all");
+  // Retour depuis la fiche d'un lieu : on rouvre le même classement (« Tout le monde » ou « Mes Bibax ») que celui où l'on a cliqué.
+  const restoreScopeRef = useRef(returnMemo?.scope || null);
   useEffect(() => {
     let cancelled = false;
     setTopVenues(null);
@@ -253,8 +299,12 @@ export function DrinkDetailScreen({
       const a = withVenue(all);
       const b = withVenue(bibax);
       setTopVenues({ all: a, bibax: b });
-      // On ouvre sur « Tout le monde », sauf s'il est vide ou illisible alors que « Mes Bibax » a des lieux.
-      setTopScope(a && a.length > 0 ? "all" : b && b.length > 0 ? "bibax" : "all");
+      // On ouvre sur « Tout le monde », sauf s'il est vide ou illisible alors que « Mes Bibax » a des lieux ; au retour d'un lieu,
+      // sur le classement où l'on avait cliqué (s'il a encore des lieux).
+      const wanted = restoreScopeRef.current;
+      restoreScopeRef.current = null;
+      const wantedRows = wanted === "all" ? a : wanted === "bibax" ? b : null;
+      setTopScope(wantedRows && wantedRows.length > 0 ? wanted : a && a.length > 0 ? "all" : b && b.length > 0 ? "bibax" : "all");
     });
     return () => {
       cancelled = true;
@@ -266,6 +316,61 @@ export function DrinkDetailScreen({
   // Le sélecteur n'existe que si les deux classements ont pu être lus ; sinon on montre celui qui existe, sans choix.
   const topShowSelect = topAll !== null && topBibax !== null;
   const topRows = (topScope === "all" ? topAll : topBibax) || [];
+
+  // Retour depuis la fiche d'un lieu ou le profil d'un Bibax ouvert depuis l'onglet Biba360 : on se replace à la hauteur de
+  // l'élément cliqué. Les cartes se remplissent au fil des lectures : on recale à chaque rendu tant que la personne n'a pas
+  // touché à l'écran, 4 secondes au plus.
+  const restoreRef = useRef(returnMemo);
+  const alignToMemo = () => {
+    const m = restoreRef.current;
+    if (!m || m.offset == null) return;
+    const el = findAnchor(m.anchor);
+    const sc = el ? findScrollParent(el) : null;
+    if (!sc) return;
+    const base = sc === document.scrollingElement ? 0 : sc.getBoundingClientRect().top;
+    const delta = el.getBoundingClientRect().top - base - m.offset;
+    if (Math.abs(delta) >= 1) sc.scrollTop += delta;
+  };
+  useLayoutEffect(alignToMemo);
+  useEffect(() => {
+    if (!restoreRef.current) return undefined;
+    if (onReturnMemoConsumed) onReturnMemoConsumed();
+    // Le conteneur de l'écran est remis en haut juste après l'arrivée : on recale à plusieurs reprises.
+    const timers = [0, 150, 400, 900, 1800].map((ms) => setTimeout(alignToMemo, ms));
+    const end = setTimeout(() => {
+      restoreRef.current = null;
+    }, 4000);
+    const stop = () => {
+      restoreRef.current = null;
+    };
+    const types = ["wheel", "touchstart", "pointerdown", "keydown"];
+    types.forEach((t) => window.addEventListener(t, stop, { capture: true, passive: true }));
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(end);
+      types.forEach((t) => window.removeEventListener(t, stop, { capture: true }));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Mémoire de retour d'un clic dans l'onglet Biba360 : l'onglet, l'élément cliqué (repère) et sa hauteur dans le conteneur.
+  const buildReturnMemo = (anchorKey, scope) => {
+    const el = findAnchor(anchorKey);
+    const sc = el ? findScrollParent(el) : null;
+    const base = sc && sc !== document.scrollingElement ? sc.getBoundingClientRect().top : 0;
+    return { tab: "biba360", anchor: anchorKey, offset: el && sc ? el.getBoundingClientRect().top - base : null, scope: scope || null };
+  };
+  const openVenueFromBiba360 = (anchorKey, venueId, scope) => onOpenVenue(venueId, buildReturnMemo(anchorKey, scope));
+  // Le profil s'ouvre à partir du code Bibax, que la liste ne porte pas : on le retrouve à partir du compte.
+  const openBibaxFromBiba360 = async (userId) => {
+    const memo = buildReturnMemo(`bibax:${userId}`);
+    const codes = await loadBibroCodes([userId]);
+    if (!codes[userId]) {
+      console.error("Profil du Bibax introuvable :", userId);
+      return;
+    }
+    if (onOpenBibax) onOpenBibax(codes[userId], memo);
+  };
 
   // Checks de MES Bibax sur ce produit (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un
   // tiret, jamais « aucun Bibax ». Le serveur ne rend que les Bibax confirmés qui partagent leurs statistiques
@@ -843,13 +948,22 @@ export function DrinkDetailScreen({
             {myHistory && myHistory.total > 0 && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
                 <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Ton historique avec ce produit</div>
-                {historyFirstDate && <HistoryRow first label="Première fois" value={historyFirstDate} />}
-                {historyShowLast && <HistoryRow first={!historyFirstDate} label="Dernière fois" value={historyLastDate} />}
-                <HistoryRow first={!historyFirstDate && !historyShowLast} label="Consommé" value={`${myHistory.total} x`} />
+                {historyFirstDate && <HistoryRow first normal label="Première fois" value={historyFirstDate} />}
+                {historyShowLast && <HistoryRow first={!historyFirstDate} normal label="Dernière fois" value={historyLastDate} />}
+                <HistoryRow first={!historyFirstDate && !historyShowLast} label="Consommé" value={<TimesValue count={myHistory.total} />} />
                 {historyVenueRows.length > 0 && (
                   <>
                     <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, margin: "16px 0 4px", borderTop: `1px solid ${COLORS.amber}`, paddingTop: "12px" }}>Où tu l'as bu</div>
-                    {historyVenueRows.map((r) => <HistoryRow key={r.key} label={r.label} value={r.count} />)}
+                    {historyVenueRows.map((r) => (
+                      <HistoryRow
+                        key={r.key}
+                        anchor={r.isVenue ? `hist:${r.key}` : undefined}
+                        label={r.label}
+                        value={r.count}
+                        go={r.isVenue ? { label: `Voir la fiche de ${r.label}`, onClick: () => openVenueFromBiba360(`hist:${r.key}`, r.key) } : null}
+                        reserveGo={historyAnyGo && !r.isVenue}
+                      />
+                    ))}
                     {historyMoreVenues > 0 && (
                       <div style={{ marginTop: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", textAlign: "center", fontSize: "13px", color: COLORS.inkSoft }}>
                         {historyMoreVenues === 1 ? "et 1 autre lieu" : `et ${historyMoreVenues} autres lieux`}
@@ -868,12 +982,13 @@ export function DrinkDetailScreen({
                 <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft }}>Tes Bibax qui ont checké ce produit</div>
                 <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
                   {bibaxChecks.map((b) => (
-                    <div key={b.userId} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px" }}>
+                    <div key={b.userId} data-anchor={`bibax:${b.userId}`} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px" }}>
                       <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                         {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={16} color={COLORS.amber} />}
                       </div>
                       <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} style={{ flex: 1, fontSize: "14px" }} />
                       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{b.checkCount}</span>
+                      <GoButton label={`Voir le profil de ${[b.name, b.lastName].filter(Boolean).join(" ") || b.nickname || "ce Bibax"}`} onClick={() => openBibaxFromBiba360(b.userId)} />
                     </div>
                   ))}
                 </div>
@@ -921,17 +1036,11 @@ export function DrinkDetailScreen({
                   </p>
                 ) : (
                   topRows.map((r) => (
-                    <div key={r.venueId} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }}>
-                      <span aria-hidden="true" style={{ width: "12px", height: "12px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
+                    <div key={r.venueId} data-anchor={`top:${r.venueId}`} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }}>
+                      <span aria-hidden="true" style={{ width: "8px", height: "8px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
                       <span style={{ flex: 1, minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{r.venue.name}</span>
-                      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{r.count} x</span>
-                      <button
-                        aria-label={`Voir la fiche de ${r.venue.name}`}
-                        onClick={() => onOpenVenue(r.venueId)}
-                        style={{ flexShrink: 0, background: "none", border: "none", padding: "6px 2px 6px 6px", display: "flex", alignItems: "center", cursor: "pointer" }}
-                      >
-                        <NavIcon name="chevron-right" size={16} color={COLORS.amber} />
-                      </button>
+                      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}><TimesValue count={r.count} /></span>
+                      <GoButton label={`Voir la fiche de ${r.venue.name}`} onClick={() => openVenueFromBiba360(`top:${r.venueId}`, r.venueId, topScope)} />
                     </div>
                   ))
                 )}
