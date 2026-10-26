@@ -90,6 +90,8 @@ import {
   createDrink,
   createBrand,
   updateDrink,
+  rateMyDrink,
+  unrateMyDrink,
   updatePublicVenue,
   updateBrewery,
   updateBrand,
@@ -1409,10 +1411,7 @@ export default function App() {
     );
     const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
     if (drink) {
-      updateDrink(drinkId, {
-        ratings: { ...(drink.ratings || {}), [profile.myBibroCode]: value },
-        ratingDates: { ...(drink.ratingDates || {}), [profile.myBibroCode]: Date.now() },
-      });
+      rateMyDrink(drinkId, value);
       // Noter une bière n'a de sens que si on l'a goûtée — les deux restent synchronisés plutôt
       // que de risquer une bière notée mais jamais marquée dégustée, ou encore sur la liste d'envie.
       if (BEER_TYPES.includes(drink.type) && !tastedDrinkIds.includes(drinkId)) {
@@ -1433,15 +1432,7 @@ export default function App() {
       return { ...prev, ratings, ratingDates, ratedServingModes };
     });
     const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
-    if (drink) {
-      const ratings = { ...(drink.ratings || {}) };
-      const ratingDates = { ...(drink.ratingDates || {}) };
-      const ratedServingModes = { ...(drink.ratedServingModes || {}) };
-      delete ratings[profile.myBibroCode];
-      delete ratingDates[profile.myBibroCode];
-      delete ratedServingModes[profile.myBibroCode];
-      updateDrink(drinkId, { ratings, ratingDates, ratedServingModes });
-    }
+    if (drink) unrateMyDrink(drinkId);
   };
 
   // Même chose que rateDrink/unrateDrink, mais prenant le vrai produit directement en
@@ -1450,23 +1441,14 @@ export default function App() {
   // skipDiscoveryPulse : même rôle que pour rateDrink — la note vient du formulaire de check, qui publie
   // lui-même UNE seule carte.
   const rateDrinkStandalone = (drinkId, value, drink, { skipDiscoveryPulse = false } = {}) => {
-    updateDrink(drinkId, {
-      ratings: { ...(drink.ratings || {}), [profile.myBibroCode]: value },
-      ratingDates: { ...(drink.ratingDates || {}), [profile.myBibroCode]: Date.now() },
-    });
+    rateMyDrink(drinkId, value);
     if (BEER_TYPES.includes(drink.type) && !tastedDrinkIds.includes(drinkId)) {
       toggleTastedDrink(drinkId, { skipPulse: skipDiscoveryPulse });
     }
   };
 
-  const unrateDrinkStandalone = (drinkId, drink) => {
-    const ratings = { ...(drink.ratings || {}) };
-    const ratingDates = { ...(drink.ratingDates || {}) };
-    const ratedServingModes = { ...(drink.ratedServingModes || {}) };
-    delete ratings[profile.myBibroCode];
-    delete ratingDates[profile.myBibroCode];
-    delete ratedServingModes[profile.myBibroCode];
-    updateDrink(drinkId, { ratings, ratingDates, ratedServingModes });
+  const unrateDrinkStandalone = (drinkId) => {
+    unrateMyDrink(drinkId);
   };
 
   const toggleTastedServingMode = (drinkId, mode) => {
