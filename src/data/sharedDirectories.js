@@ -3626,6 +3626,30 @@ export async function updateDrink(id, patch) {
   if (error) console.error("updateDrink:", error);
 }
 
+// Noter un produit : MA note s'enregistre par deux fonctions serveur (script bibamus-sql-notes-1-enregistrer-sa-note.sql) et non
+// plus en modifiant directement la fiche du produit : pour une fiche « complete », le serveur ignore cette modification (sans
+// erreur) quand elle vient d'un compte normal, et la note disparaissait au rafraîchissement. Les fonctions ne touchent que
+// l'entrée de la personne connectée (jamais celles des autres). Rendent true si l'enregistrement a réussi, false sinon (erreur
+// consignée dans la console) : l'écran garde sa note affichée dans les deux cas.
+export async function rateMyDrink(drinkId, rating) {
+  const { error } = await supabase.rpc("rate_my_drink", { p_drink_id: drinkId, p_rating: rating });
+  if (error) {
+    console.error("rateMyDrink:", error);
+    return false;
+  }
+  return true;
+}
+
+// Retire MA note de ce produit (sa date et mes modes goûtés avec elle).
+export async function unrateMyDrink(drinkId) {
+  const { error } = await supabase.rpc("unrate_my_drink", { p_drink_id: drinkId });
+  if (error) {
+    console.error("unrateMyDrink:", error);
+    return false;
+  }
+  return true;
+}
+
 export async function deleteDrink(id) {
   const { error } = await supabase.from("drinks_directory").delete().eq("id", id);
   if (error) console.error("deleteDrink:", error);
