@@ -3435,6 +3435,29 @@ export async function loadMyBibaxDrinkChecks(drinkId) {
   }));
 }
 
+// « Notes » (onglet Biba360) : la moyenne des notes que MES Bibax ont données à ce produit, et leur nombre. Seuls comptent les
+// Bibax confirmés qui partagent « Boissons » (même règle que la liste « Tes Bibax qui ont checké ce produit »). Rend
+// { average, count } (average vaut null quand count vaut 0), ou null si la lecture échoue ou si la réponse est inattendue : on ne
+// confond pas une erreur avec « aucun Bibax n'a noté ce produit ».
+export async function loadMyBibaxDrinkRating(drinkId) {
+  const { data, error } = await supabase.rpc("get_my_bibax_drink_rating", { p_drink_id: drinkId });
+  if (error || !Array.isArray(data) || data.length !== 1 || !data[0]) {
+    console.error("loadMyBibaxDrinkRating:", error || "réponse inattendue");
+    return null;
+  }
+  const { rating_avg: avg, rating_count: count } = data[0];
+  if (!Number.isInteger(count) || count < 0) {
+    console.error("loadMyBibaxDrinkRating: nombre d'avis inattendu", count);
+    return null;
+  }
+  if (count === 0) return { average: null, count: 0 };
+  if (typeof avg !== "number" || !isFinite(avg) || avg < 0 || avg > 5) {
+    console.error("loadMyBibaxDrinkRating: moyenne inattendue", avg);
+    return null;
+  }
+  return { average: avg, count };
+}
+
 // « Où ce produit est le plus consommé ? » (onglet Biba360) : jusqu'à 5 lieux de l'annuaire, du plus au moins consommé,
 // avec le nombre de consommations (la vue consumption_events : checks, BibaSolo, salons). Le serveur n'envoie jamais les
 // lieux rapides « @home » / « @event », ni les verres sans lieu — on les écarte quand même ici : un « @… » n'est pas un

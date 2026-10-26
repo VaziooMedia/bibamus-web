@@ -20,8 +20,9 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { EvolutionCard } from "./EvolutionCard.jsx";
+import { NotesCard, formatRating } from "./NotesCard.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
@@ -243,6 +244,20 @@ export function DrinkDetailScreen({
     };
   }, [drink.id]);
   const evolutionShown = !!evolution && evolution.all.some((p) => p.count > 0);
+
+  // « Notes » (onglet Biba360), ligne Bibax : la moyenne des notes de mes Bibax. null = lecture en cours, ou échouée : un tiret.
+  // Les lignes You et Bibamus n'ont pas besoin de lecture : elles viennent de drink.ratings, comme la bannière.
+  const [bibaxRating, setBibaxRating] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    setBibaxRating(null);
+    loadMyBibaxDrinkRating(drink.id).then((r) => {
+      if (!cancelled) setBibaxRating(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [drink.id]);
 
   // « Ton historique avec ce produit » (onglet Biba360) : mes consommations de ce produit. null = lecture en cours, ou échouée :
   // la carte ne s'affiche pas. Elle n'apparaît qu'une fois les noms des lieux connus (pas de lignes qui surgissent après coup).
@@ -551,7 +566,7 @@ export function DrinkDetailScreen({
             >
               <NavIcon name="star" size={14} color={COLORS.amber} filled />
               <span style={{ fontSize: "11px" }}>
-                <span style={{ color: COLORS.chalkWhite }}>{ratingAverage.toFixed(1).replace(".", ",")}/5</span>
+                <span style={{ color: COLORS.chalkWhite }}>{formatRating(ratingAverage)}</span>
                 <span style={{ color: COLORS.inkSoft }}> - {ratingValues.length} avis</span>
               </span>
             </div>
@@ -935,6 +950,10 @@ export function DrinkDetailScreen({
 
         {activeTab === "biba360" && (
           <>
+            {/* « Notes » : la note étoilée en trois lignes — You (ma note), Bibax (la moyenne de mes Bibax), Bibamus (la moyenne
+                de tous, la même que sur la bannière). Tout en haut de l'onglet, avant « Checks ». */}
+            <NotesCard mine={myRating} bibax={bibaxRating} everyone={ratingAverage != null ? { average: ratingAverage, count: ratingValues.length } : null} />
+
             {/* Un seul bloc « Checks », en sous-blocs : You (mes checks), Bibax (ceux de mes Bibax), Bibamus (tous les
                 utilisateurs de l'app). Un sous-bloc de plus = une entrée de plus dans cette liste. */}
             <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
