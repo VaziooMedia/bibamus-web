@@ -60,16 +60,18 @@ function TimesValue({ count }) {
   );
 }
 
-// Bouton rond « > » : le chevron vert fluo entouré d'un cercle, pour qu'on voie tout de suite que c'est un bouton qui ouvre
-// la fiche d'un lieu ou le profil d'un Bibax.
+// Bouton rond « > » discret : un petit chevron vert fluo dans un fin cercle de 18 px, pour qu'on voie quand même que c'est un
+// bouton qui ouvre la fiche d'un lieu ou le profil d'un Bibax. La zone de toucher déborde du cercle d'environ 7 px tout autour (32 px au total), sans
+// rien changer à la mise en page.
 function GoButton({ label, onClick }) {
   return (
     <button
       aria-label={label}
       onClick={onClick}
-      style={{ flexShrink: 0, width: "28px", height: "28px", boxSizing: "border-box", borderRadius: "50%", background: "none", border: `1.5px solid ${COLORS.amber}`, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+      style={{ position: "relative", flexShrink: 0, width: "18px", height: "18px", boxSizing: "border-box", borderRadius: "50%", background: "none", border: `1px solid ${COLORS.amber}`, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
     >
-      <NavIcon name="chevron-right" size={14} color={COLORS.amber} />
+      <span aria-hidden="true" style={{ position: "absolute", top: "-8px", right: "-8px", bottom: "-8px", left: "-8px" }} />
+      <NavIcon name="chevron-right" size={10} color={COLORS.amber} />
     </button>
   );
 }
@@ -82,7 +84,7 @@ function HistoryRow({ label, value, first = false, normal = false, go = null, re
     <div data-anchor={anchor} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", ...(first ? {} : { borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }) }}>
       <span style={{ flex: 1, minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{label}</span>
       <span style={{ ...(normal ? { fontFamily: "'Work Sans', sans-serif", fontWeight: 400, fontSize: "16px" } : { fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }), color: COLORS.amber, flexShrink: 0 }}>{value}</span>
-      {go ? <GoButton label={go.label} onClick={go.onClick} /> : reserveGo ? <span aria-hidden="true" style={{ width: "28px", flexShrink: 0 }} /> : null}
+      {go ? <GoButton label={go.label} onClick={go.onClick} /> : reserveGo ? <span aria-hidden="true" style={{ width: "18px", flexShrink: 0 }} /> : null}
     </div>
   );
 }
