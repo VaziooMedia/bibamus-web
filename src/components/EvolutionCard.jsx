@@ -1,5 +1,6 @@
 // ============================================================
-// Carte « Évolution des Checks » (onglet Biba360 d'une fiche produit) : une courbe de la popularité du produit au fil du
+// Section « Évolution des Checks » (dernière des trois sections du bloc « Checks » de l'onglet Biba360 d'une fiche produit ;
+// l'écran hôte fournit le cadre du bloc et la barre verte au-dessus) : une courbe de la popularité du produit au fil du
 // temps, avec quatre périodes au choix — 7 jours et 30 jours (un point par jour), 12 mois et « Tout » l'historique (un point
 // par mois). Chiffres anonymes de tous les utilisateurs (tous les verres : checks, BibaSolo, salons), voir
 // get_drink_evolution dans DATABASE.md.
@@ -144,7 +145,7 @@ export function EvolutionCard({ evolution }) {
   const summary = `Évolution des checks sur ${meta.long} : ${periodTotal} au total${max > 0 ? `, au plus ${max} sur un ${period === "m12" || period === "all" ? "mois" : "jour"}` : ""}.`;
 
   return (
-    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+    <div data-evo="section">
       <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Évolution des Checks</div>
       <div role="tablist" aria-label="Période du graphique" style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {PERIODS.map((p) => (
