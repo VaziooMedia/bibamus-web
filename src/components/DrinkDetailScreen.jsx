@@ -15,7 +15,7 @@ import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BibaxName } from "./ui.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { formatDrinkFieldValue, formatMoney, formatDDMMYYYY } from "../utils.js";
+import { formatDrinkFieldValue, formatMoney, formatWeekdayDDMMYYYY } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -215,8 +215,8 @@ export function DrinkDetailScreen({
       cancelled = true;
     };
   }, [drink.id]);
-  const historyFirstDate = myHistory ? formatDDMMYYYY(myHistory.firstAt) : "";
-  const historyLastDate = myHistory && myHistory.total > 1 ? formatDDMMYYYY(myHistory.lastAt) : "";
+  const historyFirstDate = myHistory ? formatWeekdayDDMMYYYY(myHistory.firstAt) : "";
+  const historyLastDate = myHistory && myHistory.total > 1 ? formatWeekdayDDMMYYYY(myHistory.lastAt) : "";
   const historyShowLast = historyLastDate !== "" && historyLastDate !== historyFirstDate;
   const historyVenueRows = myHistory && myHistory.total > 0
     ? myHistory.venues
@@ -803,10 +803,10 @@ export function DrinkDetailScreen({
                 <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "12px" }}>Ton historique avec ce produit</div>
                 {historyFirstDate && <HistoryRow first label="Première fois" value={historyFirstDate} />}
                 {historyShowLast && <HistoryRow first={!historyFirstDate} label="Dernière fois" value={historyLastDate} />}
-                <HistoryRow first={!historyFirstDate && !historyShowLast} label="Consommé" value={`${myHistory.total} fois`} />
+                <HistoryRow first={!historyFirstDate && !historyShowLast} label="Consommé" value={`${myHistory.total} x`} />
                 {historyVenueRows.length > 0 && (
                   <>
-                    <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, margin: "16px 0 4px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "12px" }}>Où tu l'as bu</div>
+                    <div style={{ textAlign: "center", fontSize: "12.5px", color: COLORS.inkSoft, margin: "16px 0 4px", borderTop: `1px solid ${COLORS.amber}`, paddingTop: "12px" }}>Où tu l'as bu</div>
                     {historyVenueRows.map((r) => <HistoryRow key={r.key} label={r.label} value={r.count} />)}
                     {historyMoreVenues > 0 && (
                       <div style={{ marginTop: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", textAlign: "center", fontSize: "13px", color: COLORS.inkSoft }}>
