@@ -466,26 +466,37 @@ export const WINE_EFFERVESCENT_STYLE_GROUPS = [
 
 const ALL_STYLE_GROUPS = [...BEER_CIDER_STYLE_GROUPS, ...WINE_STYLE_GROUPS, ...WINE_EFFERVESCENT_STYLE_GROUPS];
 
-// Styles de bières & cidres ajoutés à la main depuis la plateforme de gestion (table
-// custom_beer_cider_styles) : l'app ne les connaît pas à la compilation. Elle les charge à la
-// demande (voir la fiche produit) et les mémorise ici.
-const customStyleLabels = {};
+// Libellés venus de la base (table custom_beer_cider_styles), modifiés depuis la plateforme de gestion :
+//   - les styles ajoutés à la main, que l'app ne connaît pas à la compilation ;
+//   - les styles de la liste de départ renommés (même code, nouveau nom), qui l'emportent sur le nom figé.
+// L'app les charge à la demande (voir la fiche produit) et les mémorise ici. Une Map : un code comme
+// « constructor » ne doit jamais tomber sur une propriété de l'objet.
+const customStyleLabels = new Map();
 
+// Mémorise ces libellés. Rend vrai si l'un d'eux change ce qu'on affiche (l'écran ne se redessine alors que
+// dans ce cas : un style déjà affiché sous le bon nom, ou déjà mémorisé, ne redessine rien).
 export function registerCustomStyleLabels(list) {
+  let changed = false;
   list.forEach((s) => {
-    customStyleLabels[s.code] = s.fr;
+    const before = styleTagLabel(s.code);
+    customStyleLabels.set(s.code, s.fr);
+    if (styleTagLabel(s.code) !== before) changed = true;
   });
+  return changed;
 }
 
-// Vrai si le libellé de ce code est connu (liste figée ou style ajouté déjà chargé).
+// Vrai si le libellé de ce code est connu (liste figée ou style chargé de la base).
 export function hasStyleLabel(code) {
-  return code in customStyleLabels || ALL_STYLE_GROUPS.some((g) => g.tags.some((t) => t.code === code));
+  return customStyleLabels.has(code) || ALL_STYLE_GROUPS.some((g) => g.tags.some((t) => t.code === code));
 }
 
+// Le nom enregistré en base (renommage, style ajouté) l'emporte sur le nom figé dans le code.
 export function styleTagLabel(code) {
+  const custom = customStyleLabels.get(code);
+  if (custom) return custom;
   for (const group of ALL_STYLE_GROUPS) {
     const tag = group.tags.find((t) => t.code === code);
     if (tag) return tag.fr;
   }
-  return customStyleLabels[code] || code;
+  return code;
 }
