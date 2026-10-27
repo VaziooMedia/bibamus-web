@@ -39,7 +39,7 @@ Le zip montre la version **admin** de `DrinkDetailPanel.jsx` (≈ 99 Ko, contre 
 - **Propositions de l'IA** (`requestAICompletion`, `loadPendingAIProposals`, `resolveAIProposal`) ;
 - **fusion de doublons** (`mergeEntities`, qui appelle `merge_entities`, réservé aux administrateurs) ;
 - cépages (`loadGrapeVarieties` / `createGrapeVariety`), variantes et codes-barres, millésimes (`VintageManager`), niveau de certification (`CertificationLevelSelector`), contributions en attente (`PendingContributionsSection`) ;
-- styles : `StyleAdder`, `SelectedStyleChips`, styles de vin et de spiritueux, **styles personnalisés** (`loadCustomBeerCiderStyles` / `createCustomBeerCiderStyle`) ;
+- styles : `BeerCiderStylePicker` (accordéon, `StyleAdder`, mode « Modifier la liste » avec `StyleManagePanel`), `SelectedStyleChips`, styles de vin et de spiritueux, **styles personnalisés** (`loadCustomBeerCiderStyles`, `createCustomBeerCiderStyle`, `saveCustomBeerCiderStyle`, `countDrinksWithBeerCiderStyle`, `deleteCustomBeerCiderStyle`) ;
 - noms alternatifs et traductions (`AlternateNamesFields`, voir `MULTILINGUAL.md`).
 
 À l'exception de `SelectedStyleChips`, aucun de ces composants importés n'est dans le zip.
@@ -52,7 +52,11 @@ Le zip montre la version **admin** de `DrinkDetailPanel.jsx` (≈ 99 Ko, contre 
 
 ### Styles personnalisés
 
-Table `custom_beer_cider_styles` : code préfixé `perso_`, nom unique (casse et espaces ignorés), une seule colonne de libellé `fr`. Lecture publique, écriture réservée aux cinq rôles du personnel. Ils rejoignent la liste figée du code pour tous les produits.
+Table `custom_beer_cider_styles` : une ligne est soit un style **ajouté à la main** (code préfixé `perso_`), soit une **modification d'un style de la liste figée** du code (même code que lui : nouveau nom, nouveau groupe, ou masqué = supprimé, colonne `hidden`). Nom unique parmi les styles visibles (casse et espaces ignorés), une seule colonne de libellé `fr`. Lecture publique, écriture réservée aux cinq rôles du personnel.
+
+Dans la fiche produit bière / cidre (Niveau 1 → Style(s)), « Modifier la liste » permet de renommer, de changer de groupe ou de supprimer n'importe quel style, y compris ceux de la liste figée. La suppression annonce d'abord le nombre de produits concernés, puis retire le style de ces produits et de la liste en une seule opération (fonctions `count_drinks_with_beer_cider_style` et `delete_beer_cider_style`, réservées au personnel). Un style de la liste figée supprimé est **masqué**, pas effacé (il vit dans le code) ; un nom supprimé peut être ajouté de nouveau (nouveau code `perso_…`). Un style rangé dans un groupe qui n'existe plus apparaît dans « Autres styles ».
+
+Scripts : `styles-personnalises` (la table), `styles-modifier-supprimer` (colonne `hidden` et deux fonctions), puis `styles-regle-des-codes` (retire la règle « code préfixé `perso_` », incompatible avec la modification d'un style de la liste figée). L'app publique lit la table une fois par session et affiche le nom enregistré en base avant le nom figé (`registerCustomStyleLabels`).
 
 ## Tables et réglages de pilotage (scripts livrés)
 

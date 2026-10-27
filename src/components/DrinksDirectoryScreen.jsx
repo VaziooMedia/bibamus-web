@@ -11,8 +11,8 @@ import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { drinkTypeLabel, drinkSummaryParts } from "../utils.js";
-import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadDrinksDirectoryCount, loadCustomBeerCiderStyles } from "../data/sharedDirectories.js";
+import { styleTagLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
+import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadDrinksDirectoryCount, loadCustomBeerCiderStylesOnce } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 
 const PAGE_SIZE = 40;
@@ -64,28 +64,28 @@ export function DrinksDirectoryScreen({
   // généralement courte, s'affiche directement.
   const useLetterTier = !!activeCategory && !searching && !activeTagFilter && countFor(activeCategory) > LETTER_THRESHOLD;
 
-  // Libellé d'un style ajouté à la main : l'app ne le connaît pas à la compilation (voir la fiche produit).
-  // Il est déjà mémorisé quand on arrive depuis la fiche ; ce chargement ne sert que s'il ne l'est pas encore.
+  // Libellé d'un style modifié depuis la gestion (ajouté à la main, ou renommé) : l'app ne le connaît pas à la
+  // compilation (voir la fiche produit). Il est déjà mémorisé quand on arrive depuis la fiche ; ce chargement
+  // (une seule lecture par session) ne sert que si ce n'est pas encore le cas.
   const [, setStyleLabelsTick] = useState(0);
   // Un filtre de style peut porter plusieurs codes séparés par des virgules (« Produits communs » depuis une fiche).
   const styleFilterCodes = activeTagFilter?.kind === "style" ? String(activeTagFilter.value || "").split(",").filter(Boolean) : [];
-  const unknownStyleFilter = styleFilterCodes.some((code) => !hasStyleLabel(code));
+  const needsStyleLabels = styleFilterCodes.length > 0;
   // Retirer un style du filtre ; le dernier retiré lève le filtre, comme la puce unique d'avant.
   const removeStyleFromFilter = (code) => {
     const rest = styleFilterCodes.filter((c) => c !== code);
     setActiveTagFilter(rest.length > 0 ? { kind: "style", value: rest.join(",") } : null);
   };
   useEffect(() => {
-    if (!unknownStyleFilter) return;
+    if (!needsStyleLabels) return;
     let cancelled = false;
-    loadCustomBeerCiderStyles().then((list) => {
-      registerCustomStyleLabels(list);
-      if (!cancelled) setStyleLabelsTick((t) => t + 1);
+    loadCustomBeerCiderStylesOnce().then((list) => {
+      if (registerCustomStyleLabels(list) && !cancelled) setStyleLabelsTick((t) => t + 1);
     });
     return () => {
       cancelled = true;
     };
-  }, [unknownStyleFilter]);
+  }, [needsStyleLabels]);
 
   // Regroupement alphabétique — chargé uniquement quand une catégorie assez fournie est
   // sélectionnée, sans recherche active et sans lettre encore choisie.

@@ -2713,15 +2713,32 @@ export async function loadDrinksDirectoryCount({ type = null, letter = null, que
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
-// Styles de bières & cidres ajoutés à la main depuis la plateforme de gestion, en complément de la
-// liste figée (voir data/styleTagLabels.js).
-export async function loadCustomBeerCiderStyles() {
+// Styles de bières & cidres modifiés depuis la plateforme de gestion, en complément de la liste figée
+// (voir data/styleTagLabels.js) : styles ajoutés à la main, et styles de départ renommés ou supprimés (même
+// code que le style de départ). Rend null si la lecture échoue.
+async function fetchCustomBeerCiderStyles() {
   const { data, error } = await supabase.from("custom_beer_cider_styles").select("code, fr, group_title");
   if (error) {
     console.error("loadCustomBeerCiderStyles:", error);
-    return [];
+    return null;
   }
   return data.map((r) => ({ code: r.code, fr: r.fr, groupTitle: r.group_title }));
+}
+
+// Une seule lecture par session, partagée par tous les écrans qui en ont besoin (fiche produit, répertoire) :
+// la table est petite et change rarement. Un échec n'est pas mémorisé : le prochain écran réessaie.
+let customStylesOnce = null;
+export function loadCustomBeerCiderStylesOnce() {
+  if (!customStylesOnce) {
+    customStylesOnce = fetchCustomBeerCiderStyles().then((list) => {
+      if (list === null) {
+        customStylesOnce = null;
+        return [];
+      }
+      return list;
+    });
+  }
+  return customStylesOnce;
 }
 
 // Fiche producteur/marque — tous les produits d'une brasserie ou d'une marque donnée, jamais le

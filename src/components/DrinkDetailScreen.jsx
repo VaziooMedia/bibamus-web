@@ -23,7 +23,7 @@ import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { EvolutionCard } from "./EvolutionCard.jsx";
 import { NotesCard, formatRating } from "./NotesCard.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadCustomBeerCiderStyles, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStylesOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
@@ -143,22 +143,24 @@ export function DrinkDetailScreen({
   const [myCheckCount, setMyCheckCount] = useState(null);
   const isBeer = BEER_TYPES.includes(drink.type);
 
-  // Styles ajoutés à la main depuis la gestion : l'app ne les connaît pas à la compilation. On ne va
-  // les chercher en base que si CE produit porte un style inconnu de la liste figée — la grande
-  // majorité des produits n'en ont aucun : aucune requête en plus pour eux.
+  // Styles modifiés depuis la gestion : l'app ne les connaît pas à la compilation — un style ajouté à la main
+  // (inconnu de la liste figée) ou un style de départ renommé. On va les chercher en base (une seule fois par
+  // session) quand CE produit est une bière / un cidre qui porte des styles, ou qu'il porte un style inconnu :
+  // les autres produits (vins, spiritueux…) ne font aucune requête en plus. L'effet repasse à chaque fiche
+  // (drink.id) : la lecture est mémorisée, donc sans coût, et un échec est réessayé à la fiche suivante.
   const [, setStyleLabelsTick] = useState(0);
   const unknownStylesKey = (drink.styles || []).filter((code) => !hasStyleLabel(code)).join(",");
+  const needsStyleLabels = !!unknownStylesKey || (isBeer && (drink.styles || []).length > 0);
   useEffect(() => {
-    if (!unknownStylesKey) return;
+    if (!needsStyleLabels) return;
     let cancelled = false;
-    loadCustomBeerCiderStyles().then((list) => {
-      registerCustomStyleLabels(list);
-      if (!cancelled) setStyleLabelsTick((t) => t + 1);
+    loadCustomBeerCiderStylesOnce().then((list) => {
+      if (registerCustomStyleLabels(list) && !cancelled) setStyleLabelsTick((t) => t + 1);
     });
     return () => {
       cancelled = true;
     };
-  }, [unknownStylesKey]);
+  }, [needsStyleLabels, unknownStylesKey, drink.id]);
 
   // Styles sélectionnés sur la fiche (pastilles) pour la liste « Produits communs ». La sélection appartient
   // à CE produit : si la fiche affichée change de produit, elle repart de zéro sans état périmé.
