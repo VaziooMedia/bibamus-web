@@ -2870,7 +2870,10 @@ export async function loadBreweriesByIds(ids) {
     console.error("loadBreweriesByIds:", error);
     return [];
   }
-  return data.map(rowToBrewery);
+  // La base ne garantit aucun ordre pour un « in » : on rend les producteurs dans l'ordre des identifiants
+  // demandés. Pour un produit, c'est l'ordre choisi dans la plateforme de gestion (producer_ids).
+  const rank = new Map(ids.map((id, i) => [id, i]));
+  return data.map(rowToBrewery).sort((a, b) => rank.get(a.id) - rank.get(b.id));
 }
 
 // Pour chaque marque, sa nationalité la plus fréquente parmi ses produits liés — une seule
