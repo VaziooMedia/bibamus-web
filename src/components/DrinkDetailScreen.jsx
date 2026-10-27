@@ -68,20 +68,25 @@ function TimesValue({ count }) {
   );
 }
 
-// Bouton rond « > » discret : un petit chevron vert fluo dans un fin cercle de 18 px, pour qu'on voie quand même que c'est un
+// Bouton rond « > » discret : un petit chevron vert fluo dans un fin cercle de 14 px, pour qu'on voie quand même que c'est un
 // bouton qui ouvre la fiche d'un lieu ou le profil d'un Bibax. Il se pose juste à côté du nom (8 px après lui), jamais en bout de
-// ligne après le chiffre. La zone de toucher déborde du cercle d'environ 7 px tout autour (32 px au total), sans
-// rien changer à la mise en page.
+// ligne après le chiffre, et se centre sur la PREMIÈRE ligne du nom quand celui-ci tient sur deux lignes (Bibax avec surnom,
+// nom de lieu long) : le conteneur de la flèche s'aligne en haut de la rangée (`alignSelf`) et contient une ligne de texte
+// invisible, de même police que le nom, qui lui donne la hauteur d'une ligne de nom. La zone de toucher déborde du cercle
+// d'environ 10 px tout autour (32 px au total, comme avant que le cercle ne rapetisse), sans rien changer à la mise en page.
 function GoButton({ label, onClick }) {
   return (
-    <button
-      aria-label={label}
-      onClick={onClick}
-      style={{ position: "relative", flexShrink: 0, width: "18px", height: "18px", boxSizing: "border-box", borderRadius: "50%", background: "none", border: `1px solid ${COLORS.amber}`, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-    >
-      <span aria-hidden="true" style={{ position: "absolute", top: "-8px", right: "-8px", bottom: "-8px", left: "-8px" }} />
-      <NavIcon name="chevron-right" size={10} color={COLORS.amber} />
-    </button>
+    <span style={{ display: "flex", alignItems: "center", alignSelf: "flex-start", flexShrink: 0, fontSize: "14px" }}>
+      <span aria-hidden="true" style={{ width: 0, overflow: "hidden" }}>{"\u200b"}</span>
+      <button
+        aria-label={label}
+        onClick={onClick}
+        style={{ position: "relative", flexShrink: 0, width: "14px", height: "14px", boxSizing: "border-box", borderRadius: "50%", background: "none", border: `1px solid ${COLORS.amber}`, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+      >
+        <span aria-hidden="true" style={{ position: "absolute", top: "-10px", right: "-10px", bottom: "-10px", left: "-10px" }} />
+        <NavIcon name="chevron-right" size={8} color={COLORS.amber} />
+      </button>
+    </span>
   );
 }
 
@@ -971,7 +976,7 @@ export function DrinkDetailScreen({
                    abouti, ni quand moins de 2 personnes ont consommé le produit : la section et sa barre disparaissent alors. */}
             <div data-checks-card="" style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
               <div>
-                <BlockTitle style={{ marginBottom: "10px" }}>Checks</BlockTitle>
+                <BlockTitle>Checks</BlockTitle>
                 <StatTiles
                   tiles={[
                     { label: "You", value: myCheckCount },
@@ -982,7 +987,7 @@ export function DrinkDetailScreen({
               </div>
               <SectionDivider />
               <div>
-                <BlockTitle style={{ marginBottom: "10px" }}>Unique Checks</BlockTitle>
+                <BlockTitle>Unique Checks</BlockTitle>
                 <StatTiles
                   tiles={[
                     { label: "Bibax", value: bibaxChecks ? bibaxChecks.length : null },
@@ -1003,16 +1008,17 @@ export function DrinkDetailScreen({
                 n'apparaît que s'il y a une autre date que la première. */}
             {myHistory && myHistory.total > 0 && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-                <BlockTitle style={{ marginBottom: "12px" }}>Ton historique avec ce produit</BlockTitle>
+                <BlockTitle>Ton historique avec ce produit</BlockTitle>
                 {historyFirstDate && <HistoryRow first normal label="Première fois" value={historyFirstDate} />}
                 {historyShowLast && <HistoryRow first={!historyFirstDate} normal label="Dernière fois" value={historyLastDate} />}
                 <HistoryRow first={!historyFirstDate && !historyShowLast} label="Consommé" value={<TimesValue count={myHistory.total} />} />
                 {historyVenueRows.length > 0 && (
                   <>
-                    <BlockTitle style={{ margin: "16px 0 4px", borderTop: `1px solid ${COLORS.amber}`, paddingTop: "12px" }}>Où tu l'as bu</BlockTitle>
-                    {historyVenueRows.map((r) => (
+                    <BlockTitle style={{ margin: "16px 0 10px", borderTop: `1px solid ${COLORS.amber}`, paddingTop: "12px" }}>Où tu l'as bu</BlockTitle>
+                    {historyVenueRows.map((r, i) => (
                       <HistoryRow
                         key={r.key}
+                        first={i === 0}
                         anchor={r.isVenue ? `hist:${r.key}` : undefined}
                         label={r.label}
                         value={r.count}
@@ -1035,9 +1041,9 @@ export function DrinkDetailScreen({
             {bibaxChecks && bibaxChecks.length > 0 && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
                 <BlockTitle>Tes Bibax qui ont checké ce produit</BlockTitle>
-                <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {bibaxChecks.map((b) => (
-                    <div key={b.userId} data-anchor={`bibax:${b.userId}`} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {bibaxChecks.map((b, i) => (
+                    <div key={b.userId} data-anchor={`bibax:${b.userId}`} style={{ display: "flex", alignItems: "center", gap: "10px", ...(i === 0 ? {} : { borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px" }) }}>
                       <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                         {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={16} color={COLORS.amber} />}
                       </div>
@@ -1058,7 +1064,7 @@ export function DrinkDetailScreen({
                 aucun classement n'a de lieu. Placé après la liste des Bibax, en fin d'onglet. */}
             {topHasRows && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-                <BlockTitle style={{ marginBottom: "12px" }}>Où ce produit est le plus consommé ?</BlockTitle>
+                <BlockTitle>Où ce produit est le plus consommé ?</BlockTitle>
                 {topShowSelect && (
                   <div role="tablist" aria-label="Classement : tout le monde ou mes Bibax" style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
                     {[
@@ -1092,8 +1098,8 @@ export function DrinkDetailScreen({
                     {topScope === "bibax" ? "Aucun lieu à afficher chez tes Bibax pour ce produit." : "Pas encore assez de consommations pour dresser un classement."}
                   </p>
                 ) : (
-                  topRows.map((r) => (
-                    <div key={r.venueId} data-anchor={`top:${r.venueId}`} style={{ display: "flex", alignItems: "center", gap: "10px", borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }}>
+                  topRows.map((r, i) => (
+                    <div key={r.venueId} data-anchor={`top:${r.venueId}`} style={{ display: "flex", alignItems: "center", gap: "10px", ...(i === 0 && !topShowSelect ? {} : { borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px", marginTop: "10px" }) }}>
                       <span aria-hidden="true" style={{ width: "8px", height: "8px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px" }}>
                         <span style={{ minWidth: 0, fontSize: "14px", color: COLORS.ink, overflowWrap: "anywhere" }}>{r.venue.name}</span>

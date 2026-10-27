@@ -120,11 +120,13 @@ export function SectionTitle({ children }) {
 }
 
 // Titre d'un bloc de l'onglet Biba360 d'une fiche produit (« Notes », « Checks », « Où ce produit est le plus consommé ? »…) :
-// en blanc cassé, aligné à gauche, précédé d'une petite barre verticale vert fluo (3 × 14 px, 8 px avant le texte).
-// `style` : l'espacement propre à chaque bloc (marges, trait au-dessus).
+// en blanc cassé, aligné à gauche, précédé d'une petite barre verticale vert fluo (3 × 14 px, 8 px avant le texte), et séparé
+// du contenu par un trait gris fin (le même que celui qui sépare les lignes des listes ; 10 px d'air de chaque côté).
+// Si le titre passe sur deux lignes (écran très étroit), la barre reste sur la première.
+// `style` : ce qui est propre à un bloc (marges, trait au-dessus).
 export function BlockTitle({ children, style }) {
   return (
-    <div data-block-title="" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.ink, ...style }}>
+    <div data-block-title="" style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", color: COLORS.ink, paddingBottom: "10px", marginBottom: "10px", borderBottom: `1px solid ${COLORS.paperAlt}`, ...style }}>
       <span aria-hidden="true" style={{ width: "3px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
       {children}
     </div>
