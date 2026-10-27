@@ -90,7 +90,7 @@ PWA (`public/manifest.json`) : nom « Bibamus », `display: standalone`, `orient
 | `HeaderAvatarButton` | Bouton rond « Mon profil » (photo, sinon avatar par défaut) |
 | `EntityAvatar` | Avatar rond : photo → emoji → icône (par défaut le monogramme Bibamus, en `amber`) ; devient un bouton si `onClick`. Pas unique : plusieurs avatars sont refaits en ligne |
 | `BibaxName` | Prénom + nom, surnom en italique `amber`, ville et drapeau en gris (voir `BIBAX.md`) |
-| `BlockTitle` | Titre d'un bloc de l'onglet Biba360 (fiche produit) : blanc cassé (`ink`) 12,5 px, **aligné à gauche**, précédé d'une petite barre verticale vert fluo (`amber`, 3 × 14 px, bords arrondis de 2 px, 8 px avant le texte). Décision du 2026-10-26 (variante A choisie sur simulation). `style` ajoute l'espacement de chaque bloc |
+| `BlockTitle` | Titre d'un bloc de l'onglet Biba360 (fiche produit) : blanc cassé (`ink`) 12,5 px, **aligné à gauche**, précédé d'une petite barre verticale vert fluo (`amber`, 3 × 14 px, bords arrondis de 2 px, 8 px avant le texte, alignée sur la première ligne si le titre passe sur deux lignes) et **souligné d'un trait gris fin** (`paperAlt`, 1 px, 10 px d'air au-dessus et au-dessous : le même gris que les séparations de listes ; la première ligne du contenu n'a donc pas de trait au-dessus). Décision du 2026-10-26 (variante A choisie sur simulation), trait gris ajouté le 2026-10-27. `style` ajoute l'espacement de chaque bloc |
 | `SectionTitle` | Titre de sous-section (barre verte 4 × 16 + texte) |
 | `PrimaryButton` | Bouton plein `amber`, texte `paper`, rayon 10, Work Sans. **N'impose pas `width: 100%`** |
 | `ActionCard` | Carte-bouton `surface`, largeur 100 %, bordure `paperAlt` (ou `amber` si mise en avant), badge absolu |

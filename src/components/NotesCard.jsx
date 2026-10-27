@@ -56,7 +56,7 @@ export function NotesCard({ mine, bibax, everyone }) {
   const some = (r) => r && r.count > 0 && typeof r.average === "number" && isFinite(r.average);
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-      <BlockTitle style={{ marginBottom: "12px" }}>Notes</BlockTitle>
+      <BlockTitle>Notes</BlockTitle>
       <NoteRow first label="You" value={mine} />
       <NoteRow label="Bibax" value={some(bibax) ? bibax.average : null} count={some(bibax) ? bibax.count : null} />
       <NoteRow label="Bibamus" value={some(everyone) ? everyone.average : null} count={some(everyone) ? everyone.count : null} />

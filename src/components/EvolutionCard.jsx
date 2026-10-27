@@ -147,7 +147,7 @@ export function EvolutionCard({ evolution }) {
 
   return (
     <div data-evo="section">
-      <BlockTitle style={{ marginBottom: "12px" }}>Check Trends</BlockTitle>
+      <BlockTitle>Check Trends</BlockTitle>
       <div role="tablist" aria-label="Période du graphique" style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {PERIODS.map((p) => (
           <button
