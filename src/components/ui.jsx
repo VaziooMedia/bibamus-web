@@ -120,16 +120,38 @@ export function SectionTitle({ children }) {
 }
 
 // Titre d'un bloc de l'onglet Biba360 d'une fiche produit (« Notes », « Checks », « Où ce produit est le plus consommé ? »…) :
-// en blanc cassé, aligné à gauche, précédé d'une petite barre verticale vert fluo (3 × 14 px, 8 px avant le texte), et séparé
+// en blanc cassé et en gras, aligné à gauche, précédé d'une petite barre verticale vert fluo (3 × 14 px, 8 px avant le texte), et séparé
 // du contenu par un trait gris fin (le même que celui qui sépare les lignes des listes ; 10 px d'air de chaque côté).
 // Si le titre passe sur deux lignes (écran très étroit), la barre reste sur la première.
 // `style` : ce qui est propre à un bloc (marges, trait au-dessus).
 export function BlockTitle({ children, style }) {
   return (
-    <div data-block-title="" style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", color: COLORS.ink, paddingBottom: "10px", marginBottom: "10px", borderBottom: `1px solid ${COLORS.paperAlt}`, ...style }}>
+    <div data-block-title="" style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, paddingBottom: "10px", marginBottom: "10px", borderBottom: `1px solid ${COLORS.paperAlt}`, ...style }}>
       <span aria-hidden="true" style={{ width: "3px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
       {children}
     </div>
+  );
+}
+
+// Bouton rond « > » discret : un petit chevron vert fluo dans un fin cercle de 14 px, pour qu'on voie quand même que c'est un
+// bouton qui ouvre la fiche d'un lieu ou le profil d'un Bibax. Il se pose juste à côté du nom (8 px après lui), jamais en bout de
+// ligne après le chiffre, et se centre sur la PREMIÈRE ligne du nom quand celui-ci tient sur deux lignes (Bibax avec surnom,
+// nom de lieu long) : le conteneur de la flèche s'aligne en haut de la rangée (`alignSelf`) et contient une ligne de texte
+// invisible, de même police que le nom, qui lui donne la hauteur d'une ligne de nom. La zone de toucher déborde du cercle
+// d'environ 10 px tout autour (32 px au total, comme avant que le cercle ne rapetisse), sans rien changer à la mise en page.
+export function GoButton({ label, onClick }) {
+  return (
+    <span style={{ display: "flex", alignItems: "center", alignSelf: "flex-start", flexShrink: 0, fontSize: "14px" }}>
+      <span aria-hidden="true" style={{ width: 0, overflow: "hidden" }}>{"\u200b"}</span>
+      <button
+        aria-label={label}
+        onClick={onClick}
+        style={{ position: "relative", flexShrink: 0, width: "14px", height: "14px", boxSizing: "border-box", borderRadius: "50%", background: "none", border: `1px solid ${COLORS.amber}`, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+      >
+        <span aria-hidden="true" style={{ position: "absolute", top: "-10px", right: "-10px", bottom: "-10px", left: "-10px" }} />
+        <NavIcon name="chevron-right" size={8} color={COLORS.amber} />
+      </button>
+    </span>
   );
 }
 

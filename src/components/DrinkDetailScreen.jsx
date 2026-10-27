@@ -12,7 +12,8 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, BackFooterLink, EntityAvatar, BibaxName, BlockTitle } from "./ui.jsx";
+import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle, GoButton } from "./ui.jsx";
+import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { formatDrinkFieldValue, formatMoney, formatWeekdayDDMMYYYY } from "../utils.js";
@@ -36,7 +37,7 @@ const SUBTYPE_LABELS = {
   vin_effervescent: "Vin effervescent",
 };
 
-// Rangée de tuiles chiffrées de l'onglet Biba360 (« Checks », « Unique Checks »…). Une valeur absente
+// Rangée de tuiles chiffrées de l'onglet Biba360 (« Checks », « Unique Checkers »…). Une valeur absente
 // (lecture en cours ou échouée) s'affiche en tiret.
 function StatTiles({ tiles }) {
   return (
@@ -51,7 +52,7 @@ function StatTiles({ tiles }) {
   );
 }
 
-// Barre verte fluo entre deux sections du bloc « Checks » (Checks, Unique Checks, Check Trends) : 1 px, avec 16 px
+// Barre verte fluo entre deux sections du bloc « Checks » (Checks, Unique Checkers, Check Trends) : 1 px, avec 16 px
 // d'air au-dessus et au-dessous — le trait vert de « Où tu l'as bu » de l'historique.
 function SectionDivider() {
   return <hr data-sep="" style={{ height: 0, border: "none", borderTop: `1px solid ${COLORS.amber}`, margin: "16px 0" }} />;
@@ -65,28 +66,6 @@ function TimesValue({ count }) {
       {count}
       <span style={{ color: COLORS.ink }}> x</span>
     </>
-  );
-}
-
-// Bouton rond « > » discret : un petit chevron vert fluo dans un fin cercle de 14 px, pour qu'on voie quand même que c'est un
-// bouton qui ouvre la fiche d'un lieu ou le profil d'un Bibax. Il se pose juste à côté du nom (8 px après lui), jamais en bout de
-// ligne après le chiffre, et se centre sur la PREMIÈRE ligne du nom quand celui-ci tient sur deux lignes (Bibax avec surnom,
-// nom de lieu long) : le conteneur de la flèche s'aligne en haut de la rangée (`alignSelf`) et contient une ligne de texte
-// invisible, de même police que le nom, qui lui donne la hauteur d'une ligne de nom. La zone de toucher déborde du cercle
-// d'environ 10 px tout autour (32 px au total, comme avant que le cercle ne rapetisse), sans rien changer à la mise en page.
-function GoButton({ label, onClick }) {
-  return (
-    <span style={{ display: "flex", alignItems: "center", alignSelf: "flex-start", flexShrink: 0, fontSize: "14px" }}>
-      <span aria-hidden="true" style={{ width: 0, overflow: "hidden" }}>{"\u200b"}</span>
-      <button
-        aria-label={label}
-        onClick={onClick}
-        style={{ position: "relative", flexShrink: 0, width: "14px", height: "14px", boxSizing: "border-box", borderRadius: "50%", background: "none", border: `1px solid ${COLORS.amber}`, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-      >
-        <span aria-hidden="true" style={{ position: "absolute", top: "-10px", right: "-10px", bottom: "-10px", left: "-10px" }} />
-        <NavIcon name="chevron-right" size={8} color={COLORS.amber} />
-      </button>
-    </span>
   );
 }
 
@@ -104,6 +83,10 @@ function HistoryRow({ label, value, first = false, normal = false, go = null, an
     </div>
   );
 }
+
+// « Tes Bibax qui ont checké ce produit » : on n'affiche que les 5 premiers (ceux qui ont le plus checké le produit) ; au-delà,
+// le bouton « Voir tout » ouvre la liste complète sur sa propre page.
+const BIBAX_PREVIEW_COUNT = 5;
 
 // Premier parent qui défile (le conteneur de l'écran) — là où se lit la hauteur d'un élément pour y revenir.
 function findScrollParent(el) {
@@ -141,6 +124,7 @@ export function DrinkDetailScreen({
   onOpenBrewery,
   onOpenVenue,
   onOpenBibax,
+  onOpenBibaxList,
   returnMemo = null,
   onReturnMemoConsumed,
   onOpenTagFilter,
@@ -231,7 +215,7 @@ export function DrinkDetailScreen({
   }, [drink.id]);
 
   // Nombre de personnes différentes qui ont checké ce produit, tous les utilisateurs de l'app confondus — tuile « Bibamus »
-  // de la section « Unique Checks » (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un tiret.
+  // de la section « Unique Checkers » (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un tiret.
   const [uniqueCheckerCount, setUniqueCheckerCount] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -416,6 +400,10 @@ export function DrinkDetailScreen({
       return;
     }
     if (onOpenBibax) onOpenBibax(codes[userId], memo);
+  };
+  // « Voir tout » : la page de la liste complète. On lui passe la liste entière ; au retour, on retombe à la hauteur du bouton.
+  const openBibaxListFromBiba360 = () => {
+    if (onOpenBibaxList && bibaxChecks) onOpenBibaxList(bibaxChecks, buildReturnMemo("bibax-all"));
   };
 
   // Checks de MES Bibax sur ce produit (onglet Biba360). null = lecture en cours, ou échouée : on affiche alors un
@@ -969,7 +957,7 @@ export function DrinkDetailScreen({
 
             {/* Un seul bloc « Checks », en trois sections séparées par une barre verte fluo :
                 1. « Checks » : You (mes checks), Bibax (ceux de mes Bibax), Bibamus (tous les utilisateurs de l'app) ;
-                2. « Unique Checks » : le nombre de PERSONNES différentes (et non de checks). Pas de tuile « You » : pour moi,
+                2. « Unique Checkers » : le nombre de PERSONNES différentes (et non de checks). Pas de tuile « You » : pour moi,
                    ce serait toujours 0 ou 1. Bibax = les Bibax de la liste plus bas ; Bibamus = tous les utilisateurs de l'app ;
                 3. « Check Trends » : la courbe de la popularité du produit au fil du temps (7 jours, 30 jours, 12 mois,
                    tout l'historique), tous les utilisateurs confondus, en chiffres anonymes. Rien tant que la lecture n'a pas
@@ -987,7 +975,7 @@ export function DrinkDetailScreen({
               </div>
               <SectionDivider />
               <div>
-                <BlockTitle>Unique Checks</BlockTitle>
+                <BlockTitle>Unique Checkers</BlockTitle>
                 <StatTiles
                   tiles={[
                     { label: "Bibax", value: bibaxChecks ? bibaxChecks.length : null },
@@ -1011,7 +999,7 @@ export function DrinkDetailScreen({
                 <BlockTitle>Ton historique avec ce produit</BlockTitle>
                 {historyFirstDate && <HistoryRow first normal label="Première fois" value={historyFirstDate} />}
                 {historyShowLast && <HistoryRow first={!historyFirstDate} normal label="Dernière fois" value={historyLastDate} />}
-                <HistoryRow first={!historyFirstDate && !historyShowLast} label="Consommé" value={<TimesValue count={myHistory.total} />} />
+                <HistoryRow first={!historyFirstDate && !historyShowLast} label="Consommé au total" value={<TimesValue count={myHistory.total} />} />
                 {historyVenueRows.length > 0 && (
                   <>
                     <BlockTitle style={{ margin: "16px 0 10px", borderTop: `1px solid ${COLORS.amber}`, paddingTop: "12px" }}>Où tu l'as bu</BlockTitle>
@@ -1037,24 +1025,20 @@ export function DrinkDetailScreen({
 
             {/* Liste des Bibax qui ont checké ce produit — un bloc à part : d'autres listes (ex. les lieux où j'ai
                 consommé ce produit) pourront venir s'ajouter à côté. Rien tant que la lecture n'a pas abouti, ni quand
-                aucun de mes Bibax n'a checké ce produit (la tuile « Bibax 0 » de « Unique Checks » le dit déjà). */}
+                aucun de mes Bibax n'a checké ce produit (la tuile « Bibax 0 » de « Unique Checkers » le dit déjà). */}
             {bibaxChecks && bibaxChecks.length > 0 && (
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
                 <BlockTitle>Tes Bibax qui ont checké ce produit</BlockTitle>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {bibaxChecks.map((b, i) => (
-                    <div key={b.userId} data-anchor={`bibax:${b.userId}`} style={{ display: "flex", alignItems: "center", gap: "10px", ...(i === 0 ? {} : { borderTop: `1px solid ${COLORS.paperAlt}`, paddingTop: "10px" }) }}>
-                      <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                        {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={16} color={COLORS.amber} />}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                        <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} style={{ fontSize: "14px" }} />
-                        <GoButton label={`Voir le profil de ${[b.name, b.lastName].filter(Boolean).join(" ") || b.nickname || "ce Bibax"}`} onClick={() => openBibaxFromBiba360(b.userId)} />
-                      </div>
-                      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{b.checkCount}</span>
-                    </div>
-                  ))}
-                </div>
+                <BibaxCheckRows rows={bibaxChecks.slice(0, BIBAX_PREVIEW_COUNT)} onOpen={openBibaxFromBiba360} />
+                {bibaxChecks.length > BIBAX_PREVIEW_COUNT && (
+                  <button
+                    data-anchor="bibax-all"
+                    onClick={openBibaxListFromBiba360}
+                    style={{ display: "block", width: "100%", marginTop: "10px", paddingTop: "10px", paddingBottom: 0, paddingLeft: 0, paddingRight: 0, background: "none", border: "none", borderTop: `1px solid ${COLORS.paperAlt}`, textAlign: "center", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber, cursor: "pointer" }}
+                  >
+                    Voir tout
+                  </button>
+                )}
               </div>
             )}
 

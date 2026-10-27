@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 
 // Mémoire de retour de la fiche produit. Quand on quitte l'onglet Biba360 par un lien (la fiche d'un lieu, le profil d'un
-// Bibax), la fiche produit disparaît de l'écran ; sans mémoire, on y revient sur « Infos », tout en haut. Ici on garde
+// Bibax, la page « Voir tout » des Bibax), la fiche produit disparaît de l'écran ; sans mémoire, on y revient sur « Infos », tout en haut. Ici on garde
 // de quoi revenir sur Biba360, à la hauteur de l'élément cliqué : { drinkId, tab, anchor, offset, scope }.
 //
-// La mémoire ne vit que tant qu'on reste dans la boucle fiche produit <-> fiche d'un lieu / profil d'un Bibax. Dès qu'on
+// La mémoire ne vit que tant qu'on reste dans la boucle fiche produit <-> fiche d'un lieu / profil d'un Bibax / page « Voir tout ». Dès qu'on
 // va ailleurs (accueil, une autre section…), elle est effacée : rouvrir plus tard ce produit repart d'« Infos ».
-const LOOP_SCREENS = ["drinkDetail", "venueDetail", "bibaxProfilePreview"];
+const LOOP_SCREENS = ["drinkDetail", "venueDetail", "bibaxProfilePreview", "drinkBibaxChecks"];
 
 export function useDrinkReturnMemo(screen) {
   const [memo, setMemo] = useState(null);
