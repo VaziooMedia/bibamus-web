@@ -10,9 +10,10 @@
 // ============================================================
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../constants.js";
-import { loadPublicCard, loadVenueListsOnce } from "../data/sharedDirectories.js";
+import { loadPublicCard, loadVenueListsOnce, loadProducerListsOnce } from "../data/sharedDirectories.js";
 import { publicCardTexts } from "../publicCard.js";
 import { customNames, VENUE_TYPE_LIST_KEY } from "../venueLists.js";
+import { PRODUCER_TYPE_LIST_KEY } from "../producerLists.js";
 import { EntityAvatar } from "./ui.jsx";
 
 const LOAD_TIMEOUT_MS = 6000;
@@ -72,11 +73,15 @@ export function PublicLinkGate({ name, authScreen }) {
     // Une base qui ne répond pas ne doit pas laisser la personne devant un écran vide : au bout de quelques secondes, écran de connexion.
     const timeout = new Promise((resolve) => setTimeout(() => resolve(null), LOAD_TIMEOUT_MS));
     Promise.race([loadPublicCard(name).catch(() => null), timeout]).then(async (card) => {
-      // Pour un lieu : les noms de types enregistrés par la plateforme de gestion. Sans eux (panne, lenteur), les noms de départ.
+      // Pour un lieu ou un producteur : les noms de types enregistrés par la plateforme de gestion. Sans eux (panne, lenteur),
+      // les noms de départ.
       let typeNames = null;
-      if (card && card.kind === "venue") {
-        const lists = await Promise.race([loadVenueListsOnce().catch(() => null), new Promise((resolve) => setTimeout(() => resolve(null), NAMES_TIMEOUT_MS))]);
-        typeNames = lists ? customNames(lists[VENUE_TYPE_LIST_KEY].rows) : null;
+      if (card && (card.kind === "venue" || card.kind === "brewery")) {
+        const isVenue = card.kind === "venue";
+        const listKey = isVenue ? VENUE_TYPE_LIST_KEY : PRODUCER_TYPE_LIST_KEY;
+        const load = isVenue ? loadVenueListsOnce : loadProducerListsOnce;
+        const lists = await Promise.race([load().catch(() => null), new Promise((resolve) => setTimeout(() => resolve(null), NAMES_TIMEOUT_MS))]);
+        typeNames = lists ? customNames(lists[listKey].rows) : null;
       }
       if (!cancelled) setState({ loading: false, card, typeNames });
     });

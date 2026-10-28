@@ -15,6 +15,7 @@ import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
 import { normalizeSearchText } from "../utils.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
+import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
@@ -2744,47 +2745,56 @@ export function loadCustomBeerCiderStylesOnce() {
   return customStylesOnce;
 }
 
-// Types d'établissement et aménités d'un lieu, modifiés depuis la plateforme de gestion en complément de la liste de
-// départ du code (voir venueLists.js) : éléments ajoutés à la main, renommés ou supprimés (table custom_list_items) et
-// ordre d'affichage (table custom_list_order). Rend { venue_type: { rows, order }, amenity: { rows, order } }, ou null si
-// la lecture des éléments échoue (l'appelant garde alors la liste de départ). Un ordre illisible n'est pas une panne : la
-// liste garde simplement son ordre de départ.
-async function fetchVenueLists() {
-  const keys = [VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY];
+// Listes modifiées depuis la plateforme de gestion en complément de la liste de départ du code (voir venueLists.js et
+// producerLists.js) : éléments ajoutés à la main, renommés ou supprimés (table custom_list_items) et ordre d'affichage
+// (table custom_list_order). Rend { <clé>: { rows, order }, … } pour les clés demandées, ou null si la lecture des éléments
+// échoue (l'appelant garde alors la liste de départ). Un ordre illisible n'est pas une panne : la liste garde simplement
+// son ordre de départ.
+async function fetchCustomLists(keys, label) {
   const [items, orders] = await Promise.all([
     supabase.from("custom_list_items").select("list_key, code, fr, hidden").in("list_key", keys),
     supabase.from("custom_list_order").select("list_key, codes").in("list_key", keys),
   ]);
   if (items.error || !Array.isArray(items.data)) {
-    console.error("loadVenueLists:", items.error);
+    console.error(`${label}:`, items.error);
     return null;
   }
-  if (orders.error) console.error("loadVenueLists (ordre):", orders.error);
+  if (orders.error) console.error(`${label} (ordre):`, orders.error);
   const orderRows = Array.isArray(orders.data) ? orders.data : [];
   const forKey = (key) => ({
     rows: cleanListRows(items.data.filter((r) => r.list_key === key)),
     order: cleanOrder(orderRows.find((r) => r.list_key === key)?.codes),
   });
-  return { [VENUE_TYPE_LIST_KEY]: forKey(VENUE_TYPE_LIST_KEY), [AMENITY_LIST_KEY]: forKey(AMENITY_LIST_KEY) };
+  return Object.fromEntries(keys.map((key) => [key, forKey(key)]));
 }
 
-// Une seule lecture par session, partagée par tous les écrans qui en ont besoin (fiche d'un lieu, assistant « Ajouter un
-// lieu ») : les tables sont petites et changent rarement. Un échec n'est pas mémorisé : le prochain écran réessaie.
-let venueListsOnce = null;
-export function loadVenueListsOnce() {
-  if (!venueListsOnce) {
-    venueListsOnce = fetchVenueLists()
-      .catch((e) => {
-        console.error("loadVenueLists:", e);
-        return null;
-      })
-      .then((lists) => {
-        if (lists === null) venueListsOnce = null;
-        return lists;
-      });
-  }
-  return venueListsOnce;
+// Une seule lecture par session et par groupe de listes, partagée par tous les écrans qui en ont besoin : les tables sont
+// petites et changent rarement. Un échec n'est pas mémorisé : le prochain écran réessaie.
+function onceLoader(keys, label) {
+  let once = null;
+  return () => {
+    if (!once) {
+      once = fetchCustomLists(keys, label)
+        .catch((e) => {
+          console.error(`${label}:`, e);
+          return null;
+        })
+        .then((lists) => {
+          if (lists === null) once = null;
+          return lists;
+        });
+    }
+    return once;
+  };
 }
+
+// Types d'établissement et aménités d'un lieu : { venue_type: { rows, order }, amenity: { rows, order } } (fiche d'un lieu,
+// assistant « Ajouter un lieu »).
+export const loadVenueListsOnce = onceLoader([VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY], "loadVenueLists");
+
+// Type et profil d'un producteur : { producer_type: { rows, order }, producer_profile: { rows, order } } (assistant « Ajouter
+// un producteur », carte publique d'un producteur).
+export const loadProducerListsOnce = onceLoader([PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY], "loadProducerLists");
 
 // Fiche producteur/marque — tous les produits d'une brasserie ou d'une marque donnée, jamais le
 // répertoire complet pour ça.
