@@ -4,11 +4,13 @@
 // écrit en base tant que l'utilisateur n'a pas validé la toute dernière page ET confirmé le
 // vrai popup qui suit — tout reste en mémoire locale jusque-là.
 // ============================================================
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { COLORS, COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, EntityAvatar } from "./ui.jsx";
-import { createBrand } from "../data/sharedDirectories.js";
+import { createBrand, loadBrandListsOnce } from "../data/sharedDirectories.js";
+import { orderedList } from "../venueLists.js";
+import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 
 function StepShell({ step, totalSteps, title, onBack, onPrevious, children, footer }) {
   return (
@@ -85,12 +87,30 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
   const [originRegion, setOriginRegion] = useState("");
   const [originCity, setOriginCity] = useState("");
 
+  // Les listes des pages 4 et 5 (classifications, types) : celles du code, complétées par la plateforme de gestion (noms,
+  // ordre, éléments ajoutés ou supprimés). Lues une fois par session ; si la lecture échoue, la liste de départ suffit.
+  const [brandLists, setBrandLists] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadBrandListsOnce().then((lists) => {
+      if (lists && !cancelled) setBrandLists(lists);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const classificationOptions = orderedList(BRAND_CLASSIFICATIONS, brandLists?.[BRAND_CLASSIFICATION_LIST_KEY].rows, brandLists?.[BRAND_CLASSIFICATION_LIST_KEY].order);
+  const typeOptions = orderedList(BRAND_TYPES, brandLists?.[BRAND_TYPE_LIST_KEY].rows, brandLists?.[BRAND_TYPE_LIST_KEY].order);
+
   // Page 4 — Classification
   const [classifications, setClassifications] = useState([]);
+  // Seuls les choix encore proposés comptent (un élément supprimé depuis la gestion pendant la saisie ne part pas).
+  const chosenClassifications = classifications.filter((code) => classificationOptions.some((c) => c.code === code));
   const toggleClassification = (code) => setClassifications((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
 
   // Page 5 — Type de marque
   const [brandTypes, setBrandTypes] = useState([]);
+  const chosenTypes = brandTypes.filter((code) => typeOptions.some((t) => t.code === code));
   const toggleBrandType = (code) => setBrandTypes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
 
   // Page 6 — Producteur(s) actuel(s) (facultatif, plusieurs possibles en cas de collaboration)
@@ -114,8 +134,8 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
       originCountry,
       originRegion: originRegion.trim() || null,
       originCity: originCity.trim() || null,
-      classifications,
-      brandTypes,
+      classifications: chosenClassifications,
+      brandTypes: chosenTypes,
       producerIds: selectedProducers.map((p) => p.id),
       status: "to_process",
       createdVia: "app",
@@ -216,13 +236,13 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
         onBack={onCancel}
         onPrevious={() => setStep(3)}
         footer={
-          <PrimaryButton onClick={() => setStep(5)} disabled={classifications.length === 0} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setStep(5)} disabled={chosenClassifications.length === 0} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
       >
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Minimum 1 - Plusieurs choix possibles</p>
-        <TagPicker options={BRAND_CLASSIFICATIONS} selected={classifications} onToggle={toggleClassification} />
+        <TagPicker options={classificationOptions} selected={chosenClassifications} onToggle={toggleClassification} />
       </StepShell>
     );
   }
@@ -236,13 +256,13 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
         onBack={onCancel}
         onPrevious={() => setStep(4)}
         footer={
-          <PrimaryButton onClick={() => setStep(6)} disabled={brandTypes.length === 0} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setStep(6)} disabled={chosenTypes.length === 0} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
       >
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Minimum 1 - Plusieurs choix possibles</p>
-        <TagPicker options={BRAND_TYPES} selected={brandTypes} onToggle={toggleBrandType} />
+        <TagPicker options={typeOptions} selected={chosenTypes} onToggle={toggleBrandType} />
       </StepShell>
     );
   }
