@@ -10,7 +10,9 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
-import { createBrewery, geocodeAddress, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
+import { createBrewery, geocodeAddress, loadProducerListsOnce, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
+import { orderedList } from "../venueLists.js";
+import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { normalizeForDuplicateCheck } from "../utils.js";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
@@ -109,11 +111,29 @@ export function SubmitBreweryWizardScreen({ breweriesDirectory, onDone, onCancel
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
 
+  // Les listes des pages 6 et 7 (types, profils) : celles du code, complétées par la plateforme de gestion (noms, ordre,
+  // éléments ajoutés ou supprimés). Lues une fois par session ; si la lecture échoue, la liste de départ suffit.
+  const [producerLists, setProducerLists] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadProducerListsOnce().then((lists) => {
+      if (lists && !cancelled) setProducerLists(lists);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const typeOptions = orderedList(PRODUCER_TYPES, producerLists?.[PRODUCER_TYPE_LIST_KEY].rows, producerLists?.[PRODUCER_TYPE_LIST_KEY].order);
+  const profileOptions = orderedList(PRODUCER_PROFILES, producerLists?.[PRODUCER_PROFILE_LIST_KEY].rows, producerLists?.[PRODUCER_PROFILE_LIST_KEY].order);
+
   // Page 6 — Type de producteur
   const [producerTypes, setProducerTypes] = useState([]);
+  // Seuls les choix encore proposés comptent (un type supprimé depuis la gestion pendant la saisie ne part pas).
+  const chosenTypes = producerTypes.filter((code) => typeOptions.some((t) => t.code === code));
 
   // Page 7 — Profil du producteur
   const [producerProfiles, setProducerProfiles] = useState([]);
+  const chosenProfiles = producerProfiles.filter((code) => profileOptions.some((p) => p.code === code));
 
   // Vraie confirmation finale — rien n'est créé avant que l'utilisateur clique "OK" ici.
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -193,8 +213,8 @@ export function SubmitBreweryWizardScreen({ breweriesDirectory, onDone, onCancel
       village: village.trim() || null,
       lat,
       lng,
-      producerTypes,
-      producerProfiles,
+      producerTypes: chosenTypes,
+      producerProfiles: chosenProfiles,
       status: "to_process",
       createdVia: "app",
     });
@@ -385,13 +405,13 @@ export function SubmitBreweryWizardScreen({ breweriesDirectory, onDone, onCancel
         onBack={onCancel}
         onPrevious={() => setStep(5)}
         footer={
-          <PrimaryButton onClick={() => setStep(7)} disabled={producerTypes.length === 0} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setStep(7)} disabled={chosenTypes.length === 0} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
       >
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Minimum 1 - Plusieurs choix possibles</p>
-        <TagPicker options={PRODUCER_TYPES} selected={producerTypes} onToggle={toggleProducerType} />
+        <TagPicker options={typeOptions} selected={chosenTypes} onToggle={toggleProducerType} />
       </StepShell>
     );
   }
@@ -411,7 +431,7 @@ export function SubmitBreweryWizardScreen({ breweriesDirectory, onDone, onCancel
         }
       >
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif - Plusieurs choix possibles</p>
-        <TagPicker options={PRODUCER_PROFILES} selected={producerProfiles} onToggle={toggleProducerProfile} />
+        <TagPicker options={profileOptions} selected={chosenProfiles} onToggle={toggleProducerProfile} />
       </StepShell>
 
       {showConfirmPopup && (

@@ -16,6 +16,11 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabaseConfig.js";
 import { cardHeadTags, genericHeadTags, GENERIC_TITLE, injectHead, isPublicUsername, PUBLIC_SITE_URL, publicCardTexts } from "./publicCard.js";
 import { customNames, VENUE_TYPE_LIST_KEY } from "./venueLists.js";
+import { PRODUCER_TYPE_LIST_KEY } from "./producerLists.js";
+
+// La liste de types modifiable de chaque genre de fiche qui en a une (une marque n'en a pas).
+const TYPE_LIST_KEYS = { venue: VENUE_TYPE_LIST_KEY, brewery: PRODUCER_TYPE_LIST_KEY };
+const typeListKeyFor = (kind) => (typeof kind === "string" && Object.prototype.hasOwnProperty.call(TYPE_LIST_KEYS, kind) ? TYPE_LIST_KEYS[kind] : null);
 
 const TIMEOUT_MS = 3000;
 // Les noms de types sont un détail de l'aperçu : on ne leur laisse que 1,5 s (en plus de la carte), pour qu'un robot ne
@@ -92,13 +97,14 @@ async function fetchCard(name, fetchImpl, timeoutMs) {
   }
 }
 
-// Les noms des types d'établissement enregistrés par la plateforme de gestion (types ajoutés ou renommés), ou null si la
-// lecture échoue : l'aperçu garde alors les noms de départ. Ce n'est jamais une panne (la carte, elle, reste indispensable).
-async function fetchVenueTypeNames(fetchImpl, timeoutMs) {
+// Les noms des types d'établissement ou de producteur enregistrés par la plateforme de gestion (types ajoutés ou renommés),
+// ou null si la lecture échoue : l'aperçu garde alors les noms de départ. Ce n'est jamais une panne (la carte, elle, reste
+// indispensable). `listKey` : VENUE_TYPE_LIST_KEY ou PRODUCER_TYPE_LIST_KEY.
+async function fetchTypeNames(listKey, fetchImpl, timeoutMs) {
   try {
     const rows = await timedRequest(
       fetchImpl,
-      `${SUPABASE_URL}/rest/v1/custom_list_items?select=code,fr,hidden&list_key=eq.${VENUE_TYPE_LIST_KEY}`,
+      `${SUPABASE_URL}/rest/v1/custom_list_items?select=code,fr,hidden&list_key=eq.${listKey}`,
       { method: "GET", headers: { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}`, accept: "application/json" } },
       timeoutMs,
       (res) => res.json(),
@@ -138,7 +144,9 @@ export async function handlePublicLink(request, { fetchImpl = fetch, timeoutMs =
   if (!baseHtml) return unavailable(null, isHead);
   if (found.error) return unavailable(baseHtml, isHead);
 
-  const typeNames = found.card && found.card.kind === "venue" ? await fetchVenueTypeNames(fetchImpl, Math.min(timeoutMs, TYPE_NAMES_TIMEOUT_MS)) : null;
+  // Pour un lieu ou un producteur seulement (une marque n'a pas de liste de types modifiable).
+  const typeListKey = found.card ? typeListKeyFor(found.card.kind) : null;
+  const typeNames = typeListKey ? await fetchTypeNames(typeListKey, fetchImpl, Math.min(timeoutMs, TYPE_NAMES_TIMEOUT_MS)) : null;
   const texts = found.card ? publicCardTexts(found.card, typeNames) : null;
   const html = texts ? injectHead(baseHtml, texts.title, cardHeadTags(texts)) : injectHead(baseHtml, GENERIC_TITLE, genericHeadTags());
   if (!html) return unavailable(null, isHead);

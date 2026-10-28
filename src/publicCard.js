@@ -62,11 +62,13 @@ export function safeImageUrl(value) {
 }
 
 // Les trois premiers types connus, dans l'ordre de la fiche (un code inconnu est ignoré, jamais affiché tel quel).
-// `names` : les noms enregistrés en base pour les types d'un lieu (voir customNames dans venueLists.js : types ajoutés
-// ou renommés depuis la plateforme de gestion) ; ils l'emportent sur la liste de départ et ne valent que pour un lieu.
+// `names` : les noms enregistrés en base pour les types d'un lieu ou d'un producteur (voir customNames dans venueLists.js :
+// types ajoutés ou renommés depuis la plateforme de gestion) ; ils l'emportent sur la liste de départ et ne valent que pour
+// un lieu ou un producteur (pas pour une marque).
+const KINDS_WITH_CUSTOM_TYPES = ["venue", "brewery"];
 export function typeLabels(kind, types, max = 3, names = null) {
   const list = hasOwn(TYPE_LISTS, kind) ? TYPE_LISTS[kind] : [];
-  const custom = kind === "venue" && names && typeof names === "object" ? names : {};
+  const custom = KINDS_WITH_CUSTOM_TYPES.includes(kind) && names && typeof names === "object" ? names : {};
   if (!Array.isArray(types)) return [];
   const out = [];
   for (const code of types) {
