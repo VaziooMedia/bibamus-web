@@ -2725,6 +2725,7 @@ export default function App() {
                 onToggleAlcoholFreeDay={toggleAlcoholFreeDay}
                 onBack={() => setScreen("profile")}
                 openVenue={(id) => {
+                  setScreenBeforeVenueDetail("myStats");
                   setViewedVenueId(id);
                   setScreen("venueDetail");
                 }}
@@ -2745,6 +2746,7 @@ export default function App() {
                 bibros={bibros}
                 events={events}
                 openVenue={(id) => {
+                  setScreenBeforeVenueDetail("myStatsWrapped");
                   setViewedVenueId(id);
                   setScreen("venueDetail");
                 }}
@@ -3200,6 +3202,7 @@ export default function App() {
                 roundsSum={(events.find((e) => e.id === viewedHistoryEventId)?.rounds || []).reduce((s, r) => s + (r.total || 0), 0)}
                 onBack={() => setScreen("eventHistory")}
                 openVenue={(id) => {
+                  setScreenBeforeVenueDetail("eventHistoryDetail");
                   setViewedVenueId(id);
                   setScreen("venueDetail");
                 }}
