@@ -538,6 +538,9 @@ export function WaterAlertSettingsScreen({ event, onSave, onBack }) {
       mode,
       everyMinutes: parseInt(everyMinutes, 10) || 30,
       everyRounds: parseInt(everyRounds, 10) || 3,
+      // Départ du décompte « toutes les X minutes » : l'activation. Sans cette heure, le serveur compte depuis la création du
+      // salon et envoie le premier rappel aussitôt (dans la minute) dès que le salon a plus de X minutes.
+      ...(mode === "time" ? { lastReminderAt: new Date().toISOString() } : {}),
     });
   };
 
