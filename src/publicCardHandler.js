@@ -15,8 +15,12 @@
 // ============================================================
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabaseConfig.js";
 import { cardHeadTags, genericHeadTags, GENERIC_TITLE, injectHead, isPublicUsername, PUBLIC_SITE_URL, publicCardTexts } from "./publicCard.js";
+import { customNames, VENUE_TYPE_LIST_KEY } from "./venueLists.js";
 
 const TIMEOUT_MS = 3000;
+// Les noms de types sont un détail de l'aperçu : on ne leur laisse que 1,5 s (en plus de la carte), pour qu'un robot ne
+// patiente jamais beaucoup plus de 4,5 s au total.
+const TYPE_NAMES_TIMEOUT_MS = 1500;
 
 // Le robot peut revenir dans 5 minutes pour une fiche, 1 minute pour une page générique (une fiche qui vient de passer
 // « complet » ne reste pas longtemps invisible). Jamais de cache pour une panne.
@@ -88,6 +92,23 @@ async function fetchCard(name, fetchImpl, timeoutMs) {
   }
 }
 
+// Les noms des types d'établissement enregistrés par la plateforme de gestion (types ajoutés ou renommés), ou null si la
+// lecture échoue : l'aperçu garde alors les noms de départ. Ce n'est jamais une panne (la carte, elle, reste indispensable).
+async function fetchVenueTypeNames(fetchImpl, timeoutMs) {
+  try {
+    const rows = await timedRequest(
+      fetchImpl,
+      `${SUPABASE_URL}/rest/v1/custom_list_items?select=code,fr,hidden&list_key=eq.${VENUE_TYPE_LIST_KEY}`,
+      { method: "GET", headers: { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}`, accept: "application/json" } },
+      timeoutMs,
+      (res) => res.json(),
+    );
+    return Array.isArray(rows) ? customNames(rows) : null;
+  } catch {
+    return null;
+  }
+}
+
 function unavailable(baseHtml, isHead) {
   const headers = { "cache-control": "no-store", "retry-after": "120", "x-content-type-options": "nosniff" };
   if (baseHtml) {
@@ -117,7 +138,8 @@ export async function handlePublicLink(request, { fetchImpl = fetch, timeoutMs =
   if (!baseHtml) return unavailable(null, isHead);
   if (found.error) return unavailable(baseHtml, isHead);
 
-  const texts = found.card ? publicCardTexts(found.card) : null;
+  const typeNames = found.card && found.card.kind === "venue" ? await fetchVenueTypeNames(fetchImpl, Math.min(timeoutMs, TYPE_NAMES_TIMEOUT_MS)) : null;
+  const texts = found.card ? publicCardTexts(found.card, typeNames) : null;
   const html = texts ? injectHead(baseHtml, texts.title, cardHeadTags(texts)) : injectHead(baseHtml, GENERIC_TITLE, genericHeadTags());
   if (!html) return unavailable(null, isHead);
 

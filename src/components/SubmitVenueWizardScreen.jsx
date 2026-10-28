@@ -5,12 +5,13 @@
 // Ça évite les vrais brouillons/tests qui apparaissaient dans BibAtlas avant toute validation.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, COUNTRIES, COUNTRY_ISO_CODES, VENUE_TYPES } from "../constants.js";
+import { COLORS, COUNTRIES, COUNTRY_ISO_CODES, VENUE_TYPES, VENUE_AMENITIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
-import { createPublicVenue, saveGeocodeResult, geocodeAddress, searchVenues, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
+import { createPublicVenue, saveGeocodeResult, geocodeAddress, searchVenues, loadVenueListsOnce, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
+import { orderedList, VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY } from "../venueLists.js";
 import { normalizeForDuplicateCheck } from "../utils.js";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
@@ -47,27 +48,6 @@ const inputStyle = { width: "100%", boxSizing: "border-box", padding: "12px 14px
 const requiredStyle = (filled) => ({ ...inputStyle, border: `2px solid ${filled ? COLORS.amber : COLORS.pinkFluo}` });
 const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
 const capitalizeFirst = (s) => (s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-
-const AMENITY_FIELDS = [
-  ["hasOccasionalKaraoke", "Karaokés occasionnels"],
-  ["hasOccasionalConcerts", "Concerts occasionnels"],
-  ["hasBilliards", "Billard"],
-  ["hasFoosball", "Babyfoot - Kicker"],
-  ["hasDarts", "Jeu de fléchettes"],
-  ["hasBingo", "Bingo"],
-  ["hasFood", "Restauration"],
-  ["hasSnacks", "Petite restauration"],
-  ["hasTerrace", "Terrasse"],
-  ["wheelchairAccessible", "Accessible PMR"],
-  ["hasWifi", "WiFi gratuit"],
-  ["hasDogs", "Chiens acceptés"],
-  ["canDance", "Possibilité de danser (en soirée)"],
-  ["reservationPossible", "Réservation possible"],
-  ["goodForGroups", "Idéal pour des grands groupes"],
-  ["privatizationPossible", "Privatisation possible"],
-  ["hasPrivateRoom", "Salle annexe privée disponible"],
-  ["smokingArea", "Espace fumeurs"],
-];
 
 export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   const [step, setStep] = useState(1);
@@ -112,13 +92,31 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
 
+  // Les listes des pages 6 et 7 (types, aménités) : celles du code, complétées par la plateforme de gestion (noms, ordre,
+  // éléments ajoutés ou supprimés). Lues une fois par session ; si la lecture échoue, la liste de départ suffit.
+  const [venueLists, setVenueLists] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadVenueListsOnce().then((lists) => {
+      if (lists && !cancelled) setVenueLists(lists);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const typeOptions = orderedList(VENUE_TYPES, venueLists?.[VENUE_TYPE_LIST_KEY].rows, venueLists?.[VENUE_TYPE_LIST_KEY].order);
+  const amenityOptions = orderedList(VENUE_AMENITIES, venueLists?.[AMENITY_LIST_KEY].rows, venueLists?.[AMENITY_LIST_KEY].order);
+
   // Page 6 — Type
   const [venueTypes, setVenueTypes] = useState([]);
   const toggleVenueType = (code) => setVenueTypes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+  // Seuls les choix encore proposés comptent (un type supprimé depuis la gestion pendant la saisie ne part pas).
+  const chosenTypes = venueTypes.filter((code) => typeOptions.some((t) => t.code === code));
 
-  // Page 7 — Aménités
-  const [amenities, setAmenities] = useState({});
-  const toggleAmenity = (key) => setAmenities((prev) => ({ ...prev, [key]: !prev[key] }));
+  // Page 7 — Aménités (des codes, comme les types)
+  const [amenities, setAmenities] = useState([]);
+  const toggleAmenity = (code) => setAmenities((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+  const chosenAmenities = amenities.filter((code) => amenityOptions.some((a) => a.code === code));
 
   // Vraie confirmation finale — rien n'est créé avant que l'utilisateur clique "OK" ici.
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -196,8 +194,8 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
       streetName: streetName.trim(),
       streetNumber: streetNumber.trim(),
       village: village.trim() || null,
-      venueTypes,
-      ...amenities,
+      venueTypes: chosenTypes,
+      amenities: chosenAmenities,
       status: "to_process",
       createdVia: "app",
       menu: [],
@@ -393,15 +391,15 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         onBack={onCancel}
         onPrevious={() => setStep(5)}
         footer={
-          <PrimaryButton onClick={() => setStep(7)} disabled={venueTypes.length === 0} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setStep(7)} disabled={chosenTypes.length === 0} style={{ width: "100%" }}>
             Suivant
           </PrimaryButton>
         }
       >
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Minimum 1 - Plusieurs choix possibles</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          {VENUE_TYPES.map((t) => {
-            const checked = venueTypes.includes(t.code);
+          {typeOptions.map((t) => {
+            const checked = chosenTypes.includes(t.code);
             return (
               <button
                 key={t.code}
@@ -442,10 +440,10 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
       >
         <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: 0, marginBottom: "16px" }}>Facultatif - Plusieurs choix possibles</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {AMENITY_FIELDS.map(([key, label]) => (
-            <label key={key} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", cursor: "pointer" }}>
-              <input type="checkbox" checked={!!amenities[key]} onChange={() => toggleAmenity(key)} style={{ width: "18px", height: "18px", accentColor: COLORS.amber, flexShrink: 0 }} />
-              {label}
+          {amenityOptions.map((a) => (
+            <label key={a.code} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", cursor: "pointer" }}>
+              <input type="checkbox" checked={chosenAmenities.includes(a.code)} onChange={() => toggleAmenity(a.code)} style={{ width: "18px", height: "18px", accentColor: COLORS.amber, flexShrink: 0 }} />
+              {a.fr}
             </label>
           ))}
         </div>

@@ -10,11 +10,14 @@
 // ============================================================
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../constants.js";
-import { loadPublicCard } from "../data/sharedDirectories.js";
+import { loadPublicCard, loadVenueListsOnce } from "../data/sharedDirectories.js";
 import { publicCardTexts } from "../publicCard.js";
+import { customNames, VENUE_TYPE_LIST_KEY } from "../venueLists.js";
 import { EntityAvatar } from "./ui.jsx";
 
 const LOAD_TIMEOUT_MS = 6000;
+// Les noms de types sont un détail : si leur lecture traîne, on garde les noms de départ plutôt que de faire attendre.
+const NAMES_TIMEOUT_MS = 2500;
 
 const chipStyle = { fontSize: "11.5px", fontWeight: 600, padding: "4px 10px", borderRadius: "999px", border: `1px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink };
 
@@ -60,16 +63,22 @@ export function PublicCardScreen({ texts, onOpen }) {
 
 // `authScreen` : l'écran de connexion de l'app (déjà prêt), montré tel quel quand il n'y a pas de carte ou après le bouton.
 export function PublicLinkGate({ name, authScreen }) {
-  const [state, setState] = useState({ loading: true, card: null });
+  const [state, setState] = useState({ loading: true, card: null, typeNames: null });
   const [opened, setOpened] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    setState({ loading: true, card: null });
+    setState({ loading: true, card: null, typeNames: null });
     // Une base qui ne répond pas ne doit pas laisser la personne devant un écran vide : au bout de quelques secondes, écran de connexion.
     const timeout = new Promise((resolve) => setTimeout(() => resolve(null), LOAD_TIMEOUT_MS));
-    Promise.race([loadPublicCard(name).catch(() => null), timeout]).then((card) => {
-      if (!cancelled) setState({ loading: false, card });
+    Promise.race([loadPublicCard(name).catch(() => null), timeout]).then(async (card) => {
+      // Pour un lieu : les noms de types enregistrés par la plateforme de gestion. Sans eux (panne, lenteur), les noms de départ.
+      let typeNames = null;
+      if (card && card.kind === "venue") {
+        const lists = await Promise.race([loadVenueListsOnce().catch(() => null), new Promise((resolve) => setTimeout(() => resolve(null), NAMES_TIMEOUT_MS))]);
+        typeNames = lists ? customNames(lists[VENUE_TYPE_LIST_KEY].rows) : null;
+      }
+      if (!cancelled) setState({ loading: false, card, typeNames });
     });
     return () => {
       cancelled = true;
@@ -84,7 +93,7 @@ export function PublicLinkGate({ name, authScreen }) {
       </div>
     );
   }
-  const texts = publicCardTexts(state.card);
+  const texts = publicCardTexts(state.card, state.typeNames);
   if (!texts) return authScreen;
   return <PublicCardScreen texts={texts} onOpen={() => setOpened(true)} />;
 }
