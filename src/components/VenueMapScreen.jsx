@@ -156,17 +156,19 @@ function VenueMapCard({ cardRef, pin, venue, status, typeLabels, onOpen }) {
   );
 }
 
-export function VenueMapScreen({ onBack, onOpenVenue }) {
-  const [pins, setPins] = useState(null);
+// `initialView` : l'état de la carte au moment où l'on a quitté l'écran pour la fiche d'un lieu (voir `onOpenVenue`), pour
+// retomber exactement dessus au retour : même zoom, même centre, même cadre ouvert. `null` = carte neuve.
+export function VenueMapScreen({ onBack, onOpenVenue, initialView = null }) {
+  const [pins, setPins] = useState(initialView?.pins ?? null);
   const [locating, setLocating] = useState(false);
   const mapRef = useRef(null);
   const cardRef = useRef(null);
 
   // Le lieu dont le cadre est ouvert (null = aucun). Sa fiche complète (adresse, sous-titre, photo, types) et ses horaires
   // sont lus à la demande, une seule fois par lieu : les épingles ne portent que le nom et la position.
-  const [selectedId, setSelectedId] = useState(null);
-  const [venuesById, setVenuesById] = useState({});
-  const [hoursById, setHoursById] = useState({});
+  const [selectedId, setSelectedId] = useState(initialView?.selectedId ?? null);
+  const [venuesById, setVenuesById] = useState(initialView?.venuesById ?? {});
+  const [hoursById, setHoursById] = useState(initialView?.hoursById ?? {});
   const requestedRef = useRef(new Set());
   const aliveRef = useRef(true);
   const [, setTypeNamesTick] = useState(0);
@@ -178,8 +180,10 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
     };
   }, []);
 
+  // Au retour d'une fiche, les épingles d'avant s'affichent tout de suite puis la liste à jour les remplace ; une lecture qui
+  // échoue (liste vide) ne vide pas la carte.
   useEffect(() => {
-    loadVenueMapPins().then(setPins);
+    loadVenueMapPins().then((fresh) => setPins((previous) => (previous && fresh.length === 0 ? previous : fresh)));
   }, []);
 
   const center = useMemo(() => {
@@ -195,7 +199,7 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
 
   // Lit la fiche du lieu puis ses horaires. Un échec n'est pas gardé : le toucher suivant sur ce lieu réessaie.
   useEffect(() => {
-    if (!selectedId || requestedRef.current.has(selectedId)) return;
+    if (!selectedId || venuesById[selectedId] || requestedRef.current.has(selectedId)) return;
     const id = selectedId;
     requestedRef.current.add(id);
     (async () => {
@@ -239,20 +243,32 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
 
   // Décale la carte pour que l'épingle choisie reste visible au-dessus du cadre. Refait chaque fois que le cadre change de
   // hauteur (la fiche arrive : adresse, tags ; les noms de type arrivent : tags plus longs) ; sans effet si l'épingle est
-  // déjà bien placée.
+  // déjà bien placée. Exception : le cadre retrouvé au retour d'une fiche ne décale rien tant qu'il ne change pas de hauteur,
+  // la carte reste exactement comme on l'a quittée.
+  const restoredIdRef = useRef(initialView?.selectedId ?? null);
   useEffect(() => {
     const map = mapRef.current;
     const el = cardRef.current;
     if (!map || !el) return undefined;
+    const leaveAsIs = restoredIdRef.current === selectedPin.id;
+    restoredIdRef.current = null;
     const keepPinVisible = () => {
       map.panInside([selectedPin.lat, selectedPin.lng], {
         paddingTopLeft: [PIN_SAFE_SIDE_PX, PIN_SAFE_TOP_PX],
         paddingBottomRight: [PIN_SAFE_RIGHT_PX, el.offsetHeight + CARD_BOTTOM_PX + CARD_GAP_PX],
       });
     };
-    keepPinVisible();
+    if (!leaveAsIs) keepPinVisible();
     if (typeof ResizeObserver === "undefined") return undefined;
-    const observer = new ResizeObserver(keepPinVisible);
+    // L'observateur annonce d'abord la taille de départ : sans changement, il n'y a rien à corriger.
+    let firstReport = true;
+    const observer = new ResizeObserver(() => {
+      if (firstReport) {
+        firstReport = false;
+        if (leaveAsIs) return;
+      }
+      keepPinVisible();
+    });
     observer.observe(el);
     return () => observer.disconnect();
   }, [selectedPin]);
@@ -261,6 +277,20 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
     () => (pins || []).map((p) => <Marker key={p.id} position={[p.lat, p.lng]} icon={pinIcon} eventHandlers={{ click: () => setSelectedId(p.id) }} />),
     [pins]
   );
+
+  // Ouvre la fiche du lieu choisi en laissant à l'appelant de quoi retrouver la carte telle qu'elle est (voir `initialView`).
+  const openSelectedVenue = () => {
+    const map = mapRef.current;
+    const mapCenter = map ? map.getCenter() : null;
+    onOpenVenue(selectedPin.id, {
+      selectedId: selectedPin.id,
+      center: mapCenter ? [mapCenter.lat, mapCenter.lng] : null,
+      zoom: map ? map.getZoom() : null,
+      pins,
+      venuesById,
+      hoursById,
+    });
+  };
 
   const centerOnMyLocation = () => {
     if (!navigator.geolocation || locating) return;
@@ -287,7 +317,13 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Chargement...</p>
       ) : (
         <div style={{ flex: 1, minHeight: "300px", borderRadius: "16px", overflow: "hidden", border: `2px solid ${COLORS.paperAlt}`, position: "relative" }}>
-          <MapContainer ref={mapRef} center={center} zoom={pins.length > 0 ? 7 : 6} zoomControl={false} style={{ width: "100%", height: "100%" }}>
+          <MapContainer
+            ref={mapRef}
+            center={initialView?.center || center}
+            zoom={initialView?.zoom ?? (pins.length > 0 ? 7 : 6)}
+            zoomControl={false}
+            style={{ width: "100%", height: "100%" }}
+          >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -334,7 +370,7 @@ export function VenueMapScreen({ onBack, onOpenVenue }) {
                   venue={selectedVenue}
                   status={openStatusOf(selectedHours)}
                   typeLabels={typeLabels}
-                  onOpen={() => onOpenVenue(selectedPin.id)}
+                  onOpen={openSelectedVenue}
                 />
               </div>
             )}

@@ -312,6 +312,9 @@ export default function App() {
   const [storyResumeState, setStoryResumeState] = useState(null); // {stories, index} | null
   const [pulseStoriesRefreshKey, setPulseStoriesRefreshKey] = useState(0);
   const [screenBeforeVenueDetail, setScreenBeforeVenueDetail] = useState("venueDirectory");
+  // L'état de la carte des lieux quand on la quitte pour la fiche d'un lieu : au retour, la carte retombe dessus (zoom, centre,
+  // cadre ouvert). Effacé quand on quitte la carte ou qu'on l'ouvre depuis l'annuaire : elle repart alors de zéro.
+  const [venueMapView, setVenueMapView] = useState(null);
   const [screenBeforeBibaSolo, setScreenBeforeBibaSolo] = useState("sessionHub");
   const [viewedClubId, setViewedClubId] = useState(null);
   // Écran où ramène la flèche retour de la page d'un club (liste des clubs, ou fil de notifications quand on y arrive par une invitation).
@@ -2279,7 +2282,10 @@ export default function App() {
                   setScreen("venueDetail");
                 }}
                 goToSubmit={() => setScreen("submitVenue")}
-                goToMap={() => setScreen("venueMap")}
+                goToMap={() => {
+                  setVenueMapView(null);
+                  setScreen("venueMap");
+                }}
                 activeCountry={activeCountry}
                 setActiveCountry={setActiveCountry}
                 activeCity={activeCity}
@@ -2288,8 +2294,13 @@ export default function App() {
             )}
             {screen === "venueMap" && (
               <VenueMapScreen
-                onBack={() => setScreen("venueDirectory")}
-                onOpenVenue={(id) => {
+                initialView={venueMapView}
+                onBack={() => {
+                  setVenueMapView(null);
+                  setScreen("venueDirectory");
+                }}
+                onOpenVenue={(id, view) => {
+                  setVenueMapView(view);
                   setScreenBeforeVenueDetail("venueMap");
                   setViewedVenueId(id);
                   setScreen("venueDetail");
