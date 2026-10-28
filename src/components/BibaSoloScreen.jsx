@@ -1147,7 +1147,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
             cursor: "pointer",
           }}
         >
-          <WaterAlertIcon size={18} />
+          <WaterAlertIcon size={18} dark={!!waterAlert?.enabled} />
         </button>
         <button
           onClick={handleArchive}
