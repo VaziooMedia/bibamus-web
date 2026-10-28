@@ -17,9 +17,10 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabaseConfig.js";
 import { cardHeadTags, genericHeadTags, GENERIC_TITLE, injectHead, isPublicUsername, PUBLIC_SITE_URL, publicCardTexts } from "./publicCard.js";
 import { customNames, VENUE_TYPE_LIST_KEY } from "./venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY } from "./producerLists.js";
+import { BRAND_TYPE_LIST_KEY } from "./brandLists.js";
 
-// La liste de types modifiable de chaque genre de fiche qui en a une (une marque n'en a pas).
-const TYPE_LIST_KEYS = { venue: VENUE_TYPE_LIST_KEY, brewery: PRODUCER_TYPE_LIST_KEY };
+// La liste de types modifiable de chaque genre de fiche.
+const TYPE_LIST_KEYS = { venue: VENUE_TYPE_LIST_KEY, brand: BRAND_TYPE_LIST_KEY, brewery: PRODUCER_TYPE_LIST_KEY };
 const typeListKeyFor = (kind) => (typeof kind === "string" && Object.prototype.hasOwnProperty.call(TYPE_LIST_KEYS, kind) ? TYPE_LIST_KEYS[kind] : null);
 
 const TIMEOUT_MS = 3000;
@@ -97,9 +98,9 @@ async function fetchCard(name, fetchImpl, timeoutMs) {
   }
 }
 
-// Les noms des types d'établissement ou de producteur enregistrés par la plateforme de gestion (types ajoutés ou renommés),
+// Les noms des types d'établissement, de marque ou de producteur enregistrés par la plateforme de gestion (types ajoutés ou renommés),
 // ou null si la lecture échoue : l'aperçu garde alors les noms de départ. Ce n'est jamais une panne (la carte, elle, reste
-// indispensable). `listKey` : VENUE_TYPE_LIST_KEY ou PRODUCER_TYPE_LIST_KEY.
+// indispensable). `listKey` : VENUE_TYPE_LIST_KEY, BRAND_TYPE_LIST_KEY ou PRODUCER_TYPE_LIST_KEY.
 async function fetchTypeNames(listKey, fetchImpl, timeoutMs) {
   try {
     const rows = await timedRequest(
@@ -144,7 +145,7 @@ export async function handlePublicLink(request, { fetchImpl = fetch, timeoutMs =
   if (!baseHtml) return unavailable(null, isHead);
   if (found.error) return unavailable(baseHtml, isHead);
 
-  // Pour un lieu ou un producteur seulement (une marque n'a pas de liste de types modifiable).
+  // Les noms des types enregistrés par la gestion, pour un lieu, une marque ou un producteur.
   const typeListKey = found.card ? typeListKeyFor(found.card.kind) : null;
   const typeNames = typeListKey ? await fetchTypeNames(typeListKey, fetchImpl, Math.min(timeoutMs, TYPE_NAMES_TIMEOUT_MS)) : null;
   const texts = found.card ? publicCardTexts(found.card, typeNames) : null;

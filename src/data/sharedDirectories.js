@@ -16,6 +16,7 @@ import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.j
 import { normalizeSearchText } from "../utils.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
+import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
@@ -2745,8 +2746,8 @@ export function loadCustomBeerCiderStylesOnce() {
   return customStylesOnce;
 }
 
-// Listes modifiées depuis la plateforme de gestion en complément de la liste de départ du code (voir venueLists.js et
-// producerLists.js) : éléments ajoutés à la main, renommés ou supprimés (table custom_list_items) et ordre d'affichage
+// Listes modifiées depuis la plateforme de gestion en complément de la liste de départ du code (voir venueLists.js,
+// producerLists.js et brandLists.js) : éléments ajoutés à la main, renommés ou supprimés (table custom_list_items) et ordre d'affichage
 // (table custom_list_order). Rend { <clé>: { rows, order }, … } pour les clés demandées, ou null si la lecture des éléments
 // échoue (l'appelant garde alors la liste de départ). Un ordre illisible n'est pas une panne : la liste garde simplement
 // son ordre de départ.
@@ -2795,6 +2796,10 @@ export const loadVenueListsOnce = onceLoader([VENUE_TYPE_LIST_KEY, AMENITY_LIST_
 // Type et profil d'un producteur : { producer_type: { rows, order }, producer_profile: { rows, order } } (assistant « Ajouter
 // un producteur », carte publique d'un producteur).
 export const loadProducerListsOnce = onceLoader([PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY], "loadProducerLists");
+
+// Type et classification d'une marque : { brand_type: { rows, order }, brand_classification: { rows, order } } (assistant « Ajouter
+// une marque », carte publique d'une marque).
+export const loadBrandListsOnce = onceLoader([BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY], "loadBrandLists");
 
 // Fiche producteur/marque — tous les produits d'une brasserie ou d'une marque donnée, jamais le
 // répertoire complet pour ça.

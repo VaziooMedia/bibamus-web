@@ -10,11 +10,19 @@
 // ============================================================
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../constants.js";
-import { loadPublicCard, loadVenueListsOnce, loadProducerListsOnce } from "../data/sharedDirectories.js";
+import { loadPublicCard, loadVenueListsOnce, loadProducerListsOnce, loadBrandListsOnce } from "../data/sharedDirectories.js";
 import { publicCardTexts } from "../publicCard.js";
 import { customNames, VENUE_TYPE_LIST_KEY } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY } from "../producerLists.js";
+import { BRAND_TYPE_LIST_KEY } from "../brandLists.js";
 import { EntityAvatar } from "./ui.jsx";
+
+// La liste de types modifiable de chaque genre de fiche, et sa lecture.
+const TYPE_LISTS = {
+  venue: { key: VENUE_TYPE_LIST_KEY, load: loadVenueListsOnce },
+  brand: { key: BRAND_TYPE_LIST_KEY, load: loadBrandListsOnce },
+  brewery: { key: PRODUCER_TYPE_LIST_KEY, load: loadProducerListsOnce },
+};
 
 const LOAD_TIMEOUT_MS = 6000;
 // Les noms de types sont un détail : si leur lecture traîne, on garde les noms de départ plutôt que de faire attendre.
@@ -73,15 +81,13 @@ export function PublicLinkGate({ name, authScreen }) {
     // Une base qui ne répond pas ne doit pas laisser la personne devant un écran vide : au bout de quelques secondes, écran de connexion.
     const timeout = new Promise((resolve) => setTimeout(() => resolve(null), LOAD_TIMEOUT_MS));
     Promise.race([loadPublicCard(name).catch(() => null), timeout]).then(async (card) => {
-      // Pour un lieu ou un producteur : les noms de types enregistrés par la plateforme de gestion. Sans eux (panne, lenteur),
-      // les noms de départ.
+      // Pour un lieu, une marque ou un producteur : les noms de types enregistrés par la plateforme de gestion. Sans eux (panne,
+      // lenteur), les noms de départ.
       let typeNames = null;
-      if (card && (card.kind === "venue" || card.kind === "brewery")) {
-        const isVenue = card.kind === "venue";
-        const listKey = isVenue ? VENUE_TYPE_LIST_KEY : PRODUCER_TYPE_LIST_KEY;
-        const load = isVenue ? loadVenueListsOnce : loadProducerListsOnce;
-        const lists = await Promise.race([load().catch(() => null), new Promise((resolve) => setTimeout(() => resolve(null), NAMES_TIMEOUT_MS))]);
-        typeNames = lists ? customNames(lists[listKey].rows) : null;
+      const typeList = card && typeof card.kind === "string" && Object.prototype.hasOwnProperty.call(TYPE_LISTS, card.kind) ? TYPE_LISTS[card.kind] : null;
+      if (typeList) {
+        const lists = await Promise.race([typeList.load().catch(() => null), new Promise((resolve) => setTimeout(() => resolve(null), NAMES_TIMEOUT_MS))]);
+        typeNames = lists ? customNames(lists[typeList.key].rows) : null;
       }
       if (!cancelled) setState({ loading: false, card, typeNames });
     });
