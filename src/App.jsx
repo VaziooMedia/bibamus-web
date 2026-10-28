@@ -2278,6 +2278,7 @@ export default function App() {
                 addIntent={false}
                 onBack={() => setScreen(screenBeforeVenueDirectory)}
                 onOpenVenue={(id) => {
+                  setScreenBeforeVenueDetail("venueDirectory");
                   setViewedVenueId(id);
                   setScreen("venueDetail");
                 }}
