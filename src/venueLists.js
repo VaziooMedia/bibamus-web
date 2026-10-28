@@ -99,3 +99,10 @@ export function venueTypeLabel(code) {
   const builtin = VENUE_TYPES.find((t) => t.code === code);
   return builtin ? builtin.fr : null;
 }
+
+// Le nom à afficher pour un code de type d'établissement, ou null s'il n'y a rien de présentable : un code « perso_… » dont
+// le nom n'est pas (encore) chargé n'est jamais montré tel quel ; un ancien code inconnu est montré tel quel.
+export function venueTypeDisplayName(code) {
+  if (code === null || code === undefined || code === "") return null;
+  return venueTypeLabel(code) ?? (String(code).startsWith("perso_") ? null : String(code));
+}

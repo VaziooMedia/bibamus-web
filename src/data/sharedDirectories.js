@@ -14,7 +14,7 @@
 import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
 import { normalizeSearchText } from "../utils.js";
-import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder } from "../venueLists.js";
+import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
@@ -3260,7 +3260,15 @@ export async function loadBibaxStatsVenues(userId, since = null, until = null) {
   }
   const row = data[0];
   if (!row) return null;
-  return { topVenueId: row.top_venue_id, topVenueCount: row.top_venue_count, distinctCities: row.distinct_cities, topVenueType: row.top_venue_type, topVenueTypeCount: row.top_venue_type_count };
+  // La base rend le code technique du type d'établissement (comme pour le type de produit plus haut) : traduit ici en nom, avec
+  // les noms de la plateforme de gestion (type renommé ou ajouté). Sans nom connu, un code « perso_… » n'est jamais montré tel quel.
+  let topVenueType = row.top_venue_type;
+  if (topVenueType) {
+    const lists = await loadVenueListsOnce();
+    if (lists) registerVenueTypeNames(lists[VENUE_TYPE_LIST_KEY].rows);
+    topVenueType = venueTypeDisplayName(topVenueType);
+  }
+  return { topVenueId: row.top_venue_id, topVenueCount: row.top_venue_count, distinctCities: row.distinct_cities, topVenueType, topVenueTypeCount: row.top_venue_type_count };
 }
 
 export async function loadBibaxStatsSocial(userId, since = null, until = null) {
