@@ -174,13 +174,6 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
             </button>
           ))}
         </div>
-        {selectedVenueId === "@home" && (
-          <p style={{ fontSize: "11.5px", color: COLORS.amber, marginTop: "8px" }}>
-            La carte s'ouvrira sur l'ensemble du répertoire "Boissons", en Mode Open Bar
-            <br />
-            pas de prix à gérer, chacun boit ce qu'il y a.
-          </p>
-        )}
         {selectedVenueId === "@event" && (
           <p style={{ fontSize: "11.5px", color: COLORS.amber, marginTop: "8px" }}>
             Pour un lieu ponctuel sans fiche répertoriée (festival, mariage, fête d'entreprise...)
