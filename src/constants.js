@@ -558,6 +558,29 @@ export const VENUE_TYPES = [
   { code: "drink_food_shop", fr: "Drink & Food Shop" },
 ];
 
+// Aménités d'un lieu (liste de départ, dans l'ordre de l'assistant « Ajouter un lieu »). Le code est le nom de la colonne
+// booléenne de public_venues (has_wifi...) : la base garde la liste `amenities` d'un lieu et ces 18 cases d'accord.
+export const VENUE_AMENITIES = [
+  { code: "has_occasional_karaoke", fr: "Karaokés occasionnels" },
+  { code: "has_occasional_concerts", fr: "Concerts occasionnels" },
+  { code: "has_billiards", fr: "Billard" },
+  { code: "has_foosball", fr: "Babyfoot - Kicker" },
+  { code: "has_darts", fr: "Jeu de fléchettes" },
+  { code: "has_bingo", fr: "Bingo" },
+  { code: "has_food", fr: "Restauration" },
+  { code: "has_snacks", fr: "Petite restauration" },
+  { code: "has_terrace", fr: "Terrasse" },
+  { code: "wheelchair_accessible", fr: "Accessible PMR" },
+  { code: "has_wifi", fr: "WiFi gratuit" },
+  { code: "has_dogs", fr: "Chiens acceptés" },
+  { code: "can_dance", fr: "Possibilité de danser (en soirée)" },
+  { code: "reservation_possible", fr: "Réservation possible" },
+  { code: "good_for_groups", fr: "Idéal pour des grands groupes" },
+  { code: "privatization_possible", fr: "Privatisation possible" },
+  { code: "has_private_room", fr: "Salle annexe privée disponible" },
+  { code: "smoking_area", fr: "Espace fumeurs" },
+];
+
 export const VENUE_TYPE_TAGS = [
   "Bar",
   "Café",

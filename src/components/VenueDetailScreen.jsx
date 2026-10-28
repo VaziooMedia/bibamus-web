@@ -3,7 +3,7 @@
 // depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { COLORS, VENUE_TYPES } from "../constants.js";
+import { COLORS } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
@@ -16,7 +16,8 @@ import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
 import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, loadVenueRevenueStats, toggleFollowVenue, loadVenueFollowStatus, loadBreweryLinkedToVenue } from "../data/sharedDirectories.js";
 import { VenueCheckInConfirmModal } from "./VenueCheckInConfirmModal.jsx";
-import { loadMyVenueRating } from "../data/sharedDirectories.js";
+import { loadMyVenueRating, loadVenueListsOnce } from "../data/sharedDirectories.js";
+import { VENUE_TYPE_LIST_KEY, registerVenueTypeNames, venueTypeLabel } from "../venueLists.js";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import snapchatIconUrl from "../assets/brand/snapchat.svg";
@@ -87,6 +88,22 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
   const likes = venue.likes || [];
   const hasPhone = !!venue.phone;
   const hasEmail = !!venue.email;
+  // Les noms des types d'établissement : ceux de la plateforme de gestion (type ajouté, type renommé) l'emportent sur la
+  // liste de départ. Lus une fois par session ; l'écran ne se redessine que si un nom change.
+  const [, setTypeNamesTick] = useState(0);
+  const hasTypes = (venue.venueTypes || []).length > 0;
+  useEffect(() => {
+    if (!hasTypes) return undefined;
+    let cancelled = false;
+    loadVenueListsOnce().then((lists) => {
+      if (lists && registerVenueTypeNames(lists[VENUE_TYPE_LIST_KEY].rows) && !cancelled) setTypeNamesTick((t) => t + 1);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasTypes, venue.id]);
+  // Un type ajouté à la main dont le nom n'est pas encore chargé n'est pas montré (jamais son code technique).
+  const typeChips = (venue.venueTypes || []).map((code) => ({ code, label: venueTypeLabel(code) ?? (String(code).startsWith("perso_") ? null : code) })).filter((t) => t.label);
   const hasAmenities = !!(venue.hasWifi || venue.wheelchairAccessible || venue.canDance);
   const [activeAmenityTip, setActiveAmenityTip] = useState(null);
   const hoursBlockRef = useRef(null);
@@ -280,10 +297,10 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
       {activeTab === "infos" && (
         <>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
-        {venue.venueTypes && venue.venueTypes.length > 0 && (
+        {typeChips.length > 0 && (
           <>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-              {venue.venueTypes.map((code) => (
+              {typeChips.map(({ code, label }) => (
                 <span
                   key={code}
                   style={{
@@ -295,7 +312,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
                     fontWeight: 600,
                   }}
                 >
-                  {VENUE_TYPES.find((t) => t.code === code)?.fr || code}
+                  {label}
                 </span>
               ))}
             </div>

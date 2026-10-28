@@ -62,14 +62,19 @@ export function safeImageUrl(value) {
 }
 
 // Les trois premiers types connus, dans l'ordre de la fiche (un code inconnu est ignoré, jamais affiché tel quel).
-export function typeLabels(kind, types, max = 3) {
+// `names` : les noms enregistrés en base pour les types d'un lieu (voir customNames dans venueLists.js : types ajoutés
+// ou renommés depuis la plateforme de gestion) ; ils l'emportent sur la liste de départ et ne valent que pour un lieu.
+export function typeLabels(kind, types, max = 3, names = null) {
   const list = hasOwn(TYPE_LISTS, kind) ? TYPE_LISTS[kind] : [];
+  const custom = kind === "venue" && names && typeof names === "object" ? names : {};
   if (!Array.isArray(types)) return [];
   const out = [];
   for (const code of types) {
     if (typeof code !== "string") continue;
+    const own = hasOwn(custom, code) && typeof custom[code] === "string" ? cleanText(custom[code], 60) : "";
     const found = list.find((t) => t.code === code);
-    if (found && !out.includes(found.fr)) out.push(found.fr);
+    const label = own || (found ? found.fr : "");
+    if (label && !out.includes(label)) out.push(label);
     if (out.length >= max) break;
   }
   return out;
@@ -83,12 +88,12 @@ export function placeText(city, country) {
 }
 
 // Les textes d'une carte, prêts à afficher — ou null si la ligne reçue n'a pas la forme d'une carte.
-export function publicCardTexts(card) {
+export function publicCardTexts(card, typeNames = null) {
   if (!card || typeof card !== "object" || typeof card.kind !== "string" || !hasOwn(KIND_LABELS, card.kind)) return null;
   const name = cleanText(card.name, 80);
   if (!name) return null;
   const kindLabel = KIND_LABELS[card.kind];
-  const types = typeLabels(card.kind, card.types);
+  const types = typeLabels(card.kind, card.types, 3, typeNames);
   const place = placeText(card.city, card.country);
   const summary = [types.length > 0 ? types.join(", ") : kindLabel, place].filter(Boolean).join(" · ");
   const cover = safeImageUrl(card.cover_url);
