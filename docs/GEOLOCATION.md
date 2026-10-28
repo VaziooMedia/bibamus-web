@@ -73,12 +73,18 @@ Hook `useGeolocation` (`getCurrentPosition`, précision normale, délai 8 s, cac
 
 ## Cartes
 
-- `VenueMapScreen` : `react-leaflet`, tuiles raster OpenStreetMap, pastilles de `get_venues_map_pins`, accessible depuis l'annuaire des lieux.
+- `VenueMapScreen` (« Lieux sur la carte ») : `react-leaflet`, tuiles raster OpenStreetMap, pastilles de `get_venues_map_pins` (nom et position seulement), accessible depuis l'annuaire des lieux. La barre du bas est masquée sur cet écran (`screenHidesBottomNav`, `src/bottomNav.js`) : la carte prend toute la hauteur.
+  - **Cadre du lieu** : toucher une épingle ouvre un cadre posé en bas de la carte (il n'y a plus de bulle sur l'épingle) : rond-profil, nom et sous-titre, adresse postale, tags de type d'établissement (très fins ; quatre au plus puis « +N » ; noms de la plateforme de gestion, jamais un code technique) et une pastille qui clignote, verte si le lieu est ouvert, rouge s'il est fermé. Tout le cadre est un seul bouton qui ouvre la fiche du lieu ; toucher la carte (hors épingle, ou à côté du cadre) le referme, faire glisser ou zoomer non. La carte se décale juste assez pour que l'épingle choisie reste visible au-dessus du cadre et à gauche des boutons de zoom.
+  - **Lectures à la demande** : la fiche du lieu (`get_venues_by_ids`) puis ses horaires (voir la section Google plus bas) ne sont lus qu'au toucher d'une épingle, une seule fois par lieu tant que l'écran reste ouvert ; le cadre montre le nom tout de suite et se complète ensuite. Un lieu dont la fiche n'a pas pu être lue garde son cadre (nom seul, qui ouvre la fiche) et réessaie au toucher suivant.
+  - **Pastille** : verte / rouge d'après « ouvert maintenant » de Google (donc avec le même décalage possible de 6 heures que la fiche) ; **rouge** aussi pour un lieu fermé définitivement ou temporairement ; **aucune pastille** quand on ne sait pas (pas de lieu Google lié, lien invalide, Google injoignable, réponse sans « ouvert maintenant »). Avec « réduire les animations » demandé au système, la pastille reste allumée sans clignoter.
+  - Les règles pures (ouvert / fermé, tags, intitulé lu par les lecteurs d'écran) sont dans `src/venueMapCard.js`.
 - `VenuePositionPicker` : repère déplaçable pour corriger la position d'un lieu (assistants d'ajout, formulaire de lieu) ; Leaflet est chargé depuis cdnjs.
 
 ## Google Places — horaires d'établissements
 
 Google est la **seule** source des horaires, jamais d'encodage manuel dans l'app (`OpeningHoursDisplay` : « Aucun formulaire »). La fonction Edge `google-place-hours` est appelée côté serveur pour ne jamais exposer la clé au navigateur (aucune clé Google dans l'app). Cache des horaires : 6 heures (`google_hours_cache`, `google_hours_last_fetch_at`). Statuts gérés : `OK`, `ERROR`, `LINK_REQUIRED`, `LINK_INVALID`, ouvert définitivement / temporairement fermé.
+
+Les horaires servent à deux endroits : la fiche d'un lieu (`OpeningHoursDisplay`) et le cadre de la carte « Lieux sur la carte » (pastille ouvert / fermé).
 
 `google-place-search` n'est appelée nulle part dans l'app : le rattachement d'un lieu à Google se fait dans la plateforme de gestion. Les messages « Pas d'horaire fixe » et « pas de présence Google » ne peuvent pas s'afficher aujourd'hui : les champs correspondants ne sont jamais chargés dans la fiche d'un lieu.
 

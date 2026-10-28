@@ -16,6 +16,7 @@ import { HomeScreen } from "./components/HomeScreen.jsx";
 import { BarcodeScannerModal } from "./components/BarcodeScannerModal.jsx";
 import { LinkedScanResultsModal } from "./components/LinkedScanResultsModal.jsx";
 import { VenueMapScreen } from "./components/VenueMapScreen.jsx";
+import { isBottomNavHidden } from "./bottomNav.js";
 import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
 import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
@@ -3770,7 +3771,7 @@ export default function App() {
               onGoToSessionHub={() => setScreen("sessionHub")}
               unreadNotifications={unreadNotificationsCount}
               bibaPingVisible={featureFlags.nav_bibaping_visible !== false}
-              hidden={bottomNavHidden || bibaPingChatOpen || bibaPulseOpen}
+              hidden={isBottomNavHidden({ hiddenByScroll: bottomNavHidden, bibaPingChatOpen, bibaPulseOpen, screen })}
             />
           </div>
         </div>

@@ -107,6 +107,8 @@ Autres éléments partagés : `PageTitleWithBar` (titre h1 Urbanist 20 px avec b
 
 Cinq entrées : Home, BibaPulse, bouton central surélevé BibaGo (56 px, marge −30 px), BibaPing (masqué si le drapeau `nav_bibaping_visible` est faux, pastille de messages non lus), Notifications (cloche, pastille). Elle n'a **ni `position` ni `zIndex`** : c'est le dernier enfant d'une colonne flex sous le conteneur de défilement ; elle est « fixe » parce que la zone de contenu défile au-dessus. Le drapeau `nav_bibapulse_visible` n'agit pas sur la barre (seulement sur l'aperçu de l'accueil).
 
+Sa prop `hidden` la fait glisser hors de l'écran (la zone de contenu reprend la place). `App.jsx` la masque au défilement, pendant une conversation BibaPing ou BibaPulse, et **en permanence sur l'écran « Lieux sur la carte »** (`venueMap`) : la liste des écrans concernés est `SCREENS_WITHOUT_BOTTOM_NAV` dans `src/bottomNav.js`, la règle `screenHidesBottomNav(screen)`.
+
 ### Contextes de navigation (`contexts.js`)
 
 - `NavigationContext` ne transporte qu'une fonction « aller à l'accueil ».
