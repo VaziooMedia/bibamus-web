@@ -710,7 +710,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 // Même vrai principe que WaterAlertSettingsScreen (MinorScreens.jsx), mais persisté sur le
 // profil plutôt que sur un event de salon — "rounds" (tournées) devient "checkins"
 // (consommations du jour).
-function WaterAlertSoloSettingsScreen({ myUserId, settings, onSave, onBack }) {
+function WaterAlertSoloSettingsScreen({ myUserId, settings, checkinCount, onSave, onBack }) {
   const wa = settings || {};
   const [mode, setMode] = useState(wa.enabled ? wa.mode || "time" : "off");
   const [everyMinutes, setEveryMinutes] = useState(wa.everyMinutes ? String(wa.everyMinutes) : "30");
@@ -734,7 +734,16 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, onSave, onBack }) {
     } else if (Notification?.permission === "denied") {
       alert("Notifications refusées — le rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.");
     }
-    const next = { enabled: true, mode, everyMinutes: parseInt(everyMinutes, 10) || 30, everyRounds: parseInt(everyRounds, 10) || 3 };
+    const next = {
+      enabled: true,
+      mode,
+      everyMinutes: parseInt(everyMinutes, 10) || 30,
+      everyRounds: parseInt(everyRounds, 10) || 3,
+      // Point de départ posé à l'activation : sans lui, le premier rappel partirait aussitôt (temps) ou
+      // ne partirait jamais (consommations). Le serveur tient ensuite l'heure de ses propres rappels de son côté.
+      ...(mode === "time" ? { lastReminderAt: new Date().toISOString() } : {}),
+      ...(mode === "checkins" && typeof checkinCount === "number" ? { lastReminderCount: checkinCount } : {}),
+    };
     await saveWaterAlertSoloSettings(myUserId, next);
     onSave(next);
   };
@@ -872,29 +881,39 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     refreshBibaZero();
   }, [myUserId]);
 
-  // WaterAlert — même vrai concept qu'en salon, mais basé sur le nombre de vraies
-  // consommations du jour ("checkins") plutôt que de tournées. Rappel purement visuel, actif
-  // uniquement tant que l'app reste ouverte (pas de vrai déclencheur serveur ici, contrairement
-  // au salon, qui envoie une vraie notification push même app fermée).
+  // WaterAlert — même vrai concept qu'en salon.
+  // - Mode « toutes les X minutes » : le serveur envoie un vrai push à ce seul compte, app fermée (tâche
+  //   planifiée water-alert-solo-time-check), à partir de l'heure d'activation enregistrée dans le réglage. Tant que
+  //   l'app est ouverte sur BibaSolo, la fenêtre ci-dessous s'affiche à l'écran (un push ne s'affiche pas au premier plan).
+  // - Mode « toutes les X consommations » : entièrement dans l'app, puisque c'est en ajoutant un verre ici qu'il se
+  //   déclenche. Le compteur de départ est enregistré avec le réglage : il tient d'une ouverture de BibaSolo à l'autre.
   const [waterAlert, setWaterAlert] = useState(null);
   const [waterAlertModalOpen, setWaterAlertModalOpen] = useState(false);
   const [waterAlertSettingsOpen, setWaterAlertSettingsOpen] = useState(false);
-  const waterAlertClaimedForCount = React.useRef(null);
   useEffect(() => {
     loadMyWaterAlertSoloSettings(myUserId).then(setWaterAlert);
   }, [myUserId]);
+  const saveWaterAlertCount = (count) => {
+    const next = { ...waterAlert, lastReminderCount: count };
+    setWaterAlert(next);
+    saveWaterAlertSoloSettings(myUserId, next);
+  };
   useEffect(() => {
     if (!waterAlert || !waterAlert.enabled || waterAlert.mode !== "checkins" || checkins === null) return;
-    if (waterAlertClaimedForCount.current === null) {
-      waterAlertClaimedForCount.current = checkins.length;
+    const count = checkins.length;
+    const base = waterAlert.lastReminderCount;
+    // Réglage activé sans compteur de départ, ou compteur du jour reparti plus bas (liste archivée, verre
+    // supprimé, nouvelle journée) : on repart du compteur actuel, sans rappel.
+    if (typeof base !== "number" || count < base) {
+      saveWaterAlertCount(count);
       return;
     }
-    const since = checkins.length - (waterAlert.lastReminderCount ?? checkins.length);
-    if (checkins.length > waterAlertClaimedForCount.current && since >= (waterAlert.everyRounds || 3)) {
-      waterAlertClaimedForCount.current = checkins.length;
+    if (count - base >= (waterAlert.everyRounds || 3)) {
       setWaterAlertModalOpen(true);
+      saveWaterAlertCount(count);
     }
-  }, [checkins?.length, waterAlert?.enabled, waterAlert?.mode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkins?.length, waterAlert?.enabled, waterAlert?.mode, waterAlert?.everyRounds, waterAlert?.lastReminderCount]);
   useEffect(() => {
     if (!waterAlert || !waterAlert.enabled || waterAlert.mode !== "time") return;
     const checkElapsed = () => {
@@ -1048,6 +1067,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
       <WaterAlertSoloSettingsScreen
         myUserId={myUserId}
         settings={waterAlert}
+        checkinCount={checkins ? checkins.length : undefined}
         onSave={(next) => {
           setWaterAlert(next);
           setWaterAlertSettingsOpen(false);
