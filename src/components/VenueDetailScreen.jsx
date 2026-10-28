@@ -17,7 +17,7 @@ import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
 import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, loadVenueRevenueStats, toggleFollowVenue, loadVenueFollowStatus, loadBreweryLinkedToVenue } from "../data/sharedDirectories.js";
 import { VenueCheckInConfirmModal } from "./VenueCheckInConfirmModal.jsx";
 import { loadMyVenueRating, loadVenueListsOnce } from "../data/sharedDirectories.js";
-import { VENUE_TYPE_LIST_KEY, registerVenueTypeNames, venueTypeLabel } from "../venueLists.js";
+import { VENUE_TYPE_LIST_KEY, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import snapchatIconUrl from "../assets/brand/snapchat.svg";
@@ -103,7 +103,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
     };
   }, [hasTypes, venue.id]);
   // Un type ajouté à la main dont le nom n'est pas encore chargé n'est pas montré (jamais son code technique).
-  const typeChips = (venue.venueTypes || []).map((code) => ({ code, label: venueTypeLabel(code) ?? (String(code).startsWith("perso_") ? null : code) })).filter((t) => t.label);
+  const typeChips = (venue.venueTypes || []).map((code) => ({ code, label: venueTypeDisplayName(code) })).filter((t) => t.label);
   const hasAmenities = !!(venue.hasWifi || venue.wheelchairAccessible || venue.canDance);
   const [activeAmenityTip, setActiveAmenityTip] = useState(null);
   const hoursBlockRef = useRef(null);
