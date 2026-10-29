@@ -191,7 +191,7 @@ Onglet « BibaPulse » sur les fiches **Produit**, **Lieu** et **Producteur** �
 
 - Onglet « BibaPulse » de la barre du bas (toujours présent), mais **la barre est cachée sur l'écran BibaPulse lui-même** ; après un check publié depuis l'accueil, retour sur le Pulse avec une confirmation.
 - **Aperçu sur l'accueil** (titre « BibaPulse - Extraits », la fin du titre en gris comme « Bibax - Suggestions rapides ») : les 3 dernières cartes en version réduite, sans réactions (une carte `club_joined` y garde le nom du club cliquable ; une publication libre y tient sur une ligne : le début du texte seul, sans libellé « Publication » ; une publication avec photo et sans texte n'affiche que le nom de l'auteur), masqué si le drapeau `nav_bibapulse_visible` vaut faux. Ce drapeau n'agit pas sur la barre du bas.
-- Onglet « Pulse » dans l'écran d'un salon : fil construit localement à partir de l'état du salon, pas à partir de `pulse_events`.
+- Onglet « Pulse » dans l'écran d'un salon : fil construit localement à partir de l'état du salon, pas à partir de `pulse_events` — tournées, arrivées et départs, et les checks faits dans le salon (`event.drinkChecks`, y compris ceux qui n'ont pas été publiés dans BibaPulse). Voir `BIBAROOM.md`.
 - Cloche « Suivre sur Pulse » : sur la fiche d'un Bibax, d'un lieu et d'un produit. L'état initial de la cloche d'un Bibax est toujours « éteint » à l'ouverture de sa fiche (la propriété n'est jamais chargée). Pour un produit, aucun script livré ne montre que son suivi alimente le fil principal.
 
 ## Notifications in-app

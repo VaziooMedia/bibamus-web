@@ -6,8 +6,9 @@
 //           n'avait pas besoin d'être réécrit pour gagner des onglets. Il
 //           reçoit simplement la barre en propriété et la place lui-même,
 //           entre le lieu et la ligne du mode.
-//   Pulse : le fil de ce qui se passe DANS ce salon (tournées, arrivées,
-//           départs). Rien à voir avec BibaPulse, qui est le réseau social.
+//   Pulse : le fil de ce qui se passe DANS ce salon (tournées, checks de
+//           produits, arrivées, départs). Rien à voir avec BibaPulse, qui
+//           est le réseau social.
 //   Chat  : la conversation du salon — une vraie conversation BibaPing de
 //           type "salon", pas un système de messages à part. L'historique
 //           reste donc consultable dans BibaPing une fois la soirée finie.
@@ -28,14 +29,14 @@ import { loadRoomStories } from "../data/sharedDirectories.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
 import { loadTokTargets, loadMyPendingToks, loadMyTokReplies, markTokRepliesSeen, dismissTokReply, subscribeToToks } from "../data/toks.js";
 import { TokModal } from "./TokModal.jsx";
-import { formatTime, genderAgree, formatDate } from "../utils.js";
+import { formatTime, genderAgree, formatDate, safePulsePhotoUrl } from "../utils.js";
 import settingsIconUrl from "../assets/brand/settings-icon.png";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import tokIconUrl from "../assets/brand/tok.svg";
 
-// Fil interne : tournées et mouvements de participants, mélangés par ordre chronologique.
+// Fil interne : tournées, checks de produits et mouvements de participants, mélangés par ordre chronologique.
 // Tout vient du salon lui-même — aucune requête supplémentaire.
-function buildSalonFeed(event) {
+export function buildSalonFeed(event) {
   const items = [];
 
   (event.rounds || []).forEach((r, index) => {
@@ -51,6 +52,11 @@ function buildSalonFeed(event) {
     });
   });
 
+  // Les checks faits dans le salon (écran Drink Check), publiés ou non dans BibaPulse.
+  (event.drinkChecks || []).forEach((c) => {
+    items.push({ id: `check-${c.id}`, at: c.at, kind: "check", name: c.name, drinkName: c.drinkName, rating: c.rating, comment: c.comment, photoUrl: safePulsePhotoUrl(c.photoUrl) });
+  });
+
   (event.systemNotices || []).forEach((n) => {
     items.push({ id: `notice-${n.id}`, at: n.at, kind: n.type, name: n.name, gender: n.gender });
   });
@@ -58,12 +64,31 @@ function buildSalonFeed(event) {
   return items.filter((i) => i.at).sort((a, b) => b.at - a.at);
 }
 
-function SalonPulse({ feed }) {
+// La photo d'un check, sous son texte : pleine largeur, 220 px de haut au plus (comme dans BibaPulse). Si la photo
+// n'existe plus (le check a été supprimé de BibaPulse, ce qui efface aussi sa photo), rien ne s'affiche.
+function SalonCheckPhoto({ url }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <span style={{ display: "block", marginTop: "8px" }}>
+      <img
+        src={url}
+        alt="Photo du check"
+        loading="lazy"
+        data-testid="salon-check-photo"
+        onError={() => setFailed(true)}
+        style={{ width: "100%", maxHeight: "220px", objectFit: "cover", borderRadius: "10px", display: "block" }}
+      />
+    </span>
+  );
+}
+
+export function SalonPulse({ feed }) {
   if (feed.length === 0) {
     return (
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "20px", textAlign: "center" }}>
         <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: 0, fontWeight: 700 }}>Rien à raconter pour l'instant</p>
-        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "6px 0 0" }}>Les tournées et les arrivées apparaîtront ici.</p>
+        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "6px 0 0" }}>Les tournées, les checks et les arrivées apparaîtront ici.</p>
       </div>
     );
   }
@@ -75,7 +100,7 @@ function SalonPulse({ feed }) {
           key={item.id}
           style={{
             background: COLORS.surface,
-            border: `2px solid ${item.kind === "round" ? COLORS.paperAlt : COLORS.pinkFluo}`,
+            border: `2px solid ${item.kind === "round" || item.kind === "check" ? COLORS.paperAlt : COLORS.pinkFluo}`,
             borderRadius: "12px",
             padding: "10px 14px",
             display: "flex",
@@ -101,6 +126,24 @@ function SalonPulse({ feed }) {
                     {` · ${item.drinkCount} verre${item.drinkCount > 1 ? "s" : ""}`}
                   </span>
                 )}
+              </>
+            )}
+            {item.kind === "check" && (
+              <>
+                <strong>{item.name || "Quelqu'un"}</strong> a checké <strong style={{ color: COLORS.amber }}>{item.drinkName}</strong>
+                {item.rating != null && (
+                  <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
+                    {" — "}
+                    <span style={{ color: COLORS.amber }}>{String(item.rating).replace(".", ",")}</span>
+                    <span style={{ color: COLORS.ink }}>/5</span>
+                  </span>
+                )}
+                {item.comment && (
+                  <span data-testid="salon-check-comment" style={{ display: "block", marginTop: "3px", fontSize: "12.5px", fontStyle: "italic", color: COLORS.inkSoft, overflowWrap: "anywhere" }}>
+                    {`« ${item.comment} »`}
+                  </span>
+                )}
+                {item.photoUrl && <SalonCheckPhoto url={item.photoUrl} />}
               </>
             )}
             {item.kind === "joined" && (

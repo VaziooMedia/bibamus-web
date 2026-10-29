@@ -268,6 +268,30 @@ export const withHomeServe = (e, newEntry, homeDrink) => ({
 });
 export const withoutHomeDrink = (e, serveId) => ({ ...e, homeDrinks: (e.homeDrinks || []).filter((h) => h.id !== serveId) });
 
+// Photo d'un check rangée dans le salon : seule une adresse du bucket BibaPulse (https, dossier « pulse-photos »,
+// 300 caractères au plus, sans espace, « ? », « # » ni « .. » — les règles du serveur pour une photo BibaPulse)
+// est gardée et affichée ; toute autre valeur donne null. Fonction pure, partagée avec les tests.
+export const safePulsePhotoUrl = (url) =>
+  typeof url === "string" && url.length <= 300 && url.startsWith("https://") && url.includes("/pulse-photos/") && !/[\s?#]/.test(url) && !url.includes("..") ? url : null;
+
+// Un check fait dans le salon (écran Drink Check) : rangé dans event.drinkChecks pour que l'onglet Pulse du salon
+// le montre à tout le monde — { id, code, name, drinkId, drinkName, rating, comment, photoUrl, at }. rating : la
+// note du check (nombre) ou null ; comment : le commentaire ou null ; photoUrl : la photo du check (voir
+// safePulsePhotoUrl) ou null. Une note qui n'est pas un nombre, un commentaire vide ou fait d'espaces : null.
+// Fonction pure, partagée avec les tests.
+export const buildDrinkCheck = ({ id, code, name, drinkId, drinkName, rating, comment, photoUrl, at }) => ({
+  id,
+  code: code || null,
+  name: name || "",
+  drinkId: drinkId || null,
+  drinkName: drinkName || "Boisson",
+  rating: typeof rating === "number" && Number.isFinite(rating) ? rating : null,
+  comment: typeof comment === "string" && comment.trim() ? comment.trim() : null,
+  photoUrl: safePulsePhotoUrl(photoUrl),
+  at,
+});
+export const withDrinkCheck = (e, check) => ({ ...e, drinkChecks: [...(e.drinkChecks || []), check] });
+
 // Changer de lieu dans les réglages de la session. La carte du salon est remplacée par celle du
 // nouveau lieu (vide pour @Home / @Event), SAUF que la carte @Home — les produits pris en « Je me
 // sers » — est mémorisée en quittant @Home et rétablie en y revenant : sans cela, les verres déjà
@@ -662,6 +686,7 @@ export const normalizeEvent = (e) => ({
   knownFriends: e.knownFriends || [],
   personalOrders: e.personalOrders || [],
   homeDrinks: e.homeDrinks || [],
+  drinkChecks: e.drinkChecks || [],
   homeMenu: e.homeMenu || [],
   ticketPurchases: e.ticketPurchases || [],
   participants: e.participants || [],
