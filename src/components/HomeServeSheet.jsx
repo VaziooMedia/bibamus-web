@@ -3,12 +3,13 @@
 //
 // Chez soi, il n'y a pas de carte à télécharger ni de tournée : chacun se sert quand il en a
 // envie. Tout passe donc par BibAtlas (le répertoire global) : on cherche un produit, on choisit
-// son volume (facultatif), et le verre est ajouté pour SOI seulement. Chaque verre porte le code
+// son volume et son type de service (facultatifs, pré-remplis avec les valeurs par défaut de la
+// fiche produit), et le verre est ajouté pour SOI seulement. Chaque verre porte le code
 // de la personne qui l'a pris (event.homeDrinks) ; la liste « Mes verres » permet d'en reprendre
 // un identique (+) ou de retirer le dernier (−) en cas d'erreur.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, DRINK_VOLUMES_CL } from "../constants.js";
+import { COLORS } from "../constants.js";
 import { EntityAvatar, PrimaryButton } from "./ui.jsx";
 import { NavIcon } from "./icons.jsx";
 import { AiIcon } from "./AiIcon.jsx";
@@ -21,11 +22,48 @@ const SUBTYPE_LABELS = { biere: "Bière", cidre: "Cidre", poire: "Poiré", vin: 
 
 const volumeLabel = (cl) => (cl != null ? ` ${String(cl).replace(".", ",")} cl.` : "");
 
+// Type de service : même ordre et mêmes libellés que le « Type de service par défaut » de la fiche produit côté Gestion.
+const SERVING_MODE_OPTIONS = [
+  ["bouteille", "Bouteille"],
+  ["canette", "Canette"],
+  ["fut", "On Tap"],
+  ["verre", "Au verre"],
+];
+
+// Champ « Volume (cl) » : même gabarit (largeur, valeur centrée) que le champ de volume de BibaSolo.
+const VOLUME_BLOCK_W = 114;
+const encodeFieldStyle = {
+  width: "100%",
+  height: "46px",
+  boxSizing: "border-box",
+  padding: "0 14px",
+  borderRadius: "12px",
+  border: `2px solid ${COLORS.paperAlt}`,
+  background: COLORS.surface,
+  color: COLORS.ink,
+  fontSize: "14px",
+  textAlign: "center",
+};
+const fieldLabelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, display: "block", marginBottom: "6px" };
+
+// Volume saisi (virgule ou point) → nombre de cl, ou null si vide ou illisible.
+const parseVolume = (raw) => {
+  const n = parseFloat(String(raw).replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+// Valeurs par défaut de la fiche produit (Gestion) : volume habituel et type de service habituel.
+const defaultVolumeText = (drink) => {
+  const n = Number(drink?.defaultVolumeCl);
+  return drink?.defaultVolumeCl != null && Number.isFinite(n) && n > 0 ? String(n) : "";
+};
+const defaultServingMode = (drink) => (SERVING_MODE_OPTIONS.some(([key]) => key === drink?.defaultServingMode) ? drink.defaultServingMode : "");
+
 export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe, onRemove, onClose }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [picked, setPicked] = useState(null);
   const [volume, setVolume] = useState("");
+  const [servingMode, setServingMode] = useState("");
   const [justAdded, setJustAdded] = useState(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanNotice, setScanNotice] = useState(null);
@@ -61,14 +99,15 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
 
   const pick = (drink) => {
     setPicked(drink);
-    // Le volume habituel du produit s'il est connu, sinon « non défini » — on peut passer.
-    setVolume(drink.defaultVolumeCl != null && DRINK_VOLUMES_CL.includes(Number(drink.defaultVolumeCl)) ? String(drink.defaultVolumeCl) : "");
+    // Le volume et le type de service habituels du produit (fiche produit, côté Gestion) s'ils sont connus, sinon vides — on peut passer.
+    setVolume(defaultVolumeText(drink));
+    setServingMode(defaultServingMode(drink));
   };
 
   const confirm = () => {
     if (!picked || myPaused) return;
-    const cl = volume ? parseFloat(volume) : null;
-    onServe(picked, { volumeCl: cl });
+    const cl = parseVolume(volume);
+    onServe(picked, { volumeCl: cl, servingMode });
     setJustAdded(`${picked.name}${volumeLabel(cl)}`);
     setPicked(null);
     setQuery("");
@@ -77,7 +116,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
 
   const again = (entry) => {
     if (myPaused || !entry?.sourceDrinkId) return;
-    onServe({ id: entry.sourceDrinkId, name: entry.name, kcalPer100ml: entry.kcalPer100ml }, { volumeCl: entry.volumeCl ?? null });
+    onServe({ id: entry.sourceDrinkId, name: entry.name, kcalPer100ml: entry.kcalPer100ml }, { volumeCl: entry.volumeCl ?? null, servingMode: entry.servingMode || "" });
     setJustAdded(`${entry.name}${volumeLabel(entry.volumeCl)}`);
   };
 
@@ -180,19 +219,36 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
           {picked && (
             <div style={{ marginTop: "12px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
               <div style={{ fontWeight: 700, fontSize: "15px", marginBottom: "10px" }}>{picked.name}</div>
-              <label style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft, display: "block", marginBottom: "4px" }}>Volume</label>
-              <select
-                value={volume}
-                onChange={(e) => setVolume(e.target.value)}
-                style={{ padding: "10px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", width: "100%", boxSizing: "border-box", marginBottom: "12px" }}
-              >
-                <option value="">Non défini</option>
-                {DRINK_VOLUMES_CL.map((v) => (
-                  <option key={v} value={v}>
-                    {String(v).replace(".", ",")} cl.
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
+                <div data-encode="volume" style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
+                  <label htmlFor="home-serve-volume" style={fieldLabelStyle}>Volume (cl)</label>
+                  <input
+                    id="home-serve-volume"
+                    type="text"
+                    inputMode="decimal"
+                    value={volume}
+                    onChange={(e) => setVolume(e.target.value)}
+                    placeholder="00"
+                    style={encodeFieldStyle}
+                  />
+                </div>
+                <div data-encode="service" style={{ flex: 1, minWidth: 0 }}>
+                  <label htmlFor="home-serve-service" style={fieldLabelStyle}>Type de service</label>
+                  <select
+                    id="home-serve-service"
+                    value={servingMode}
+                    onChange={(e) => setServingMode(e.target.value)}
+                    style={{ ...encodeFieldStyle, textAlign: "left" }}
+                  >
+                    <option value="">Non défini</option>
+                    {SERVING_MODE_OPTIONS.map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <PrimaryButton onClick={confirm} disabled={myPaused} style={{ width: "100%", marginBottom: "6px" }}>
                 Me servir
               </PrimaryButton>

@@ -206,15 +206,19 @@ export const resolveMenuItem = (item, drinksDirectory) => {
 };
 
 // @Home — prépare « Je me sers » (fonction pure, testée à part). Renvoie : la nouvelle entrée de
-// carte à ajouter au salon (null si ce produit existe déjà à ce volume, ajouté par moi ou par
-// quelqu'un d'autre), le verre à ranger dans event.homeDrinks, et la ligne de statistiques
-// (round_orders : lieu @home, donc sans prix). drink_id est le vrai identifiant du catalogue.
-export const buildHomeServe = (event, source, { volumeCl = null } = {}, me = {}) => {
+// carte à ajouter au salon (null si ce produit existe déjà à ce volume et à ce type de service, ajouté
+// par moi ou par quelqu'un d'autre), le verre à ranger dans event.homeDrinks, et la ligne de
+// statistiques (round_orders : lieu @home, donc sans prix). drink_id est le vrai identifiant du
+// catalogue. Le type de service (bouteille, canette, fût, verre ; vide = non défini) est gardé sur
+// l'entrée de carte : le même produit au même volume mais servi autrement est une autre entrée.
+export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "" } = {}, me = {}) => {
   const cl = volumeCl ?? null;
+  const serving = servingMode || "";
   let entry = null;
   let vol = null;
   for (const d of event.menu || []) {
     if (!(d.fromDirectory && d.sourceDrinkId === source.id)) continue;
+    if ((d.servingMode || "") !== serving) continue;
     const v = normalizeVolumes(d).find((x) => (x.cl ?? null) === cl);
     if (v) {
       entry = d;
@@ -225,7 +229,7 @@ export const buildHomeServe = (event, source, { volumeCl = null } = {}, me = {})
   let newEntry = null;
   if (!entry) {
     newEntry = resolveMenuItem(
-      { id: `local-${Date.now()}-${Math.random()}`, fromDirectory: true, sourceDrinkId: source.id, servingMode: "", volumes: [{ id: nextId(), cl, price: 0, isDefault: true }] },
+      { id: `local-${Date.now()}-${Math.random()}`, fromDirectory: true, sourceDrinkId: source.id, servingMode: serving, volumes: [{ id: nextId(), cl, price: 0, isDefault: true }] },
       [source]
     );
     entry = newEntry;
