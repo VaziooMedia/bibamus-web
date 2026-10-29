@@ -160,7 +160,7 @@ import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
 import { useUsernameDeepLink } from "./hooks/useUsernameDeepLink.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId, safeServingMode } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -1721,17 +1721,17 @@ export default function App() {
 
   // BibAtlas (le répertoire global des produits) comble les trous d'une carte jamais à 100% à
   // jour — un participant y trouve un produit absent de la carte du lieu et l'y ajoute lui-même,
-  // avec le volume et le prix qu'il fixe. L'ajout rejoint la vraie carte du lieu, de façon
+  // avec le volume, le prix et le type de service qu'il fixe. L'ajout rejoint la vraie carte du lieu, de façon
   // définitive (pas seulement cette tournée) — addedVia/addedByBibroCode permettent à une future
   // interface de gestion Business de repérer ces ajouts en attente de relecture par le gérant.
-  const addBibAtlasProduct = async (venueId, source, { volumeCl, price }) => {
+  const addBibAtlasProduct = async (venueId, source, { volumeCl, price, servingMode }) => {
     const venue = venuesById[venueId] || (await loadVenuesByIds([venueId]))[0];
     if (!venue) return null;
     const newEntry = {
       id: nextId(),
       fromDirectory: true,
       sourceDrinkId: source.id,
-      servingMode: "",
+      servingMode: safeServingMode(servingMode),
       volumes: [{ id: nextId(), cl: volumeCl ?? null, price: price ?? 0, isDefault: true }],
       addedVia: "bibAtlas",
       addedByBibroCode: profile.myBibroCode,

@@ -274,6 +274,18 @@ export const defaultVolumeText = (drink) => {
   const n = Number(drink?.defaultVolumeCl);
   return drink?.defaultVolumeCl != null && Number.isFinite(n) && n > 0 ? String(n).replace(".", ",") : "";
 };
+// Type de service d'un produit ajouté depuis BibAtlas : mêmes choix, même ordre et mêmes libellés que « Next Drink » (@Home)
+// et que le « Type de service par défaut » de la fiche produit. Clé vide = « Non défini ».
+export const SERVING_MODE_OPTIONS = [
+  ["bouteille", "Bouteille"],
+  ["canette", "Canette"],
+  ["fut", "On Tap"],
+  ["verre", "Au verre"],
+];
+// Une clé connue est gardée telle quelle ; tout le reste (absent, inconnu, mal écrit) donne "" (« Non défini »).
+export const safeServingMode = (raw) => (SERVING_MODE_OPTIONS.some(([key]) => key === raw) ? raw : "");
+// Type de service pré-sélectionné : celui par défaut de la fiche produit (`defaultServingMode`), « Non défini » sinon.
+export const defaultServingModeText = (drink) => safeServingMode(drink?.defaultServingMode);
 // Ne garde que des chiffres et UN séparateur décimal (virgule ou point), `max` caractères au plus.
 export const sanitizeDecimalText = (raw, max = 6) => {
   let out = "";
