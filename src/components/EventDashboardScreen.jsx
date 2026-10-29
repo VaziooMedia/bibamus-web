@@ -1289,7 +1289,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                   currency={event.currency}
                   centered
                   jetonIconSize={28}
-                  jetonIcon="cyan"
+                  jetonIcon="pink"
                 />
               </div>
               <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>DÉPENSÉS</div>
@@ -1414,7 +1414,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             {!event.isHome && (
             <div style={{ flex: 1, textAlign: "center", borderLeft: `1px solid ${COLORS.paperAlt}` }}>
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>
-                <MoneyAmount value={event.currency === "jeton" ? sessionJetonSpend : sessionRoundsTotal} currency={event.currency} centered jetonIconSize={28} jetonIcon="cyan" />
+                <MoneyAmount value={event.currency === "jeton" ? sessionJetonSpend : sessionRoundsTotal} currency={event.currency} centered jetonIconSize={28} jetonIcon="pink" />
               </div>
               <div style={{ fontSize: "10px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", letterSpacing: "0.5px", marginTop: "2px" }}>{(event.currency === "jeton" ? sessionJetonSpend : sessionRoundsTotal) > 0 ? "DÉPENSÉS" : "DÉPENSÉ"}</div>
             </div>
