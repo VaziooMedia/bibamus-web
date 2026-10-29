@@ -13,6 +13,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle, GoButton } from "./ui.jsx";
+import { getDrinkFeatureItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
@@ -142,6 +143,8 @@ export function DrinkDetailScreen({
   const [justChecked, setJustChecked] = useState(false);
   const [myCheckCount, setMyCheckCount] = useState(null);
   const isBeer = BEER_TYPES.includes(drink.type);
+  // Ligne « caractéristiques » de la fiche : 0.0 %, Bio, Sans gluten (vide si le produit n'en a aucune).
+  const featureItems = getDrinkFeatureItems(drink, { size: 13 });
 
   // Styles modifiés depuis la gestion : l'app ne les connaît pas à la compilation — un style ajouté à la main
   // (inconnu de la liste figée) ou un style de départ renommé. On va les chercher en base (une seule fois par
@@ -668,7 +671,7 @@ export function DrinkDetailScreen({
 
         {activeTab === "infos" && (
           <>
-        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || linkedBrand || linkedProducers.length > 0) && (
+        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || featureItems.length > 0 || linkedBrand || linkedProducers.length > 0) && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
             <div style={{ fontSize: "13px" }}>
               {[
@@ -727,6 +730,20 @@ export function DrinkDetailScreen({
                   </div>
                   ),
                 },
+                featureItems.length > 0 && {
+                  key: "features",
+                  sep: "grey",
+                  node: (
+                  <div key="features" data-testid="drink-features" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    {featureItems.map((it, i) => (
+                      <React.Fragment key={it.key}>
+                        {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                        {renderDrinkBadgeItem(it, { drink, size: 13 })}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  ),
+                },
                 (drink.originCity || drink.originRegion || drink.nationality) && {
                   key: "origin",
                   sep: "grey",
@@ -775,7 +792,7 @@ export function DrinkDetailScreen({
                 ))}
             </div>
 
-            {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null) && (linkedBrand || linkedProducers.length > 0) && (
+            {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || featureItems.length > 0) && (linkedBrand || linkedProducers.length > 0) && (
               <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />
             )}
 
