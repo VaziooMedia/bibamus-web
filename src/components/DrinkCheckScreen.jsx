@@ -15,7 +15,8 @@ import { loadDrinksByIds } from "../data/sharedDirectories.js";
 // produit et depuis l'accueil — avec photo, commentaire, visibilité, Bibax tagués — et la confirmation
 // publie la carte dans BibaPulse. Sans lui, l'écran garde son comportement d'origine (note seule).
 // onCheckConfirmed (facultatif) : appelé AU MOMENT où le check est confirmé, avant même la publication dans
-// BibaPulse, avec { name } — l'appelant y affiche la popup « Check confirmé ».
+// BibaPulse, avec { name, drinkId, rating, comment, photoUrl } (rating : la note du check ou null ; comment : le
+// commentaire ou null ; photoUrl : la photo déjà envoyée ou null) — l'appelant y affiche la popup « Check confirmé » et, dans un salon, range le check dans son Pulse.
 export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, onBack, onRateDrink, onUnrateDrink, onCheckDrink = null, onCheckConfirmed = null }) {
   const [drinks, setDrinks] = useState(null);
   const [checking, setChecking] = useState(null);
@@ -69,7 +70,7 @@ export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, on
     setChecking(null);
     if (!result) return;
     // Le check est confirmé : on le dit tout de suite, sans attendre la publication dans BibaPulse.
-    if (onCheckConfirmed) onCheckConfirmed({ name: drink.name });
+    if (onCheckConfirmed) onCheckConfirmed({ name: drink.name, drinkId: drink.id, rating: result.rating ?? null, comment: result.content?.comment || null, photoUrl: result.content?.photoUrl || null });
     if (!onCheckDrink) return;
     const pulseResult = await onCheckDrink(drink.id, result.venueId, {
       publishToPulse: result.publishToPulse,

@@ -160,7 +160,7 @@ import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
 import { useUsernameDeepLink } from "./hooks/useUsernameDeepLink.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId } from "./utils.js";
+import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -1916,6 +1916,15 @@ export default function App() {
   // parcours depuis l'accueil, affichée tout de suite — sans attendre la publication dans BibaPulse.
   const confirmDrinkCheck = ({ name }) => setCheckToast({ name: name || null, key: Date.now() });
 
+  // Check confirmé dans un salon : en plus de la popup, il est rangé dans le salon (event.drinkChecks) pour
+  // apparaître dans l'onglet Pulse du salon, chez tout le monde — même s'il n'est pas publié dans BibaPulse.
+  const confirmRoomDrinkCheck = ({ name, drinkId, rating, comment, photoUrl }) => {
+    confirmDrinkCheck({ name });
+    if (!currentEvent) return;
+    const check = buildDrinkCheck({ id: nextId(), code: profile.myBibroCode, name: profile.name, drinkId, drinkName: name, rating, comment, photoUrl, at: Date.now() });
+    updateEvent(currentEvent.id, (e) => withDrinkCheck(e, check));
+  };
+
   // Fin du parcours « Check depuis l'accueil ». info = null : la fenêtre a été fermée sans confirmer, on reste
   // sur la fiche. Sinon le check est confirmé : on retombe sur le Pulse principal si une publication a été
   // faite (elle y apparaît en tête), sinon sur l'accueil — dans les deux cas avec une petite confirmation.
@@ -2378,7 +2387,7 @@ export default function App() {
                 onRateDrink={rateDrinkStandalone}
                 onUnrateDrink={unrateDrinkStandalone}
                 onCheckDrink={publishDrinkCheckFromList}
-                onCheckConfirmed={confirmDrinkCheck}
+                onCheckConfirmed={confirmRoomDrinkCheck}
               />
             )}
             {screen === "bibaMusic" && currentEvent && (

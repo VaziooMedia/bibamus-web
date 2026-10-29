@@ -27,8 +27,9 @@ const SPECIAL_VENUES = [
 ];
 
 // enableContent : affiche les champs de publication (visibilité, commentaire, photo, Bibax tagués).
-// Le résultat renvoyé à onClose est { publishToPulse, venueId, visibility, content } — content ne
-// contient que ce qui a été renseigné : { comment, rating, photoUrl, taggedIds }.
+// Le résultat renvoyé à onClose est { publishToPulse, venueId, visibility, content, rating } — content ne
+// contient que ce qui a été renseigné : { comment, rating, photoUrl, taggedIds } ; rating est la note du check
+// (null si « Pas de note »), même quand rien n'est publié dans BibaPulse.
 export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRating, presetVenue = null, enableContent = false, onRate, onUnrate, onClose }) {
   const hasRating = myRating != null;
   const [isEditingRating, setIsEditingRating] = useState(!hasRating);
@@ -78,9 +79,10 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
 
     // Contenu de la publication : seulement ce qui a été renseigné. La photo est envoyée AVANT de
     // valider le check : si elle est refusée, rien n'est enregistré et on reste dans la fenêtre.
+    // La note du check : celle qu'on vient de donner, sinon celle qu'on avait déjà, sinon aucune (« Pas de note »).
+    const ratingForPulse = isEditingRating && !skipRating ? pendingValue : hasRating ? myRating : null;
     let content;
     if (enableContent && publishToPulse) {
-      const ratingForPulse = isEditingRating && !skipRating ? pendingValue : hasRating ? myRating : null;
       if (form.photo) setSending(true);
       const built = await buildPulseContent(form, { rating: ratingForPulse });
       if (built.error) {
@@ -92,7 +94,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
     }
 
     if (isEditingRating && !skipRating) onRate(pendingValue);
-    onClose({ publishToPulse, venueId: selectedVenue?.id || null, visibility: form.visibility, content });
+    onClose({ publishToPulse, venueId: selectedVenue?.id || null, visibility: form.visibility, content, rating: ratingForPulse });
   };
 
   return (
