@@ -268,6 +268,42 @@ export const withHomeServe = (e, newEntry, homeDrink) => ({
 });
 export const withoutHomeDrink = (e, serveId) => ({ ...e, homeDrinks: (e.homeDrinks || []).filter((h) => h.id !== serveId) });
 
+// Fenêtre « Ajouter à la carte » (BibAtlas, nouvelle commande) : champs de saisie, fonctions pures partagées avec les tests.
+// Volume pré-rempli avec le volume par défaut de la fiche produit (« 33 », « 37,5 ») ; vide s'il n'y en a pas.
+export const defaultVolumeText = (drink) => {
+  const n = Number(drink?.defaultVolumeCl);
+  return drink?.defaultVolumeCl != null && Number.isFinite(n) && n > 0 ? String(n).replace(".", ",") : "";
+};
+// Ne garde que des chiffres et UN séparateur décimal (virgule ou point), `max` caractères au plus.
+export const sanitizeDecimalText = (raw, max = 6) => {
+  let out = "";
+  let hasSeparator = false;
+  for (const ch of String(raw ?? "")) {
+    if (ch >= "0" && ch <= "9") out += ch;
+    else if ((ch === "," || ch === ".") && !hasSeparator) {
+      hasSeparator = true;
+      out += ch;
+    }
+  }
+  return out.slice(0, max);
+};
+// Ne garde que des chiffres (nombre de jetons), `max` caractères au plus.
+export const sanitizeDigitsText = (raw, max = 3) => String(raw ?? "").replace(/\D/g, "").slice(0, max);
+// Texte saisi (virgule ou point) → nombre strictement positif, sinon null (volume : « pas défini »).
+export const parsePositiveText = (raw) => {
+  const n = parseFloat(String(raw ?? "").replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+// Texte saisi → prix en euros (0 si vide ou illisible, jamais négatif).
+export const parsePriceText = (raw) => {
+  const n = parseFloat(String(raw ?? "").replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+// Flèches du nombre de jetons : +1 / −1, jamais en dessous de 0 (ni au-dessus de 999). Renvoie le nouveau texte.
+export const stepTokens = (raw, delta) => String(Math.min(999, Math.max(0, (parseInt(raw, 10) || 0) + delta)));
+// Texte saisi → nombre entier de jetons (0 si vide ou illisible).
+export const parseTokensText = (raw) => Math.min(999, Math.max(0, parseInt(raw, 10) || 0));
+
 // Photo d'un check rangée dans le salon : seule une adresse du bucket BibaPulse (https, dossier « pulse-photos »,
 // 300 caractères au plus, sans espace, « ? », « # » ni « .. » — les règles du serveur pour une photo BibaPulse)
 // est gardée et affichée ; toute autre valeur donne null. Fonction pure, partagée avec les tests.
