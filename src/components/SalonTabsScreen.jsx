@@ -21,6 +21,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
+import { StarsDisplay } from "./StarsDisplay.jsx";
 import { EventDashboardScreen } from "./EventDashboardScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
@@ -132,10 +133,9 @@ export function SalonPulse({ feed }) {
               <>
                 <strong>{item.name || "Quelqu'un"}</strong> a checké <strong style={{ color: COLORS.amber }}>{item.drinkName}</strong>
                 {item.rating != null && (
-                  <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800 }}>
-                    {" — "}
-                    <span style={{ color: COLORS.amber }}>{String(item.rating).replace(".", ",")}</span>
-                    <span style={{ color: COLORS.ink }}>/5</span>
+                  // La note en étoiles (au quart d'étoile), sur la 2e ligne, à la place de « 4,5/5 ».
+                  <span data-testid="salon-check-stars" role="img" aria-label={`Note : ${String(item.rating).replace(".", ",")} sur 5`} style={{ display: "block", marginTop: "3px", lineHeight: 0 }}>
+                    <StarsDisplay value={item.rating} size={14} />
                   </span>
                 )}
                 {item.comment && (
