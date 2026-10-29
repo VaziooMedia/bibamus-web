@@ -10,7 +10,7 @@ import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } f
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
-import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById, defaultVolumeText, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
+import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById, defaultVolumeText, defaultServingModeText, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
 
@@ -162,8 +162,12 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
   );
 }
 
-// Champs de la fenêtre « Ajouter à la carte » (BibAtlas) : étroits (114 px, comme le volume de « Je me sers »), valeur centrée.
-const ENCODE_BLOCK_W = 114;
+// Champs de la fenêtre « Ajouter à la carte » (BibAtlas) : étroits, valeur centrée. Le type de service prend la largeur de son texte.
+const VOLUME_BLOCK_W = 84;
+const PRICE_BLOCK_W = 96;
+// Espace entre les parties de la fenêtre (au-dessus des blocs, sous les blocs, sous la phrase) : assez grand pour qu'un doigt
+// qui règle une valeur n'atteigne pas le bouton « Ajouter ».
+const SHEET_GAP = 24;
 const encodeFieldStyle = { width: "100%", height: "46px", boxSizing: "border-box", padding: "0 10px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" };
 const encodeLabelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, display: "flex", alignItems: "center", gap: "5px", marginBottom: "6px", whiteSpace: "nowrap" };
 
@@ -206,6 +210,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const [bibAtlasPicked, setBibAtlasPicked] = useState(null);
   const [bibAtlasVolume, setBibAtlasVolume] = useState("");
   const [bibAtlasPrice, setBibAtlasPrice] = useState("");
+  const [bibAtlasServing, setBibAtlasServing] = useState("");
   const [bibAtlasSaving, setBibAtlasSaving] = useState(false);
   useEffect(() => {
     const q = bibAtlasQuery.trim();
@@ -406,7 +411,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
     const volumeCl = parsePositiveText(bibAtlasVolume);
     // Le prix est dans la devise du salon : des jetons (nombre entier) ou des euros.
     const price = isOpenBar ? 0 : isJeton ? parseTokensText(bibAtlasPrice) : parsePriceText(bibAtlasPrice);
-    const created = await onAddBibAtlasProduct(bibAtlasPicked, { volumeCl, price });
+    const created = await onAddBibAtlasProduct(bibAtlasPicked, { volumeCl, price, servingMode: bibAtlasServing });
     setBibAtlasSaving(false);
     if (!created) return;
     setBibAtlasPicked(null);
@@ -856,8 +861,9 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                   key={d.id}
                   onClick={() => {
                     setBibAtlasPicked(d);
-                    // Volume : celui par défaut du produit. Prix : 0,00 en euros (jamais le prix par défaut), 1 jeton en jetons.
+                    // Volume et type de service : ceux par défaut du produit. Prix : 0,00 en euros (jamais le prix par défaut), 1 jeton en jetons.
                     setBibAtlasVolume(defaultVolumeText(d));
+                    setBibAtlasServing(defaultServingModeText(d));
                     setBibAtlasPrice(isJeton ? "1" : "");
                   }}
                   style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}
@@ -876,11 +882,13 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
         {bibAtlasPicked && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", zIndex: 50 }} onClick={() => !bibAtlasSaving && setBibAtlasPicked(null)}>
             <div style={{ background: COLORS.paper, width: "100%", borderRadius: "16px 16px 0 0", padding: "20px", boxSizing: "border-box" }} onClick={(e) => e.stopPropagation()}>
-              <div style={{ fontWeight: 700, fontSize: "16px", marginBottom: "4px" }}>{bibAtlasPicked.name}</div>
-              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "0 0 16px 0" }}>Ce produit rejoindra la carte de ce lieu</p>
+              <div data-encode="header" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <EntityAvatar photoUrl={bibAtlasPicked.photoUrl} photoEmoji={bibAtlasPicked.avatarEmoji} size={44} fallbackIcon="bottle" />
+                <div style={{ fontWeight: 700, fontSize: "16px", minWidth: 0, overflowWrap: "anywhere" }}>{bibAtlasPicked.name}</div>
+              </div>
 
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "18px" }}>
-                <div data-encode="volume" style={{ flex: `0 0 ${ENCODE_BLOCK_W}px`, minWidth: 0 }}>
+              <div data-encode="row" style={{ display: "flex", alignItems: "flex-start", gap: "10px", margin: `${SHEET_GAP}px 0` }}>
+                <div data-encode="volume" style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
                   <label htmlFor="bibatlas-volume" style={encodeLabelStyle}>Volume (cl.)</label>
                   <input
                     id="bibatlas-volume"
@@ -893,7 +901,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                   />
                 </div>
                 {!isOpenBar && (
-                  <div data-encode="price" style={{ flex: `0 0 ${ENCODE_BLOCK_W}px`, minWidth: 0 }}>
+                  <div data-encode="price" style={{ flex: `0 0 ${PRICE_BLOCK_W}px`, minWidth: 0 }}>
                     {isJeton ? (
                       <>
                         <label style={encodeLabelStyle}>
@@ -918,10 +926,28 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                     )}
                   </div>
                 )}
+                <div data-encode="service" style={{ flex: "0 0 auto" }}>
+                  <label htmlFor="bibatlas-service" style={encodeLabelStyle}>Type de service</label>
+                  <select
+                    id="bibatlas-service"
+                    value={bibAtlasServing}
+                    onChange={(e) => setBibAtlasServing(e.target.value)}
+                    style={{ ...encodeFieldStyle, textAlign: "left", padding: "0 8px" }}
+                  >
+                    <option value="">Non défini</option>
+                    {SERVING_MODE_OPTIONS.map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
+              <p data-encode="note" style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: `0 0 ${SHEET_GAP}px 0` }}>Ce produit rejoindra la carte de ce lieu</p>
+
               <PrimaryButton onClick={handleConfirmBibAtlasAdd} disabled={bibAtlasSaving} style={{ width: "100%", marginBottom: "8px" }}>
-                {bibAtlasSaving ? "Ajout..." : "Ajouter à la carte"}
+                {bibAtlasSaving ? "Ajout..." : "Ajouter"}
               </PrimaryButton>
               <button
                 onClick={() => !bibAtlasSaving && setBibAtlasPicked(null)}
