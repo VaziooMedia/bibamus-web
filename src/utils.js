@@ -161,7 +161,8 @@ export const directoryDrinkIdsConsumedBy = (event, myBibroCode) => {
 
 // @Home — ce que chaque personne a bu, par participant puis par produit (et volume), pour l'écran
 // du salon. Les plus servis d'abord ; à égalité, par prénom. Un verre est une entrée de
-// event.homeDrinks : { id, code, name, drinkId, timestamp }.
+// event.homeDrinks : { id, code, name, drinkId, timestamp }. Chaque ligne porte aussi le type de service
+// de l'entrée (servingMode : "" | bouteille | canette | fut | verre), pour l'afficher sous le nom.
 export const homeDrinksByPerson = (event) => {
   const people = new Map();
   (event.homeDrinks || []).forEach((h) => {
@@ -173,7 +174,7 @@ export const homeDrinksByPerson = (event) => {
       people.set(h.code, person);
     }
     const entry = findEntryForEvent(event, h.drinkId);
-    const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, count: 0 };
+    const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, servingMode: entry?.servingMode || "", count: 0 };
     item.count += 1;
     person.items.set(h.drinkId, item);
     person.total += 1;
@@ -185,7 +186,7 @@ export const homeDrinksByPerson = (event) => {
 
 // « Mes statistiques » — la liste de MES verres dans ce salon, un par verre bu, dans l'ordre où je les ai
 // pris (le plus ancien d'abord ; sans heure connue, l'ordre d'enregistrement), avec leur volume et leurs
-// kcal. `orders` : les verres de la personne (event.personalOrders + ses verres @Home, ceux que compte la
+// kcal, et le type de service du verre (servingMode, "" si aucun). `orders` : les verres de la personne (event.personalOrders + ses verres @Home, ceux que compte la
 // case « VERRES »), donc la liste a toujours autant de lignes que cette case, et la somme de ses kcal est
 // celle de la case « KCAL ». Un verre dont le produit n'est plus retrouvé : « Boisson », volume et kcal
 // inconnus (null) ; un produit sans kcal connues : kcal null.
@@ -193,7 +194,7 @@ export const myDrinksList = (event, orders = []) =>
   orders
     .map((o, i) => {
       const entry = findEntryForEvent(event, o.drinkId);
-      return { id: o.id ?? `verre-${i}`, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, kcal: entry ? kcalForDrink(entry) : null, timestamp: o.timestamp ?? 0, order: i };
+      return { id: o.id ?? `verre-${i}`, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, kcal: entry ? kcalForDrink(entry) : null, servingMode: entry?.servingMode || "", timestamp: o.timestamp ?? 0, order: i };
     })
     .sort((a, b) => a.timestamp - b.timestamp || a.order - b.order)
     .map(({ order, ...glass }) => glass);

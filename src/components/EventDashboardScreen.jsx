@@ -21,6 +21,7 @@ import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson, myDrinksList } from "../utils.js";
 import { HomeServeSheet } from "./HomeServeSheet.jsx";
+import { ServiceTag } from "./ServiceTag.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
@@ -1230,8 +1231,10 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                     {`- ${glass.name}`}
                     {/* Le volume en vert fluo, sans gras. */}
                     {glass.volumeCl != null && (
-                      <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400 }}>{` ${String(glass.volumeCl).replace(".", ",")} cl.`}</span>
+                      <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400 }}>{` ${String(glass.volumeCl).replace(".", ",")}\u00a0cl.`}</span>
                     )}
+                    {/* Le type de service, en petite pastille sur la ligne du dessous. */}
+                    <ServiceTag mode={glass.servingMode} />
                   </span>
                   {/* Les kcal dans une colonne à droite, précédée d'une barre verticale (d'une ligne à l'autre, la barre se prolonge) ; masquées avec l'œil de la case KCAL. */}
                   <span data-testid="my-drink-kcal" style={{ flexShrink: 0, width: "84px", boxSizing: "border-box", borderLeft: `1px solid ${COLORS.paperAlt}`, padding: "1px 0 1px 10px" }}>
@@ -1640,7 +1643,11 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                     <div style={{ marginTop: "4px", fontSize: "12.5px", color: COLORS.inkSoft, display: "flex", flexDirection: "column", gap: "2px" }}>
                       {person.items.map((it) => (
                         <div key={it.drinkId} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
-                          <span style={{ minWidth: 0 }}>{`- ${it.name}${it.volumeCl != null ? ` ${String(it.volumeCl).replace(".", ",")} cl.` : ""}`}</span>
+                          <span style={{ minWidth: 0 }}>
+                            {`- ${it.name}${it.volumeCl != null ? ` ${String(it.volumeCl).replace(".", ",")}\u00a0cl.` : ""}`}
+                            {/* Le type de service, en petite pastille sur la ligne du dessous. */}
+                            <ServiceTag mode={it.servingMode} />
+                          </span>
                           {/* La quantité en bout de ligne : toutes alignées sur le bord droit de la carte, comme « n verres ». */}
                           <span style={{ flexShrink: 0 }}>{`×${it.count}`}</span>
                         </div>
