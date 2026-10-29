@@ -4,7 +4,7 @@
 // contexte a sa propre vraie façon de les calculer), pour en choisir un à noter.
 // "Déjà noté" s'affiche si une vraie note existe déjà (drink.ratings[myBibroCode]).
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
@@ -14,26 +14,52 @@ import { loadDrinksByIds } from "../data/sharedDirectories.js";
 // onCheckDrink (facultatif) : quand il est fourni, la fenêtre de check est la même que sur les fiches
 // produit et depuis l'accueil — avec photo, commentaire, visibilité, Bibax tagués — et la confirmation
 // publie la carte dans BibaPulse. Sans lui, l'écran garde son comportement d'origine (note seule).
-export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, onBack, onRateDrink, onUnrateDrink, onCheckDrink = null }) {
+// onCheckConfirmed (facultatif) : appelé AU MOMENT où le check est confirmé, avant même la publication dans
+// BibaPulse, avec { name } — l'appelant y affiche la popup « Check confirmé ».
+export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, onBack, onRateDrink, onUnrateDrink, onCheckDrink = null, onCheckConfirmed = null }) {
   const [drinks, setDrinks] = useState(null);
   const [checking, setChecking] = useState(null);
+  // Les notes données ou retirées ICI : elles priment toujours sur ce que le serveur renvoie, tant qu'on est sur
+  // l'écran. { identifiant du produit: note | null (note retirée) }. Sans cela, un rechargement de la liste qui
+  // arrive avant que le serveur ait enregistré la note effaçait « Déjà noté » une dizaine de secondes.
+  const [ratingOverrides, setRatingOverrides] = useState({});
+
+  // Le tableau drinkIds est recréé par l'appelant à chaque rendu : on ne recharge la liste que si les
+  // produits eux-mêmes changent, jamais parce que l'écran a été redessiné.
+  const idsKey = useMemo(() => JSON.stringify([...new Set(drinkIds || [])].sort()), [drinkIds]);
 
   useEffect(() => {
-    const uniqueIds = [...new Set(drinkIds || [])];
+    const uniqueIds = JSON.parse(idsKey);
     if (uniqueIds.length === 0) {
       setDrinks([]);
-      return;
+      return undefined;
     }
-    loadDrinksByIds(uniqueIds).then(setDrinks);
-  }, [drinkIds]);
+    // Une réponse arrivée trop tard (la liste a changé entre-temps) ne doit pas écraser la plus récente.
+    let cancelled = false;
+    loadDrinksByIds(uniqueIds).then((loaded) => {
+      if (!cancelled) setDrinks(loaded);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [idsKey]);
 
   const ratingFor = (drink) => {
     const raw = drink.ratings && drink.ratings[myBibroCode];
     return typeof raw === "number" && isFinite(raw) ? raw : null;
   };
 
-  const refreshOne = (drinkId, patch) => {
-    setDrinks((prev) => prev.map((d) => (d.id === drinkId ? { ...d, ...patch } : d)));
+  // Les produits tels qu'on les montre : la liste du serveur, avec par-dessus les notes données ou retirées ici.
+  const shownDrinks = (drinks || []).map((d) => {
+    if (!Object.prototype.hasOwnProperty.call(ratingOverrides, d.id)) return d;
+    const ratings = { ...(d.ratings || {}) };
+    if (ratingOverrides[d.id] == null) delete ratings[myBibroCode];
+    else ratings[myBibroCode] = ratingOverrides[d.id];
+    return { ...d, ratings };
+  });
+
+  const setRatingHere = (drinkId, value) => {
+    setRatingOverrides((prev) => ({ ...prev, [drinkId]: value }));
   };
 
   // Fermeture de la fenêtre de check : result = null si elle a été fermée sans confirmer, sinon
@@ -41,7 +67,10 @@ export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, on
   const handleCheckClosed = async (result) => {
     const drink = checking;
     setChecking(null);
-    if (!result || !onCheckDrink) return;
+    if (!result) return;
+    // Le check est confirmé : on le dit tout de suite, sans attendre la publication dans BibaPulse.
+    if (onCheckConfirmed) onCheckConfirmed({ name: drink.name });
+    if (!onCheckDrink) return;
     const pulseResult = await onCheckDrink(drink.id, result.venueId, {
       publishToPulse: result.publishToPulse,
       visibility: result.visibility,
@@ -70,7 +99,7 @@ export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, on
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun produit du répertoire consommé pour l'instant.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {drinks.map((d) => {
+          {shownDrinks.map((d) => {
             const already = ratingFor(d) != null;
             return (
               <button
@@ -107,13 +136,11 @@ export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, on
           onRate={(value) => {
             // Avec le check complet, la fenêtre publie elle-même UNE carte : la note ne doit pas en publier une de plus.
             onRateDrink(checking.id, value, checking, { skipDiscoveryPulse: !!onCheckDrink });
-            refreshOne(checking.id, { ratings: { ...(checking.ratings || {}), [myBibroCode]: value } });
+            setRatingHere(checking.id, value);
           }}
           onUnrate={() => {
             onUnrateDrink(checking.id, checking);
-            const ratings = { ...(checking.ratings || {}) };
-            delete ratings[myBibroCode];
-            refreshOne(checking.id, { ratings });
+            setRatingHere(checking.id, null);
           }}
           onClose={handleCheckClosed}
         />

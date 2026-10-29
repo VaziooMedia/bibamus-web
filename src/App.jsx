@@ -1912,6 +1912,10 @@ export default function App() {
     return publishDrinkCheckInToPulse(drinkId, venueId, { isDiscovery: false, visibility, content });
   };
 
+  // Check confirmé depuis l'écran Drink Check (salon ou BibaSolo) : la même popup « Check confirmé » que dans le
+  // parcours depuis l'accueil, affichée tout de suite — sans attendre la publication dans BibaPulse.
+  const confirmDrinkCheck = ({ name }) => setCheckToast({ name: name || null, key: Date.now() });
+
   // Fin du parcours « Check depuis l'accueil ». info = null : la fenêtre a été fermée sans confirmer, on reste
   // sur la fiche. Sinon le check est confirmé : on retombe sur le Pulse principal si une publication a été
   // faite (elle y apparaît en tête), sinon sur l'accueil — dans les deux cas avec une petite confirmation.
@@ -2374,6 +2378,7 @@ export default function App() {
                 onRateDrink={rateDrinkStandalone}
                 onUnrateDrink={unrateDrinkStandalone}
                 onCheckDrink={publishDrinkCheckFromList}
+                onCheckConfirmed={confirmDrinkCheck}
               />
             )}
             {screen === "bibaMusic" && currentEvent && (
@@ -3704,6 +3709,7 @@ export default function App() {
                 onRateDrink={rateDrinkStandalone}
                 onUnrateDrink={unrateDrinkStandalone}
                 onCheckDrink={publishDrinkCheckFromList}
+                onCheckConfirmed={confirmDrinkCheck}
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail("bibaSolo");
                   setViewedDrinkId(id);
