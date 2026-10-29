@@ -183,7 +183,22 @@ export const homeDrinksByPerson = (event) => {
     .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
 };
 
-export const resolveMenuItem = (item, drinksDirectory) => {
+// « Mes statistiques » — la liste de MES verres dans ce salon, un par verre bu, dans l'ordre où je les ai
+// pris (le plus ancien d'abord ; sans heure connue, l'ordre d'enregistrement), avec leur volume et leurs
+// kcal. `orders` : les verres de la personne (event.personalOrders + ses verres @Home, ceux que compte la
+// case « VERRES »), donc la liste a toujours autant de lignes que cette case, et la somme de ses kcal est
+// celle de la case « KCAL ». Un verre dont le produit n'est plus retrouvé : « Boisson », volume et kcal
+// inconnus (null) ; un produit sans kcal connues : kcal null.
+export const myDrinksList = (event, orders = []) =>
+  orders
+    .map((o, i) => {
+      const entry = findEntryForEvent(event, o.drinkId);
+      return { id: o.id ?? `verre-${i}`, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, kcal: entry ? kcalForDrink(entry) : null, timestamp: o.timestamp ?? 0, order: i };
+    })
+    .sort((a, b) => a.timestamp - b.timestamp || a.order - b.order)
+    .map(({ order, ...glass }) => glass);
+
+export const resolveMenuItem =(item, drinksDirectory) => {
   if (!item.fromDirectory || !item.sourceDrinkId) return item;
   const master = drinksDirectory.find((d) => d.id === item.sourceDrinkId);
   if (!master) return item;

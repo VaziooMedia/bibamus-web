@@ -19,7 +19,7 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
-import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson } from "../utils.js";
+import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson, myDrinksList } from "../utils.js";
 import { HomeServeSheet } from "./HomeServeSheet.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
@@ -41,6 +41,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
   const [expandedRoundIds, setExpandedRoundIds] = useState(() => new Set());
   const [showRoundsList, setShowRoundsList] = usePersistedToggle(event.id, "tournees", false);
   const [showMyStats, setShowMyStats] = usePersistedToggle(event.id, "mesStats", true);
+  const [showMyDrinks, setShowMyDrinks] = usePersistedToggle(event.id, "mesVerres", false);
   const [showSessionStats, setShowSessionStats] = usePersistedToggle(event.id, "statsGenerales", true);
   const [showMyJetons, setShowMyJetons] = usePersistedToggle(event.id, "mesJetons", false);
   // @Home : « Qui a bu quoi » remplace la liste des tournées, et « Next Drink » la création d'une tournée.
@@ -303,8 +304,10 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
     },
     { total: 0, missing: 0 }
   );
+  // Le menu déroulant de « Mes statistiques » : mes verres un par un, avec volume et kcal.
+  const myDrinks = myDrinksList(event, myOrderEntries);
 
-  const myRounds = event.rounds.filter((r) => r.buyerName === myName);
+  const myRounds =event.rounds.filter((r) => r.buyerName === myName);
   const myPending = myRounds.filter((r) => r.settledDirectly === false).reduce((sum, r) => sum + (r.total - (r.amountPaid || 0)), 0);
   const myTips = myRounds.filter((r) => r.settledDirectly !== false).reduce((sum, r) => sum + (r.tip || 0), 0) + (event.tabTipsByBuyer?.[myName] || 0);
   const myPaid = myRounds.reduce((sum, r) => sum + (r.settledDirectly !== false ? r.total : r.amountPaid || 0), 0);
@@ -1205,6 +1208,31 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
               </button>
             </div>
           </div>
+        </div>
+
+        <div data-testid="my-drinks" style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+          <button
+            onClick={() => setShowMyDrinks((s) => !s)}
+            aria-expanded={showMyDrinks}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+          >
+            <span style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft }}>Mes verres</span>
+            <span style={{ display: "inline-flex", transform: `rotate(${showMyDrinks ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
+              <NavIcon name="back-triangle" size={14} color={COLORS.amber} />
+            </span>
+          </button>
+          {showMyDrinks && (
+            <div data-testid="my-drinks-list" style={{ marginTop: "8px", maxHeight: "260px", overflowY: "auto", fontSize: "12.5px", color: COLORS.inkSoft, display: "flex", flexDirection: "column", gap: "2px" }}>
+              {myDrinks.length === 0 && <p style={{ margin: 0, fontStyle: "italic" }}>Aucun verre pour l'instant.</p>}
+              {myDrinks.map((glass) => (
+                <div key={glass.id} data-testid="my-drink" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
+                  <span style={{ minWidth: 0 }}>{`- ${glass.name}${glass.volumeCl != null ? ` ${String(glass.volumeCl).replace(".", ",")} cl.` : ""}`}</span>
+                  {/* Les kcal en bout de ligne, alignées sur le bord droit ; masquées avec l'œil de la case KCAL. */}
+                  <span style={{ flexShrink: 0 }}>{caloriesHidden ? "—" : glass.kcal != null ? `${glass.kcal} kcal` : "kcal s.i."}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {!event.isHome && (event.rounds.length > 0 || myContribution > 0) && (
