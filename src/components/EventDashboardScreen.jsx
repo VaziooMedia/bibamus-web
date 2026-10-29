@@ -1227,12 +1227,15 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
               {myDrinks.length === 0 && <p style={{ margin: 0, fontStyle: "italic" }}>Aucun verre pour l'instant.</p>}
               {myDrinks.map((glass) => (
                 <div key={glass.id} data-testid="my-drink" style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-                  <span style={{ minWidth: 0, padding: "1px 0" }}>
-                    {`- ${glass.name}`}
-                    {/* Le volume en vert fluo, sans gras. */}
-                    {glass.volumeCl != null && (
-                      <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400 }}>{` ${String(glass.volumeCl).replace(".", ",")}\u00a0cl.`}</span>
-                    )}
+                  <span style={{ minWidth: 0, padding: "1px 0", display: "flex", flexDirection: "column" }}>
+                    {/* Nom + volume sur une seule ligne : si c'est trop long, le nom se coupe par \u00ab \u2026 \u00bb ; le volume reste entier. */}
+                    <span style={{ display: "flex", minWidth: 0 }}>
+                      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{`- ${glass.name}`}</span>
+                      {/* Le volume en vert fluo, sans gras. */}
+                      {glass.volumeCl != null && (
+                        <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400, flexShrink: 0, whiteSpace: "pre" }}>{` ${String(glass.volumeCl).replace(".", ",")}\u00a0cl.`}</span>
+                      )}
+                    </span>
                     {/* Le type de service, en petite pastille sur la ligne du dessous. */}
                     <ServiceTag mode={glass.servingMode} />
                   </span>
@@ -1643,8 +1646,12 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                     <div style={{ marginTop: "4px", fontSize: "12.5px", color: COLORS.inkSoft, display: "flex", flexDirection: "column", gap: "2px" }}>
                       {person.items.map((it) => (
                         <div key={it.drinkId} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
-                          <span style={{ minWidth: 0 }}>
-                            {`- ${it.name}${it.volumeCl != null ? ` ${String(it.volumeCl).replace(".", ",")}\u00a0cl.` : ""}`}
+                          <span style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
+                            {/* Nom + volume sur une seule ligne : si c'est trop long, le nom se coupe par \u00ab \u2026 \u00bb ; le volume reste entier. */}
+                            <span style={{ display: "flex", minWidth: 0 }}>
+                              <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{`- ${it.name}`}</span>
+                              {it.volumeCl != null && <span style={{ flexShrink: 0, whiteSpace: "pre" }}>{` ${String(it.volumeCl).replace(".", ",")}\u00a0cl.`}</span>}
+                            </span>
                             {/* Le type de service, en petite pastille sur la ligne du dessous. */}
                             <ServiceTag mode={it.servingMode} />
                           </span>
