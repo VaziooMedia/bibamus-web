@@ -62,6 +62,14 @@ export function getDrinkBadgeItems(drink, { hideCountry = false, size = 11 } = {
   return items;
 }
 
+// Caractéristiques montrées sur la fiche produit, dans cet ordre : 0.0 %, Bio, Sans gluten. Mêmes règles d'affichage que
+// partout dans l'app (getDrinkBadgeItems) ; les autres badges (générique, « Alc. », pays) n'en font pas partie.
+export const DRINK_FEATURE_KEYS = ["zero", "bio", "gf"];
+export function getDrinkFeatureItems(drink, { size = 13 } = {}) {
+  const all = getDrinkBadgeItems(drink, { hideCountry: true, size });
+  return DRINK_FEATURE_KEYS.map((key) => all.find((it) => it.key === key)).filter(Boolean);
+}
+
 export function renderDrinkBadgeItem(it, { drink, onTagClick, size = 11 }) {
   const badgeStyle = {
     fontSize: `${size}px`,
