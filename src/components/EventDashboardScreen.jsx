@@ -1222,13 +1222,21 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             </span>
           </button>
           {showMyDrinks && (
-            <div data-testid="my-drinks-list" style={{ marginTop: "8px", maxHeight: "260px", overflowY: "auto", fontSize: "12.5px", color: COLORS.inkSoft, display: "flex", flexDirection: "column", gap: "2px" }}>
+            <div data-testid="my-drinks-list" style={{ marginTop: "8px", maxHeight: "260px", overflowY: "auto", fontSize: "12.5px", color: COLORS.inkSoft, display: "flex", flexDirection: "column" }}>
               {myDrinks.length === 0 && <p style={{ margin: 0, fontStyle: "italic" }}>Aucun verre pour l'instant.</p>}
               {myDrinks.map((glass) => (
-                <div key={glass.id} data-testid="my-drink" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
-                  <span style={{ minWidth: 0 }}>{`- ${glass.name}${glass.volumeCl != null ? ` ${String(glass.volumeCl).replace(".", ",")} cl.` : ""}`}</span>
-                  {/* Les kcal en bout de ligne, alignées sur le bord droit ; masquées avec l'œil de la case KCAL. */}
-                  <span style={{ flexShrink: 0 }}>{caloriesHidden ? "—" : glass.kcal != null ? `${glass.kcal} kcal` : "kcal s.i."}</span>
+                <div key={glass.id} data-testid="my-drink" style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
+                  <span style={{ minWidth: 0, padding: "1px 0" }}>
+                    {`- ${glass.name}`}
+                    {/* Le volume en vert fluo, sans gras. */}
+                    {glass.volumeCl != null && (
+                      <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400 }}>{` ${String(glass.volumeCl).replace(".", ",")} cl.`}</span>
+                    )}
+                  </span>
+                  {/* Les kcal dans une colonne à droite, précédée d'une barre verticale (d'une ligne à l'autre, la barre se prolonge) ; masquées avec l'œil de la case KCAL. */}
+                  <span data-testid="my-drink-kcal" style={{ flexShrink: 0, width: "84px", boxSizing: "border-box", borderLeft: `1px solid ${COLORS.paperAlt}`, padding: "1px 0 1px 10px" }}>
+                    {caloriesHidden ? "—" : glass.kcal != null ? `${glass.kcal} kcal` : "kcal s.i."}
+                  </span>
                 </div>
               ))}
             </div>
