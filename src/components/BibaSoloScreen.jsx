@@ -628,7 +628,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: "48px", marginBottom: "40px" }}>
             <div data-encode="volume" style={{ flex: `0 1 ${ENCODE_BLOCK_W}px`, minWidth: 0 }}>
               <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", marginBottom: "6px" }}>
-                <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft }}>Volume (cl)</label>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft }}>Volume (cl.)</label>
               </div>
               <input type="text" inputMode="decimal" value={volume} onChange={(e) => setVolume(e.target.value)} placeholder="00" style={encodeInputStyle} />
             </div>
