@@ -133,9 +133,15 @@ export function SalonPulse({ feed }) {
               <>
                 <strong>{item.name || "Quelqu'un"}</strong> a checké <strong style={{ color: COLORS.amber }}>{item.drinkName}</strong>
                 {item.rating != null && (
-                  // La note en étoiles (au quart d'étoile), sur la 2e ligne, à la place de « 4,5/5 ».
-                  <span data-testid="salon-check-stars" role="img" aria-label={`Note : ${String(item.rating).replace(".", ",")} sur 5`} style={{ display: "block", marginTop: "3px", lineHeight: 0 }}>
-                    <StarsDisplay value={item.rating} size={14} />
+                  // 2e ligne : la note en étoiles (au quart d'étoile), suivie de « 3,5/5 » — la note en vert fluo, « /5 » en blanc.
+                  <span data-testid="salon-check-rating" style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "3px" }}>
+                    <span data-testid="salon-check-stars" aria-hidden="true" style={{ display: "block", lineHeight: 0 }}>
+                      <StarsDisplay value={item.rating} size={14} />
+                    </span>
+                    <span data-testid="salon-check-note" style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", lineHeight: "14px", whiteSpace: "nowrap" }}>
+                      <span style={{ color: COLORS.amber }}>{String(item.rating).replace(".", ",")}</span>
+                      <span style={{ color: COLORS.ink }}>/5</span>
+                    </span>
                   </span>
                 )}
                 {item.comment && (
