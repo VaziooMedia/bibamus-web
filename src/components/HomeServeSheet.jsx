@@ -13,6 +13,7 @@ import { COLORS } from "../constants.js";
 import { EntityAvatar, PrimaryButton } from "./ui.jsx";
 import { NavIcon } from "./icons.jsx";
 import { AiIcon } from "./AiIcon.jsx";
+import { ServiceTag } from "./ServiceTag.jsx";
 import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent } from "../utils.js";
 import { searchDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
@@ -270,9 +271,14 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {groups.map((g) => (
                   <div key={g.drinkId} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "13px", fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {g.entry?.name || "Boisson"}
-                      {g.entry?.volumeCl != null && <span style={{ color: COLORS.amber, fontWeight: 700 }}>{volumeLabel(g.entry.volumeCl)}</span>}
+                    <span style={{ fontSize: "13px", fontWeight: 600, minWidth: 0, display: "flex", flexDirection: "column", whiteSpace: "pre" }}>
+                      {/* Le nom se coupe par « … » si besoin ; le volume reste toujours visible. */}
+                      <span style={{ display: "flex", alignItems: "baseline", minWidth: 0 }}>
+                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{g.entry?.name || "Boisson"}</span>
+                        {g.entry?.volumeCl != null && <span style={{ color: COLORS.amber, fontWeight: 700, flexShrink: 0 }}>{volumeLabel(g.entry.volumeCl)}</span>}
+                      </span>
+                      {/* Le type de service, en petite pastille sur la ligne du dessous. */}
+                      <ServiceTag mode={g.entry?.servingMode} />
                     </span>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                       <button
