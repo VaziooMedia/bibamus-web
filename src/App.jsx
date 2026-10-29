@@ -861,10 +861,10 @@ export default function App() {
   // a bu quoi sans que les verres des uns écrasent ceux des autres. Il est aussi enregistré en
   // statistiques (round_orders, lieu @home, sans prix) avec un identifiant propre par verre, pour
   // pouvoir le retirer seul. drink_id est le vrai identifiant du catalogue, comme pour les tournées.
-  const serveHomeDrink = (source, { volumeCl = null } = {}) => {
+  const serveHomeDrink = (source, { volumeCl = null, servingMode = "" } = {}) => {
     const ev = events.find((e) => e.id === activeEventId);
     if (!ev || !ev.isHome || !source?.id || !profile.myBibroCode) return;
-    const { newEntry, homeDrink, order } = buildHomeServe(ev, source, { volumeCl }, { code: profile.myBibroCode, name: profile.name });
+    const { newEntry, homeDrink, order } = buildHomeServe(ev, source, { volumeCl, servingMode }, { code: profile.myBibroCode, name: profile.name });
     updateEvent(ev.id, (e) => withHomeServe(e, newEntry, homeDrink));
     recordRoundOrders([order], { venueId: "@home", eventId: ev.id, roundId: homeDrink.id, currency: ev.currency, paid: true });
   };
