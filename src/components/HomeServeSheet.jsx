@@ -30,7 +30,7 @@ const SERVING_MODE_OPTIONS = [
   ["verre", "Au verre"],
 ];
 
-// Champ « Volume (cl) » : même gabarit (largeur, valeur centrée) que le champ de volume de BibaSolo.
+// Champ « Volume (cl.) » : même gabarit (largeur, valeur centrée) que le champ de volume de BibaSolo.
 const VOLUME_BLOCK_W = 114;
 const encodeFieldStyle = {
   width: "100%",
@@ -221,7 +221,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
               <div style={{ fontWeight: 700, fontSize: "15px", marginBottom: "10px" }}>{picked.name}</div>
               <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
                 <div data-encode="volume" style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
-                  <label htmlFor="home-serve-volume" style={fieldLabelStyle}>Volume (cl)</label>
+                  <label htmlFor="home-serve-volume" style={fieldLabelStyle}>Volume (cl.)</label>
                   <input
                     id="home-serve-volume"
                     type="text"
