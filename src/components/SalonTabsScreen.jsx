@@ -65,13 +65,14 @@ export function buildSalonFeed(event) {
   return items.filter((i) => i.at).sort((a, b) => b.at - a.at);
 }
 
-// La photo d'un check, sous son texte : pleine largeur, 220 px de haut au plus (comme dans BibaPulse). Si la photo
-// n'existe plus (le check a été supprimé de BibaPulse, ce qui efface aussi sa photo), rien ne s'affiche.
+// La photo d'un check, sur sa propre ligne sous le texte et l'heure, sur TOUTE la largeur de la carte : 220 px de haut
+// au plus (comme dans BibaPulse). Si la photo n'existe plus (le check a été supprimé de BibaPulse, ce qui efface aussi
+// sa photo), rien ne s'affiche.
 function SalonCheckPhoto({ url }) {
   const [failed, setFailed] = useState(false);
   if (failed) return null;
   return (
-    <span style={{ display: "block", marginTop: "8px" }}>
+    <span style={{ display: "block", flex: "0 0 100%", minWidth: 0 }}>
       <img
         src={url}
         alt="Photo du check"
@@ -105,8 +106,11 @@ export function SalonPulse({ feed }) {
             borderRadius: "12px",
             padding: "10px 14px",
             display: "flex",
-            alignItems: "center",
-            gap: "10px",
+            // Un check peut avoir plusieurs lignes (étoiles, commentaire) et une photo : l'heure reste en haut, en face
+            // de la 1re ligne, et la photo passe sur sa propre ligne, pleine largeur. Les autres cartes restent centrées.
+            alignItems: item.kind === "check" ? "flex-start" : "center",
+            flexWrap: item.kind === "check" ? "wrap" : "nowrap",
+            gap: "8px 10px",
           }}
         >
           <span style={{ flex: 1, minWidth: 0, fontSize: "13px", color: COLORS.ink }}>
@@ -149,7 +153,6 @@ export function SalonPulse({ feed }) {
                     {`« ${item.comment} »`}
                   </span>
                 )}
-                {item.photoUrl && <SalonCheckPhoto url={item.photoUrl} />}
               </>
             )}
             {item.kind === "joined" && (
@@ -168,7 +171,8 @@ export function SalonPulse({ feed }) {
               </>
             )}
           </span>
-          <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{formatTime(item.at)}</span>
+          <span data-testid="salon-feed-time" style={{ fontSize: "10.5px", color: COLORS.inkSoft, flexShrink: 0, marginTop: item.kind === "check" ? "2px" : 0 }}>{formatTime(item.at)}</span>
+          {item.kind === "check" && item.photoUrl && <SalonCheckPhoto url={item.photoUrl} />}
         </div>
       ))}
     </div>
