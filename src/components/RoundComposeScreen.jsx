@@ -4,13 +4,13 @@
 // window.storage) est remplacée par loadSalon (Supabase).
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES, DRINK_VOLUMES_CL } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
+import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES } from "../constants.js";
+import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } from "./ui.jsx";
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
-import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById } from "../utils.js";
+import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById, defaultVolumeText, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
 
@@ -162,6 +162,39 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
   );
 }
 
+// Champs de la fenêtre « Ajouter à la carte » (BibAtlas) : étroits (114 px, comme le volume de « Je me sers »), valeur centrée.
+const ENCODE_BLOCK_W = 114;
+const encodeFieldStyle = { width: "100%", height: "46px", boxSizing: "border-box", padding: "0 10px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" };
+const encodeLabelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, display: "flex", alignItems: "center", gap: "5px", marginBottom: "6px", whiteSpace: "nowrap" };
+
+// Nombre de jetons : valeur centrée, avec deux flèches (+1 / −1) ; jamais en dessous de 0.
+function TokenStepper({ value, onChange }) {
+  const atZero = parseTokensText(value) <= 0;
+  const arrowStyle = { flex: 1, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", padding: 0, cursor: "pointer" };
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        data-testid="bibatlas-tokens"
+        aria-label="Jetons"
+        type="text"
+        inputMode="numeric"
+        value={value}
+        onChange={(e) => onChange(sanitizeDigitsText(e.target.value))}
+        placeholder="0"
+        style={{ ...encodeFieldStyle, padding: "0 32px" }}
+      />
+      <div style={{ position: "absolute", top: "2px", bottom: "2px", right: "2px", width: "30px", display: "flex", flexDirection: "column" }}>
+        <button data-testid="bibatlas-tokens-up" type="button" aria-label="Ajouter un jeton" onClick={() => onChange(stepTokens(value, 1))} style={arrowStyle}>
+          <span style={{ display: "flex", transform: "rotate(-90deg)" }}><NavIcon name="chevron-right" size={14} color={COLORS.amber} /></span>
+        </button>
+        <button data-testid="bibatlas-tokens-down" type="button" aria-label="Retirer un jeton" disabled={atZero} onClick={() => onChange(stepTokens(value, -1))} style={{ ...arrowStyle, cursor: atZero ? "default" : "pointer", opacity: atZero ? 0.3 : 1 }}>
+          <span style={{ display: "flex", transform: "rotate(90deg)" }}><NavIcon name="chevron-right" size={14} color={COLORS.amber} /></span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraftFriends, draftOrders, setDraftOrders, activeFriendId, setActiveFriendId, bibros, myBibroCode, onBack, onSeeTicket, onUseBibaBobJoker, onAddBibAtlasProduct }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [zeroOnly, setZeroOnly] = useState(false);
@@ -192,6 +225,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const [nameInput, setNameInput] = useState("");
   const [room, setRoom] = useState(null);
   const isOpenBar = event.mode === "openbar";
+  const isJeton = event.currency === "jeton";
   const isCagnotte = event.mode === "cagnotte";
   const isAddition = event.mode === "addition";
 
@@ -369,8 +403,9 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const handleConfirmBibAtlasAdd = async () => {
     if (!bibAtlasPicked) return;
     setBibAtlasSaving(true);
-    const volumeCl = bibAtlasVolume ? parseFloat(bibAtlasVolume) : null;
-    const price = isOpenBar ? 0 : parseFloat(bibAtlasPrice.replace(",", ".")) || 0;
+    const volumeCl = parsePositiveText(bibAtlasVolume);
+    // Le prix est dans la devise du salon : des jetons (nombre entier) ou des euros.
+    const price = isOpenBar ? 0 : isJeton ? parseTokensText(bibAtlasPrice) : parsePriceText(bibAtlasPrice);
     const created = await onAddBibAtlasProduct(bibAtlasPicked, { volumeCl, price });
     setBibAtlasSaving(false);
     if (!created) return;
@@ -821,8 +856,9 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                   key={d.id}
                   onClick={() => {
                     setBibAtlasPicked(d);
-                    setBibAtlasVolume("");
-                    setBibAtlasPrice("");
+                    // Volume : celui par défaut du produit. Prix : 0,00 en euros (jamais le prix par défaut), 1 jeton en jetons.
+                    setBibAtlasVolume(defaultVolumeText(d));
+                    setBibAtlasPrice(isJeton ? "1" : "");
                   }}
                   style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}
                 >
@@ -841,34 +877,48 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", zIndex: 50 }} onClick={() => !bibAtlasSaving && setBibAtlasPicked(null)}>
             <div style={{ background: COLORS.paper, width: "100%", borderRadius: "16px 16px 0 0", padding: "20px", boxSizing: "border-box" }} onClick={(e) => e.stopPropagation()}>
               <div style={{ fontWeight: 700, fontSize: "16px", marginBottom: "4px" }}>{bibAtlasPicked.name}</div>
-              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "0 0 16px 0" }}>Ce produit rejoindra définitivement la carte de ce lieu — le gérant pourra l'ajuster par la suite.</p>
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: "0 0 16px 0" }}>Ce produit rejoindra la carte de ce lieu</p>
 
-              <label style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft, display: "block", marginBottom: "4px" }}>Volume</label>
-              <select
-                value={bibAtlasVolume}
-                onChange={(e) => setBibAtlasVolume(e.target.value)}
-                style={{ padding: "10px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", width: "100%", boxSizing: "border-box", marginBottom: "14px" }}
-              >
-                <option value="">Non défini</option>
-                {DRINK_VOLUMES_CL.map((v) => (
-                  <option key={v} value={v}>
-                    {String(v).replace(".", ",")} cl.
-                  </option>
-                ))}
-              </select>
-
-              {!isOpenBar && (
-                <>
-                  <label style={{ fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft, display: "block", marginBottom: "4px" }}>Prix</label>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "18px" }}>
+                <div data-encode="volume" style={{ flex: `0 0 ${ENCODE_BLOCK_W}px`, minWidth: 0 }}>
+                  <label htmlFor="bibatlas-volume" style={encodeLabelStyle}>Volume (cl.)</label>
                   <input
-                    value={bibAtlasPrice}
-                    onChange={(e) => setBibAtlasPrice(e.target.value)}
+                    id="bibatlas-volume"
+                    type="text"
                     inputMode="decimal"
-                    placeholder="0,00"
-                    style={{ padding: "10px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", width: "100%", boxSizing: "border-box", marginBottom: "14px" }}
+                    value={bibAtlasVolume}
+                    onChange={(e) => setBibAtlasVolume(sanitizeDecimalText(e.target.value, 6))}
+                    placeholder="00"
+                    style={encodeFieldStyle}
                   />
-                </>
-              )}
+                </div>
+                {!isOpenBar && (
+                  <div data-encode="price" style={{ flex: `0 0 ${ENCODE_BLOCK_W}px`, minWidth: 0 }}>
+                    {isJeton ? (
+                      <>
+                        <label style={encodeLabelStyle}>
+                          Jetons
+                          <TokenPinkIcon size={14} />
+                        </label>
+                        <TokenStepper value={bibAtlasPrice} onChange={setBibAtlasPrice} />
+                      </>
+                    ) : (
+                      <>
+                        <label htmlFor="bibatlas-price" style={encodeLabelStyle}>Prix (€)</label>
+                        <input
+                          id="bibatlas-price"
+                          type="text"
+                          inputMode="decimal"
+                          value={bibAtlasPrice}
+                          onChange={(e) => setBibAtlasPrice(sanitizeDecimalText(e.target.value, 7))}
+                          placeholder="0,00"
+                          style={encodeFieldStyle}
+                        />
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <PrimaryButton onClick={handleConfirmBibAtlasAdd} disabled={bibAtlasSaving} style={{ width: "100%", marginBottom: "8px" }}>
                 {bibAtlasSaving ? "Ajout..." : "Ajouter à la carte"}
