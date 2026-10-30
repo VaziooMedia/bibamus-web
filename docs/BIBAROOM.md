@@ -9,7 +9,7 @@
 
 Un BibaRoom est un salon partagé qui représente une sortie ou une soirée. Il se crée depuis **BibaGo** (`SessionHubScreen`, qui propose aussi BibaSolo et, grisé « Soon », BibArena) et se rejoint avec un code. Le code du salon fait office de clé d'accès : le client charge un salon avec son seul code, sans vérification d'appartenance. Les Stories de salon suivent le même principe.
 
-Écran d'un salon (`SalonTabsScreen`) : **trois onglets** — Biba|Room (le tableau de bord, `EventDashboardScreen`), Biba|Pulse (fil du salon, construit à partir de l'état du salon, pas de `pulse_events` : les tournées, les **checks** faits dans le salon, et les arrivées et départs — voir « Drink Check ») et Biba|Ping (chat du salon). La barre des trois boutons porte **une ligne de séparation au-dessus et une en dessous**, sur les trois onglets (la barre est construite une seule fois, dans `SalonTabsScreen`).
+Écran d'un salon (`SalonTabsScreen`) : **trois onglets** — Biba|Room (le tableau de bord, `EventDashboardScreen`), Biba|Pulse (fil du salon, construit à partir de l'état du salon, pas de `pulse_events` : les tournées, les **checks** faits dans le salon, et les arrivées et départs — voir « Drink Check ») et Biba|Ping (chat du salon). La barre des trois boutons est le composant partagé `PillTabs` (`src/components/PillTabs.jsx`), le même aspect que les fiches Produits et Lieux et que les BibaClub depuis le 2026-10-30 : pastilles rondes de même largeur, onglet actif plein vert fluo, **sans icônes**, avec **une ligne de séparation au-dessus et une en dessous**. Une pastille rouge à cheval sur la bordure compte les éléments non lus de Pulse et de Ping. La barre est construite une seule fois, dans `SalonTabsScreen`.
 
 ## Modes
 

@@ -1,13 +1,16 @@
 // ============================================================
 // Page d'un BibaClub — en-tête (photo, nom, catégorie), puis 3
-// onglets : Fil (publications des membres), Membres (liste +
-// rôles + arrivées à valider + invitation de Bibax), Stats
-// (calculées à partir des salons rattachés).
+// onglets : BibaPulse (publications des membres, ancien « Fil »),
+// Biba360 (statistiques calculées à partir des salons rattachés,
+// ancien « Stats »), Bibax (liste des membres + rôles + arrivées
+// à valider + invitation de Bibax, ancien « Membres »).
+// Les clés internes restent feed / stats / members.
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
+import { PillTabs } from "./PillTabs.jsx";
 import { ClubInvitationCard } from "./ClubInvitationCard.jsx";
 import { InviteBibaxPanel } from "./InviteBibaxPanel.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
@@ -296,27 +299,15 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
 
       {isMember && (
         <>
-          <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
-            {["feed", "members", "stats"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                style={{
-                  flex: 1,
-                  padding: "9px",
-                  borderRadius: "10px",
-                  border: `2px solid ${tab === t ? COLORS.amber : COLORS.paperAlt}`,
-                  background: tab === t ? COLORS.amber : "none",
-                  color: tab === t ? COLORS.paper : COLORS.ink,
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                {t === "feed" ? "Fil" : t === "members" ? "Membres" : "Stats"}
-              </button>
-            ))}
-          </div>
+          <PillTabs
+            tabs={[
+              { key: "feed", label: { prefix: "Biba", accent: "Pulse" } },
+              { key: "stats", label: { prefix: "Biba", accent: "360" } },
+              { key: "members", label: { prefix: "Biba", accent: "x" } },
+            ]}
+            active={tab}
+            onChange={setTab}
+          />
 
           {tab === "feed" && (
             <div style={{ flex: 1, overflowY: "auto" }}>

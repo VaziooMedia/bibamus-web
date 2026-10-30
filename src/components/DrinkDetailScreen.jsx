@@ -13,6 +13,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle, GoButton } from "./ui.jsx";
+import { PillTabs } from "./PillTabs.jsx";
 import { getDrinkFeatureItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
@@ -639,41 +640,15 @@ export function DrinkDetailScreen({
           </div>
         )}
 
-        <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-          {[
+        <PillTabs
+          tabs={[
             { key: "infos", label: "Infos" },
-            { key: "biba360", label: "Biba360" },
-            { key: "bibapulse", label: "BibaPulse" },
-          ].map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              style={{
-                flex: 1,
-                background: activeTab === t.key ? COLORS.amber : "none",
-                color: activeTab === t.key ? COLORS.paper : COLORS.ink,
-                border: `2px solid ${activeTab === t.key ? COLORS.amber : COLORS.paperAlt}`,
-                borderRadius: "999px",
-                padding: "6px 12px",
-                fontSize: "13px",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              {t.key === "bibapulse" ? (
-                <>
-                  Biba<span style={{ color: activeTab === t.key ? undefined : COLORS.amber }}>Pulse</span>
-                </>
-              ) : t.key === "biba360" ? (
-                <>
-                  Biba<span style={{ color: activeTab === t.key ? undefined : COLORS.amber }}>360</span>
-                </>
-              ) : (
-                t.label
-              )}
-            </button>
-          ))}
-        </div>
+            { key: "biba360", label: { prefix: "Biba", accent: "360" } },
+            { key: "bibapulse", label: { prefix: "Biba", accent: "Pulse" } },
+          ]}
+          active={activeTab}
+          onChange={setActiveTab}
+        />
 
         {activeTab === "infos" && (
           <>

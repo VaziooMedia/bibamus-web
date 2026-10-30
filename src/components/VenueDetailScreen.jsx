@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { PillTabs } from "./PillTabs.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
 import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink, formatMoney } from "../utils.js";
@@ -263,36 +264,14 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
             📝 Une modification de la fiche est proposée, en attente de validation.
           </div>
         )}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        {[
+      <PillTabs
+        tabs={[
           { key: "infos", label: "Infos" },
-          { key: "bibapulse", label: "BibaPulse" },
-        ].map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveTab(t.key)}
-            style={{
-              flex: 1,
-              background: activeTab === t.key ? COLORS.amber : "none",
-              color: activeTab === t.key ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${activeTab === t.key ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "6px 12px",
-              fontSize: "13px",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {t.key === "bibapulse" ? (
-              <>
-                Biba<span style={{ color: activeTab === t.key ? undefined : COLORS.amber }}>Pulse</span>
-              </>
-            ) : (
-              t.label
-            )}
-          </button>
-        ))}
-      </div>
+          { key: "bibapulse", label: { prefix: "Biba", accent: "Pulse" } },
+        ]}
+        active={activeTab}
+        onChange={setActiveTab}
+      />
 
       {activeTab === "infos" && (
         <>
