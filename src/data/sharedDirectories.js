@@ -3852,6 +3852,7 @@ function rowToDrink(row) {
     volumeCl: row.volume_cl,
     glutenFree: row.gluten_free,
     bio: row.bio,
+    characteristics: row.characteristics || [],
     servingMode: row.serving_mode,
     beerTags: row.beer_tags || [],
     aliases: row.aliases || [],

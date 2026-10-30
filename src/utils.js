@@ -462,6 +462,11 @@ export const isAlcoholicDrink = (drink) => {
   return true;
 };
 
+// Label « Authentic Trappist Product (ATP) » : c'est une caractéristique du produit, créée dans la liste « Caractéristiques &
+// labels » de la gestion (le 2026-10-30). Son code a été généré par la gestion à partir du nom et ne change pas si le nom est modifié.
+export const ATP_CHARACTERISTIC_CODE = "perso_authentic_trappist_product_atp";
+export const isAtpDrink = (drink) => Array.isArray(drink?.characteristics) && drink.characteristics.includes(ATP_CHARACTERISTIC_CODE);
+
 // Paliers d'alcool montrés en pastille sur les produits (jamais sur les produits « naturellement » sans alcool) :
 //   0.0 exactement     → « 0.0% »
 //   de 0,1 à 0,5 inclus → « Alcohol free » (sans alcool au sens belge, mais pas 0.0)
