@@ -24,7 +24,7 @@ import { NavIcon } from "./icons.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { EventDashboardScreen } from "./EventDashboardScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
-import { PageHeader, EntityAvatar } from "./ui.jsx";
+import { PageHeader, SalonAvatar } from "./ui.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
 import { loadRoomStories } from "../data/sharedDirectories.js";
@@ -436,7 +436,7 @@ export function SalonTabsScreen(props) {
                 ...(roomStories.length > 0 ? { border: "2px solid #FF2C8F" } : {}),
               }}
             >
-              <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={48} />
+              <SalonAvatar event={event} venue={venue} size={48} />
             </button>
             {event.salonCode && onAddStory && (
               <button

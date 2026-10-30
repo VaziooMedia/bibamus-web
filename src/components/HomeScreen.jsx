@@ -9,7 +9,7 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import loupeIconUrl from "../assets/brand/loupe.svg";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
-import { EntityAvatar, CategoryTile, BibaxName } from "./ui.jsx";
+import { EntityAvatar, SalonAvatar, CategoryTile, BibaxName } from "./ui.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds, pulseClubName } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
@@ -415,11 +415,7 @@ export function HomeScreen({
                     />
                     {ev.paused ? "EN PAUSE" : "EN COURS"}
                   </span>
-                  <EntityAvatar
-                    photoUrl={ev.venueId ? venuesById[ev.venueId]?.profilePhotoUrl : null}
-                    photoEmoji={ev.venueId ? venuesById[ev.venueId]?.avatarEmoji : null}
-                    size={56}
-                  />
+                  <SalonAvatar event={ev} venue={ev.venueId ? venuesById[ev.venueId] : null} size={56} />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: "16px", lineHeight: 1.25, whiteSpace: "normal", wordBreak: "break-word" }}>{ev.name}</div>
                     {(() => {

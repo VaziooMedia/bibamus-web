@@ -6,7 +6,9 @@ import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, TokenPinkIcon, TokenCyanIcon, CountryFlagImg } from "./icons.jsx";
 import { NavigationContext, ProfileNavContext } from "../contexts.js";
-import { formatMoney } from "../utils.js";
+import { formatMoney, salonSpecialPlace } from "../utils.js";
+import homeSalonIconUrl from "../assets/brand/home-icon.svg";
+import eventSalonIconUrl from "../assets/brand/event-icon.svg";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import bibaPingActiveIconUrl from "../assets/brand/bibaping-active.svg";
 import { loadMyUnreadMessageCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
@@ -176,8 +178,14 @@ export function BibaxName({ name, lastName, nickname, city, locality, country, s
   );
 }
 
-export function EntityAvatar({ photoUrl, photoEmoji, size = 40, onClick, fallbackIcon = "bibamus-monogram", fallbackColor = COLORS.amber }) {
-  const content = photoUrl ? null : photoEmoji ? photoEmoji : <NavIcon name={fallbackIcon} size={Math.round(size * 0.58)} color={fallbackColor} />;
+// Ordre de priorité du contenu du rond : photo, puis emoji, puis `fallbackImageUrl` (un picto
+// image, occupant `fallbackImageScale` du rond), puis l'icône `fallbackIcon` (le « B » Bibamus
+// par défaut).
+export function EntityAvatar({ photoUrl, photoEmoji, size = 40, onClick, fallbackIcon = "bibamus-monogram", fallbackColor = COLORS.amber, fallbackImageUrl, fallbackImageScale = 0.62 }) {
+  const fallbackImageSize = Math.round(size * fallbackImageScale);
+  const content = photoUrl ? null : photoEmoji ? photoEmoji : fallbackImageUrl ? (
+    <img src={fallbackImageUrl} alt="" style={{ width: `${fallbackImageSize}px`, height: `${fallbackImageSize}px`, objectFit: "contain", display: "block" }} />
+  ) : <NavIcon name={fallbackIcon} size={Math.round(size * 0.58)} color={fallbackColor} />;
   const style = {
     width: `${size}px`,
     height: `${size}px`,
@@ -198,6 +206,20 @@ export function EntityAvatar({ photoUrl, photoEmoji, size = 40, onClick, fallbac
     );
   }
   return <span style={style}>{content}</span>;
+}
+
+// Rond de profil d'un salon : la photo ou l'emoji de son lieu s'il en a un ; sinon, un salon
+// @Home porte une maison et un salon @Event un feu d'artifice (au lieu du « B » Bibamus).
+export function SalonAvatar({ event, venue, size = 48 }) {
+  const place = salonSpecialPlace(event);
+  return (
+    <EntityAvatar
+      photoUrl={venue ? venue.profilePhotoUrl : null}
+      photoEmoji={venue ? venue.avatarEmoji : null}
+      size={size}
+      fallbackImageUrl={place === "home" ? homeSalonIconUrl : place === "event" ? eventSalonIconUrl : undefined}
+    />
+  );
 }
 
 export function HeaderAvatarButton({ size = 40 }) {
