@@ -462,6 +462,27 @@ export const isAlcoholicDrink = (drink) => {
   return true;
 };
 
+// Paliers d'alcool montrés en pastille sur les produits (jamais sur les produits « naturellement » sans alcool) :
+//   0.0 exactement     → « 0.0% »
+//   de 0,1 à 0,5 inclus → « Alcohol free » (sans alcool au sens belge, mais pas 0.0)
+//   de 0,6 à 3,0 inclus → « Alcohol low »
+//   au-delà de 3,0 ou degré inconnu → aucune pastille.
+// Les seuils collent à isAlcoholicDrink (0,5 % reste « sans alcool », > 0,5 % est alcoolisé).
+// `key` sert aussi de « kind » au filtre de l'Annuaire (étiquette p_tag_kind côté base).
+export const ALCOHOL_TIER_BADGES = {
+  zero: { key: "zero", label: "0.0%", title: "0,0 % d'alcool" },
+  free: { key: "alcoholFree", label: "Alcohol free", title: "Alcohol free (0,1 à 0,5 % ABV)" },
+  low: { key: "alcoholLow", label: "Alcohol low", title: "Alcohol low (0,6 à 3,0 % ABV)" },
+};
+export function getAlcoholTierBadge(abv) {
+  const n = typeof abv === "string" ? parseFloat(abv) : abv;
+  if (typeof n !== "number" || n < 0) return null; // NaN et l'infini ne tombent dans aucun palier ci-dessous
+  if (n === 0) return ALCOHOL_TIER_BADGES.zero;
+  if (n <= 0.5) return ALCOHOL_TIER_BADGES.free;
+  if (n <= 3.0) return ALCOHOL_TIER_BADGES.low;
+  return null;
+}
+
 
 export function drinkSummaryParts(d, includeType = true) {
   const abvText = d.abv != null ? `${d.abv.toFixed(1)}% ABV` : null;

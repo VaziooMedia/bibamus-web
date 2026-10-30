@@ -32,7 +32,7 @@ import {
   saveWaterAlertSoloSettings,
   upsertPushSubscription,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import beerIconUrl from "../assets/brand/beer.svg";
@@ -145,7 +145,7 @@ const menuBadgeStyle = {
 // (ligne 1 : nom + volume ; ligne 2 : service, drapeau, degré d'alcool, badges, prix ; ligne 3 :
 // producteur), avec le drapeau sans fond et le degré d'alcool toujours visible s'il est connu.
 function MenuItemBlock({ item, onClick }) {
-  const isZeroAbv = item.abv != null && item.abv <= 0.5;
+  const alcoholTier = getAlcoholTierBadge(item.abv);
   const priceText = item.price != null ? formatMoney(item.price, "euro") : null;
   const priceParts = priceText ? priceText.split(" ") : [];
   const priceSymbol = priceParts.length > 1 ? priceParts.pop() : null;
@@ -163,9 +163,9 @@ function MenuItemBlock({ item, onClick }) {
         {item.abv.toFixed(1)}% ABV
       </span>
     ) : null,
-    isZeroAbv ? (
-      <span key="zero" style={menuBadgeStyle}>
-        0.0%
+    alcoholTier ? (
+      <span key={alcoholTier.key} title={alcoholTier.title} style={menuBadgeStyle}>
+        {alcoholTier.label}
       </span>
     ) : null,
     item.bio ? (

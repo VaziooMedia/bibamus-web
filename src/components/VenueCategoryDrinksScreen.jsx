@@ -7,7 +7,7 @@ import { COLORS, SERVING_MODE_LABELS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
-import { resolveMenuItem, formatMoney, flattenMenu } from "../utils.js";
+import { resolveMenuItem, formatMoney, flattenMenu, getAlcoholTierBadge } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
@@ -48,7 +48,7 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {items.map((d) => {
-            const isZeroAbv = d.abv != null && d.abv <= 0.5;
+            const alcoholTier = getAlcoholTierBadge(d.abv);
             const priceText = formatMoney(d.price || 0, venue?.defaultCurrency);
             // Sépare le nombre du symbole/mot de devise pour styler ce dernier plus petit et grisé.
             const priceParts = priceText.split(" ");
@@ -68,9 +68,9 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
                   {d.abv.toFixed(1)}% ABV
                 </span>
               ) : null,
-              isZeroAbv ? (
-                <span key="zero" style={badgeStyle}>
-                  0.0%
+              alcoholTier ? (
+                <span key={alcoholTier.key} title={alcoholTier.title} style={badgeStyle}>
+                  {alcoholTier.label}
                 </span>
               ) : null,
               d.bio ? (

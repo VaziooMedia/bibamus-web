@@ -367,6 +367,10 @@ export function DrinksDirectoryScreen({
             </span>
           ) : activeTagFilter.kind === "zero" ? (
             "0.0%"
+          ) : activeTagFilter.kind === "alcoholFree" ? (
+            "Alcohol free"
+          ) : activeTagFilter.kind === "alcoholLow" ? (
+            "Alcohol low"
           ) : activeTagFilter.kind === "alcoholic" ? (
             "Alcoolisé"
           ) : activeTagFilter.kind === "glutenFree" ? (
