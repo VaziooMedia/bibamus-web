@@ -25,6 +25,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { EventDashboardScreen } from "./EventDashboardScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
+import { PillTabs } from "./PillTabs.jsx";
 import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
 import { loadRoomStories } from "../data/sharedDirectories.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
@@ -32,7 +33,6 @@ import { loadTokTargets, loadMyPendingToks, loadMyTokReplies, markTokRepliesSeen
 import { TokModal } from "./TokModal.jsx";
 import { formatTime, genderAgree, formatDate, safePulsePhotoUrl } from "../utils.js";
 import settingsIconUrl from "../assets/brand/settings-icon.png";
-import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import tokIconUrl from "../assets/brand/tok.svg";
 
 // Fil interne : tournées, checks de produits et mouvements de participants, mélangés par ordre chronologique.
@@ -339,55 +339,20 @@ export function SalonTabsScreen(props) {
 
   if (!event) return null;
 
-  // Libellé scindé : une fois l'onglet actif, seul le suffixe passe en blanc.
-  const tabs = [
-    { key: "salon", suffix: "Room", badge: 0 },
-    { key: "pulse", suffix: "Pulse", badge: pulseUnread },
-    { key: "chat", suffix: "Ping", badge: chatUnread },
-  ];
-
-  // Une ligne de séparation au-dessus et en dessous des trois boutons (même trait que les autres séparateurs).
+  // Même barre d'onglets que les fiches Produits / Lieux et les BibaClub (PillTabs) : pastilles vertes,
+  // sans icônes, avec un trait de séparation au-dessus et en dessous. Les pastilles rouges comptent
+  // les éléments non lus de Pulse et de Ping.
   const tabBar = (
-    <div style={{ marginBottom: "10px" }}>
-    <div style={{ height: "1px", background: COLORS.paperAlt, marginBottom: "10px" }} />
-    <div style={{ display: "flex", gap: "6px" }}>
-      {tabs.map((t) => {
-        const active = tab === t.key;
-        return (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            style={{
-              position: "relative",
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "5px",
-              background: active ? COLORS.surface : "none",
-              border: `2px solid ${active ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "7px 6px",
-              fontSize: "11.5px",
-              fontWeight: 700,
-              color: active ? COLORS.amber : COLORS.inkSoft,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t.key === "chat" && <img src={bibaPingIconUrl} alt="" style={{ height: "17px" }} />}
-            {t.key === "pulse" && <NavIcon name="activity" size={18} color={COLORS.amber} />}
-            <span>
-              Biba
-              <span style={{ color: active ? COLORS.ink : "inherit" }}>{t.suffix}</span>
-            </span>
-            <TabBadge count={t.badge} />
-          </button>
-        );
-      })}
-    </div>
-    <div style={{ height: "1px", background: COLORS.paperAlt, marginTop: "10px" }} />
-    </div>
+    <PillTabs
+      tabs={[
+        { key: "salon", label: { prefix: "Biba", accent: "Room" } },
+        { key: "pulse", label: { prefix: "Biba", accent: "Pulse" }, badge: <TabBadge count={pulseUnread} /> },
+        { key: "chat", label: { prefix: "Biba", accent: "Ping" }, badge: <TabBadge count={chatUnread} /> },
+      ]}
+      active={tab}
+      onChange={setTab}
+      marginBottom="10px"
+    />
   );
 
   // Volontairement différent des autres boutons de cette ligne : rond et plein, poussé à
