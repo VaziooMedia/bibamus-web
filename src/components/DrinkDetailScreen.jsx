@@ -17,7 +17,7 @@ import { getDrinkFeatureItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { formatDrinkFieldValue, formatMoney, formatWeekdayDDMMYYYY } from "../utils.js";
+import { formatDrinkFieldValue, formatMoney, formatWeekdayDDMMYYYY, isAtpDrink } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -27,6 +27,7 @@ import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data
 import { loadCustomBeerCiderStylesOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
+import atpIconUrl from "../assets/brand/atp.svg";
 
 // Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
 // de gestion — les autres n'en ont pas encore ; on laisse alors vide.
@@ -143,8 +144,11 @@ export function DrinkDetailScreen({
   const [justChecked, setJustChecked] = useState(false);
   const [myCheckCount, setMyCheckCount] = useState(null);
   const isBeer = BEER_TYPES.includes(drink.type);
-  // Ligne « caractéristiques » de la fiche : 0.0 %, Bio, Sans gluten (vide si le produit n'en a aucune).
+  // Ligne « caractéristiques » de la fiche : palier d'alcool, Bio, Sans gluten (vide si le produit n'en a aucune).
   const featureItems = getDrinkFeatureItems(drink, { size: 13 });
+  // Label ATP (bières trappistes) : une ligne à part, sous les caractéristiques, avec une grande icône.
+  const isAtp = isAtpDrink(drink);
+  const hasFeatureRows = featureItems.length > 0 || isAtp;
 
   // Styles modifiés depuis la gestion : l'app ne les connaît pas à la compilation — un style ajouté à la main
   // (inconnu de la liste figée) ou un style de départ renommé. On va les chercher en base (une seule fois par
@@ -671,7 +675,7 @@ export function DrinkDetailScreen({
 
         {activeTab === "infos" && (
           <>
-        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || featureItems.length > 0 || linkedBrand || linkedProducers.length > 0) && (
+        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasFeatureRows || linkedBrand || linkedProducers.length > 0) && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
             <div style={{ fontSize: "13px" }}>
               {[
@@ -744,6 +748,15 @@ export function DrinkDetailScreen({
                   </div>
                   ),
                 },
+                isAtp && {
+                  key: "atp",
+                  sep: "grey",
+                  node: (
+                  <div key="atp" data-testid="drink-atp" style={{ display: "flex", alignItems: "center" }}>
+                    <img src={atpIconUrl} alt="Authentic Trappist Product" title="Authentic Trappist Product (ATP)" style={{ height: "56px", width: "auto", display: "block" }} />
+                  </div>
+                  ),
+                },
                 (drink.originCity || drink.originRegion || drink.nationality) && {
                   key: "origin",
                   sep: "grey",
@@ -792,7 +805,7 @@ export function DrinkDetailScreen({
                 ))}
             </div>
 
-            {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || featureItems.length > 0) && (linkedBrand || linkedProducers.length > 0) && (
+            {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasFeatureRows) && (linkedBrand || linkedProducers.length > 0) && (
               <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />
             )}
 
