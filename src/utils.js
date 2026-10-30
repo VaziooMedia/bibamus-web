@@ -361,6 +361,11 @@ export const withVenueChange = (e, { mode, currency, jetonUnitValue, selectedVen
   };
 };
 
+// Un salon @Home (chez soi) ou @Event (hors d'un lieu) n'a pas de photo de lieu : son rond de
+// profil porte un picto à lui (voir SalonAvatar) au lieu du « B » Bibamus par défaut.
+// Renvoie "home", "event" ou null (salon ordinaire, lié ou non à un vrai lieu).
+export const salonSpecialPlace = (event) => (event?.isHome ? "home" : event?.venueId === "@event" ? "event" : null);
+
 // Écran « Réglages de la session » : choisir un lieu applique la même règle qu'à la création du
 // salon — @Home = Mode LIBER (open bar, en euros : chacun boit ce qu'il y a, pas de prix) ;
 // quitter @Home, c'est revenir au Mode ORBIS (tournées). Tout autre changement de lieu laisse le

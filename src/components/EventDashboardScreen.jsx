@@ -16,7 +16,7 @@ import { NavIcon, WaterAlertIcon, TokenCyanIcon, TokenPinkIcon } from "./icons.j
 import settingsIconUrl from "../assets/brand/settings-icon.png";
 import bibaplayIconUrl from "../assets/brand/bibaplay.svg";
 import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
-import { EntityAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
+import { SalonAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
 import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson, myDrinksList } from "../utils.js";
@@ -389,7 +389,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                 ...(roomStories.length > 0 ? { border: "2px solid #FF2C8F" } : {}),
               }}
             >
-              <EntityAvatar photoUrl={venue ? venue.profilePhotoUrl : null} photoEmoji={venue ? venue.avatarEmoji : null} size={48} />
+              <SalonAvatar event={event} venue={venue} size={48} />
             </button>
             {event.salonCode && onAddStory && (
               <button
