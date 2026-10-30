@@ -146,9 +146,11 @@ export function DrinkDetailScreen({
   const isBeer = BEER_TYPES.includes(drink.type);
   // Ligne « caractéristiques » de la fiche : palier d'alcool, Bio, Sans gluten (vide si le produit n'en a aucune).
   const featureItems = getDrinkFeatureItems(drink, { size: 13 });
-  // Label ATP (bières trappistes) : une ligne à part, sous les caractéristiques, avec une grande icône.
+  // Label ATP (bières trappistes) : une grande icône à l'extrême droite de la ligne de l'origine (ville, région, pays) ; seule
+  // sur cette ligne, à droite, si le produit n'a aucune origine.
   const isAtp = isAtpDrink(drink);
-  const hasFeatureRows = featureItems.length > 0 || isAtp;
+  const hasOrigin = !!(drink.originCity || drink.originRegion || drink.nationality);
+  const hasCharacteristics = featureItems.length > 0 || isAtp;
 
   // Styles modifiés depuis la gestion : l'app ne les connaît pas à la compilation — un style ajouté à la main
   // (inconnu de la liste figée) ou un style de départ renommé. On va les chercher en base (une seule fois par
@@ -675,7 +677,7 @@ export function DrinkDetailScreen({
 
         {activeTab === "infos" && (
           <>
-        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasFeatureRows || linkedBrand || linkedProducers.length > 0) && (
+        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasCharacteristics || linkedBrand || linkedProducers.length > 0) && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
             <div style={{ fontSize: "13px" }}>
               {[
@@ -748,31 +750,31 @@ export function DrinkDetailScreen({
                   </div>
                   ),
                 },
-                isAtp && {
-                  key: "atp",
-                  sep: "grey",
-                  node: (
-                  <div key="atp" data-testid="drink-atp" style={{ display: "flex", alignItems: "center" }}>
-                    <img src={atpIconUrl} alt="Authentic Trappist Product" title="Authentic Trappist Product (ATP)" style={{ height: "56px", width: "auto", display: "block" }} />
-                  </div>
-                  ),
-                },
-                (drink.originCity || drink.originRegion || drink.nationality) && {
+                (hasOrigin || isAtp) && {
                   key: "origin",
                   sep: "grey",
                   node: (
-                  <div key="origin" style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                    <NavIcon name="map-pin" size={15} color={COLORS.amber} />
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                      {drink.originCity && <span>{drink.originCity}</span>}
-                      {drink.originRegion && <span>{drink.originRegion}</span>}
-                      {drink.nationality && (
-                        <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          {drink.nationality}
-                          <CountryFlagImg country={drink.nationality} size={14} />
-                        </span>
-                      )}
-                    </div>
+                  <div key="origin" data-testid="drink-origin" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                    {hasOrigin ? (
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                        <NavIcon name="map-pin" size={15} color={COLORS.amber} />
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          {drink.originCity && <span>{drink.originCity}</span>}
+                          {drink.originRegion && <span>{drink.originRegion}</span>}
+                          {drink.nationality && (
+                            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              {drink.nationality}
+                              <CountryFlagImg country={drink.nationality} size={14} />
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span />
+                    )}
+                    {isAtp && (
+                      <img data-testid="drink-atp" src={atpIconUrl} alt="Authentic Trappist Product" title="Authentic Trappist Product (ATP)" style={{ height: "56px", width: "auto", display: "block", flexShrink: 0 }} />
+                    )}
                   </div>
                   ),
                 },
@@ -805,7 +807,7 @@ export function DrinkDetailScreen({
                 ))}
             </div>
 
-            {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasFeatureRows) && (linkedBrand || linkedProducers.length > 0) && (
+            {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasCharacteristics) && (linkedBrand || linkedProducers.length > 0) && (
               <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />
             )}
 
