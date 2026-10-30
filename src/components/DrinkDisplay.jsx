@@ -6,6 +6,7 @@
 import React from "react";
 import { COLORS, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, NON_ALCOHOLIC_DRINK_TYPES } from "../constants.js";
 import { CountryFlagImg } from "./icons.jsx";
+import { getAlcoholTierBadge } from "../utils.js";
 import bioIconUrl from "../assets/brand/bio.svg";
 import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
@@ -38,8 +39,9 @@ export function getDrinkBadgeItems(drink, { hideCountry = false, size = 11 } = {
       filter: { kind: "nationality", value: drink.nationality },
     });
   }
-  if (!isInherentlyNonAlcoholic && drink.abv != null && drink.abv <= 0.5) {
-    items.push({ key: "zero", label: "0.0%", title: "Sans alcool (≤ 0,5%)", filter: { kind: "zero" } });
+  const alcoholTier = isInherentlyNonAlcoholic ? null : getAlcoholTierBadge(drink.abv);
+  if (alcoholTier) {
+    items.push({ key: alcoholTier.key, label: alcoholTier.label, title: alcoholTier.title, filter: { kind: alcoholTier.key } });
   }
   if (isInherentlyNonAlcoholic && drink.abv != null && drink.abv > 0.5) {
     items.push({ key: "alcoholic", label: "Alc.", title: "Contient de l'alcool, contrairement à la plupart des produits de cette catégorie", filter: { kind: "alcoholic" } });
@@ -62,9 +64,10 @@ export function getDrinkBadgeItems(drink, { hideCountry = false, size = 11 } = {
   return items;
 }
 
-// Caractéristiques montrées sur la fiche produit, dans cet ordre : 0.0 %, Bio, Sans gluten. Mêmes règles d'affichage que
-// partout dans l'app (getDrinkBadgeItems) ; les autres badges (générique, « Alc. », pays) n'en font pas partie.
-export const DRINK_FEATURE_KEYS = ["zero", "bio", "gf"];
+// Caractéristiques montrées sur la fiche produit, dans cet ordre : palier d'alcool (0.0%, Alcohol free ou Alcohol low —
+// un seul à la fois), Bio, Sans gluten. Mêmes règles d'affichage que partout dans l'app (getDrinkBadgeItems) ; les autres
+// badges (générique, « Alc. », pays) n'en font pas partie.
+export const DRINK_FEATURE_KEYS = ["zero", "alcoholFree", "alcoholLow", "bio", "gf"];
 export function getDrinkFeatureItems(drink, { size = 13 } = {}) {
   const all = getDrinkBadgeItems(drink, { hideCountry: true, size });
   return DRINK_FEATURE_KEYS.map((key) => all.find((it) => it.key === key)).filter(Boolean);
