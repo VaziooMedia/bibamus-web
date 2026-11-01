@@ -3,10 +3,13 @@
 // depuis les listes de départ de la plateforme de gestion (src/data/softStyles.js, hotStyles.js et
 // cocktailStyles.js ; 1014 styles en 16 listes). Les Snacks n'ont pas de styles.
 //
+// FICHIER GÉNÉRÉ — ne pas le modifier à la main : node scripts/generate-other-style-labels.mjs
+// (sans option pour le réécrire, avec --check pour vérifier qu'il est à jour).
+//
 // Utilisé uniquement pour AFFICHER les styles déjà choisis sur une fiche produit : la sélection se fait côté
 // plateforme de gestion. Un code ajouté à la main (« perso_… ») ou un nom modifié depuis la gestion ne
 // se trouve pas ici : il est lu en base (table custom_list_items, clés ci-dessous) et l'emporte sur ce nom.
-// Une liste de plus ou de moins dans la gestion est à reporter ici (même code, même nom).
+// Un style de départ ajouté, renommé ou supprimé dans le code de la gestion se reporte ici avec le script ci-dessus.
 // ============================================================
 
 // Clés de ces listes dans custom_list_items (list_key).
