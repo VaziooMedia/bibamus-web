@@ -12,7 +12,7 @@ import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./u
 import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { drinkTypeLabel, drinkSummaryParts } from "../utils.js";
 import { styleTagLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadDrinksDirectoryCount, loadCustomBeerCiderStylesOnce } from "../data/sharedDirectories.js";
+import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadDrinksDirectoryCount, loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 
 const PAGE_SIZE = 40;
@@ -79,8 +79,9 @@ export function DrinksDirectoryScreen({
   useEffect(() => {
     if (!needsStyleLabels) return;
     let cancelled = false;
-    loadCustomBeerCiderStylesOnce().then((list) => {
-      if (registerCustomStyleLabels(list) && !cancelled) setStyleLabelsTick((t) => t + 1);
+    // Les deux tables : le filtre peut porter un style de bière ou de l'une des autres catégories (Softs & Eaux, Boissons chaudes, Cocktails / Mocktails).
+    Promise.all([loadCustomBeerCiderStylesOnce(), loadCustomListStyleLabelsOnce()]).then(([beerList, otherList]) => {
+      if (registerCustomStyleLabels([...beerList, ...otherList]) && !cancelled) setStyleLabelsTick((t) => t + 1);
     });
     return () => {
       cancelled = true;

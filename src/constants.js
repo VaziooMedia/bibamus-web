@@ -340,6 +340,48 @@ export const SNACK_WEIGHTS_G = [25, 40, 45, 50, 75, 100, 125, 150, 200, 250, 300
 
 export const BEER_TYPES = ["Bières & Cidres"];
 
+// Nom français de la sous-catégorie d'un produit (colonne beverage_subtype), pour l'afficher sous le nom, dans les résultats de
+// recherche, les tournées et le service à la maison. Mêmes noms que la plateforme de gestion. Une sous-catégorie absente d'ici
+// (Spiritueux, dont les sous-catégories ne sont pas encore reprises) n'affiche rien plutôt qu'un code brut ou la catégorie générale.
+// Les codes de deux familles ne se confondent jamais (vérifié à la reprise des listes).
+export const SUBTYPE_LABELS = {
+  // Bières & Cidres, Vins & Bulles
+  biere: "Bière",
+  cidre: "Cidre",
+  poire: "Poiré",
+  vin: "Vin",
+  vin_effervescent: "Vin effervescent",
+  // Softs & Eaux
+  soda: "Soda",
+  eau: "Eau",
+  jus_de_fruits: "Jus",
+  energy: "Energy",
+  sport: "Sport",
+  lactee: "Lactée",
+  sirop: "Sirop",
+  // Boissons chaudes
+  cafe: "Café",
+  the: "Thé",
+  infusion: "Infusion",
+  hot_milk: "Hot Milk",
+  soupe: "Soupe",
+  hot_mix: "Hot Mix",
+  cereales_chicoree: "Céréales & Chicorée",
+  // Cocktails / Mocktails
+  cocktail: "Cocktails",
+  mocktail: "Mocktails",
+  // Snacks
+  chips: "Chips",
+  aperitifs: "Apéritifs",
+  charcuterie: "Charcuterie",
+  fromage: "Fromage",
+  snacks_chauds: "Snacks chauds",
+  glaces: "Glaces",
+  chocolats: "Chocolats",
+  confiseries: "Confiseries",
+  biscuits_gateaux: "Biscuits & Gâteaux",
+};
+
 export const SERVING_MODE_LABELS = { bouteille: "Bouteille", canette: "Canette", verre: "Au verre", fut: "On tap" };
 
 export const BEER_STYLE_TAGS = [

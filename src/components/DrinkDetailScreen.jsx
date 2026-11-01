@@ -10,7 +10,7 @@
 // moyenne, sur le bandeau photo.
 // ============================================================
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS } from "../constants.js";
+import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle, GoButton } from "./ui.jsx";
 import { PillTabs } from "./PillTabs.jsx";
@@ -25,20 +25,11 @@ import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { EvolutionCard } from "./EvolutionCard.jsx";
 import { NotesCard, formatRating } from "./NotesCard.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
-import { loadCustomBeerCiderStylesOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { OTHER_STYLE_TYPES } from "../data/otherStyleLabels.js";
+import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import atpIconUrl from "../assets/brand/atp.svg";
-
-// Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
-// de gestion — les autres n'en ont pas encore ; on laisse alors vide.
-const SUBTYPE_LABELS = {
-  biere: "Bière",
-  cidre: "Cidre",
-  poire: "Poiré",
-  vin: "Vin",
-  vin_effervescent: "Vin effervescent",
-};
 
 // Rangée de tuiles chiffrées de l'onglet Biba360 (« Checks », « Unique Checkers »…). Une valeur absente
 // (lecture en cours ou échouée) s'affiche en tiret.
@@ -158,19 +149,23 @@ export function DrinkDetailScreen({
   // session) quand CE produit est une bière / un cidre qui porte des styles, ou qu'il porte un style inconnu :
   // les autres produits (vins, spiritueux…) ne font aucune requête en plus. L'effet repasse à chaque fiche
   // (drink.id) : la lecture est mémorisée, donc sans coût, et un échec est réessayé à la fiche suivante.
+  // Softs & Eaux, Boissons chaudes et Cocktails / Mocktails : leurs styles modifiés sont dans une autre table
+  // (custom_list_items) ; même principe, une seule lecture par session, seulement pour un produit de ces
+  // catégories qui porte des styles.
   const [, setStyleLabelsTick] = useState(0);
+  const usesListStyles = OTHER_STYLE_TYPES.includes(drink.type);
   const unknownStylesKey = (drink.styles || []).filter((code) => !hasStyleLabel(code)).join(",");
-  const needsStyleLabels = !!unknownStylesKey || (isBeer && (drink.styles || []).length > 0);
+  const needsStyleLabels = usesListStyles ? (drink.styles || []).length > 0 : !!unknownStylesKey || (isBeer && (drink.styles || []).length > 0);
   useEffect(() => {
     if (!needsStyleLabels) return;
     let cancelled = false;
-    loadCustomBeerCiderStylesOnce().then((list) => {
+    (usesListStyles ? loadCustomListStyleLabelsOnce : loadCustomBeerCiderStylesOnce)().then((list) => {
       if (registerCustomStyleLabels(list) && !cancelled) setStyleLabelsTick((t) => t + 1);
     });
     return () => {
       cancelled = true;
     };
-  }, [needsStyleLabels, unknownStylesKey, drink.id]);
+  }, [needsStyleLabels, usesListStyles, unknownStylesKey, drink.id]);
 
   // Styles sélectionnés sur la fiche (pastilles) pour la liste « Produits communs ». La sélection appartient
   // à CE produit : si la fiche affichée change de produit, elle repart de zéro sans état périmé.

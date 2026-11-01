@@ -17,6 +17,7 @@ import { normalizeSearchText } from "../utils.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
+import { OTHER_STYLE_LIST_KEYS } from "./otherStyleLabels.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
@@ -2744,6 +2745,34 @@ export function loadCustomBeerCiderStylesOnce() {
     });
   }
   return customStylesOnce;
+}
+
+// Styles des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails modifiés depuis la plateforme de gestion, en
+// complément des noms du code (voir data/otherStyleLabels.js) : styles ajoutés à la main (code « perso_… ») et styles de départ
+// renommés (même code). Table custom_list_items, une clé par liste. Un style de départ supprimé (ligne masquée) est laissé de côté :
+// la gestion l'a déjà retiré des produits. Rend null si la lecture échoue.
+async function fetchCustomListStyleLabels() {
+  const { data, error } = await supabase.from("custom_list_items").select("code, fr, hidden").in("list_key", OTHER_STYLE_LIST_KEYS);
+  if (error || !Array.isArray(data)) {
+    console.error("loadCustomListStyleLabels:", error);
+    return null;
+  }
+  return data.filter((r) => !r.hidden && r.code && r.fr).map((r) => ({ code: r.code, fr: r.fr }));
+}
+
+// Une seule lecture par session, comme pour les bières & cidres ; un échec n'est pas mémorisé.
+let customListStylesOnce = null;
+export function loadCustomListStyleLabelsOnce() {
+  if (!customListStylesOnce) {
+    customListStylesOnce = fetchCustomListStyleLabels().then((list) => {
+      if (list === null) {
+        customListStylesOnce = null;
+        return [];
+      }
+      return list;
+    });
+  }
+  return customListStylesOnce;
 }
 
 // Listes modifiées depuis la plateforme de gestion en complément de la liste de départ du code (voir venueLists.js,
