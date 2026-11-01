@@ -6,6 +6,8 @@
 // une fiche produit ; la vraie sélection se fait côté admin.
 // ============================================================
 
+import { OTHER_STYLE_LABELS } from "./otherStyleLabels.js";
+
 export const BEER_CIDER_STYLE_GROUPS = [
   {
     title: "Lagers, Pils & fermentation basse",
@@ -466,6 +468,9 @@ export const WINE_EFFERVESCENT_STYLE_GROUPS = [
 
 const ALL_STYLE_GROUPS = [...BEER_CIDER_STYLE_GROUPS, ...WINE_STYLE_GROUPS, ...WINE_EFFERVESCENT_STYLE_GROUPS];
 
+// Styles des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails : une simple table code → nom (voir
+// otherStyleLabels.js, importé en tête de fichier), à part des groupes ci-dessus qui, eux, servent à ranger des listes de choix.
+
 // Libellés venus de la base (table custom_beer_cider_styles), modifiés depuis la plateforme de gestion :
 //   - les styles ajoutés à la main, que l'app ne connaît pas à la compilation ;
 //   - les styles de la liste de départ renommés (même code, nouveau nom), qui l'emportent sur le nom figé.
@@ -487,7 +492,7 @@ export function registerCustomStyleLabels(list) {
 
 // Vrai si le libellé de ce code est connu (liste figée ou style chargé de la base).
 export function hasStyleLabel(code) {
-  return customStyleLabels.has(code) || ALL_STYLE_GROUPS.some((g) => g.tags.some((t) => t.code === code));
+  return customStyleLabels.has(code) || OTHER_STYLE_LABELS.has(code) || ALL_STYLE_GROUPS.some((g) => g.tags.some((t) => t.code === code));
 }
 
 // Le nom enregistré en base (renommage, style ajouté) l'emporte sur le nom figé dans le code.
@@ -498,5 +503,5 @@ export function styleTagLabel(code) {
     const tag = group.tags.find((t) => t.code === code);
     if (tag) return tag.fr;
   }
-  return code;
+  return OTHER_STYLE_LABELS.get(code) || code;
 }

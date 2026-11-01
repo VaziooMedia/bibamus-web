@@ -9,7 +9,7 @@
 // un identique (+) ou de retirer le dernier (−) en cas d'erreur.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { EntityAvatar, PrimaryButton } from "./ui.jsx";
 import { NavIcon } from "./icons.jsx";
 import { AiIcon } from "./AiIcon.jsx";
@@ -17,9 +17,6 @@ import { ServiceTag } from "./ServiceTag.jsx";
 import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent } from "../utils.js";
 import { searchDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
-
-// Même libellés que RoundComposeScreen / SearchScreen, pour la sous-catégorie d'un résultat.
-const SUBTYPE_LABELS = { biere: "Bière", cidre: "Cidre", poire: "Poiré", vin: "Vin", vin_effervescent: "Vin effervescent" };
 
 const volumeLabel = (cl) => (cl != null ? ` ${String(cl).replace(".", ",")} cl.` : "");
 

@@ -4,7 +4,7 @@
 // window.storage) est remplacée par loadSalon (Supabase).
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES } from "../constants.js";
+import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } from "./ui.jsx";
 import { BibaxSearchPicker } from "./Pickers.jsx";
@@ -17,9 +17,6 @@ import { searchDrinks } from "../data/sharedDirectories.js";
 // Un même produit peut exister sur la carte en plusieurs volumes ("Jupiler" 25cl. et 33cl.,
 // jusqu'ici deux blocs distincts) — regroupés ici sous un seul nom, triés du plus petit volume
 // au plus grand ; la sélection du volume se fait dans la carte elle-même (GroupedDrinkCard).
-// Même libellés que SearchScreen.jsx, pour la sous-catégorie d'un résultat BibAtlas — plus
-// précis que la catégorie ("Bières & Cidres") elle-même, déjà connue depuis le contexte.
-const SUBTYPE_LABELS = { biere: "Bière", cidre: "Cidre", poire: "Poiré", vin: "Vin", vin_effervescent: "Vin effervescent" };
 
 function groupDrinksByName(items) {
   const groups = [];

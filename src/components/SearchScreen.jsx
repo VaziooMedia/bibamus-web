@@ -17,23 +17,12 @@
 // page (BibaxDirectoryScreen).
 // ============================================================
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, ActionCard } from "./ui.jsx";
 import { formatAddress, usernameFromQuery } from "../utils.js";
 import { searchBibax, searchDrinks, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
-
-// Seuls Bières & Cidres et Vins ont déjà de vraies sous-catégories définies côté plateforme
-// de gestion — les autres (Soft, Spiritueux...) n'en ont pas encore ; on laisse alors vide
-// plutôt que d'afficher un code brut ou la catégorie générale.
-const SUBTYPE_LABELS = {
-  biere: "Bière",
-  cidre: "Cidre",
-  poire: "Poiré",
-  vin: "Vin",
-  vin_effervescent: "Vin effervescent",
-};
 
 function normalize(str) {
   return (str || "")
