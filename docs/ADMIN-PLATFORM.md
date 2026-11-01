@@ -70,7 +70,7 @@ Section **lue dans le dépôt de gestion le 2026-11-01** (le reste de ce documen
 - **Snacks** : « Poids par défaut (grammes) » et « Énergie (kcal/100gr) » remplacent le volume en centilitres et l'énergie pour 100 ml ; les valeurs vont dans les mêmes champs.
 - **Listes de départ** (nombre de styles) : Eau 5 ; Soda 30 ; Jus 46 ; Energy 41 ; Sport 34 ; Lactée 47 ; Sirop 84 ; Café 54 ; Thé 98 ; Infusion 98 ; Hot Milk 74 ; Soupe 75 ; Hot Mix 41 ; Céréales & Chicorée 55 ; Cocktails 121 ; Mocktails 111.
 - **Produits existants** : aucune sous-catégorie ni aucun style n'est ajouté d'office ; un produit déjà enregistré reste sans sous-catégorie tant qu'on n'en choisit pas une.
-- **Côté app publique (depuis le 2026-11-01)** (voir `DATABASE.md`) : la sous-catégorie s'affiche sous le nom du produit et les styles portent leur nom. Un style renommé ou ajouté à la main dans la gestion y apparaît sans mise à jour de l'app (lu en base, une fois par session). Un style de départ ajouté ou renommé **dans le code** de la gestion, lui, est à reporter dans `src/data/otherStyleLabels.js` de l'app.
+- **Côté app publique (depuis le 2026-11-01)** (voir `DATABASE.md`) : la sous-catégorie s'affiche sous le nom du produit et les styles portent leur nom. Un style renommé ou ajouté à la main dans la gestion y apparaît sans mise à jour de l'app (lu en base, une fois par session). Un style de départ ajouté, renommé ou supprimé **dans le code** de la gestion, lui, se reporte dans l'app en relançant `node scripts/generate-other-style-labels.mjs` (dépôt `bibamus-web`, qui réécrit `src/data/otherStyleLabels.js` ; `--check` vérifie seulement qu'il est à jour).
 
 ### Listes modifiables de la fiche produit (arômes & saveurs, accords, moment, verre, caractéristiques)
 
