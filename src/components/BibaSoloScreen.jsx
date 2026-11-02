@@ -1344,6 +1344,37 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
       setRecentDrinkIds(ids);
     });
 
+  // Passage à une nouvelle période (6 h) pendant que l'écran reste ouvert : les listes et les compteurs sont rechargés pile à 6 h.
+  // On revérifie aussi au retour sur l'app, car un téléphone en veille peut avoir mis le minuteur en pause.
+  useEffect(() => {
+    let timer = null;
+    let shown = soloPeriodStarts().current;
+    const schedule = () => {
+      const next = new Date(shown);
+      next.setDate(next.getDate() + 1); // le 6 h suivant (heure du téléphone)
+      timer = setTimeout(check, Math.max(1000, next.getTime() - Date.now() + 500));
+    };
+    const check = () => {
+      clearTimeout(timer);
+      const now = soloPeriodStarts().current;
+      if (now !== shown) {
+        shown = now;
+        refresh();
+      }
+      schedule();
+    };
+    const onVisible = () => {
+      if (!document.hidden) check();
+    };
+    schedule();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     refresh();
     refreshFavorites();
@@ -1392,11 +1423,13 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     await deleteSoloCheckin(id);
   };
 
+  // « Archiver » vide les deux listes affichées : la période en cours et la période précédente grisée.
   const handleArchive = async () => {
-    if (!checkins || checkins.length === 0) return;
-    if (!window.confirm("Archiver la liste du jour ? Les compteurs BibaSolo repartent à zéro, mais tout reste compté dans Mes Statistiques.")) return;
-    const ids = checkins.map((c) => c.id);
+    const ids = [...(checkins || []), ...(previousCheckins || [])].map((c) => c.id);
+    if (ids.length === 0) return;
+    if (!window.confirm("Archiver les listes affichées ? Les compteurs BibaSolo repartent à zéro, mais tout reste compté dans Mes Statistiques.")) return;
     setCheckins([]);
+    setPreviousCheckins([]);
     await archiveSoloCheckins(ids);
   };
 
@@ -1583,13 +1616,6 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           }}
         >
           <WaterAlertIcon size={18} dark={!!waterAlert?.enabled} />
-        </button>
-        <button
-          onClick={handleArchive}
-          title="Archiver la liste du jour"
-          style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px", cursor: "pointer", display: "flex" }}
-        >
-          <NavIcon name="refresh" size={16} color={COLORS.inkSoft} />
         </button>
       </div>
 
@@ -1873,6 +1899,20 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           </>
         )}
       </div>
+
+      {/* Archiver : sous le bloc de la période précédente, juste au-dessus de la barre du pied de page, tout à droite. */}
+      {((checkins && checkins.length > 0) || (previousCheckins && previousCheckins.length > 0)) && (
+        <div data-solo-archive-row="1" style={{ display: "flex", justifyContent: "flex-end", marginTop: "14px" }}>
+          <button
+            onClick={handleArchive}
+            title="Archiver"
+            aria-label="Archiver"
+            style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px", cursor: "pointer", display: "flex" }}
+          >
+            <NavIcon name="refresh" size={16} color={COLORS.inkSoft} />
+          </button>
+        </div>
+      )}
 
       {bibaBobModalMode && (
         <BibaBobModal
