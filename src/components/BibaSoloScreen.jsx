@@ -5,7 +5,8 @@
 // (optionnel), et c'est tout. Récapitulatif du jour visible en
 // direct au-dessus de la liste.
 // ============================================================
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { flushSync } from "react-dom";
 import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg, WaterAlertIcon, TokenPinkIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
@@ -225,6 +226,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("euro"); // "euro" | "jeton" — monnaie dans laquelle le verre a été payé
   const [free, setFree] = useState(false); // verre offert : compte pour un prix de 0 (en euros), le prix saisi est gardé de côté
+  const priceInputRef = useRef(null); // champ de prix : reçoit le curseur (et le clavier numérique) dès qu'on touche € ou Jetons
   const [servingMode, setServingMode] = useState(""); // type de service : "" (non défini) | bouteille | canette | fut | verre
   const [saving, setSaving] = useState(false);
 
@@ -698,8 +700,13 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                           if (key === "free") {
                             setFree(true);
                           } else {
-                            setFree(false);
-                            setCurrency(key);
+                            // Le champ est grisé tant que « Free » est actif : on applique le changement tout de suite (flushSync),
+                            // puis on met le curseur dans le champ dans le même geste, pour que le clavier numérique s'ouvre aussi sur mobile.
+                            flushSync(() => {
+                              setFree(false);
+                              setCurrency(key);
+                            });
+                            priceInputRef.current?.focus();
                           }
                         }}
                         style={{
@@ -724,6 +731,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                   })}
                 </div>
                 <input
+                  ref={priceInputRef}
                   type="text"
                   inputMode="decimal"
                   aria-label="Prix"
