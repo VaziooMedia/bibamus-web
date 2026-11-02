@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, MENU_CATEGORIES, ADD_BLOCK_HEIGHT } from "../constants.js";
-import { NavIcon, TokenPinkIcon } from "./icons.jsx";
+import { NavIcon, TokenPinkIcon, AddPlusIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { DrinkRow } from "./DrinkRow.jsx";
@@ -428,24 +428,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
             onClick={() => setGenericChecklistOpen((o) => !o)}
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", height: `${ADD_BLOCK_HEIGHT - 4}px`, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
           >
-            <p style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, margin: 0 }}>Ajouter depuis Produits génériques</p>
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "22px",
-                height: "22px",
-                flexShrink: 0,
-                transform: `rotate(${genericChecklistOpen ? 45 : 0}deg)`,
-                transition: "transform 0.15s ease",
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18">
-                <line x1="9" y1="1.5" x2="9" y2="16.5" stroke={COLORS.pinkFluo} strokeWidth="2.4" strokeLinecap="round" />
-                <line x1="1.5" y1="9" x2="16.5" y2="9" stroke={COLORS.pinkFluo} strokeWidth="2.4" strokeLinecap="round" />
-              </svg>
-            </span>
+            <p style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, margin: 0 }}>Produits génériques</p>
+            <AddPlusIcon color={COLORS.pinkFluo} rotated={genericChecklistOpen} />
           </button>
           {genericChecklistOpen && (
             <div style={{ paddingBottom: "14px" }}>
@@ -459,7 +443,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                 Possibilité d'adapter le volume et le type de service de tous les produits depuis les catégories.
                 <br />
                 <br />
-                Si un produit spécifique est disponible, tu peux l'ajouter à la carte depuis "Ajouter depuis BibAtlas".
+                Si un produit spécifique est disponible, tu peux l'ajouter à la carte depuis "BibAtlas".
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {genericDirectoryItems.map((g) => {

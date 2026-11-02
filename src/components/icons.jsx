@@ -233,6 +233,30 @@ export function CountryFlagImg({ country, size = 16, style }) {
   );
 }
 
+// « + » des blocs « BibAtlas » et « Produits génériques » (écran Carte boissons) : même icône dans les deux ; `rotated` la tourne
+// d'un huitième de tour (elle devient un « × » quand le bloc est déplié).
+export function AddPlusIcon({ color, rotated = false }) {
+  return (
+    <span
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "22px",
+        height: "22px",
+        flexShrink: 0,
+        transform: `rotate(${rotated ? 45 : 0}deg)`,
+        transition: "transform 0.15s ease",
+      }}
+    >
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <line x1="9" y1="1.5" x2="9" y2="16.5" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="1.5" y1="9" x2="16.5" y2="9" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
+      </svg>
+    </span>
+  );
+}
+
 export function TokenPinkIcon({ size = 22 }) {
   return <img src={tokenPinkUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
 }

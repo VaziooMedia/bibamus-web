@@ -1,10 +1,11 @@
 // ============================================================
-// Sélecteur "Ajouter depuis BibAtlas" (BibAtlas = le répertoire de produits) — copié
+// Sélecteur « BibAtlas » (le répertoire de produits ; bouton avec un « + ») — copié
 // à l'origine tel quel depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, SUBTYPE_LABELS, ADD_BLOCK_HEIGHT } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
+import { AddPlusIcon } from "./icons.jsx";
 import { drinkTypeLabel } from "../utils.js";
 import { searchDrinksByType } from "../data/sharedDirectories.js";
 
@@ -48,6 +49,9 @@ export function DrinkDirectoryPicker({ type, onPick }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
           width: "100%",
           height: `${ADD_BLOCK_HEIGHT}px`,
           boxSizing: "border-box",
@@ -62,7 +66,10 @@ export function DrinkDirectoryPicker({ type, onPick }) {
           cursor: "pointer",
         }}
       >
-        Ajouter depuis Bib<span style={{ color: COLORS.amber }}>Atlas</span>
+        <span>
+          Bib<span style={{ color: COLORS.amber }}>Atlas</span>
+        </span>
+        <AddPlusIcon color={COLORS.amber} />
       </button>
 
       {open && (
