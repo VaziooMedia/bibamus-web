@@ -32,10 +32,10 @@ import {
   saveWaterAlertSoloSettings,
   upsertPushSubscription,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
-import beerIconUrl from "../assets/brand/beer.svg";
+import genericIconUrl from "../assets/brand/generic-icon-green.svg";
 import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import bioIconUrl from "../assets/brand/bio.svg";
 import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
@@ -98,12 +98,16 @@ const MENTION_ICON_STYLE = { height: "14px", width: "auto", display: "block", fi
 // que « % ABV » ; la feuille dépasse au-dessus, dans l'interligne.
 const BIO_ICON_STYLE = { ...MENTION_ICON_STYLE, transform: "translateY(-2.7px)" };
 
-// Mise en page des champs « Volume » et « prix » : même largeur pour les deux, égale à celle des deux
-// onglets « € » et « Jetons » réunis (2 × CURRENCY_TAB_W + l'écart entre eux).
-const CURRENCY_TAB_W = 54;
-const CURRENCY_TAB_GAP = 6;
-const ENCODE_BLOCK_W = 2 * CURRENCY_TAB_W + CURRENCY_TAB_GAP;
-const ENCODE_HEADER_H = 24; // hauteur commune de la ligne au-dessus des champs (libellé « Volume » / onglets)
+// Mise en page du formulaire d'ajout, sur deux lignes : « Volume » et « Type de service » côte à côte, puis, une ligne plus
+// bas, le choix € / Jetons / Free avec le champ de prix. Chaque champ du haut est aussi large que son titre, plus
+// ENCODE_EXTRA de chaque côté ; le bloc du bas a exactement la largeur totale des deux champs du haut (écart compris), et
+// ses trois onglets ont la même largeur.
+const ENCODE_EXTRA = 10;
+const ENCODE_COL_GAP = 16; // écart entre « Volume » et « Type de service »
+const ENCODE_ROW_GAP = 30; // écart entre la ligne du haut et le bloc du prix
+const PAY_TAB_GAP = 4; // écart entre les onglets € / Jetons / Free
+const ENCODE_HEADER_H = 24; // hauteur commune de la ligne au-dessus des champs (libellé « Volume » / « Type de service » / onglets)
+const encodeLabelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, whiteSpace: "nowrap" };
 const encodeInputStyle = {
   width: "100%",
   boxSizing: "border-box",
@@ -220,6 +224,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [volume, setVolume] = useState("");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("euro"); // "euro" | "jeton" — monnaie dans laquelle le verre a été payé
+  const [free, setFree] = useState(false); // verre offert : compte pour un prix de 0 (en euros), le prix saisi est gardé de côté
+  const [servingMode, setServingMode] = useState(""); // type de service : "" (non défini) | bouteille | canette | fut | verre
   const [saving, setSaving] = useState(false);
 
   // Trois portes d'entrée distinctes une fois qu'un lieu est choisi, comme dans un salon : sa
@@ -278,6 +284,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const selectDrink = (d) => {
     setSelectedDrink(d);
     setVolume(String(defaultVolumeOf(d) ?? VOLUME_FALLBACK_CL));
+    setServingMode(defaultServingModeText(d));
   };
 
   // Choisir un item de la carte du lieu — pré-remplit aussi le prix et le volume réellement
@@ -287,6 +294,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     const master = venueDrinks.find((m) => m.id === item.sourceDrinkId);
     setSelectedDrink({ id: item.sourceDrinkId, name: item.name, photoUrl: item.photoUrl, avatarEmoji: master?.avatarEmoji });
     setVolume(item.volumeCl ? String(item.volumeCl) : String(defaultVolumeOf(master) ?? VOLUME_FALLBACK_CL));
+    // Le type de service que le lieu précise sur sa carte passe avant celui par défaut de la fiche du produit.
+    setServingMode(safeServingMode(item.servingMode) || defaultServingModeText(master));
     if (item.price != null) setPrice(String(item.price).replace(".", ","));
     // Une carte tarifée en jetons : le prix repris ici est un nombre de jetons, pas des euros.
     if (venue?.defaultCurrency === "jeton") setCurrency("jeton");
@@ -298,11 +307,13 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const isHome = venue?.id === "@home";
 
   const handleSubmit = async () => {
-    if (!selectedDrink || (!isHome && !price)) return;
+    if (!selectedDrink || (!isHome && !free && !price)) return;
     setSaving(true);
     setError(null);
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
-    const result = await addSoloCheckin(myUserId, selectedDrink.id, isHome ? null : parseFloat(price.replace(",", ".")), venue?.id, volumeNum, currency);
+    // @Home : pas de prix. « Free » : prix 0, en euros. Sinon, le prix saisi dans la monnaie choisie.
+    const priceNum = isHome ? null : free ? 0 : parseFloat(price.replace(",", "."));
+    const result = await addSoloCheckin(myUserId, selectedDrink.id, priceNum, venue?.id, volumeNum, free ? "euro" : currency, servingMode);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -316,7 +327,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
         <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Ajouter un verre</h1>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Ajouter un Produit</h1>
       </div>
 
       {!selectedDrink ? (
@@ -461,7 +472,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                     textAlign: "left",
                   }}
                 >
-                  <img src={beerIconUrl} alt="" style={{ height: "22px", width: "auto", display: "block" }} />
+                  <img src={genericIconUrl} alt="" style={{ height: "22px", width: "auto", display: "block" }} />
                   <span style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>Produits génériques</span>
                   <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
                 </button>
@@ -624,45 +635,105 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
             </button>
           </div>
 
-          {/* Volume à gauche, prix à droite (avec son choix € / Jetons au-dessus) : mêmes largeurs, valeurs centrées. */}
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: "48px", marginBottom: "40px" }}>
-            <div data-encode="volume" style={{ flex: `0 1 ${ENCODE_BLOCK_W}px`, minWidth: 0 }}>
-              <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", marginBottom: "6px" }}>
-                <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft }}>Volume (cl.)</label>
+          {/* Ligne 1 : « Volume » et « Type de service » côte à côte, chacun aussi large que son titre (+ ENCODE_EXTRA de chaque côté).
+              Ligne 2 : choix € / Jetons / Free et champ de prix, exactement aussi larges que la ligne 1 (@Home : pas de prix). */}
+          <div data-encode="form" style={{ display: "flex", flexDirection: "column", alignItems: "stretch", width: "fit-content", margin: "0 auto 40px", gap: `${ENCODE_ROW_GAP}px` }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: `${ENCODE_COL_GAP}px` }}>
+              <div data-encode="volume" style={{ flex: "0 0 auto", minWidth: 0, padding: `0 ${ENCODE_EXTRA}px` }}>
+                <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "6px" }}>
+                  <label htmlFor="solo-volume" style={encodeLabelStyle}>Volume (cl.)</label>
+                </div>
+                <input
+                  id="solo-volume"
+                  type="text"
+                  inputMode="decimal"
+                  value={volume}
+                  onChange={(e) => setVolume(e.target.value)}
+                  placeholder="00"
+                  style={{ ...encodeInputStyle, width: 0, minWidth: `calc(100% + ${2 * ENCODE_EXTRA}px)`, margin: `0 -${ENCODE_EXTRA}px`, padding: "12px 8px" }}
+                />
               </div>
-              <input type="text" inputMode="decimal" value={volume} onChange={(e) => setVolume(e.target.value)} placeholder="00" style={encodeInputStyle} />
+
+              <div data-encode="service" style={{ flex: "0 0 auto", minWidth: 0, padding: `0 ${ENCODE_EXTRA}px` }}>
+                <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "6px" }}>
+                  <label htmlFor="solo-service" style={encodeLabelStyle}>Type de service</label>
+                </div>
+                <div style={{ position: "relative", width: 0, minWidth: `calc(100% + ${2 * ENCODE_EXTRA}px)`, margin: `0 -${ENCODE_EXTRA}px` }}>
+                  <select
+                    id="solo-service"
+                    value={servingMode}
+                    onChange={(e) => setServingMode(e.target.value)}
+                    style={{ ...encodeInputStyle, WebkitAppearance: "none", appearance: "none", textAlign: "left", height: "44px", padding: "0 26px 0 11px", fontSize: "13px", cursor: "pointer" }}
+                  >
+                    <option value="">Non défini</option>
+                    {SERVING_MODE_OPTIONS.map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true" style={{ position: "absolute", right: "9px", top: "50%", marginTop: "-3px", pointerEvents: "none" }}>
+                    <path d="M1 1l4 4 4-4" fill="none" stroke={COLORS.inkSoft} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {!isHome && (
-              <div data-encode="price" style={{ flex: `0 1 ${ENCODE_BLOCK_W}px`, minWidth: 0 }}>
-                <div role="group" aria-label="Monnaie" style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${CURRENCY_TAB_GAP}px`, marginBottom: "6px" }}>
+              <div data-encode="price" style={{ width: 0, minWidth: "100%" }}>
+                <div role="group" aria-label="Monnaie" style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${PAY_TAB_GAP}px`, marginBottom: "6px" }}>
                   {[
                     ["euro", "€"],
                     ["jeton", "Jetons"],
-                  ].map(([key, label]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      aria-pressed={currency === key}
-                      onClick={() => setCurrency(key)}
-                      style={{
-                        flex: 1,
-                        minWidth: 0,
-                        padding: 0,
-                        background: currency === key ? COLORS.amber : COLORS.surface,
-                        border: `2px solid ${currency === key ? COLORS.amber : COLORS.paperAlt}`,
-                        borderRadius: "999px",
-                        fontSize: "10.5px",
-                        fontWeight: 700,
-                        color: currency === key ? COLORS.paper : COLORS.ink,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                    ["free", "Free"],
+                  ].map(([key, label]) => {
+                    const active = free ? key === "free" : key === currency;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        aria-pressed={active}
+                        aria-label={key === "jeton" ? "Jetons" : undefined}
+                        onClick={() => {
+                          if (key === "free") {
+                            setFree(true);
+                          } else {
+                            setFree(false);
+                            setCurrency(key);
+                          }
+                        }}
+                        style={{
+                          flex: "1 1 0",
+                          minWidth: 0,
+                          padding: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: active ? COLORS.amber : COLORS.surface,
+                          border: `2px solid ${active ? COLORS.amber : COLORS.paperAlt}`,
+                          borderRadius: "999px",
+                          fontSize: "10.5px",
+                          fontWeight: 700,
+                          color: active ? COLORS.paper : COLORS.ink,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {key === "jeton" ? <TokenPinkIcon size={13} /> : label}
+                      </button>
+                    );
+                  })}
                 </div>
-                <input type="text" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder={currency === "jeton" ? "0" : "0,00"} autoFocus style={encodeInputStyle} />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  aria-label="Prix"
+                  value={free ? "0,00" : price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  disabled={free}
+                  placeholder={currency === "jeton" ? "0" : "0,00"}
+                  autoFocus
+                  style={free ? { ...encodeInputStyle, opacity: 0.45, background: COLORS.paper } : encodeInputStyle}
+                />
               </div>
             )}
           </div>
@@ -676,7 +747,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
           {error && <p style={{ fontSize: "12.5px", color: "#FF3B3B", marginTop: "10px" }}>{error}</p>}
 
-          <PrimaryButton onClick={handleSubmit} disabled={(!isHome && !price) || saving} style={{ width: "100%", marginTop: "24px" }}>
+          <PrimaryButton onClick={handleSubmit} disabled={(!isHome && !free && !price) || saving} style={{ width: "100%", marginTop: "24px" }}>
             {saving ? "Enregistrement..." : "Ajouter"}
           </PrimaryButton>
         </>
@@ -1255,7 +1326,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           </button>
           <button
             onClick={() => setAdding(true)}
-            title="Ajouter un verre"
+            title="Ajouter un Produit"
             style={{
               display: "flex",
               alignItems: "center",
