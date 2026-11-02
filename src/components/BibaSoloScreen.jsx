@@ -100,15 +100,27 @@ const MENTION_ICON_STYLE = { height: "14px", width: "auto", display: "block", fi
 const BIO_ICON_STYLE = { ...MENTION_ICON_STYLE, transform: "translateY(-2.7px)" };
 
 // Mise en page du formulaire d'ajout, sur deux lignes : « Volume » et « Type de service » côte à côte, puis, une ligne plus
-// bas, le choix € / Jetons / Free avec le champ de prix. Chaque champ du haut est aussi large que son titre, plus
-// ENCODE_EXTRA de chaque côté ; le bloc du bas a exactement la largeur totale des deux champs du haut (écart compris), et
-// ses trois onglets ont la même largeur.
-const ENCODE_EXTRA = 10;
-const ENCODE_COL_GAP = 16; // écart entre « Volume » et « Type de service »
+// bas, le choix € / Jetons / Free avec le champ de prix. Chaque titre du haut est une pastille vert fluo (même style que
+// l'onglet actif) et son champ a exactement la largeur de la pastille ; le bloc du bas a exactement la largeur totale des
+// deux champs du haut (écart compris), et ses trois onglets ont la même largeur.
+const ENCODE_COL_GAP = 24; // écart entre « Volume » et « Type de service »
 const ENCODE_ROW_GAP = 30; // écart entre la ligne du haut et le bloc du prix
 const PAY_TAB_GAP = 4; // écart entre les onglets € / Jetons / Free
-const ENCODE_HEADER_H = 24; // hauteur commune de la ligne au-dessus des champs (libellé « Volume » / « Type de service » / onglets)
-const encodeLabelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, whiteSpace: "nowrap" };
+const ENCODE_HEADER_H = 24; // hauteur commune de la ligne au-dessus des champs (pastilles de titre / onglets)
+const encodeTitleStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  boxSizing: "border-box",
+  height: `${ENCODE_HEADER_H}px`,
+  padding: "0 12px",
+  background: COLORS.amber,
+  border: `2px solid ${COLORS.amber}`,
+  borderRadius: "999px",
+  fontSize: "10.5px",
+  fontWeight: 700,
+  color: COLORS.paper,
+  whiteSpace: "nowrap",
+};
 const encodeInputStyle = {
   width: "100%",
   boxSizing: "border-box",
@@ -637,13 +649,13 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
             </button>
           </div>
 
-          {/* Ligne 1 : « Volume » et « Type de service » côte à côte, chacun aussi large que son titre (+ ENCODE_EXTRA de chaque côté).
+          {/* Ligne 1 : « Volume » et « Type de service » côte à côte, chacun aussi large que sa pastille de titre.
               Ligne 2 : choix € / Jetons / Free et champ de prix, exactement aussi larges que la ligne 1 (@Home : pas de prix). */}
           <div data-encode="form" style={{ display: "flex", flexDirection: "column", alignItems: "stretch", width: "fit-content", margin: "0 auto 40px", gap: `${ENCODE_ROW_GAP}px` }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: `${ENCODE_COL_GAP}px` }}>
-              <div data-encode="volume" style={{ flex: "0 0 auto", minWidth: 0, padding: `0 ${ENCODE_EXTRA}px` }}>
+              <div data-encode="volume" style={{ flex: "0 0 auto", minWidth: 0 }}>
                 <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "6px" }}>
-                  <label htmlFor="solo-volume" style={encodeLabelStyle}>Volume (cl.)</label>
+                  <label htmlFor="solo-volume" style={encodeTitleStyle}>Volume (cl.)</label>
                 </div>
                 <input
                   id="solo-volume"
@@ -652,15 +664,15 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                   value={volume}
                   onChange={(e) => setVolume(e.target.value)}
                   placeholder="00"
-                  style={{ ...encodeInputStyle, width: 0, minWidth: `calc(100% + ${2 * ENCODE_EXTRA}px)`, margin: `0 -${ENCODE_EXTRA}px`, padding: "12px 8px" }}
+                  style={{ ...encodeInputStyle, width: 0, minWidth: "100%", padding: "12px 8px" }}
                 />
               </div>
 
-              <div data-encode="service" style={{ flex: "0 0 auto", minWidth: 0, padding: `0 ${ENCODE_EXTRA}px` }}>
+              <div data-encode="service" style={{ flex: "0 0 auto", minWidth: 0 }}>
                 <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "6px" }}>
-                  <label htmlFor="solo-service" style={encodeLabelStyle}>Type de service</label>
+                  <label htmlFor="solo-service" style={encodeTitleStyle}>Type de service</label>
                 </div>
-                <div style={{ position: "relative", width: 0, minWidth: `calc(100% + ${2 * ENCODE_EXTRA}px)`, margin: `0 -${ENCODE_EXTRA}px` }}>
+                <div style={{ position: "relative", width: 0, minWidth: "100%" }}>
                   <select
                     id="solo-service"
                     value={servingMode}
