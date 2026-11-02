@@ -54,6 +54,21 @@ function normalize(str) {
 // La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
 // seule soirée. `current` = début de la période en cours (le dernier 6 h passé), `previous` = début de la période d'avant.
 const SOLO_DAY_START_HOUR = 6;
+// Boutons ronds à contour gris (Historique, Archiver) : 42 px, icône de 18 px.
+const SOLO_ROUND_OUTLINE_BUTTON_STYLE = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "42px",
+  height: "42px",
+  borderRadius: "50%",
+  background: "none",
+  border: `2px solid ${COLORS.paperAlt}`,
+  boxSizing: "border-box",
+  padding: 0,
+  cursor: "pointer",
+  flexShrink: 0,
+};
 // Les deux barres de séparation de la liste (« Aujourd'hui » et la date de la période précédente) ont le même style.
 const SOLO_BAR_LABEL_STYLE = { fontSize: "12px", fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" };
 const SOLO_BAR_LINE_STYLE = { flex: 1, height: "2px", borderRadius: "1px", background: COLORS.inkSoft, opacity: 0.5 };
@@ -1675,27 +1690,6 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         )}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
           <button
-            onClick={() => setHistoryOpen(true)}
-            title="Historique"
-            aria-label="Historique"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "42px",
-              height: "42px",
-              borderRadius: "50%",
-              background: "none",
-              border: `2px solid ${COLORS.paperAlt}`,
-              boxSizing: "border-box",
-              padding: 0,
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            <NavIcon name="calendar" size={18} color={COLORS.inkSoft} />
-          </button>
-          <button
             onClick={() => setCheckingDrinks(true)}
             title="Drink Check"
             style={{
@@ -1900,19 +1894,18 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         )}
       </div>
 
-      {/* Archiver : sous le bloc de la période précédente, juste au-dessus de la barre du pied de page, tout à droite. */}
-      {((checkins && checkins.length > 0) || (previousCheckins && previousCheckins.length > 0)) && (
-        <div data-solo-archive-row="1" style={{ display: "flex", justifyContent: "flex-end", marginTop: "14px" }}>
-          <button
-            onClick={handleArchive}
-            title="Archiver"
-            aria-label="Archiver"
-            style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px", cursor: "pointer", display: "flex" }}
-          >
-            <NavIcon name="refresh" size={16} color={COLORS.inkSoft} />
+      {/* Sous le bloc de la période précédente, juste au-dessus de la barre du pied de page, tout à droite : Historique, puis Archiver
+          (Archiver n'apparaît que s'il y a quelque chose à archiver ; Historique est toujours là). */}
+      <div data-solo-bottom-actions="1" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px", marginTop: "14px" }}>
+        <button onClick={() => setHistoryOpen(true)} title="Historique" aria-label="Historique" style={SOLO_ROUND_OUTLINE_BUTTON_STYLE}>
+          <NavIcon name="calendar" size={18} color={COLORS.inkSoft} />
+        </button>
+        {((checkins && checkins.length > 0) || (previousCheckins && previousCheckins.length > 0)) && (
+          <button onClick={handleArchive} title="Archiver" aria-label="Archiver" style={SOLO_ROUND_OUTLINE_BUTTON_STYLE}>
+            <NavIcon name="refresh" size={18} color={COLORS.inkSoft} />
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {bibaBobModalMode && (
         <BibaBobModal
