@@ -3,7 +3,7 @@
 // à l'origine tel quel depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, SUBTYPE_LABELS } from "../constants.js";
+import { COLORS, SUBTYPE_LABELS, ADD_BLOCK_HEIGHT } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
 import { drinkTypeLabel } from "../utils.js";
 import { searchDrinksByType } from "../data/sharedDirectories.js";
@@ -49,8 +49,10 @@ export function DrinkDirectoryPicker({ type, onPick }) {
         onClick={() => setOpen((o) => !o)}
         style={{
           width: "100%",
-          textAlign: "center",
-          padding: "11px",
+          height: `${ADD_BLOCK_HEIGHT}px`,
+          boxSizing: "border-box",
+          textAlign: "left",
+          padding: "0 14px",
           borderRadius: "9px",
           border: `2px solid ${COLORS.amberDark}`,
           background: COLORS.surface,

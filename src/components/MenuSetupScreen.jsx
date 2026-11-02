@@ -3,7 +3,7 @@
 // le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, MENU_CATEGORIES } from "../constants.js";
+import { COLORS, MENU_CATEGORIES, ADD_BLOCK_HEIGHT } from "../constants.js";
 import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
@@ -423,12 +423,12 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
         </div>
       )}
       {genericDirectoryItems.length > 0 && (
-        <div style={{ background: "#3D1F1F", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "10px", padding: "0 14px", marginBottom: "16px" }}>
           <button
             onClick={() => setGenericChecklistOpen((o) => !o)}
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", height: `${ADD_BLOCK_HEIGHT - 4}px`, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
           >
-            <p style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, margin: 0 }}>Produits génériques</p>
+            <p style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, margin: 0 }}>Ajouter depuis Produits génériques</p>
             <span
               style={{
                 display: "flex",
@@ -442,14 +442,14 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
               }}
             >
               <svg width="18" height="18" viewBox="0 0 18 18">
-                <line x1="9" y1="1.5" x2="9" y2="16.5" stroke={COLORS.wine} strokeWidth="2.4" strokeLinecap="round" />
-                <line x1="1.5" y1="9" x2="16.5" y2="9" stroke={COLORS.wine} strokeWidth="2.4" strokeLinecap="round" />
+                <line x1="9" y1="1.5" x2="9" y2="16.5" stroke={COLORS.pinkFluo} strokeWidth="2.4" strokeLinecap="round" />
+                <line x1="1.5" y1="9" x2="16.5" y2="9" stroke={COLORS.pinkFluo} strokeWidth="2.4" strokeLinecap="round" />
               </svg>
             </span>
           </button>
           {genericChecklistOpen && (
-            <>
-              <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "10px 0" }}>
+            <div style={{ paddingBottom: "14px" }}>
+              <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "2px 0 10px" }}>
                 Sélectionne les produits génériques disponibles.
                 <br />
                 <br />
@@ -468,7 +468,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                     return (
                       <div
                         key={g.id}
-                        style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, borderRadius: "8px", padding: "9px 12px" }}
+                        style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surfaceAlt, borderRadius: "8px", padding: "9px 12px" }}
                       >
                         <button
                           onClick={() => addGenericItem(g)}
@@ -508,7 +508,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                         display: "flex",
                         alignItems: "center",
                         gap: "10px",
-                        background: COLORS.surface,
+                        background: COLORS.surfaceAlt,
                         borderRadius: "8px",
                         padding: "9px 12px",
                         cursor: "pointer",
@@ -525,7 +525,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                   );
                 })}
               </div>
-            </>
+            </div>
           )}
         </div>
       )}
