@@ -510,6 +510,18 @@ export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl, 
   return { ok: true };
 }
 
+function soloRowToCheckin(row) {
+  return {
+    id: row.id,
+    drinkId: row.drink_id,
+    venueId: row.venue_id,
+    price: row.price,
+    currency: row.currency === "jeton" ? "jeton" : "euro",
+    volumeCl: row.volume_cl,
+    createdAt: row.created_at,
+  };
+}
+
 export async function loadMySoloCheckins(sinceIso, excludeArchived = false, untilIso = null) {
   let query = supabase.from("solo_checkins").select("*").order("created_at", { ascending: false });
   if (sinceIso) query = query.gte("created_at", sinceIso);
@@ -520,15 +532,18 @@ export async function loadMySoloCheckins(sinceIso, excludeArchived = false, unti
     console.error("loadMySoloCheckins:", error);
     return [];
   }
-  return data.map((row) => ({
-    id: row.id,
-    drinkId: row.drink_id,
-    venueId: row.venue_id,
-    price: row.price,
-    currency: row.currency === "jeton" ? "jeton" : "euro",
-    volumeCl: row.volume_cl,
-    createdAt: row.created_at,
-  }));
+  return data.map(soloRowToCheckin);
+}
+
+// Écran « Historique » de BibaSolo : tous les verres, archivés compris, du plus récent au plus ancien, par pages
+// (`offset` = nombre de verres déjà chargés). Renvoie `null` en cas d'erreur, pour ne pas confondre avec une page vide.
+export async function loadMySoloHistory(offset = 0, limit = 40) {
+  const { data, error } = await supabase.from("solo_checkins").select("*").order("created_at", { ascending: false }).order("id", { ascending: false }).range(offset, offset + limit - 1);
+  if (error) {
+    console.error("loadMySoloHistory:", error);
+    return null;
+  }
+  return data.map(soloRowToCheckin);
 }
 
 // "Archiver" — la liste du jour disparaît de BibaSolo (et ses 3 compteurs repartent à zéro),

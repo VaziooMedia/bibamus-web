@@ -18,6 +18,7 @@ import {
   addSoloCheckin,
   archiveSoloCheckins,
   loadMySoloCheckins,
+  loadMySoloHistory,
   deleteSoloCheckin,
   searchDrinks,
   loadDrinksByIds,
@@ -62,10 +63,16 @@ function formatPeriodDay(iso) {
   const d = new Date(iso);
   return `${WEEKDAYS_FR[d.getDay()]} ${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
+// Début (le dernier 6 h passé, heure du téléphone) de la période qui contient l'instant donné.
+function soloPeriodStartOf(when) {
+  const at = new Date(when);
+  const start = new Date(at);
+  start.setHours(SOLO_DAY_START_HOUR, 0, 0, 0);
+  if (start > at) start.setDate(start.getDate() - 1);
+  return start;
+}
 function soloPeriodStarts(now = new Date()) {
-  const current = new Date(now);
-  current.setHours(SOLO_DAY_START_HOUR, 0, 0, 0);
-  if (current > now) current.setDate(current.getDate() - 1);
+  const current = soloPeriodStartOf(now);
   const previous = new Date(current);
   previous.setDate(previous.getDate() - 1);
   return { current: current.toISOString(), previous: previous.toISOString() };
@@ -940,6 +947,241 @@ const formatJetonCount = (value) => {
   return n % 1 === 0 ? n : n.toFixed(1);
 };
 
+// Une ligne du journal (produit, volume, prix, lieu, date, croix de suppression) — la même dans la liste de BibaSolo (période en
+// cours et période précédente grisée) et dans l'Historique. Sans `onDelete`, pas de croix de suppression (Historique en lecture seule).
+function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
+  const showMentions = drink && VOLUME_DISPLAY_TYPES.includes(drink.type);
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "10px",
+        padding: "12px 0",
+        borderBottom: isLast ? "none" : `1px solid ${COLORS.paperAlt}`,
+      }}
+    >
+      <button
+        onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+        disabled={!drink || !onOpenDrink}
+        style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
+      >
+        <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />
+      </button>
+      {/* À droite du rond : 3 lignes qui se suivent, sans ligne vide entre elles */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+          <button
+            onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+            disabled={!drink || !onOpenDrink}
+            style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
+          >
+            {/* Ligne 1 — produit (le volume est en tête de la ligne 2) */}
+            <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+              <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
+            </div>
+          </button>
+          {c.price != null && (
+            <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px", flexShrink: 0 }}>
+              {c.currency === "jeton" ? (
+                <MoneyAmount value={c.price} currency="jeton" jetonIcon="pink" jetonIconSize={14} />
+              ) : (
+                <>
+                  {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+                </>
+              )}
+            </span>
+          )}
+        </div>
+        {/* Ligne 2 — volume + drapeau + % ABV + icône Bio + icône Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
+        {(() => {
+          const mentionParts = [];
+          if (c.volumeCl) mentionParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
+          if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
+          if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
+          if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
+          if (showMentions && drink.glutenFree) mentionParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
+          if (mentionParts.length === 0) return null;
+          return (
+            <button
+              onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+              disabled={!drink || !onOpenDrink}
+              style={{ display: "block", width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
+            >
+              <div data-journal-line="2" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
+                {mentionParts.map((part, idx) => (
+                  <React.Fragment key={idx}>
+                    {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                    {part}
+                  </React.Fragment>
+                ))}
+              </div>
+            </button>
+          );
+        })()}
+        {/* Ligne 3 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
+        {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
+          <div data-journal-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
+            <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
+          </div>
+        )}
+        {/* Ligne 4 (3 quand il n'y a pas de lieu) — date + heure (points vert fluo) à gauche, croix de suppression à l'extrême droite */}
+        <div data-journal-line="date" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+          <div data-journal-datetime="1" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
+            {[formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
+              <React.Fragment key={idx}>
+                {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                <span>{part}</span>
+              </React.Fragment>
+            ))}
+          </div>
+          {onDelete && (
+            <button onClick={() => onDelete(c.id)} style={{ display: "flex", background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px -4px -4px 0", flexShrink: 0 }}>
+              <NavIcon name="x" size={14} color={COLORS.paperAlt} />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Écran « Historique » : tous les verres, archivés compris, du plus récent au plus ancien, regroupés par période (6 h → 6 h) sous une
+// barre datée, par pages de HISTORY_PAGE_SIZE. En lecture seule : pas de croix de suppression.
+const HISTORY_PAGE_SIZE = 40;
+function SoloHistoryScreen({ onBack, onOpenDrink }) {
+  const [rows, setRows] = useState(null); // null = chargement de la première page
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState(false);
+  const [drinksById, setDrinksById] = useState({});
+  const [venuesById, setVenuesById] = useState({});
+
+  const loadPage = async (offset) => {
+    setLoadingMore(true);
+    const page = await loadMySoloHistory(offset, HISTORY_PAGE_SIZE);
+    setLoadingMore(false);
+    if (page === null) {
+      setError(true);
+      if (offset === 0) setRows((prev) => prev || []);
+      return;
+    }
+    setError(false);
+    setRows((prev) => (offset === 0 ? page : [...(prev || []), ...page]));
+    setHasMore(page.length === HISTORY_PAGE_SIZE);
+  };
+  useEffect(() => {
+    loadPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Produits et lieux des verres affichés : seulement ceux qu'on n'a pas encore demandés.
+  useEffect(() => {
+    if (!rows) return;
+    const missingDrinks = [...new Set(rows.map((c) => String(c.drinkId)))].filter((id) => !(id in drinksById));
+    if (missingDrinks.length > 0) {
+      loadDrinksByIds(missingDrinks).then((results) =>
+        setDrinksById((prev) => {
+          const next = { ...prev };
+          missingDrinks.forEach((id) => (next[id] = null));
+          results.forEach((d) => (next[String(d.id)] = d));
+          return next;
+        })
+      );
+    }
+    const missingVenues = [...new Set(rows.filter((c) => c.venueId && !QUICK_VENUE_IDS.includes(c.venueId)).map((c) => String(c.venueId)))].filter((id) => !(id in venuesById));
+    if (missingVenues.length > 0) {
+      loadVenuesByIds(missingVenues).then((results) =>
+        setVenuesById((prev) => {
+          const next = { ...prev };
+          missingVenues.forEach((id) => (next[id] = null));
+          results.forEach((v) => (next[String(v.id)] = v));
+          return next;
+        })
+      );
+    }
+  }, [rows]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const groups = useMemo(() => {
+    const out = [];
+    for (const c of rows || []) {
+      const start = soloPeriodStartOf(c.createdAt);
+      const last = out[out.length - 1];
+      if (last && last.key === start.getTime()) last.items.push(c);
+      else out.push({ key: start.getTime(), start, items: [c] });
+    }
+    return out;
+  }, [rows]);
+  const currentKey = soloPeriodStartOf(new Date()).getTime();
+  const thisYear = new Date().getFullYear();
+  const groupLabel = (g) => {
+    if (g.key === currentKey) return "Aujourd'hui";
+    const label = formatPeriodDay(g.start.toISOString());
+    return g.start.getFullYear() === thisYear ? label : `${label}/${g.start.getFullYear()}`;
+  };
+
+  return (
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
+        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Historique</h1>
+      </div>
+
+      <div style={{ flex: 1 }}>
+        {rows === null ? (
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Chargement...</p>
+        ) : groups.length === 0 && !error ? (
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Aucun verre dans l'historique.</p>
+        ) : (
+          groups.map((g, gi) => (
+            <React.Fragment key={g.key}>
+              <div data-solo-history-bar="1" style={{ display: "flex", alignItems: "center", gap: "10px", margin: gi === 0 ? "0 0 18px" : "20px 0 18px" }}>
+                <span data-solo-history-label="1" style={SOLO_BAR_LABEL_STYLE}>{groupLabel(g)}</span>
+                <div style={SOLO_BAR_LINE_STYLE} />
+              </div>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
+                {g.items.map((c, i) => (
+                  <SoloCheckinRow
+                    key={c.id}
+                    c={c}
+                    drink={drinksById[String(c.drinkId)]}
+                    venue={c.venueId ? venuesById[String(c.venueId)] : null}
+                    isLast={i === g.items.length - 1}
+                    onOpenDrink={onOpenDrink}
+                  />
+                ))}
+              </div>
+            </React.Fragment>
+          ))
+        )}
+        {error && (
+          <p style={{ fontSize: "12.5px", color: "#FF3B3B", textAlign: "center", marginTop: "16px" }}>
+            Impossible de charger l'historique.{" "}
+            <button type="button" onClick={() => loadPage(rows ? rows.length : 0)} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, cursor: "pointer", padding: 0, fontSize: "12.5px" }}>
+              Réessayer
+            </button>
+          </p>
+        )}
+        {hasMore && !error && (
+          <button
+            type="button"
+            data-solo-history-more="1"
+            disabled={loadingMore}
+            onClick={() => loadPage(rows.length)}
+            style={{ width: "100%", marginTop: "18px", padding: "12px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", color: COLORS.ink, fontSize: "13px", fontWeight: 700, cursor: loadingMore ? "default" : "pointer", opacity: loadingMore ? 0.6 : 1 }}
+          >
+            {loadingMore ? "Chargement..." : "Voir plus"}
+          </button>
+        )}
+      </div>
+
+      <PageFooterNav onBack={onBack} />
+    </div>
+  );
+}
+
 export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onCheckConfirmed, onOpenDrink, onBack, onAddDrink }) {
   const [checkins, setCheckins] = useState(null); // période en cours (de 6 h à 6 h) : c'est elle que comptent les compteurs
   const [previousCheckins, setPreviousCheckins] = useState(null); // période d'avant, affichée grisée sous la liste
@@ -958,6 +1200,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   }, [periodInfoOpen]);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [checkingDrinks, setCheckingDrinks] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [drinksById, setDrinksById] = useState({});
@@ -1157,6 +1400,10 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     await archiveSoloCheckins(ids);
   };
 
+  if (historyOpen) {
+    return <SoloHistoryScreen onBack={() => setHistoryOpen(false)} onOpenDrink={onOpenDrink} />;
+  }
+
   if (adding) {
     return (
       <AddSoloCheckinScreen
@@ -1233,106 +1480,17 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     </>
   );
 
-  // Une ligne du journal (produit, volume, prix, lieu, date, croix de suppression) — la même pour la période en cours et la
-  // période précédente (grisée).
-  const renderCheckinRow = (c, i, list) => {
-    const drink = drinksById[String(c.drinkId)];
-    const venue = c.venueId ? venuesById[String(c.venueId)] : null;
-    const showMentions = drink && VOLUME_DISPLAY_TYPES.includes(drink.type);
-    return (
-      <div
-        key={c.id}
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          gap: "10px",
-          padding: "12px 0",
-          borderBottom: i === list.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
-        }}
-      >
-        <button
-          onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-          disabled={!drink || !onOpenDrink}
-          style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
-        >
-          <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />
-        </button>
-        {/* À droite du rond : 3 lignes qui se suivent, sans ligne vide entre elles */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-            <button
-              onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-              disabled={!drink || !onOpenDrink}
-              style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
-            >
-              {/* Ligne 1 — produit (le volume est en tête de la ligne 2) */}
-              <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
-              </div>
-            </button>
-            {c.price != null && (
-              <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px", flexShrink: 0 }}>
-                {c.currency === "jeton" ? (
-                  <MoneyAmount value={c.price} currency="jeton" jetonIcon="pink" jetonIconSize={14} />
-                ) : (
-                  <>
-                    {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
-                  </>
-                )}
-              </span>
-            )}
-          </div>
-          {/* Ligne 2 — volume + drapeau + % ABV + icône Bio + icône Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
-          {(() => {
-            const mentionParts = [];
-            if (c.volumeCl) mentionParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
-            if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
-            if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
-            if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
-            if (showMentions && drink.glutenFree) mentionParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
-            if (mentionParts.length === 0) return null;
-            return (
-              <button
-                onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-                disabled={!drink || !onOpenDrink}
-                style={{ display: "block", width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
-              >
-                <div data-journal-line="2" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
-                  {mentionParts.map((part, idx) => (
-                    <React.Fragment key={idx}>
-                      {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
-                      {part}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </button>
-            );
-          })()}
-          {/* Ligne 3 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
-          {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
-            <div data-journal-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
-              <NavIcon name="map-pin" size={12} color={COLORS.amber} />
-              <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
-            </div>
-          )}
-          {/* Ligne 4 (3 quand il n'y a pas de lieu) — date + heure (points vert fluo) à gauche, croix de suppression à l'extrême droite */}
-          <div data-journal-line="date" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
-            <div data-journal-datetime="1" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
-              {[formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
-                <React.Fragment key={idx}>
-                  {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
-                  <span>{part}</span>
-                </React.Fragment>
-              ))}
-            </div>
-            <button onClick={() => handleDelete(c.id)} style={{ display: "flex", background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px -4px -4px 0", flexShrink: 0 }}>
-              <NavIcon name="x" size={14} color={COLORS.paperAlt} />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const renderCheckinRow = (c, i, list) => (
+    <SoloCheckinRow
+      key={c.id}
+      c={c}
+      drink={drinksById[String(c.drinkId)]}
+      venue={c.venueId ? venuesById[String(c.venueId)] : null}
+      isLast={i === list.length - 1}
+      onOpenDrink={onOpenDrink}
+      onDelete={handleDelete}
+    />
+  );
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -1490,6 +1648,27 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           </button>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          <button
+            onClick={() => setHistoryOpen(true)}
+            title="Historique"
+            aria-label="Historique"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "42px",
+              height: "42px",
+              borderRadius: "50%",
+              background: "none",
+              border: `2px solid ${COLORS.paperAlt}`,
+              boxSizing: "border-box",
+              padding: 0,
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <NavIcon name="calendar" size={18} color={COLORS.inkSoft} />
+          </button>
           <button
             onClick={() => setCheckingDrinks(true)}
             title="Drink Check"
