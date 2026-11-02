@@ -37,7 +37,7 @@ import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flatten
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
-import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
+import drinkCheckIconUrl from "../assets/brand/drinkcheck2.svg";
 import bioIconUrl from "../assets/brand/bio.svg";
 import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
 import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
@@ -50,10 +50,25 @@ function normalize(str) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function startOfTodayIso() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
+// La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
+// seule soirée. `current` = début de la période en cours (le dernier 6 h passé), `previous` = début de la période d'avant.
+const SOLO_DAY_START_HOUR = 6;
+// Les deux barres de séparation de la liste (« Aujourd'hui » et la date de la période précédente) ont le même style.
+const SOLO_BAR_LABEL_STYLE = { fontSize: "12px", fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" };
+const SOLO_BAR_LINE_STYLE = { flex: 1, height: "2px", borderRadius: "1px", background: COLORS.inkSoft, opacity: 0.5 };
+const WEEKDAYS_FR = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+// « Dimanche 01/11 » : le jour où la période a commencé (à 6 h).
+function formatPeriodDay(iso) {
+  const d = new Date(iso);
+  return `${WEEKDAYS_FR[d.getDay()]} ${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+function soloPeriodStarts(now = new Date()) {
+  const current = new Date(now);
+  current.setHours(SOLO_DAY_START_HOUR, 0, 0, 0);
+  if (current > now) current.setDate(current.getDate() - 1);
+  const previous = new Date(current);
+  previous.setDate(previous.getDate() - 1);
+  return { current: current.toISOString(), previous: previous.toISOString() };
 }
 
 function formatDateOnly(iso) {
@@ -926,7 +941,21 @@ const formatJetonCount = (value) => {
 };
 
 export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onCheckConfirmed, onOpenDrink, onBack, onAddDrink }) {
-  const [checkins, setCheckins] = useState(null);
+  const [checkins, setCheckins] = useState(null); // période en cours (de 6 h à 6 h) : c'est elle que comptent les compteurs
+  const [previousCheckins, setPreviousCheckins] = useState(null); // période d'avant, affichée grisée sous la liste
+  const [previousPeriodStart, setPreviousPeriodStart] = useState(null); // début (6 h) de la période d'avant : sa date s'affiche dans la barre de séparation
+  const [periodInfoOpen, setPeriodInfoOpen] = useState(null); // bulle d'explication des périodes ouverte : null | "today" | "previous" (icône « info » de chaque barre)
+  const todayBarRef = useRef(null);
+  const previousBarRef = useRef(null);
+  useEffect(() => {
+    if (!periodInfoOpen) return undefined;
+    const close = (e) => {
+      const bar = periodInfoOpen === "today" ? todayBarRef.current : previousBarRef.current;
+      if (bar && !bar.contains(e.target)) setPeriodInfoOpen(null);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [periodInfoOpen]);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
   const [checkingDrinks, setCheckingDrinks] = useState(false);
@@ -1048,7 +1077,12 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     setVenueQuery("");
   };
 
-  const refresh = () => loadMySoloCheckins(startOfTodayIso(), true).then(setCheckins);
+  const refresh = () => {
+    const { current, previous } = soloPeriodStarts();
+    setPreviousPeriodStart(previous);
+    loadMySoloCheckins(current, true).then(setCheckins);
+    loadMySoloCheckins(previous, true, current).then(setPreviousCheckins);
+  };
 
   // Favoris — sur tout l'historique, pas seulement aujourd'hui, sinon la liste se vide à
   // chaque nouvelle journée. Limité à 3, le plus ancien pousse dehors dès qu'un nouveau arrive.
@@ -1076,21 +1110,22 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   useEffect(() => {
     const ids = new Set(recentDrinkIds);
     (checkins || []).forEach((c) => ids.add(String(c.drinkId)));
+    (previousCheckins || []).forEach((c) => ids.add(String(c.drinkId)));
     if (ids.size === 0) {
       setDrinksById({});
       return;
     }
     loadDrinksByIds([...ids]).then((results) => setDrinksById(Object.fromEntries(results.map((d) => [String(d.id), d]))));
-  }, [checkins, recentDrinkIds]);
+  }, [checkins, previousCheckins, recentDrinkIds]);
 
   useEffect(() => {
-    const venueIds = new Set((checkins || []).filter((c) => c.venueId && !QUICK_VENUE_IDS.includes(c.venueId)).map((c) => String(c.venueId)));
+    const venueIds = new Set([...(checkins || []), ...(previousCheckins || [])].filter((c) => c.venueId && !QUICK_VENUE_IDS.includes(c.venueId)).map((c) => String(c.venueId)));
     if (venueIds.size === 0) {
       setVenuesById({});
       return;
     }
     loadVenuesByIds([...venueIds]).then((results) => setVenuesById(Object.fromEntries(results.map((v) => [String(v.id), v]))));
-  }, [checkins, recentDrinkIds]);
+  }, [checkins, previousCheckins, recentDrinkIds]);
 
   const totals = useMemo(() => {
     if (!checkins) return { count: 0, price: 0, jetons: 0, kcal: 0 };
@@ -1110,6 +1145,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
 
   const handleDelete = async (id) => {
     setCheckins((prev) => prev.filter((c) => c.id !== id));
+    setPreviousCheckins((prev) => (prev ? prev.filter((c) => c.id !== id) : prev));
     await deleteSoloCheckin(id);
   };
 
@@ -1168,6 +1204,135 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
       />
     );
   }
+
+  // Icône « info » d'une barre de séparation (« today » ou « previous ») et sa bulle, qui explique comment sont comptées les périodes.
+  // Une seule bulle est ouverte à la fois ; elle se pose sous l'icône touchée.
+  const renderPeriodInfo = (which) => (
+    <>
+      <button
+        type="button"
+        data-solo-period-info={which}
+        onClick={() => setPeriodInfoOpen((o) => (o === which ? null : which))}
+        aria-label="Comment sont comptées les périodes"
+        aria-expanded={periodInfoOpen === which}
+        title="Comment sont comptées les périodes"
+        style={{ background: "none", border: "none", padding: "6px", margin: "-6px 0 -6px -6px", cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0, opacity: periodInfoOpen === which ? 1 : 0.6 }}
+      >
+        <NavIcon name="info" size={14} color={COLORS.amber} />
+      </button>
+      {periodInfoOpen === which && (
+        <div
+          data-solo-period-bubble={which}
+          role="note"
+          style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", zIndex: 5, width: "230px", boxSizing: "border-box", background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "10px 12px", fontSize: "12px", lineHeight: 1.4, color: COLORS.ink, boxShadow: "0 10px 24px rgba(0,0,0,.55)" }}
+        >
+          <span style={{ position: "absolute", top: "-6px", right: "9px", width: "10px", height: "10px", background: COLORS.surface, borderTop: `2px solid ${COLORS.amber}`, borderLeft: `2px solid ${COLORS.amber}`, transform: "rotate(45deg)" }} />
+          Les périodes sont comptées sur 24 h, de 6 h du matin à 6 h du matin le lendemain.
+        </div>
+      )}
+    </>
+  );
+
+  // Une ligne du journal (produit, volume, prix, lieu, date, croix de suppression) — la même pour la période en cours et la
+  // période précédente (grisée).
+  const renderCheckinRow = (c, i, list) => {
+    const drink = drinksById[String(c.drinkId)];
+    const venue = c.venueId ? venuesById[String(c.venueId)] : null;
+    const showMentions = drink && VOLUME_DISPLAY_TYPES.includes(drink.type);
+    return (
+      <div
+        key={c.id}
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "10px",
+          padding: "12px 0",
+          borderBottom: i === list.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
+        }}
+      >
+        <button
+          onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+          disabled={!drink || !onOpenDrink}
+          style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
+        >
+          <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />
+        </button>
+        {/* À droite du rond : 3 lignes qui se suivent, sans ligne vide entre elles */}
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+            <button
+              onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+              disabled={!drink || !onOpenDrink}
+              style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
+            >
+              {/* Ligne 1 — produit (le volume est en tête de la ligne 2) */}
+              <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
+              </div>
+            </button>
+            {c.price != null && (
+              <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px", flexShrink: 0 }}>
+                {c.currency === "jeton" ? (
+                  <MoneyAmount value={c.price} currency="jeton" jetonIcon="pink" jetonIconSize={14} />
+                ) : (
+                  <>
+                    {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+                  </>
+                )}
+              </span>
+            )}
+          </div>
+          {/* Ligne 2 — volume + drapeau + % ABV + icône Bio + icône Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
+          {(() => {
+            const mentionParts = [];
+            if (c.volumeCl) mentionParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
+            if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
+            if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
+            if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
+            if (showMentions && drink.glutenFree) mentionParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
+            if (mentionParts.length === 0) return null;
+            return (
+              <button
+                onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+                disabled={!drink || !onOpenDrink}
+                style={{ display: "block", width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
+              >
+                <div data-journal-line="2" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
+                  {mentionParts.map((part, idx) => (
+                    <React.Fragment key={idx}>
+                      {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                      {part}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </button>
+            );
+          })()}
+          {/* Ligne 3 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
+          {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
+            <div data-journal-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
+              <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+              <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
+            </div>
+          )}
+          {/* Ligne 4 (3 quand il n'y a pas de lieu) — date + heure (points vert fluo) à gauche, croix de suppression à l'extrême droite */}
+          <div data-journal-line="date" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+            <div data-journal-datetime="1" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
+              {[formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
+                <React.Fragment key={idx}>
+                  {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                  <span>{part}</span>
+                </React.Fragment>
+              ))}
+            </div>
+            <button onClick={() => handleDelete(c.id)} style={{ display: "flex", background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px -4px -4px 0", flexShrink: 0 }}>
+              <NavIcon name="x" size={14} color={COLORS.paperAlt} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -1342,7 +1507,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
               flexShrink: 0,
             }}
           >
-            <img src={drinkCheckIconUrl} alt="Drink Check" style={{ height: "24px", filter: "brightness(0)" }} />
+            <img src={drinkCheckIconUrl} alt="Drink Check" style={{ height: "24px" }} />
           </button>
           <button
             onClick={() => setAdding(true)}
@@ -1494,114 +1659,39 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           </div>
         </div>
       </div>
-      <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, marginBottom: "18px" }} />
+      {/* Barre de séparation au-dessus de la liste en cours : « Aujourd'hui », la barre, puis l'icône « info » (bulle d'explication des périodes). */}
+      <div data-solo-today-bar="1" ref={todayBarRef} style={{ position: "relative", display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
+        <span data-solo-today-label="1" style={SOLO_BAR_LABEL_STYLE}>Aujourd'hui</span>
+        <div style={SOLO_BAR_LINE_STYLE} />
+        {renderPeriodInfo("today")}
+      </div>
 
       <div style={{ flex: 1, overflowY: "auto" }}>
         {checkins === null ? (
           <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Chargement...</p>
-        ) : checkins.length === 0 ? (
-          <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Rien d'encodé aujourd'hui.</p>
         ) : (
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
-            {checkins.map((c, i) => {
-              const drink = drinksById[String(c.drinkId)];
-              const venue = c.venueId ? venuesById[String(c.venueId)] : null;
-              const showMentions = drink && VOLUME_DISPLAY_TYPES.includes(drink.type);
-              return (
-                <div
-                  key={c.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "10px",
-                    padding: "12px 0",
-                    borderBottom: i === checkins.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
-                  }}
-                >
-                  <button
-                    onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-                    disabled={!drink || !onOpenDrink}
-                    style={{ background: "none", border: "none", padding: 0, cursor: drink && onOpenDrink ? "pointer" : "default", flexShrink: 0, marginTop: "2px" }}
-                  >
-                    <EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />
-                  </button>
-                  {/* À droite du rond : 3 lignes qui se suivent, sans ligne vide entre elles */}
-                  <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                      <button
-                        onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-                        disabled={!drink || !onOpenDrink}
-                        style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
-                      >
-                        {/* Ligne 1 — produit (le volume est en tête de la ligne 2) */}
-                        <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                          <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
-                        </div>
-                      </button>
-                      {c.price != null && (
-                        <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px", flexShrink: 0 }}>
-                          {c.currency === "jeton" ? (
-                            <MoneyAmount value={c.price} currency="jeton" jetonIcon="pink" jetonIconSize={14} />
-                          ) : (
-                            <>
-                              {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
-                            </>
-                          )}
-                        </span>
-                      )}
-                    </div>
-                    {/* Ligne 2 — volume + drapeau + % ABV + icône Bio + icône Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
-                    {(() => {
-                      const mentionParts = [];
-                      if (c.volumeCl) mentionParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
-                      if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
-                      if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
-                      if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
-                      if (showMentions && drink.glutenFree) mentionParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
-                      if (mentionParts.length === 0) return null;
-                      return (
-                        <button
-                          onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-                          disabled={!drink || !onOpenDrink}
-                          style={{ display: "block", width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
-                        >
-                          <div data-journal-line="2" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
-                            {mentionParts.map((part, idx) => (
-                              <React.Fragment key={idx}>
-                                {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
-                                {part}
-                              </React.Fragment>
-                            ))}
-                          </div>
-                        </button>
-                      );
-                    })()}
-                    {/* Ligne 3 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
-                    {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
-                      <div data-journal-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
-                        <NavIcon name="map-pin" size={12} color={COLORS.amber} />
-                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
-                      </div>
-                    )}
-                    {/* Ligne 4 (3 quand il n'y a pas de lieu) — date + heure (points vert fluo) à gauche, croix de suppression à l'extrême droite */}
-                    <div data-journal-line="date" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
-                      <div data-journal-datetime="1" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
-                        {[formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
-                          <React.Fragment key={idx}>
-                            {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
-                            <span>{part}</span>
-                          </React.Fragment>
-                        ))}
-                      </div>
-                      <button onClick={() => handleDelete(c.id)} style={{ display: "flex", background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px -4px -4px 0", flexShrink: 0 }}>
-                        <NavIcon name="x" size={14} color={COLORS.paperAlt} />
-                      </button>
-                    </div>
-                  </div>
+          <>
+            {checkins.length === 0 ? (
+              <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Rien d'encodé aujourd'hui.</p>
+            ) : (
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
+                {checkins.map((c, i) => renderCheckinRow(c, i, checkins))}
+              </div>
+            )}
+            {/* Période précédente : grisée, sous une barre de séparation ; elle ne compte pas dans les compteurs du haut. */}
+            {previousCheckins && previousCheckins.length > 0 && (
+              <>
+                <div data-solo-separator="1" ref={previousBarRef} style={{ position: "relative", display: "flex", alignItems: "center", gap: "10px", margin: "20px 0" }}>
+                  <span data-solo-period-date="1" style={SOLO_BAR_LABEL_STYLE}>{formatPeriodDay(previousPeriodStart)}</span>
+                  <div style={SOLO_BAR_LINE_STYLE} />
+                  {renderPeriodInfo("previous")}
                 </div>
-              );
-            })}
-          </div>
+                <div data-solo-previous="1" style={{ opacity: 0.5, filter: "grayscale(1)", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
+                  {previousCheckins.map((c, i) => renderCheckinRow(c, i, previousCheckins))}
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
 

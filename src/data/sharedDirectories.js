@@ -510,9 +510,10 @@ export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl, 
   return { ok: true };
 }
 
-export async function loadMySoloCheckins(sinceIso, excludeArchived = false) {
+export async function loadMySoloCheckins(sinceIso, excludeArchived = false, untilIso = null) {
   let query = supabase.from("solo_checkins").select("*").order("created_at", { ascending: false });
   if (sinceIso) query = query.gte("created_at", sinceIso);
+  if (untilIso) query = query.lt("created_at", untilIso); // borne haute exclue : sert à isoler la période précédente
   if (excludeArchived) query = query.is("archived_at", null);
   const { data, error } = await query;
   if (error) {
