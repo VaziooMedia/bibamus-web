@@ -54,13 +54,13 @@ export function DrinkDirectoryPicker({ type, onPick }) {
           borderRadius: "9px",
           border: `2px solid ${COLORS.amberDark}`,
           background: COLORS.surface,
-          color: COLORS.amberDark,
+          color: COLORS.ink,
           fontWeight: 700,
           fontSize: "13.5px",
           cursor: "pointer",
         }}
       >
-        Ajouter depuis BibAtlas
+        Ajouter depuis Bib<span style={{ color: COLORS.amber }}>Atlas</span>
       </button>
 
       {open && (
