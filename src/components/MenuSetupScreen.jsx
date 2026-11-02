@@ -459,7 +459,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                 Possibilité d'adapter le volume et le type de service de tous les produits depuis les catégories.
                 <br />
                 <br />
-                Si un produit spécifique est disponible, tu peux l'ajouter à la carte depuis "Ajouter depuis le répertoire".
+                Si un produit spécifique est disponible, tu peux l'ajouter à la carte depuis "Ajouter depuis BibAtlas".
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {genericDirectoryItems.map((g) => {

@@ -1,11 +1,11 @@
 // ============================================================
-// Sélecteur "Ajouter depuis le répertoire" — copié tel quel
-// depuis le prototype Claude.
+// Sélecteur "Ajouter depuis BibAtlas" (BibAtlas = le répertoire de produits) — copié
+// à l'origine tel quel depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS } from "../constants.js";
-import { DrinkBadges } from "./DrinkDisplay.jsx";
-import { drinkSummaryLine } from "../utils.js";
+import { COLORS, SUBTYPE_LABELS } from "../constants.js";
+import { EntityAvatar } from "./ui.jsx";
+import { drinkTypeLabel } from "../utils.js";
 import { searchDrinksByType } from "../data/sharedDirectories.js";
 
 export function DrinkDirectoryPicker({ type, onPick }) {
@@ -52,7 +52,7 @@ export function DrinkDirectoryPicker({ type, onPick }) {
           textAlign: "center",
           padding: "11px",
           borderRadius: "9px",
-          border: `2px dashed ${COLORS.amberDark}`,
+          border: `2px solid ${COLORS.amberDark}`,
           background: COLORS.surface,
           color: COLORS.amberDark,
           fontWeight: 700,
@@ -60,7 +60,7 @@ export function DrinkDirectoryPicker({ type, onPick }) {
           cursor: "pointer",
         }}
       >
-        Ajouter depuis le répertoire
+        Ajouter depuis BibAtlas
       </button>
 
       {open && (
@@ -93,19 +93,16 @@ export function DrinkDirectoryPicker({ type, onPick }) {
                 {query.trim().length === 0 ? "Tape au moins 2 caractères" : query.trim().length === 1 ? "Encore un caractère..." : "Aucun résultat."}
               </div>
             )}
+            {/* Une seule ligne par produit, comme la recherche BibAtlas de « Nouvelle tournée » : rond-profil, nom, catégorie. */}
             {filtered.map((d) => (
               <button
                 key={d.id}
                 onClick={() => pick(d)}
-                style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "transparent", border: "none", cursor: "pointer" }}
+                style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "10px 14px", background: "transparent", border: "none", cursor: "pointer" }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink, flexWrap: "wrap" }}>
-                  {d.name}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "1px" }}>
-                  <DrinkBadges drink={d} />
-                </div>
-                {drinkSummaryLine(d) && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>{drinkSummaryLine(d)}</div>}
+                <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={36} fallbackIcon="bottle" />
+                <span style={{ fontWeight: 600, fontSize: "14px", color: COLORS.ink, minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
+                <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{SUBTYPE_LABELS[d.beverageSubtype] || drinkTypeLabel(d.type)}</span>
               </button>
             ))}
           </div>
