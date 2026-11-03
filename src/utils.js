@@ -162,7 +162,8 @@ export const directoryDrinkIdsConsumedBy = (event, myBibroCode) => {
 // @Home — ce que chaque personne a bu, par participant puis par produit (et volume), pour l'écran
 // du salon. Les plus servis d'abord ; à égalité, par prénom. Un verre est une entrée de
 // event.homeDrinks : { id, code, name, drinkId, timestamp }. Chaque ligne porte aussi le type de service
-// de l'entrée (servingMode : "" | bouteille | canette | fut | verre), pour l'afficher sous le nom.
+// de l'entrée (servingMode : "" | bouteille | canette | fut | verre), pour l'afficher sous le nom, et `shot` (vrai si
+// l'entrée est un shot : menuCategory "Shots") : un shot et un spiritueux de même volume sont deux lignes, la pastille les distingue.
 export const homeDrinksByPerson = (event) => {
   const people = new Map();
   (event.homeDrinks || []).forEach((h) => {
@@ -174,7 +175,7 @@ export const homeDrinksByPerson = (event) => {
       people.set(h.code, person);
     }
     const entry = findEntryForEvent(event, h.drinkId);
-    const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, servingMode: entry?.servingMode || "", count: 0 };
+    const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", count: 0 };
     item.count += 1;
     person.items.set(h.drinkId, item);
     person.total += 1;
@@ -189,12 +190,12 @@ export const homeDrinksByPerson = (event) => {
 // kcal, et le type de service du verre (servingMode, "" si aucun). `orders` : les verres de la personne (event.personalOrders + ses verres @Home, ceux que compte la
 // case « VERRES »), donc la liste a toujours autant de lignes que cette case, et la somme de ses kcal est
 // celle de la case « KCAL ». Un verre dont le produit n'est plus retrouvé : « Boisson », volume et kcal
-// inconnus (null) ; un produit sans kcal connues : kcal null.
+// inconnus (null) ; un produit sans kcal connues : kcal null. `shot` : vrai si le verre est un shot (menuCategory "Shots").
 export const myDrinksList = (event, orders = []) =>
   orders
     .map((o, i) => {
       const entry = findEntryForEvent(event, o.drinkId);
-      return { id: o.id ?? `verre-${i}`, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, kcal: entry ? kcalForDrink(entry) : null, servingMode: entry?.servingMode || "", timestamp: o.timestamp ?? 0, order: i };
+      return { id: o.id ?? `verre-${i}`, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, kcal: entry ? kcalForDrink(entry) : null, servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", timestamp: o.timestamp ?? 0, order: i };
     })
     .sort((a, b) => a.timestamp - b.timestamp || a.order - b.order)
     .map(({ order, ...glass }) => glass);
