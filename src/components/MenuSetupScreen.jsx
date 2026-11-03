@@ -8,7 +8,7 @@ import { NavIcon, TokenPinkIcon, AddPlusIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { MenuProductRow, CHECK_MARK_BG } from "./MenuProductRow.jsx";
-import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems } from "../utils.js";
+import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems, safeServingMode } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import { loadGenericDrinks } from "../data/sharedDirectories.js";
 
@@ -110,37 +110,63 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   // to offer — only really makes sense for events not tied to one specific venue.
   const genericDirectoryItems = [...genericDrinks].sort((a, b) => a.name.localeCompare(b.name));
 
-  // Prix proposé quand on ajoute un produit à la carte (produit générique ou produit choisi dans BibAtlas) : le prix moyen encodé sur sa fiche
-  // en euros ; pour un événement en jetons, sa valeur en jetons si elle existe, sinon le prix moyen converti avec la valeur du jeton de
-  // l'événement (au moins 1 jeton). 0 quand la fiche n'a pas de prix.
-  const defaultPriceOf = (src) =>
-    event.currency === "jeton"
-      ? src.averageJetonValue != null
-        ? src.averageJetonValue
-        : event.jetonUnitValue && src.averagePrice != null
-        ? Math.max(1, Math.round(src.averagePrice / event.jetonUnitValue))
-        : 0
-      : src.averagePrice || 0;
+  // Valeurs proposées quand on ajoute un produit à la carte (produit générique ou produit choisi dans BibAtlas) : celles encodées sur sa fiche
+  // dans « Valeurs par défaut » (prix, volume, type de service) ; à défaut, les anciens champs de la fiche (prix moyen, volume, type de service).
+  // Spiritueux ajouté comme Shot (asShot) dont la fiche a la case « Shot » cochée : d'abord les valeurs par défaut du shot, puis celles du spiritueux.
+  // Prix : en euros, la valeur en euros ; pour un événement en jetons, la valeur en jetons si elle existe, sinon le prix en euros converti avec la
+  // valeur du jeton de l'événement (au moins 1 jeton). 0 quand la fiche n'a pas de prix.
+  const positiveOrNull = (v) => {
+    const n = Number(v);
+    return v != null && v !== "" && Number.isFinite(n) && n > 0 ? n : null;
+  };
+  const defaultsOf = (src, asShot = false) => {
+    const own = asShot && src.servesAsShot;
+    const spirit = { euro: src.defaultPriceEuro ?? src.averagePrice ?? null, jeton: src.defaultPriceJeton ?? src.averageJetonValue ?? null };
+    const priceSets = own ? [{ euro: src.defaultShotPriceEuro ?? null, jeton: src.defaultShotPriceJeton ?? null }, spirit] : [spirit];
+    let price = 0;
+    for (const p of priceSets) {
+      const value =
+        event.currency === "jeton"
+          ? p.jeton != null
+            ? p.jeton
+            : event.jetonUnitValue && p.euro != null
+            ? Math.max(1, Math.round(p.euro / event.jetonUnitValue))
+            : null
+          : p.euro;
+      if (value != null) {
+        price = value;
+        break;
+      }
+    }
+    return {
+      price,
+      volumeCl: (own ? positiveOrNull(src.defaultShotVolumeCl) : null) ?? positiveOrNull(src.defaultVolumeCl) ?? positiveOrNull(src.volumeCl),
+      servingMode: (own ? safeServingMode(src.defaultShotServingMode) : "") || safeServingMode(src.defaultServingMode) || src.servingMode || "",
+    };
+  };
 
-  const genericItemToEventItem = (g) => ({
-    id: nextId(),
-    name: g.name,
-    price: defaultPriceOf(g),
-    type: g.type || "",
-    volumeCl: g.volumeCl != null ? g.volumeCl : null,
-    kcalPer100ml: g.kcalPer100ml != null ? g.kcalPer100ml : null,
-    servingMode: g.servingMode || "",
-    beerTags: g.beerTags || [],
-    abv: g.abv != null ? g.abv : null,
-    brand: g.brand || "",
-    brewery: g.brewery || "",
-    nationality: g.nationality || "",
-    glutenFree: !!g.glutenFree,
-    bio: !!g.bio,
-    countsAsDrinkId: g.countsAsDrinkId || null,
-    photoUrl: g.photoUrl || null,
-    avatarEmoji: g.avatarEmoji || null,
-  });
+  const genericItemToEventItem = (g) => {
+    const d = defaultsOf(g);
+    return {
+      id: nextId(),
+      name: g.name,
+      price: d.price,
+      type: g.type || "",
+      volumeCl: d.volumeCl,
+      kcalPer100ml: g.kcalPer100ml != null ? g.kcalPer100ml : null,
+      servingMode: d.servingMode,
+      beerTags: g.beerTags || [],
+      abv: g.abv != null ? g.abv : null,
+      brand: g.brand || "",
+      brewery: g.brewery || "",
+      nationality: g.nationality || "",
+      glutenFree: !!g.glutenFree,
+      bio: !!g.bio,
+      countsAsDrinkId: g.countsAsDrinkId || null,
+      photoUrl: g.photoUrl || null,
+      avatarEmoji: g.avatarEmoji || null,
+    };
+  };
 
   const isGenericItemPresent = (g) => event.menu.some((eItem) => normalizeForSearch(eItem.name) === normalizeForSearch(g.name));
 
@@ -164,6 +190,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   const [pendingSpiritSource, setPendingSpiritSource] = useState(null);
 
   const addDrinkFromDirectory = (source, overrideType) => {
+    const d = defaultsOf(source, overrideType === "Shots");
     updateEvent(event.id, (e) => ({
       ...e,
       menu: [
@@ -171,11 +198,11 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
         {
           id: nextId(),
           name: source.name,
-          price: defaultPriceOf(source),
+          price: d.price,
           type: overrideType || source.type || "",
-          volumeCl: source.volumeCl || null,
+          volumeCl: d.volumeCl,
           kcalPer100ml: source.kcalPer100ml != null ? source.kcalPer100ml : null,
-          servingMode: source.servingMode || "",
+          servingMode: d.servingMode,
           beerTags: source.beerTags || [],
           abv: source.abv != null ? source.abv : null,
           brand: source.brand || "",
