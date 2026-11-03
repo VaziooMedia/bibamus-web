@@ -1,7 +1,7 @@
 // ============================================================
-// Icône « info » d'une ligne produit de la Carte boissons, et sa bulle : elle explique de bien vérifier les trois données par défaut du produit
-// (prix, volume, type de service) et de cocher le rond « Données par défaut vérifiées » une fois qu'elles sont justes.
-// Même présentation que les autres icônes « info » de l'app (BibaSolo) : icône verte fluo, bulle à bord vert fluo qui s'ouvre au toucher.
+// Icône « info » d'une ligne produit de la Carte boissons, et sa bulle : elle explique que les 3 valeurs encadrées en rose (prix, volume, type de
+// service) sont des valeurs par défaut, à vérifier et adapter si besoin, puis à valider en cochant le rond « Données par défaut vérifiées ».
+// Comme les autres icônes « info » de l'app (BibaSolo), la bulle a un bord vert fluo et s'ouvre au toucher ; l'icône, elle, est grise.
 // La bulle est dessinée à part, au niveau de la page (portail) : les blocs de la carte sont rognés à leurs bords arrondis et la couperaient.
 // Elle reste entière dans l'écran, se pose sous l'icône (au-dessus s'il n'y a pas la place) et se ferme en touchant ailleurs, avec Échap,
 // en faisant défiler la page, ou en touchant l'icône d'un autre produit.
@@ -75,9 +75,9 @@ export function DefaultDataInfo() {
         onClick={() => setOpen((o) => !o)}
         aria-label="À propos des données par défaut"
         aria-expanded={open}
-        style={{ background: "none", border: "none", padding: "8px", margin: 0, cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0, opacity: open ? 1 : 0.6 }}
+        style={{ background: "none", border: "none", padding: "8px", margin: 0, cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}
       >
-        <NavIcon name="info" size={14} color={COLORS.amber} />
+        <NavIcon name="info" size={14} color={COLORS.inkSoft} />
       </button>
       {open &&
         createPortal(
@@ -120,10 +120,11 @@ export function DefaultDataInfo() {
                 }}
               />
             )}
-            <span style={{ display: "block", position: "relative", fontSize: "13px", fontWeight: 700 }}>Données par défaut</span>
-            <span style={{ display: "block", position: "relative", marginTop: "3px", color: COLORS.inkSoft }}>
-              Vérifie bien le prix, le volume et le type de service : ce sont des données par défaut, peut-être pas exactes. Coche le rond une fois les trois vérifiés.
-            </span>
+            <span style={{ display: "block", position: "relative" }}>Les 3 valeurs encadrées en rose sont des valeurs par défaut (prix, volume et type de service).</span>
+            <ul style={{ position: "relative", margin: "6px 0 0", paddingLeft: "16px" }}>
+              <li>Vérifie et adapte si besoin ces valeurs par défaut.</li>
+              <li style={{ marginTop: "3px" }}>Check pour valider tes valeurs vérifiées</li>
+            </ul>
           </div>,
           document.body
         )}
