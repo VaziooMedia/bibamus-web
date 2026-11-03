@@ -169,7 +169,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
           </div>
 
           {isSpirit && (
-            <div data-menu-row-spirit="1" style={{ display: "flex", gap: "8px" }}>
+            <div data-menu-row-spirit="1" style={{ display: "grid", gridAutoFlow: "column", gridAutoColumns: "1fr", width: "max-content", gap: "8px" }}>
               {[
                 { label: "Spiritueux", active: !isShot, value: "" },
                 { label: "Shot", active: isShot, value: "Shots" },
@@ -179,7 +179,6 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                   onClick={() => onChangeMenuCategory(opt.value)}
                   aria-pressed={opt.active}
                   style={{
-                    flex: "0 0 auto",
                     padding: "4px 14px",
                     borderRadius: "8px",
                     border: `1.5px solid ${opt.active ? COLORS.ink : COLORS.paperAlt}`,
