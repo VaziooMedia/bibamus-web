@@ -5,7 +5,7 @@
 //   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + prix modifiable (à droite)
 //   déroulé   : dans un « tiroir » creusé (fond plus sombre, sans trait) : volume (texte libre, clavier numérique) + type de
 //               service ; pour un spiritueux, le choix Spiritueux / Shot. Rien d'autre.
-// DrinkRow (plus complète) reste utilisée par le répertoire de produits et par le formulaire de carte d'un lieu.
+// DrinkRow (plus complète) reste utilisée par le répertoire de produits.
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
