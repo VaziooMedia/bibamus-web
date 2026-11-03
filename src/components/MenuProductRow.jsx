@@ -2,7 +2,8 @@
 // Ligne d'un produit dans la Carte boissons d'un événement (BibaRoom / Produits), version simplifiée — sans cadre propre :
 // c'est le bloc qui la contient (catégorie, « Tous les produits ajoutés », résultats de recherche) qui la cadre, et un trait fin la sépare des autres lignes.
 //   1ʳᵉ ligne : rond-profil du produit + nom + croix de suppression (tout à droite)
-//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + prix modifiable (à droite)
+//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + prix modifiable (à droite) ; le cadre du prix est rose fluo tant que le prix
+//               n'a pas été vérifié/adapté (c'est peut-être un prix par défaut, à contrôler), vert fluo ensuite (`drink.priceChecked`).
 //   déroulé   : dans un « tiroir » creusé (fond plus sombre, sans trait) : volume (texte libre, clavier numérique) + type de
 //               service ; pour un spiritueux, le choix Spiritueux / Shot. Rien d'autre.
 // DrinkRow (plus complète) reste utilisée par le répertoire de produits.
@@ -49,13 +50,15 @@ const stepButtonStyle = { flex: 1, display: "flex", alignItems: "center", justif
 
 export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, onChangeVolume, onChangeServingMode, onChangeMenuCategory, onRemove }) {
   const [expanded, setExpanded] = useState(false);
-  const [priceFocused, setPriceFocused] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   // Textes saisis gardés tels quels dans l'état local : sinon une virgule tapée en dernier serait effacée dès qu'elle est relue comme nombre.
   const [priceInput, setPriceInput] = useState(() => String(drink.price ?? "").replace(".", ","));
   const [volumeInput, setVolumeInput] = useState(() => (drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : ""));
   const isSpirit = drink.type === "Spiritueux";
   const isShot = drink.menuCategory === "Shots";
+  // Cadre du prix : rose fluo tant que le prix n'a pas été vérifié/adapté, vert fluo une fois que c'est fait. Il ne change pas au simple
+  // toucher du champ (un prix encore à contrôler ne doit pas passer au vert sans que rien n'ait été modifié).
+  const priceFrameColor = drink.priceChecked ? COLORS.amber : COLORS.pinkFluo;
 
   return (
     <div data-menu-row="1" style={{ padding: "10px 0" }}>
@@ -86,15 +89,13 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
         {/* Prix : un seul champ arrondi — montant + symbole, puis les deux flèches empilées à droite */}
         <div
           data-menu-price="1"
-          style={{ display: "flex", alignItems: "stretch", height: "44px", flexShrink: 0, borderRadius: "12px", border: `2px solid ${priceFocused ? COLORS.amber : COLORS.paperAlt}`, background: COLORS.surfaceAlt, overflow: "hidden", transition: "border-color 0.15s ease" }}
+          style={{ display: "flex", alignItems: "stretch", height: "44px", flexShrink: 0, borderRadius: "12px", border: `2px solid ${priceFrameColor}`, background: COLORS.surfaceAlt, overflow: "hidden", transition: "border-color 0.15s ease" }}
         >
           <input
             type="text"
             inputMode="decimal"
             aria-label={`Prix de ${drink.name}`}
             value={priceInput}
-            onFocus={() => setPriceFocused(true)}
-            onBlur={() => setPriceFocused(false)}
             onChange={(e) => {
               const raw = e.target.value;
               setPriceInput(raw);

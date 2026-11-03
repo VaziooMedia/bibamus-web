@@ -43,10 +43,11 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     setCleanupMessage(result.removed === 0 ? "Aucun doublon trouvé." : `${result.removed} doublon${result.removed > 1 ? "s" : ""} retiré${result.removed > 1 ? "s" : ""}.`);
   };
 
+  // Modifier le prix d'un produit = l'avoir vérifié/adapté : son cadre prix passe du rose fluo (à contrôler) au vert fluo (OK).
   const setPrice = (drinkId, price) => {
     updateEvent(event.id, (e) => ({
       ...e,
-      menu: e.menu.map((d) => (d.id === drinkId ? { ...d, price: isNaN(price) ? 0 : price } : d)),
+      menu: e.menu.map((d) => (d.id === drinkId ? { ...d, price: isNaN(price) ? 0 : price, priceChecked: true } : d)),
     }));
   };
 
