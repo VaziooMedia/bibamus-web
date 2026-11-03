@@ -1,7 +1,8 @@
 // ============================================================
 // Icône « info » d'une ligne produit de la Carte boissons, et sa bulle : elle explique que les 3 valeurs encadrées en rose (prix, volume, type de
 // service) sont des valeurs par défaut, à vérifier et adapter si besoin, puis à valider en cochant le rond « Données par défaut vérifiées ».
-// Comme les autres icônes « info » de l'app (BibaSolo), la bulle a un bord vert fluo et s'ouvre au toucher ; l'icône, elle, est grise.
+// Comme les autres icônes « info » de l'app (BibaSolo), la bulle a un bord vert fluo et s'ouvre au toucher ; l'icône est grise quand la bulle
+// est fermée, vert fluo quand elle est ouverte.
 // La bulle est dessinée à part, au niveau de la page (portail) : les blocs de la carte sont rognés à leurs bords arrondis et la couperaient.
 // Elle reste entière dans l'écran, se pose sous l'icône (au-dessus s'il n'y a pas la place) et se ferme en touchant ailleurs, avec Échap,
 // en faisant défiler la page, ou en touchant l'icône d'un autre produit.
@@ -77,7 +78,7 @@ export function DefaultDataInfo() {
         aria-expanded={open}
         style={{ background: "none", border: "none", padding: "8px", margin: 0, cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}
       >
-        <NavIcon name="info" size={14} color={COLORS.inkSoft} />
+        <NavIcon name="info" size={14} color={open ? COLORS.amber : COLORS.inkSoft} />
       </button>
       {open &&
         createPortal(
@@ -123,7 +124,7 @@ export function DefaultDataInfo() {
             <span style={{ display: "block", position: "relative" }}>Les 3 valeurs encadrées en rose sont des valeurs par défaut (prix, volume et type de service).</span>
             <ul style={{ position: "relative", margin: "6px 0 0", paddingLeft: "16px" }}>
               <li>Vérifie et adapte si besoin ces valeurs par défaut.</li>
-              <li style={{ marginTop: "3px" }}>Check pour valider tes valeurs vérifiées</li>
+              <li style={{ marginTop: "3px" }}>Check pour valider tes valeurs vérifiées.</li>
             </ul>
           </div>,
           document.body
