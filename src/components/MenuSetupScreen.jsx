@@ -110,17 +110,22 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   // to offer — only really makes sense for events not tied to one specific venue.
   const genericDirectoryItems = [...genericDrinks].sort((a, b) => a.name.localeCompare(b.name));
 
+  // Prix proposé quand on ajoute un produit à la carte (produit générique ou produit choisi dans BibAtlas) : le prix moyen encodé sur sa fiche
+  // en euros ; pour un événement en jetons, sa valeur en jetons si elle existe, sinon le prix moyen converti avec la valeur du jeton de
+  // l'événement (au moins 1 jeton). 0 quand la fiche n'a pas de prix.
+  const defaultPriceOf = (src) =>
+    event.currency === "jeton"
+      ? src.averageJetonValue != null
+        ? src.averageJetonValue
+        : event.jetonUnitValue && src.averagePrice != null
+        ? Math.max(1, Math.round(src.averagePrice / event.jetonUnitValue))
+        : 0
+      : src.averagePrice || 0;
+
   const genericItemToEventItem = (g) => ({
     id: nextId(),
     name: g.name,
-    price:
-      event.currency === "jeton"
-        ? g.averageJetonValue != null
-          ? g.averageJetonValue
-          : event.jetonUnitValue && g.averagePrice != null
-          ? Math.max(1, Math.round(g.averagePrice / event.jetonUnitValue))
-          : 0
-        : g.averagePrice || 0,
+    price: defaultPriceOf(g),
     type: g.type || "",
     volumeCl: g.volumeCl != null ? g.volumeCl : null,
     kcalPer100ml: g.kcalPer100ml != null ? g.kcalPer100ml : null,
@@ -166,7 +171,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
         {
           id: nextId(),
           name: source.name,
-          price: 0,
+          price: defaultPriceOf(source),
           type: overrideType || source.type || "",
           volumeCl: source.volumeCl || null,
           kcalPer100ml: source.kcalPer100ml != null ? source.kcalPer100ml : null,
