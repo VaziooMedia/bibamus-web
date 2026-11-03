@@ -2,7 +2,7 @@
 // Ligne d'un produit dans la Carte boissons d'un événement (BibaRoom / Produits), version simplifiée — sans cadre propre :
 // c'est le bloc qui la contient (catégorie, « Tous les produits ajoutés », résultats de recherche) qui la cadre, et un trait fin la sépare des autres lignes.
 //   1ʳᵉ ligne : rond-profil du produit + nom + croix de suppression (tout à droite)
-//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + à droite « Vérifié » avec son rond à cocher, puis le prix modifiable
+//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + à droite « Données par défaut vérifiées » avec son rond à cocher, puis le prix modifiable
 //   déroulé   : dans un « tiroir » creusé (fond plus sombre, sans trait) : volume (texte libre, clavier numérique) + type de
 //               service ; pour un spiritueux, le choix Spiritueux / Shot. Rien d'autre.
 // Le cadre du prix, du volume et du type de service est rose fluo tant que la valeur n'a pas été vérifiée/adaptée (c'est peut-être une valeur
@@ -14,7 +14,7 @@ import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
 import { SERVING_MODE_OPTIONS, safeServingMode, sanitizeDecimalText, parsePositiveText } from "../utils.js";
 
-// Check noir des cases à cocher (produits génériques, « Vérifié ») : dessiné ici, car la couleur d'accent native des navigateurs ne permet pas de
+// Check noir des cases à cocher (produits génériques, « Données par défaut vérifiées ») : dessiné ici, car la couleur d'accent native des navigateurs ne permet pas de
 // choisir la couleur du check.
 export const CHECK_MARK_BG = `url("data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.3 6.3 4.9 8.9 9.7 3.3' fill='none' stroke='#000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>")}")`;
 
@@ -61,7 +61,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
   const [volumeInput, setVolumeInput] = useState(() => (drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : ""));
   const isSpirit = drink.type === "Spiritueux";
   const isShot = drink.menuCategory === "Shots";
-  // « Vérifié » est coché quand le prix, le volume et le type de service sont tous vérifiés/adaptés (que ce soit en les modifiant ou en cochant le rond).
+  // « Données par défaut vérifiées » est coché quand le prix, le volume et le type de service sont tous vérifiés/adaptés (que ce soit en les modifiant ou en cochant le rond).
   const allVerified = !!(drink.priceChecked && drink.volumeChecked && drink.servingModeChecked);
 
   return (
@@ -90,15 +90,15 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
         <button onClick={() => setExpanded((s) => !s)} style={{ ...smallButtonStyle, minWidth: "36px", width: "36px", height: "44px" }} aria-label="Détails" aria-expanded={expanded}>
           <Chevron size={22} color={COLORS.amber} turn={expanded ? 90 : 0} />
         </button>
-        {/* À droite : « Vérifié » + son rond à cocher, puis le prix */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-        <label data-menu-verified="1" style={{ display: "flex", alignItems: "center", gap: "8px", height: "44px", flexShrink: 0, cursor: "pointer", fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft }}>
-          Vérifié
+        {/* À droite : « Données par défaut vérifiées » (sur 2 ou 3 lignes si la place manque) + son rond à cocher, puis le prix */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+        <label data-menu-verified="1" style={{ display: "flex", alignItems: "center", gap: "8px", minHeight: "44px", minWidth: 0, cursor: "pointer", fontSize: "12px", fontWeight: 600, lineHeight: 1.2, color: COLORS.inkSoft }}>
+          <span style={{ minWidth: 0, textAlign: "right" }}>Données par défaut vérifiées</span>
           <input
             type="checkbox"
             checked={allVerified}
             onChange={(e) => onChangeVerified(e.target.checked)}
-            aria-label={`${drink.name} : vérifié`}
+            aria-label={`${drink.name} : données par défaut vérifiées`}
             style={{
               appearance: "none",
               WebkitAppearance: "none",
