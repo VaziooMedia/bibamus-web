@@ -1,9 +1,10 @@
 // ============================================================
-// Ligne d'un produit dans la Carte boissons d'un événement (BibaRoom / Produits), version simplifiée :
-//   1ʳᵉ ligne : rond-profil du produit + nom + prix (modifiable)
-//   2ᵉ ligne  : flèche de déroulement + croix de suppression
-//   déroulé   : volume (texte libre, clavier numérique) + type de service ; pour un spiritueux, le choix Spiritueux / Shot.
-//               Rien d'autre.
+// Ligne d'un produit dans la Carte boissons d'un événement (BibaRoom / Produits), version simplifiée — sans cadre propre :
+// c'est le bloc qui la contient (catégorie, « Tous les produits ajoutés », résultats de recherche) qui la cadre, et un trait fin la sépare des autres lignes.
+//   1ʳᵉ ligne : rond-profil du produit + nom + croix de suppression (tout à droite)
+//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + prix modifiable (à droite)
+//   déroulé   : dans un « tiroir » creusé (fond plus sombre, sans trait) : volume (texte libre, clavier numérique) + type de
+//               service ; pour un spiritueux, le choix Spiritueux / Shot. Rien d'autre.
 // DrinkRow (plus complète) reste utilisée par le répertoire de produits et par le formulaire de carte d'un lieu.
 // ============================================================
 import React, { useState } from "react";
@@ -12,9 +13,26 @@ import { EntityAvatar } from "./ui.jsx";
 import { SERVING_MODE_OPTIONS, safeServingMode, sanitizeDecimalText, parsePositiveText } from "../utils.js";
 
 // Même présentation que la fenêtre « Ajouter à la carte » de BibAtlas (Nouvelle tournée) : champ étroit pour le volume, valeur centrée.
-const VOLUME_BLOCK_W = 84;
-const fieldLabelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, display: "block", marginBottom: "6px", whiteSpace: "nowrap" };
-const fieldStyle = { width: "100%", height: "46px", boxSizing: "border-box", padding: "0 10px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" };
+const VOLUME_BLOCK_W = 92;
+// Le type de service n'a pas besoin de toute la largeur : un bloc étroit, resté à l'extrême droite du tiroir (il rétrécit un peu si l'écran est très étroit).
+const SERVICE_BLOCK_W = 136;
+// Champ du déroulé : le titre (bandeau grisé) et le champ ne forment qu'un seul bloc arrondi — le titre en est le haut.
+const titleStyle = { background: COLORS.paperAlt, color: COLORS.ink, fontSize: "11.5px", fontWeight: 600, lineHeight: 1.3, padding: "3px 8px", textAlign: "center", whiteSpace: "nowrap" };
+function FusedField({ title, htmlFor, width, shrink = false, focused, onFocus, onBlur, children }) {
+  return (
+    <div
+      onFocus={onFocus}
+      onBlur={onBlur}
+      style={{ flex: `0 ${shrink ? 1 : 0} ${width}px`, minWidth: 0, display: "flex", flexDirection: "column", borderRadius: "12px", border: `2px solid ${focused ? COLORS.amber : COLORS.paperAlt}`, background: COLORS.surface, overflow: "hidden", transition: "border-color 0.15s ease" }}
+    >
+      <label htmlFor={htmlFor} style={titleStyle}>
+        {title}
+      </label>
+      {children}
+    </div>
+  );
+}
+const fieldStyle = { width: "100%", height: "40px", boxSizing: "border-box", padding: "0 10px", borderRadius: 0, border: "none", background: "transparent", color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" };
 const smallButtonStyle = { display: "flex", alignItems: "center", justifyContent: "center", minWidth: "40px", height: "36px", background: "none", border: "none", color: COLORS.inkSoft, cursor: "pointer", padding: 0 };
 
 // Chevron dessiné en traits (pointe vers la droite) ; `turn` le fait pivoter : 90 = vers le bas, -90 = vers le haut.
@@ -32,6 +50,7 @@ const stepButtonStyle = { flex: 1, display: "flex", alignItems: "center", justif
 export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, onChangeVolume, onChangeServingMode, onChangeMenuCategory, onRemove }) {
   const [expanded, setExpanded] = useState(false);
   const [priceFocused, setPriceFocused] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
   // Textes saisis gardés tels quels dans l'état local : sinon une virgule tapée en dernier serait effacée dès qu'elle est relue comme nombre.
   const [priceInput, setPriceInput] = useState(() => String(drink.price ?? "").replace(".", ","));
   const [volumeInput, setVolumeInput] = useState(() => (drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : ""));
@@ -39,8 +58,8 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
   const isShot = drink.menuCategory === "Shots";
 
   return (
-    <div data-menu-row="1" style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px" }}>
-      {/* 1ʳᵉ ligne : rond-profil + nom + prix */}
+    <div data-menu-row="1" style={{ padding: "10px 0" }}>
+      {/* 1ʳᵉ ligne : rond-profil + nom + croix de suppression (tout à droite, dans le coin) */}
       <div data-menu-row-line="1" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={36} fallbackIcon="bottle" />
         <div
@@ -49,6 +68,21 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
         >
           {drink.name}
         </div>
+        <button
+          onClick={onRemove}
+          style={{ ...smallButtonStyle, minWidth: "30px", width: "30px", height: "30px", justifyContent: "flex-end", alignSelf: "flex-start", marginTop: "-6px", fontSize: "18px" }}
+          aria-label={`Supprimer ${drink.name}`}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* 2ᵉ ligne : flèche de déroulement (à gauche, vert fluo) + prix (à droite) */}
+      <div data-menu-row-line="2" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginTop: "6px" }}>
+        {/* Flèche de dépliage : vers la droite quand c'est replié, vers le bas quand c'est déplié ; centrée sous le rond-profil */}
+        <button onClick={() => setExpanded((s) => !s)} style={{ ...smallButtonStyle, minWidth: "36px", width: "36px", height: "44px" }} aria-label="Détails" aria-expanded={expanded}>
+          <Chevron size={22} color={COLORS.amber} turn={expanded ? 90 : 0} />
+        </button>
         {/* Prix : un seul champ arrondi — montant + symbole, puis les deux flèches empilées à droite */}
         <div
           data-menu-price="1"
@@ -99,24 +133,10 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
         </div>
       </div>
 
-      {/* 2ᵉ ligne : flèche de déroulement (à gauche) + croix de suppression (à droite) */}
-      <div data-menu-row-line="2" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
-        {/* Flèche de dépliage : vers la droite quand c'est replié, vers le bas quand c'est déplié ; centrée sous le rond-profil */}
-        <button onClick={() => setExpanded((s) => !s)} style={{ ...smallButtonStyle, minWidth: "36px", width: "36px" }} aria-label="Détails" aria-expanded={expanded}>
-          <Chevron size={22} color={COLORS.inkSoft} turn={expanded ? 90 : 0} />
-        </button>
-        <button onClick={onRemove} style={{ ...smallButtonStyle, fontSize: "18px" }} aria-label={`Supprimer ${drink.name}`}>
-          ×
-        </button>
-      </div>
-
       {expanded && (
-        <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "6px", paddingTop: "12px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-            <div style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
-              <label htmlFor={`menu-volume-${drink.id}`} style={fieldLabelStyle}>
-                Volume (cl.)
-              </label>
+        <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "10px", padding: "12px", borderRadius: "12px", background: COLORS.paper }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
+            <FusedField title="Volume (cl.)" htmlFor={`menu-volume-${drink.id}`} width={VOLUME_BLOCK_W} focused={focusedField === "volume"} onFocus={() => setFocusedField("volume")} onBlur={() => setFocusedField(null)}>
               <input
                 id={`menu-volume-${drink.id}`}
                 type="text"
@@ -130,11 +150,8 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                 placeholder="00"
                 style={fieldStyle}
               />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <label htmlFor={`menu-service-${drink.id}`} style={fieldLabelStyle}>
-                Type de service
-              </label>
+            </FusedField>
+            <FusedField title="Type de service" htmlFor={`menu-service-${drink.id}`} width={SERVICE_BLOCK_W} shrink focused={focusedField === "service"} onFocus={() => setFocusedField("service")} onBlur={() => setFocusedField(null)}>
               <select
                 id={`menu-service-${drink.id}`}
                 value={safeServingMode(drink.servingMode)}
@@ -148,11 +165,11 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                   </option>
                 ))}
               </select>
-            </div>
+            </FusedField>
           </div>
 
           {isSpirit && (
-            <div data-menu-row-spirit="1" style={{ display: "flex", gap: "8px" }}>
+            <div data-menu-row-spirit="1" style={{ display: "grid", gridAutoFlow: "column", gridAutoColumns: "1fr", width: "max-content", gap: "8px" }}>
               {[
                 { label: "Spiritueux", active: !isShot, value: "" },
                 { label: "Shot", active: isShot, value: "Shots" },
@@ -162,14 +179,14 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                   onClick={() => onChangeMenuCategory(opt.value)}
                   aria-pressed={opt.active}
                   style={{
-                    flex: 1,
-                    padding: "8px",
+                    padding: "4px 14px",
                     borderRadius: "8px",
-                    border: `2px solid ${opt.active ? COLORS.ink : COLORS.paperAlt}`,
+                    border: `1.5px solid ${opt.active ? COLORS.ink : COLORS.paperAlt}`,
                     background: opt.active ? COLORS.amber : COLORS.surface,
                     color: opt.active ? COLORS.paper : COLORS.ink,
                     fontWeight: 700,
-                    fontSize: "12.5px",
+                    fontSize: "11.5px",
+                    lineHeight: 1.3,
                     cursor: "pointer",
                   }}
                 >

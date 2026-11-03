@@ -210,6 +210,15 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     />
   );
 
+  // Les lignes produit d'un bloc : pas de cadre par produit, un trait fin entre deux lignes.
+  const renderRows = (items) =>
+    items.map((drink, i) => (
+      <React.Fragment key={drink.id}>
+        {i > 0 && <div style={{ height: "1px", background: COLORS.paperAlt }} />}
+        {renderDrinkRow(drink)}
+      </React.Fragment>
+    ));
+
   // Un bloc déroulant de la carte : « Tous les produits ajoutés » ou une catégorie (un seul bloc ouvert à la fois).
   const renderMenuBlock = (key, label, items) => {
     const isOpen = openCategory === key;
@@ -238,7 +247,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
             <span>{isOpen ? "▲" : "▾"}</span>
           </span>
         </button>
-        {isOpen && <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "0 10px 10px 10px" }}>{items.map((drink) => renderDrinkRow(drink))}</div>}
+        {isOpen && <div style={{ margin: "0 10px", borderTop: `1px solid ${COLORS.paperAlt}` }}>{renderRows(items)}</div>}
       </div>
     );
   };
@@ -474,7 +483,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
           searchResults.length === 0 ? (
             <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucun produit trouvé.</p>
           ) : (
-            searchResults.map((drink) => renderDrinkRow(drink))
+            <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 10px" }}>{renderRows(searchResults)}</div>
           )
         ) : event.menu.length === 0 ? (
           <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucun produit sur cette carte pour l'instant.</p>
