@@ -69,7 +69,7 @@ export function DrinkDirectoryPicker({ type, onPick }) {
         <span>
           Bib<span style={{ color: COLORS.amber }}>Atlas</span>
         </span>
-        <AddPlusIcon color={COLORS.amber} />
+        <AddPlusIcon color={COLORS.amber} rotated={open} />
       </button>
 
       {open && (

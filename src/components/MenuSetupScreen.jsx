@@ -383,7 +383,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
             onClick={() => setGenericChecklistOpen((o) => !o)}
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", height: `${ADD_BLOCK_HEIGHT - 4}px`, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
           >
-            <p style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, margin: 0 }}>Produits génériques</p>
+            <p style={{ fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, margin: 0 }}>Produits génériques</p>
             <AddPlusIcon color={COLORS.pinkFluo} rotated={genericChecklistOpen} />
           </button>
           {genericChecklistOpen && (
