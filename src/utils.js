@@ -538,8 +538,6 @@ export function drinkSummaryLine(d, includeType = true) {
 
 export const normalizeForDuplicateCheck = (name) => (name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
 
-export const isValidVenuePhone = (phone) => !phone || !phone.trim() || /^\+\d/.test(phone.trim());
-
 export const ensureLeafletLoaded = (onReady, onError) => {
   if (window.L) {
     onReady();
