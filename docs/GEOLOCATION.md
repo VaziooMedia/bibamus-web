@@ -79,7 +79,7 @@ Hook `useGeolocation` (`getCurrentPosition`, précision normale, délai 8 s, cac
   - **Lectures à la demande** : la fiche du lieu (`get_venues_by_ids`) puis ses horaires (voir la section Google plus bas) ne sont lus qu'au toucher d'une épingle, une seule fois par lieu tant que l'écran reste ouvert ; le cadre montre le nom tout de suite et se complète ensuite. Un lieu dont la fiche n'a pas pu être lue garde son cadre (nom seul, qui ouvre la fiche) et réessaie au toucher suivant.
   - **Pastille** : verte / rouge d'après « ouvert maintenant » de Google (donc avec le même décalage possible de 6 heures que la fiche) ; **rouge** aussi pour un lieu fermé définitivement ou temporairement ; **aucune pastille** quand on ne sait pas (pas de lieu Google lié, lien invalide, Google injoignable, réponse sans « ouvert maintenant »). Avec « réduire les animations » demandé au système, la pastille reste allumée sans clignoter.
   - Les règles pures (ouvert / fermé, tags, intitulé lu par les lecteurs d'écran) sont dans `src/venueMapCard.js`.
-- `VenuePositionPicker` : repère déplaçable pour corriger la position d'un lieu (assistants d'ajout, formulaire de lieu) ; Leaflet est chargé depuis cdnjs.
+- `VenuePositionPicker` : repère déplaçable pour corriger la position d'un lieu (assistants d'ajout) ; Leaflet est chargé depuis cdnjs.
 
 ## Google Places — horaires d'établissements
 

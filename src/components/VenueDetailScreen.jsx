@@ -29,7 +29,7 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onBack, onEdit, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, claimsEnabled = true }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onBack, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
   const [activeTab, setActiveTab] = useState("infos");
   const [justCheckedIn, setJustCheckedIn] = useState(false);
@@ -695,18 +695,6 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, isAdmin, onTog
             style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
           >
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setShowActionsMenu(false);
-                  onEdit();
-                }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-              >
-                <NavIcon name="pencil" size={20} color={COLORS.amber} />
-                Éditer
-              </button>
-            )}
             <button
               onClick={() => {
                 setShowActionsMenu(false);
