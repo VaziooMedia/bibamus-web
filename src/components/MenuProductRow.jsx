@@ -2,10 +2,11 @@
 // Ligne d'un produit dans la Carte boissons d'un événement (BibaRoom / Produits), version simplifiée — sans cadre propre :
 // c'est le bloc qui la contient (catégorie, « Tous les produits ajoutés », résultats de recherche) qui la cadre, et un trait fin la sépare des autres lignes.
 //   1ʳᵉ ligne : rond-profil du produit + nom + croix de suppression (tout à droite)
-//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + prix modifiable (à droite) ; le cadre du prix est rose fluo tant que le prix
-//               n'a pas été vérifié/adapté (c'est peut-être un prix par défaut, à contrôler), vert fluo ensuite (`drink.priceChecked`).
+//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + prix modifiable (à droite)
 //   déroulé   : dans un « tiroir » creusé (fond plus sombre, sans trait) : volume (texte libre, clavier numérique) + type de
 //               service ; pour un spiritueux, le choix Spiritueux / Shot. Rien d'autre.
+// Le cadre du prix, du volume et du type de service est rose fluo tant que la valeur n'a pas été vérifiée/adaptée (c'est peut-être une valeur
+// par défaut, à contrôler), vert fluo ensuite (`drink.priceChecked`, `drink.volumeChecked`, `drink.servingModeChecked`).
 // DrinkRow (plus complète) reste utilisée par le répertoire de produits.
 // ============================================================
 import React, { useState } from "react";
@@ -19,12 +20,13 @@ const VOLUME_BLOCK_W = 92;
 const SERVICE_BLOCK_W = 136;
 // Champ du déroulé : le titre (bandeau grisé) et le champ ne forment qu'un seul bloc arrondi — le titre en est le haut.
 const titleStyle = { background: COLORS.paperAlt, color: COLORS.ink, fontSize: "11.5px", fontWeight: 600, lineHeight: 1.3, padding: "3px 8px", textAlign: "center", whiteSpace: "nowrap" };
-function FusedField({ title, htmlFor, width, shrink = false, focused, onFocus, onBlur, children }) {
+// Cadre d'une valeur à contrôler (prix, volume, type de service) : rose fluo tant qu'elle n'a pas été vérifiée/adaptée, vert fluo une fois que c'est fait.
+// Il ne change pas au simple toucher du champ (une valeur encore à contrôler ne doit pas passer au vert sans que rien n'ait été modifié).
+const frameColor = (checked) => (checked ? COLORS.amber : COLORS.pinkFluo);
+function FusedField({ title, htmlFor, width, shrink = false, color, children }) {
   return (
     <div
-      onFocus={onFocus}
-      onBlur={onBlur}
-      style={{ flex: `0 ${shrink ? 1 : 0} ${width}px`, minWidth: 0, display: "flex", flexDirection: "column", borderRadius: "12px", border: `2px solid ${focused ? COLORS.amber : COLORS.paperAlt}`, background: COLORS.surface, overflow: "hidden", transition: "border-color 0.15s ease" }}
+      style={{ flex: `0 ${shrink ? 1 : 0} ${width}px`, minWidth: 0, display: "flex", flexDirection: "column", borderRadius: "12px", border: `2px solid ${color}`, background: COLORS.surface, overflow: "hidden", transition: "border-color 0.15s ease" }}
     >
       <label htmlFor={htmlFor} style={titleStyle}>
         {title}
@@ -50,15 +52,11 @@ const stepButtonStyle = { flex: 1, display: "flex", alignItems: "center", justif
 
 export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, onChangeVolume, onChangeServingMode, onChangeMenuCategory, onRemove }) {
   const [expanded, setExpanded] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
   // Textes saisis gardés tels quels dans l'état local : sinon une virgule tapée en dernier serait effacée dès qu'elle est relue comme nombre.
   const [priceInput, setPriceInput] = useState(() => String(drink.price ?? "").replace(".", ","));
   const [volumeInput, setVolumeInput] = useState(() => (drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : ""));
   const isSpirit = drink.type === "Spiritueux";
   const isShot = drink.menuCategory === "Shots";
-  // Cadre du prix : rose fluo tant que le prix n'a pas été vérifié/adapté, vert fluo une fois que c'est fait. Il ne change pas au simple
-  // toucher du champ (un prix encore à contrôler ne doit pas passer au vert sans que rien n'ait été modifié).
-  const priceFrameColor = drink.priceChecked ? COLORS.amber : COLORS.pinkFluo;
 
   return (
     <div data-menu-row="1" style={{ padding: "10px 0" }}>
@@ -89,7 +87,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
         {/* Prix : un seul champ arrondi — montant + symbole, puis les deux flèches empilées à droite */}
         <div
           data-menu-price="1"
-          style={{ display: "flex", alignItems: "stretch", height: "44px", flexShrink: 0, borderRadius: "12px", border: `2px solid ${priceFrameColor}`, background: COLORS.surfaceAlt, overflow: "hidden", transition: "border-color 0.15s ease" }}
+          style={{ display: "flex", alignItems: "stretch", height: "44px", flexShrink: 0, borderRadius: "12px", border: `2px solid ${frameColor(drink.priceChecked)}`, background: COLORS.surfaceAlt, overflow: "hidden", transition: "border-color 0.15s ease" }}
         >
           <input
             type="text"
@@ -137,7 +135,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
       {expanded && (
         <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "10px", padding: "12px", borderRadius: "12px", background: COLORS.paper }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
-            <FusedField title="Volume (cl.)" htmlFor={`menu-volume-${drink.id}`} width={VOLUME_BLOCK_W} focused={focusedField === "volume"} onFocus={() => setFocusedField("volume")} onBlur={() => setFocusedField(null)}>
+            <FusedField title="Volume (cl.)" htmlFor={`menu-volume-${drink.id}`} width={VOLUME_BLOCK_W} color={frameColor(drink.volumeChecked)}>
               <input
                 id={`menu-volume-${drink.id}`}
                 type="text"
@@ -152,7 +150,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                 style={fieldStyle}
               />
             </FusedField>
-            <FusedField title="Type de service" htmlFor={`menu-service-${drink.id}`} width={SERVICE_BLOCK_W} shrink focused={focusedField === "service"} onFocus={() => setFocusedField("service")} onBlur={() => setFocusedField(null)}>
+            <FusedField title="Type de service" htmlFor={`menu-service-${drink.id}`} width={SERVICE_BLOCK_W} shrink color={frameColor(drink.servingModeChecked)}>
               <select
                 id={`menu-service-${drink.id}`}
                 value={safeServingMode(drink.servingMode)}

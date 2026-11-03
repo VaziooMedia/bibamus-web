@@ -43,7 +43,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     setCleanupMessage(result.removed === 0 ? "Aucun doublon trouvé." : `${result.removed} doublon${result.removed > 1 ? "s" : ""} retiré${result.removed > 1 ? "s" : ""}.`);
   };
 
-  // Modifier le prix d'un produit = l'avoir vérifié/adapté : son cadre prix passe du rose fluo (à contrôler) au vert fluo (OK).
+  // Modifier le prix, le volume ou le type de service d'un produit = l'avoir vérifié/adapté : son cadre passe du rose fluo (à contrôler) au vert fluo (OK).
   const setPrice = (drinkId, price) => {
     updateEvent(event.id, (e) => ({
       ...e,
@@ -51,12 +51,14 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     }));
   };
 
-  const setDrinkField = (drinkId, field, value) => {
+  const setDrinkFields = (drinkId, fields) => {
     updateEvent(event.id, (e) => ({
       ...e,
-      menu: e.menu.map((d) => (d.id === drinkId ? { ...d, [field]: value } : d)),
+      menu: e.menu.map((d) => (d.id === drinkId ? { ...d, ...fields } : d)),
     }));
   };
+
+  const setDrinkField = (drinkId, field, value) => setDrinkFields(drinkId, { [field]: value });
 
   const removeDrink = (drinkId) => {
     updateEvent(event.id, (e) => ({ ...e, menu: e.menu.filter((d) => d.id !== drinkId) }));
@@ -208,8 +210,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
       priceStep={step}
       priceSymbol={unitLabel === "€" ? "€" : <TokenPinkIcon size={17} />}
       onChangePrice={(price) => setPrice(drink.id, price)}
-      onChangeVolume={(vol) => setDrinkField(drink.id, "volumeCl", vol)}
-      onChangeServingMode={(mode) => setDrinkField(drink.id, "servingMode", mode)}
+      onChangeVolume={(vol) => setDrinkFields(drink.id, { volumeCl: vol, volumeChecked: true })}
+      onChangeServingMode={(mode) => setDrinkFields(drink.id, { servingMode: mode, servingModeChecked: true })}
       onChangeMenuCategory={(cat) => setDrinkField(drink.id, "menuCategory", cat)}
       onRemove={() => removeDrink(drink.id)}
     />
