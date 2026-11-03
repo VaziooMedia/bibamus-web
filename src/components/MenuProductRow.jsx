@@ -2,15 +2,22 @@
 // Ligne d'un produit dans la Carte boissons d'un événement (BibaRoom / Produits), version simplifiée — sans cadre propre :
 // c'est le bloc qui la contient (catégorie, « Tous les produits ajoutés », résultats de recherche) qui la cadre, et un trait fin la sépare des autres lignes.
 //   1ʳᵉ ligne : rond-profil du produit + nom + croix de suppression (tout à droite)
-//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + prix modifiable (à droite)
+//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + à droite l'icône « info » (bulle d'explication), le rond « Données par défaut vérifiées » à cocher, puis le prix modifiable
 //   déroulé   : dans un « tiroir » creusé (fond plus sombre, sans trait) : volume (texte libre, clavier numérique) + type de
 //               service ; pour un spiritueux, le choix Spiritueux / Shot. Rien d'autre.
+// Le cadre du prix, du volume et du type de service est rose fluo tant que la valeur n'a pas été vérifiée/adaptée (c'est peut-être une valeur
+// par défaut, à contrôler), vert fluo ensuite (`drink.priceChecked`, `drink.volumeChecked`, `drink.servingModeChecked`).
 // DrinkRow (plus complète) reste utilisée par le répertoire de produits.
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
+import { DefaultDataInfo } from "./DefaultDataInfo.jsx";
 import { SERVING_MODE_OPTIONS, safeServingMode, sanitizeDecimalText, parsePositiveText } from "../utils.js";
+
+// Check noir des cases à cocher (produits génériques, « Données par défaut vérifiées ») : dessiné ici, car la couleur d'accent native des navigateurs ne permet pas de
+// choisir la couleur du check.
+export const CHECK_MARK_BG = `url("data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.3 6.3 4.9 8.9 9.7 3.3' fill='none' stroke='#000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>")}")`;
 
 // Même présentation que la fenêtre « Ajouter à la carte » de BibAtlas (Nouvelle tournée) : champ étroit pour le volume, valeur centrée.
 const VOLUME_BLOCK_W = 92;
@@ -18,12 +25,13 @@ const VOLUME_BLOCK_W = 92;
 const SERVICE_BLOCK_W = 136;
 // Champ du déroulé : le titre (bandeau grisé) et le champ ne forment qu'un seul bloc arrondi — le titre en est le haut.
 const titleStyle = { background: COLORS.paperAlt, color: COLORS.ink, fontSize: "11.5px", fontWeight: 600, lineHeight: 1.3, padding: "3px 8px", textAlign: "center", whiteSpace: "nowrap" };
-function FusedField({ title, htmlFor, width, shrink = false, focused, onFocus, onBlur, children }) {
+// Cadre d'une valeur à contrôler (prix, volume, type de service) : rose fluo tant qu'elle n'a pas été vérifiée/adaptée, vert fluo une fois que c'est fait.
+// Il ne change pas au simple toucher du champ (une valeur encore à contrôler ne doit pas passer au vert sans que rien n'ait été modifié).
+const frameColor = (checked) => (checked ? COLORS.amber : COLORS.pinkFluo);
+function FusedField({ title, htmlFor, width, shrink = false, color, children }) {
   return (
     <div
-      onFocus={onFocus}
-      onBlur={onBlur}
-      style={{ flex: `0 ${shrink ? 1 : 0} ${width}px`, minWidth: 0, display: "flex", flexDirection: "column", borderRadius: "12px", border: `2px solid ${focused ? COLORS.amber : COLORS.paperAlt}`, background: COLORS.surface, overflow: "hidden", transition: "border-color 0.15s ease" }}
+      style={{ flex: `0 ${shrink ? 1 : 0} ${width}px`, minWidth: 0, display: "flex", flexDirection: "column", borderRadius: "12px", border: `2px solid ${color}`, background: COLORS.surface, overflow: "hidden", transition: "border-color 0.15s ease" }}
     >
       <label htmlFor={htmlFor} style={titleStyle}>
         {title}
@@ -47,15 +55,15 @@ function Chevron({ size, color, turn = 0, stroke = 2.6 }) {
 // Bouton ▲ / ▼ du prix : moitié de la hauteur du champ, chevron vert fluo.
 const stepButtonStyle = { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer" };
 
-export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, onChangeVolume, onChangeServingMode, onChangeMenuCategory, onRemove }) {
+export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, onChangeVolume, onChangeServingMode, onChangeMenuCategory, onChangeVerified, onRemove }) {
   const [expanded, setExpanded] = useState(false);
-  const [priceFocused, setPriceFocused] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
   // Textes saisis gardés tels quels dans l'état local : sinon une virgule tapée en dernier serait effacée dès qu'elle est relue comme nombre.
   const [priceInput, setPriceInput] = useState(() => String(drink.price ?? "").replace(".", ","));
   const [volumeInput, setVolumeInput] = useState(() => (drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : ""));
   const isSpirit = drink.type === "Spiritueux";
   const isShot = drink.menuCategory === "Shots";
+  // « Données par défaut vérifiées » est coché quand le prix, le volume et le type de service sont tous vérifiés/adaptés (que ce soit en les modifiant ou en cochant le rond).
+  const allVerified = !!(drink.priceChecked && drink.volumeChecked && drink.servingModeChecked);
 
   return (
     <div data-menu-row="1" style={{ padding: "10px 0" }}>
@@ -83,18 +91,41 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
         <button onClick={() => setExpanded((s) => !s)} style={{ ...smallButtonStyle, minWidth: "36px", width: "36px", height: "44px" }} aria-label="Détails" aria-expanded={expanded}>
           <Chevron size={22} color={COLORS.amber} turn={expanded ? 90 : 0} />
         </button>
+        {/* À droite : l'icône « info » (sa bulle explique les données par défaut), le rond « Données par défaut vérifiées » à cocher, puis le prix */}
+        <div style={{ display: "flex", alignItems: "center", gap: "4px", minWidth: 0 }}>
+        <DefaultDataInfo />
+        <label data-menu-verified="1" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "44px", padding: "0 8px", flexShrink: 0, cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={allVerified}
+            onChange={(e) => onChangeVerified(e.target.checked)}
+            aria-label={`${drink.name} : données par défaut vérifiées`}
+            style={{
+              appearance: "none",
+              WebkitAppearance: "none",
+              boxSizing: "border-box",
+              width: "24px",
+              height: "24px",
+              margin: 0,
+              flexShrink: 0,
+              borderRadius: "50%",
+              border: `2px solid ${allVerified ? COLORS.amber : COLORS.pinkFluo}`,
+              background: allVerified ? `${COLORS.amber} ${CHECK_MARK_BG} center / 14px 14px no-repeat` : "transparent",
+              cursor: "pointer",
+              transition: "border-color 0.15s ease, background-color 0.15s ease",
+            }}
+          />
+        </label>
         {/* Prix : un seul champ arrondi — montant + symbole, puis les deux flèches empilées à droite */}
         <div
           data-menu-price="1"
-          style={{ display: "flex", alignItems: "stretch", height: "44px", flexShrink: 0, borderRadius: "12px", border: `2px solid ${priceFocused ? COLORS.amber : COLORS.paperAlt}`, background: COLORS.surfaceAlt, overflow: "hidden", transition: "border-color 0.15s ease" }}
+          style={{ display: "flex", alignItems: "stretch", height: "44px", flexShrink: 0, borderRadius: "12px", border: `2px solid ${frameColor(drink.priceChecked)}`, background: COLORS.surfaceAlt, overflow: "hidden", transition: "border-color 0.15s ease" }}
         >
           <input
             type="text"
             inputMode="decimal"
             aria-label={`Prix de ${drink.name}`}
             value={priceInput}
-            onFocus={() => setPriceFocused(true)}
-            onBlur={() => setPriceFocused(false)}
             onChange={(e) => {
               const raw = e.target.value;
               setPriceInput(raw);
@@ -131,12 +162,13 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
             </button>
           </div>
         </div>
+        </div>
       </div>
 
       {expanded && (
         <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "10px", padding: "12px", borderRadius: "12px", background: COLORS.paper }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
-            <FusedField title="Volume (cl.)" htmlFor={`menu-volume-${drink.id}`} width={VOLUME_BLOCK_W} focused={focusedField === "volume"} onFocus={() => setFocusedField("volume")} onBlur={() => setFocusedField(null)}>
+            <FusedField title="Volume (cl.)" htmlFor={`menu-volume-${drink.id}`} width={VOLUME_BLOCK_W} color={frameColor(drink.volumeChecked)}>
               <input
                 id={`menu-volume-${drink.id}`}
                 type="text"
@@ -151,7 +183,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                 style={fieldStyle}
               />
             </FusedField>
-            <FusedField title="Type de service" htmlFor={`menu-service-${drink.id}`} width={SERVICE_BLOCK_W} shrink focused={focusedField === "service"} onFocus={() => setFocusedField("service")} onBlur={() => setFocusedField(null)}>
+            <FusedField title="Type de service" htmlFor={`menu-service-${drink.id}`} width={SERVICE_BLOCK_W} shrink color={frameColor(drink.servingModeChecked)}>
               <select
                 id={`menu-service-${drink.id}`}
                 value={safeServingMode(drink.servingMode)}
