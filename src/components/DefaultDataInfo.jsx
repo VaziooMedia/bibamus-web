@@ -17,7 +17,8 @@ const SCREEN_MARGIN = 12;
 const GAP = 10;
 const ARROW = 12;
 
-export function DefaultDataInfo() {
+// `withSpiritChoice` : la ligne est celle d'un spiritueux, qui a une 4ᵉ valeur par défaut à vérifier (le choix Spiritueux / Shot) ; le texte parle alors de 4 valeurs.
+export function DefaultDataInfo({ withSpiritChoice = false }) {
   const [open, setOpen] = useState(false);
   const [place, setPlace] = useState(null);
   const buttonRef = useRef(null);
@@ -121,7 +122,11 @@ export function DefaultDataInfo() {
                 }}
               />
             )}
-            <span style={{ display: "block", position: "relative" }}>Les 3 valeurs encadrées en rose sont des valeurs par défaut (prix, volume et type de service).</span>
+            <span style={{ display: "block", position: "relative" }}>
+              {withSpiritChoice
+                ? "Les 4 valeurs encadrées en rose sont des valeurs par défaut (prix, volume, type de service et Spiritueux ou Shot)."
+                : "Les 3 valeurs encadrées en rose sont des valeurs par défaut (prix, volume et type de service)."}
+            </span>
             <ul style={{ position: "relative", margin: "6px 0 0", paddingLeft: "16px" }}>
               <li>Vérifie et adapte si besoin ces valeurs par défaut.</li>
               <li style={{ marginTop: "3px" }}>Check pour valider tes valeurs vérifiées.</li>

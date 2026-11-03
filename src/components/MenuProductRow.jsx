@@ -94,7 +94,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
         </button>
         {/* À droite : l'icône « info » (sa bulle explique les données par défaut), le rond « Données par défaut vérifiées » à cocher, puis le prix */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", minWidth: 0 }}>
-        <DefaultDataInfo />
+        <DefaultDataInfo withSpiritChoice={isSpirit} />
         <label data-menu-verified="1" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "44px", padding: "0 8px", flexShrink: 0, cursor: "pointer" }}>
           <input
             type="checkbox"
