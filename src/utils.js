@@ -227,7 +227,9 @@ export const resolveMenuItem =(item, drinksDirectory) => {
 // statistiques (round_orders : lieu @home, donc sans prix). drink_id est le vrai identifiant du
 // catalogue. Le type de service (bouteille, canette, fût, verre ; vide = non défini) est gardé sur
 // l'entrée de carte : le même produit au même volume mais servi autrement est une autre entrée.
-export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "" } = {}, me = {}) => {
+// Un shot (`asShot`) est une entrée à part, comme dans la carte boissons d'un salon : même produit (type « Spiritueux »)
+// avec `menuCategory: "Shots"` ; le même produit pris en spiritueux n'en reprend donc pas l'entrée, et inversement.
+export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "", asShot = false } = {}, me = {}) => {
   const cl = volumeCl ?? null;
   const serving = servingMode || "";
   let entry = null;
@@ -235,6 +237,7 @@ export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "
   for (const d of event.menu || []) {
     if (!(d.fromDirectory && d.sourceDrinkId === source.id)) continue;
     if ((d.servingMode || "") !== serving) continue;
+    if ((d.menuCategory === "Shots") !== !!asShot) continue;
     const v = normalizeVolumes(d).find((x) => (x.cl ?? null) === cl);
     if (v) {
       entry = d;
@@ -245,7 +248,7 @@ export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "
   let newEntry = null;
   if (!entry) {
     newEntry = resolveMenuItem(
-      { id: `local-${Date.now()}-${Math.random()}`, fromDirectory: true, sourceDrinkId: source.id, servingMode: serving, volumes: [{ id: nextId(), cl, price: 0, isDefault: true }] },
+      { id: `local-${Date.now()}-${Math.random()}`, fromDirectory: true, sourceDrinkId: source.id, servingMode: serving, ...(asShot ? { menuCategory: "Shots" } : {}), volumes: [{ id: nextId(), cl, price: 0, isDefault: true }] },
       [source]
     );
     entry = newEntry;
@@ -269,10 +272,20 @@ export const withHomeServe = (e, newEntry, homeDrink) => ({
 export const withoutHomeDrink = (e, serveId) => ({ ...e, homeDrinks: (e.homeDrinks || []).filter((h) => h.id !== serveId) });
 
 // Fenêtre « Ajouter à la carte » (BibAtlas, nouvelle commande) : champs de saisie, fonctions pures partagées avec les tests.
+// Un spiritueux dont la fiche a la case « Shot » cochée peut aussi être pris en shot ; `startsAsShot` dit s'il est « par défaut un Shot »
+// (choix de la fiche). Les autres produits n'ont ni l'un ni l'autre : aucun choix Spiritueux / Shot ne leur est proposé.
+export const canBeShot = (drink) => drink?.type === "Spiritueux" && !!drink?.servesAsShot;
+export const startsAsShot = (drink) => canBeShot(drink) && !!drink?.defaultAsShot;
+// Nombre strictement positif, sinon null (valeur de fiche absente, à 0 ou illisible).
+const positiveOrNull = (v) => {
+  const n = Number(v);
+  return v != null && Number.isFinite(n) && n > 0 ? n : null;
+};
 // Volume pré-rempli avec le volume par défaut de la fiche produit (« 33 », « 37,5 ») ; vide s'il n'y en a pas.
-export const defaultVolumeText = (drink) => {
-  const n = Number(drink?.defaultVolumeCl);
-  return drink?.defaultVolumeCl != null && Number.isFinite(n) && n > 0 ? String(n).replace(".", ",") : "";
+// En shot (`asShot`) : le volume par défaut du shot d'abord, puis celui du spiritueux s'il n'est pas renseigné.
+export const defaultVolumeText = (drink, asShot = false) => {
+  const n = (asShot ? positiveOrNull(drink?.defaultShotVolumeCl) : null) ?? positiveOrNull(drink?.defaultVolumeCl);
+  return n != null ? String(n).replace(".", ",") : "";
 };
 // Type de service d'un produit ajouté depuis BibAtlas : mêmes choix, même ordre et mêmes libellés que « Next Drink » (@Home)
 // et que le « Type de service par défaut » de la fiche produit. Clé vide = « Non défini ».
@@ -285,7 +298,9 @@ export const SERVING_MODE_OPTIONS = [
 // Une clé connue est gardée telle quelle ; tout le reste (absent, inconnu, mal écrit) donne "" (« Non défini »).
 export const safeServingMode = (raw) => (SERVING_MODE_OPTIONS.some(([key]) => key === raw) ? raw : "");
 // Type de service pré-sélectionné : celui par défaut de la fiche produit (`defaultServingMode`), « Non défini » sinon.
-export const defaultServingModeText = (drink) => safeServingMode(drink?.defaultServingMode);
+// En shot (`asShot`) : celui par défaut du shot d'abord, puis celui du spiritueux s'il n'est pas renseigné.
+export const defaultServingModeText = (drink, asShot = false) =>
+  (asShot ? safeServingMode(drink?.defaultShotServingMode) : "") || safeServingMode(drink?.defaultServingMode);
 // Ne garde que des chiffres et UN séparateur décimal (virgule ou point), `max` caractères au plus.
 export const sanitizeDecimalText = (raw, max = 6) => {
   let out = "";
