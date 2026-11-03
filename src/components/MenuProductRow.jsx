@@ -13,8 +13,20 @@ import { EntityAvatar } from "./ui.jsx";
 import { SERVING_MODE_OPTIONS, safeServingMode, sanitizeDecimalText, parsePositiveText } from "../utils.js";
 
 // Même présentation que la fenêtre « Ajouter à la carte » de BibAtlas (Nouvelle tournée) : champ étroit pour le volume, valeur centrée.
-const VOLUME_BLOCK_W = 84;
-const fieldLabelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, display: "block", marginBottom: "6px", whiteSpace: "nowrap" };
+const VOLUME_BLOCK_W = 92;
+// Le type de service n'a pas besoin de toute la largeur : un bloc étroit, resté à l'extrême droite.
+const SERVICE_BLOCK_W = 136;
+// Titre d'un champ du déroulé : pastille grisée au-dessus du champ.
+const pillStyle = { display: "inline-block", padding: "3px 10px", borderRadius: "999px", background: COLORS.paperAlt, color: COLORS.ink, fontSize: "11.5px", fontWeight: 600, lineHeight: 1.3, whiteSpace: "nowrap" };
+function FieldPill({ htmlFor, children }) {
+  return (
+    <div style={{ display: "flex", marginBottom: "6px" }}>
+      <label htmlFor={htmlFor} style={pillStyle}>
+        {children}
+      </label>
+    </div>
+  );
+}
 const fieldStyle = { width: "100%", height: "46px", boxSizing: "border-box", padding: "0 10px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" };
 const smallButtonStyle = { display: "flex", alignItems: "center", justifyContent: "center", minWidth: "40px", height: "36px", background: "none", border: "none", color: COLORS.inkSoft, cursor: "pointer", padding: 0 };
 
@@ -117,11 +129,9 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
 
       {expanded && (
         <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "8px" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
             <div style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
-              <label htmlFor={`menu-volume-${drink.id}`} style={fieldLabelStyle}>
-                Volume (cl.)
-              </label>
+              <FieldPill htmlFor={`menu-volume-${drink.id}`}>Volume (cl.)</FieldPill>
               <input
                 id={`menu-volume-${drink.id}`}
                 type="text"
@@ -136,10 +146,8 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                 style={fieldStyle}
               />
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <label htmlFor={`menu-service-${drink.id}`} style={fieldLabelStyle}>
-                Type de service
-              </label>
+            <div style={{ flex: `0 0 ${SERVICE_BLOCK_W}px`, minWidth: 0 }}>
+              <FieldPill htmlFor={`menu-service-${drink.id}`}>Type de service</FieldPill>
               <select
                 id={`menu-service-${drink.id}`}
                 value={safeServingMode(drink.servingMode)}
