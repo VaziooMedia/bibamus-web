@@ -7,17 +7,13 @@ import { COLORS, MENU_CATEGORIES, ADD_BLOCK_HEIGHT } from "../constants.js";
 import { NavIcon, TokenPinkIcon, AddPlusIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
-import { MenuProductRow } from "./MenuProductRow.jsx";
+import { MenuProductRow, CHECK_MARK_BG } from "./MenuProductRow.jsx";
 import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import { loadGenericDrinks } from "../data/sharedDirectories.js";
 
 // Clé du bloc « Tous les produits ajoutés » dans le bloc déroulant ouvert (ne peut pas être confondue avec une catégorie).
 const ALL_PRODUCTS_BLOCK = "__tous__";
-
-// Case à cocher des produits génériques : carrée, blanche quand elle est vide ; cochée, elle devient vert fluo avec un check noir
-// (dessiné ici : la couleur d'accent native des navigateurs ne permet pas de choisir la couleur du check).
-const CHECK_MARK_BG = `url("data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.3 6.3 4.9 8.9 9.7 3.3' fill='none' stroke='#000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>")}")`;
 
 export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDirectory, onRegisterBrewery, onCleanupDuplicates }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
@@ -213,6 +209,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
       onChangeVolume={(vol) => setDrinkFields(drink.id, { volumeCl: vol, volumeChecked: true })}
       onChangeServingMode={(mode) => setDrinkFields(drink.id, { servingMode: mode, servingModeChecked: true })}
       onChangeMenuCategory={(cat) => setDrinkField(drink.id, "menuCategory", cat)}
+      onChangeVerified={(verified) => setDrinkFields(drink.id, { priceChecked: verified, volumeChecked: verified, servingModeChecked: verified })}
       onRemove={() => removeDrink(drink.id)}
     />
   );
