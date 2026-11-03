@@ -2464,8 +2464,6 @@ export default function App() {
             {screen === "editVenue" && viewedVenue && (
               <DirectoryVenueFormScreen
                 venue={viewedVenue}
-                breweriesDirectory={breweriesDirectory}
-                onRegisterBrewery={registerBrewery}
                 addIntent={false}
                 suggestMode={!profile.isAdmin && viewedVenue?.status === "complete"}
                 onSave={(patch) => {

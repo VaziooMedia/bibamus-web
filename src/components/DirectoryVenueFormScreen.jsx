@@ -1,18 +1,16 @@
 // ============================================================
-// Formulaire "Proposer un établissement" — copié tel quel depuis
-// le prototype Claude.
+// Formulaire "Proposer un établissement" / "Éditer la fiche" d'un lieu.
+// La carte boissons ne se modifie plus depuis l'app : elle se gère depuis la plateforme de gestion
+// (et, plus tard, la plateforme Business). Ce formulaire ne touche donc jamais à la carte du lieu.
 // ============================================================
 import React, { useState } from "react";
-import { COLORS, VENUE_TYPE_TAGS, COUNTRIES, DRINK_TYPES, BEER_TYPES, DRINK_CATEGORY_ICONS, MENU_CATEGORIES } from "../constants.js";
-import { NavIcon, TokenPinkIcon } from "./icons.jsx";
+import { COLORS, VENUE_TYPE_TAGS } from "../constants.js";
+import { TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
-import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
-import { DrinkRow } from "./DrinkRow.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
-import { capitalizeFirst, drinkTypeLabel, nextId, isValidVenuePhone, resolveMenuItem } from "../utils.js";
-import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
+import { capitalizeFirst, isValidVenuePhone } from "../utils.js";
 
-export function DirectoryVenueFormScreen({ venue, breweriesDirectory, onRegisterBrewery, addIntent, suggestMode, menuOnly, onSave, onCancel }) {
+export function DirectoryVenueFormScreen({ venue, addIntent, suggestMode, onSave, onCancel }) {
   const [name, setName] = useState(venue?.name || "");
   const [subtitle, setSubtitle] = useState(venue?.subtitle || "");
   const [streetName, setStreetName] = useState(venue?.streetName || "");
@@ -34,129 +32,29 @@ export function DirectoryVenueFormScreen({ venue, breweriesDirectory, onRegister
   const [tags, setTags] = useState(venue?.tags || []);
   const [lat, setLat] = useState(venue?.lat ?? null);
   const [lng, setLng] = useState(venue?.lng ?? null);
-  const [menu, setMenu] = useState(venue?.menu || []);
-  const drinksDirectory = useTargetedDrinks(menu);
-  const [activeMenuCategory, setActiveMenuCategory] = useState(null);
 
-  const incompleteMenuItems = menu
-    .map((d) => resolveMenuItem(d, drinksDirectory))
-    .filter((d) => {
-      const isBeerItem = BEER_TYPES.includes(d.type);
-      const isSoftItem = d.type === "Softs & Eaux";
-      if ((isBeerItem || isSoftItem) && !d.volumeCl) return true;
-      if (isBeerItem && !d.servingMode) return true;
-      return false;
-    });
-
-  const canSave = name.trim().length > 0 && isValidVenuePhone(phone) && incompleteMenuItems.length === 0;
+  const canSave = name.trim().length > 0 && isValidVenuePhone(phone);
   const fieldStyle = { padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "14px", width: "100%" };
-
-  const [pendingSpiritSource, setPendingSpiritSource] = useState(null);
-
-  const addDrinkFromDirectory = (source, menuCategory) => {
-    setMenu((prev) => [
-      ...prev,
-      {
-        id: nextId(),
-        price: 0,
-        volumeCl: source.defaultVolumeCl || null,
-        servingMode: source.defaultServingMode || "",
-        fromDirectory: true,
-        sourceDrinkId: source.id,
-        ...(menuCategory ? { menuCategory } : {}),
-      },
-    ]);
-  };
-
-  const handlePickFromDirectory = (source) => {
-    if (source.type === "Spiritueux") {
-      setPendingSpiritSource(source);
-    } else {
-      addDrinkFromDirectory(source);
-    }
-  };
-
-  const removeDrink = (id) => setMenu((prev) => prev.filter((d) => d.id !== id));
-
-  // Moves an item up/down within its own category — items of different categories are
-  // interleaved in the flat menu array, so the nearest same-category neighbor is what moves.
-  const moveMenuItem = (id, direction) => {
-    setMenu((prev) => {
-      const categoryOf = (item) => {
-        const resolved = resolveMenuItem(item, drinksDirectory);
-        const effective = item.menuCategory || resolved.type;
-        return MENU_CATEGORIES.includes(effective) ? effective : "Non classé";
-      };
-      const idx = prev.findIndex((d) => d.id === id);
-      if (idx === -1) return prev;
-      const cat = categoryOf(prev[idx]);
-      let neighborIdx = -1;
-      if (direction === "up") {
-        for (let i = idx - 1; i >= 0; i--) {
-          if (categoryOf(prev[i]) === cat) {
-            neighborIdx = i;
-            break;
-          }
-        }
-      } else {
-        for (let i = idx + 1; i < prev.length; i++) {
-          if (categoryOf(prev[i]) === cat) {
-            neighborIdx = i;
-            break;
-          }
-        }
-      }
-      if (neighborIdx === -1) return prev;
-      const next = [...prev];
-      [next[idx], next[neighborIdx]] = [next[neighborIdx], next[idx]];
-      return next;
-    });
-  };
-
-
-  const setPrice = (id, price) => setMenu((prev) => prev.map((d) => (d.id === id ? { ...d, price: isNaN(price) ? 0 : price } : d)));
-
-  const setDrinkField = (id, field, value) => setMenu((prev) => prev.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
-
-  const toggleBeerTag = (id, tag) =>
-    setMenu((prev) =>
-      prev.map((d) => {
-        if (d.id !== id) return d;
-        const tags = d.beerTags || [];
-        return { ...d, beerTags: tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag] };
-      })
-    );
-
-  const isJetonMenu = defaultCurrency === "jeton";
-  const menuPriceStep = isJetonMenu ? "1" : "0.10";
-  const menuPriceSymbol = isJetonMenu ? <TokenPinkIcon size={17} /> : "€";
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onCancel} />
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "0 0 6px 0" }}>
-        {menuOnly ? "Carte boissons" : !venue ? (addIntent ? "Créer ce lieu" : "Proposer un établissement") : suggestMode ? "Suggérer une modification" : "Éditer la fiche"}
+        {!venue ? (addIntent ? "Créer ce lieu" : "Proposer un établissement") : suggestMode ? "Suggérer une modification" : "Éditer la fiche"}
       </h1>
-      {menuOnly && (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-          {venue.name} — se modifie librement, par n'importe qui, à tout moment.
-        </p>
-      )}
-      {!menuOnly && !venue && (
+      {!venue && (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
           {addIntent
             ? "Il sera ajouté à tes lieux favoris immédiatement — et visible dans le répertoire tout de suite, avant d'être vérifié par un administrateur."
             : "Il sera visible et utilisable immédiatement, puis vérifié par un administrateur."}
         </p>
       )}
-      {!menuOnly && suggestMode && (
+      {suggestMode && (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-          Ce lieu est certifié — tes changements sur le nom, l'adresse, le téléphone, etc. seront proposés à un administrateur. La carte boissons, elle, se modifie toujours directement.
+          Ce lieu est certifié — tes changements sur le nom, l'adresse, le téléphone, etc. seront proposés à un administrateur.
         </p>
       )}
 
-      {!menuOnly && (
-      <>
       <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px" }}>Nom *</label>
       <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex. Café du Centre" autoFocus style={fieldStyle} />
 
@@ -292,184 +190,6 @@ export function DirectoryVenueFormScreen({ venue, breweriesDirectory, onRegister
           );
         })}
       </div>
-      </>
-      )}
-
-      <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px" }}>Carte boissons {!menuOnly && "(facultatif)"}</label>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-4px", marginBottom: "10px" }}>
-        Piochez dans le répertoire pour des caractéristiques standardisées. Produit manquant ? Ajoutez-le d'abord dans "Boissons" — des génériques existent déjà pour les cas non standardisés (ex. "Cocktail Maison").
-      </p>
-
-      {(() => {
-        const resolvedMenu = menu.map((d) => resolveMenuItem(d, drinksDirectory));
-        const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
-        const countFor = (cat) => resolvedMenu.filter((d) => categoryOf(d) === cat).length;
-        const itemsIn = (cat) => resolvedMenu.filter((d) => categoryOf(d) === cat);
-        const uncategorizedCount = countFor("Non classé");
-
-        const typeFor = (cat) => (!cat ? null : cat === "Shots" ? "Spiritueux" : cat);
-
-        const addControls = (
-          <>
-            <div style={{ marginBottom: "10px" }}>
-              <DrinkDirectoryPicker
-                type={typeFor(activeMenuCategory)}
-                onPick={(source) => (source.type === "Spiritueux" && !activeMenuCategory ? handlePickFromDirectory(source) : addDrinkFromDirectory(source, activeMenuCategory || undefined))}
-              />
-            </div>
-            {pendingSpiritSource && (
-              <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "12px 14px", marginBottom: "10px" }}>
-                <p style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginTop: 0, marginBottom: "8px" }}>
-                  Ajouter "{pendingSpiritSource.name}" comme...
-                </p>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    onClick={() => {
-                      addDrinkFromDirectory(pendingSpiritSource);
-                      setPendingSpiritSource(null);
-                    }}
-                    style={{ flex: 1, background: COLORS.surfaceAlt, border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, fontSize: "13px", color: COLORS.chalkWhite, cursor: "pointer" }}
-                  >
-                    Spiritueux
-                  </button>
-                  <button
-                    onClick={() => {
-                      addDrinkFromDirectory(pendingSpiritSource, "Shots");
-                      setPendingSpiritSource(null);
-                    }}
-                    style={{ flex: 1, background: COLORS.surfaceAlt, border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, fontSize: "13px", color: COLORS.chalkWhite, cursor: "pointer" }}
-                  >
-                    Shot
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        );
-
-        if (activeMenuCategory) {
-          return (
-            <div style={{ marginBottom: "20px" }}>
-              <button
-                onClick={() => setActiveMenuCategory(null)}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "10px", display: "flex", alignItems: "center" }}
-                title="Toutes les catégories"
-                aria-label="Toutes les catégories"
-              >
-                <NavIcon name="back-triangle" size={20} color={COLORS.amber} />
-              </button>
-              <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-                {DRINK_CATEGORY_ICONS[activeMenuCategory] || "📦"} {drinkTypeLabel(activeMenuCategory).toUpperCase()}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
-                {itemsIn(activeMenuCategory).length === 0 && (
-                  <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson dans cette catégorie pour l'instant.</p>
-                )}
-                {itemsIn(activeMenuCategory).map((d, i, arr) => (
-                  <div key={d.id} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px", flexShrink: 0 }}>
-                      <button
-                        onClick={() => moveMenuItem(d.id, "up")}
-                        disabled={i === 0}
-                        style={{ background: "none", border: "none", cursor: i === 0 ? "default" : "pointer", padding: "2px", opacity: i === 0 ? 0.25 : 1, fontSize: "12px", lineHeight: 1 }}
-                      >
-                        ▲
-                      </button>
-                      <button
-                        onClick={() => moveMenuItem(d.id, "down")}
-                        disabled={i === arr.length - 1}
-                        style={{ background: "none", border: "none", cursor: i === arr.length - 1 ? "default" : "pointer", padding: "2px", opacity: i === arr.length - 1 ? 0.25 : 1, fontSize: "12px", lineHeight: 1 }}
-                      >
-                        ▼
-                      </button>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <DrinkRow
-                        drink={d}
-                        priceStep={menuPriceStep}
-                        priceSymbol={menuPriceSymbol}
-                        onChangeName={(v) => setDrinkField(d.id, "name", v)}
-                        onChangePrice={(p) => setPrice(d.id, p)}
-                        onChangeType={(t) => setDrinkField(d.id, "type", t)}
-                        onChangeVolume={(v) => setDrinkField(d.id, "volumeCl", v)}
-                        onChangeKcal={(k) => setDrinkField(d.id, "kcalPer100ml", k)}
-                        onChangeServingMode={(m) => setDrinkField(d.id, "servingMode", m)}
-                        onToggleBeerTag={(tag) => toggleBeerTag(d.id, tag)}
-                        onChangeBrewery={(b) => setDrinkField(d.id, "brewery", b)}
-                        onChangeAbv={(abv) => setDrinkField(d.id, "abv", abv)}
-                        onChangeMenuCategory={(cat) => setDrinkField(d.id, "menuCategory", cat)}
-                        onRemove={() => removeDrink(d.id)}
-                        breweriesDirectory={breweriesDirectory}
-                        onRegisterBrewery={onRegisterBrewery}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {addControls}
-            </div>
-          );
-        }
-
-        return (
-          <div style={{ marginBottom: "20px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
-              {MENU_CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveMenuCategory(cat)}
-                  style={{
-                    textAlign: "left",
-                    background: COLORS.surface,
-                    border: `2px solid ${COLORS.paperAlt}`,
-                    borderRadius: "10px",
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "14px" }}>
-                    <span style={{ fontSize: "16px" }}>{DRINK_CATEGORY_ICONS[cat]}</span>
-                    {drinkTypeLabel(cat)}
-                  </span>
-                  <span style={{ fontSize: "12px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countFor(cat)} →</span>
-                </button>
-              ))}
-              {uncategorizedCount > 0 && (
-                <button
-                  onClick={() => setActiveMenuCategory("Non classé")}
-                  style={{
-                    textAlign: "left",
-                    background: COLORS.surface,
-                    border: `2px solid ${COLORS.paperAlt}`,
-                    borderRadius: "10px",
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "14px" }}>
-                    <span style={{ fontSize: "16px" }}>📦</span>
-                    Non classé
-                  </span>
-                  <span style={{ fontSize: "12px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{uncategorizedCount} →</span>
-                </button>
-              )}
-            </div>
-            {addControls}
-          </div>
-        );
-      })()}
-
-      {incompleteMenuItems.length > 0 && (
-        <p style={{ fontSize: "12.5px", color: COLORS.wine, fontWeight: 600, marginBottom: "10px" }}>
-          ⚠️ {incompleteMenuItems.length} produit{incompleteMenuItems.length > 1 ? "s" : ""} incomplet{incompleteMenuItems.length > 1 ? "s" : ""} — le volume est obligatoire pour les bières et softs, le type de service pour les bières.
-        </p>
-      )}
 
       <PrimaryButton
         onClick={() =>
@@ -496,13 +216,12 @@ export function DirectoryVenueFormScreen({ venue, breweriesDirectory, onRegister
             tags,
             lat,
             lng,
-            menu,
           })
         }
         disabled={!canSave}
         style={{ marginTop: "4px", width: "100%" }}
       >
-        {menuOnly ? "Enregistrer la carte" : !venue ? (addIntent ? "Créer et ajouter à mes favoris" : "Proposer cet établissement") : suggestMode ? "Envoyer la suggestion" : "Enregistrer"}
+        {!venue ? (addIntent ? "Créer et ajouter à mes favoris" : "Proposer cet établissement") : suggestMode ? "Envoyer la suggestion" : "Enregistrer"}
       </PrimaryButton>
       <BackFooterLink onClick={onCancel} />
     </div>
