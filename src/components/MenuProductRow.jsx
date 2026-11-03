@@ -62,8 +62,9 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
   const [volumeInput, setVolumeInput] = useState(() => (drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : ""));
   const isSpirit = drink.type === "Spiritueux";
   const isShot = drink.menuCategory === "Shots";
-  // « Données par défaut vérifiées » est coché quand le prix, le volume et le type de service sont tous vérifiés/adaptés (que ce soit en les modifiant ou en cochant le rond).
-  const allVerified = !!(drink.priceChecked && drink.volumeChecked && drink.servingModeChecked);
+  // « Données par défaut vérifiées » est coché quand le prix, le volume et le type de service sont tous vérifiés/adaptés (que ce soit en les modifiant ou en
+  // cochant le rond) ; pour un spiritueux, il faut aussi avoir confirmé le choix Spiritueux / Shot (en touchant l'un des deux boutons).
+  const allVerified = !!(drink.priceChecked && drink.volumeChecked && drink.servingModeChecked && (!isSpirit || drink.menuCategoryChecked));
 
   return (
     <div data-menu-row="1" style={{ padding: "10px 0" }}>
@@ -201,7 +202,12 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
           </div>
 
           {isSpirit && (
-            <div data-menu-row-spirit="1" style={{ display: "grid", gridAutoFlow: "column", gridAutoColumns: "1fr", width: "max-content", gap: "8px" }}>
+            <div
+              data-menu-row-spirit="1"
+              role="group"
+              aria-label="Spiritueux ou Shot"
+              style={{ display: "grid", gridAutoFlow: "column", gridAutoColumns: "1fr", width: "max-content", gap: "8px" }}
+            >
               {[
                 { label: "Spiritueux", active: !isShot, value: "" },
                 { label: "Shot", active: isShot, value: "Shots" },
@@ -214,7 +220,8 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                     padding: "4px 14px",
                     borderRadius: "8px",
                     border: `1.5px solid ${opt.active ? COLORS.ink : COLORS.paperAlt}`,
-                    background: opt.active ? COLORS.amber : COLORS.surface,
+                    // Le bouton choisi est rose fluo tant que le choix n'est pas confirmé (valeur par défaut de la fiche), vert fluo une fois confirmé.
+                    background: opt.active ? frameColor(drink.menuCategoryChecked) : COLORS.surface,
                     color: opt.active ? COLORS.paper : COLORS.ink,
                     fontWeight: 700,
                     fontSize: "11.5px",

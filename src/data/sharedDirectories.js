@@ -3887,6 +3887,7 @@ function rowToDrink(row) {
     defaultPriceEuro: row.default_price_euro,
     defaultPriceJeton: row.default_price_jeton,
     servesAsShot: !!row.serves_as_shot,
+    defaultAsShot: !!row.default_as_shot,
     defaultShotVolumeCl: row.default_shot_volume_cl,
     defaultShotServingMode: row.default_shot_serving_mode,
     defaultShotPriceEuro: row.default_shot_price_euro,

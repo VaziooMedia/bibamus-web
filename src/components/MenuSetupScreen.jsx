@@ -187,10 +187,11 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
 
   const [genericChecklistOpen, setGenericChecklistOpen] = useState(false);
 
-  const [pendingSpiritSource, setPendingSpiritSource] = useState(null);
-
-  const addDrinkFromDirectory = (source, overrideType) => {
-    const d = defaultsOf(source, overrideType === "Shots");
+  // Un spiritueux choisi dans BibAtlas est ajouté tout de suite, sans question : comme Shot quand sa fiche est « par défaut un Shot » (case « Shot »
+  // cochée dans la plateforme de gestion), comme Spiritueux sinon. Dans sa ligne, les boutons Spiritueux / Shot restent à vérifier (cadre rose).
+  const addDrinkFromDirectory = (source) => {
+    const asShot = source.type === "Spiritueux" && !!source.servesAsShot && !!source.defaultAsShot;
+    const d = defaultsOf(source, asShot);
     updateEvent(event.id, (e) => ({
       ...e,
       menu: [
@@ -199,7 +200,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
           id: nextId(),
           name: source.name,
           price: d.price,
-          type: overrideType || source.type || "",
+          type: source.type || "",
+          ...(asShot ? { menuCategory: "Shots" } : {}),
           volumeCl: d.volumeCl,
           kcalPer100ml: source.kcalPer100ml != null ? source.kcalPer100ml : null,
           servingMode: d.servingMode,
@@ -218,13 +220,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     }));
   };
 
-  const handlePickFromDirectory = (source) => {
-    if (source.type === "Spiritueux") {
-      setPendingSpiritSource(source);
-    } else {
-      addDrinkFromDirectory(source);
-    }
-  };
+  const handlePickFromDirectory = (source) => addDrinkFromDirectory(source);
 
   const unitLabel = event.currency === "euro" ? "€" : "jetons";
   const step = event.currency === "euro" ? "0.10" : "1";
@@ -240,8 +236,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
       onChangePrice={(price) => setPrice(drink.id, price)}
       onChangeVolume={(vol) => setDrinkFields(drink.id, { volumeCl: vol, volumeChecked: true })}
       onChangeServingMode={(mode) => setDrinkFields(drink.id, { servingMode: mode, servingModeChecked: true })}
-      onChangeMenuCategory={(cat) => setDrinkField(drink.id, "menuCategory", cat)}
-      onChangeVerified={(verified) => setDrinkFields(drink.id, { priceChecked: verified, volumeChecked: verified, servingModeChecked: verified })}
+      onChangeMenuCategory={(cat) => setDrinkFields(drink.id, { menuCategory: cat, menuCategoryChecked: true })}
+      onChangeVerified={(verified) => setDrinkFields(drink.id, { priceChecked: verified, volumeChecked: verified, servingModeChecked: verified, menuCategoryChecked: verified })}
       onRemove={() => removeDrink(drink.id)}
     />
   );
@@ -386,33 +382,6 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
       <div style={{ marginBottom: "10px" }}>
         <DrinkDirectoryPicker type={null} onPick={handlePickFromDirectory} />
       </div>
-      {pendingSpiritSource && (
-        <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "12px 14px", marginBottom: "10px" }}>
-          <p style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginTop: 0, marginBottom: "8px" }}>
-            Ajouter "{pendingSpiritSource.name}" comme...
-          </p>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              onClick={() => {
-                addDrinkFromDirectory(pendingSpiritSource);
-                setPendingSpiritSource(null);
-              }}
-              style={{ flex: 1, background: COLORS.surfaceAlt, border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, fontSize: "13px", color: COLORS.chalkWhite, cursor: "pointer" }}
-            >
-              Spiritueux
-            </button>
-            <button
-              onClick={() => {
-                addDrinkFromDirectory(pendingSpiritSource, "Shots");
-                setPendingSpiritSource(null);
-              }}
-              style={{ flex: 1, background: COLORS.surfaceAlt, border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, fontSize: "13px", color: COLORS.chalkWhite, cursor: "pointer" }}
-            >
-              Shot
-            </button>
-          </div>
-        </div>
-      )}
       {genericDirectoryItems.length > 0 && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "10px", padding: "0 10px", marginBottom: "16px" }}>
           <button
