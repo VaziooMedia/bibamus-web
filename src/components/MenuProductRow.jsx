@@ -16,18 +16,23 @@ import { SERVING_MODE_OPTIONS, safeServingMode, sanitizeDecimalText, parsePositi
 const VOLUME_BLOCK_W = 92;
 // Le type de service n'a pas besoin de toute la largeur : un bloc étroit, resté à l'extrême droite.
 const SERVICE_BLOCK_W = 136;
-// Titre d'un champ du déroulé : pastille grisée au-dessus du champ.
-const pillStyle = { display: "inline-block", padding: "3px 10px", borderRadius: "999px", background: COLORS.paperAlt, color: COLORS.ink, fontSize: "11.5px", fontWeight: 600, lineHeight: 1.3, whiteSpace: "nowrap" };
-function FieldPill({ htmlFor, children }) {
+// Champ du déroulé : le titre (bandeau grisé) et le champ ne forment qu'un seul bloc arrondi — le titre en est le haut.
+const titleStyle = { background: COLORS.paperAlt, color: COLORS.ink, fontSize: "11.5px", fontWeight: 600, lineHeight: 1.3, padding: "3px 8px", textAlign: "center", whiteSpace: "nowrap" };
+function FusedField({ title, htmlFor, width, focused, onFocus, onBlur, children }) {
   return (
-    <div style={{ display: "flex", marginBottom: "6px" }}>
-      <label htmlFor={htmlFor} style={pillStyle}>
-        {children}
+    <div
+      onFocus={onFocus}
+      onBlur={onBlur}
+      style={{ flex: `0 0 ${width}px`, minWidth: 0, display: "flex", flexDirection: "column", borderRadius: "12px", border: `2px solid ${focused ? COLORS.amber : COLORS.paperAlt}`, background: COLORS.surface, overflow: "hidden", transition: "border-color 0.15s ease" }}
+    >
+      <label htmlFor={htmlFor} style={titleStyle}>
+        {title}
       </label>
+      {children}
     </div>
   );
 }
-const fieldStyle = { width: "100%", height: "46px", boxSizing: "border-box", padding: "0 10px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" };
+const fieldStyle = { width: "100%", height: "40px", boxSizing: "border-box", padding: "0 10px", borderRadius: 0, border: "none", background: "transparent", color: COLORS.ink, fontSize: "14px", textAlign: "center", outline: "none" };
 const smallButtonStyle = { display: "flex", alignItems: "center", justifyContent: "center", minWidth: "40px", height: "36px", background: "none", border: "none", color: COLORS.inkSoft, cursor: "pointer", padding: 0 };
 
 // Chevron dessiné en traits (pointe vers la droite) ; `turn` le fait pivoter : 90 = vers le bas, -90 = vers le haut.
@@ -45,6 +50,7 @@ const stepButtonStyle = { flex: 1, display: "flex", alignItems: "center", justif
 export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, onChangeVolume, onChangeServingMode, onChangeMenuCategory, onRemove }) {
   const [expanded, setExpanded] = useState(false);
   const [priceFocused, setPriceFocused] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
   // Textes saisis gardés tels quels dans l'état local : sinon une virgule tapée en dernier serait effacée dès qu'elle est relue comme nombre.
   const [priceInput, setPriceInput] = useState(() => String(drink.price ?? "").replace(".", ","));
   const [volumeInput, setVolumeInput] = useState(() => (drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : ""));
@@ -128,10 +134,9 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
       </div>
 
       {expanded && (
-        <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "8px" }}>
+        <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px", paddingTop: "12px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
-            <div style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
-              <FieldPill htmlFor={`menu-volume-${drink.id}`}>Volume (cl.)</FieldPill>
+            <FusedField title="Volume (cl.)" htmlFor={`menu-volume-${drink.id}`} width={VOLUME_BLOCK_W} focused={focusedField === "volume"} onFocus={() => setFocusedField("volume")} onBlur={() => setFocusedField(null)}>
               <input
                 id={`menu-volume-${drink.id}`}
                 type="text"
@@ -145,9 +150,8 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                 placeholder="00"
                 style={fieldStyle}
               />
-            </div>
-            <div style={{ flex: `0 0 ${SERVICE_BLOCK_W}px`, minWidth: 0 }}>
-              <FieldPill htmlFor={`menu-service-${drink.id}`}>Type de service</FieldPill>
+            </FusedField>
+            <FusedField title="Type de service" htmlFor={`menu-service-${drink.id}`} width={SERVICE_BLOCK_W} focused={focusedField === "service"} onFocus={() => setFocusedField("service")} onBlur={() => setFocusedField(null)}>
               <select
                 id={`menu-service-${drink.id}`}
                 value={safeServingMode(drink.servingMode)}
@@ -161,7 +165,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                   </option>
                 ))}
               </select>
-            </div>
+            </FusedField>
           </div>
 
           {isSpirit && (
@@ -175,14 +179,15 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
                   onClick={() => onChangeMenuCategory(opt.value)}
                   aria-pressed={opt.active}
                   style={{
-                    flex: 1,
-                    padding: "8px",
+                    flex: "0 0 auto",
+                    padding: "4px 14px",
                     borderRadius: "8px",
-                    border: `2px solid ${opt.active ? COLORS.ink : COLORS.paperAlt}`,
+                    border: `1.5px solid ${opt.active ? COLORS.ink : COLORS.paperAlt}`,
                     background: opt.active ? COLORS.amber : COLORS.surface,
                     color: opt.active ? COLORS.paper : COLORS.ink,
                     fontWeight: 700,
-                    fontSize: "12.5px",
+                    fontSize: "11.5px",
+                    lineHeight: 1.3,
                     cursor: "pointer",
                   }}
                 >
