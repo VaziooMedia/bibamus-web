@@ -56,7 +56,7 @@ export function DrinkDirectoryPicker({ type, onPick }) {
           height: `${ADD_BLOCK_HEIGHT}px`,
           boxSizing: "border-box",
           textAlign: "left",
-          padding: "0 14px",
+          padding: "0 10px",
           borderRadius: "9px",
           border: `2px solid ${COLORS.amberDark}`,
           background: COLORS.surface,
@@ -98,7 +98,7 @@ export function DrinkDirectoryPicker({ type, onPick }) {
           />
           <div style={{ overflowY: "auto", flex: 1 }}>
             {filtered.length === 0 && (
-              <div style={{ padding: "10px 14px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>
+              <div style={{ padding: "10px 10px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>
                 {query.trim().length === 0 ? "Tape au moins 2 caractères" : query.trim().length === 1 ? "Encore un caractère..." : "Aucun résultat."}
               </div>
             )}
@@ -107,7 +107,7 @@ export function DrinkDirectoryPicker({ type, onPick }) {
               <button
                 key={d.id}
                 onClick={() => pick(d)}
-                style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "10px 14px", background: "transparent", border: "none", cursor: "pointer" }}
+                style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "10px 10px", background: "transparent", border: "none", cursor: "pointer" }}
               >
                 <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={36} fallbackIcon="bottle" />
                 <span style={{ fontWeight: 600, fontSize: "14px", color: COLORS.ink, minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>

@@ -235,7 +235,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
             textAlign: "left",
             background: "none",
             border: "none",
-            padding: "12px 14px",
+            padding: "12px 10px",
             cursor: "pointer",
             display: "flex",
             justifyContent: "space-between",
@@ -382,7 +382,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
         </div>
       )}
       {genericDirectoryItems.length > 0 && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "10px", padding: "0 14px", marginBottom: "16px" }}>
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "10px", padding: "0 10px", marginBottom: "16px" }}>
           <button
             onClick={() => setGenericChecklistOpen((o) => !o)}
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", height: `${ADD_BLOCK_HEIGHT - 4}px`, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
@@ -491,7 +491,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher un produit..."
-          style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "12px" }}
+          style={{ padding: "11px 10px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "12px" }}
         />
       )}
 
