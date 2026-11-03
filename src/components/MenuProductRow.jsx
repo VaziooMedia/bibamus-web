@@ -1,8 +1,8 @@
 // ============================================================
 // Ligne d'un produit dans la Carte boissons d'un événement (BibaRoom / Produits), version simplifiée — sans cadre propre :
 // c'est le bloc qui la contient (catégorie, « Tous les produits ajoutés », résultats de recherche) qui la cadre, et un trait fin la sépare des autres lignes.
-//   1ʳᵉ ligne : rond-profil du produit + nom + prix (modifiable)
-//   2ᵉ ligne  : flèche de déroulement + croix de suppression
+//   1ʳᵉ ligne : rond-profil du produit + nom + croix de suppression (tout à droite)
+//   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + prix modifiable (à droite)
 //   déroulé   : volume (texte libre, clavier numérique) + type de service ; pour un spiritueux, le choix Spiritueux / Shot.
 //               Rien d'autre.
 // DrinkRow (plus complète) reste utilisée par le répertoire de produits et par le formulaire de carte d'un lieu.
@@ -41,7 +41,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
 
   return (
     <div data-menu-row="1" style={{ padding: "10px 0" }}>
-      {/* 1ʳᵉ ligne : rond-profil + nom + prix */}
+      {/* 1ʳᵉ ligne : rond-profil + nom + croix de suppression (tout à droite, dans le coin) */}
       <div data-menu-row-line="1" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={36} fallbackIcon="bottle" />
         <div
@@ -50,6 +50,21 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
         >
           {drink.name}
         </div>
+        <button
+          onClick={onRemove}
+          style={{ ...smallButtonStyle, minWidth: "30px", width: "30px", height: "30px", justifyContent: "flex-end", alignSelf: "flex-start", marginTop: "-6px", fontSize: "18px" }}
+          aria-label={`Supprimer ${drink.name}`}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* 2ᵉ ligne : flèche de déroulement (à gauche, vert fluo) + prix (à droite) */}
+      <div data-menu-row-line="2" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginTop: "6px" }}>
+        {/* Flèche de dépliage : vers la droite quand c'est replié, vers le bas quand c'est déplié ; centrée sous le rond-profil */}
+        <button onClick={() => setExpanded((s) => !s)} style={{ ...smallButtonStyle, minWidth: "36px", width: "36px", height: "44px" }} aria-label="Détails" aria-expanded={expanded}>
+          <Chevron size={22} color={COLORS.amber} turn={expanded ? 90 : 0} />
+        </button>
         {/* Prix : un seul champ arrondi — montant + symbole, puis les deux flèches empilées à droite */}
         <div
           data-menu-price="1"
@@ -98,17 +113,6 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
             </button>
           </div>
         </div>
-      </div>
-
-      {/* 2ᵉ ligne : flèche de déroulement (à gauche) + croix de suppression (à droite) */}
-      <div data-menu-row-line="2" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
-        {/* Flèche de dépliage : vers la droite quand c'est replié, vers le bas quand c'est déplié ; centrée sous le rond-profil */}
-        <button onClick={() => setExpanded((s) => !s)} style={{ ...smallButtonStyle, minWidth: "36px", width: "36px" }} aria-label="Détails" aria-expanded={expanded}>
-          <Chevron size={22} color={COLORS.inkSoft} turn={expanded ? 90 : 0} />
-        </button>
-        <button onClick={onRemove} style={{ ...smallButtonStyle, fontSize: "18px" }} aria-label={`Supprimer ${drink.name}`}>
-          ×
-        </button>
       </div>
 
       {expanded && (
