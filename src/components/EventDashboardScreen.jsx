@@ -25,6 +25,7 @@ import { ServiceTag } from "./ServiceTag.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
+import { EmptyMenuBadge } from "./EmptyMenuBadge.jsx";
 
 // Retient, pour toute la durée de la session dans l'app (pas juste le montage de CE composant),
 // les salons pour lesquels on a déjà fait la vérification initiale au moins une fois — pour
@@ -536,29 +537,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
           <NavIcon name="bottle" size={12} color={COLORS.amber} />
           Produits
           {menuIsEmpty ? (
-            <span
-              style={{
-                position: "absolute",
-                top: "-9px",
-                left: "-9px",
-                background: COLORS.wine,
-                color: "#fff",
-                borderRadius: "999px",
-                minWidth: "23px",
-                height: "23px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "13px",
-                fontWeight: 800,
-                border: "2px solid #fff",
-                padding: "0 5px",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
-              }}
-              title="Aucune boisson sur la carte — ajoutez-en via « Charger la carte générique » ou depuis le répertoire"
-            >
-              !
-            </span>
+            <EmptyMenuBadge />
           ) : menuCurrencyMismatch ? (
             <span
               style={{
