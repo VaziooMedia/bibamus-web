@@ -340,6 +340,9 @@ export const SNACK_WEIGHTS_G = [25, 40, 45, 50, 75, 100, 125, 150, 200, 250, 300
 
 export const BEER_TYPES = ["Bières & Cidres"];
 
+// Hauteur commune (px) des deux blocs « Ajouter depuis BibAtlas » et « Ajouter depuis Produits génériques » (écran Carte boissons).
+export const ADD_BLOCK_HEIGHT = 42;
+
 // Nom français de la sous-catégorie d'un produit (colonne beverage_subtype), pour l'afficher sous le nom, dans les résultats de
 // recherche, les tournées et le service à la maison. Mêmes noms que la plateforme de gestion. Une sous-catégorie absente d'ici
 // (Spiritueux, dont les sous-catégories ne sont pas encore reprises) n'affiche rien plutôt qu'un code brut ou la catégorie générale.

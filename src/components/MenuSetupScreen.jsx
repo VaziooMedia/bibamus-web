@@ -3,14 +3,17 @@
 // le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, MENU_CATEGORIES } from "../constants.js";
-import { NavIcon, TokenPinkIcon } from "./icons.jsx";
+import { COLORS, MENU_CATEGORIES, ADD_BLOCK_HEIGHT } from "../constants.js";
+import { NavIcon, TokenPinkIcon, AddPlusIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
-import { DrinkRow } from "./DrinkRow.jsx";
+import { MenuProductRow } from "./MenuProductRow.jsx";
 import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import { loadGenericDrinks } from "../data/sharedDirectories.js";
+
+// Clé du bloc « Tous les produits ajoutés » dans le bloc déroulant ouvert (ne peut pas être confondue avec une catégorie).
+const ALL_PRODUCTS_BLOCK = "__tous__";
 
 export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDirectory, onRegisterBrewery, onCleanupDuplicates }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
@@ -50,18 +53,6 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     }));
   };
 
-  const toggleBeerTag = (drinkId, tag) => {
-    updateEvent(event.id, (e) => ({
-      ...e,
-      menu: e.menu.map((d) => {
-        if (d.id !== drinkId) return d;
-        const tags = d.beerTags || [];
-        const next = tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
-        return { ...d, beerTags: next };
-      }),
-    }));
-  };
-
   const removeDrink = (drinkId) => {
     updateEvent(event.id, (e) => ({ ...e, menu: e.menu.filter((d) => d.id !== drinkId) }));
   };
@@ -96,6 +87,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     glutenFree: !!vItem.glutenFree,
     bio: !!vItem.bio,
     countsAsDrinkId: vItem.countsAsDrinkId || null,
+    photoUrl: vItem.photoUrl || null,
+    avatarEmoji: vItem.avatarEmoji || null,
     ...(vItem.menuCategory ? { menuCategory: vItem.menuCategory } : {}),
   });
 
@@ -137,6 +130,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     glutenFree: !!g.glutenFree,
     bio: !!g.bio,
     countsAsDrinkId: g.countsAsDrinkId || null,
+    photoUrl: g.photoUrl || null,
+    avatarEmoji: g.avatarEmoji || null,
   });
 
   const isGenericItemPresent = (g) => event.menu.some((eItem) => normalizeForSearch(eItem.name) === normalizeForSearch(g.name));
@@ -181,6 +176,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
           glutenFree: !!source.glutenFree,
           bio: !!source.bio,
           countsAsDrinkId: source.countsAsDrinkId || null,
+          photoUrl: source.photoUrl || null,
+          avatarEmoji: source.avatarEmoji || null,
         },
       ],
     }));
@@ -196,6 +193,55 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
 
   const unitLabel = event.currency === "euro" ? "€" : "jetons";
   const step = event.currency === "euro" ? "0.10" : "1";
+
+  // Une ligne produit modifiable (résultats de recherche et blocs de la carte) : rond-profil + nom + prix, puis flèche + croix ;
+  // déroulée, seulement le volume et le type de service (et Spiritueux / Shot pour un spiritueux).
+  const renderDrinkRow = (drink) => (
+    <MenuProductRow
+      key={drink.id}
+      drink={drink}
+      priceStep={step}
+      priceSymbol={unitLabel === "€" ? "€" : <TokenPinkIcon size={17} />}
+      onChangePrice={(price) => setPrice(drink.id, price)}
+      onChangeVolume={(vol) => setDrinkField(drink.id, "volumeCl", vol)}
+      onChangeServingMode={(mode) => setDrinkField(drink.id, "servingMode", mode)}
+      onChangeMenuCategory={(cat) => setDrinkField(drink.id, "menuCategory", cat)}
+      onRemove={() => removeDrink(drink.id)}
+    />
+  );
+
+  // Un bloc déroulant de la carte : « Tous les produits ajoutés » ou une catégorie (un seul bloc ouvert à la fois).
+  const renderMenuBlock = (key, label, items) => {
+    const isOpen = openCategory === key;
+    return (
+      <div key={key} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", overflow: "hidden" }}>
+        <button
+          onClick={() => toggleCategoryOpen(key)}
+          style={{
+            width: "100%",
+            textAlign: "left",
+            background: "none",
+            border: "none",
+            padding: "12px 14px",
+            cursor: "pointer",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "14.5px" }}>
+            <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+            {label}
+          </span>
+          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", display: "flex", alignItems: "center", gap: "10px" }}>
+            <span>{items.length}</span>
+            <span>{isOpen ? "▲" : "▾"}</span>
+          </span>
+        </button>
+        {isOpen && <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "0 10px 10px 10px" }}>{items.map((drink) => renderDrinkRow(drink))}</div>}
+      </div>
+    );
+  };
 
   return (
     <div style={{ padding: "8px 20px 24px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -292,106 +338,6 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
         </div>
       )}
 
-      {event.menu.length > 6 && (
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher un produit..."
-          style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "12px" }}
-        />
-      )}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-        {searching ? (
-          searchResults.length === 0 ? (
-            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucun produit trouvé.</p>
-          ) : (
-            searchResults.map((drink) => (
-              <DrinkRow
-                key={drink.id}
-                drink={drink}
-                priceStep={step}
-                priceSymbol={unitLabel === "€" ? "€" : <TokenPinkIcon size={17} />}
-                forceLocked
-                onChangeName={(name) => setDrinkField(drink.id, "name", name)}
-                onChangePrice={(price) => setPrice(drink.id, price)}
-                onChangeType={(type) => setDrinkField(drink.id, "type", type)}
-                onChangeVolume={(vol) => setDrinkField(drink.id, "volumeCl", vol)}
-                onChangeKcal={(k) => setDrinkField(drink.id, "kcalPer100ml", k)}
-                onChangeServingMode={(mode) => setDrinkField(drink.id, "servingMode", mode)}
-                onToggleBeerTag={(tag) => toggleBeerTag(drink.id, tag)}
-                onChangeBrewery={(b) => setDrinkField(drink.id, "brewery", b)}
-                onChangeAbv={(abv) => setDrinkField(drink.id, "abv", abv)}
-                onChangeMenuCategory={(cat) => setDrinkField(drink.id, "menuCategory", cat)}
-                breweriesDirectory={breweriesDirectory}
-                onRegisterBrewery={onRegisterBrewery}
-                onRemove={() => removeDrink(drink.id)}
-              />
-            ))
-          )
-        ) : event.menu.length === 0 ? (
-          <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucun produit sur cette carte pour l'instant.</p>
-        ) : (
-          categoriesPresent.map((cat) => {
-            const items = itemsIn(cat);
-            const isOpen = openCategory === cat;
-            return (
-              <div key={cat} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", overflow: "hidden" }}>
-                <button
-                  onClick={() => toggleCategoryOpen(cat)}
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    background: "none",
-                    border: "none",
-                    padding: "12px 14px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "14.5px" }}>
-                    <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-                    {cat === "Non classé" ? cat : drinkTypeLabel(cat)}
-                  </span>
-                  <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif", display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span>{items.length}</span>
-                    <span>{isOpen ? "▲" : "▾"}</span>
-                  </span>
-                </button>
-                {isOpen && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "0 10px 10px 10px" }}>
-                    {items.map((drink) => (
-                      <DrinkRow
-                        key={drink.id}
-                        drink={drink}
-                        priceStep={step}
-                        priceSymbol={unitLabel === "€" ? "€" : <TokenPinkIcon size={17} />}
-                        forceLocked
-                        onChangeName={(name) => setDrinkField(drink.id, "name", name)}
-                        onChangePrice={(price) => setPrice(drink.id, price)}
-                        onChangeType={(type) => setDrinkField(drink.id, "type", type)}
-                        onChangeVolume={(vol) => setDrinkField(drink.id, "volumeCl", vol)}
-                        onChangeKcal={(k) => setDrinkField(drink.id, "kcalPer100ml", k)}
-                        onChangeServingMode={(mode) => setDrinkField(drink.id, "servingMode", mode)}
-                        onToggleBeerTag={(tag) => toggleBeerTag(drink.id, tag)}
-                        onChangeBrewery={(b) => setDrinkField(drink.id, "brewery", b)}
-                        onChangeAbv={(abv) => setDrinkField(drink.id, "abv", abv)}
-                        onChangeMenuCategory={(cat2) => setDrinkField(drink.id, "menuCategory", cat2)}
-                        breweriesDirectory={breweriesDirectory}
-                        onRegisterBrewery={onRegisterBrewery}
-                        onRemove={() => removeDrink(drink.id)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
-
       <div style={{ marginBottom: "10px" }}>
         <DrinkDirectoryPicker type={null} onPick={handlePickFromDirectory} />
       </div>
@@ -423,33 +369,17 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
         </div>
       )}
       {genericDirectoryItems.length > 0 && (
-        <div style={{ background: "#3D1F1F", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "10px", padding: "0 14px", marginBottom: "16px" }}>
           <button
             onClick={() => setGenericChecklistOpen((o) => !o)}
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", height: `${ADD_BLOCK_HEIGHT - 4}px`, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
           >
             <p style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink, margin: 0 }}>Produits génériques</p>
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "22px",
-                height: "22px",
-                flexShrink: 0,
-                transform: `rotate(${genericChecklistOpen ? 45 : 0}deg)`,
-                transition: "transform 0.15s ease",
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18">
-                <line x1="9" y1="1.5" x2="9" y2="16.5" stroke={COLORS.wine} strokeWidth="2.4" strokeLinecap="round" />
-                <line x1="1.5" y1="9" x2="16.5" y2="9" stroke={COLORS.wine} strokeWidth="2.4" strokeLinecap="round" />
-              </svg>
-            </span>
+            <AddPlusIcon color={COLORS.pinkFluo} rotated={genericChecklistOpen} />
           </button>
           {genericChecklistOpen && (
-            <>
-              <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "10px 0" }}>
+            <div style={{ paddingBottom: "14px" }}>
+              <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "2px 0 10px" }}>
                 Sélectionne les produits génériques disponibles.
                 <br />
                 <br />
@@ -459,7 +389,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                 Possibilité d'adapter le volume et le type de service de tous les produits depuis les catégories.
                 <br />
                 <br />
-                Si un produit spécifique est disponible, tu peux l'ajouter à la carte depuis "Ajouter depuis le répertoire".
+                Si un produit spécifique est disponible, tu peux l'ajouter à la carte depuis "BibAtlas".
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {genericDirectoryItems.map((g) => {
@@ -468,7 +398,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                     return (
                       <div
                         key={g.id}
-                        style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, borderRadius: "8px", padding: "9px 12px" }}
+                        style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surfaceAlt, borderRadius: "8px", padding: "9px 12px" }}
                       >
                         <button
                           onClick={() => addGenericItem(g)}
@@ -508,7 +438,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                         display: "flex",
                         alignItems: "center",
                         gap: "10px",
-                        background: COLORS.surface,
+                        background: COLORS.surfaceAlt,
                         borderRadius: "8px",
                         padding: "9px 12px",
                         cursor: "pointer",
@@ -525,10 +455,38 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                   );
                 })}
               </div>
-            </>
+            </div>
           )}
         </div>
       )}
+
+      {event.menu.length > 6 && (
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher un produit..."
+          style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "12px" }}
+        />
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+        {searching ? (
+          searchResults.length === 0 ? (
+            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucun produit trouvé.</p>
+          ) : (
+            searchResults.map((drink) => renderDrinkRow(drink))
+          )
+        ) : event.menu.length === 0 ? (
+          <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucun produit sur cette carte pour l'instant.</p>
+        ) : (
+          <>
+            {/* Premier bloc : tous les produits ajoutés, toutes catégories confondues (par ordre alphabétique). */}
+            {renderMenuBlock(ALL_PRODUCTS_BLOCK, "Tous les produits ajoutés", [...event.menu].sort((a, b) => a.name.localeCompare(b.name)))}
+            {categoriesPresent.map((cat) => renderMenuBlock(cat, cat === "Non classé" ? cat : drinkTypeLabel(cat), itemsIn(cat)))}
+          </>
+        )}
+      </div>
+
 
       <button
         onClick={handleCleanup}
