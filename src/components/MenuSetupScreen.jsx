@@ -418,7 +418,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                             background: COLORS.amber,
                             color: COLORS.paper,
                             border: "none",
-                            borderRadius: "5px",
+                            borderRadius: "50%",
                             fontSize: "13px",
                             fontWeight: 800,
                             cursor: "pointer",
@@ -457,7 +457,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                         type="checkbox"
                         checked={present}
                         onChange={() => toggleGenericItem(g)}
-                        style={{ width: "18px", height: "18px", accentColor: COLORS.wine, flexShrink: 0 }}
+                        style={{ width: "18px", height: "18px", margin: 0, accentColor: COLORS.wine, flexShrink: 0 }}
                       />
                       <span style={{ fontSize: "13.5px", fontWeight: 600, color: COLORS.ink }}>{g.name}</span>
                     </label>
