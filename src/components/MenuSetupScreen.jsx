@@ -7,7 +7,7 @@ import { COLORS, MENU_CATEGORIES, ADD_BLOCK_HEIGHT } from "../constants.js";
 import { NavIcon, TokenPinkIcon, AddPlusIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
-import { DrinkRow } from "./DrinkRow.jsx";
+import { MenuProductRow } from "./MenuProductRow.jsx";
 import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import { loadGenericDrinks } from "../data/sharedDirectories.js";
@@ -53,18 +53,6 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     }));
   };
 
-  const toggleBeerTag = (drinkId, tag) => {
-    updateEvent(event.id, (e) => ({
-      ...e,
-      menu: e.menu.map((d) => {
-        if (d.id !== drinkId) return d;
-        const tags = d.beerTags || [];
-        const next = tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
-        return { ...d, beerTags: next };
-      }),
-    }));
-  };
-
   const removeDrink = (drinkId) => {
     updateEvent(event.id, (e) => ({ ...e, menu: e.menu.filter((d) => d.id !== drinkId) }));
   };
@@ -99,6 +87,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     glutenFree: !!vItem.glutenFree,
     bio: !!vItem.bio,
     countsAsDrinkId: vItem.countsAsDrinkId || null,
+    photoUrl: vItem.photoUrl || null,
+    avatarEmoji: vItem.avatarEmoji || null,
     ...(vItem.menuCategory ? { menuCategory: vItem.menuCategory } : {}),
   });
 
@@ -140,6 +130,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     glutenFree: !!g.glutenFree,
     bio: !!g.bio,
     countsAsDrinkId: g.countsAsDrinkId || null,
+    photoUrl: g.photoUrl || null,
+    avatarEmoji: g.avatarEmoji || null,
   });
 
   const isGenericItemPresent = (g) => event.menu.some((eItem) => normalizeForSearch(eItem.name) === normalizeForSearch(g.name));
@@ -184,6 +176,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
           glutenFree: !!source.glutenFree,
           bio: !!source.bio,
           countsAsDrinkId: source.countsAsDrinkId || null,
+          photoUrl: source.photoUrl || null,
+          avatarEmoji: source.avatarEmoji || null,
         },
       ],
     }));
@@ -200,26 +194,18 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   const unitLabel = event.currency === "euro" ? "€" : "jetons";
   const step = event.currency === "euro" ? "0.10" : "1";
 
-  // Une ligne produit modifiable (résultats de recherche et blocs de la carte).
+  // Une ligne produit modifiable (résultats de recherche et blocs de la carte) : rond-profil + nom + prix, puis flèche + croix ;
+  // déroulée, seulement le volume et le type de service (et Spiritueux / Shot pour un spiritueux).
   const renderDrinkRow = (drink) => (
-    <DrinkRow
+    <MenuProductRow
       key={drink.id}
       drink={drink}
       priceStep={step}
       priceSymbol={unitLabel === "€" ? "€" : <TokenPinkIcon size={17} />}
-      forceLocked
-      onChangeName={(name) => setDrinkField(drink.id, "name", name)}
       onChangePrice={(price) => setPrice(drink.id, price)}
-      onChangeType={(type) => setDrinkField(drink.id, "type", type)}
       onChangeVolume={(vol) => setDrinkField(drink.id, "volumeCl", vol)}
-      onChangeKcal={(k) => setDrinkField(drink.id, "kcalPer100ml", k)}
       onChangeServingMode={(mode) => setDrinkField(drink.id, "servingMode", mode)}
-      onToggleBeerTag={(tag) => toggleBeerTag(drink.id, tag)}
-      onChangeBrewery={(b) => setDrinkField(drink.id, "brewery", b)}
-      onChangeAbv={(abv) => setDrinkField(drink.id, "abv", abv)}
       onChangeMenuCategory={(cat) => setDrinkField(drink.id, "menuCategory", cat)}
-      breweriesDirectory={breweriesDirectory}
-      onRegisterBrewery={onRegisterBrewery}
       onRemove={() => removeDrink(drink.id)}
     />
   );
