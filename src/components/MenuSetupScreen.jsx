@@ -15,6 +15,10 @@ import { loadGenericDrinks } from "../data/sharedDirectories.js";
 // Clé du bloc « Tous les produits ajoutés » dans le bloc déroulant ouvert (ne peut pas être confondue avec une catégorie).
 const ALL_PRODUCTS_BLOCK = "__tous__";
 
+// Case à cocher des produits génériques : carrée, blanche quand elle est vide ; cochée, elle devient vert fluo avec un check noir
+// (dessiné ici : la couleur d'accent native des navigateurs ne permet pas de choisir la couleur du check).
+const CHECK_MARK_BG = `url("data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.3 6.3 4.9 8.9 9.7 3.3' fill='none' stroke='#000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>")}")`;
+
 export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDirectory, onRegisterBrewery, onCleanupDuplicates }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [genericDrinks, setGenericDrinks] = useState([]);
@@ -415,10 +419,11 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                             width: "18px",
                             height: "18px",
                             flexShrink: 0,
-                            background: COLORS.amber,
+                            // Rose tant que le produit n'est pas sur la carte, vert fluo dès qu'il y est au moins une fois.
+                            background: count > 0 ? COLORS.amber : COLORS.pinkFluo,
                             color: COLORS.paper,
                             border: "none",
-                            borderRadius: "5px",
+                            borderRadius: "50%",
                             fontSize: "13px",
                             fontWeight: 800,
                             cursor: "pointer",
@@ -457,7 +462,19 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                         type="checkbox"
                         checked={present}
                         onChange={() => toggleGenericItem(g)}
-                        style={{ width: "18px", height: "18px", accentColor: COLORS.wine, flexShrink: 0 }}
+                        style={{
+                          appearance: "none",
+                          WebkitAppearance: "none",
+                          boxSizing: "border-box",
+                          width: "18px",
+                          height: "18px",
+                          margin: 0,
+                          flexShrink: 0,
+                          borderRadius: "4px",
+                          border: `1px solid ${present ? COLORS.amber : "#767676"}`,
+                          background: present ? `${COLORS.amber} ${CHECK_MARK_BG} center / 12px 12px no-repeat` : "#fff",
+                          cursor: "pointer",
+                        }}
                       />
                       <span style={{ fontSize: "13.5px", fontWeight: 600, color: COLORS.ink }}>{g.name}</span>
                     </label>
