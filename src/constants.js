@@ -626,48 +626,6 @@ export const VENUE_AMENITIES = [
   { code: "smoking_area", fr: "Espace fumeurs" },
 ];
 
-export const VENUE_TYPE_TAGS = [
-  "Bar",
-  "Café",
-  "Taverne",
-  "Bistrot",
-  "Estaminet",
-  "Café de quartier",
-  "Brasserie",
-  "Cafétaria",
-  "Buvette",
-  "Bar d'hôtel",
-  "Microbrasserie",
-  "Restaurant",
-  "Salle de spectacle",
-  "Salle de concert",
-  "Salle de location",
-  "Bar lounge",
-  "Bar-concert",
-  "Bar e-sport",
-  "Bar à bières",
-  "Bar à vins",
-  "Bar à champagne",
-  "Bar à cocktails",
-  "Bar à rhum",
-  "Bar à whiskey",
-  "Bar à gin",
-  "Bar à shots",
-  "Bar à jeux",
-  "Piano-Bar",
-  "Karaoké-Bar",
-  "Bar dansant",
-  "Discothèque",
-  "Night-club",
-  "Cabaret",
-  "Club privé",
-  "Pub",
-  "Irish pub",
-  "Terrasse",
-  "Grande terrasse",
-  "Rooftop",
-];
-
 // Pays avec code — utilisé pour l'inscription et le profil (le seuil d'âge minimum dépend du
 // pays choisi ici). Distinct de COUNTRIES ci-dessous (une simple liste de noms, utilisée pour
 // les établissements), pour ne pas casser cet usage existant.
