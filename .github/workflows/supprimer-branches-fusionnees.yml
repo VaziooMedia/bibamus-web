@@ -1,0 +1,78 @@
+# Supprime les branches « claude/* » déjà entièrement fusionnées dans main.
+#
+# À lancer À LA MAIN : onglet « Actions » du dépôt > « Supprimer les branches fusionnées » > « Run workflow ».
+# Par défaut c'est une SIMULATION : le journal liste les branches concernées et rien n'est supprimé.
+# Pour supprimer vraiment, cocher « Supprimer vraiment » avant de lancer.
+#
+# Une branche n'est supprimée que si les trois conditions sont réunies :
+#   1. son nom commence par « claude/ » ;
+#   2. elle est entièrement fusionnée dans main (son dernier commit fait partie de l'historique de main) ;
+#   3. aucune pull request ouverte ne l'utilise.
+# Une branche créée à partir de main et sans aucun commit compte comme « fusionnée » : à lancer quand aucun travail ne vient d'être démarré.
+# Le contenu des branches supprimées reste dans l'historique de main.
+name: Supprimer les branches fusionnées
+
+on:
+  workflow_dispatch:
+    inputs:
+      supprimer:
+        description: "Supprimer vraiment (sinon : simulation, rien n'est supprimé)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  nettoyer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer toutes les branches
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Lister puis supprimer les branches fusionnées
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPPRIMER: ${{ inputs.supprimer }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
+          git branch -r --merged origin/main | sed 's#^ *origin/##' | grep '^claude/' | sort > fusionnees.txt || true
+          total=$(wc -l < fusionnees.txt)
+          proprietaire="${REPO%%/*}"
+          if [ "$SUPPRIMER" = "true" ]; then mode="SUPPRESSION"; else mode="SIMULATION (rien n'est supprimé)"; fi
+          echo "Mode : $mode"
+          echo "Branches claude/* entièrement fusionnées dans main : $total"
+          supprimees=0; a_supprimer=0; gardees=0; echecs=0
+          while read -r branche; do
+            [ -z "$branche" ] && continue
+            if ! ouvertes=$(gh api "repos/$REPO/pulls?state=open&head=$proprietaire:$branche" --jq 'length'); then
+              echo "ÉCHEC (lecture des PR) : $branche"; echecs=$((echecs + 1)); continue
+            fi
+            if [ "$ouvertes" != "0" ]; then
+              echo "GARDÉE (PR ouverte) : $branche"; gardees=$((gardees + 1)); continue
+            fi
+            if [ "$SUPPRIMER" = "true" ]; then
+              if gh api -X DELETE "repos/$REPO/git/refs/heads/$branche" --silent; then
+                echo "supprimée : $branche"; supprimees=$((supprimees + 1))
+              else
+                echo "ÉCHEC (suppression) : $branche"; echecs=$((echecs + 1))
+              fi
+            else
+              echo "serait supprimée : $branche"; a_supprimer=$((a_supprimer + 1))
+            fi
+          done < fusionnees.txt
+          {
+            echo "### Branches fusionnées"
+            echo "- Mode : $mode"
+            echo "- Fusionnées dans main : $total"
+            echo "- Supprimées : $supprimees"
+            echo "- À supprimer (simulation) : $a_supprimer"
+            echo "- Gardées (PR ouverte) : $gardees"
+            echo "- Échecs : $echecs"
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ "$echecs" -eq 0 ]
