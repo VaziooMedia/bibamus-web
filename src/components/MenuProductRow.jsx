@@ -1,5 +1,6 @@
 // ============================================================
-// Ligne d'un produit dans la Carte boissons d'un événement (BibaRoom / Produits), version simplifiée :
+// Ligne d'un produit dans la Carte boissons d'un événement (BibaRoom / Produits), version simplifiée — sans cadre propre :
+// c'est le bloc qui la contient (catégorie, « Tous les produits ajoutés », résultats de recherche) qui la cadre, et un trait fin la sépare des autres lignes.
 //   1ʳᵉ ligne : rond-profil du produit + nom + prix (modifiable)
 //   2ᵉ ligne  : flèche de déroulement + croix de suppression
 //   déroulé   : volume (texte libre, clavier numérique) + type de service ; pour un spiritueux, le choix Spiritueux / Shot.
@@ -39,7 +40,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
   const isShot = drink.menuCategory === "Shots";
 
   return (
-    <div data-menu-row="1" style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px" }}>
+    <div data-menu-row="1" style={{ padding: "10px 0" }}>
       {/* 1ʳᵉ ligne : rond-profil + nom + prix */}
       <div data-menu-row-line="1" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={36} fallbackIcon="bottle" />
@@ -111,7 +112,7 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
       </div>
 
       {expanded && (
-        <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "6px", paddingTop: "12px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+        <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "8px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
             <div style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
               <label htmlFor={`menu-volume-${drink.id}`} style={fieldLabelStyle}>
