@@ -1215,8 +1215,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                         <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400, flexShrink: 0, whiteSpace: "pre" }}>{` ${String(glass.volumeCl).replace(".", ",")}\u00a0cl.`}</span>
                       )}
                     </span>
-                    {/* Le type de service, en petite pastille sur la ligne du dessous. */}
-                    <ServiceTag mode={glass.servingMode} />
+                    {/* Le type de service, en petite pastille sur la ligne du dessous ; « Shot » en plus pour un shot dans un salon @Home. */}
+                    <ServiceTag mode={glass.servingMode} shot={!!event.isHome && glass.shot} />
                   </span>
                   {/* Les kcal dans une colonne à droite, précédée d'une barre verticale (d'une ligne à l'autre, la barre se prolonge) ; masquées avec l'œil de la case KCAL. */}
                   <span data-testid="my-drink-kcal" style={{ flexShrink: 0, width: "84px", boxSizing: "border-box", borderLeft: `1px solid ${COLORS.paperAlt}`, padding: "1px 0 1px 10px" }}>
@@ -1631,8 +1631,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                               <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{`- ${it.name}`}</span>
                               {it.volumeCl != null && <span style={{ flexShrink: 0, whiteSpace: "pre" }}>{` ${String(it.volumeCl).replace(".", ",")}\u00a0cl.`}</span>}
                             </span>
-                            {/* Le type de service, en petite pastille sur la ligne du dessous. */}
-                            <ServiceTag mode={it.servingMode} />
+                            {/* Le type de service (et « Shot » pour un shot), en petites pastilles sur la ligne du dessous. */}
+                            <ServiceTag mode={it.servingMode} shot={it.shot} />
                           </span>
                           {/* La quantité en bout de ligne : toutes alignées sur le bord droit de la carte, comme « n verres ». */}
                           <span style={{ flexShrink: 0 }}>{`×${it.count}`}</span>

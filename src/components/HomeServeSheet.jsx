@@ -296,8 +296,8 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
                         <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{g.entry?.name || "Boisson"}</span>
                         {g.entry?.volumeCl != null && <span style={{ color: COLORS.amber, fontWeight: 700, flexShrink: 0 }}>{volumeLabel(g.entry.volumeCl)}</span>}
                       </span>
-                      {/* Le type de service, en petite pastille sur la ligne du dessous. */}
-                      <ServiceTag mode={g.entry?.servingMode} />
+                      {/* Le type de service (et « Shot » pour un shot), en petites pastilles sur la ligne du dessous. */}
+                      <ServiceTag mode={g.entry?.servingMode} shot={g.entry?.menuCategory === "Shots"} />
                     </span>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                       <button
