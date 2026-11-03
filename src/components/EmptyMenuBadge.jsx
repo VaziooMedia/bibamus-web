@@ -1,5 +1,5 @@
 // ============================================================
-// Badge rouge « ! » posé sur le bouton « Produits » d'un BibaRoom quand la carte est vide, et sa bulle d'aide.
+// Badge rose fluo « ! » posé sur le bouton « Produits » d'un BibaRoom quand la carte est vide, et sa bulle d'aide.
 // La bulle s'affiche au survol du badge (souris). Elle est dessinée ici plutôt que par le navigateur (attribut `title`) pour
 // suivre le style de l'app ; elle reste toujours entière dans l'écran (décalée vers la gauche ou la droite si besoin) et ne
 // capte aucun clic : toucher le badge ouvre « Produits » comme avant.
@@ -48,7 +48,7 @@ export function EmptyMenuBadge() {
         position: "absolute",
         top: "-9px",
         left: "-9px",
-        background: COLORS.wine,
+        background: COLORS.pinkFluo,
         color: "#fff",
         borderRadius: "999px",
         minWidth: "23px",
@@ -76,7 +76,7 @@ export function EmptyMenuBadge() {
             padding: "10px 14px 11px",
             borderRadius: "12px",
             background: COLORS.surfaceAlt,
-            border: `2px solid ${COLORS.wine}`,
+            border: `2px solid ${COLORS.pinkFluo}`,
             boxShadow: "0 10px 24px rgba(0,0,0,0.5)",
             textAlign: "left",
             fontWeight: 400,
@@ -90,7 +90,7 @@ export function EmptyMenuBadge() {
           {/* Petite pointe vers le badge */}
           <span
             aria-hidden="true"
-            style={{ position: "absolute", top: `${-ARROW / 2 - 2}px`, left: `${place.arrow}px`, width: `${ARROW}px`, height: `${ARROW}px`, background: COLORS.surfaceAlt, borderTop: `2px solid ${COLORS.wine}`, borderLeft: `2px solid ${COLORS.wine}`, transform: "rotate(45deg)" }}
+            style={{ position: "absolute", top: `${-ARROW / 2 - 2}px`, left: `${place.arrow}px`, width: `${ARROW}px`, height: `${ARROW}px`, background: COLORS.surfaceAlt, borderTop: `2px solid ${COLORS.pinkFluo}`, borderLeft: `2px solid ${COLORS.pinkFluo}`, transform: "rotate(45deg)" }}
           />
           <span style={{ display: "block", position: "relative", fontSize: "13.5px", fontWeight: 700, lineHeight: 1.35, color: COLORS.ink }}>Aucun produit présent sur la carte.</span>
           <span style={{ display: "block", position: "relative", marginTop: "4px", fontSize: "12.5px", lineHeight: 1.45, color: COLORS.inkSoft }}>
