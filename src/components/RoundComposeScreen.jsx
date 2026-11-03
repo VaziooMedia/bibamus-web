@@ -10,7 +10,8 @@ import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } f
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
-import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById, defaultVolumeText, defaultServingModeText, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
+import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById, defaultVolumeText, defaultServingModeText, canBeShot, startsAsShot, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
+import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { loadSalon } from "../data/salons.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
 
@@ -208,6 +209,8 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const [bibAtlasVolume, setBibAtlasVolume] = useState("");
   const [bibAtlasPrice, setBibAtlasPrice] = useState("");
   const [bibAtlasServing, setBibAtlasServing] = useState("");
+  // Spiritueux dont la fiche a la case « Shot » : pris en shot ou non (au départ : le choix par défaut de la fiche).
+  const [bibAtlasAsShot, setBibAtlasAsShot] = useState(false);
   const [bibAtlasSaving, setBibAtlasSaving] = useState(false);
   useEffect(() => {
     const q = bibAtlasQuery.trim();
@@ -408,7 +411,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
     const volumeCl = parsePositiveText(bibAtlasVolume);
     // Le prix est dans la devise du salon : des jetons (nombre entier) ou des euros.
     const price = isOpenBar ? 0 : isJeton ? parseTokensText(bibAtlasPrice) : parsePriceText(bibAtlasPrice);
-    const created = await onAddBibAtlasProduct(bibAtlasPicked, { volumeCl, price, servingMode: bibAtlasServing });
+    const created = await onAddBibAtlasProduct(bibAtlasPicked, { volumeCl, price, servingMode: bibAtlasServing, asShot: canBeShot(bibAtlasPicked) && bibAtlasAsShot });
     setBibAtlasSaving(false);
     if (!created) return;
     setBibAtlasPicked(null);
@@ -858,9 +861,12 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                   key={d.id}
                   onClick={() => {
                     setBibAtlasPicked(d);
-                    // Volume et type de service : ceux par défaut du produit. Prix : 0,00 en euros (jamais le prix par défaut), 1 jeton en jetons.
-                    setBibAtlasVolume(defaultVolumeText(d));
-                    setBibAtlasServing(defaultServingModeText(d));
+                    // Spiritueux ou Shot : le choix par défaut de la fiche (seul un spiritueux avec la case « Shot » peut être un shot).
+                    const asShot = startsAsShot(d);
+                    setBibAtlasAsShot(asShot);
+                    // Volume et type de service : ceux par défaut du produit (ceux du shot s'il commence en shot). Prix : 0,00 en euros (jamais le prix par défaut), 1 jeton en jetons.
+                    setBibAtlasVolume(defaultVolumeText(d, asShot));
+                    setBibAtlasServing(defaultServingModeText(d, asShot));
                     setBibAtlasPrice(isJeton ? "1" : "");
                   }}
                   style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}
@@ -883,6 +889,21 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                 <EntityAvatar photoUrl={bibAtlasPicked.photoUrl} photoEmoji={bibAtlasPicked.avatarEmoji} size={44} fallbackIcon="bottle" />
                 <div style={{ fontWeight: 700, fontSize: "16px", minWidth: 0, overflowWrap: "anywhere" }}>{bibAtlasPicked.name}</div>
               </div>
+
+              {/* Spiritueux ou Shot : seulement pour un spiritueux dont la fiche a la case « Shot ». Changer de choix remet le volume et le type de
+                  service par défaut de ce choix ; le prix, lui, n'est pas touché. */}
+              {canBeShot(bibAtlasPicked) && (
+                <SpiritKindToggle
+                  asShot={bibAtlasAsShot}
+                  style={{ marginTop: "14px" }}
+                  onChange={(asShot) => {
+                    if (asShot === bibAtlasAsShot) return;
+                    setBibAtlasAsShot(asShot);
+                    setBibAtlasVolume(defaultVolumeText(bibAtlasPicked, asShot));
+                    setBibAtlasServing(defaultServingModeText(bibAtlasPicked, asShot));
+                  }}
+                />
+              )}
 
               <div data-encode="row" style={{ display: "flex", alignItems: "flex-start", gap: "10px", margin: `${SHEET_GAP}px 0` }}>
                 <div data-encode="volume" style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>

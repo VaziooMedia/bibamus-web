@@ -15,7 +15,8 @@ import { NavIcon } from "./icons.jsx";
 import { AiIcon } from "./AiIcon.jsx";
 import { ServiceTag } from "./ServiceTag.jsx";
 import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
-import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent } from "../utils.js";
+import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
+import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent, canBeShot, startsAsShot } from "../utils.js";
 import { searchDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 
 const volumeLabel = (cl) => (cl != null ? ` ${String(cl).replace(".", ",")} cl.` : "");
@@ -50,11 +51,17 @@ const parseVolume = (raw) => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 // Valeurs par défaut de la fiche produit (Gestion) : volume habituel et type de service habituel.
-const defaultVolumeText = (drink) => {
-  const n = Number(drink?.defaultVolumeCl);
-  return drink?.defaultVolumeCl != null && Number.isFinite(n) && n > 0 ? String(n) : "";
+// En shot (`asShot`) : celles du shot d'abord, puis celles du spiritueux s'il n'y en a pas pour le shot.
+const positiveOrNull = (v) => {
+  const n = Number(v);
+  return v != null && Number.isFinite(n) && n > 0 ? n : null;
 };
-const defaultServingMode = (drink) => (SERVING_MODE_OPTIONS.some(([key]) => key === drink?.defaultServingMode) ? drink.defaultServingMode : "");
+const defaultVolumeText = (drink, asShot = false) => {
+  const n = (asShot ? positiveOrNull(drink?.defaultShotVolumeCl) : null) ?? positiveOrNull(drink?.defaultVolumeCl);
+  return n != null ? String(n) : "";
+};
+const knownServingMode = (mode) => (SERVING_MODE_OPTIONS.some(([key]) => key === mode) ? mode : "");
+const defaultServingMode = (drink, asShot = false) => (asShot ? knownServingMode(drink?.defaultShotServingMode) : "") || knownServingMode(drink?.defaultServingMode);
 
 export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe, onRemove, onClose }) {
   const [query, setQuery] = useState("");
@@ -62,6 +69,8 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
   const [picked, setPicked] = useState(null);
   const [volume, setVolume] = useState("");
   const [servingMode, setServingMode] = useState("");
+  // Spiritueux dont la fiche a la case « Shot » : pris en shot ou non (au départ : le choix par défaut de la fiche).
+  const [asShot, setAsShot] = useState(false);
   const [justAdded, setJustAdded] = useState(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanNotice, setScanNotice] = useState(null);
@@ -97,15 +106,26 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
 
   const pick = (drink) => {
     setPicked(drink);
-    // Le volume et le type de service habituels du produit (fiche produit, côté Gestion) s'ils sont connus, sinon vides — on peut passer.
-    setVolume(defaultVolumeText(drink));
-    setServingMode(defaultServingMode(drink));
+    // Spiritueux ou Shot : le choix par défaut de la fiche (seul un spiritueux avec la case « Shot » peut être un shot).
+    const shot = startsAsShot(drink);
+    setAsShot(shot);
+    // Le volume et le type de service habituels du produit (fiche produit, côté Gestion ; ceux du shot s'il commence en shot) s'ils sont connus, sinon vides — on peut passer.
+    setVolume(defaultVolumeText(drink, shot));
+    setServingMode(defaultServingMode(drink, shot));
+  };
+
+  // Changer de choix Spiritueux / Shot remet le volume et le type de service par défaut de ce choix.
+  const changeKind = (shot) => {
+    if (shot === asShot) return;
+    setAsShot(shot);
+    setVolume(defaultVolumeText(picked, shot));
+    setServingMode(defaultServingMode(picked, shot));
   };
 
   const confirm = () => {
     if (!picked || myPaused) return;
     const cl = parseVolume(volume);
-    onServe(picked, { volumeCl: cl, servingMode });
+    onServe(picked, { volumeCl: cl, servingMode, asShot: canBeShot(picked) && asShot });
     setJustAdded(`${picked.name}${volumeLabel(cl)}`);
     setPicked(null);
     setQuery("");
@@ -114,7 +134,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
 
   const again = (entry) => {
     if (myPaused || !entry?.sourceDrinkId) return;
-    onServe({ id: entry.sourceDrinkId, name: entry.name, kcalPer100ml: entry.kcalPer100ml }, { volumeCl: entry.volumeCl ?? null, servingMode: entry.servingMode || "" });
+    onServe({ id: entry.sourceDrinkId, name: entry.name, kcalPer100ml: entry.kcalPer100ml }, { volumeCl: entry.volumeCl ?? null, servingMode: entry.servingMode || "", asShot: entry.menuCategory === "Shots" });
     setJustAdded(`${entry.name}${volumeLabel(entry.volumeCl)}`);
   };
 
@@ -217,6 +237,8 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
           {picked && (
             <div style={{ marginTop: "12px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
               <div style={{ fontWeight: 700, fontSize: "15px", marginBottom: "10px" }}>{picked.name}</div>
+              {/* Spiritueux ou Shot : seulement pour un spiritueux dont la fiche a la case « Shot ». */}
+              {canBeShot(picked) && <SpiritKindToggle asShot={asShot} onChange={changeKind} style={{ marginBottom: "12px" }} />}
               <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
                 <div data-encode="volume" style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
                   <label htmlFor="home-serve-volume" style={fieldLabelStyle}>Volume (cl.)</label>

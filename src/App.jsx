@@ -860,10 +860,10 @@ export default function App() {
   // a bu quoi sans que les verres des uns écrasent ceux des autres. Il est aussi enregistré en
   // statistiques (round_orders, lieu @home, sans prix) avec un identifiant propre par verre, pour
   // pouvoir le retirer seul. drink_id est le vrai identifiant du catalogue, comme pour les tournées.
-  const serveHomeDrink = (source, { volumeCl = null, servingMode = "" } = {}) => {
+  const serveHomeDrink = (source, { volumeCl = null, servingMode = "", asShot = false } = {}) => {
     const ev = events.find((e) => e.id === activeEventId);
     if (!ev || !ev.isHome || !source?.id || !profile.myBibroCode) return;
-    const { newEntry, homeDrink, order } = buildHomeServe(ev, source, { volumeCl, servingMode }, { code: profile.myBibroCode, name: profile.name });
+    const { newEntry, homeDrink, order } = buildHomeServe(ev, source, { volumeCl, servingMode, asShot }, { code: profile.myBibroCode, name: profile.name });
     updateEvent(ev.id, (e) => withHomeServe(e, newEntry, homeDrink));
     recordRoundOrders([order], { venueId: "@home", eventId: ev.id, roundId: homeDrink.id, currency: ev.currency, paid: true });
   };
@@ -1723,7 +1723,9 @@ export default function App() {
   // avec le volume, le prix et le type de service qu'il fixe. L'ajout rejoint la vraie carte du lieu, de façon
   // définitive (pas seulement cette tournée) — addedVia/addedByBibroCode permettent à une future
   // interface de gestion Business de repérer ces ajouts en attente de relecture par le gérant.
-  const addBibAtlasProduct = async (venueId, source, { volumeCl, price, servingMode }) => {
+  // Un spiritueux pris en shot (`asShot`) rejoint la carte comme dans la carte boissons d'un salon : type « Spiritueux »
+  // avec `menuCategory: "Shots"` (il se range donc dans la catégorie Shots de la tournée).
+  const addBibAtlasProduct = async (venueId, source, { volumeCl, price, servingMode, asShot = false }) => {
     const venue = venuesById[venueId] || (await loadVenuesByIds([venueId]))[0];
     if (!venue) return null;
     const newEntry = {
@@ -1731,6 +1733,7 @@ export default function App() {
       fromDirectory: true,
       sourceDrinkId: source.id,
       servingMode: safeServingMode(servingMode),
+      ...(asShot ? { menuCategory: "Shots" } : {}),
       volumes: [{ id: nextId(), cl: volumeCl ?? null, price: price ?? 0, isDefault: true }],
       addedVia: "bibAtlas",
       addedByBibroCode: profile.myBibroCode,
