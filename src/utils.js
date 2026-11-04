@@ -4,13 +4,23 @@
 // ============================================================
 import { DRINK_TYPES, MENU_CATEGORIES, DRINK_TYPE_MIGRATIONS, NON_ALCOHOLIC_DRINK_TYPES, SERVING_MODE_LABELS, MONTH_NAMES_FR, DRINK_FIELD_LABELS } from "./constants.js";
 
+// Lettres que la décomposition NFD ne sépare pas en « lettre + accent » : œ → oe, æ → ae, ß → ss, ø → o, ł → l… Mêmes correspondances que
+// `unaccent` de Postgres, que la base applique pour calculer `search_text` (fonction `bibamus_normalize_search_text`) : « œufs » se retrouve en
+// tapant « oeufs », « Straße » en tapant « strasse ». Reçoit un texte déjà passé en minuscules.
+const SPECIAL_LETTERS = { "œ": "oe", "æ": "ae", "ß": "ss", "ø": "o", "đ": "d", "ð": "d", "þ": "th", "ł": "l", "ħ": "h", "ı": "i", "ĳ": "ij", "ŀ": "l", "ſ": "s", "ŧ": "t", "ƒ": "f", "ﬀ": "ff", "ﬁ": "fi", "ﬂ": "fl", "ﬃ": "ffi", "ﬄ": "ffl" };
+const SPECIAL_LETTERS_RE = new RegExp(`[${Object.keys(SPECIAL_LETTERS).join("")}]`, "g");
+const foldSpecialLetters = (lower) => lower.replace(SPECIAL_LETTERS_RE, (c) => SPECIAL_LETTERS[c]);
+// Tirets et apostrophes, droits ou typographiques (’ ‘ ʼ ′ – — ‐ ― −) : tous remplacés par un espace dans une recherche. `unaccent` les ramène à
+// ' ou - (vérifié en base le 2026-11-04), puis la base les remplace par un espace. Un clavier de téléphone tape ’ là où la fiche a ', et inversement.
+// L'accent aigu isolé ´ n'en fait pas partie : `unaccent` le laisse tel quel.
+const SEPARATORS_RE = /[-'’`‘ʼ′‐–—―−]/g;
+
 export const normalizeForSearch = (text) =>
-  (text || "")
-    .toLowerCase()
+  foldSpecialLetters((text || "").toLowerCase())
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\./g, "")
-    .replace(/[-']/g, " ")
+    .replace(SEPARATORS_RE, " ")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -851,11 +861,10 @@ export function displayName(entity, appLanguageCode) {
 // vraies recherches côté serveur.
 export function normalizeSearchText(str) {
   if (!str) return "";
-  return str
-    .toLowerCase()
+  return foldSpecialLetters(str.toLowerCase())
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // accents (Jägermeister → jagermeister)
-    .replace(/[-'’`]/g, " ") // tirets/apostrophes → espace (Belle-Vue → belle vue)
+    .replace(/[\u0300-\u036f]/g, "") // accents (Jägermeister → jagermeister) ; lettres collées déjà traitées (Œufs → oeufs)
+    .replace(SEPARATORS_RE, " ") // tirets/apostrophes, droits ou typographiques → espace (Belle-Vue → belle vue)
     .replace(/\./g, "") // points (St. → St)
     .replace(/\bsainte\b/g, "ste")
     .replace(/\bsaint\b/g, "st") // Saint ↔ St

@@ -2721,7 +2721,9 @@ export async function searchDrinksByType(type, query = "", limit = 30) {
   const typed = (query || "").trim();
   const q = normalizeSearchText(typed);
   if (typed && !q) return []; // rien que de la ponctuation : aucun produit à retrouver
-  if (q) request = request.ilike("search_text", `%${q}%`);
+  // `%`, `_` et `\` tapés sont cherchés tels quels (pas des jokers) ; chaque espace devient `%` : la base ne fusionne pas les espaces
+  // (« Coca - Cola » est enregistré « coca   cola »), et les mots tapés doivent seulement se suivre dans l'ordre.
+  if (q) request = request.ilike("search_text", `%${q.replace(/[\\%_]/g, "\\$&").replace(/ /g, "%")}%`);
   const { data, error } = await request.order("name").limit(limit);
   if (error) {
     console.error("searchDrinksByType:", error);
