@@ -14,7 +14,7 @@ const pillStyle = { display: "inline-block", whiteSpace: "nowrap", padding: "0 6
 // Le libellé d'un type de service connu, ou null (vide, NULL en base ou valeur inconnue).
 export const serviceLabelOf = (mode) => (typeof mode === "string" && Object.prototype.hasOwnProperty.call(SERVICE_LABELS, mode) ? SERVICE_LABELS[mode] : null);
 
-// La pastille « Shot » seule, réutilisée telle quelle par le journal de BibaSolo (ligne 2 d'un verre bu).
+// La pastille « Shot » seule, réutilisée telle quelle par le journal de BibaSolo (ligne 3 d'un verre bu).
 export function ShotPill({ style }) {
   return (
     <span data-testid="shot-tag" style={{ ...pillStyle, ...style }}>
@@ -23,7 +23,7 @@ export function ShotPill({ style }) {
   );
 }
 
-// La pastille de la ligne 2 du journal de BibaSolo : « Shot » seul pour un verre pris en shot, quel que soit son type de service
+// La pastille de la ligne 3 du journal de BibaSolo (après le drapeau) : « Shot » seul pour un verre pris en shot, quel que soit son type de service
 // (un shot est d'office servi au verre, inutile de le répéter) ; sinon le type de service ; rien s'il n'est pas défini.
 export function ServicePill({ mode, shot = false }) {
   if (shot) return <ShotPill />;

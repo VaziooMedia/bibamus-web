@@ -1044,45 +1044,54 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
             </span>
           )}
         </div>
-        {/* Ligne 2 — volume + drapeau + % ABV + icône Bio + icône Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
+        {/* Lignes 2 et 3 (sur toute la largeur, sous le prix ; points vert fluo entre les éléments ; chacune ouvre la fiche du produit ; chacune
+            disparaît quand elle n'a rien à montrer).
+            Ligne 2 — volume + % ABV + étiquette d'alcool (0.0 %…) + icône Bio + icône Gluten free.
+            Ligne 3 — drapeau du pays + pastille de type de service : « Shot » seule pour un verre pris en shot, sans tenir compte de son type de
+            service ; sinon le type de service s'il est défini. */}
         {(() => {
-          const mentionParts = [];
-          // Ordre : volume, % ABV, pays (drapeau), étiquette d'alcool (0.0%…) / Bio / Gluten free, puis la pastille de type de service.
-          if (c.volumeCl) mentionParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
-          if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
-          if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
+          const detailParts = [];
+          if (c.volumeCl) detailParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
+          if (showMentions && drink.abv != null) detailParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
           const alcoholTier = showMentions ? getAlcoholTierBadge(drink.abv) : null;
-          if (alcoholTier) mentionParts.push(<span key="tier" title={alcoholTier.title} style={{ whiteSpace: "nowrap" }}>{alcoholTier.label}</span>);
-          if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
-          if (showMentions && drink.glutenFree) mentionParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
-          // Un verre pris en shot porte la pastille « Shot » seule, sans tenir compte de son type de service ; sinon, le type de service s'il est défini.
-          if (c.shot || serviceLabelOf(c.servingMode)) mentionParts.push(<ServicePill key="service" mode={c.servingMode} shot={c.shot} />);
-          if (mentionParts.length === 0) return null;
+          if (alcoholTier) detailParts.push(<span key="tier" title={alcoholTier.title} style={{ whiteSpace: "nowrap" }}>{alcoholTier.label}</span>);
+          if (showMentions && drink.bio) detailParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
+          if (showMentions && drink.glutenFree) detailParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
+          const originParts = [];
+          if (drink?.nationality) originParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
+          if (c.shot || serviceLabelOf(c.servingMode)) originParts.push(<ServicePill key="service" mode={c.servingMode} shot={c.shot} />);
+          const renderLine = (parts, line) =>
+            parts.length === 0 ? null : (
+              <button
+                onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+                disabled={!drink || !onOpenDrink}
+                style={{ display: "block", width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
+              >
+                <div data-journal-line={line} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
+                  {parts.map((part, idx) => (
+                    <React.Fragment key={idx}>
+                      {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                      {part}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </button>
+            );
           return (
-            <button
-              onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-              disabled={!drink || !onOpenDrink}
-              style={{ display: "block", width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
-            >
-              <div data-journal-line="2" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
-                {mentionParts.map((part, idx) => (
-                  <React.Fragment key={idx}>
-                    {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
-                    {part}
-                  </React.Fragment>
-                ))}
-              </div>
-            </button>
+            <>
+              {renderLine(detailParts, "2")}
+              {renderLine(originParts, "3")}
+            </>
           );
         })()}
-        {/* Ligne 3 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
+        {/* Ligne 4 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
         {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
           <div data-journal-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
             <NavIcon name="map-pin" size={12} color={COLORS.amber} />
             <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
           </div>
         )}
-        {/* Ligne 4 (3 quand il n'y a pas de lieu) — date + heure (points vert fluo) à gauche, croix de suppression à l'extrême droite */}
+        {/* Ligne 5 (4 quand il n'y a pas de lieu) — date + heure (points vert fluo) à gauche, croix de suppression à l'extrême droite */}
         <div data-journal-line="date" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
           <div data-journal-datetime="1" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
             {[formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
