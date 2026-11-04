@@ -146,7 +146,8 @@ const BIO_ICON_STYLE = { ...MENTION_ICON_STYLE, transform: "translateY(-2.7px)" 
 const ENCODE_COL_GAP = 24; // écart entre « Volume » et « Type de service »
 const ENCODE_ROW_GAP = 30; // écart entre la ligne du haut et le bloc du prix
 const PAY_TAB_GAP = 2; // filet entre les onglets € / Jetons / Free (le gris du cadre apparaît entre eux)
-const ENCODE_HEADER_H = 24; // hauteur commune du bandeau de titre / des onglets, en haut de chaque bloc
+const ENCODE_HEADER_H = 24; // hauteur commune du bandeau de titre / des onglets, en haut de chaque bloc (barre de séparation comprise)
+const ENCODE_SEPARATOR = `2px solid ${COLORS.paperAlt}`; // petite barre qui sépare le titre (ou les onglets) du champ, même gris que le cadre et les filets entre onglets
 const ENCODE_FIELD_H = 44; // hauteur commune des champs (volume, type de service, prix)
 const encodeBlockStyle = {
   boxSizing: "border-box",
@@ -163,6 +164,7 @@ const encodeTitleStyle = {
   height: `${ENCODE_HEADER_H}px`,
   padding: "0 12px",
   background: COLORS.amber,
+  borderBottom: ENCODE_SEPARATOR,
   fontSize: "10.5px",
   fontWeight: 700,
   color: COLORS.paper,
@@ -721,8 +723,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
             </button>
           </div>
 
-          {/* Spiritueux dont la fiche a la case « Shot » : choix Spiritueux / Shot, centré comme le formulaire en dessous */}
-          {canBeShot(shotSource) && <SpiritKindToggle asShot={asShot} onChange={changeKind} style={{ margin: "0 auto 32px" }} />}
+          {/* Spiritueux dont la fiche a la case « Shot » : choix Spiritueux / Shot (boutons fins), centré comme le formulaire en dessous */}
+          {canBeShot(shotSource) && <SpiritKindToggle fine asShot={asShot} onChange={changeKind} style={{ margin: "0 auto 32px" }} />}
 
           {/* Ligne 1 : « Volume » et « Type de service » côte à côte, chacun aussi large que sa pastille de titre.
               Ligne 2 : choix € / Jetons / Free et champ de prix, exactement aussi larges que la ligne 1 (@Home : pas de prix). */}
@@ -766,7 +768,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
             {!isHome && (
               <div data-encode="price" style={{ ...encodeBlockStyle, width: 0, minWidth: "100%" }}>
-                <div role="group" aria-label="Monnaie" style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${PAY_TAB_GAP}px`, background: COLORS.paperAlt }}>
+                <div role="group" aria-label="Monnaie" style={{ boxSizing: "border-box", height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${PAY_TAB_GAP}px`, background: COLORS.paperAlt, borderBottom: ENCODE_SEPARATOR }}>
                   {[
                     ["euro", "€"],
                     ["jeton", "Jetons"],
