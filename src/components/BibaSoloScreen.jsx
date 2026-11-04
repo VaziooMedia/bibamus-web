@@ -1037,6 +1037,9 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
             <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber, marginTop: "2px", flexShrink: 0 }}>
               {c.currency === "jeton" ? (
                 <MoneyAmount value={c.price} currency="jeton" jetonIcon="pink" jetonIconSize={14} />
+              ) : c.price === 0 ? (
+                // Verre « Free » (enregistré avec un prix de 0 en euros) : le mot « Free » plutôt que « 0.00 € ».
+                "Free"
               ) : (
                 <>
                   {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
