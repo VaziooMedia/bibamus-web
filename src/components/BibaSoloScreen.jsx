@@ -146,6 +146,7 @@ const BIO_ICON_STYLE = { ...MENTION_ICON_STYLE, transform: "translateY(-2.7px)" 
 const ENCODE_COL_GAP = 24; // écart entre « Volume » et « Type de service »
 const ENCODE_ROW_GAP = 30; // écart entre la ligne du haut et le bloc du prix
 const PAY_TAB_GAP = 2; // filet entre les onglets € / Jetons / Free (le gris du cadre apparaît entre eux)
+const PAY_EURO_SIZE = "16px"; // le sigle € de l'onglet, plus grand que les libellés « Free » / « Jetons » (10,5 px) pour rester lisible ; tient dans le bandeau de 24 px
 const ENCODE_HEADER_H = 24; // hauteur commune du bandeau de titre / des onglets, en haut de chaque bloc (barre de séparation comprise)
 const ENCODE_SEPARATOR = `2px solid ${COLORS.paperAlt}`; // petite barre qui sépare le titre (ou les onglets) du champ, même gris que le cadre et les filets entre onglets
 const ENCODE_FIELD_H = 44; // hauteur commune des champs (volume, type de service, prix)
@@ -810,7 +811,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                           cursor: "pointer",
                         }}
                       >
-                        {key === "jeton" ? <TokenPinkIcon size={13} /> : label}
+                        {key === "jeton" ? <TokenPinkIcon size={13} /> : key === "euro" ? <span style={{ fontSize: PAY_EURO_SIZE, lineHeight: 1 }}>{label}</span> : label}
                       </button>
                     );
                   })}
