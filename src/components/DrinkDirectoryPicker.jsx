@@ -92,15 +92,14 @@ export function DrinkDirectoryPicker({ type, onPick }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nom, type ou brasserie"
+            placeholder="Tape au moins 2 caractères..."
             autoFocus
             style={{ margin: "8px", padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
           />
           <div style={{ overflowY: "auto", flex: 1 }}>
-            {filtered.length === 0 && (
-              <div style={{ padding: "10px 10px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>
-                {query.trim().length === 0 ? "Tape au moins 2 caractères" : query.trim().length === 1 ? "Encore un caractère..." : "Aucun résultat."}
-              </div>
+            {/* L'invite « Tape au moins 2 caractères... » est dans le champ lui-même : en dessous, on n'écrit « Aucun résultat. » qu'une fois la recherche lancée. */}
+            {filtered.length === 0 && query.trim().length >= 2 && (
+              <div style={{ padding: "10px 10px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucun résultat.</div>
             )}
             {/* Une seule ligne par produit, comme la recherche BibAtlas de « Nouvelle tournée » : rond-profil, nom, catégorie. */}
             {filtered.map((d) => (
