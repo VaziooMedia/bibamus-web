@@ -824,7 +824,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                   type="text"
                   inputMode="decimal"
                   aria-label="Prix"
-                  value={free ? "0,00" : price}
+                  value={free ? "-" : price}
                   onChange={(e) => setPrice(e.target.value)}
                   disabled={free}
                   placeholder={currency === "jeton" ? "0" : "0,00"}
