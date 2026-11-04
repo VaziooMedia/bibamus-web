@@ -2716,8 +2716,12 @@ export async function loadGenericDrinks() {
 export async function searchDrinksByType(type, query = "", limit = 30) {
   let request = supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES);
   if (type) request = request.eq("type", DRINK_TYPE_LABEL_TO_CODE[type] || type);
-  const q = (query || "").trim();
-  if (q) request = request.ilike("name", `%${q}%`);
+  // Comme la recherche des marques et des producteurs : on cherche dans `search_text` (nom, nom alternatif, alias et traductions, accents
+  // retirés, tirets et apostrophes en espaces) avec la saisie normalisée de la même façon, pour que « Jagermeister », tapé sans tréma, trouve « Jägermeister ».
+  const typed = (query || "").trim();
+  const q = normalizeSearchText(typed);
+  if (typed && !q) return []; // rien que de la ponctuation : aucun produit à retrouver
+  if (q) request = request.ilike("search_text", `%${q}%`);
   const { data, error } = await request.order("name").limit(limit);
   if (error) {
     console.error("searchDrinksByType:", error);
