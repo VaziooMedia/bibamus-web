@@ -13,15 +13,9 @@ import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, PageHeader } from "./ui.jsx";
 import { ResultRow } from "./SearchScreen.jsx";
+import { makeSearchMatcher } from "../utils.js";
 
 const fullNameOf = (b) => [b.firstName || b.name, b.lastName].filter(Boolean).join(" ") || "Bibax";
-
-// « Émile » et « emile » se valent ; « jean dup » trouve « Jean Dupont ».
-const normalize = (s) =>
-  String(s || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
 
 // `onPick(bibax)` renvoie une promesse : null si la discussion s'est ouverte, sinon le texte de l'erreur.
 export function NewConversationScreen({ bibros = [], onPick, onBack }) {
@@ -40,12 +34,9 @@ export function NewConversationScreen({ bibros = [], onPick, onBack }) {
   );
 
   const shown = useMemo(() => {
-    const tokens = normalize(trimmed).split(/\s+/).filter(Boolean);
-    if (tokens.length === 0) return sortedBibros;
-    return sortedBibros.filter((b) => {
-      const haystack = normalize([b.firstName || b.name, b.lastName, b.nickname].filter(Boolean).join(" "));
-      return tokens.every((t) => haystack.includes(t));
-    });
+    // Même règle de recherche que partout dans l'app (voir makeSearchMatcher) : « Émile » et « emile » se valent, « jean dup » comme « dupont jean » trouvent « Jean Dupont ».
+    const matchesQuery = makeSearchMatcher(trimmed);
+    return sortedBibros.filter((b) => matchesQuery(b.firstName || b.name, b.lastName, b.nickname));
   }, [sortedBibros, trimmed]);
 
   const handlePick = async (b) => {

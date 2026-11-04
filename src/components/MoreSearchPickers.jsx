@@ -7,7 +7,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS, GENERIC_BRAND_LABEL } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { normalizeForSearch, normalizeForDuplicateCheck, drinkTypeLabel, ensureLeafletLoaded } from "../utils.js";
+import { makeSearchMatcher, entityNames, normalizeForDuplicateCheck, drinkTypeLabel, ensureLeafletLoaded } from "../utils.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
 
 export function DrinkLinkPicker({ onPick, excludeId = null, placeholder = "Rechercher une boisson..." }) {
@@ -129,8 +129,9 @@ export function BrandSearchSelect({ value, onChange, brands, onRegister, placeho
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const q = normalizeForSearch(query.trim());
-  const filtered = (q ? brands.filter((b) => normalizeForSearch(b.name).includes(q)) : [...brands])
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher).
+  const matchesQuery = makeSearchMatcher(query);
+  const filtered = brands.filter((b) => matchesQuery(entityNames(b)))
     .filter((b) => normalizeForDuplicateCheck(b.name) !== normalizeForDuplicateCheck(GENERIC_BRAND_LABEL))
     .sort((a, b) => a.name.localeCompare(b.name));
   const exactMatch = brands.some((b) => normalizeForDuplicateCheck(b.name) === normalizeForDuplicateCheck(query));

@@ -19,6 +19,7 @@ import { CheckButtonIcon } from "./CheckButtonIcon.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
+import { makeSearchMatcher } from "../utils.js";
 import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
 
 const SPECIAL_VENUES = [
@@ -70,7 +71,8 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
   }, [q]);
 
   const filteredVenues = q ? searchedVenues : nearbyVenues;
-  const filteredSpecials = q ? SPECIAL_VENUES.filter((v) => v.name.toLowerCase().includes(q.toLowerCase())) : SPECIAL_VENUES;
+  const matchesSpecial = makeSearchMatcher(q);
+  const filteredSpecials = q ? SPECIAL_VENUES.filter((v) => matchesSpecial(v.name)) : SPECIAL_VENUES;
 
 
   const finalizeCheck = async () => {

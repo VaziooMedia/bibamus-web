@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { normalizeForSearch, normalizeForDuplicateCheck } from "../utils.js";
+import { makeSearchMatcher, entityNames, normalizeForDuplicateCheck } from "../utils.js";
 
 export function BrewerySearchSelect({ value, onChange, breweries, onRegister, placeholder = "Sélectionner une brasserie..." }) {
   const [open, setOpen] = useState(false);
@@ -27,8 +27,9 @@ export function BrewerySearchSelect({ value, onChange, breweries, onRegister, pl
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const q = normalizeForSearch(query.trim());
-  const filtered = q ? breweries.filter((b) => normalizeForSearch(b.name).includes(q)) : breweries;
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher).
+  const matchesQuery = makeSearchMatcher(query);
+  const filtered = breweries.filter((b) => matchesQuery(entityNames(b)));
   const exactMatch = breweries.some((b) => normalizeForDuplicateCheck(b.name) === normalizeForDuplicateCheck(query));
 
   const pick = (name) => {

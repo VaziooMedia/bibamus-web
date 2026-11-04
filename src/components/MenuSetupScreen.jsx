@@ -8,7 +8,7 @@ import { NavIcon, TokenPinkIcon, AddPlusIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { MenuProductRow, CHECK_MARK_BG } from "./MenuProductRow.jsx";
-import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems, safeServingMode } from "../utils.js";
+import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems, safeServingMode, makeSearchMatcher, entityNames } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import { loadGenericDrinks } from "../data/sharedDirectories.js";
 
@@ -61,10 +61,11 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   };
 
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
-  const q = normalizeForSearch(query.trim());
-  const searching = q.length > 0;
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher).
+  const matchesQuery = makeSearchMatcher(query);
+  const searching = query.trim().length > 0;
   const searchResults = searching
-    ? [...event.menu].filter((d) => normalizeForSearch(d.name).includes(q)).sort((a, b) => a.name.localeCompare(b.name))
+    ? [...event.menu].filter((d) => matchesQuery(entityNames(d))).sort((a, b) => a.name.localeCompare(b.name))
     : [];
   const categoriesPresent = [...MENU_CATEGORIES, "Non classé"].filter((cat) => event.menu.some((d) => categoryOf(d) === cat));
   const itemsIn = (cat) => [...event.menu.filter((d) => categoryOf(d) === cat)].sort((a, b) => a.name.localeCompare(b.name));

@@ -11,7 +11,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
 import { MyPhotosScreen } from "./MyPhotosScreen.jsx";
-import { normalizeForSearch, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery } from "../utils.js";
+import { makeSearchMatcher, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery } from "../utils.js";
 import {
   loadPendingBibaxRequests,
   loadSentBibaxRequests,
@@ -294,10 +294,9 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
 export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack, onBibaxAdded, onOpenBibaxProfile, onSeeAllSuggestions }) {
   const [query, setQuery] = useState("");
 
-  const q = normalizeForSearch(query.trim());
-  const matchesQuery = (b) =>
-    !q ||
-    [b.firstName, b.lastName, b.nickname, b.alias, b.city, b.country].some((field) => normalizeForSearch(field).includes(q));
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher) : prénom, nom, surnom, alias, ville et pays, dans n'importe quel ordre.
+  const matchesText = makeSearchMatcher(query);
+  const matchesQuery = (b) => matchesText(b.firstName, b.lastName, b.nickname, b.alias, b.city, b.country);
 
   const sortedBibros = [...bibros].filter(matchesQuery).sort((a, b) => {
     if (!!a.isFavorite !== !!b.isFavorite) return a.isFavorite ? -1 : 1;

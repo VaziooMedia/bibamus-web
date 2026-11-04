@@ -10,7 +10,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { loadBrandsDirectory, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
-import { normalizeSearchText } from "../utils.js";
+import { normalizeSearchText, makeSearchMatcher, entityNames } from "../utils.js";
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
@@ -51,15 +51,15 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, isAdmin, addI
 
   const items = useMemo(() => {
     if (searching) {
-      return all.filter((b) =>
-        [b.name, b.alternateName, ...(b.aliases || []), ...(b.translations || []).map((t) => t.value)].some((v) => v && normalizeSearchText(v).includes(q))
-      );
+      // Même règle de recherche que partout dans l'app (voir makeSearchMatcher) : chaque mot tapé se retrouve, dans n'importe quel ordre.
+      const matches = makeSearchMatcher(debouncedQuery);
+      return all.filter((b) => matches(entityNames(b)));
     }
     if (activeCountry) {
       return all.filter((b) => b.originCountry === activeCountry).sort((a, b) => a.name.localeCompare(b.name));
     }
     return [];
-  }, [all, searching, q, activeCountry]);
+  }, [all, searching, debouncedQuery, activeCountry]);
 
   const alreadyAdded = (b) => myBrands.some((mb) => mb.isFavorite && mb.sourcePublicBrandId === b.id);
 

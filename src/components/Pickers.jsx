@@ -6,7 +6,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { normalizeForSearch, capitalizeFirst, sameVenueByNameCity } from "../utils.js";
+import { makeSearchMatcher, capitalizeFirst, sameVenueByNameCity } from "../utils.js";
 import { searchVenues } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 
@@ -25,9 +25,10 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
   }, [open]);
 
   const available = bibros.filter((b) => !excludeCodes.includes(b.code));
-  const q = normalizeForSearch(query.trim());
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher) : prénom, nom, surnom et alias, dans n'importe quel ordre.
+  const matchesQuery = makeSearchMatcher(query);
   const searchText = (b) => [b.alias, b.firstName || b.name, b.lastName, b.nickname].filter(Boolean).join(" ");
-  const filtered = (q ? available.filter((b) => normalizeForSearch(searchText(b)).includes(q)) : available).sort((a, b) => {
+  const filtered = available.filter((b) => matchesQuery(searchText(b))).sort((a, b) => {
     if (!!a.isFavorite !== !!b.isFavorite) return a.isFavorite ? -1 : 1;
     return searchText(a).localeCompare(searchText(b));
   });

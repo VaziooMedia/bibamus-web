@@ -19,7 +19,7 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { SalonAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
-import { formatDate, formatTime, nextId, normalizeForSearch, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson, myDrinksList } from "../utils.js";
+import { formatDate, formatTime, nextId, makeSearchMatcher, entityNames, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson, myDrinksList } from "../utils.js";
 import { HomeServeSheet } from "./HomeServeSheet.jsx";
 import { ServiceTag } from "./ServiceTag.jsx";
 import { loadSalon } from "../data/salons.js";
@@ -960,10 +960,10 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             />
             <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px", maxHeight: "260px", overflowY: "auto" }}>
               {(() => {
-                const q = normalizeForSearch(personalDrinkQuery.trim());
-                const searching = q.length > 0;
+                const matchesQuery = makeSearchMatcher(personalDrinkQuery);
+                const searching = personalDrinkQuery.trim().length > 0;
                 const flatEventMenu = flattenMenu(event.menu);
-                const list = searching ? flatEventMenu.filter((d) => normalizeForSearch(d.name).includes(q)) : flatEventMenu.filter((d) => countPersonal(d.id) > 0);
+                const list = searching ? flatEventMenu.filter((d) => matchesQuery(entityNames(d))) : flatEventMenu.filter((d) => countPersonal(d.id) > 0);
                 if (list.length === 0) {
                   return searching ? (
                     <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", margin: 0 }}>Aucune boisson ne correspond.</p>

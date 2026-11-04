@@ -10,7 +10,7 @@ import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } f
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
-import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, normalizeForSearch, flattenMenu, findMenuEntryById, defaultVolumeText, defaultServingModeText, canBeShot, startsAsShot, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
+import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, makeSearchMatcher, entityNames, flattenMenu, findMenuEntryById, defaultVolumeText, defaultServingModeText, canBeShot, startsAsShot, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { loadSalon } from "../data/salons.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
@@ -422,10 +422,11 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
     goToCategory(categoryOf(created));
   };
 
-  const q = normalizeForSearch(query.trim());
-  const searching = q.length > 0;
-  const searchResultsAll = searching ? visibleMenu.filter((d) => normalizeForSearch(d.name).includes(q)) : [];
-  const searchResultsInCategory = searching && activeCategory ? itemsIn(activeCategory).filter((d) => normalizeForSearch(d.name).includes(q)) : [];
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher).
+  const matchesQuery = makeSearchMatcher(query);
+  const searching = query.trim().length > 0;
+  const searchResultsAll = searching ? visibleMenu.filter((d) => matchesQuery(entityNames(d))) : [];
+  const searchResultsInCategory = searching && activeCategory ? itemsIn(activeCategory).filter((d) => matchesQuery(entityNames(d))) : [];
 
 
   return (
