@@ -139,37 +139,50 @@ const MENTION_ICON_STYLE = { height: "14px", width: "auto", display: "block", fi
 const BIO_ICON_STYLE = { ...MENTION_ICON_STYLE, transform: "translateY(-2.7px)" };
 
 // Mise en page du formulaire d'ajout, sur deux lignes : « Volume » et « Type de service » côte à côte, puis, une ligne plus
-// bas, le choix € / Jetons / Free avec le champ de prix. Chaque titre du haut est une pastille vert fluo (même style que
-// l'onglet actif) et son champ a exactement la largeur de la pastille ; le bloc du bas a exactement la largeur totale des
-// deux champs du haut (écart compris), et ses trois onglets ont la même largeur.
+// bas, le choix € / Jetons / Free avec le champ de prix. Chaque bloc d'encodage est UN seul bloc : un cadre gris arrondi qui
+// contient, collés l'un à l'autre, son titre (bandeau vert fluo ; pour le prix, les trois onglets € / Jetons / Free) et son champ.
+// Le bloc a exactement la largeur de son titre ; le bloc du bas a exactement la largeur totale des deux blocs du haut (écart
+// compris), et ses trois onglets ont la même largeur.
 const ENCODE_COL_GAP = 24; // écart entre « Volume » et « Type de service »
 const ENCODE_ROW_GAP = 30; // écart entre la ligne du haut et le bloc du prix
-const PAY_TAB_GAP = 4; // écart entre les onglets € / Jetons / Free
-const ENCODE_HEADER_H = 24; // hauteur commune de la ligne au-dessus des champs (pastilles de titre / onglets)
+const PAY_TAB_GAP = 2; // filet entre les onglets € / Jetons / Free (le gris du cadre apparaît entre eux)
+const ENCODE_HEADER_H = 24; // hauteur commune du bandeau de titre / des onglets, en haut de chaque bloc
+const ENCODE_FIELD_H = 44; // hauteur commune des champs (volume, type de service, prix)
+const encodeBlockStyle = {
+  boxSizing: "border-box",
+  border: `2px solid ${COLORS.paperAlt}`,
+  borderRadius: "12px",
+  overflow: "hidden",
+  background: COLORS.surface,
+};
 const encodeTitleStyle = {
-  display: "inline-flex",
+  display: "flex",
   alignItems: "center",
+  justifyContent: "center",
   boxSizing: "border-box",
   height: `${ENCODE_HEADER_H}px`,
   padding: "0 12px",
   background: COLORS.amber,
-  border: `2px solid ${COLORS.amber}`,
-  borderRadius: "999px",
   fontSize: "10.5px",
   fontWeight: 700,
   color: COLORS.paper,
   whiteSpace: "nowrap",
 };
+// Le champ n'a plus de bordure ni d'angles à lui : c'est le cadre du bloc qui les porte. Le contour de focus est tracé à l'intérieur
+// du champ (outlineOffset négatif), sans quoi le cadre le couperait.
 const encodeInputStyle = {
+  display: "block",
   width: "100%",
   boxSizing: "border-box",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: `2px solid ${COLORS.paperAlt}`,
+  height: `${ENCODE_FIELD_H}px`,
+  padding: "0 14px",
+  border: "none",
+  borderRadius: 0,
   background: COLORS.surface,
   color: COLORS.ink,
   fontSize: "14px",
   textAlign: "center",
+  outlineOffset: "-2px",
 };
 // Pris en shot (`asShot`), le volume du shot encodé sur la fiche (default_shot_volume_cl) passe en premier ; s'il n'y en a pas, on retombe sur la chaîne habituelle.
 function defaultVolumeOf(drink, asShot = false) {
@@ -698,7 +711,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               borderRadius: "12px",
               padding: "5px 12px",
               marginTop: "18px",
-              marginBottom: canBeShot(shotSource) ? "14px" : "32px",
+              marginBottom: canBeShot(shotSource) ? "28px" : "32px",
             }}
           >
             <EntityAvatar photoUrl={selectedDrink.photoUrl} photoEmoji={selectedDrink.avatarEmoji} size={28} fallbackIcon="bottle" />
@@ -715,10 +728,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               Ligne 2 : choix € / Jetons / Free et champ de prix, exactement aussi larges que la ligne 1 (@Home : pas de prix). */}
           <div data-encode="form" style={{ display: "flex", flexDirection: "column", alignItems: "stretch", width: "fit-content", margin: "0 auto 40px", gap: `${ENCODE_ROW_GAP}px` }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: `${ENCODE_COL_GAP}px` }}>
-              <div data-encode="volume" style={{ flex: "0 0 auto", minWidth: 0 }}>
-                <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "6px" }}>
-                  <label htmlFor="solo-volume" style={encodeTitleStyle}>Volume (cl.)</label>
-                </div>
+              <div data-encode="volume" style={{ ...encodeBlockStyle, flex: "0 0 auto", minWidth: 0 }}>
+                <label htmlFor="solo-volume" style={encodeTitleStyle}>Volume (cl.)</label>
                 <input
                   id="solo-volume"
                   type="text"
@@ -726,20 +737,18 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                   value={volume}
                   onChange={(e) => setVolume(e.target.value)}
                   placeholder="00"
-                  style={{ ...encodeInputStyle, width: 0, minWidth: "100%", padding: "12px 8px" }}
+                  style={{ ...encodeInputStyle, width: 0, minWidth: "100%", padding: "0 8px" }}
                 />
               </div>
 
-              <div data-encode="service" style={{ flex: "0 0 auto", minWidth: 0 }}>
-                <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "6px" }}>
-                  <label htmlFor="solo-service" style={encodeTitleStyle}>Type de service</label>
-                </div>
+              <div data-encode="service" style={{ ...encodeBlockStyle, flex: "0 0 auto", minWidth: 0 }}>
+                <label htmlFor="solo-service" style={encodeTitleStyle}>Type de service</label>
                 <div style={{ position: "relative", width: 0, minWidth: "100%" }}>
                   <select
                     id="solo-service"
                     value={servingMode}
                     onChange={(e) => setServingMode(e.target.value)}
-                    style={{ ...encodeInputStyle, WebkitAppearance: "none", appearance: "none", textAlign: "left", height: "44px", padding: "0 26px 0 11px", fontSize: "13px", cursor: "pointer" }}
+                    style={{ ...encodeInputStyle, WebkitAppearance: "none", appearance: "none", textAlign: "left", padding: "0 26px 0 11px", fontSize: "13px", cursor: "pointer" }}
                   >
                     <option value="">Non défini</option>
                     {SERVING_MODE_OPTIONS.map(([key, label]) => (
@@ -756,8 +765,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
             </div>
 
             {!isHome && (
-              <div data-encode="price" style={{ width: 0, minWidth: "100%" }}>
-                <div role="group" aria-label="Monnaie" style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${PAY_TAB_GAP}px`, marginBottom: "6px" }}>
+              <div data-encode="price" style={{ ...encodeBlockStyle, width: 0, minWidth: "100%" }}>
+                <div role="group" aria-label="Monnaie" style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${PAY_TAB_GAP}px`, background: COLORS.paperAlt }}>
                   {[
                     ["euro", "€"],
                     ["jeton", "Jetons"],
@@ -791,8 +800,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                           alignItems: "center",
                           justifyContent: "center",
                           background: active ? COLORS.amber : COLORS.surface,
-                          border: `2px solid ${active ? COLORS.amber : COLORS.paperAlt}`,
-                          borderRadius: "999px",
+                          border: "none",
+                          borderRadius: 0,
                           fontSize: "10.5px",
                           fontWeight: 700,
                           color: active ? COLORS.paper : COLORS.ink,
