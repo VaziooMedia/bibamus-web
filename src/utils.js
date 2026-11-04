@@ -872,6 +872,12 @@ export function normalizeSearchText(str) {
     .trim();
 }
 
+// Version « compacte » d'un texte déjà passé dans normalizeSearchText : sans espaces ni ponctuation, pour retrouver « Hendrick's » en tapant « Hendricks »
+// ou « Belle-Vue » en tapant « Bellevue ». Même ensemble de caractères que la colonne `search_compact` de `drinks_directory` (`regexp_replace` sur
+// `search_text`, voir docs/DATABASE.md), plus « » “ ” „ que `unaccent` ramène à << >> ou " côté base. Les lettres, les chiffres et toutes les écritures non
+// latines restent.
+export const compactSearchText = (normalized) => (normalized || "").replace(/[\s"',;:!?(){}[\]/\\&+*#@%=|<>~^$_«»“”„-]/g, "");
+
 // « @nom » tapé dans une barre de recherche : rend le nom SANS le « @ » (pour lookupUsername), ou null
 // si la saisie ne commence pas par « @ » ou n'a rien après. Une saisie normale n'est jamais touchée.
 export const usernameFromQuery = (text) => {

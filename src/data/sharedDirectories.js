@@ -13,7 +13,7 @@
 
 import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
-import { normalizeSearchText } from "../utils.js";
+import { normalizeSearchText, compactSearchText } from "../utils.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
@@ -2716,20 +2716,28 @@ export async function loadGenericDrinks() {
 export async function searchDrinksByType(type, query = "", limit = 30) {
   let request = supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES);
   if (type) request = request.eq("type", DRINK_TYPE_LABEL_TO_CODE[type] || type);
-  // Comme la recherche des marques et des producteurs : on cherche dans `search_text` (nom, nom alternatif, alias et traductions, accents
-  // retirés, tirets et apostrophes en espaces) avec la saisie normalisée de la même façon, pour que « Jagermeister », tapé sans tréma, trouve « Jägermeister ».
+  // Recherche tolérante : accents, lettres collées (œ), apostrophes et tirets, droits ou typographiques, ET séparateurs omis (« Hendricks » pour
+  // « Hendrick's », « Bellevue » pour « Belle-Vue »). On compare la saisie normalisée comme `search_text`, puis débarrassée des espaces et de la
+  // ponctuation, à la colonne `search_compact` (le même `search_text`, compacté de la même façon en base).
   const typed = (query || "").trim();
   const q = normalizeSearchText(typed);
-  if (typed && !q) return []; // rien que de la ponctuation : aucun produit à retrouver
-  // `%`, `_` et `\` tapés sont cherchés tels quels (pas des jokers) ; chaque espace devient `%` : la base ne fusionne pas les espaces
-  // (« Coca - Cola » est enregistré « coca   cola »), et les mots tapés doivent seulement se suivre dans l'ordre.
-  if (q) request = request.ilike("search_text", `%${q.replace(/[\\%_]/g, "\\$&").replace(/ /g, "%")}%`);
-  const { data, error } = await request.order("name").limit(limit);
+  const compact = compactSearchText(q);
+  if (typed && !compact) return []; // rien que de la ponctuation : aucun produit à retrouver
+  if (compact) request = request.ilike("search_compact", `%${compact}%`);
+  // Compacter rapproche des mots voisins (« dj » est dans « chaud jagermeister ») : on lit plus de lignes, puis on met d'abord celles où les mots tapés
+  // se suivent vraiment dans `search_text`, et on rend `limit` lignes.
+  const { data, error } = await request.order("name").limit(compact ? limit * 3 : limit);
   if (error) {
     console.error("searchDrinksByType:", error);
     return [];
   }
-  return data.map(rowToDrink);
+  let rows = data;
+  if (compact) {
+    const wordsInOrder = new RegExp(q.split(" ").filter(Boolean).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*"), "i");
+    const exact = (row) => wordsInOrder.test(row.search_text || "");
+    rows = [...rows.filter(exact), ...rows.filter((row) => !exact(row))].slice(0, limit);
+  }
+  return rows.map(rowToDrink);
 }
 
 // Combien de produits ce Bibro a-t-il notés au total — compte côté serveur, jamais besoin de
