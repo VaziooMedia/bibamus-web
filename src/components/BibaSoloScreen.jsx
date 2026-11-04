@@ -291,12 +291,13 @@ function MenuItemBlock({ item, onClick }) {
 
 // Écran d'ajout — recherche une boisson, prix obligatoire. Le lieu est fixé une fois sur la
 // page principale de BibaSolo et appliqué automatiquement ici, sans le redemander à chaque verre.
-function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActive = false, onDone, onBack, onAddDrink = null }) {
+function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActive = false, defaultCurrency = "euro", onDone, onBack, onAddDrink = null }) {
   const [query, setQuery] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
   const [volume, setVolume] = useState("");
   const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState("euro"); // "euro" | "jeton" — monnaie dans laquelle le verre a été payé
+  // Monnaie dans laquelle le verre a été payé : « jeton » d'office quand le mode Jetons est activé sur l'écran principal, « euro » sinon.
+  const [currency, setCurrency] = useState(defaultCurrency === "jeton" ? "jeton" : "euro"); // "euro" | "jeton"
   const [free, setFree] = useState(false); // verre offert : compte pour un prix de 0 (en euros), le prix saisi est gardé de côté
   const priceInputRef = useRef(null); // champ de prix : reçoit le curseur (et le clavier numérique) dès qu'on touche € ou Jetons
   const [servingMode, setServingMode] = useState(""); // type de service : "" (non défini) | bouteille | canette | fut | verre
@@ -390,8 +391,10 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     // Le type de service que le lieu précise sur sa carte passe avant celui par défaut de la fiche du produit.
     setServingMode(safeServingMode(item.servingMode) || defaultServingModeText(master, shot));
     if (item.price != null) setPrice(String(item.price).replace(".", ","));
-    // Une carte tarifée en jetons : le prix repris ici est un nombre de jetons, pas des euros.
+    // Une carte tarifée en jetons : le prix repris ici est un nombre de jetons, pas des euros. Une carte tarifée en euros remet
+    // les euros, même si le mode Jetons avait mis « Jetons » par défaut : sinon son prix en euros atterrirait dans le champ des jetons.
     if (venue?.defaultCurrency === "jeton") setCurrency("jeton");
+    else if (venue?.defaultCurrency === "euro") setCurrency("euro");
   };
 
   const [error, setError] = useState(null);
@@ -1258,6 +1261,8 @@ function SoloHistoryScreen({ onBack, onOpenDrink }) {
 // Boutons ronds du bloc Jetons : 32 px pour « + » / « − » et la croix / le « + » du formulaire d'achat, 40 px pour le « + » d'achat.
 const JETON_ROUND_BUTTON = { display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", borderRadius: "50%", background: "none", border: `2px solid ${COLORS.paperAlt}`, boxSizing: "border-box", padding: 0, flexShrink: 0, cursor: "pointer" };
 const JETON_SMALL_BUTTON = { ...JETON_ROUND_BUTTON, width: "32px", height: "32px" };
+// Annuler (croix) et valider (« + ») du formulaire d'achat : carrés à coins arrondis, plus petits que les boutons ronds « + » / « − » de la colonne de gauche.
+const JETON_BUY_ACTION_BUTTON = { ...JETON_SMALL_BUTTON, width: "28px", height: "28px", borderRadius: "8px" };
 const JETON_INPUT = { width: "54px", height: "34px", boxSizing: "border-box", textAlign: "center", fontSize: "15px", fontWeight: 700, color: COLORS.ink, background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", outline: "none" };
 
 function jetonPlusIcon(color, size = 12) {
@@ -1333,16 +1338,20 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
           disabled={buyOpen}
           title="Acheter des jetons"
           aria-label="Acheter des jetons"
-          style={{ ...JETON_ROUND_BUTTON, background: COLORS.amber, border: `2px solid ${COLORS.amber}`, opacity: buyOpen ? 0.35 : 1, cursor: buyOpen ? "default" : "pointer" }}
+          style={{ ...JETON_ROUND_BUTTON, position: "relative", overflow: "visible", border: `2px solid ${COLORS.amber}`, opacity: buyOpen ? 0.35 : 1, cursor: buyOpen ? "default" : "pointer" }}
         >
-          {jetonPlusIcon(COLORS.paper, 14)}
+          {/* Un jeton vert avec un petit « + » : on achète des jetons, et ce bouton ne se confond plus avec le « + » de « Ajouter un Produit ». */}
+          <TokenGreenIcon size={22} />
+          <span style={{ position: "absolute", top: "-6px", right: "-6px", width: "16px", height: "16px", borderRadius: "50%", background: COLORS.amber, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {jetonPlusIcon(COLORS.paper, 9)}
+          </span>
         </button>
       </div>
       {buyOpen && (
         <div data-jeton-buy="1">
           <div style={{ borderTop: `2px solid ${COLORS.paperAlt}`, margin: "12px -14px 12px" }} />
           <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft }}>
-            <button type="button" onClick={closeBuy} title="Annuler" aria-label="Annuler" style={JETON_SMALL_BUTTON}>
+            <button type="button" onClick={closeBuy} title="Annuler" aria-label="Annuler" style={JETON_BUY_ACTION_BUTTON}>
               <span style={{ display: "block", transform: "rotate(45deg)" }}>{jetonPlusIcon(COLORS.ink)}</span>
             </button>
             <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
@@ -1357,7 +1366,7 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
               disabled={!canBuy}
               title="Ajouter les jetons"
               aria-label="Ajouter les jetons achetés"
-              style={{ ...JETON_SMALL_BUTTON, background: COLORS.amber, border: `2px solid ${COLORS.amber}`, opacity: canBuy ? 1 : 0.35, cursor: canBuy ? "pointer" : "default" }}
+              style={{ ...JETON_BUY_ACTION_BUTTON, background: COLORS.amber, border: `2px solid ${COLORS.amber}`, opacity: canBuy ? 1 : 0.35, cursor: canBuy ? "pointer" : "default" }}
             >
               {jetonPlusIcon(COLORS.paper)}
             </button>
@@ -1700,6 +1709,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         recentDrinks={recentDrinkIds.map((id) => drinksById[id]).filter(Boolean)}
         venue={currentVenue}
         bibaZeroActive={!!bibaZero}
+        defaultCurrency={jetonsOn ? "jeton" : "euro"}
         onAddDrink={onAddDrink}
         onBack={() => setAdding(false)}
         onDone={() => {
