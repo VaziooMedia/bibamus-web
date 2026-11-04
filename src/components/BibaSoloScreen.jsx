@@ -291,12 +291,13 @@ function MenuItemBlock({ item, onClick }) {
 
 // Écran d'ajout — recherche une boisson, prix obligatoire. Le lieu est fixé une fois sur la
 // page principale de BibaSolo et appliqué automatiquement ici, sans le redemander à chaque verre.
-function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActive = false, onDone, onBack, onAddDrink = null }) {
+function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActive = false, defaultCurrency = "euro", onDone, onBack, onAddDrink = null }) {
   const [query, setQuery] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
   const [volume, setVolume] = useState("");
   const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState("euro"); // "euro" | "jeton" — monnaie dans laquelle le verre a été payé
+  // Monnaie dans laquelle le verre a été payé : « jeton » d'office quand le mode Jetons est activé sur l'écran principal, « euro » sinon.
+  const [currency, setCurrency] = useState(defaultCurrency === "jeton" ? "jeton" : "euro"); // "euro" | "jeton"
   const [free, setFree] = useState(false); // verre offert : compte pour un prix de 0 (en euros), le prix saisi est gardé de côté
   const priceInputRef = useRef(null); // champ de prix : reçoit le curseur (et le clavier numérique) dès qu'on touche € ou Jetons
   const [servingMode, setServingMode] = useState(""); // type de service : "" (non défini) | bouteille | canette | fut | verre
@@ -390,8 +391,10 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     // Le type de service que le lieu précise sur sa carte passe avant celui par défaut de la fiche du produit.
     setServingMode(safeServingMode(item.servingMode) || defaultServingModeText(master, shot));
     if (item.price != null) setPrice(String(item.price).replace(".", ","));
-    // Une carte tarifée en jetons : le prix repris ici est un nombre de jetons, pas des euros.
+    // Une carte tarifée en jetons : le prix repris ici est un nombre de jetons, pas des euros. Une carte tarifée en euros remet
+    // les euros, même si le mode Jetons avait mis « Jetons » par défaut : sinon son prix en euros atterrirait dans le champ des jetons.
     if (venue?.defaultCurrency === "jeton") setCurrency("jeton");
+    else if (venue?.defaultCurrency === "euro") setCurrency("euro");
   };
 
   const [error, setError] = useState(null);
@@ -1700,6 +1703,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         recentDrinks={recentDrinkIds.map((id) => drinksById[id]).filter(Boolean)}
         venue={currentVenue}
         bibaZeroActive={!!bibaZero}
+        defaultCurrency={jetonsOn ? "jeton" : "euro"}
         onAddDrink={onAddDrink}
         onBack={() => setAdding(false)}
         onDone={() => {
