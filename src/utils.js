@@ -911,7 +911,8 @@ export function makeSearchMatcher(query) {
 // 1 = tous les mots sont là, séparés ou dans un autre ordre, 2 = il a fallu ignorer les espaces et la ponctuation (« Hendricks » pour « Hendrick's »).
 // `searchText` est la colonne `search_text` de la fiche (déjà normalisée par la base).
 export function searchRank(query, searchText) {
-  const q = normalizeSearchText(query);
+  // `unaccent` de la base écrit les guillemets « » comme << >> et les guillemets “ ” „ comme " dans `search_text` : on fait de même sur la saisie.
+  const q = normalizeSearchText(query).replace(/«/g, "<<").replace(/»/g, ">>").replace(/[“”„]/g, '"');
   const text = (searchText || "").replace(/\s+/g, " "); // la base ne fusionne pas les espaces (« Coca - Cola » → « coca   cola »)
   if (q && text.includes(q)) return 0;
   const words = q.split(" ").filter(Boolean);

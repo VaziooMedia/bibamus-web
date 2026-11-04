@@ -13,7 +13,7 @@
 
 import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
-import { normalizeSearchText, searchTokens, searchRank } from "../utils.js";
+import { searchTokens, searchRank } from "../utils.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
@@ -3036,34 +3036,39 @@ export async function loadBrandsByIds(ids) {
 
 // Pas de vraie RPC dédiée pour ces 2 répertoires (contrairement à search_drinks/search_venues)
 // — vraie recherche directe par nom, simple et suffisante pour un vrai picker de tag.
-export async function searchBrands(query, limit = 30) {
-  const q = (query || "").trim();
-  if (!q) return [];
-  const { data, error } = await supabase
-    .from("brands_directory")
-    .select("*")
-    .ilike("search_text", `%${normalizeSearchText(q)}%`)
-    .limit(limit);
+// Même règle de recherche que partout dans l'app (voir makeSearchMatcher dans utils.js) : chaque mot tapé doit se retrouver, dans n'importe quel ordre,
+// sans tenir compte des accents, des apostrophes, des tirets ni des espaces. Chaque mot est comparé à la colonne `search_compact` de la table (le
+// `search_text` de la fiche, débarrassé des espaces et de la ponctuation, comme `compactSearchText`). On lit plus de lignes que demandé, puis on classe
+// les plus précises en premier (voir searchRank), comme pour les produits.
+async function searchDirectoryByTokens(table, label, query, limit) {
+  const typed = (query || "").trim();
+  if (!typed) return [];
+  const tokens = searchTokens(typed);
+  if (tokens.length === 0) return []; // rien que de la ponctuation : aucune fiche à retrouver
+  let request = supabase.from(table).select("*");
+  tokens.forEach((token) => {
+    request = request.ilike("search_compact", `%${token}%`);
+  });
+  const { data, error } = await request.order("name").limit(limit * 3);
   if (error) {
-    console.error("searchBrands:", error);
+    console.error(`${label}:`, error);
     return [];
   }
-  return data.map(rowToBrand);
+  return data
+    .map((row, index) => ({ row, index, rank: searchRank(typed, row.search_text) }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map((entry) => entry.row)
+    .slice(0, limit);
+}
+
+export async function searchBrands(query, limit = 30) {
+  const rows = await searchDirectoryByTokens("brands_directory", "searchBrands", query, limit);
+  return rows.map(rowToBrand);
 }
 
 export async function searchBreweries(query, limit = 30) {
-  const q = (query || "").trim();
-  if (!q) return [];
-  const { data, error } = await supabase
-    .from("breweries_directory")
-    .select("*")
-    .ilike("search_text", `%${normalizeSearchText(q)}%`)
-    .limit(limit);
-  if (error) {
-    console.error("searchBreweries:", error);
-    return [];
-  }
-  return data.map(rowToBrewery);
+  const rows = await searchDirectoryByTokens("breweries_directory", "searchBreweries", query, limit);
+  return rows.map(rowToBrewery);
 }
 
 export async function loadBreweriesByIds(ids) {
