@@ -44,7 +44,7 @@ import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
 import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
 import { AiIcon } from "./AiIcon.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
-import { ShotPill } from "./ServiceTag.jsx";
+import { ServicePill, serviceLabelOf } from "./ServiceTag.jsx";
 
 function normalize(str) {
   return (str || "")
@@ -1047,13 +1047,16 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
         {/* Ligne 2 — volume + drapeau + % ABV + icône Bio + icône Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
         {(() => {
           const mentionParts = [];
+          // Ordre : volume, % ABV, pays (drapeau), étiquette d'alcool (0.0%…) / Bio / Gluten free, puis la pastille de type de service.
           if (c.volumeCl) mentionParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
-          // Un verre pris en shot porte la pastille « Shot » juste après le volume.
-          if (c.shot) mentionParts.push(<ShotPill key="shot" />);
-          if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
           if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
+          if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
+          const alcoholTier = showMentions ? getAlcoholTierBadge(drink.abv) : null;
+          if (alcoholTier) mentionParts.push(<span key="tier" title={alcoholTier.title} style={{ whiteSpace: "nowrap" }}>{alcoholTier.label}</span>);
           if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
           if (showMentions && drink.glutenFree) mentionParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
+          // Un verre pris en shot porte la pastille « Shot » seule, sans tenir compte de son type de service ; sinon, le type de service s'il est défini.
+          if (c.shot || serviceLabelOf(c.servingMode)) mentionParts.push(<ServicePill key="service" mode={c.servingMode} shot={c.shot} />);
           if (mentionParts.length === 0) return null;
           return (
             <button

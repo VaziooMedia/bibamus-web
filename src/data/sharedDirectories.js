@@ -520,6 +520,7 @@ function soloRowToCheckin(row) {
     price: row.price,
     currency: row.currency === "jeton" ? "jeton" : "euro",
     volumeCl: row.volume_cl,
+    servingMode: row.serving_mode || "",
     shot: row.as_shot === true,
     createdAt: row.created_at,
   };

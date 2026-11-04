@@ -11,6 +11,9 @@ const SERVICE_LABELS = { bouteille: "Bouteille", canette: "Canette", fut: "On Ta
 
 const pillStyle = { display: "inline-block", whiteSpace: "nowrap", padding: "0 6px", fontSize: "9.5px", lineHeight: "13px", fontWeight: 500, color: COLORS.inkSoft, border: `1px solid ${COLORS.inkSoft}55`, borderRadius: "999px" };
 
+// Le libellé d'un type de service connu, ou null (vide, NULL en base ou valeur inconnue).
+export const serviceLabelOf = (mode) => (typeof mode === "string" && Object.prototype.hasOwnProperty.call(SERVICE_LABELS, mode) ? SERVICE_LABELS[mode] : null);
+
 // La pastille « Shot » seule, réutilisée telle quelle par le journal de BibaSolo (ligne 2 d'un verre bu).
 export function ShotPill({ style }) {
   return (
@@ -20,8 +23,20 @@ export function ShotPill({ style }) {
   );
 }
 
+// La pastille de la ligne 2 du journal de BibaSolo : « Shot » seul pour un verre pris en shot, quel que soit son type de service
+// (un shot est d'office servi au verre, inutile de le répéter) ; sinon le type de service ; rien s'il n'est pas défini.
+export function ServicePill({ mode, shot = false }) {
+  if (shot) return <ShotPill />;
+  const label = serviceLabelOf(mode);
+  return label ? (
+    <span data-testid="service-pill" style={pillStyle}>
+      {label}
+    </span>
+  ) : null;
+}
+
 export function ServiceTag({ mode, shot = false }) {
-  const known = typeof mode === "string" && Object.prototype.hasOwnProperty.call(SERVICE_LABELS, mode) ? SERVICE_LABELS[mode] : null;
+  const known = serviceLabelOf(mode);
   const label = shot && mode === "verre" ? null : known;
   if (!label && !shot) return null;
   return (
