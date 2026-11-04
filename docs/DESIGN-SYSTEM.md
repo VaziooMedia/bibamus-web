@@ -72,7 +72,7 @@ Le logo (`BibamusLogoFull`, `public/bibamus-logo.svg`) suit la même convention 
 
 ### Jetons de couleur
 
-Six fichiers `src/assets/brand/token-*.svg` (bleu `#0040ef`, cyan `#00ffff`, vert `#39ff14`, orange `#ef4800`, rose `#ef007c`, rouge `#ef1700`). Composants : Rose, Cyan, Rouge (inutilisé), Vert ; pas de composant Bleu ni Orange. Sens observé dans les salons : **cyan = versés** dans la cagnotte, **rose = dépensés** (aussi en BibaSolo), **vert = restants**. Le vert et le cyan des jetons ne sont pas ceux de `amber` et de `jetonFluo`.
+Six fichiers `src/assets/brand/token-*.svg` (bleu `#0040ef`, cyan `#00ffff`, vert `#39ff14`, orange `#ef4800`, rose `#ef007c`, rouge `#ef1700`). Composants : Rose, Cyan, Rouge (inutilisé), Vert ; pas de composant Bleu ni Orange. Sens observé dans les salons : **cyan = versés** dans la cagnotte, **rose = dépensés** (aussi en BibaSolo), **vert = restants**. BibaSolo suit le même code dans son bloc Jetons : jeton **vert = solde positif** (disponibles ; le chiffre passe en rose fluo si le solde est négatif), jeton **rose = dépensés**, et l'icône d'activation de l'en-tête est le jeton vert (grisé et atténué quand le bloc est masqué, entouré de `amber` quand il est affiché). Le vert et le cyan des jetons ne sont pas ceux de `amber` et de `jetonFluo`.
 
 ## Thème
 

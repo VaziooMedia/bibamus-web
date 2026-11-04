@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { flushSync } from "react-dom";
 import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
-import { NavIcon, CountryFlagImg, WaterAlertIcon, TokenPinkIcon } from "./icons.jsx";
+import { NavIcon, CountryFlagImg, WaterAlertIcon, TokenPinkIcon, TokenGreenIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink, MoneyAmount } from "./ui.jsx";
 import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
@@ -33,6 +33,10 @@ import {
   loadMyWaterAlertSoloSettings,
   saveWaterAlertSoloSettings,
   upsertPushSubscription,
+  loadMyJetonMovements,
+  addJetonMovement,
+  archiveMyJetonMovements,
+  loadMyJetonSpentSince,
 } from "../data/sharedDirectories.js";
 import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
@@ -1251,6 +1255,120 @@ function SoloHistoryScreen({ onBack, onOpenDrink }) {
   );
 }
 
+// Boutons ronds du bloc Jetons : 32 px pour « + » / « − » et la croix / le « + » du formulaire d'achat, 40 px pour le « + » d'achat.
+const JETON_ROUND_BUTTON = { display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", borderRadius: "50%", background: "none", border: `2px solid ${COLORS.paperAlt}`, boxSizing: "border-box", padding: 0, flexShrink: 0, cursor: "pointer" };
+const JETON_SMALL_BUTTON = { ...JETON_ROUND_BUTTON, width: "32px", height: "32px" };
+const JETON_INPUT = { width: "54px", height: "34px", boxSizing: "border-box", textAlign: "center", fontSize: "15px", fontWeight: 700, color: COLORS.ink, background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", outline: "none" };
+
+function jetonPlusIcon(color, size = 12) {
+  const bar = (2.5 / 2);
+  return (
+    <span style={{ position: "relative", width: `${size}px`, height: `${size}px`, display: "block" }}>
+      <span style={{ position: "absolute", left: 0, top: `${size / 2 - bar}px`, width: `${size}px`, height: "2.5px", borderRadius: "2px", background: color }} />
+      <span style={{ position: "absolute", top: 0, left: `${size / 2 - bar}px`, width: "2.5px", height: `${size}px`, borderRadius: "2px", background: color }} />
+    </span>
+  );
+}
+
+// Bloc « Jetons » de l'accueil de BibaSolo, sous les trois blocs (Verres / Dépensé / Kcal) ; on l'affiche et on le masque avec
+// l'icône Jetons de l'en-tête. Couleurs des jetons : vert fluo = solde positif (jeton du solde, bouton d'achat), rose = dépensés.
+//   - à gauche : « + » (jeton trouvé ou offert) au-dessus de « − » (jeton donné, ou verre offert à quelqu'un) : ils ne touchent pas au Dépensé ;
+//   - au centre : le solde (chiffre blanc, jeton vert, « disponible(s) »), une petite barre, puis les jetons dépensés (« 3 ● dépensés ») ;
+//   - à droite : « + » vert = acheter des jetons. Le sous-bloc d'achat (X jetons contre X €) s'ouvre dessous, croix à gauche pour annuler,
+//     « + » à droite pour ajouter ; les euros payés s'ajoutent au Dépensé du jour.
+// `balance` vaut null tant que les mouvements ne sont pas chargés ; `onBuy` renvoie une promesse (true si l'achat est enregistré).
+function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
+  const [buyOpen, setBuyOpen] = useState(false);
+  const [buyCount, setBuyCount] = useState("");
+  const [buyEuro, setBuyEuro] = useState("");
+  const buyN = parseFloat(String(buyCount).replace(",", "."));
+  const canBuy = buyN > 0 && !busy;
+  const closeBuy = () => {
+    setBuyOpen(false);
+    setBuyCount("");
+    setBuyEuro("");
+  };
+  const confirmBuy = async () => {
+    if (!canBuy) return;
+    const euro = parseFloat(String(buyEuro).replace(",", "."));
+    const ok = await onBuy(buyN, Number.isFinite(euro) && euro > 0 ? euro : 0);
+    if (ok) closeBuy();
+  };
+  const stock = balance ?? 0;
+  const canMinus = balance != null && balance > 0 && !busy;
+  return (
+    <div data-jetons-block="1" style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "18px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px", flexShrink: 0 }}>
+          <button type="button" onClick={() => onAdjust(1)} disabled={busy} title="Ajouter un jeton (trouvé ou offert)" aria-label="Ajouter un jeton" style={{ ...JETON_SMALL_BUTTON, opacity: busy ? 0.6 : 1 }}>
+            {jetonPlusIcon(COLORS.ink)}
+          </button>
+          <button
+            type="button"
+            onClick={() => onAdjust(-1)}
+            disabled={!canMinus}
+            title="Retirer un jeton (donné, ou verre offert à quelqu'un)"
+            aria-label="Retirer un jeton"
+            style={{ ...JETON_SMALL_BUTTON, opacity: canMinus ? 1 : 0.35, cursor: canMinus ? "pointer" : "default" }}
+          >
+            <span style={{ width: "12px", height: "2.5px", borderRadius: "2px", background: COLORS.ink }} />
+          </button>
+        </div>
+        <div style={{ textAlign: "center", flex: 1, minWidth: 0 }}>
+          <div data-jeton-count="1" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "22px", fontWeight: 800, color: stock < 0 ? COLORS.pinkFluo : COLORS.ink }}>
+            {balance == null ? "–" : formatJetonCount(balance)}
+            <TokenGreenIcon size={20} />
+          </div>
+          <div data-jeton-label="1" style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>{stock < 2 ? "disponible" : "disponibles"}</div>
+          <div style={{ width: "40px", height: "2px", borderRadius: "1px", background: COLORS.paperAlt, margin: "7px auto 6px" }} />
+          <div data-jeton-spent="1" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontSize: "11px", color: COLORS.inkSoft }}>
+            <span style={{ fontWeight: 700, color: COLORS.ink }}>{formatJetonCount(spent)}</span>
+            <TokenPinkIcon size={11} />
+            <span>{spent > 0 && spent < 2 ? "dépensé" : "dépensés"}</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setBuyOpen(true)}
+          disabled={buyOpen}
+          title="Acheter des jetons"
+          aria-label="Acheter des jetons"
+          style={{ ...JETON_ROUND_BUTTON, background: COLORS.amber, border: `2px solid ${COLORS.amber}`, opacity: buyOpen ? 0.35 : 1, cursor: buyOpen ? "default" : "pointer" }}
+        >
+          {jetonPlusIcon(COLORS.paper, 14)}
+        </button>
+      </div>
+      {buyOpen && (
+        <div data-jeton-buy="1">
+          <div style={{ borderTop: `2px solid ${COLORS.paperAlt}`, margin: "12px -14px 12px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft }}>
+            <button type="button" onClick={closeBuy} title="Annuler" aria-label="Annuler" style={JETON_SMALL_BUTTON}>
+              <span style={{ display: "block", transform: "rotate(45deg)" }}>{jetonPlusIcon(COLORS.ink)}</span>
+            </button>
+            <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+              <input type="text" inputMode="decimal" aria-label="Nombre de jetons" value={buyCount} onChange={(e) => setBuyCount(e.target.value)} placeholder="0" autoFocus style={JETON_INPUT} />
+              <span style={{ whiteSpace: "nowrap" }}>jetons contre</span>
+              <input type="text" inputMode="decimal" aria-label="Montant payé en euros" value={buyEuro} onChange={(e) => setBuyEuro(e.target.value)} placeholder="0,00" style={JETON_INPUT} />
+              <span style={{ fontWeight: 600 }}>€</span>
+            </div>
+            <button
+              type="button"
+              onClick={confirmBuy}
+              disabled={!canBuy}
+              title="Ajouter les jetons"
+              aria-label="Ajouter les jetons achetés"
+              style={{ ...JETON_SMALL_BUTTON, background: COLORS.amber, border: `2px solid ${COLORS.amber}`, opacity: canBuy ? 1 : 0.35, cursor: canBuy ? "pointer" : "default" }}
+            >
+              {jetonPlusIcon(COLORS.paper)}
+            </button>
+          </div>
+        </div>
+      )}
+      {error && <p style={{ fontSize: "12px", color: "#FF3B3B", margin: "10px 0 0" }}>{error}</p>}
+    </div>
+  );
+}
+
 export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onCheckConfirmed, onOpenDrink, onBack, onAddDrink }) {
   const [checkins, setCheckins] = useState(null); // période en cours (de 6 h à 6 h) : c'est elle que comptent les compteurs
   const [previousCheckins, setPreviousCheckins] = useState(null); // période d'avant, affichée grisée sous la liste
@@ -1272,6 +1390,29 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   const [historyOpen, setHistoryOpen] = useState(false);
   const [checkingDrinks, setCheckingDrinks] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
+  // Jetons — l'icône de l'en-tête affiche / masque le bloc Jetons ; ce choix est retenu sur cet appareil (comme le lieu actuel).
+  const jetonsStorageKey = `bibasolo-${myUserId}-jetons-on`;
+  const [jetonsOn, setJetonsOnState] = useState(() => {
+    try {
+      return localStorage.getItem(jetonsStorageKey) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleJetons = () => {
+    const next = !jetonsOn;
+    setJetonsOnState(next);
+    try {
+      if (next) localStorage.setItem(jetonsStorageKey, "1");
+      else localStorage.removeItem(jetonsStorageKey);
+    } catch {
+      // localStorage indisponible : le bloc reste affiché / masqué pour la session en cours, simplement pas retrouvé à la prochaine ouverture.
+    }
+  };
+  const [jetonMovements, setJetonMovements] = useState(null); // null tant que non chargés
+  const [jetonSpentTotal, setJetonSpentTotal] = useState(0); // jetons des verres payés en jetons depuis le premier mouvement (archivés compris)
+  const [jetonBusy, setJetonBusy] = useState(false);
+  const [jetonError, setJetonError] = useState("");
   const [drinksById, setDrinksById] = useState({});
   const [venuesById, setVenuesById] = useState({});
 
@@ -1396,6 +1537,50 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     loadMySoloCheckins(previous, true, current).then(setPreviousCheckins);
   };
 
+  // Solde de jetons = achats + ajouts − retraits − jetons des verres payés en jetons. Relu au chargement, après chaque mouvement et
+  // chaque fois que la liste des verres change (verre ajouté, supprimé, archivé, nouvelle période).
+  const refreshJetons = async () => {
+    const moves = await loadMyJetonMovements();
+    if (moves === null) return;
+    setJetonMovements(moves);
+    if (moves.length === 0) {
+      setJetonSpentTotal(0);
+      return;
+    }
+    const spent = await loadMyJetonSpentSince(moves[0].createdAt);
+    if (spent !== null) setJetonSpentTotal(spent);
+  };
+  useEffect(() => {
+    refreshJetons();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myUserId, checkins]);
+  const jetonBalance = useMemo(() => {
+    if (jetonMovements === null) return null;
+    const net = jetonMovements.reduce((acc, m) => acc + (m.kind === "retrait" ? -m.jetons : m.jetons), 0);
+    return Math.round((net - jetonSpentTotal) * 100) / 100;
+  }, [jetonMovements, jetonSpentTotal]);
+  // Euros payés en achetant des jetons pendant la période en cours (6 h → 6 h), achats archivés exclus : ils s'ajoutent au Dépensé.
+  const jetonPurchasesEuro = useMemo(() => {
+    if (!jetonMovements) return 0;
+    const start = new Date(soloPeriodStarts().current).getTime();
+    return jetonMovements.reduce((acc, m) => acc + (m.kind === "achat" && !m.archived && new Date(m.createdAt).getTime() >= start ? m.amountEur || 0 : 0), 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jetonMovements, checkins]);
+  const saveJetonMovement = async (kind, jetons, amountEur = null) => {
+    if (jetonBusy) return false;
+    setJetonBusy(true);
+    setJetonError("");
+    const result = await addJetonMovement(myUserId, kind, jetons, amountEur);
+    if (result.error) {
+      setJetonError("Impossible d'enregistrer les jetons pour le moment. Réessaie dans un instant.");
+      setJetonBusy(false);
+      return false;
+    }
+    await refreshJetons();
+    setJetonBusy(false);
+    return true;
+  };
+
   // Favoris — sur tout l'historique, pas seulement aujourd'hui, sinon la liste se vide à
   // chaque nouvelle journée. Limité à 3, le plus ancien pousse dehors dès qu'un nouveau arrive.
   const refreshFavorites = () =>
@@ -1500,6 +1685,8 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     setCheckins([]);
     setPreviousCheckins([]);
     await archiveSoloCheckins(ids);
+    await archiveMyJetonMovements(previousPeriodStart || soloPeriodStarts().previous);
+    refreshJetons();
   };
 
   if (historyOpen) {
@@ -1605,6 +1792,28 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Solo</span>
         </h1>
+        <button
+          onClick={toggleJetons}
+          data-testid="jetons-toggle"
+          aria-pressed={jetonsOn}
+          title={jetonsOn ? "Masquer les Jetons" : "Afficher les Jetons"}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "32px",
+            background: "none",
+            border: `2px solid ${jetonsOn ? COLORS.amber : COLORS.paperAlt}`,
+            borderRadius: "10px",
+            padding: "0 8px",
+            cursor: "pointer",
+          }}
+        >
+          {/* Inactive : le même jeton vert, grisé (désaturé et atténué comme un élément désactivé) */}
+          <span style={{ display: "flex", filter: jetonsOn ? "none" : "grayscale(1)", opacity: jetonsOn ? 1 : 0.4 }}>
+            <TokenGreenIcon size={18} />
+          </span>
+        </button>
         <div style={{ position: "relative" }}>
           <button
             onClick={() => setBibaZeroMenuOpen((o) => !o)}
@@ -1867,30 +2076,17 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>{totals.count <= 1 ? "Verre" : "Verres"}</div>
         </div>
         <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "center" }}>
-          {/* Euros et jetons ne s'additionnent pas : deux lignes quand les deux ont servi aujourd'hui. */}
-          <div data-spent="1" style={{ fontSize: totals.price > 0 && totals.jetons > 0 ? "16px" : "22px", fontWeight: 800, color: COLORS.amber }}>
-            {(totals.price > 0 || totals.jetons === 0) && (
-              <div>
-                {/* Le nombre est centré dans le bloc ; le sigle € est posé juste à sa droite sans entrer dans le centrage. */}
-                <span data-spent-amount="1" style={{ position: "relative", display: "inline-block" }}>
-                  {totals.price.toFixed(2)}
-                  <span data-spent-symbol="1" style={{ position: "absolute", left: "100%", top: 0, marginLeft: "4px" }}>
-                    <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
-                  </span>
+          {/* Dépensé = euros seulement : les verres payés en euros + les euros payés pour acheter des jetons. Les jetons ont leur bloc. */}
+          <div data-spent="1" style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>
+            <div>
+              {/* Le nombre est centré dans le bloc ; le sigle € est posé juste à sa droite sans entrer dans le centrage. */}
+              <span data-spent-amount="1" style={{ position: "relative", display: "inline-block" }}>
+                {(totals.price + jetonPurchasesEuro).toFixed(2)}
+                <span data-spent-symbol="1" style={{ position: "absolute", left: "100%", top: 0, marginLeft: "4px" }}>
+                  <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
                 </span>
-              </div>
-            )}
-            {totals.jetons > 0 && (
-              <div>
-                {/* Comme le €, le nombre de jetons est centré dans le bloc ; l'icône rose est posée juste à sa droite sans entrer dans le centrage. */}
-                <span data-spent-jeton-amount="1" style={{ position: "relative", display: "inline-block" }}>
-                  {formatJetonCount(totals.jetons)}
-                  <span data-spent-jeton-symbol="1" style={{ position: "absolute", left: "100%", top: "50%", transform: "translateY(-50%)", marginLeft: "4px", display: "flex" }}>
-                    <TokenPinkIcon size={totals.price > 0 ? 15 : 20} />
-                  </span>
-                </span>
-              </div>
-            )}
+              </span>
+            </div>
           </div>
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>Dépensé</div>
         </div>
@@ -1912,6 +2108,16 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           </div>
         </div>
       </div>
+      {jetonsOn && (
+        <SoloJetonsBlock
+          balance={jetonBalance}
+          spent={totals.jetons}
+          busy={jetonBusy}
+          error={jetonError}
+          onAdjust={(delta) => saveJetonMovement(delta > 0 ? "ajout" : "retrait", 1)}
+          onBuy={(count, euro) => saveJetonMovement("achat", count, euro)}
+        />
+      )}
       {/* Barre de séparation au-dessus de la liste en cours : « Aujourd'hui », la barre, puis l'icône « info » (bulle d'explication des périodes). */}
       <div data-solo-today-bar="1" ref={todayBarRef} style={{ position: "relative", display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
         <span data-solo-today-label="1" style={SOLO_BAR_LABEL_STYLE}>Aujourd'hui</span>

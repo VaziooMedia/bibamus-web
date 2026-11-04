@@ -565,6 +565,62 @@ export async function deleteSoloCheckin(id) {
   if (error) console.error("deleteSoloCheckin:", error);
 }
 
+// BibaSolo « Jetons » — le solde de jetons de la personne. `solo_jeton_movements` ne garde que les mouvements qui ne passent
+// pas par un verre : `achat` (X jetons contre X €), `ajout` (« + » : jeton trouvé ou offert) et `retrait` (« − » : jeton donné,
+// ou verre offert à quelqu'un). Les jetons dépensés viennent des verres payés en jetons (`solo_checkins.currency = 'jeton'`) :
+// solde = achats + ajouts − retraits − jetons dépensés depuis le premier mouvement.
+function jetonRowToMovement(row) {
+  return {
+    id: row.id,
+    kind: row.kind,
+    jetons: Number(row.jetons),
+    amountEur: row.amount_eur == null ? null : Number(row.amount_eur),
+    createdAt: row.created_at,
+    archived: row.archived_at != null,
+  };
+}
+
+// Tous les mouvements, archivés compris, du plus ancien au plus récent. `null` en cas d'erreur (pour ne pas confondre avec « aucun »).
+export async function loadMyJetonMovements() {
+  const { data, error } = await supabase.from("solo_jeton_movements").select("*").order("created_at", { ascending: true }).order("id", { ascending: true });
+  if (error) {
+    console.error("loadMyJetonMovements:", error);
+    return null;
+  }
+  return data.map(jetonRowToMovement);
+}
+
+// `amountEur` : les euros payés, pour un achat seulement (NULL pour « + » et « − », qui ne touchent pas au Dépensé).
+export async function addJetonMovement(userId, kind, jetons, amountEur = null) {
+  const row = { user_id: userId, kind, jetons, amount_eur: kind === "achat" && Number.isFinite(amountEur) ? amountEur : null };
+  const { error } = await supabase.from("solo_jeton_movements").insert(row);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+// « Archiver » de BibaSolo : les achats déjà affichés ne comptent plus dans le « Dépensé » du jour, mais restent dans le solde.
+export async function archiveMyJetonMovements(sinceIso) {
+  const { error } = await supabase.from("solo_jeton_movements").update({ archived_at: new Date().toISOString() }).is("archived_at", null).gte("created_at", sinceIso);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+// Somme des jetons des verres payés en jetons depuis `sinceIso`, verres archivés compris (l'archivage ne rend pas les jetons).
+// `null` en cas d'erreur. Lue par pages de 1000 (limite de lignes par requête).
+export async function loadMyJetonSpentSince(sinceIso) {
+  const PAGE = 1000;
+  let total = 0;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase.from("solo_checkins").select("price").eq("currency", "jeton").gte("created_at", sinceIso).order("created_at", { ascending: true }).order("id", { ascending: true }).range(from, from + PAGE - 1);
+    if (error) {
+      console.error("loadMyJetonSpentSince:", error);
+      return null;
+    }
+    total += data.reduce((acc, r) => acc + (Number(r.price) || 0), 0);
+    if (data.length < PAGE) return total;
+  }
+}
+
 export async function submitSupportMessage(userId, type, message, contactEmail) {
   const { error } = await supabase.from("support_messages").insert({ user_id: userId, type, message, contact_email: contactEmail || null });
   if (error) return { error: error.message };
