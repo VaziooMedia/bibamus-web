@@ -1336,9 +1336,13 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
           disabled={buyOpen}
           title="Acheter des jetons"
           aria-label="Acheter des jetons"
-          style={{ ...JETON_ROUND_BUTTON, background: COLORS.amber, border: `2px solid ${COLORS.amber}`, opacity: buyOpen ? 0.35 : 1, cursor: buyOpen ? "default" : "pointer" }}
+          style={{ ...JETON_ROUND_BUTTON, position: "relative", overflow: "visible", border: `2px solid ${COLORS.amber}`, opacity: buyOpen ? 0.35 : 1, cursor: buyOpen ? "default" : "pointer" }}
         >
-          {jetonPlusIcon(COLORS.paper, 14)}
+          {/* Un jeton vert avec un petit « + » : on achète des jetons, et ce bouton ne se confond plus avec le « + » de « Ajouter un Produit ». */}
+          <TokenGreenIcon size={22} />
+          <span style={{ position: "absolute", top: "-6px", right: "-6px", width: "16px", height: "16px", borderRadius: "50%", background: COLORS.amber, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {jetonPlusIcon(COLORS.paper, 9)}
+          </span>
         </button>
       </div>
       {buyOpen && (
