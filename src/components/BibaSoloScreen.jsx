@@ -1261,6 +1261,8 @@ function SoloHistoryScreen({ onBack, onOpenDrink }) {
 // Boutons ronds du bloc Jetons : 32 px pour « + » / « − » et la croix / le « + » du formulaire d'achat, 40 px pour le « + » d'achat.
 const JETON_ROUND_BUTTON = { display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", borderRadius: "50%", background: "none", border: `2px solid ${COLORS.paperAlt}`, boxSizing: "border-box", padding: 0, flexShrink: 0, cursor: "pointer" };
 const JETON_SMALL_BUTTON = { ...JETON_ROUND_BUTTON, width: "32px", height: "32px" };
+// Annuler (croix) et valider (« + ») du formulaire d'achat : carrés à coins arrondis, plus petits que les boutons ronds « + » / « − » de la colonne de gauche.
+const JETON_BUY_ACTION_BUTTON = { ...JETON_SMALL_BUTTON, width: "28px", height: "28px", borderRadius: "8px" };
 const JETON_INPUT = { width: "54px", height: "34px", boxSizing: "border-box", textAlign: "center", fontSize: "15px", fontWeight: 700, color: COLORS.ink, background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", outline: "none" };
 
 function jetonPlusIcon(color, size = 12) {
@@ -1349,7 +1351,7 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
         <div data-jeton-buy="1">
           <div style={{ borderTop: `2px solid ${COLORS.paperAlt}`, margin: "12px -14px 12px" }} />
           <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft }}>
-            <button type="button" onClick={closeBuy} title="Annuler" aria-label="Annuler" style={JETON_SMALL_BUTTON}>
+            <button type="button" onClick={closeBuy} title="Annuler" aria-label="Annuler" style={JETON_BUY_ACTION_BUTTON}>
               <span style={{ display: "block", transform: "rotate(45deg)" }}>{jetonPlusIcon(COLORS.ink)}</span>
             </button>
             <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
@@ -1364,7 +1366,7 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
               disabled={!canBuy}
               title="Ajouter les jetons"
               aria-label="Ajouter les jetons achetés"
-              style={{ ...JETON_SMALL_BUTTON, background: COLORS.amber, border: `2px solid ${COLORS.amber}`, opacity: canBuy ? 1 : 0.35, cursor: canBuy ? "pointer" : "default" }}
+              style={{ ...JETON_BUY_ACTION_BUTTON, background: COLORS.amber, border: `2px solid ${COLORS.amber}`, opacity: canBuy ? 1 : 0.35, cursor: canBuy ? "pointer" : "default" }}
             >
               {jetonPlusIcon(COLORS.paper)}
             </button>
