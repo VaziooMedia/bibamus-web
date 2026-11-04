@@ -34,7 +34,7 @@ import {
   saveWaterAlertSoloSettings,
   upsertPushSubscription,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
@@ -43,6 +43,8 @@ import bioIconUrl from "../assets/brand/bio.svg";
 import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
 import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
 import { AiIcon } from "./AiIcon.jsx";
+import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
+import { ServicePill, serviceLabelOf } from "./ServiceTag.jsx";
 
 function normalize(str) {
   return (str || "")
@@ -137,40 +139,56 @@ const MENTION_ICON_STYLE = { height: "14px", width: "auto", display: "block", fi
 const BIO_ICON_STYLE = { ...MENTION_ICON_STYLE, transform: "translateY(-2.7px)" };
 
 // Mise en page du formulaire d'ajout, sur deux lignes : « Volume » et « Type de service » côte à côte, puis, une ligne plus
-// bas, le choix € / Jetons / Free avec le champ de prix. Chaque titre du haut est une pastille vert fluo (même style que
-// l'onglet actif) et son champ a exactement la largeur de la pastille ; le bloc du bas a exactement la largeur totale des
-// deux champs du haut (écart compris), et ses trois onglets ont la même largeur.
+// bas, le choix € / Jetons / Free avec le champ de prix. Chaque bloc d'encodage est UN seul bloc : un cadre gris arrondi qui
+// contient, collés l'un à l'autre, son titre (bandeau vert fluo ; pour le prix, les trois onglets € / Jetons / Free) et son champ.
+// Le bloc a exactement la largeur de son titre ; le bloc du bas a exactement la largeur totale des deux blocs du haut (écart
+// compris), et ses trois onglets ont la même largeur.
 const ENCODE_COL_GAP = 24; // écart entre « Volume » et « Type de service »
 const ENCODE_ROW_GAP = 30; // écart entre la ligne du haut et le bloc du prix
-const PAY_TAB_GAP = 4; // écart entre les onglets € / Jetons / Free
-const ENCODE_HEADER_H = 24; // hauteur commune de la ligne au-dessus des champs (pastilles de titre / onglets)
+const PAY_TAB_GAP = 2; // filet entre les onglets € / Jetons / Free (le gris du cadre apparaît entre eux)
+const ENCODE_HEADER_H = 24; // hauteur commune du bandeau de titre / des onglets, en haut de chaque bloc (barre de séparation comprise)
+const ENCODE_SEPARATOR = `2px solid ${COLORS.paperAlt}`; // petite barre qui sépare le titre (ou les onglets) du champ, même gris que le cadre et les filets entre onglets
+const ENCODE_FIELD_H = 44; // hauteur commune des champs (volume, type de service, prix)
+const encodeBlockStyle = {
+  boxSizing: "border-box",
+  border: `2px solid ${COLORS.paperAlt}`,
+  borderRadius: "12px",
+  overflow: "hidden",
+  background: COLORS.surface,
+};
 const encodeTitleStyle = {
-  display: "inline-flex",
+  display: "flex",
   alignItems: "center",
+  justifyContent: "center",
   boxSizing: "border-box",
   height: `${ENCODE_HEADER_H}px`,
   padding: "0 12px",
   background: COLORS.amber,
-  border: `2px solid ${COLORS.amber}`,
-  borderRadius: "999px",
+  borderBottom: ENCODE_SEPARATOR,
   fontSize: "10.5px",
   fontWeight: 700,
   color: COLORS.paper,
   whiteSpace: "nowrap",
 };
+// Le champ n'a plus de bordure ni d'angles à lui : c'est le cadre du bloc qui les porte. Le contour de focus est tracé à l'intérieur
+// du champ (outlineOffset négatif), sans quoi le cadre le couperait.
 const encodeInputStyle = {
+  display: "block",
   width: "100%",
   boxSizing: "border-box",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: `2px solid ${COLORS.paperAlt}`,
+  height: `${ENCODE_FIELD_H}px`,
+  padding: "0 14px",
+  border: "none",
+  borderRadius: 0,
   background: COLORS.surface,
   color: COLORS.ink,
   fontSize: "14px",
   textAlign: "center",
+  outlineOffset: "-2px",
 };
-function defaultVolumeOf(drink) {
-  for (const v of [drink?.defaultVolumeCl, drink?.volumeCl]) {
+// Pris en shot (`asShot`), le volume du shot encodé sur la fiche (default_shot_volume_cl) passe en premier ; s'il n'y en a pas, on retombe sur la chaîne habituelle.
+function defaultVolumeOf(drink, asShot = false) {
+  for (const v of [asShot ? drink?.defaultShotVolumeCl : null, drink?.defaultVolumeCl, drink?.volumeCl]) {
     const n = Number(v);
     if (v != null && v !== "" && Number.isFinite(n) && n > 0) return n;
   }
@@ -277,6 +295,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [free, setFree] = useState(false); // verre offert : compte pour un prix de 0 (en euros), le prix saisi est gardé de côté
   const priceInputRef = useRef(null); // champ de prix : reçoit le curseur (et le clavier numérique) dès qu'on touche € ou Jetons
   const [servingMode, setServingMode] = useState(""); // type de service : "" (non défini) | bouteille | canette | fut | verre
+  const [asShot, setAsShot] = useState(false); // spiritueux pris en shot (choix Spiritueux / Shot)
+  const [shotSource, setShotSource] = useState(null); // fiche complète du produit choisi : dit s'il peut être un shot et fournit ses valeurs par défaut
   const [saving, setSaving] = useState(false);
 
   // Trois portes d'entrée distinctes une fois qu'un lieu est choisi, comme dans un salon : sa
@@ -332,10 +352,23 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const gq = normalize(genericQuery);
   const genericResults = (gq.length === 0 ? genericDrinks : genericDrinks.filter((d) => normalize(d.name).includes(gq))).filter((d) => !bibaZeroActive || !isAlcoholicDrink(d));
 
+  // Un spiritueux dont la fiche a la case « Shot » cochée propose le choix Spiritueux / Shot ; il démarre en Shot si la fiche
+  // le dit par défaut. Volume et type de service reprennent alors les valeurs du shot de la fiche.
   const selectDrink = (d) => {
+    const shot = startsAsShot(d);
     setSelectedDrink(d);
-    setVolume(String(defaultVolumeOf(d) ?? VOLUME_FALLBACK_CL));
-    setServingMode(defaultServingModeText(d));
+    setShotSource(d);
+    setAsShot(shot);
+    setVolume(String(defaultVolumeOf(d, shot) ?? VOLUME_FALLBACK_CL));
+    setServingMode(defaultServingModeText(d, shot));
+  };
+
+  // Changer de choix (Spiritueux / Shot) remet volume et type de service aux valeurs de la fiche pour ce choix ; le prix reste tel quel.
+  const changeKind = (next) => {
+    if (next === asShot) return;
+    setAsShot(next);
+    setVolume(String(defaultVolumeOf(shotSource, next) ?? VOLUME_FALLBACK_CL));
+    setServingMode(defaultServingModeText(shotSource, next));
   };
 
   // Choisir un item de la carte du lieu — pré-remplit aussi le prix et le volume réellement
@@ -343,10 +376,14 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   // volume, c'est celui par défaut de la fiche du produit qui s'applique.
   const selectVenueMenuItem = (item) => {
     const master = venueDrinks.find((m) => m.id === item.sourceDrinkId);
+    // Sur la carte d'un lieu, c'est la carte qui dit si le verre est un shot (catégorie « Shots »).
+    const shot = categoryOf(item) === "Shots";
     setSelectedDrink({ id: item.sourceDrinkId, name: item.name, photoUrl: item.photoUrl, avatarEmoji: master?.avatarEmoji });
-    setVolume(item.volumeCl ? String(item.volumeCl) : String(defaultVolumeOf(master) ?? VOLUME_FALLBACK_CL));
+    setShotSource(master || null);
+    setAsShot(shot);
+    setVolume(item.volumeCl ? String(item.volumeCl) : String(defaultVolumeOf(master, shot) ?? VOLUME_FALLBACK_CL));
     // Le type de service que le lieu précise sur sa carte passe avant celui par défaut de la fiche du produit.
-    setServingMode(safeServingMode(item.servingMode) || defaultServingModeText(master));
+    setServingMode(safeServingMode(item.servingMode) || defaultServingModeText(master, shot));
     if (item.price != null) setPrice(String(item.price).replace(".", ","));
     // Une carte tarifée en jetons : le prix repris ici est un nombre de jetons, pas des euros.
     if (venue?.defaultCurrency === "jeton") setCurrency("jeton");
@@ -364,7 +401,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
     // @Home : pas de prix. « Free » : prix 0, en euros. Sinon, le prix saisi dans la monnaie choisie.
     const priceNum = isHome ? null : free ? 0 : parseFloat(price.replace(",", "."));
-    const result = await addSoloCheckin(myUserId, selectedDrink.id, priceNum, venue?.id, volumeNum, free ? "euro" : currency, servingMode);
+    const result = await addSoloCheckin(myUserId, selectedDrink.id, priceNum, venue?.id, volumeNum, free ? "euro" : currency, servingMode, asShot);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -676,7 +713,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               borderRadius: "12px",
               padding: "5px 12px",
               marginTop: "18px",
-              marginBottom: "32px",
+              marginBottom: canBeShot(shotSource) ? "28px" : "32px",
             }}
           >
             <EntityAvatar photoUrl={selectedDrink.photoUrl} photoEmoji={selectedDrink.avatarEmoji} size={28} fallbackIcon="bottle" />
@@ -686,14 +723,15 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
             </button>
           </div>
 
+          {/* Spiritueux dont la fiche a la case « Shot » : choix Spiritueux / Shot (boutons fins), centré comme le formulaire en dessous */}
+          {canBeShot(shotSource) && <SpiritKindToggle fine asShot={asShot} onChange={changeKind} style={{ margin: "0 auto 32px" }} />}
+
           {/* Ligne 1 : « Volume » et « Type de service » côte à côte, chacun aussi large que sa pastille de titre.
               Ligne 2 : choix € / Jetons / Free et champ de prix, exactement aussi larges que la ligne 1 (@Home : pas de prix). */}
           <div data-encode="form" style={{ display: "flex", flexDirection: "column", alignItems: "stretch", width: "fit-content", margin: "0 auto 40px", gap: `${ENCODE_ROW_GAP}px` }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: `${ENCODE_COL_GAP}px` }}>
-              <div data-encode="volume" style={{ flex: "0 0 auto", minWidth: 0 }}>
-                <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "6px" }}>
-                  <label htmlFor="solo-volume" style={encodeTitleStyle}>Volume (cl.)</label>
-                </div>
+              <div data-encode="volume" style={{ ...encodeBlockStyle, flex: "0 0 auto", minWidth: 0 }}>
+                <label htmlFor="solo-volume" style={encodeTitleStyle}>Volume (cl.)</label>
                 <input
                   id="solo-volume"
                   type="text"
@@ -701,20 +739,18 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                   value={volume}
                   onChange={(e) => setVolume(e.target.value)}
                   placeholder="00"
-                  style={{ ...encodeInputStyle, width: 0, minWidth: "100%", padding: "12px 8px" }}
+                  style={{ ...encodeInputStyle, width: 0, minWidth: "100%", padding: "0 8px" }}
                 />
               </div>
 
-              <div data-encode="service" style={{ flex: "0 0 auto", minWidth: 0 }}>
-                <div style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "6px" }}>
-                  <label htmlFor="solo-service" style={encodeTitleStyle}>Type de service</label>
-                </div>
+              <div data-encode="service" style={{ ...encodeBlockStyle, flex: "0 0 auto", minWidth: 0 }}>
+                <label htmlFor="solo-service" style={encodeTitleStyle}>Type de service</label>
                 <div style={{ position: "relative", width: 0, minWidth: "100%" }}>
                   <select
                     id="solo-service"
                     value={servingMode}
                     onChange={(e) => setServingMode(e.target.value)}
-                    style={{ ...encodeInputStyle, WebkitAppearance: "none", appearance: "none", textAlign: "left", height: "44px", padding: "0 26px 0 11px", fontSize: "13px", cursor: "pointer" }}
+                    style={{ ...encodeInputStyle, WebkitAppearance: "none", appearance: "none", textAlign: "left", padding: "0 26px 0 11px", fontSize: "13px", cursor: "pointer" }}
                   >
                     <option value="">Non défini</option>
                     {SERVING_MODE_OPTIONS.map(([key, label]) => (
@@ -731,8 +767,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
             </div>
 
             {!isHome && (
-              <div data-encode="price" style={{ width: 0, minWidth: "100%" }}>
-                <div role="group" aria-label="Monnaie" style={{ height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${PAY_TAB_GAP}px`, marginBottom: "6px" }}>
+              <div data-encode="price" style={{ ...encodeBlockStyle, width: 0, minWidth: "100%" }}>
+                <div role="group" aria-label="Monnaie" style={{ boxSizing: "border-box", height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${PAY_TAB_GAP}px`, background: COLORS.paperAlt, borderBottom: ENCODE_SEPARATOR }}>
                   {[
                     ["euro", "€"],
                     ["jeton", "Jetons"],
@@ -766,8 +802,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                           alignItems: "center",
                           justifyContent: "center",
                           background: active ? COLORS.amber : COLORS.surface,
-                          border: `2px solid ${active ? COLORS.amber : COLORS.paperAlt}`,
-                          borderRadius: "999px",
+                          border: "none",
+                          borderRadius: 0,
                           fontSize: "10.5px",
                           fontWeight: 700,
                           color: active ? COLORS.paper : COLORS.ink,
@@ -1008,40 +1044,54 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
             </span>
           )}
         </div>
-        {/* Ligne 2 — volume + drapeau + % ABV + icône Bio + icône Gluten free, séparés par un point vert fluo (sur toute la largeur, sous le prix) */}
+        {/* Lignes 2 et 3 (sur toute la largeur, sous le prix ; points vert fluo entre les éléments ; chacune ouvre la fiche du produit ; chacune
+            disparaît quand elle n'a rien à montrer).
+            Ligne 2 — volume + % ABV + étiquette d'alcool (0.0 %…) + icône Bio + icône Gluten free.
+            Ligne 3 — drapeau du pays + pastille de type de service : « Shot » seule pour un verre pris en shot, sans tenir compte de son type de
+            service ; sinon le type de service s'il est défini. */}
         {(() => {
-          const mentionParts = [];
-          if (c.volumeCl) mentionParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
-          if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
-          if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
-          if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
-          if (showMentions && drink.glutenFree) mentionParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
-          if (mentionParts.length === 0) return null;
+          const detailParts = [];
+          if (c.volumeCl) detailParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
+          if (showMentions && drink.abv != null) detailParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
+          const alcoholTier = showMentions ? getAlcoholTierBadge(drink.abv) : null;
+          if (alcoholTier) detailParts.push(<span key="tier" title={alcoholTier.title} style={{ whiteSpace: "nowrap" }}>{alcoholTier.label}</span>);
+          if (showMentions && drink.bio) detailParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
+          if (showMentions && drink.glutenFree) detailParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
+          const originParts = [];
+          if (drink?.nationality) originParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
+          if (c.shot || serviceLabelOf(c.servingMode)) originParts.push(<ServicePill key="service" mode={c.servingMode} shot={c.shot} />);
+          const renderLine = (parts, line) =>
+            parts.length === 0 ? null : (
+              <button
+                onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
+                disabled={!drink || !onOpenDrink}
+                style={{ display: "block", width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
+              >
+                <div data-journal-line={line} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
+                  {parts.map((part, idx) => (
+                    <React.Fragment key={idx}>
+                      {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
+                      {part}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </button>
+            );
           return (
-            <button
-              onClick={() => drink && onOpenDrink && onOpenDrink(drink.id)}
-              disabled={!drink || !onOpenDrink}
-              style={{ display: "block", width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
-            >
-              <div data-journal-line="2" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
-                {mentionParts.map((part, idx) => (
-                  <React.Fragment key={idx}>
-                    {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
-                    {part}
-                  </React.Fragment>
-                ))}
-              </div>
-            </button>
+            <>
+              {renderLine(detailParts, "2")}
+              {renderLine(originParts, "3")}
+            </>
           );
         })()}
-        {/* Ligne 3 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
+        {/* Ligne 4 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
         {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
           <div data-journal-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
             <NavIcon name="map-pin" size={12} color={COLORS.amber} />
             <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
           </div>
         )}
-        {/* Ligne 4 (3 quand il n'y a pas de lieu) — date + heure (points vert fluo) à gauche, croix de suppression à l'extrême droite */}
+        {/* Ligne 5 (4 quand il n'y a pas de lieu) — date + heure (points vert fluo) à gauche, croix de suppression à l'extrême droite */}
         <div data-journal-line="date" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
           <div data-journal-datetime="1" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap" }}>
             {[formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
