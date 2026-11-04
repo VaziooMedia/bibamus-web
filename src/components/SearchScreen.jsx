@@ -20,16 +20,9 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, ActionCard } from "./ui.jsx";
-import { formatAddress, usernameFromQuery } from "../utils.js";
+import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames } from "../utils.js";
 import { searchBibax, searchDrinks, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
-
-function normalize(str) {
-  return (str || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
 
 function TagButton({ label, count, filled, onClick }) {
   return (
@@ -124,8 +117,13 @@ export function SearchScreen({
   const userPickedTabRef = useRef(false);
 
   const trimmed = query.trim();
-  const q = normalize(trimmed);
   const hasQuery = trimmed.length >= 2;
+  // « @nom » est une recherche exacte à part (plus bas) : la recherche normale ne s'y applique pas, elle ignorerait le « @ » et ramènerait des fiches partielles.
+  const plain = trimmed.startsWith("@") ? "" : trimmed;
+  const hasPlain = plain.length >= 2;
+  // Même règle de recherche que partout dans l'app : chaque mot tapé doit se retrouver, dans n'importe quel ordre, sans tenir compte des accents,
+  // des apostrophes, des tirets ni des espaces. Les marques et producteurs se cherchent dans leur nom, leur nom alternatif, leurs alias et leurs traductions.
+  const matches = useMemo(() => makeSearchMatcher(plain), [plain]);
 
   const [venueSearchResults, setVenueResults] = useState([]);
   const [drinkResults, setDrinkResults] = useState([]);
@@ -140,15 +138,15 @@ export function SearchScreen({
   const atFound = atDone ? atState.found : null;
   const atLoading = atName !== null && !atDone;
   const brandResults = useMemo(() => {
-    const found = q.length < 2 ? [] : brandsDirectory.filter((b) => normalize(b.name).includes(q) || (b.aliases || []).some((a) => normalize(a).includes(q)));
+    const found = !hasPlain ? [] : brandsDirectory.filter((b) => matches(entityNames(b)));
     const exact = atFound?.kind === "brand" ? brandsDirectory.find((b) => b.id === atFound.id) : null;
     return exact ? [exact, ...found.filter((b) => b.id !== exact.id)] : found;
-  }, [brandsDirectory, q, atFound]);
+  }, [brandsDirectory, hasPlain, matches, atFound]);
   const breweryResults = useMemo(() => {
-    const found = q.length < 2 ? [] : breweriesDirectory.filter((b) => normalize(b.name).includes(q) || (b.aliases || []).some((a) => normalize(a).includes(q)));
+    const found = !hasPlain ? [] : breweriesDirectory.filter((b) => matches(entityNames(b)));
     const exact = atFound?.kind === "brewery" ? breweriesDirectory.find((b) => b.id === atFound.id) : null;
     return exact ? [exact, ...found.filter((b) => b.id !== exact.id)] : found;
-  }, [breweriesDirectory, q, atFound]);
+  }, [breweriesDirectory, hasPlain, matches, atFound]);
   const venueResults = useMemo(
     () => (atFound?.kind === "venue" ? [atFound.venue, ...venueSearchResults.filter((v) => v.id !== atFound.venue.id)] : venueSearchResults),
     [venueSearchResults, atFound]
@@ -159,49 +157,49 @@ export function SearchScreen({
   );
 
   useEffect(() => {
-    if (hideBibaxAndAtlas || trimmed.length < 2) {
+    if (hideBibaxAndAtlas || !hasPlain) {
       setBibaxResults([]);
       return;
     }
     setBibaxLoading(true);
     const timer = setTimeout(() => {
-      searchBibax(trimmed).then((results) => {
+      searchBibax(plain).then((results) => {
         setBibaxResults(results);
         setBibaxLoading(false);
       });
     }, 350);
     return () => clearTimeout(timer);
-  }, [trimmed]);
+  }, [plain]);
 
   // Recherche produits côté serveur plutôt qu'un filtre sur tout le répertoire en mémoire — seule
   // différence avec le comportement précédent : les alias ne sont pas (encore) inclus dans cette
   // recherche serveur, contrairement à l'ancien filtre en mémoire.
   useEffect(() => {
-    if (trimmed.length < 2) {
+    if (!hasPlain) {
       setDrinkResults([]);
       return;
     }
     setDrinksLoading(true);
     const timer = setTimeout(() => {
-      searchDrinks(trimmed).then((results) => {
+      searchDrinks(plain).then((results) => {
         setDrinkResults(results);
         setDrinksLoading(false);
       });
     }, 350);
     return () => clearTimeout(timer);
-  }, [trimmed]);
+  }, [plain]);
 
   // Même principe côté serveur pour les lieux.
   useEffect(() => {
-    if (trimmed.length < 2) {
+    if (!hasPlain) {
       setVenueResults([]);
       return;
     }
     const timer = setTimeout(() => {
-      searchVenues(trimmed).then(setVenueResults);
+      searchVenues(plain).then(setVenueResults);
     }, 350);
     return () => clearTimeout(timer);
-  }, [trimmed]);
+  }, [plain]);
 
   // « @nom » exact : le serveur rend au plus une ligne ; on charge ensuite ce qu'il faut pour l'afficher
   // (la fiche du lieu, le profil de la personne) — les marques et producteurs viennent des répertoires

@@ -11,7 +11,7 @@ import { CONTAINER_TYPES } from "../data/beerCiderStyles.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariant, lookupBarcode, loadDrinksByIds, searchDrinks } from "../data/sharedDirectories.js";
-import { normalizeForDuplicateCheck } from "../utils.js";
+import { normalizeForDuplicateCheck, makeSearchMatcher, entityNames } from "../utils.js";
 
 const BEER_CIDER_SUBTYPES = [
   { code: "biere", fr: "Bière" },
@@ -139,11 +139,13 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   // supprime le brouillon créé dès l'étape 1 (voir validatedRef).
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
 
-  const normalize = (s) => (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-  const brandResults = brandQuery.trim().length >= 2 ? brandsDirectory.filter((b) => normalize(b.name).includes(normalize(brandQuery))).slice(0, 8) : [];
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher).
+  const matchesBrand = makeSearchMatcher(brandQuery);
+  const matchesProducer = makeSearchMatcher(producerQuery);
+  const brandResults = brandQuery.trim().length >= 2 ? brandsDirectory.filter((b) => matchesBrand(entityNames(b))).slice(0, 8) : [];
   const producerResults =
     producerQuery.trim().length >= 2
-      ? breweriesDirectory.filter((p) => normalize(p.name).includes(normalize(producerQuery)) && !selectedProducers.some((sp) => sp.id === p.id)).slice(0, 8)
+      ? breweriesDirectory.filter((p) => matchesProducer(entityNames(p)) && !selectedProducers.some((sp) => sp.id === p.id)).slice(0, 8)
       : [];
 
   const handleAbandon = async () => {

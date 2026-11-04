@@ -13,7 +13,7 @@ import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { createBrewery, geocodeAddress, loadProducerListsOnce, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
 import { orderedList } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
-import { normalizeForDuplicateCheck } from "../utils.js";
+import { normalizeForDuplicateCheck, makeSearchMatcher, entityNames } from "../utils.js";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -87,8 +87,9 @@ export function SubmitBreweryWizardScreen({ breweriesDirectory, onDone, onCancel
   // Repère les vraies correspondances existantes en direct pendant la saisie du nom — la
   // vraie liste des producteurs est déjà entièrement chargée côté app, filtrée ici même,
   // pas besoin d'un vrai aller-retour réseau supplémentaire.
-  const normalize = (s) => (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-  const nameMatches = name.trim().length >= 2 ? breweriesDirectory.filter((b) => normalize(b.name).includes(normalize(name.trim()))).slice(0, 5) : [];
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher).
+  const matchesName = makeSearchMatcher(name);
+  const nameMatches = name.trim().length >= 2 ? breweriesDirectory.filter((b) => matchesName(entityNames(b))).slice(0, 5) : [];
 
   // Page 2 — Pays
   const [country, setCountry] = useState("");

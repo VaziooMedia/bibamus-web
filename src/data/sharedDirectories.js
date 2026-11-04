@@ -13,7 +13,7 @@
 
 import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
-import { normalizeSearchText, compactSearchText } from "../utils.js";
+import { normalizeSearchText, searchTokens, searchRank } from "../utils.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
@@ -2716,26 +2716,30 @@ export async function loadGenericDrinks() {
 export async function searchDrinksByType(type, query = "", limit = 30) {
   let request = supabase.from("drinks_directory").select("*").in("status", APP_VISIBLE_STATUSES);
   if (type) request = request.eq("type", DRINK_TYPE_LABEL_TO_CODE[type] || type);
-  // Recherche tolérante : accents, lettres collées (œ), apostrophes et tirets, droits ou typographiques, ET séparateurs omis (« Hendricks » pour
-  // « Hendrick's », « Bellevue » pour « Belle-Vue »). On compare la saisie normalisée comme `search_text`, puis débarrassée des espaces et de la
-  // ponctuation, à la colonne `search_compact` (le même `search_text`, compacté de la même façon en base).
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher dans utils.js) : chaque mot tapé doit se retrouver, dans n'importe quel
+  // ordre, sans tenir compte des accents, des lettres collées (œ), des apostrophes, des tirets (droits ou typographiques) ni des espaces (« Hendricks »
+  // pour « Hendrick's », « Bellevue » pour « Belle-Vue »). Chaque mot est comparé à la colonne `search_compact` (le `search_text` de la fiche, débarrassé
+  // des espaces et de la ponctuation, de la même façon que `compactSearchText`).
   const typed = (query || "").trim();
-  const q = normalizeSearchText(typed);
-  const compact = compactSearchText(q);
-  if (typed && !compact) return []; // rien que de la ponctuation : aucun produit à retrouver
-  if (compact) request = request.ilike("search_compact", `%${compact}%`);
-  // Compacter rapproche des mots voisins (« dj » est dans « chaud jagermeister ») : on lit plus de lignes, puis on met d'abord celles où les mots tapés
-  // se suivent vraiment dans `search_text`, et on rend `limit` lignes.
-  const { data, error } = await request.order("name").limit(compact ? limit * 3 : limit);
+  const tokens = searchTokens(typed);
+  if (typed && tokens.length === 0) return []; // rien que de la ponctuation : aucun produit à retrouver
+  tokens.forEach((token) => {
+    request = request.ilike("search_compact", `%${token}%`);
+  });
+  // Ignorer les espaces rapproche des mots voisins (« dj » est dans « chaud jagermeister ») : on lit plus de lignes, puis on classe les plus précises en
+  // premier (voir searchRank), et on rend `limit` lignes.
+  const { data, error } = await request.order("name").limit(tokens.length > 0 ? limit * 3 : limit);
   if (error) {
     console.error("searchDrinksByType:", error);
     return [];
   }
   let rows = data;
-  if (compact) {
-    const wordsInOrder = new RegExp(q.split(" ").filter(Boolean).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*"), "i");
-    const exact = (row) => wordsInOrder.test(row.search_text || "");
-    rows = [...rows.filter(exact), ...rows.filter((row) => !exact(row))].slice(0, limit);
+  if (tokens.length > 0) {
+    rows = data
+      .map((row, index) => ({ row, index, rank: searchRank(typed, row.search_text) }))
+      .sort((a, b) => a.rank - b.rank || a.index - b.index)
+      .map((entry) => entry.row)
+      .slice(0, limit);
   }
   return rows.map(rowToDrink);
 }

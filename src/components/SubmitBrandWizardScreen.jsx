@@ -9,6 +9,7 @@ import { COLORS, COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../consta
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { createBrand, loadBrandListsOnce } from "../data/sharedDirectories.js";
+import { makeSearchMatcher, entityNames } from "../utils.js";
 import { orderedList } from "../venueLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 
@@ -77,8 +78,9 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
 
   // Page 1 — Nom
   const [name, setName] = useState("");
-  const normalize = (s) => (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-  const nameMatches = name.trim().length >= 2 ? brandsDirectory.filter((b) => normalize(b.name).includes(normalize(name.trim()))).slice(0, 5) : [];
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher).
+  const matchesName = makeSearchMatcher(name);
+  const nameMatches = name.trim().length >= 2 ? brandsDirectory.filter((b) => matchesName(entityNames(b))).slice(0, 5) : [];
 
   // Page 2 — Pays d'origine
   const [originCountry, setOriginCountry] = useState("");
@@ -116,9 +118,10 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
   // Page 6 — Producteur(s) actuel(s) (facultatif, plusieurs possibles en cas de collaboration)
   const [producerQuery, setProducerQuery] = useState("");
   const [selectedProducers, setSelectedProducers] = useState([]);
+  const matchesProducer = makeSearchMatcher(producerQuery);
   const producerResults =
     producerQuery.trim().length >= 2
-      ? breweriesDirectory.filter((p) => normalize(p.name).includes(normalize(producerQuery.trim())) && !selectedProducers.some((sp) => sp.id === p.id)).slice(0, 8)
+      ? breweriesDirectory.filter((p) => matchesProducer(entityNames(p)) && !selectedProducers.some((sp) => sp.id === p.id)).slice(0, 8)
       : [];
 
   // Vraie confirmation finale — rien n'est créé avant que l'utilisateur clique "OK" ici.

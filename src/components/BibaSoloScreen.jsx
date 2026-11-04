@@ -38,7 +38,7 @@ import {
   archiveMyJetonMovements,
   loadMyJetonSpentSince,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
@@ -49,13 +49,6 @@ import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
 import { AiIcon } from "./AiIcon.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { ServicePill, serviceLabelOf } from "./ServiceTag.jsx";
-
-function normalize(str) {
-  return (str || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
 
 // La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
 // seule soirée. `current` = début de la période en cours (le dernier 6 h passé), `previous` = début de la période d'avant.
@@ -335,7 +328,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const itemsInCategory = (cat) => venueMenuItems.filter((d) => categoryOf(d) === cat);
   const visibleRecentDrinks = bibaZeroActive ? recentDrinks.filter((d) => !isAlcoholicDrink(d)) : recentDrinks;
 
-  const q = normalize(query);
+  const q = query.trim();
   const [rawDrinkResults, setRawDrinkResults] = useState([]);
   const drinkResults = bibaZeroActive ? rawDrinkResults.filter((d) => !isAlcoholicDrink(d)) : rawDrinkResults;
   useEffect(() => {
@@ -355,8 +348,11 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   useEffect(() => {
     if (pickMode === "generic" && genericDrinks.length === 0) loadGenericDrinks().then(setGenericDrinks);
   }, [pickMode]); // eslint-disable-line react-hooks/exhaustive-deps
-  const gq = normalize(genericQuery);
-  const genericResults = (gq.length === 0 ? genericDrinks : genericDrinks.filter((d) => normalize(d.name).includes(gq))).filter((d) => !bibaZeroActive || !isAlcoholicDrink(d));
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher) pour la carte du lieu, une catégorie de la carte et les produits génériques.
+  const carteMatches = makeSearchMatcher(carteQuery);
+  const categoryMatches = makeSearchMatcher(categoryQuery);
+  const genericMatches = makeSearchMatcher(genericQuery);
+  const genericResults = genericDrinks.filter((d) => genericMatches(entityNames(d))).filter((d) => !bibaZeroActive || !isAlcoholicDrink(d));
 
   // Un spiritueux dont la fiche a la case « Shot » cochée propose le choix Spiritueux / Shot ; il démarre en Shot si la fiche
   // le dit par défaut. Volume et type de service reprennent alors les valeurs du shot de la fiche.
@@ -597,10 +593,10 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                     placeholder="Rechercher dans la carte..."
                     style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", marginBottom: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
                   />
-                  {normalize(carteQuery).length > 0 ? (
+                  {carteQuery.trim().length > 0 ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                       {venueMenuItems
-                        .filter((d) => normalize(d.name).includes(normalize(carteQuery)))
+                        .filter((d) => carteMatches(entityNames(d)))
                         .map((item) => (
                           <MenuItemBlock key={item.id} item={item} onClick={() => selectVenueMenuItem(item)} />
                         ))}
@@ -645,7 +641,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                   />
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {itemsInCategory(activeCategory)
-                      .filter((d) => normalize(d.name).includes(normalize(categoryQuery)))
+                      .filter((d) => categoryMatches(entityNames(d)))
                       .map((item) => (
                         <MenuItemBlock key={item.id} item={item} onClick={() => selectVenueMenuItem(item)} />
                       ))}
@@ -1521,7 +1517,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     );
   }, []);
 
-  const vq = normalize(venueQuery);
+  const vq = venueQuery.trim();
   useEffect(() => {
     if (vq.length < 2) {
       setVenueResults([]);

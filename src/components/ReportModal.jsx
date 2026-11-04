@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { submitReport, trackEvent, searchDrinks, searchVenues } from "../data/sharedDirectories.js";
+import { makeSearchMatcher, entityNames } from "../utils.js";
 
 // Icône moderne (cercle + point d'exclamation), remplace l'ancien drapeau — cohérente avec le
 // style trait fin utilisé ailleurs dans l'app.
@@ -84,13 +85,14 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
 
   // Pour "brand"/"producer" (pas encore migrés vers une recherche serveur), directory
   // reste la liste déjà chargée en mémoire par l'appelant.
+  const matchesDuplicate = makeSearchMatcher(duplicateQuery);
   const duplicateMatches =
     entityType === "drink"
       ? drinkDuplicateMatches
       : entityType === "venue"
       ? venueDuplicateMatches
       : isDuplicate && duplicateQuery.trim().length >= 2
-      ? directory.filter((d) => d.id !== entityId && d.name?.toLowerCase().includes(duplicateQuery.trim().toLowerCase())).slice(0, 5)
+      ? directory.filter((d) => d.id !== entityId && matchesDuplicate(entityNames(d))).slice(0, 5)
       : [];
 
   const canSubmit = reason && (!commentRequired || comment.trim().length > 0) && (!isDuplicate || duplicateTarget);

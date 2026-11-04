@@ -29,14 +29,13 @@ export const normalizeForSearch = (text) =>
 // (traductions, anciens noms...), sans jamais dupliquer la fiche elle-même. extraFields permet
 // d'inclure d'autres champs texte pertinents (ex. le nom de la brasserie pour un produit).
 export function searchEntities(entities, query, extraFields = []) {
-  const q = normalizeForSearch(query);
-  if (!q) return entities;
-  return entities.filter((e) => {
-    if (normalizeForSearch(e.name).includes(q)) return true;
-    if (Array.isArray(e.aliases) && e.aliases.some((a) => normalizeForSearch(a).includes(q))) return true;
-    return extraFields.some((field) => normalizeForSearch(e[field]).includes(q));
-  });
+  if (!(query || "").trim()) return entities;
+  const matches = makeSearchMatcher(query);
+  return entities.filter((e) => matches(entityNames(e), extraFields.map((field) => e[field])));
 }
+
+// Tous les noms sous lesquels une fiche (produit, marque, producteur, lieu) peut être cherchée : nom, nom alternatif, alias et traductions.
+export const entityNames = (e) => [e?.name, e?.alternateName, e?.aliases, (e?.translations || []).map((t) => t?.value)];
 
 export const formatCompactCount = (n) => {
   if (n < 1000) return String(n);
@@ -877,6 +876,48 @@ export function normalizeSearchText(str) {
 // `search_text`, voir docs/DATABASE.md), plus « » “ ” „ que `unaccent` ramène à << >> ou " côté base. Les lettres, les chiffres et toutes les écritures non
 // latines restent.
 export const compactSearchText = (normalized) => (normalized || "").replace(/[\s"',;:!?(){}[\]/\\&+*#@%=|<>~^$_«»“”„-]/g, "");
+
+// ------------------------------------------------------------------------------------------------------------------------------------------
+// Recherche commune à TOUTES les barres de recherche de l'app (produits, marques, producteurs, lieux, Bibax, BibaClubs) : une seule règle.
+//   - Chaque MOT tapé doit se retrouver dans la fiche, dans n'importe quel ordre (« dupont jean » trouve « Jean Dupont »).
+//   - Accents, ligatures, majuscules, apostrophes, tirets, points et espaces ne comptent pas (« oeufs » trouve « Œufs », « Hendricks » trouve
+//     « Hendrick's », « Bellevue » trouve « Belle-Vue », « jager meister » trouve « Jägermeister »).
+// Côté base, les fonctions de recherche appliquent la même règle (colonne `search_compact`, voir docs/DATABASE.md).
+// ------------------------------------------------------------------------------------------------------------------------------------------
+
+// Les mots de la saisie, prêts à être cherchés dans un texte compact : « Hendrick's Gin » → ["hendrick", "s", "gin"]. Chaque mot est normalisé puis
+// compacté ; un mot qui n'est que de la ponctuation disparaît. Liste vide = rien d'exploitable dans la saisie.
+export const searchTokens = (query) =>
+  normalizeSearchText(query)
+    .split(" ")
+    .map(compactSearchText)
+    .filter(Boolean);
+
+// Fabrique le test d'une barre de recherche. `const matches = makeSearchMatcher(saisie)` puis `matches(nom, ...alias, traductions)` : vrai si chaque mot
+// tapé se retrouve dans l'ensemble de ces textes (chaînes, tableaux ou valeurs vides acceptés). Saisie vide = tout correspond ; saisie sans lettre ni chiffre
+// (rien que de la ponctuation) = rien ne correspond, comme dans BibAtlas.
+export function makeSearchMatcher(query) {
+  const typed = (query || "").trim();
+  if (!typed) return () => true;
+  const tokens = searchTokens(typed);
+  if (tokens.length === 0) return () => false;
+  return (...texts) => {
+    const haystack = compactSearchText(normalizeSearchText(texts.flat(Infinity).filter(Boolean).join(" ")));
+    return tokens.every((token) => haystack.includes(token));
+  };
+}
+
+// Classement des résultats d'une recherche, du plus précis au moins précis : 0 = la saisie se retrouve telle quelle (mots côte à côte, dans l'ordre),
+// 1 = tous les mots sont là, séparés ou dans un autre ordre, 2 = il a fallu ignorer les espaces et la ponctuation (« Hendricks » pour « Hendrick's »).
+// `searchText` est la colonne `search_text` de la fiche (déjà normalisée par la base).
+export function searchRank(query, searchText) {
+  const q = normalizeSearchText(query);
+  const text = (searchText || "").replace(/\s+/g, " "); // la base ne fusionne pas les espaces (« Coca - Cola » → « coca   cola »)
+  if (q && text.includes(q)) return 0;
+  const words = q.split(" ").filter(Boolean);
+  if (words.length > 0 && words.every((word) => text.includes(word))) return 1;
+  return 2;
+}
 
 // « @nom » tapé dans une barre de recherche : rend le nom SANS le « @ » (pour lookupUsername), ou null
 // si la saisie ne commence pas par « @ » ou n'a rien après. Une saisie normale n'est jamais touchée.
