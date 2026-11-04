@@ -11,17 +11,22 @@ const SERVICE_LABELS = { bouteille: "Bouteille", canette: "Canette", fut: "On Ta
 
 const pillStyle = { display: "inline-block", whiteSpace: "nowrap", padding: "0 6px", fontSize: "9.5px", lineHeight: "13px", fontWeight: 500, color: COLORS.inkSoft, border: `1px solid ${COLORS.inkSoft}55`, borderRadius: "999px" };
 
+// La pastille « Shot » seule, réutilisée telle quelle par le journal de BibaSolo (ligne 2 d'un verre bu).
+export function ShotPill({ style }) {
+  return (
+    <span data-testid="shot-tag" style={{ ...pillStyle, ...style }}>
+      Shot
+    </span>
+  );
+}
+
 export function ServiceTag({ mode, shot = false }) {
   const known = typeof mode === "string" && Object.prototype.hasOwnProperty.call(SERVICE_LABELS, mode) ? SERVICE_LABELS[mode] : null;
   const label = shot && mode === "verre" ? null : known;
   if (!label && !shot) return null;
   return (
     <span data-testid="service-tag" style={{ display: "block", paddingLeft: "10px", marginTop: "2px", lineHeight: 0 }}>
-      {shot && (
-        <span data-testid="shot-tag" style={{ ...pillStyle, marginRight: label ? "4px" : 0 }}>
-          Shot
-        </span>
-      )}
+      {shot && <ShotPill style={{ marginRight: label ? "4px" : 0 }} />}
       {label && <span style={pillStyle}>{label}</span>}
     </span>
   );

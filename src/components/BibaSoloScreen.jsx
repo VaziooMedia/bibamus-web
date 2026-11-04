@@ -34,7 +34,7 @@ import {
   saveWaterAlertSoloSettings,
   upsertPushSubscription,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
@@ -43,6 +43,8 @@ import bioIconUrl from "../assets/brand/bio.svg";
 import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
 import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
 import { AiIcon } from "./AiIcon.jsx";
+import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
+import { ShotPill } from "./ServiceTag.jsx";
 
 function normalize(str) {
   return (str || "")
@@ -169,8 +171,9 @@ const encodeInputStyle = {
   fontSize: "14px",
   textAlign: "center",
 };
-function defaultVolumeOf(drink) {
-  for (const v of [drink?.defaultVolumeCl, drink?.volumeCl]) {
+// Pris en shot (`asShot`), le volume du shot encodé sur la fiche (default_shot_volume_cl) passe en premier ; s'il n'y en a pas, on retombe sur la chaîne habituelle.
+function defaultVolumeOf(drink, asShot = false) {
+  for (const v of [asShot ? drink?.defaultShotVolumeCl : null, drink?.defaultVolumeCl, drink?.volumeCl]) {
     const n = Number(v);
     if (v != null && v !== "" && Number.isFinite(n) && n > 0) return n;
   }
@@ -277,6 +280,8 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [free, setFree] = useState(false); // verre offert : compte pour un prix de 0 (en euros), le prix saisi est gardé de côté
   const priceInputRef = useRef(null); // champ de prix : reçoit le curseur (et le clavier numérique) dès qu'on touche € ou Jetons
   const [servingMode, setServingMode] = useState(""); // type de service : "" (non défini) | bouteille | canette | fut | verre
+  const [asShot, setAsShot] = useState(false); // spiritueux pris en shot (choix Spiritueux / Shot)
+  const [shotSource, setShotSource] = useState(null); // fiche complète du produit choisi : dit s'il peut être un shot et fournit ses valeurs par défaut
   const [saving, setSaving] = useState(false);
 
   // Trois portes d'entrée distinctes une fois qu'un lieu est choisi, comme dans un salon : sa
@@ -332,10 +337,23 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const gq = normalize(genericQuery);
   const genericResults = (gq.length === 0 ? genericDrinks : genericDrinks.filter((d) => normalize(d.name).includes(gq))).filter((d) => !bibaZeroActive || !isAlcoholicDrink(d));
 
+  // Un spiritueux dont la fiche a la case « Shot » cochée propose le choix Spiritueux / Shot ; il démarre en Shot si la fiche
+  // le dit par défaut. Volume et type de service reprennent alors les valeurs du shot de la fiche.
   const selectDrink = (d) => {
+    const shot = startsAsShot(d);
     setSelectedDrink(d);
-    setVolume(String(defaultVolumeOf(d) ?? VOLUME_FALLBACK_CL));
-    setServingMode(defaultServingModeText(d));
+    setShotSource(d);
+    setAsShot(shot);
+    setVolume(String(defaultVolumeOf(d, shot) ?? VOLUME_FALLBACK_CL));
+    setServingMode(defaultServingModeText(d, shot));
+  };
+
+  // Changer de choix (Spiritueux / Shot) remet volume et type de service aux valeurs de la fiche pour ce choix ; le prix reste tel quel.
+  const changeKind = (next) => {
+    if (next === asShot) return;
+    setAsShot(next);
+    setVolume(String(defaultVolumeOf(shotSource, next) ?? VOLUME_FALLBACK_CL));
+    setServingMode(defaultServingModeText(shotSource, next));
   };
 
   // Choisir un item de la carte du lieu — pré-remplit aussi le prix et le volume réellement
@@ -343,10 +361,14 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   // volume, c'est celui par défaut de la fiche du produit qui s'applique.
   const selectVenueMenuItem = (item) => {
     const master = venueDrinks.find((m) => m.id === item.sourceDrinkId);
+    // Sur la carte d'un lieu, c'est la carte qui dit si le verre est un shot (catégorie « Shots »).
+    const shot = categoryOf(item) === "Shots";
     setSelectedDrink({ id: item.sourceDrinkId, name: item.name, photoUrl: item.photoUrl, avatarEmoji: master?.avatarEmoji });
-    setVolume(item.volumeCl ? String(item.volumeCl) : String(defaultVolumeOf(master) ?? VOLUME_FALLBACK_CL));
+    setShotSource(master || null);
+    setAsShot(shot);
+    setVolume(item.volumeCl ? String(item.volumeCl) : String(defaultVolumeOf(master, shot) ?? VOLUME_FALLBACK_CL));
     // Le type de service que le lieu précise sur sa carte passe avant celui par défaut de la fiche du produit.
-    setServingMode(safeServingMode(item.servingMode) || defaultServingModeText(master));
+    setServingMode(safeServingMode(item.servingMode) || defaultServingModeText(master, shot));
     if (item.price != null) setPrice(String(item.price).replace(".", ","));
     // Une carte tarifée en jetons : le prix repris ici est un nombre de jetons, pas des euros.
     if (venue?.defaultCurrency === "jeton") setCurrency("jeton");
@@ -364,7 +386,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
     // @Home : pas de prix. « Free » : prix 0, en euros. Sinon, le prix saisi dans la monnaie choisie.
     const priceNum = isHome ? null : free ? 0 : parseFloat(price.replace(",", "."));
-    const result = await addSoloCheckin(myUserId, selectedDrink.id, priceNum, venue?.id, volumeNum, free ? "euro" : currency, servingMode);
+    const result = await addSoloCheckin(myUserId, selectedDrink.id, priceNum, venue?.id, volumeNum, free ? "euro" : currency, servingMode, asShot);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -676,7 +698,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               borderRadius: "12px",
               padding: "5px 12px",
               marginTop: "18px",
-              marginBottom: "32px",
+              marginBottom: canBeShot(shotSource) ? "14px" : "32px",
             }}
           >
             <EntityAvatar photoUrl={selectedDrink.photoUrl} photoEmoji={selectedDrink.avatarEmoji} size={28} fallbackIcon="bottle" />
@@ -685,6 +707,9 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               <NavIcon name="x" size={15} color={COLORS.inkSoft} />
             </button>
           </div>
+
+          {/* Spiritueux dont la fiche a la case « Shot » : choix Spiritueux / Shot, centré comme le formulaire en dessous */}
+          {canBeShot(shotSource) && <SpiritKindToggle asShot={asShot} onChange={changeKind} style={{ margin: "0 auto 32px" }} />}
 
           {/* Ligne 1 : « Volume » et « Type de service » côte à côte, chacun aussi large que sa pastille de titre.
               Ligne 2 : choix € / Jetons / Free et champ de prix, exactement aussi larges que la ligne 1 (@Home : pas de prix). */}
@@ -1012,6 +1037,8 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
         {(() => {
           const mentionParts = [];
           if (c.volumeCl) mentionParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
+          // Un verre pris en shot porte la pastille « Shot » juste après le volume.
+          if (c.shot) mentionParts.push(<ShotPill key="shot" />);
           if (drink?.nationality) mentionParts.push(<CountryFlagImg key="flag" country={drink.nationality} size={16} />);
           if (showMentions && drink.abv != null) mentionParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
           if (showMentions && drink.bio) mentionParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
