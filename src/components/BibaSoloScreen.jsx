@@ -410,7 +410,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     const volumeNum = parseFloat(String(volume).replace(",", ".")) || null;
     // @Home : pas de prix. « Free » : prix 0, en euros. Sinon, le prix saisi dans la monnaie choisie.
     const priceNum = isHome ? null : free ? 0 : parseFloat(price.replace(",", "."));
-    const offeredNum = canOffer ? parseFloat(String(offered).replace(",", ".")) : 0;
+    const offeredNum = canOffer && offeredOpen ? parseFloat(String(offered).replace(",", ".")) : 0;
     const result = await addSoloCheckin(myUserId, selectedDrink.id, priceNum, venue?.id, volumeNum, free ? "euro" : currency, servingMode, asShot, offeredNum);
     setSaving(false);
     if (result.error) {
@@ -845,7 +845,10 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                 // Ouvert, le bloc se colle sous celui du prix : on annule l'écart de la colonne (+ 2 px, pour que son filet du haut recouvre le filet du bas du
                 // bloc du prix et ne fasse qu'un seul trait), et seuls les angles extérieurs restent arrondis.
                 <div data-encode="offered" style={{ ...encodeBlockStyle, width: 0, minWidth: "100%", marginTop: `-${ENCODE_ROW_GAP + 2}px`, borderRadius: "0 0 12px 12px" }}>
-                  <label htmlFor="solo-offered" style={encodeTitleStyle}>Offrir</label>
+                  {/* Le titre est aussi un bouton : un appui referme le bloc (le lien « + Offrir » revient) et efface le montant saisi. */}
+                  <button type="button" data-encode="offered-close" aria-label="Masquer le bloc Offrir" onClick={() => { setOffered(""); setOfferedOpen(false); }} style={{ ...encodeTitleStyle, width: "100%", borderTop: "none", borderLeft: "none", borderRight: "none", fontFamily: "inherit", cursor: "pointer" }}>
+                    Offrir
+                  </button>
                   <input id="solo-offered" type="text" inputMode="decimal" aria-label="Montant offert" value={offered} onChange={(e) => setOffered(e.target.value)} placeholder={offeredInJetons ? "0" : "0,00"} autoFocus style={encodeInputStyle} />
                 </div>
               ) : (
@@ -1407,6 +1410,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   const [checkins, setCheckins] = useState(null); // période en cours (de 6 h à 6 h) : c'est elle que comptent les compteurs
   const [previousCheckins, setPreviousCheckins] = useState(null); // période d'avant, affichée grisée sous la liste
   const [previousPeriodStart, setPreviousPeriodStart] = useState(null); // début (6 h) de la période d'avant : sa date s'affiche dans la barre de séparation
+  const [spentInfoOpen, setSpentInfoOpen] = useState(false); // bulle de détail du bloc « Dépensé » (mes consommations / consommations offertes / jetons achetés)
   const [periodInfoOpen, setPeriodInfoOpen] = useState(null); // bulle d'explication des périodes ouverte : null | "today" | "previous" (icône « info » de chaque barre)
   const todayBarRef = useRef(null);
   const previousBarRef = useRef(null);
@@ -1690,18 +1694,20 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   }, [checkins, previousCheckins, recentDrinkIds]);
 
   const totals = useMemo(() => {
-    if (!checkins) return { count: 0, price: 0, jetons: 0, kcal: 0 };
+    if (!checkins) return { count: 0, price: 0, own: 0, offered: 0, jetons: 0, kcal: 0 };
     return checkins.reduce(
       (acc, c) => {
         const drink = drinksById[String(c.drinkId)];
         return {
           count: acc.count + 1,
           price: acc.price + (c.currency === "jeton" ? 0 : (c.price || 0) + (c.offeredPrice || 0)), // euros : prix du verre + euros offerts
+          own: acc.own + (c.currency === "jeton" ? 0 : c.price || 0), // euros : mes consommations seules
+          offered: acc.offered + (c.currency === "jeton" ? 0 : c.offeredPrice || 0), // euros : consommations offertes seules
           jetons: acc.jetons + (c.currency === "jeton" ? (c.price || 0) + (c.offeredPrice || 0) : 0), // jetons : prix du verre + jetons offerts
           kcal: acc.kcal + (drink ? drinkCalories(drink, c.volumeCl) : 0),
         };
       },
-      { count: 0, price: 0, jetons: 0, kcal: 0 }
+      { count: 0, price: 0, own: 0, offered: 0, jetons: 0, kcal: 0 }
     );
   }, [checkins, drinksById]);
 
@@ -2110,7 +2116,22 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>{totals.count}</div>
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>{totals.count <= 1 ? "Verre" : "Verres"}</div>
         </div>
-        <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "center" }}>
+        {/* Un appui sur le bloc ouvre / ferme une bulle (même style que la bulle des périodes) qui détaille le Dépensé. */}
+        <div
+          data-spent-tile="1"
+          role="button"
+          tabIndex={0}
+          aria-expanded={spentInfoOpen}
+          aria-label="Détail du dépensé"
+          onClick={() => setSpentInfoOpen((o) => !o)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setSpentInfoOpen((o) => !o);
+            }
+          }}
+          style={{ position: "relative", cursor: "pointer", flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "center" }}
+        >
           {/* Dépensé = euros seulement : les verres payés en euros + les euros offerts + les euros payés pour acheter des jetons. Les jetons ont leur bloc. */}
           <div data-spent="1" style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>
             <div>
@@ -2124,6 +2145,29 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
             </div>
           </div>
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>Dépensé</div>
+          {spentInfoOpen && (
+            <div
+              data-spent-bubble="1"
+              role="note"
+              style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", top: "calc(100% + 8px)", zIndex: 5, width: "230px", boxSizing: "border-box", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "10px 12px", fontSize: "12px", lineHeight: 1.4, color: COLORS.ink, boxShadow: "0 10px 24px rgba(0,0,0,.55)", cursor: "default" }}
+            >
+              <span style={{ position: "absolute", top: "-6px", left: "calc(50% - 5px)", width: "10px", height: "10px", background: COLORS.surface, borderTop: `2px solid ${COLORS.amber}`, borderLeft: `2px solid ${COLORS.amber}`, transform: "rotate(45deg)" }} />
+              {[
+                ["own", "Mes consommations", totals.own],
+                ["offered", "Consommations offertes", totals.offered],
+                ...(jetonPurchasesEuro > 0 ? [["jetons", "Jetons achetés", jetonPurchasesEuro]] : []),
+              ].map(([key, label, value]) => (
+                <div key={key} data-spent-line={key} style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                  <span>{label}</span>
+                  <span style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{value.toFixed(2)} €</span>
+                </div>
+              ))}
+              <div data-spent-line="total" style={{ display: "flex", justifyContent: "space-between", gap: "10px", marginTop: "6px", paddingTop: "6px", borderTop: `1px solid ${COLORS.paperAlt}`, fontWeight: 700 }}>
+                <span>Total</span>
+                <span style={{ color: COLORS.amber, whiteSpace: "nowrap" }}>{(totals.price + jetonPurchasesEuro).toFixed(2)} €</span>
+              </div>
+            </div>
+          )}
         </div>
         <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "center" }}>
           {caloriesHidden ? (
