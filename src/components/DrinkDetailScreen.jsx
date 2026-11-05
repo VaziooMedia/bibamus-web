@@ -549,7 +549,7 @@ export function DrinkDetailScreen({
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                background: "rgba(8,19,31,0.72)",
+                background: "#000",
                 border: `2px solid ${COLORS.amber}`,
                 borderRadius: "8px",
                 padding: "3px 8px",
@@ -558,7 +558,7 @@ export function DrinkDetailScreen({
               <NavIcon name="star" size={14} color={COLORS.amber} filled />
               <span style={{ fontSize: "11px" }}>
                 <span style={{ color: COLORS.chalkWhite }}>{formatRating(ratingAverage)}</span>
-                <span style={{ color: COLORS.inkSoft }}> - {ratingValues.length} avis</span>
+                <span style={{ color: COLORS.chalkWhite }}> - {ratingValues.length} avis</span>
               </span>
             </div>
           </div>

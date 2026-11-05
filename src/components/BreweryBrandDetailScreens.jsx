@@ -268,7 +268,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onOpenVenue, onRated, claimsEnabled = true }) {
+export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onOpenVenue, onRatingConfirmed, claimsEnabled = true }) {
   const [activeTab, setActiveTab] = useState("infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
@@ -312,18 +312,22 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
     if (ratingSummary.canRate) setShowRatingModal(true);
     else setRatingHint((n) => n + 1);
   };
-  // Note enregistrée : la même confirmation encadrée en rose, en haut de l'écran, que celle d'un check (elle est dessinée par App).
+  // Note enregistrée ou retirée : la même confirmation encadrée en rose, en haut de l'écran, que celle d'un check (elle est dessinée par App ;
+  // le titre vient d'ici : « Note confirmée » ou « Note retirée », avec le nom de la marque dessous).
   const saveMyRating = async (value) => {
     const ok = await rateMyBrand(brand.id, value);
     if (ok) {
       await reloadRatingSummary();
-      if (onRated) onRated({ name: brand.name });
+      if (onRatingConfirmed) onRatingConfirmed({ title: "Note confirmée", name: brand.name });
     }
     return ok;
   };
   const removeMyRating = async () => {
     const ok = await unrateMyBrand(brand.id);
-    if (ok) await reloadRatingSummary();
+    if (ok) {
+      await reloadRatingSummary();
+      if (onRatingConfirmed) onRatingConfirmed({ title: "Note retirée", name: brand.name });
+    }
     return ok;
   };
 
@@ -409,7 +413,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                background: "rgba(8,19,31,0.72)",
+                background: "#000",
                 border: `2px solid ${COLORS.amber}`,
                 borderRadius: "8px",
                 padding: "3px 8px",

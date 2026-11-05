@@ -1,6 +1,6 @@
 // ============================================================
 // Petite popup de confirmation, encadrée en rose, en haut de l'écran : un check (« Check confirmé », parcours depuis l'accueil, salon,
-// BibaSolo) ou la note d'une marque (« Note confirmée » : `title`). Disparaît toute seule après 2,5 secondes ; un tap la ferme tout de suite.
+// BibaSolo) ou la note d'une marque (« Note confirmée » / « Note retirée » : `title`). Disparaît toute seule après 2,5 secondes ; un tap la ferme tout de suite.
 // ============================================================
 import React, { useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
