@@ -3,7 +3,7 @@
 // — copiées telles quelles depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS, BRAND_TYPES, BRAND_CLASSIFICATIONS, DRINK_TYPES } from "../constants.js";
+import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS, BRAND_TYPES, BRAND_CLASSIFICATIONS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
@@ -410,11 +410,18 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
   const brandTags = [...tagLabels(brand.brandTypes, BRAND_TYPES, BRAND_TYPE_LIST_KEY), ...tagLabels(brand.classifications, BRAND_CLASSIFICATIONS, BRAND_CLASSIFICATION_LIST_KEY)];
   const hasOrigin = !!(brand.originCity || brand.originRegion || brand.originCountry);
 
-  // Les produits, regroupés par type de boisson (ordre du répertoire) ; un seul type = pas d'intertitre.
-  const drinkGroups = [...relatedDrinks.reduce((m, d) => m.set(d.type, [...(m.get(d.type) || []), d]), new Map())].sort((a, b) => {
-    const rank = (t) => (DRINK_TYPES.indexOf(t) === -1 ? DRINK_TYPES.length : DRINK_TYPES.indexOf(t));
-    return rank(a[0]) - rank(b[0]);
-  });
+  // Les produits, regroupés par sous-catégorie (« Bière », « Cidre », « Soda »… : SUBTYPE_LABELS), dans l'ordre du répertoire
+  // (catégorie, puis ordre des sous-catégories). Un produit sans sous-catégorie nommée (les Spiritueux) est rangé sous le nom
+  // de sa catégorie. Une seule sous-catégorie = pas d'intertitre.
+  const subtypeKeys = Object.keys(SUBTYPE_LABELS);
+  const drinkGroups = [
+    ...relatedDrinks.reduce((m, d) => {
+      const label = SUBTYPE_LABELS[d.beverageSubtype] || d.type;
+      return m.set(label, { drinks: [...(m.get(label)?.drinks || []), d], type: d.type, subtypeRank: SUBTYPE_LABELS[d.beverageSubtype] ? subtypeKeys.indexOf(d.beverageSubtype) : -1 });
+    }, new Map()),
+  ]
+    .map(([label, g]) => ({ label, ...g, typeRank: DRINK_TYPES.indexOf(g.type) === -1 ? DRINK_TYPES.length : DRINK_TYPES.indexOf(g.type) }))
+    .sort((a, b) => a.typeRank - b.typeRank || a.subtypeRank - b.subtypeRank);
 
   const submitEdit = () => {
     onSuggestEdit(nameValue);
@@ -584,11 +591,11 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "16px 0", margin: 0 }}>Aucune boisson de cette marque enregistrée pour l'instant.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {drinkGroups.map(([type, drinks], gi) => (
-              <React.Fragment key={type}>
+            {drinkGroups.map(({ label, drinks }, gi) => (
+              <React.Fragment key={label}>
                 {drinkGroups.length > 1 && (
                   <div style={{ fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px", marginTop: gi > 0 ? "6px" : 0 }}>
-                    {type.toUpperCase()} ({drinks.length})
+                    {label.toUpperCase()} ({drinks.length})
                   </div>
                 )}
                 {drinks.map((d) => {
