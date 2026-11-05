@@ -18,6 +18,7 @@ import { LinkedScanResultsModal } from "./components/LinkedScanResultsModal.jsx"
 import { VenueMapScreen } from "./components/VenueMapScreen.jsx";
 import { isBottomNavHidden } from "./bottomNav.js";
 import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
+import { LoadingScreen } from "./components/LoadingScreen.jsx";
 import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
 import { PublicLinkGate } from "./components/PublicCardScreen.jsx";
@@ -1859,11 +1860,7 @@ export default function App() {
   };
 
   if (!authChecked) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#F2F2E8", fontFamily: "sans-serif" }}>
-        Chargement...
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!session) {
@@ -1873,11 +1870,7 @@ export default function App() {
   }
 
   if (loading || !profileLoaded) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#F2F2E8", fontFamily: "sans-serif" }}>
-        Chargement...
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   const stillBlocked = profile.active === false && (!profile.blockedUntil || new Date(profile.blockedUntil) > new Date());
