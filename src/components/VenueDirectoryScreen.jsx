@@ -16,7 +16,7 @@ import { loadNearbyVenues, loadVenueCountryCounts, loadVenueCityCounts, loadVenu
 const PAGE_SIZE = 40;
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
-export function VenueDirectoryScreen({ myVenues, myBibroCode, isAdmin, addIntent, onBack, onOpenVenue, goToSubmit, goToMap, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
+export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack, onOpenVenue, goToSubmit, goToMap, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const { status: geoStatus, position, requestPosition } = useGeolocation();

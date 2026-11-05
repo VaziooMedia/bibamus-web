@@ -1,7 +1,7 @@
 # BIBAMUS — Contexte du projet
 
 > Ce document est la référence générale de Bibamus. Il doit permettre à une nouvelle conversation Claude — ou à toute personne rejoignant le projet — de comprendre rapidement ce qu'est Bibamus sans relire l'historique des échanges. Il reste volontairement une synthèse : le détail de chaque module est dans les documents spécialisés listés en fin de fichier.
-> Dernière mise à jour : 2026-11-05 (Softs & Eaux et Boissons chaudes (sauf Hot Mix) : « 0.0% ABV » et pastille « 0.0% » masqués ; BibaSolo : montant facultatif « Offrir », en € ou en jetons ; 2026-10-24 pour les liens @nom, recherche par @nom, aperçus de partage ; 2026-10-09 pour le reste). Les faits du produit et de la pile technique sont vérifiés contre le code de l'app (`src/`, version `26.32`). Les passages d'intention (vision, public visé) ne sont pas vérifiables dans le code et sont repris tels quels. Ce qui relève d'un autre dépôt ou d'un service externe est marqué **(hors dépôt)**.
+> Dernière mise à jour : 2026-11-05 (plus aucun outil d'administration dans l'app ; fiche Marque refondue sur le modèle de la fiche Produit ; Softs & Eaux et Boissons chaudes (sauf Hot Mix) : « 0.0% ABV » et pastille « 0.0% » masqués ; BibaSolo : montant facultatif « Offrir », en € ou en jetons ; 2026-10-24 pour les liens @nom, recherche par @nom, aperçus de partage ; 2026-10-09 pour le reste). Les faits du produit et de la pile technique sont vérifiés contre le code de l'app (`src/`, version `26.32`). Les passages d'intention (vision, public visé) ne sont pas vérifiables dans le code et sont repris tels quels. Ce qui relève d'un autre dépôt ou d'un service externe est marqué **(hors dépôt)**.
 
 ---
 
@@ -35,7 +35,7 @@
 | **BibaClub** | Clubs ; un salon peut être rattaché à un club |
 | **BibaZERO / WaterAlert / BibAzard** | BibaZERO : statut par participant pour qui ne boit pas, avec PIN et joker, **hors modes de salon** et aussi en BibaSolo ; WaterAlert : rappels d'eau ; BibAzard : roulette de boisson au hasard |
 | **DrinkCheck / PlaceCheck** | Accès rapides de l'accueil vers le répertoire de produits ou de lieux avec un flux de check |
-| **Transverses** | Notifications, recherche globale, paramètres (compte, sécurité, notifications, préférences, apparence, connexions, aide), import de données (administrateurs) |
+| **Transverses** | Notifications, recherche globale, paramètres (compte, sécurité, notifications, préférences, apparence, connexions, aide) |
 
 Non construits à ce jour (cartes ou tuiles « Soon » ou « Bientôt ») : BibArena, BibaMeet, BibaCal, BibaCare, autres jeux de BibaPlay, thème personnalisable, vidéo dans les Stories, export image de Wrapped, lecture des codes-barres (drapeau `BARCODE_SCAN_ENABLED = false` : la caméra sert à lire l'étiquette).
 

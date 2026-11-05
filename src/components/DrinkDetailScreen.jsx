@@ -10,7 +10,7 @@
 // moyenne, sur le bandeau photo.
 // ============================================================
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { COLORS, BEER_TYPES, DRINK_FIELD_LABELS, SUBTYPE_LABELS } from "../constants.js";
+import { COLORS, BEER_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle, GoButton } from "./ui.jsx";
 import { PillTabs } from "./PillTabs.jsx";
@@ -18,7 +18,7 @@ import { getDrinkFeatureItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { displayedAbv, formatDrinkFieldValue, formatMoney, formatWeekdayDDMMYYYY, isAtpDrink } from "../utils.js";
+import { displayedAbv, formatWeekdayDDMMYYYY, isAtpDrink } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -26,7 +26,7 @@ import { EvolutionCard } from "./EvolutionCard.jsx";
 import { NotesCard, formatRating } from "./NotesCard.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { OTHER_STYLE_TYPES } from "../data/otherStyleLabels.js";
-import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import atpIconUrl from "../assets/brand/atp.svg";
@@ -96,7 +96,6 @@ function findAnchor(key) {
 
 export function DrinkDetailScreen({
   drink,
-  isAdmin,
   myBibroCode,
   myUserId,
   isOnWishlist,
@@ -107,13 +106,6 @@ export function DrinkDetailScreen({
   autoOpenCheck = false,
   onCheckFlowFinished,
   onBack,
-  onEdit,
-  onCertify,
-  onDecertify,
-  onDelete,
-  pendingContributions = [],
-  onApproveContribution,
-  onRejectContribution,
   onOpenBrand,
   onOpenBrewery,
   onOpenVenue,
@@ -124,7 +116,6 @@ export function DrinkDetailScreen({
   onOpenTagFilter,
   claimsEnabled = true,
 }) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeTab, setActiveTab] = useState(returnMemo?.tab || "infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
@@ -461,14 +452,6 @@ export function DrinkDetailScreen({
     );
   }, [drink.id]);
 
-  // Chiffre d'affaires — réservé aux admins pour l'instant, en attendant la future plateforme
-  // Business (voir bibamus-schema-owner-stats.sql).
-  const [revenueStats, setRevenueStats] = useState(null);
-  useEffect(() => {
-    if (!isAdmin) return;
-    loadDrinkRevenueStats(drink.id).then(setRevenueStats);
-  }, [drink.id, isAdmin]);
-
   const handleCheckConfirmed = async (result) => {
     setShowCheckModal(false);
     if (!result) {
@@ -604,37 +587,6 @@ export function DrinkDetailScreen({
       </div>
 
       <div style={{ marginTop: "76px" }}>
-        {pendingContributions.length > 0 && (
-          <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-            <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {pendingContributions.map((c) => (
-                <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
-                  <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
-                    <strong>{DRINK_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {formatDrinkFieldValue(c.fieldPath, c.previousValue)} → {formatDrinkFieldValue(c.fieldPath, c.proposedValue)}
-                  </div>
-                  {isAdmin && (
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        onClick={() => onApproveContribution(c)}
-                        style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
-                      >
-                        ✓ Accepter
-                      </button>
-                      <button
-                        onClick={() => onRejectContribution(c)}
-                        style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
-                      >
-                        ✕ Refuser
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         <PillTabs
           tabs={[
             { key: "infos", label: "Infos" },
@@ -832,29 +784,6 @@ export function DrinkDetailScreen({
           </div>
         )}
 
-        {isAdmin && revenueStats && revenueStats.orderCount > 0 && (
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.wine}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-              <span style={{ width: "4px", height: "18px", background: COLORS.wine, borderRadius: "2px", display: "inline-block" }} />
-              <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Admin — Chiffre d'affaires (tous utilisateurs)</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px" }}>
-              {revenueStats.totalEuro > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: COLORS.inkSoft }}>Total en euros</span>
-                  <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(revenueStats.totalEuro, "euro")}</span>
-                </div>
-              )}
-              {revenueStats.avgPriceEuro != null && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: COLORS.inkSoft }}>Prix moyen payé</span>
-                  <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(revenueStats.avgPriceEuro, "euro")}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
             <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
@@ -892,35 +821,6 @@ export function DrinkDetailScreen({
             </div>
           )}
         </div>
-
-        {isAdmin && (
-          <div style={{ marginTop: "auto", paddingTop: "20px" }}>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>ADMINISTRATION</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {drink.status !== "complete" ? (
-                <button
-                  onClick={onCertify}
-                  style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}
-                >
-                  ✓ Certifier cette fiche
-                </button>
-              ) : (
-                <button
-                  onClick={onDecertify}
-                  style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.ink, cursor: "pointer" }}
-                >
-                  ↩️ Décertifier cette fiche
-                </button>
-              )}
-              <button
-                onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
-                style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.wine, cursor: "pointer" }}
-              >
-                {confirmDelete ? "Confirmer la suppression ?" : "Supprimer du répertoire"}
-              </button>
-            </div>
-          </div>
-        )}
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
           {claimsEnabled && (
@@ -1127,18 +1027,6 @@ export function DrinkDetailScreen({
               style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
             >
               <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
-              {isAdmin && (
-                <button
-                  onClick={() => {
-                    setShowActionsMenu(false);
-                    onEdit();
-                  }}
-                  style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-                >
-                  <NavIcon name="pencil" size={20} color={COLORS.amber} />
-                  Éditer
-                </button>
-              )}
               <button
                 onClick={() => {
                   setShowActionsMenu(false);

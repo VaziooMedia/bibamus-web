@@ -3,15 +3,17 @@
 // — copiées telles quelles depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS } from "../constants.js";
-import { NavIcon, CertificationIcon } from "./icons.jsx";
+import { COLORS, BRAND_TYPES, BRAND_CLASSIFICATIONS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
+import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { DrinkBadges } from "./DrinkDisplay.jsx";
+import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
-import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById } from "../data/sharedDirectories.js";
+import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce } from "../data/sharedDirectories.js";
+import { customNames } from "../venueLists.js";
+import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
 
@@ -33,15 +35,11 @@ function ShareEntityButton({ name, username }) {
   );
 }
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
-  const [editing, setEditing] = useState(false);
-  const [nameValue, setNameValue] = useState(brewery.name || "");
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, claimsEnabled = true }) {
   const [activeTab, setActiveTab] = useState("infos");
-  const [countryValue, setCountryValue] = useState(brewery.country || "");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
 
   const [relatedDrinks, setRelatedDrinks] = useState([]);
@@ -59,11 +57,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
     if (brewery.linkedVenueId) loadVenueById(brewery.linkedVenueId).then(setLinkedVenue);
     else setLinkedVenue(null);
   }, [brewery.linkedVenueId]);
-
-  const submitEdit = () => {
-    onSuggestEdit(nameValue, countryValue);
-    setEditing(false);
-  };
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -94,61 +87,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
       </div>
 
       <div style={{ marginTop: "76px" }}>
-        {pendingContributions.length > 0 && (
-          <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-            <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {pendingContributions.map((c) => (
-                <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
-                  <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
-                    <strong>{BREWERY_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
-                  </div>
-                  {isAdmin && (
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        onClick={() => onApproveContribution(c)}
-                        style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
-                      >
-                        ✓ Accepter
-                      </button>
-                      <button
-                        onClick={() => onRejectContribution(c)}
-                        style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
-                      >
-                        ✕ Refuser
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-      {editing && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-          <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>Ta suggestion sera soumise à validation.</p>
-          <input
-            value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
-            placeholder="Nom"
-            style={{ padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
-          />
-          <div style={{ display: "flex", gap: "8px" }}>
-            <input
-              value={countryValue}
-              onChange={(e) => setCountryValue(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submitEdit()}
-              placeholder="Pays d'origine"
-              style={{ flex: 1, padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
-            />
-            <button onClick={submitEdit} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 14px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper }}>
-              Suggérer
-            </button>
-          </div>
-        </div>
-      )}
-
       {linkedVenue && (
         <button
           onClick={() => onOpenVenue(linkedVenue.id)}
@@ -223,7 +161,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
         SES PRODUITS ({relatedDrinks.length})
       </div>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-4px", marginBottom: "8px" }}>Touchez une boisson pour la corriger, la peaufiner ou la certifier.</p>
       {relatedDrinks.length === 0 ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "20px" }}>
           Aucune boisson de cette brasserie enregistrée pour l'instant.
@@ -245,27 +182,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
               {drinkSummaryLine(d) && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{drinkSummaryLine(d)}</div>}
             </button>
           ))}
-        </div>
-      )}
-
-      {isAdmin && (
-        <div style={{ marginTop: "auto", paddingTop: "20px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {brewery.status !== "complete" && (
-              <button
-                onClick={onCertify}
-                style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}
-              >
-                ✓ Certifier cette brasserie
-              </button>
-            )}
-            <button
-              onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
-              style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.wine, cursor: "pointer" }}
-            >
-              {confirmDelete ? "Confirmer la suppression ?" : "Supprimer du répertoire"}
-            </button>
-          </div>
         </div>
       )}
 
@@ -316,18 +232,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
             style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
           >
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setShowActionsMenu(false);
-                  setEditing(true);
-                }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-              >
-                <NavIcon name="pencil" size={20} color={COLORS.amber} />
-                Éditer
-              </button>
-            )}
             <button
               onClick={() => {
                 setShowActionsMenu(false);
@@ -360,10 +264,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
-  const [editing, setEditing] = useState(false);
-  const [nameValue, setNameValue] = useState(brand.name || "");
-  const [confirmDelete, setConfirmDelete] = useState(false);
+export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, claimsEnabled = true }) {
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
@@ -380,10 +281,46 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
     else setProducers([]);
   }, [brand.producerIds]);
 
-  const submitEdit = () => {
-    onSuggestEdit(nameValue);
-    setEditing(false);
+  // Les noms des types et des catégories de la marque : ceux de la plateforme de gestion (élément ajouté, élément renommé)
+  // l'emportent sur la liste de départ. Lus une fois par session. Un code inconnu dont le nom n'est pas chargé n'est jamais
+  // montré tel quel. Entre parenthèses, l'explication de la liste de départ (« Bulles (champagne, crémant...) ») est omise.
+  const [brandLists, setBrandLists] = useState(null);
+  const hasBrandTags = (brand.brandTypes || []).length > 0 || (brand.classifications || []).length > 0;
+  useEffect(() => {
+    if (!hasBrandTags) return undefined;
+    let cancelled = false;
+    loadBrandListsOnce().then((lists) => {
+      if (lists && !cancelled) setBrandLists(lists);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasBrandTags, brand.id]);
+  const tagLabels = (codes, builtin, listKey) => {
+    const names = brandLists ? customNames(brandLists[listKey].rows) : {};
+    return (codes || [])
+      .map((code) => {
+        const found = builtin.find((t) => t.code === code);
+        const label = names[code] || (found ? found.fr.replace(/\s*\(.*\)\s*$/, "") : "");
+        return label;
+      })
+      .filter(Boolean);
   };
+  const brandTags = [...tagLabels(brand.brandTypes, BRAND_TYPES, BRAND_TYPE_LIST_KEY), ...tagLabels(brand.classifications, BRAND_CLASSIFICATIONS, BRAND_CLASSIFICATION_LIST_KEY)];
+  const hasOrigin = !!(brand.originCity || brand.originRegion || brand.originCountry);
+
+  // Les produits, regroupés par sous-catégorie (« Bière », « Cidre », « Soda »… : SUBTYPE_LABELS), dans l'ordre du répertoire
+  // (catégorie, puis ordre des sous-catégories). Un produit sans sous-catégorie nommée (les Spiritueux) est rangé sous le nom
+  // de sa catégorie. Une seule sous-catégorie = pas d'intertitre.
+  const subtypeKeys = Object.keys(SUBTYPE_LABELS);
+  const drinkGroups = [
+    ...relatedDrinks.reduce((m, d) => {
+      const label = SUBTYPE_LABELS[d.beverageSubtype] || d.type;
+      return m.set(label, { drinks: [...(m.get(label)?.drinks || []), d], type: d.type, subtypeRank: SUBTYPE_LABELS[d.beverageSubtype] ? subtypeKeys.indexOf(d.beverageSubtype) : -1 });
+    }, new Map()),
+  ]
+    .map(([label, g]) => ({ label, ...g, typeRank: DRINK_TYPES.indexOf(g.type) === -1 ? DRINK_TYPES.length : DRINK_TYPES.indexOf(g.type) }))
+    .sort((a, b) => a.typeRank - b.typeRank || a.subtypeRank - b.subtypeRank);
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -413,122 +350,143 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
       </div>
 
       <div style={{ marginTop: "76px" }}>
-        {pendingContributions.length > 0 && (
-          <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-            <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {pendingContributions.map((c) => (
-                <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
-                  <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
-                    <strong>{BRAND_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
+      {/* Carte « Infos » : même présentation que la fiche Produit (pastilles, ligne d'origine, puis le producteur après un trait vert). */}
+      {(brandTags.length > 0 || hasOrigin || producers.length > 0) && (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+          <div style={{ fontSize: "13px" }}>
+            {[
+              brandTags.length > 0 && {
+                key: "tags",
+                sep: null,
+                node: (
+                  <div key="tags" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {brandTags.map((label) => (
+                      <span key={label} style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "0.45em 0.9em", fontSize: "10px", fontWeight: 600, color: COLORS.ink }}>
+                        {label}
+                      </span>
+                    ))}
                   </div>
-                  {isAdmin && (
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        onClick={() => onApproveContribution(c)}
-                        style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
-                      >
-                        ✓ Accepter
-                      </button>
-                      <button
-                        onClick={() => onRejectContribution(c)}
-                        style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
-                      >
-                        ✕ Refuser
-                      </button>
+                ),
+              },
+              hasOrigin && {
+                key: "origin",
+                sep: "green",
+                node: (
+                  <div key="origin" style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                    <NavIcon name="map-pin" size={15} color={COLORS.amber} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      {brand.originCity && <span>{brand.originCity}</span>}
+                      {brand.originRegion && <span>{brand.originRegion}</span>}
+                      {brand.originCountry && (
+                        <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          {brand.originCountry}
+                          <CountryFlagImg country={brand.originCountry} size={14} />
+                        </span>
+                      )}
                     </div>
+                  </div>
+                ),
+              },
+            ]
+              .filter(Boolean)
+              .map((row, i) => (
+                <React.Fragment key={row.key}>
+                  {i > 0 && (
+                    <div
+                      style={{
+                        borderBottom: row.sep === "green" ? `2px solid ${COLORS.amber}` : `1px solid ${COLORS.paperAlt}`,
+                        margin: row.sep === "green" ? "14px 0" : "10px 0",
+                      }}
+                    />
                   )}
-                </div>
+                  {row.node}
+                </React.Fragment>
               ))}
-            </div>
           </div>
-        )}
 
-      {editing && (
-        <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
-          <input
-            value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submitEdit()}
-            placeholder="Nom"
-            autoFocus
-            style={{ flex: 1, padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
-          />
-          <button onClick={submitEdit} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 14px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper }}>
-            Suggérer
-          </button>
-        </div>
-      )}
+          {(brandTags.length > 0 || hasOrigin) && producers.length > 0 && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />}
 
-      {producers.length > 0 && (
-        <>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-            SES PRODUCTEURS
-          </div>
-          {producers.map((producer) => (
+          {producers.map((producer, i) => (
             <button
               key={producer.id}
               onClick={() => onOpenBrewery(producer.id)}
-              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "8px" }}
+              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginTop: i > 0 ? "10px" : 0 }}
             >
               <EntityAvatar photoUrl={producer.profilePhotoUrl} photoEmoji={producer.avatarEmoji} size={28} />
-              <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                {producer.name}
-                <CertificationIcon level={producer.certificationLevel} size={13} />
+              <span>
+                <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>Producteur</span>
+                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {producer.name}
+                  <CertificationIcon level={producer.certificationLevel} size={13} />
+                </span>
               </span>
             </button>
           ))}
-        </>
-      )}
-
-      <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-        SES PRODUITS ({relatedDrinks.length})
-      </div>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-4px", marginBottom: "8px" }}>Touchez une boisson pour la corriger, la peaufiner ou la certifier.</p>
-      {relatedDrinks.length === 0 ? (
-        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "20px" }}>
-          Aucune boisson de cette marque enregistrée pour l'instant.
-        </p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-          {relatedDrinks.map((d) => (
-            <button
-              key={d.id}
-              onClick={() => onOpenDrink(d.id)}
-              style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
-            >
-              <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                {d.name}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-                <DrinkBadges drink={d} />
-              </div>
-              {drinkSummaryLine(d) && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{drinkSummaryLine(d)}</div>}
-            </button>
-          ))}
         </div>
       )}
 
-      {isAdmin && (
-        <div style={{ marginTop: "auto", paddingTop: "20px" }}>
+      {/* Carte « Ses produits » : titre à barre verte et lignes imbriquées, comme « Lieux qui le proposent » sur la fiche Produit. */}
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Ses produits ({relatedDrinks.length})</span>
+        </div>
+        {relatedDrinks.length === 0 ? (
+          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "16px 0", margin: 0 }}>Aucune boisson de cette marque enregistrée pour l'instant.</p>
+        ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {brand.status !== "complete" && (
-              <button
-                onClick={onCertify}
-                style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}
-              >
-                ✓ Certifier cette marque
-              </button>
-            )}
-            <button
-              onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
-              style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.wine, cursor: "pointer" }}
-            >
-              {confirmDelete ? "Confirmer la suppression ?" : "Supprimer du répertoire"}
-            </button>
+            {drinkGroups.map(({ label, drinks }, gi) => (
+              <React.Fragment key={label}>
+                {drinkGroups.length > 1 && (
+                  <div style={{ fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px", marginTop: gi > 0 ? "6px" : 0 }}>
+                    {label.toUpperCase()} ({drinks.length})
+                  </div>
+                )}
+                {drinks.map((d) => {
+                  const parts = (d.type === "Bières & Cidres"
+                    ? [
+                        d.nationality ? <CountryFlagImg country={d.nationality} size={18.5} /> : null,
+                        d.abv != null ? <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span> : null,
+                        ...getDrinkBadgeItems(d, { hideCountry: true }).map((it) => renderDrinkBadgeItem(it, { drink: d, size: 11 })),
+                      ]
+                    : getDrinkBadgeItems(d).map((it) => renderDrinkBadgeItem(it, { drink: d, size: 11 }))
+                  ).filter(Boolean);
+                  return (
+                    <button
+                      key={d.id}
+                      onClick={() => onOpenDrink(d.id)}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+                    >
+                      <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={28} />
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                          {d.name}
+                          {d.pendingContributionsCount > 0 && (
+                            <span style={{ fontSize: "13px" }} title="Une modification est proposée">
+                              📝
+                            </span>
+                          )}
+                        </span>
+                        {parts.length > 0 && (
+                          <span style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
+                            {parts.map((part, i) => (
+                              <React.Fragment key={i}>
+                                {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+                                {part}
+                              </React.Fragment>
+                            ))}
+                          </span>
+                        )}
+                      </span>
+                      <CertificationIcon level={d.certificationLevel} size={15} />
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
         {claimsEnabled && (
@@ -570,18 +528,6 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
             style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
           >
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setShowActionsMenu(false);
-                  setEditing(true);
-                }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-              >
-                <NavIcon name="pencil" size={20} color={COLORS.amber} />
-                Éditer
-              </button>
-            )}
             <button
               onClick={() => {
                 setShowActionsMenu(false);

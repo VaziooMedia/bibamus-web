@@ -44,7 +44,6 @@ import { BibaPlayHubScreen } from "./components/BibaPlayHubScreen.jsx";
 import { PredictHubScreen, PredictGameScreen, ANSWER_DURATION_SECONDS } from "./components/PredictScreens.jsx";
 import { MenuSetupScreen } from "./components/MenuSetupScreen.jsx";
 import { DrinksDirectoryScreen } from "./components/DrinksDirectoryScreen.jsx";
-import { DrinkFormScreen } from "./components/DrinkFormScreen.jsx";
 import { SubmitDrinkWizardScreen } from "./components/SubmitDrinkWizardScreen.jsx";
 import { SubmitVenueWizardScreen } from "./components/SubmitVenueWizardScreen.jsx";
 import { SubmitBreweryWizardScreen } from "./components/SubmitBreweryWizardScreen.jsx";
@@ -73,12 +72,10 @@ import { SearchScreen } from "./components/SearchScreen.jsx";
 import { NotificationsFeedScreen } from "./components/NotificationsFeedScreen.jsx";
 import { BibaSoloScreen } from "./components/BibaSoloScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
-import { BreweriesAdminScreen, BrandsAdminScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
 import { BrandDirectoryScreen } from "./components/BrandDirectoryScreen.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
-import { ImportDataScreen } from "./components/ImportDataScreen.jsx";
-import { BibrosListScreen, BibroDetailScreen, BibroStatsScreen, BibroPulseScreen, AddBibroScreen, AdminUnlockScreen, MutualBibaxScreen } from "./components/BibrosScreens.jsx";
+import { BibrosListScreen, BibroDetailScreen, BibroStatsScreen, BibroPulseScreen, AddBibroScreen, MutualBibaxScreen } from "./components/BibrosScreens.jsx";
 import { DeleteAccountScreen } from "./components/DeleteAccountScreen.jsx";
 import { CheckConfirmedToast } from "./components/CheckConfirmedToast.jsx";
 import {
@@ -89,19 +86,12 @@ import {
   createBrewery,
   createPublicVenue,
   createDrink,
-  createBrand,
   updateDrink,
   rateMyDrink,
   unrateMyDrink,
   updatePublicVenue,
-  updateBrewery,
-  updateBrand,
-  deleteBrewery,
-  deleteBrand,
-  deleteDrink,
   deletePublicVenue,
   uploadDrinkPhoto,
-  proposeContribution,
   getSession,
   onAuthStateChange,
   loadMyProfile,
@@ -125,9 +115,6 @@ import {
   emitEvent,
   updateMyProfile,
   signOut,
-  loadContributionsForEntity,
-  approveContribution,
-  rejectContribution,
   countMyUnreadNotifications,
   subscribeToMyNotifications,
   loadClubMembers,
@@ -159,7 +146,7 @@ import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
 import { useUsernameDeepLink } from "./hooks/useUsernameDeepLink.js";
-import { randomCode, computeDrinkDiff, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId, safeServingMode } from "./utils.js";
+import { randomCode, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId, safeServingMode } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -1217,23 +1204,6 @@ export default function App() {
     );
   };
 
-  const registerBrand = (name) => {
-    const trimmed = (name || "").trim();
-    if (!trimmed) return trimmed;
-    const normalized = trimmed.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-    const existing = brandsDirectory.find(
-      (b) => (b.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "") === normalized
-    );
-    if (existing) return existing.name;
-    const newBrand = { id: `local-${Date.now()}`, name: trimmed, status: "to_process" };
-    setBrandsDirectory((prev) => [...prev, newBrand]);
-    emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "brand", entityId: newBrand.id });
-    createBrand(newBrand).then((created) => {
-      if (created) setBrandsDirectory((prev) => prev.map((b) => (b.id === newBrand.id ? created : b)));
-    });
-    return trimmed;
-  };
-
   const submitVenue = async (venueData) => {
     const created = await createPublicVenue({
       id: `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
@@ -1532,79 +1502,6 @@ export default function App() {
     onNotFound: () => alert("Cette page n'existe pas ou n'est plus disponible."),
   });
 
-  useEffect(() => {
-    if (viewedBreweryId && profile.isAdmin) {
-      loadContributionsForEntity("producer", viewedBreweryId).then(setViewedBreweryContributions);
-    } else {
-      setViewedBreweryContributions([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewedBreweryId, profile.isAdmin]);
-
-  useEffect(() => {
-    if (viewedBrandId && profile.isAdmin) {
-      loadContributionsForEntity("brand", viewedBrandId).then(setViewedBrandContributions);
-    } else {
-      setViewedBrandContributions([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewedBrandId, profile.isAdmin]);
-
-  const [viewedDrinkContributions, setViewedDrinkContributions] = useState([]);
-
-  useEffect(() => {
-    if (viewedDrinkId && profile.isAdmin) {
-      loadContributionsForEntity("drink", viewedDrinkId).then(setViewedDrinkContributions);
-    } else {
-      setViewedDrinkContributions([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewedDrinkId, profile.isAdmin]);
-
-  const suggestDrinkEdit = async (id, submittedData) => {
-    const drink = viewedDrink?.id === id ? viewedDrink : null;
-    if (!drink) return;
-    const fields = computeDrinkDiff(drink, submittedData);
-    if (Object.keys(fields).length === 0) return;
-    await proposeContribution("drink", id, fields, drink, profile.myBibroCode || null);
-    setViewedDrink((prev) => (prev && prev.id === id ? { ...prev, pendingContributionsCount: (prev.pendingContributionsCount || 0) + Object.keys(fields).length } : prev));
-  };
-
-  const refreshViewedDrinkContributions = async (id) => {
-    const list = await loadContributionsForEntity("drink", id);
-    setViewedDrinkContributions(list);
-  };
-
-  const approveDrinkContribution = async (contribution) => {
-    await approveContribution(contribution, profile.myBibroCode || null);
-    emitEvent(EVENT_TYPES.CONTRIBUTION_APPROVED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: contribution.entityId, payload: { fieldPath: contribution.fieldPath } });
-    setViewedDrink((prev) =>
-      prev && prev.id === contribution.entityId
-        ? { ...prev, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (prev.pendingContributionsCount || 0) - 1) }
-        : prev
-    );
-    await refreshViewedDrinkContributions(contribution.entityId);
-  };
-
-  const rejectDrinkContribution = async (contribution) => {
-    await rejectContribution(contribution, profile.myBibroCode || null);
-    setViewedDrink((prev) => (prev && prev.id === contribution.entityId ? { ...prev, pendingContributionsCount: Math.max(0, (prev.pendingContributionsCount || 0) - 1) } : prev));
-    await refreshViewedDrinkContributions(contribution.entityId);
-  };
-
-  const certifyDrink = (id) => {
-    updateDrink(id, { status: "complete" });
-    setViewedDrink((prev) => (prev && prev.id === id ? { ...prev, status: "complete" } : prev));
-  };
-  const decertifyDrink = (id) => {
-    updateDrink(id, { status: "to_process" });
-    setViewedDrink((prev) => (prev && prev.id === id ? { ...prev, status: "to_process" } : prev));
-  };
-  const removeDrinkFromDirectory = (id) => {
-    deleteDrink(id);
-    setScreen("drinksDirectory");
-  };
-
   // Version simplifiée : ne touche pas aux statistiques personnelles par lieu (ce système n'existe
   // pas encore côté web — "mes lieux" est ici le répertoire partagé, pas une liste personnelle avec
   // ses propres compteurs). Le cœur (retirer/modifier une tournée, et synchroniser le salon partagé)
@@ -1755,67 +1652,6 @@ export default function App() {
   const [drinksDirCategory, setDrinksDirCategory] = useState(null);
   const [drinksDirTagFilter, setDrinksDirTagFilter] = useState(null);
   const [drinksDirLetter, setDrinksDirLetter] = useState(null);
-
-  const suggestBreweryEdit = async (id, name, country) => {
-    const b = breweriesDirectory.find((x) => x.id === id);
-    if (!b) return;
-    const fields = {};
-    const trimmedName = (name || "").trim();
-    const trimmedCountry = (country || "").trim();
-    if (trimmedName && trimmedName !== b.name) fields.name = trimmedName;
-    if (trimmedCountry !== (b.country || "")) fields.country = trimmedCountry;
-    if (Object.keys(fields).length === 0) return;
-    await proposeContribution("producer", id, fields, b, profile.myBibroCode || null);
-    setBreweriesDirectory((prev) => prev.map((x) => (x.id === id ? { ...x, pendingContributionsCount: (x.pendingContributionsCount || 0) + Object.keys(fields).length } : x)));
-  };
-
-  const suggestBrandEdit = async (id, name) => {
-    const b = brandsDirectory.find((x) => x.id === id);
-    if (!b) return;
-    const trimmedName = (name || "").trim();
-    if (!trimmedName || trimmedName === b.name) return;
-    await proposeContribution("brand", id, { name: trimmedName }, b, profile.myBibroCode || null);
-    setBrandsDirectory((prev) => prev.map((x) => (x.id === id ? { ...x, pendingContributionsCount: (x.pendingContributionsCount || 0) + 1 } : x)));
-  };
-
-  const [viewedBreweryContributions, setViewedBreweryContributions] = useState([]);
-  const [viewedBrandContributions, setViewedBrandContributions] = useState([]);
-
-  const refreshViewedBreweryContributions = async (id) => {
-    const list = await loadContributionsForEntity("producer", id);
-    setViewedBreweryContributions(list);
-  };
-
-  const approveBreweryContribution = async (contribution) => {
-    await approveContribution(contribution, profile.myBibroCode || null);
-    emitEvent(EVENT_TYPES.CONTRIBUTION_APPROVED, { actorBibroCode: profile.myBibroCode, entityType: "producer", entityId: contribution.entityId, payload: { fieldPath: contribution.fieldPath } });
-    setBreweriesDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
-    await refreshViewedBreweryContributions(contribution.entityId);
-  };
-
-  const rejectBreweryContribution = async (contribution) => {
-    await rejectContribution(contribution, profile.myBibroCode || null);
-    setBreweriesDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
-    await refreshViewedBreweryContributions(contribution.entityId);
-  };
-
-  const refreshViewedBrandContributions = async (id) => {
-    const list = await loadContributionsForEntity("brand", id);
-    setViewedBrandContributions(list);
-  };
-
-  const approveBrandContribution = async (contribution) => {
-    await approveContribution(contribution, profile.myBibroCode || null);
-    emitEvent(EVENT_TYPES.CONTRIBUTION_APPROVED, { actorBibroCode: profile.myBibroCode, entityType: "brand", entityId: contribution.entityId, payload: { fieldPath: contribution.fieldPath } });
-    setBrandsDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, [contribution.fieldPath]: contribution.proposedValue, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
-    await refreshViewedBrandContributions(contribution.entityId);
-  };
-
-  const rejectBrandContribution = async (contribution) => {
-    await rejectContribution(contribution, profile.myBibroCode || null);
-    setBrandsDirectory((prev) => prev.map((x) => (x.id === contribution.entityId ? { ...x, pendingContributionsCount: Math.max(0, (x.pendingContributionsCount || 0) - 1) } : x)));
-    await refreshViewedBrandContributions(contribution.entityId);
-  };
 
   // Étiquette touchée sur une fiche produit (pour l'instant : une pastille de style) : on ouvre la
   // liste des produits de la même catégorie, limitée à cette étiquette. La flèche retour de cette
@@ -2292,7 +2128,6 @@ export default function App() {
               <VenueDirectoryScreen
                 myVenues={[]}
                 myBibroCode={profile.myBibroCode}
-                isAdmin={!!profile.isAdmin}
                 addIntent={false}
                 onBack={() => setScreen(screenBeforeVenueDirectory)}
                 onOpenVenue={(id) => {
@@ -2445,7 +2280,6 @@ export default function App() {
             )}
             {screen === "drinksDirectory" && (
               <DrinksDirectoryScreen
-                isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 onBack={leaveDrinksDirectory}
                 openedFromDrink={drinksDirectoryOpenedFromDrink}
@@ -2476,26 +2310,6 @@ export default function App() {
                 onCancel={() => setScreen("venueDirectory")}
               />
             )}
-            {screen === "editDrink" && viewedDrink && (
-              <DrinkFormScreen
-                drink={viewedDrink}
-                breweriesDirectory={breweriesDirectory}
-                onRegisterBrewery={registerBrewery}
-                brandsDirectory={brandsDirectory}
-                onRegisterBrand={registerBrand}
-                suggestMode={!profile.isAdmin && viewedDrink?.status === "complete"}
-                onSave={(patch) => {
-                  if (!profile.isAdmin && viewedDrink?.status === "complete") {
-                    suggestDrinkEdit(viewedDrinkId, patch);
-                  } else {
-                    updateDrink(viewedDrinkId, patch);
-                    setViewedDrink((prev) => (prev && prev.id === viewedDrinkId ? { ...prev, ...patch } : prev));
-                  }
-                  setScreen("drinkDetail");
-                }}
-                onCancel={() => setScreen("drinkDetail")}
-              />
-            )}
             {screen === "submitDrink" && (
               <SubmitDrinkWizardScreen
                 breweriesDirectory={breweriesDirectory}
@@ -2519,7 +2333,6 @@ export default function App() {
                   return v ? { ...v, isFavorite: favoriteVenueIds.includes(v.id) } : v;
                 })()}
                 myBibroCode={profile.myBibroCode}
-                isAdmin={!!profile.isAdmin}
                 myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
                 onCheckIn={(opts) => checkInVenue(viewedVenueId, opts)}
@@ -2587,7 +2400,6 @@ export default function App() {
               <DrinkDetailScreen
                 claimsEnabled={featureFlags.claims_enabled !== false}
                 drink={viewedDrink}
-                isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
                 isTasted={tastedDrinkIds.includes(viewedDrinkId)}
@@ -2609,13 +2421,6 @@ export default function App() {
                     setScreen(screenBeforeDrinkDetail);
                   }
                 }}
-                onEdit={() => setScreen("editDrink")}
-                onCertify={() => certifyDrink(viewedDrinkId)}
-                onDecertify={() => decertifyDrink(viewedDrinkId)}
-                onDelete={() => removeDrinkFromDirectory(viewedDrinkId)}
-                pendingContributions={viewedDrinkContributions}
-                onApproveContribution={approveDrinkContribution}
-                onRejectContribution={rejectDrinkContribution}
                 onOpenTagFilter={openTagFilter}
                 onUploadPhoto={(file) => uploadPhotoForDrink(viewedDrinkId, file)}
                 onDeletePhoto={() => deletePhotoForDrink(viewedDrinkId)}
@@ -2711,7 +2516,6 @@ export default function App() {
                 profile={profile}
                 onSaveProfile={(patch) => setProfile((p) => ({ ...p, ...patch }))}
                 onUploadPhoto={(file) => uploadMyAvatarPhoto(session.user.id, file)}
-                onGoToAdminUnlock={() => setScreen("adminUnlock")}
                 onGoToSettings={() => setScreen("settings")}
                 onLogout={handleLogout}
                 onBack={() => setScreen("profile")}
@@ -2770,8 +2574,6 @@ export default function App() {
                 myUserId={session.user.id}
                 onOpenMyStory={setViewedStoryAuthor}
                 onBack={() => setScreen("profile")}
-                isAdmin={!!profile.isAdmin}
-                goToImport={() => setScreen("importData")}
                 goToDeleteAccount={() => setScreen("deleteAccount")}
                 onLogout={handleLogout}
                 goToCategory={(key) => {
@@ -3172,15 +2974,6 @@ export default function App() {
             )}
             {screen === "accountDeactivate" && <DeactivateAccountScreen onBack={() => setScreen("account")} />}
             {screen === "deleteAccount" && <DeleteAccountScreen onBack={() => setScreen("settings")} onAccountDeleted={handleAccountDeleted} />}
-            {screen === "importData" && (
-              <ImportDataScreen
-                onBack={async () => {
-                  setBreweriesDirectory(await loadBreweriesDirectory());
-                  setBrandsDirectory(await loadBrandsDirectory());
-                  setScreen("settings");
-                }}
-              />
-            )}
             {screen === "eventHistory" && (
               <EventHistoryScreen
                 myName={profile.name}
@@ -3273,41 +3066,9 @@ export default function App() {
                 onBack={() => setScreen("eventDashboard")}
               />
             )}
-            {screen === "breweries" && (
-              <BreweriesAdminScreen
-                breweries={breweriesDirectory}
-                isAdmin={!!profile.isAdmin}
-                onBack={() => setScreen("repertoireHub")}
-                onOpenBrewery={(id) => {
-                  setViewedBreweryId(id);
-                  setScreenBeforeBreweryDetail("breweries");
-                  setScreen("breweryDetail");
-                }}
-                onRename={(id, name) => {
-                  updateBrewery(id, { name });
-                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === id ? { ...b, name } : b)));
-                }}
-                onSetCountry={(id, country) => {
-                  updateBrewery(id, { country });
-                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === id ? { ...b, country } : b)));
-                }}
-                onSuggestEdit={suggestBreweryEdit}
-                onCreate={registerBrewery}
-                onCertify={(id) => {
-                  updateBrewery(id, { status: "complete" });
-                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === id ? { ...b, status: "complete" } : b)));
-                }}
-                onDelete={(id) => {
-                  deleteBrewery(id);
-                  setBreweriesDirectory((prev) => prev.filter((b) => b.id !== id));
-                }}
-                onRefresh={async () => setBreweriesDirectory(await loadBreweriesDirectory())}
-              />
-            )}
             {screen === "breweryDirectory" && (
               <BreweryDirectoryScreen
                 myBreweries={[]}
-                isAdmin={!!profile.isAdmin}
                 onBack={() => setScreen(screenBeforeBreweryDirectory)}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
@@ -3333,7 +3094,6 @@ export default function App() {
             {screen === "brandDirectory" && (
               <BrandDirectoryScreen
                 myBrands={[]}
-                isAdmin={!!profile.isAdmin}
                 onBack={() => setScreen(screenBeforeBrandDirectory)}
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);
@@ -3357,39 +3117,11 @@ export default function App() {
                 onCancel={() => setScreen("brandDirectory")}
               />
             )}
-            {screen === "brands" && (
-              <BrandsAdminScreen
-                brands={brandsDirectory}
-                isAdmin={!!profile.isAdmin}
-                onBack={() => setScreen("repertoireHub")}
-                onOpenBrand={(id) => {
-                  setViewedBrandId(id);
-                  setScreenBeforeBrandDetail("brands");
-                  setScreen("brandDetail");
-                }}
-                onRename={(id, name) => {
-                  updateBrand(id, { name });
-                  setBrandsDirectory((prev) => prev.map((b) => (b.id === id ? { ...b, name } : b)));
-                }}
-                onSuggestEdit={suggestBrandEdit}
-                onCreate={registerBrand}
-                onCertify={(id) => {
-                  updateBrand(id, { status: "complete" });
-                  setBrandsDirectory((prev) => prev.map((b) => (b.id === id ? { ...b, status: "complete" } : b)));
-                }}
-                onDelete={(id) => {
-                  deleteBrand(id);
-                  setBrandsDirectory((prev) => prev.filter((b) => b.id !== id));
-                }}
-                onRefresh={async () => setBrandsDirectory(await loadBrandsDirectory())}
-              />
-            )}
             {screen === "breweryDetail" && (
               <BreweryDetailScreen
                 claimsEnabled={featureFlags.claims_enabled !== false}
                 brewery={resolveEntity(breweriesDirectory, viewedBreweryId)}
                 breweriesDirectory={breweriesDirectory}
-                isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
                 onBack={() => {
@@ -3415,19 +3147,6 @@ export default function App() {
                   setScreenBeforeVenueDetail("breweryDetail");
                   setScreen("venueDetail");
                 }}
-                onSuggestEdit={(name, country) => suggestBreweryEdit(viewedBreweryId, name, country)}
-                pendingContributions={viewedBreweryContributions}
-                onApproveContribution={approveBreweryContribution}
-                onRejectContribution={rejectBreweryContribution}
-                onCertify={() => {
-                  updateBrewery(viewedBreweryId, { status: "complete" });
-                  setBreweriesDirectory((prev) => prev.map((b) => (b.id === viewedBreweryId ? { ...b, status: "complete" } : b)));
-                }}
-                onDelete={() => {
-                  deleteBrewery(viewedBreweryId);
-                  setBreweriesDirectory((prev) => prev.filter((b) => b.id !== viewedBreweryId));
-                  setScreen("breweryDirectory");
-                }}
               />
             )}
             {screen === "brandDetail" && (
@@ -3435,7 +3154,6 @@ export default function App() {
                 claimsEnabled={featureFlags.claims_enabled !== false}
                 brand={resolveEntity(brandsDirectory, viewedBrandId)}
                 brandsDirectory={brandsDirectory}
-                isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
                 onBack={() => {
@@ -3455,19 +3173,6 @@ export default function App() {
                   setViewedBreweryId(id);
                   setScreenBeforeBreweryDetail("brandDetail");
                   setScreen("breweryDetail");
-                }}
-                onSuggestEdit={(name) => suggestBrandEdit(viewedBrandId, name)}
-                pendingContributions={viewedBrandContributions}
-                onApproveContribution={approveBrandContribution}
-                onRejectContribution={rejectBrandContribution}
-                onCertify={() => {
-                  updateBrand(viewedBrandId, { status: "complete" });
-                  setBrandsDirectory((prev) => prev.map((b) => (b.id === viewedBrandId ? { ...b, status: "complete" } : b)));
-                }}
-                onDelete={() => {
-                  deleteBrand(viewedBrandId);
-                  setBrandsDirectory((prev) => prev.filter((b) => b.id !== viewedBrandId));
-                  setScreen("brandDirectory");
                 }}
               />
             )}
@@ -3595,11 +3300,6 @@ export default function App() {
                 onCancel={() => setScreen("bibrosList")}
                 myBibroCode={profile.myBibroCode}
                 bibros={bibros}
-              />
-            )}
-            {screen === "adminUnlock" && (
-              <AdminUnlockScreen
-                onCancel={() => setScreen("myInfo")}
               />
             )}
             {screen === "bibaMeet" && (
@@ -3778,7 +3478,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "submitBrewery", "submitBrand", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "breweries", "brands", "bibrosList", "bibroDetail", "bibroStats", "bibroPulse", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "adminUnlock", "deleteAccount", "editDrink", "breweryDetail", "brandDetail", "importData"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "submitBrewery", "submitBrand", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroStats", "bibroPulse", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
