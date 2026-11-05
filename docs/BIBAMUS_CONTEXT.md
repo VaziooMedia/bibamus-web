@@ -19,7 +19,7 @@
 
 | Module | Rôle |
 |---|---|
-| **Home** | Accueil : Stories, BibaLive (salons en cours, section de l'accueil et non un écran), aperçu BibaPulse (3 dernières cartes), suggestions Bibax (3 affichées), six tuiles — BibaGo, BibaPlay, BibaMeet *(« Soon »)*, BibAtlas, BibaCal *(« Soon »)*, BibaPing — et quatre boutons ronds (recherche, BibaSolo, DrinkCheck, PlaceCheck). BibaPulse n'a pas de tuile : il est dans la barre basse |
+| **Home** | Accueil : Stories, BibaLive (salons en cours, section de l'accueil et non un écran), aperçu BibaPulse (3 premières cartes du fil, bloc des marques en favori compris), suggestions Bibax (3 affichées), six tuiles — BibaGo, BibaPlay, BibaMeet *(« Soon »)*, BibAtlas, BibaCal *(« Soon »)*, BibaPing — et quatre boutons ronds (recherche, BibaSolo, DrinkCheck, PlaceCheck). BibaPulse n'a pas de tuile : il est dans la barre basse |
 | **BibaGo** | Trois cartes : **BibaRoom** (créer / rejoindre), **BibaSolo** et BibArena *(« Soon »)* |
 | **BibaRoom** | Salon partagé (tournées, cagnotte, addition, consommation libre) à trois onglets Room / Pulse / Ping — voir `BIBAROOM.md` |
 | **BibaSolo** | Journal personnel de consommations sans salon : boisson, prix en € ou en jetons (et un montant facultatif « Offrir », dans la même monnaie, pour un verre payé à d'autres), lieu optionnel, calories, BibaZERO et WaterAlert solo ; suivi des jetons (achats, trouvés / offerts, donnés, solde) dans un bloc qu'affiche l'icône « Jetons » de l'en-tête |

@@ -6,6 +6,7 @@ import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, deleteMyPulsePost, previewMyPulseCheckDeletion, deleteMyPulseCheck, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
+import { mergePulseFeedTop, appendOlderPulsePage } from "../pulseFeedMerge.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { PulsePostScreen } from "./PulsePostScreen.jsx";
@@ -709,13 +710,8 @@ export function BibaPulseScreen({
       loadPulseFeed().then((freshTopAll) => {
         // Une carte que je viens de supprimer ne revient pas, même si cette réponse a été demandée juste avant.
         const freshTop = freshTopAll.filter((e) => !deletedIds.current.has(e.id));
-        setEntries((prev) => {
-          if (!prev) return freshTop;
-          const freshMap = new Map(freshTop.map((e) => [e.id, e]));
-          const merged = prev.map((e) => freshMap.get(e.id) || e);
-          const newOnes = freshTop.filter((e) => !prev.some((p) => p.id === e.id));
-          return [...newOnes, ...merged];
-        });
+        // Garde en tête le bloc des marques en favori (voir pulseFeedMerge.js).
+        setEntries((prev) => mergePulseFeedTop(prev, freshTop));
       });
     }, 10000);
     return () => clearInterval(interval);
@@ -726,7 +722,7 @@ export function BibaPulseScreen({
     setLoadingMore(true);
     const oldest = entries[entries.length - 1].createdAt;
     const more = await loadPulseFeed(oldest);
-    setEntries((prev) => [...prev, ...more]);
+    setEntries((prev) => appendOlderPulsePage(prev, more));
     setHasMore(more.length >= 20);
     setLoadingMore(false);
   };

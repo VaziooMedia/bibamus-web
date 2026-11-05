@@ -1,7 +1,7 @@
 # BIBAPULSE — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-23 (suppression de son propre check, avec ou sans sa consommation des statistiques, fonction Edge `delete-pulse-check` ; avant : 2026-10-22, suppression de sa propre publication libre, fonction Edge `delete-pulse-post` ; avant : publication libre avec Bibax tagués et partage en Story, fonction Edge version 7 ; avant : publication libre, version 6 ; avant : carte « a rejoint le BibaClub », étape E4, 2026-10-18 ; accès aux tables en lecture et en écriture, 2026-10-14). Vérifié contre le code de l'app (`src/`), les scripts SQL `bibamus-sql-pulse-*` / `bibamus-sql-tags-*` et la fonction Edge `create-pulse-event` (version 7) livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
+> Dernière mise à jour : 2026-11-05 (bloc en tête du fil principal pour les marques mises en favori (cœur), fonction `get_pulse_feed` ; avant : 2026-10-23, suppression de son propre check, avec ou sans sa consommation des statistiques, fonction Edge `delete-pulse-check` ; avant : 2026-10-22, suppression de sa propre publication libre, fonction Edge `delete-pulse-post` ; avant : publication libre avec Bibax tagués et partage en Story, fonction Edge version 7 ; avant : publication libre, version 6 ; avant : carte « a rejoint le BibaClub », étape E4, 2026-10-18 ; accès aux tables en lecture et en écriture, 2026-10-14). Vérifié contre le code de l'app (`src/`), les scripts SQL `bibamus-sql-pulse-*` / `bibamus-sql-tags-*` et la fonction Edge `create-pulse-event` (version 7) livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
 
 ---
 
@@ -123,6 +123,17 @@ Le serveur accepte `relations`, `public` et `private`. **L'application n'offre q
 
 Dans les deux cas, les cartes masquées (`hidden`) et celles d'un utilisateur bloqué (dans un sens ou dans l'autre) sont exclues.
 
+### Bloc en tête : les marques en favori (cœur)
+
+Décision de Mehdi (2026-11-05) : le cœur « Favoris » d'une marque (fiche Marque) fait arriver **en priorité** dans le fil principal les cartes qui la concernent. Cela ne touche que `get_pulse_feed` (pas le fil d'une fiche, pas l'activité d'un Bibax).
+
+- **Cartes concernées** : un check ou une découverte (`drink_checked`, `product_discovered`) d'un produit dont `drinks_directory.brand_id` est une marque en favori ; une publication libre dont `metadata.tags` contient `{ type: "brand", id: <la marque> }`. Pas les cartes « Ajout » (`database_contribution`), pas les visites de lieu, pas les cartes `club_joined`.
+- **Le bloc** : au chargement du fil (sans `p_before`), les **5 cartes les plus récentes**, de **moins de 7 jours**, parmi les cartes que la personne a le droit de voir, passent en tête (la plus récente d'abord) ; vient ensuite le fil chronologique habituel, **sans répéter** ces cartes. Une page garde sa taille : le bloc en occupe 5 au plus, jamais la page entière (`p_limit − 1` au plus : avec `p_limit` = 1, aucun bloc ; l'aperçu de l'accueil, qui demande 3 cartes, en reçoit 2 du bloc au plus). Les pages suivantes (`p_before`) ne contiennent que le fil habituel, sans les cartes du bloc. Une carte du bloc porte `metadata.priority = true` (valeur calculée à la lecture, jamais enregistrée).
+- **Rien ne change pour la visibilité** : mêmes règles qu'avant (publiques, ses propres cartes, « Mes Bibax » avec la cloche ou le lieu suivi), mêmes blocages, mêmes cartes masquées. Le cœur ne fait **jamais** apparaître une carte que la personne n'aurait pas pu voir : il ne change que l'ordre. Sans aucun cœur, le fil est identique à celui d'avant. Les cœurs d'une personne ne comptent que pour elle.
+- **Borne de lecture** : une page ne dépasse jamais **50** cartes (constante dans la fonction : avec une borne variable, le serveur lirait tout le fil au lieu des plus récentes ; avant, aucune borne). Mesure sur une base de test de 300 000 cartes : environ +2 ms sans favori, +6 ms avec favoris par appel.
+- **Dans l'app** (`src/pulseFeedMerge.js`, utilisé par `BibaPulseScreen`) : au rafraîchissement automatique du haut du fil (toutes les 10 secondes), le bloc envoyé par le serveur reste en tête et une nouvelle carte ordinaire ne passe jamais devant ; une carte qui sort du bloc retrouve sa place chronologique ; une page plus ancienne est ajoutée sans doublon. **Aucun marqueur visuel** n'indique qu'une carte est prioritaire.
+- **À connaître** : pas de rattrapage ni de mémoire — le bloc se recalcule à chaque lecture ; une carte plus ancienne que 7 jours n'est jamais prioritaire. La cloche d'une marque n'a toujours aucun effet sur le fil.
+
 ## Réactions
 
 Trois réactions, chacune sur sa table dédiée (jamais un simple compteur : toujours une trace de qui).
@@ -141,7 +152,7 @@ La ligne-résumé sous les boutons (« Bixé par X et N autres Bibax », « N Bi
 
 | Fonction | Rôle | Remarques |
 |---|---|---|
-| `get_pulse_feed(p_limit, p_before)` | Fil principal, 20 cartes par page | `security definer` ; vide pour un visiteur non connecté ; règle de visibilité ci-dessus ; remplace `metadata.tagged_ids` par `metadata.tagged` (nom + code Bibax) |
+| `get_pulse_feed(p_limit, p_before)` | Fil principal, 20 cartes par page (50 au plus : borne ajoutée avec le bloc en tête) | `security definer` ; vide pour un visiteur non connecté ; règle de visibilité ci-dessus ; remplace `metadata.tagged_ids` par `metadata.tagged` (nom + code Bibax) ; **bloc en tête** des marques en favori (voir « Visibilité », livré le 2026-11-05 : `bibamus-sql-fil-pulse-coeur-marques-1-fil-prioritaire.sql`, avec son `…-retour-arriere.sql`) : les cartes de ce bloc portent `metadata.priority = true` (calculé à la lecture, jamais enregistré) |
 | `get_entity_pulse(...)` | Fil d'une fiche | Voir « Fil de fiche ». Remplacée par le script `bibamus-sql-pulse-publication-1-fil-des-fiches` (ajoute les publications libres qui taguent la fiche) ; ce script refuse de s'appliquer si la fonction n'est pas dans l'état attendu |
 | `get_pulse_reactors(p_pulse_event_id)` | Liste des réacteurs (`kind` : `bix`, `incoming`, `sante`) | Connectés seulement ; vide si la carte n'est pas visible pour l'appelant (même règle que le fil) ; exclut les utilisateurs bloqués. Vérifié dans la base le 2026-10-14 (script non livré) |
 | `toggle_pulse_sante(p_pulse_event_id)` | Bascule Cheers | Connectés seulement ; l'ajout est refusé si la carte n'est pas visible pour l'appelant, le retrait reste toujours possible. Vérifié dans la base le 2026-10-14 (script non livré) |
@@ -150,7 +161,7 @@ La ligne-résumé sous les boutons (« Bixé par X et N autres Bibax », « N Bi
 | `toggle_notify_pulse(p_target_code)` | Cloche « Suivre sur Pulse » d'un Bibax | **(base)** |
 | `toggle_follow_venue` / `toggle_follow_drink` | Cloche d'un lieu / d'un produit | **(base)** |
 | `toggle_follow_brand` / `get_brand_follow_status` | Cloche d'une marque (table fermée `brand_follows`) | Connectés seulement ; livrée le 2026-11-05 (`bibamus-sql-cloche-coeur-marques-1-cloche.sql`) ; n'alimente pas encore le fil |
-| `toggle_favorite_brand` / `get_brand_favorite_status` | Cœur « Favoris » d'une marque (table fermée `brand_favorites`) | Connectés seulement ; livrée le 2026-11-05 (`bibamus-sql-cloche-coeur-marques-2-coeur.sql`) ; ne change pas encore le fil |
+| `toggle_favorite_brand` / `get_brand_favorite_status` | Cœur « Favoris » d'une marque (table fermée `brand_favorites`) | Connectés seulement ; livrée le 2026-11-05 (`bibamus-sql-cloche-coeur-marques-2-coeur.sql`) ; lue par `get_pulse_feed` pour le bloc en tête |
 | `get_bibax_pulse_activity(p_target_user_id, p_before)` | Activité d'un Bibax sur sa fiche | **(base)** |
 | `get_pulse_moderation_details`, `moderate_pulse_content` | Modération (voir plus bas) | Réservées à `can_moderate()` |
 
@@ -194,7 +205,7 @@ Onglet « BibaPulse » sur les fiches **Produit**, **Marque**, **Lieu** et **Pro
 - Onglet « BibaPulse » de la barre du bas (toujours présent), mais **la barre est cachée sur l'écran BibaPulse lui-même** ; après un check publié depuis l'accueil, retour sur le Pulse avec une confirmation.
 - **Aperçu sur l'accueil** (titre « BibaPulse - Extraits », la fin du titre en gris comme « Bibax - Suggestions rapides ») : les 3 dernières cartes en version réduite, sans réactions (une carte `club_joined` y garde le nom du club cliquable ; une publication libre y tient sur une ligne : le début du texte seul, sans libellé « Publication » ; une publication avec photo et sans texte n'affiche que le nom de l'auteur), masqué si le drapeau `nav_bibapulse_visible` vaut faux. Ce drapeau n'agit pas sur la barre du bas.
 - Onglet « Pulse » dans l'écran d'un salon : fil construit localement à partir de l'état du salon, pas à partir de `pulse_events` — tournées, arrivées et départs, et les checks faits dans le salon (`event.drinkChecks`, y compris ceux qui n'ont pas été publiés dans BibaPulse). Voir `BIBAROOM.md`.
-- Cloche « Suivre sur Pulse » : sur la fiche d'un Bibax, d'un lieu, d'un produit et d'une **marque** (depuis le 2026-11-05). L'état initial de la cloche d'un Bibax est toujours « éteint » à l'ouverture de sa fiche (la propriété n'est jamais chargée). Pour un produit, aucun script livré ne montre que son suivi alimente le fil principal. **Marque** : la cloche et le cœur « Favoris » (icône cœur ; décision de Mehdi du 2026-11-05 : un favori doit faire arriver **en priorité** dans le fil les publications relatives à la marque) sont pour l'instant seulement **enregistrés** en base, sans aucun effet sur le fil ; la priorité dans le fil (fonction `get_pulse_feed`), et ce que veut dire « publications relatives à la marque » (checks de ses produits, publications taguées avec la marque, ou les deux), restent à faire.
+- Cloche « Suivre sur Pulse » : sur la fiche d'un Bibax, d'un lieu, d'un produit et d'une **marque** (depuis le 2026-11-05). L'état initial de la cloche d'un Bibax est toujours « éteint » à l'ouverture de sa fiche (la propriété n'est jamais chargée). Pour un produit, aucun script livré ne montre que son suivi alimente le fil principal. **Marque** : la cloche et le cœur « Favoris » (icône cœur ; décision de Mehdi du 2026-11-05 : un favori doit faire arriver **en priorité** dans le fil les publications relatives à la marque) sont **enregistrés** en base. **Cœur** : il alimente le bloc en tête du fil principal (voir « Visibilité »). **Cloche** : elle reste pour l'instant sans aucun effet sur le fil (à définir).
 
 ## Notifications in-app
 
