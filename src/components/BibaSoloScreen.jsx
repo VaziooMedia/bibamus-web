@@ -292,7 +292,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   // Monnaie dans laquelle le verre a été payé : « jeton » d'office quand le mode Jetons est activé sur l'écran principal, « euro » sinon.
   const [currency, setCurrency] = useState(defaultCurrency === "jeton" ? "jeton" : "euro"); // "euro" | "jeton"
   const [free, setFree] = useState(false); // verre offert : compte pour un prix de 0 (en euros), le prix saisi est gardé de côté
-  const [offered, setOffered] = useState(""); // euros payés pour un verre offert à quelqu'un d'autre (facultatif ; le champ ne s'ouvre qu'à la demande)
+  const [offered, setOffered] = useState(""); // montant payé pour un verre offert à d'autres, dans la monnaie du verre (facultatif ; le champ ne s'ouvre qu'à la demande)
   const [offeredOpen, setOfferedOpen] = useState(false);
   const priceInputRef = useRef(null); // champ de prix : reçoit le curseur (et le clavier numérique) dès qu'on touche € ou Jetons
   const [servingMode, setServingMode] = useState(""); // type de service : "" (non défini) | bouteille | canette | fut | verre
@@ -399,8 +399,9 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
   // À la maison (@Home), on boit ce qu'il y a dans son frigo : rien n'est payé, donc pas de prix.
   const isHome = venue?.id === "@home";
-  // Le montant offert à quelqu'un est en euros : pas à la maison (pas de prix), ni pour un verre payé en jetons (sauf « Free », qui compte en euros).
-  const canOffer = !isHome && (free || currency !== "jeton");
+  // Le montant offert suit la monnaie du verre : jetons quand le verre est payé en jetons, euros sinon. Pas à la maison (pas de prix), ni avec « Free » (verre sans monnaie).
+  const canOffer = !isHome && !free;
+  const offeredInJetons = currency === "jeton";
 
   const handleSubmit = async () => {
     if (!selectedDrink || (!isHome && !free && !price)) return;
@@ -776,7 +777,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
             </div>
 
             {!isHome && (
-              <div data-encode="price" style={{ ...encodeBlockStyle, width: 0, minWidth: "100%" }}>
+              <div data-encode="price" style={{ ...encodeBlockStyle, width: 0, minWidth: "100%", borderRadius: canOffer && offeredOpen ? "12px 12px 0 0" : "12px" }}>
                 <div role="group" aria-label="Monnaie" style={{ boxSizing: "border-box", height: `${ENCODE_HEADER_H}px`, display: "flex", gap: `${PAY_TAB_GAP}px`, background: COLORS.paperAlt, borderBottom: ENCODE_SEPARATOR }}>
                   {[
                     ["euro", "€"],
@@ -838,16 +839,18 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                 />
               </div>
             )}
-            {/* Facultatif, sous le prix du verre : ce qu'on a payé en plus pour un verre offert à quelqu'un. Un simple lien tant qu'on n'en a pas besoin. */}
+            {/* Facultatif, sous le prix du verre : ce qu'on a payé en plus pour offrir un verre à d'autres, en euros ou en jetons comme le verre. Un simple lien tant qu'on n'en a pas besoin. */}
             {canOffer &&
               (offeredOpen ? (
-                <div data-encode="offered" style={{ ...encodeBlockStyle, width: 0, minWidth: "100%" }}>
-                  <label htmlFor="solo-offered" style={encodeTitleStyle}>Offert à quelqu'un (€)</label>
-                  <input id="solo-offered" type="text" inputMode="decimal" aria-label="Montant offert à quelqu'un" value={offered} onChange={(e) => setOffered(e.target.value)} placeholder="0,00" autoFocus style={encodeInputStyle} />
+                // Ouvert, le bloc se colle sous celui du prix : on annule l'écart de la colonne (+ 2 px, pour que son filet du haut recouvre le filet du bas du
+                // bloc du prix et ne fasse qu'un seul trait), et seuls les angles extérieurs restent arrondis.
+                <div data-encode="offered" style={{ ...encodeBlockStyle, width: 0, minWidth: "100%", marginTop: `-${ENCODE_ROW_GAP + 2}px`, borderRadius: "0 0 12px 12px" }}>
+                  <label htmlFor="solo-offered" style={encodeTitleStyle}>Offrir</label>
+                  <input id="solo-offered" type="text" inputMode="decimal" aria-label="Montant offert" value={offered} onChange={(e) => setOffered(e.target.value)} placeholder={offeredInJetons ? "0" : "0,00"} autoFocus style={encodeInputStyle} />
                 </div>
               ) : (
                 <button type="button" data-encode="offered-open" onClick={() => setOfferedOpen(true)} style={{ alignSelf: "center", marginTop: "-14px", background: "none", border: "none", padding: "4px 8px", cursor: "pointer", fontSize: "12.5px", fontWeight: 700, color: COLORS.amber }}>
-                  + Offert à quelqu'un
+                  + Offrir
                 </button>
               ))}
           </div>
@@ -1108,10 +1111,13 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
             </>
           );
         })()}
-        {/* Ligne 3 bis — montant payé pour un verre offert à quelqu'un d'autre, quand il y en a un (il compte dans le Dépensé, pas dans le prix du verre). */}
+        {/* Ligne 3 bis — montant payé pour offrir un verre à d'autres, quand il y en a un, dans la monnaie du verre (il compte dans le Dépensé ou dans les jetons dépensés, pas dans le prix du verre). */}
         {c.offeredPrice > 0 && (
-          <div data-journal-line="offered" style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-            <span style={{ fontWeight: 700, color: COLORS.amber }}>+ {c.offeredPrice.toFixed(2)} €</span> offerts à quelqu'un
+          <div data-journal-line="offered" style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", color: COLORS.inkSoft }}>
+            <span style={{ fontWeight: 700, color: COLORS.amber, display: "inline-flex", alignItems: "center", gap: "3px" }}>
+              + {c.currency === "jeton" ? <MoneyAmount value={c.offeredPrice} currency="jeton" jetonIcon="pink" jetonIconSize={12} /> : <>{c.offeredPrice.toFixed(2)} €</>}
+            </span>
+            offerts
           </div>
         )}
         {/* Ligne 4 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
@@ -1690,8 +1696,8 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         const drink = drinksById[String(c.drinkId)];
         return {
           count: acc.count + 1,
-          price: acc.price + (c.currency === "jeton" ? 0 : (c.price || 0) + (c.offeredPrice || 0)), // prix du verre + euros offerts à quelqu'un
-          jetons: acc.jetons + (c.currency === "jeton" ? c.price || 0 : 0),
+          price: acc.price + (c.currency === "jeton" ? 0 : (c.price || 0) + (c.offeredPrice || 0)), // euros : prix du verre + euros offerts
+          jetons: acc.jetons + (c.currency === "jeton" ? (c.price || 0) + (c.offeredPrice || 0) : 0), // jetons : prix du verre + jetons offerts
           kcal: acc.kcal + (drink ? drinkCalories(drink, c.volumeCl) : 0),
         };
       },
@@ -2105,7 +2111,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>{totals.count <= 1 ? "Verre" : "Verres"}</div>
         </div>
         <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "center" }}>
-          {/* Dépensé = euros seulement : les verres payés en euros + les euros offerts à quelqu'un + les euros payés pour acheter des jetons. Les jetons ont leur bloc. */}
+          {/* Dépensé = euros seulement : les verres payés en euros + les euros offerts + les euros payés pour acheter des jetons. Les jetons ont leur bloc. */}
           <div data-spent="1" style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>
             <div>
               {/* Le nombre est centré dans le bloc ; le sigle € est posé juste à sa droite sans entrer dans le centrage. */}

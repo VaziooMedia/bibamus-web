@@ -507,8 +507,8 @@ export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl, 
   if (servingMode) row.serving_mode = servingMode;
   // Spiritueux pris en shot : `as_shot` vaut false par défaut dans la base, seul un shot s'envoie explicitement.
   if (asShot) row.as_shot = true;
-  // Montant (en euros) payé pour un verre offert à quelqu'un d'autre pendant ce verre : `offered_price` est vide par défaut dans la base,
-  // seul un montant supérieur à 0 s'envoie explicitement.
+  // Montant payé pour offrir un verre à d'autres pendant ce verre, dans la monnaie du verre (euros ou jetons, selon `currency`) :
+  // `offered_price` est vide par défaut dans la base, seul un montant supérieur à 0 s'envoie explicitement.
   if (Number.isFinite(offeredPrice) && offeredPrice > 0) row.offered_price = offeredPrice;
   const { error } = await supabase.from("solo_checkins").insert(row);
   if (error) return { error: error.message };
@@ -525,7 +525,7 @@ function soloRowToCheckin(row) {
     volumeCl: row.volume_cl,
     servingMode: row.serving_mode || "",
     shot: row.as_shot === true,
-    offeredPrice: Number(row.offered_price) || 0, // euros payés pour un verre offert à quelqu'un (0 = aucun)
+    offeredPrice: Number(row.offered_price) || 0, // montant payé pour offrir un verre, dans la monnaie du verre (0 = aucun)
     createdAt: row.created_at,
   };
 }
@@ -609,18 +609,18 @@ export async function archiveMyJetonMovements(sinceIso) {
   return { ok: true };
 }
 
-// Somme des jetons des verres payés en jetons depuis `sinceIso`, verres archivés compris (l'archivage ne rend pas les jetons).
+// Somme des jetons des verres payés en jetons depuis `sinceIso` (prix du verre + jetons offerts), verres archivés compris (l'archivage ne rend pas les jetons).
 // `null` en cas d'erreur. Lue par pages de 1000 (limite de lignes par requête).
 export async function loadMyJetonSpentSince(sinceIso) {
   const PAGE = 1000;
   let total = 0;
   for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabase.from("solo_checkins").select("price").eq("currency", "jeton").gte("created_at", sinceIso).order("created_at", { ascending: true }).order("id", { ascending: true }).range(from, from + PAGE - 1);
+    const { data, error } = await supabase.from("solo_checkins").select("price, offered_price").eq("currency", "jeton").gte("created_at", sinceIso).order("created_at", { ascending: true }).order("id", { ascending: true }).range(from, from + PAGE - 1);
     if (error) {
       console.error("loadMyJetonSpentSince:", error);
       return null;
     }
-    total += data.reduce((acc, r) => acc + (Number(r.price) || 0), 0);
+    total += data.reduce((acc, r) => acc + (Number(r.price) || 0) + (Number(r.offered_price) || 0), 0);
     if (data.length < PAGE) return total;
   }
 }
