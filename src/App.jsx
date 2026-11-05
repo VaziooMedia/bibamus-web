@@ -3174,6 +3174,11 @@ export default function App() {
                   setScreenBeforeBreweryDetail("brandDetail");
                   setScreen("breweryDetail");
                 }}
+                onOpenVenue={(id) => {
+                  setViewedVenueId(id);
+                  setScreenBeforeVenueDetail("brandDetail");
+                  setScreen("venueDetail");
+                }}
               />
             )}
             {screen === "bibrosList" && (

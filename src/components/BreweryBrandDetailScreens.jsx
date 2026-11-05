@@ -11,6 +11,7 @@ import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
+import { PillTabs } from "./PillTabs.jsx";
 import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce } from "../data/sharedDirectories.js";
 import { customNames } from "../venueLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
@@ -264,7 +265,8 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, claimsEnabled = true }) {
+export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onOpenVenue, claimsEnabled = true }) {
+  const [activeTab, setActiveTab] = useState("infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
@@ -350,6 +352,18 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
       </div>
 
       <div style={{ marginTop: "76px" }}>
+      {/* Même barre d'onglets que la fiche Produit. Biba360 viendra plus tard : pour l'instant Infos et BibaPulse. */}
+      <PillTabs
+        tabs={[
+          { key: "infos", label: "Infos" },
+          { key: "bibapulse", label: { prefix: "Biba", accent: "Pulse" } },
+        ]}
+        active={activeTab}
+        onChange={setActiveTab}
+      />
+
+      {activeTab === "infos" && (
+        <>
       {/* Carte « Infos » : même présentation que la fiche Produit (pastilles, ligne d'origine, puis le producteur après un trait vert). */}
       {(brandTags.length > 0 || hasOrigin || producers.length > 0) && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
@@ -516,6 +530,15 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
           <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
+        </>
+      )}
+
+      {/* Le fil de la marque : les checks et découvertes de ses produits, et les publications qui la taguent.
+          Les pastilles d'autres marques ne sont pas cliquables ici (pas de pile de retour marque → marque). */}
+      {activeTab === "bibapulse" && (
+        <EntityPulseSection entityType="brand" entityId={brand.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} onOpenProducer={onOpenBrewery} />
+      )}
+
       {claimsEnabled && claiming && <ClaimModal entityType="brand" entityId={brand.id} entityName={brand.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 
       {showActionsMenu && (
