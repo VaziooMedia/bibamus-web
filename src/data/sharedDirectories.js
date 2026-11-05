@@ -4383,8 +4383,9 @@ export async function loadPulseFeed(before = null, limit = 20) {
   return data.map(rowToPulseEntry);
 }
 
-// Pulse d'une fiche (Produit, Lieu, Producteur) — mêmes cartes que le fil principal, filtrées à
-// cette fiche. entityType : "drink" | "venue" | "producer". scope : "all" (tout ce que je peux
+// Pulse d'une fiche (Produit, Lieu, Producteur, Marque) — mêmes cartes que le fil principal, filtrées à
+// cette fiche. entityType : "drink" | "venue" | "producer" | "brand" (les cartes d'une marque portent sur
+// les produits rattachés à cette marque, comme celles d'un producteur). scope : "all" (tout ce que je peux
 // voir) ou "bibax" (mes Bibax seulement).
 export async function loadEntityPulse(entityType, entityId, scope = "all", before = null, limit = 20) {
   const { data, error } = await supabase.rpc("get_entity_pulse", { p_entity_type: entityType, p_entity_id: entityId, p_scope: scope, p_limit: limit, p_before: before });

@@ -1,5 +1,5 @@
 // ============================================================
-// Pulse d'une fiche (Produit, Lieu, Producteur) — mêmes cartes que le fil principal (BibaPulseScreen),
+// Pulse d'une fiche (Produit, Lieu, Producteur, Marque) — mêmes cartes que le fil principal (BibaPulseScreen),
 // filtrées à cette seule fiche, avec deux onglets : « Tous » (tout ce que je peux voir) et « Mes Bibax »
 // (mes Bibax confirmés seulement). Ne se recharge jamais tout seul (contrairement au fil principal,
 // qui l'actualise toutes les 10 secondes) : cette section est consultée une fois, pas surveillée en continu.
@@ -7,8 +7,8 @@
 // selfEntity (facultatif) : la fiche elle-même, déjà en mémoire (le produit d'une fiche Produit,
 // le lieu d'une fiche Lieu). Sert à afficher un nom juste immédiatement, sans attendre un aller-retour
 // réseau, pour les publications qui la concernent directement. Forme : { type: "drink" | "venue", object }.
-// Sans effet pour une fiche Producteur : ses publications portent sur des produits différents, jamais
-// sur le producteur lui-même.
+// Sans effet pour une fiche Producteur ou Marque : leurs cartes portent sur des produits différents, jamais
+// sur le producteur ou la marque eux-mêmes.
 //
 // Les publications libres qui TAGUENT cette fiche s'y affichent aussi (le serveur les ajoute au fil de la fiche).
 // Leurs propres tags (autres produits, marques, producteurs, lieux) sont des pastilles, cliquables seulement
