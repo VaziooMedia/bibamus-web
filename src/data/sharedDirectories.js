@@ -2943,6 +2943,7 @@ export async function loadDrinksByBrewery(breweryName) {
   return data.map(rowToDrink);
 }
 
+// Par le NOM de la marque (texte « brand » du produit) : n'est plus utilisée par la fiche Marque, voir loadDrinksByBrandId.
 export async function loadDrinksByBrand(brandName) {
   if (!brandName) return [];
   const { data, error } = await supabase.rpc("get_drinks_by_brand", { p_brand_name: brandName });
@@ -2975,9 +2976,12 @@ export async function loadDrinksByProducerId(producerId) {
   return data.map(rowToDrink);
 }
 
+// Les produits d'une marque, par la clé brand_id (fonction get_drinks_by_brand_id) : tous les produits liés à la marque, qu'un nom de
+// marque soit écrit dessus ou non, plus ceux pas encore liés dont le nom de marque écrit est celui de la marque. Mêmes statuts visibles
+// que loadDrinksByBrand.
 export async function loadDrinksByBrandId(brandId) {
   if (!brandId) return [];
-  const { data, error } = await supabase.from("drinks_directory").select("*").eq("brand_id", brandId).order("name");
+  const { data, error } = await supabase.rpc("get_drinks_by_brand_id", { p_brand_id: brandId });
   if (error) {
     console.error("loadDrinksByBrandId:", error);
     return [];
