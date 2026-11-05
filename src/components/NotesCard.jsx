@@ -6,22 +6,22 @@
 // Chaque ligne reçoit soit rien (lecture en cours, échouée, ou personne n'a noté : un tiret), soit une valeur sur 5 ; Bibax et
 // Bibamus reçoivent en plus le nombre d'avis. Les étoiles se remplissent au quart d'étoile (comme les notes elles-mêmes).
 //
-// Accessibilité : les étoiles sont décoratives (masquées aux lecteurs d'écran) ; la note s'écrit aussi en chiffres (« 4,3/5 »).
+// Accessibilité : les étoiles sont décoratives (masquées aux lecteurs d'écran) ; la note s'écrit aussi en chiffres (« 4,30 / 5 »).
 // ============================================================
 import React from "react";
 import { COLORS } from "../constants.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { BlockTitle } from "./ui.jsx";
 
-// « 3,25/5 » : deux décimales, virgule. Les notes se donnent au quart d'étoile (0,25 ; 3,25…) : avec une seule décimale,
+// « 3,25 / 5 » : deux décimales, virgule, une espace de chaque côté du « / ». Les notes se donnent au quart d'étoile (0,25 ; 3,25…) : avec une seule décimale,
 // 3,25 s'afficherait « 3,3 » et 0,25 « 0,3 ». C'est aussi le format de la bannière de la fiche (elle l'utilise), pour que les
 // deux ne puissent jamais différer (la bannière passe par RatingFraction, juste en dessous).
-export const formatRating = (value) => `${value.toFixed(2).replace(".", ",")}/5`;
+export const formatRating = (value) => `${value.toFixed(2).replace(".", ",")} / 5`;
 
-// La même note pour la bannière de la couverture, avec le « / » en vert fluo et une espace de chaque côté (« 3,25 / 5 »). Mêmes chiffres que
+// La même note pour la bannière de la couverture, avec le « / » en vert fluo (« 3,25 / 5 »). Mêmes chiffres et mêmes espaces que
 // formatRating : on le coupe au « / » plutôt que de refaire l'arrondi.
 export function RatingFraction({ value }) {
-  const [number, max] = formatRating(value).split("/");
+  const [number, max] = formatRating(value).split(" / ");
   return (
     <>
       {number}
@@ -45,7 +45,7 @@ function NoteRow({ label, value, count = null, first = false }) {
             <span aria-hidden="true" style={{ display: "flex" }}>
               <StarsDisplay value={value} size={14} />
             </span>
-            <span data-note-value style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, minWidth: "60px", textAlign: "right" }}>
+            <span data-note-value style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, minWidth: "72px", textAlign: "right" }}>
               {formatRating(value)}
             </span>
           </span>
