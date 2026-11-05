@@ -3,15 +3,17 @@
 // — copiées telles quelles depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS } from "../constants.js";
-import { NavIcon, CertificationIcon } from "./icons.jsx";
+import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS, BRAND_TYPES, BRAND_CLASSIFICATIONS, DRINK_TYPES } from "../constants.js";
+import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
-import { DrinkBadges } from "./DrinkDisplay.jsx";
+import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
-import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById } from "../data/sharedDirectories.js";
+import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce } from "../data/sharedDirectories.js";
+import { customNames } from "../venueLists.js";
+import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
 
@@ -380,6 +382,40 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
     else setProducers([]);
   }, [brand.producerIds]);
 
+  // Les noms des types et des catégories de la marque : ceux de la plateforme de gestion (élément ajouté, élément renommé)
+  // l'emportent sur la liste de départ. Lus une fois par session. Un code inconnu dont le nom n'est pas chargé n'est jamais
+  // montré tel quel. Entre parenthèses, l'explication de la liste de départ (« Bulles (champagne, crémant...) ») est omise.
+  const [brandLists, setBrandLists] = useState(null);
+  const hasBrandTags = (brand.brandTypes || []).length > 0 || (brand.classifications || []).length > 0;
+  useEffect(() => {
+    if (!hasBrandTags) return undefined;
+    let cancelled = false;
+    loadBrandListsOnce().then((lists) => {
+      if (lists && !cancelled) setBrandLists(lists);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasBrandTags, brand.id]);
+  const tagLabels = (codes, builtin, listKey) => {
+    const names = brandLists ? customNames(brandLists[listKey].rows) : {};
+    return (codes || [])
+      .map((code) => {
+        const found = builtin.find((t) => t.code === code);
+        const label = names[code] || (found ? found.fr.replace(/\s*\(.*\)\s*$/, "") : "");
+        return label;
+      })
+      .filter(Boolean);
+  };
+  const brandTags = [...tagLabels(brand.brandTypes, BRAND_TYPES, BRAND_TYPE_LIST_KEY), ...tagLabels(brand.classifications, BRAND_CLASSIFICATIONS, BRAND_CLASSIFICATION_LIST_KEY)];
+  const hasOrigin = !!(brand.originCity || brand.originRegion || brand.originCountry);
+
+  // Les produits, regroupés par type de boisson (ordre du répertoire) ; un seul type = pas d'intertitre.
+  const drinkGroups = [...relatedDrinks.reduce((m, d) => m.set(d.type, [...(m.get(d.type) || []), d]), new Map())].sort((a, b) => {
+    const rank = (t) => (DRINK_TYPES.indexOf(t) === -1 ? DRINK_TYPES.length : DRINK_TYPES.indexOf(t));
+    return rank(a[0]) - rank(b[0]);
+  });
+
   const submitEdit = () => {
     onSuggestEdit(nameValue);
     setEditing(false);
@@ -460,57 +496,150 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
         </div>
       )}
 
-      {producers.length > 0 && (
-        <>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-            SES PRODUCTEURS
+      {/* Carte « Infos » : même présentation que la fiche Produit (pastilles, ligne d'origine, puis le producteur après un trait vert). */}
+      {(brandTags.length > 0 || hasOrigin || producers.length > 0) && (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+          <div style={{ fontSize: "13px" }}>
+            {[
+              brandTags.length > 0 && {
+                key: "tags",
+                sep: null,
+                node: (
+                  <div key="tags" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {brandTags.map((label) => (
+                      <span key={label} style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "0.45em 0.9em", fontSize: "10px", fontWeight: 600, color: COLORS.ink }}>
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                ),
+              },
+              hasOrigin && {
+                key: "origin",
+                sep: "green",
+                node: (
+                  <div key="origin" style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                    <NavIcon name="map-pin" size={15} color={COLORS.amber} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      {brand.originCity && <span>{brand.originCity}</span>}
+                      {brand.originRegion && <span>{brand.originRegion}</span>}
+                      {brand.originCountry && (
+                        <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          {brand.originCountry}
+                          <CountryFlagImg country={brand.originCountry} size={14} />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ),
+              },
+            ]
+              .filter(Boolean)
+              .map((row, i) => (
+                <React.Fragment key={row.key}>
+                  {i > 0 && (
+                    <div
+                      style={{
+                        borderBottom: row.sep === "green" ? `2px solid ${COLORS.amber}` : `1px solid ${COLORS.paperAlt}`,
+                        margin: row.sep === "green" ? "14px 0" : "10px 0",
+                      }}
+                    />
+                  )}
+                  {row.node}
+                </React.Fragment>
+              ))}
           </div>
-          {producers.map((producer) => (
+
+          {(brandTags.length > 0 || hasOrigin) && producers.length > 0 && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />}
+
+          {producers.map((producer, i) => (
             <button
               key={producer.id}
               onClick={() => onOpenBrewery(producer.id)}
-              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "8px" }}
+              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginTop: i > 0 ? "10px" : 0 }}
             >
               <EntityAvatar photoUrl={producer.profilePhotoUrl} photoEmoji={producer.avatarEmoji} size={28} />
-              <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                {producer.name}
-                <CertificationIcon level={producer.certificationLevel} size={13} />
+              <span>
+                <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>Producteur</span>
+                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {producer.name}
+                  <CertificationIcon level={producer.certificationLevel} size={13} />
+                </span>
               </span>
-            </button>
-          ))}
-        </>
-      )}
-
-      <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-        SES PRODUITS ({relatedDrinks.length})
-      </div>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-4px", marginBottom: "8px" }}>Touchez une boisson pour la corriger, la peaufiner ou la certifier.</p>
-      {relatedDrinks.length === 0 ? (
-        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "20px" }}>
-          Aucune boisson de cette marque enregistrée pour l'instant.
-        </p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-          {relatedDrinks.map((d) => (
-            <button
-              key={d.id}
-              onClick={() => onOpenDrink(d.id)}
-              style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
-            >
-              <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                {d.name}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-                <DrinkBadges drink={d} />
-              </div>
-              {drinkSummaryLine(d) && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{drinkSummaryLine(d)}</div>}
             </button>
           ))}
         </div>
       )}
 
+      {/* Carte « Ses produits » : titre à barre verte et lignes imbriquées, comme « Lieux qui le proposent » sur la fiche Produit. */}
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Ses produits ({relatedDrinks.length})</span>
+        </div>
+        {isAdmin && relatedDrinks.length > 0 && (
+          <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "0 0 12px" }}>Touchez une boisson pour la corriger, la peaufiner ou la certifier.</p>
+        )}
+        {relatedDrinks.length === 0 ? (
+          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "16px 0", margin: 0 }}>Aucune boisson de cette marque enregistrée pour l'instant.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {drinkGroups.map(([type, drinks], gi) => (
+              <React.Fragment key={type}>
+                {drinkGroups.length > 1 && (
+                  <div style={{ fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px", marginTop: gi > 0 ? "6px" : 0 }}>
+                    {type.toUpperCase()} ({drinks.length})
+                  </div>
+                )}
+                {drinks.map((d) => {
+                  const parts = (d.type === "Bières & Cidres"
+                    ? [
+                        d.nationality ? <CountryFlagImg country={d.nationality} size={18.5} /> : null,
+                        d.abv != null ? <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span> : null,
+                        ...getDrinkBadgeItems(d, { hideCountry: true }).map((it) => renderDrinkBadgeItem(it, { drink: d, size: 11 })),
+                      ]
+                    : getDrinkBadgeItems(d).map((it) => renderDrinkBadgeItem(it, { drink: d, size: 11 }))
+                  ).filter(Boolean);
+                  return (
+                    <button
+                      key={d.id}
+                      onClick={() => onOpenDrink(d.id)}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+                    >
+                      <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={28} />
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                          {d.name}
+                          {d.pendingContributionsCount > 0 && (
+                            <span style={{ fontSize: "13px" }} title="Une modification est proposée">
+                              📝
+                            </span>
+                          )}
+                        </span>
+                        {parts.length > 0 && (
+                          <span style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
+                            {parts.map((part, i) => (
+                              <React.Fragment key={i}>
+                                {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+                                {part}
+                              </React.Fragment>
+                            ))}
+                          </span>
+                        )}
+                      </span>
+                      <CertificationIcon level={d.certificationLevel} size={15} />
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+      </div>
+
       {isAdmin && (
         <div style={{ marginTop: "auto", paddingTop: "20px" }}>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>ADMINISTRATION</div>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {brand.status !== "complete" && (
               <button
