@@ -423,7 +423,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
               <span style={{ display: "flex", alignSelf: "center" }}>
                 <NavIcon name="star" size={17} color={COLORS.amber} filled />
               </span>
-              <span style={{ fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>{formatRating(ratingSummary.average)}</span>
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>{formatRating(ratingSummary.average)}</span>
               <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {ratingSummary.count} avis</span>
             </div>
           </div>

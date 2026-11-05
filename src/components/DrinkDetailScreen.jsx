@@ -559,7 +559,7 @@ export function DrinkDetailScreen({
               <span style={{ display: "flex", alignSelf: "center" }}>
                 <NavIcon name="star" size={17} color={COLORS.amber} filled />
               </span>
-              <span style={{ fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>{formatRating(ratingAverage)}</span>
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>{formatRating(ratingAverage)}</span>
               <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {ratingValues.length} avis</span>
             </div>
           </div>
