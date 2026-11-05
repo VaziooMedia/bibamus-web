@@ -38,7 +38,7 @@ import {
   archiveMyJetonMovements,
   loadMyJetonSpentSince,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, getAlcoholTierBadge, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, displayedAbv, displayedAlcoholTier, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
@@ -215,7 +215,7 @@ const menuBadgeStyle = {
 // (ligne 1 : nom + volume ; ligne 2 : service, drapeau, degré d'alcool, badges, prix ; ligne 3 :
 // producteur), avec le drapeau sans fond et le degré d'alcool toujours visible s'il est connu.
 function MenuItemBlock({ item, onClick }) {
-  const alcoholTier = getAlcoholTierBadge(item.abv);
+  const alcoholTier = displayedAlcoholTier(item);
   const priceText = item.price != null ? formatMoney(item.price, "euro") : null;
   const priceParts = priceText ? priceText.split(" ") : [];
   const priceSymbol = priceParts.length > 1 ? priceParts.pop() : null;
@@ -228,7 +228,7 @@ function MenuItemBlock({ item, onClick }) {
       </span>
     ) : null,
     item.nationality ? <CountryFlagImg key="flag" country={item.nationality} size={16} /> : null,
-    item.abv != null ? (
+    displayedAbv(item) != null ? (
       <span key="abv" style={{ fontSize: "11px", color: COLORS.inkSoft }}>
         {item.abv.toFixed(1)}% ABV
       </span>
@@ -483,7 +483,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                         <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
                         <span style={{ flex: 1, display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
                           <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
-                          {d.abv != null && (
+                          {displayedAbv(d) != null && (
                             <>
                               <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />
                               <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{String(d.abv).replace(".", ",")}% ABV</span>
@@ -697,7 +697,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                       <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={32} fallbackIcon="bottle" />
                       <span style={{ flex: 1, display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
                         <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</span>
-                        {d.abv != null && (
+                        {displayedAbv(d) != null && (
                           <>
                             <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />
                             <span style={{ fontSize: "12px", color: COLORS.inkSoft, flexShrink: 0 }}>{String(d.abv).replace(".", ",")}% ABV</span>
@@ -1082,8 +1082,8 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
         {(() => {
           const detailParts = [];
           if (c.volumeCl) detailParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
-          if (showMentions && drink.abv != null) detailParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
-          const alcoholTier = showMentions ? getAlcoholTierBadge(drink.abv) : null;
+          if (showMentions && displayedAbv(drink) != null) detailParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
+          const alcoholTier = showMentions ? displayedAlcoholTier(drink) : null;
           if (alcoholTier) detailParts.push(<span key="tier" title={alcoholTier.title} style={{ whiteSpace: "nowrap" }}>{alcoholTier.label}</span>);
           if (showMentions && drink.bio) detailParts.push(<img key="bio" src={bioIconUrl} alt="Bio" style={BIO_ICON_STYLE} />);
           if (showMentions && drink.glutenFree) detailParts.push(<img key="gf" src={glutenFreeIconUrl} alt="Sans gluten" style={MENTION_ICON_STYLE} />);
