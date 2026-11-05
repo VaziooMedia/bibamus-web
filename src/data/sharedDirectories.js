@@ -4582,6 +4582,39 @@ export async function loadDrinkFollowStatus(drinkId) {
   return !!data;
 }
 
+// Cloche « Suivre sur Pulse » et cœur « Favoris » d'une MARQUE (depuis le 2026-11-05) : mêmes formes que celles d'un produit.
+// toggleFollowBrand rend { ok, following } et toggleFavoriteBrand { ok, favorite } (ou { error } si la base refuse) ; les deux
+// lectures rendent vrai/faux, faux si la lecture échoue. Pour l'instant, aucune des deux ne change le fil Pulse.
+export async function toggleFollowBrand(brandId) {
+  const { data, error } = await supabase.rpc("toggle_follow_brand", { p_brand_id: brandId });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function loadBrandFollowStatus(brandId) {
+  const { data, error } = await supabase.rpc("get_brand_follow_status", { p_brand_id: brandId });
+  if (error) {
+    console.error("loadBrandFollowStatus:", error);
+    return false;
+  }
+  return !!data;
+}
+
+export async function toggleFavoriteBrand(brandId) {
+  const { data, error } = await supabase.rpc("toggle_favorite_brand", { p_brand_id: brandId });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function loadBrandFavoriteStatus(brandId) {
+  const { data, error } = await supabase.rpc("get_brand_favorite_status", { p_brand_id: brandId });
+  if (error) {
+    console.error("loadBrandFavoriteStatus:", error);
+    return false;
+  }
+  return !!data;
+}
+
 export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
   const {
     data: { user },

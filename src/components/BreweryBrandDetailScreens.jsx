@@ -15,7 +15,8 @@ import { PillTabs } from "./PillTabs.jsx";
 import { NotesCard, RatingFraction } from "./NotesCard.jsx";
 import { BrandRatingModal } from "./BrandRatingModal.jsx";
 import { HintBubble } from "./HintBubble.jsx";
-import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand } from "../data/sharedDirectories.js";
+import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
+import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand, loadBrandFollowStatus, toggleFollowBrand, loadBrandFavoriteStatus, toggleFavoriteBrand } from "../data/sharedDirectories.js";
 import { customNames } from "../venueLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
@@ -24,10 +25,10 @@ import { usernameLinkUrl } from "../usernameLinks.js";
 // Bouton « Partager » des fiches producteur et marque : même icône et même emplacement que sur la fiche lieu.
 // Le lien partagé est bibamus.app/@nom de la fiche (lien général si elle n'a pas encore de @nom). Rien ne
 // s'affiche si le partage natif n'existe pas sur l'appareil.
-function ShareEntityButton({ name, username }) {
+function ShareEntityButton({ name, username, extraTop = 0 }) {
   if (!canShareEntity()) return null;
   return (
-    <div style={{ position: "absolute", top: "32px", right: "8px", display: "flex", alignItems: "center" }}>
+    <div style={{ position: "absolute", top: `${32 + extraTop}px`, right: "8px", display: "flex", alignItems: "center" }}>
       <button
         onClick={() => shareEntity({ title: name, text: `Découvre ${name} sur Bibamus !`, url: usernameLinkUrl(username) })}
         title="Partager"
@@ -39,12 +40,60 @@ function ShareEntityButton({ name, username }) {
   );
 }
 
+// Icônes de l'en-tête de la fiche Marque : « Partager » | cloche « Suivre sur Pulse » | cœur « Favoris », comme le bloc de la fiche Produit
+// (mêmes emplacement, taille de 24 px et séparateurs verticaux). « Partager » n'apparaît que si le partage natif existe sur l'appareil.
+// La cloche et le cœur sont pleins quand ils sont actifs. Pour l'instant, ils sont seulement enregistrés (l'effet sur le fil Pulse viendra après).
+function BrandHeaderIcons({ name, username, extraTop = 0, isFollowed, followBusy, onToggleFollow, isFavorite, favoriteBusy, onToggleFavorite }) {
+  const divider = <span aria-hidden="true" style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />;
+  const iconButton = { background: "none", border: "none", padding: 0, display: "flex" };
+  return (
+    <div style={{ position: "absolute", top: `${32 + extraTop}px`, right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+      {canShareEntity() && (
+        <>
+          <button
+            onClick={() => shareEntity({ title: name, text: `Découvre ${name} sur Bibamus !`, url: usernameLinkUrl(username) })}
+            title="Partager"
+            aria-label="Partager"
+            style={{ ...iconButton, cursor: "pointer" }}
+          >
+            <NavIcon name="share" size={24} color={COLORS.amber} />
+          </button>
+          {divider}
+        </>
+      )}
+      <button
+        onClick={onToggleFollow}
+        disabled={followBusy}
+        title={isFollowed ? "Suivie sur Pulse — ses activités apparaissent" : "Suivre sur Pulse"}
+        aria-label={isFollowed ? "Ne plus suivre sur Pulse" : "Suivre sur Pulse"}
+        aria-pressed={isFollowed}
+        style={{ ...iconButton, cursor: followBusy ? "default" : "pointer" }}
+      >
+        <NavIcon name="bell" size={24} color={COLORS.amber} filled={isFollowed} />
+      </button>
+      {divider}
+      <button
+        onClick={onToggleFavorite}
+        disabled={favoriteBusy}
+        title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+        aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+        aria-pressed={isFavorite}
+        style={{ ...iconButton, cursor: favoriteBusy ? "default" : "pointer" }}
+      >
+        <NavIcon name="heart" size={24} color={COLORS.amber} filled={isFavorite} />
+      </button>
+    </div>
+  );
+}
+
 export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, claimsEnabled = true }) {
   const [activeTab, setActiveTab] = useState("infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  // Nom sur plusieurs lignes : « Partager » et le contenu en dessous descendent d'autant (voir useWrappedTitleExtra).
+  const [titleRef, titleExtra] = useWrappedTitleExtra();
 
   const [relatedDrinks, setRelatedDrinks] = useState([]);
   useEffect(() => {
@@ -79,18 +128,23 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
           <EntityAvatar photoUrl={brewery.profilePhotoUrl} photoEmoji={brewery.avatarEmoji} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
-          <div style={{ paddingRight: canShareEntity() ? "34px" : 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{brewery.name}</h1>
-              <CertificationIcon level={brewery.certificationLevel} size={17} />
+          <div>
+            {/* L'icône de certification est toujours dans le coin en haut à droite du bloc du nom, à hauteur de la 1re ligne (même pour un nom court),
+            et ne suit pas le texte quand le nom passe sur plusieurs lignes. Le nom lui laisse sa place à droite (23 px). 3,4 px = de quoi la
+            centrer sur une ligne de 23,75 px. */}
+            <div ref={titleRef}>
+              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, paddingRight: "23px", lineHeight: 1.25, color: COLORS.chalkWhite }}>{brewery.name}</h1>
             </div>
-            {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{brewery.country}</p>}
+            <span style={{ position: "absolute", top: "3.4px", right: 0, display: "flex" }}>
+              <CertificationIcon level={brewery.certificationLevel} size={17} />
+            </span>
+            {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0", paddingRight: canShareEntity() ? "34px" : 0 }}>{brewery.country}</p>}
           </div>
-          <ShareEntityButton name={brewery.name} username={brewery.username} />
+          <ShareEntityButton name={brewery.name} username={brewery.username} extraTop={titleExtra} />
         </div>
       </div>
 
-      <div style={{ marginTop: "76px" }}>
+      <div style={{ marginTop: `${76 + titleExtra}px` }}>
       {linkedVenue && (
         <button
           onClick={() => onOpenVenue(linkedVenue.id)}
@@ -274,11 +328,54 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  // Nom sur plusieurs lignes : les icônes de l'en-tête et le contenu en dessous descendent d'autant (voir useWrappedTitleExtra).
+  const [titleRef, titleExtra] = useWrappedTitleExtra();
 
   const [relatedDrinks, setRelatedDrinks] = useState([]);
   useEffect(() => {
     loadDrinksByBrand(brand.name).then(setRelatedDrinks);
   }, [brand.name]);
+
+  // Cloche « Suivre sur Pulse » et cœur « Favoris » de la marque : un état par personne, enregistré en base (brand_follows et brand_favorites).
+  // Lus à l'ouverture de la fiche ; une bascule attend la réponse du serveur (le bouton est inactif entre-temps), comme la cloche d'un produit.
+  const [isFollowed, setIsFollowed] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    setIsFollowed(false);
+    setIsFavorite(false);
+    loadBrandFollowStatus(brand.id).then((v) => {
+      if (!cancelled) setIsFollowed(v);
+    });
+    loadBrandFavoriteStatus(brand.id).then((v) => {
+      if (!cancelled) setIsFavorite(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [brand.id]);
+  const handleToggleFollow = async () => {
+    setFollowBusy(true);
+    const result = await toggleFollowBrand(brand.id);
+    setFollowBusy(false);
+    if (!result || result.error) {
+      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      return;
+    }
+    setIsFollowed(!!result.following);
+  };
+  const handleToggleFavorite = async () => {
+    setFavoriteBusy(true);
+    const result = await toggleFavoriteBrand(brand.id);
+    setFavoriteBusy(false);
+    if (!result || result.error) {
+      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      return;
+    }
+    setIsFavorite(!!result.favorite);
+  };
 
   // Notes de la marque (étoiles sur 5, comme les produits). ratingSummary = { average, count, myRating, canRate } ; null = lecture en
   // cours, ou échouée. Il sert à la bannière de la couverture, au bouton étoile et aux lignes You et Bibamus de la carte « Notes ».
@@ -395,13 +492,28 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
           <EntityAvatar photoUrl={brand.logoUrl} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
-          <div style={{ paddingRight: canShareEntity() ? "34px" : 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{brand.name}</h1>
-              <CertificationIcon level={brand.certificationLevel} size={17} />
+          <div>
+            {/* L'icône de certification est toujours dans le coin en haut à droite du bloc du nom, à hauteur de la 1re ligne (même pour un nom court),
+                et ne suit pas le texte quand le nom passe sur plusieurs lignes. Le nom lui laisse sa place à droite (23 px). 3,4 px = de quoi la
+                centrer sur une ligne de 23,75 px. */}
+            <div ref={titleRef}>
+              <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, paddingRight: "23px", lineHeight: 1.25, color: COLORS.chalkWhite }}>{brand.name}</h1>
             </div>
+            <span style={{ position: "absolute", top: "3.4px", right: 0, display: "flex" }}>
+              <CertificationIcon level={brand.certificationLevel} size={17} />
+            </span>
           </div>
-          <ShareEntityButton name={brand.name} username={brand.username} />
+          <BrandHeaderIcons
+            name={brand.name}
+            username={brand.username}
+            extraTop={titleExtra}
+            isFollowed={isFollowed}
+            followBusy={followBusy}
+            onToggleFollow={handleToggleFollow}
+            isFavorite={isFavorite}
+            favoriteBusy={favoriteBusy}
+            onToggleFavorite={handleToggleFavorite}
+          />
         </div>
         {/* Bannière de la note, puis bouton de note : mêmes emplacements que la bannière et le bouton Check de la fiche Produit
             (en bas de la couverture, le bouton tout à droite). Sans le droit de noter (aucun produit de la marque checké), le
@@ -455,7 +567,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
         </button>
       </div>
 
-      <div style={{ marginTop: "76px" }}>
+      <div style={{ marginTop: `${76 + titleExtra}px` }}>
       {/* Même barre d'onglets que la fiche Produit. Biba360 ne contient pour l'instant que la carte « Notes » ; les autres blocs viendront. */}
       <PillTabs
         tabs={[
