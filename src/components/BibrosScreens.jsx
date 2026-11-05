@@ -1598,17 +1598,3 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
     </div>
   );
 }
-
-export function AdminUnlockScreen({ onCancel }) {
-  return (
-    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={onCancel} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "0 0 18px 0" }}>Accès administrateur</h1>
-      <p style={{ fontSize: "14px", color: COLORS.inkSoft, marginBottom: "12px" }}>
-        Le statut administrateur est désormais automatique, lié à votre compte — il n'y a plus de passphrase à saisir. Si vous pensez devoir y avoir accès, contactez un administrateur existant
-        pour qu'il vous l'attribue.
-      </p>
-      <PageFooterNav onBack={onCancel} />
-    </div>
-  );
-}

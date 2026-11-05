@@ -10,7 +10,7 @@ import { CityAutocomplete } from "./CityAutocomplete.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
 import { redirectToSpotifyAuth, getMySpotifyStatus, disconnectSpotify } from "../data/spotify.js";
 
-export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onUploadPhoto, onGoToAdminUnlock, onLogout, onBack, myUserId }) {
+export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onUploadPhoto, onLogout, onBack, myUserId }) {
   const [spotifyStatus, setSpotifyStatus] = useState(null);
   useEffect(() => {
     getMySpotifyStatus().then(setSpotifyStatus);
@@ -414,16 +414,6 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
         )}
       </div>
 
-      {profile.isAdmin ? (
-        <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "18px", textAlign: "center" }}>🛡️ Mode administrateur actif</p>
-      ) : (
-        <button
-          onClick={onGoToAdminUnlock}
-          style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", cursor: "pointer", marginTop: "18px", textAlign: "center", width: "100%" }}
-        >
-          🔐 Accès administrateur
-        </button>
-      )}
       <button
         onClick={onLogout}
         style={{ background: "none", border: "none", color: "#D64545", fontSize: "12px", fontWeight: 700, cursor: "pointer", marginTop: "14px", textAlign: "center", width: "100%" }}

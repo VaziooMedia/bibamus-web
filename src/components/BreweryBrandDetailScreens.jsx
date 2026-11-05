@@ -3,7 +3,7 @@
 // — copiées telles quelles depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect } from "react";
-import { COLORS, BREWERY_FIELD_LABELS, BRAND_FIELD_LABELS, BRAND_TYPES, BRAND_CLASSIFICATIONS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
+import { COLORS, BRAND_TYPES, BRAND_CLASSIFICATIONS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
@@ -35,15 +35,11 @@ function ShareEntityButton({ name, username }) {
   );
 }
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
-  const [editing, setEditing] = useState(false);
-  const [nameValue, setNameValue] = useState(brewery.name || "");
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, claimsEnabled = true }) {
   const [activeTab, setActiveTab] = useState("infos");
-  const [countryValue, setCountryValue] = useState(brewery.country || "");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
 
   const [relatedDrinks, setRelatedDrinks] = useState([]);
@@ -61,11 +57,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
     if (brewery.linkedVenueId) loadVenueById(brewery.linkedVenueId).then(setLinkedVenue);
     else setLinkedVenue(null);
   }, [brewery.linkedVenueId]);
-
-  const submitEdit = () => {
-    onSuggestEdit(nameValue, countryValue);
-    setEditing(false);
-  };
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -96,61 +87,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
       </div>
 
       <div style={{ marginTop: "76px" }}>
-        {pendingContributions.length > 0 && (
-          <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-            <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {pendingContributions.map((c) => (
-                <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
-                  <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
-                    <strong>{BREWERY_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
-                  </div>
-                  {isAdmin && (
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        onClick={() => onApproveContribution(c)}
-                        style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
-                      >
-                        ✓ Accepter
-                      </button>
-                      <button
-                        onClick={() => onRejectContribution(c)}
-                        style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
-                      >
-                        ✕ Refuser
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-      {editing && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-          <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>Ta suggestion sera soumise à validation.</p>
-          <input
-            value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
-            placeholder="Nom"
-            style={{ padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
-          />
-          <div style={{ display: "flex", gap: "8px" }}>
-            <input
-              value={countryValue}
-              onChange={(e) => setCountryValue(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submitEdit()}
-              placeholder="Pays d'origine"
-              style={{ flex: 1, padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
-            />
-            <button onClick={submitEdit} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 14px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper }}>
-              Suggérer
-            </button>
-          </div>
-        </div>
-      )}
-
       {linkedVenue && (
         <button
           onClick={() => onOpenVenue(linkedVenue.id)}
@@ -225,7 +161,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
         SES PRODUITS ({relatedDrinks.length})
       </div>
-      <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "-4px", marginBottom: "8px" }}>Touchez une boisson pour la corriger, la peaufiner ou la certifier.</p>
       {relatedDrinks.length === 0 ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "20px" }}>
           Aucune boisson de cette brasserie enregistrée pour l'instant.
@@ -247,27 +182,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
               {drinkSummaryLine(d) && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{drinkSummaryLine(d)}</div>}
             </button>
           ))}
-        </div>
-      )}
-
-      {isAdmin && (
-        <div style={{ marginTop: "auto", paddingTop: "20px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {brewery.status !== "complete" && (
-              <button
-                onClick={onCertify}
-                style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}
-              >
-                ✓ Certifier cette brasserie
-              </button>
-            )}
-            <button
-              onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
-              style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.wine, cursor: "pointer" }}
-            >
-              {confirmDelete ? "Confirmer la suppression ?" : "Supprimer du répertoire"}
-            </button>
-          </div>
         </div>
       )}
 
@@ -318,18 +232,6 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
             style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
           >
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setShowActionsMenu(false);
-                  setEditing(true);
-                }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-              >
-                <NavIcon name="pencil" size={20} color={COLORS.amber} />
-                Éditer
-              </button>
-            )}
             <button
               onClick={() => {
                 setShowActionsMenu(false);
@@ -362,10 +264,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], isAdmin,
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onSuggestEdit, pendingContributions = [], onApproveContribution, onRejectContribution, onCertify, onDelete, claimsEnabled = true }) {
-  const [editing, setEditing] = useState(false);
-  const [nameValue, setNameValue] = useState(brand.name || "");
-  const [confirmDelete, setConfirmDelete] = useState(false);
+export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, claimsEnabled = true }) {
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
@@ -423,11 +322,6 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
     .map(([label, g]) => ({ label, ...g, typeRank: DRINK_TYPES.indexOf(g.type) === -1 ? DRINK_TYPES.length : DRINK_TYPES.indexOf(g.type) }))
     .sort((a, b) => a.typeRank - b.typeRank || a.subtypeRank - b.subtypeRank);
 
-  const submitEdit = () => {
-    onSuggestEdit(nameValue);
-    setEditing(false);
-  };
-
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <div style={{ position: "relative", margin: "-28px -20px 0 -20px" }}>
@@ -456,53 +350,6 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
       </div>
 
       <div style={{ marginTop: "76px" }}>
-        {pendingContributions.length > 0 && (
-          <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-            <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2C94C", marginBottom: "10px" }}>📝 {pendingContributions.length > 1 ? "Des modifications sont proposées" : "Une modification est proposée"}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {pendingContributions.map((c) => (
-                <div key={c.id} style={{ background: "rgba(0,0,0,0.15)", borderRadius: "8px", padding: "8px 10px" }}>
-                  <div style={{ fontSize: "12.5px", color: "#F2C94C", marginBottom: isAdmin ? "6px" : 0 }}>
-                    <strong>{BRAND_FIELD_LABELS[c.fieldPath] || c.fieldPath}</strong> : {c.previousValue || "—"} → {c.proposedValue || "—"}
-                  </div>
-                  {isAdmin && (
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        onClick={() => onApproveContribution(c)}
-                        style={{ flex: 1, background: COLORS.sage, border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, fontSize: "11.5px", color: "#fff", cursor: "pointer" }}
-                      >
-                        ✓ Accepter
-                      </button>
-                      <button
-                        onClick={() => onRejectContribution(c)}
-                        style={{ flex: 1, background: "none", border: "2px solid #5c4a00", borderRadius: "6px", padding: "5px", fontWeight: 700, fontSize: "11.5px", color: "#F2C94C", cursor: "pointer" }}
-                      >
-                        ✕ Refuser
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-      {editing && (
-        <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
-          <input
-            value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submitEdit()}
-            placeholder="Nom"
-            autoFocus
-            style={{ flex: 1, padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
-          />
-          <button onClick={submitEdit} style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 14px", fontWeight: 700, fontSize: "13px", cursor: "pointer", color: COLORS.paper }}>
-            Suggérer
-          </button>
-        </div>
-      )}
-
       {/* Carte « Infos » : même présentation que la fiche Produit (pastilles, ligne d'origine, puis le producteur après un trait vert). */}
       {(brandTags.length > 0 || hasOrigin || producers.length > 0) && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
@@ -584,9 +431,6 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
           <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
           <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Ses produits ({relatedDrinks.length})</span>
         </div>
-        {isAdmin && relatedDrinks.length > 0 && (
-          <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "0 0 12px" }}>Touchez une boisson pour la corriger, la peaufiner ou la certifier.</p>
-        )}
         {relatedDrinks.length === 0 ? (
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "16px 0", margin: 0 }}>Aucune boisson de cette marque enregistrée pour l'instant.</p>
         ) : (
@@ -644,28 +488,6 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
         )}
       </div>
 
-      {isAdmin && (
-        <div style={{ marginTop: "auto", paddingTop: "20px" }}>
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>ADMINISTRATION</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {brand.status !== "complete" && (
-              <button
-                onClick={onCertify}
-                style={{ background: COLORS.amber, border: "none", borderRadius: "10px", padding: "12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}
-              >
-                ✓ Certifier cette marque
-              </button>
-            )}
-            <button
-              onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
-              style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.wine, cursor: "pointer" }}
-            >
-              {confirmDelete ? "Confirmer la suppression ?" : "Supprimer du répertoire"}
-            </button>
-          </div>
-        </div>
-      )}
-
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
         {claimsEnabled && (
         <button
@@ -706,18 +528,6 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], isAdmin, myBibr
             style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}
           >
             <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setShowActionsMenu(false);
-                  setEditing(true);
-                }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
-              >
-                <NavIcon name="pencil" size={20} color={COLORS.amber} />
-                Éditer
-              </button>
-            )}
             <button
               onClick={() => {
                 setShowActionsMenu(false);

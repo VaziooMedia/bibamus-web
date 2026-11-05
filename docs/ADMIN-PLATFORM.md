@@ -1,7 +1,7 @@
 # PLATEFORME DE GESTION (admin.bibamus.app) — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-11-03 (valeurs par défaut et case « Shot » de la fiche Spiritueux ; 2026-11-02 pour les fiches Softs & Eaux, Boissons chaudes, Cocktails / Mocktails et Snacks, dont les caractéristiques & labels des Softs & Eaux (2026-11-01), des Cocktails / Mocktails, des Boissons chaudes et des Snacks (2026-11-02) ; 2026-10-24 pour le nom d'utilisateur ; 2026-10-09 pour le reste). **Limite importante** : la plateforme de gestion est un dépôt distinct (`Bibamus-Management`) qui n'a pas été relu en entier. Ce document s'appuie sur (1) les scripts SQL et les fonctions Edge livrés, qui sont communs aux deux projets, (2) les copies de composants d'administration qui traînent dans `bibamus-web`, et (3) le zip `DEPOT-bibamus-admin_styles-etiquettes-selectionnees.zip` (deux fichiers du 2026-10-05). Ce qui ne peut se lire que dans le dépôt de gestion lui-même est marqué **(dépôt admin)** : non revérifié.
+> Dernière mise à jour : 2026-11-05 (plus aucun outil d'administration dans l'app ; 2026-11-03 pour valeurs par défaut et case « Shot » de la fiche Spiritueux ; 2026-11-02 pour les fiches Softs & Eaux, Boissons chaudes, Cocktails / Mocktails et Snacks, dont les caractéristiques & labels des Softs & Eaux (2026-11-01), des Cocktails / Mocktails, des Boissons chaudes et des Snacks (2026-11-02) ; 2026-10-24 pour le nom d'utilisateur ; 2026-10-09 pour le reste). **Limite importante** : la plateforme de gestion est un dépôt distinct (`Bibamus-Management`) qui n'a pas été relu en entier. Ce document s'appuie sur (1) les scripts SQL et les fonctions Edge livrés, qui sont communs aux deux projets, (2) les copies de composants d'administration qui traînent dans `bibamus-web`, et (3) le zip `DEPOT-bibamus-admin_styles-etiquettes-selectionnees.zip` (deux fichiers du 2026-10-05). Ce qui ne peut se lire que dans le dépôt de gestion lui-même est marqué **(dépôt admin)** : non revérifié.
 
 ---
 
@@ -15,7 +15,7 @@ Les indices d'un **même backend Supabase** que `bibamus-web` sont concordants �
 
 `bibamus-web` embarque des copies de composants d'administration **jamais importées depuis `App.jsx`** : `UserDetailPanel`, `DrinksScreen`, `DrinkDetailPanel`, `BreweryDetailPanel`, `BrandDetailPanel`, `SimpleEntityPanel`, `DataTable`, `ServerDataTable`, `DataBaseOverviewScreen`, `OpeningHoursEditor`, `GooglePlaceLinker` (`VenuesScreen` et `VenueDetailPanel`, du même type, ont été retirés le 2026-11-03). Elles importent des fonctions **absentes** de `sharedDirectories.js` (`createAppUser`, `updateAppUserProfile`, `deleteAppUser`, `mergeEntities`, `searchGooglePlaceMatches`, `linkGooglePlace`, `unlinkGooglePlace`, `setNoGooglePresence`). Conséquence : une preuve trouvée dans ces copies **ne prouve pas** l'état du dépôt de gestion, dont elles sont des versions plus anciennes ou partielles.
 
-Seuls `ImportDataScreen`, `BreweriesAdminScreen`, `BrandsAdminScreen` et une ligne « admin » dans `MinorScreens` sont réellement atteignables dans l'app, pour les comptes administrateurs.
+**Depuis le 2026-11-05, plus aucun outil d'administration n'est atteignable dans l'app, même pour un compte `admin` ou `super_admin`** : les écrans « Brasseries » et « Marques » (`BreweriesAdminScreen`, `BrandsAdminScreen`), l'import de données (`ImportDataScreen`, bouton des Réglages compris), l'édition d'un produit (`DrinkFormScreen`), l'écran « Accès administrateur » et les boutons Certifier / Décertifier / Supprimer du répertoire / Accepter / Refuser / Éditer des fiches Produit, Producteur et Marque ont été retirés (décision de Mehdi). Tout cela se fait depuis la plateforme de gestion ; la modification d'une fiche par son gérant passera par la future plateforme Business. Ce qui reste, réservé aux comptes admin : le bloc de lecture « Admin — Chiffre d'affaires » des fiches Produit et Lieu.
 
 ## Gestion des utilisateurs
 
@@ -30,7 +30,7 @@ La gestion des utilisateurs **existe** (la version précédente de ce document, 
 
 ## Rôles
 
-Les règles d'accès des scripts livrés et la fonction Edge d'IA admettent `editor`, `super_editor`, `moderator`, `admin`, `super_admin` ; les Stories officielles sont réservées à `admin` et `super_admin` ; dans l'app, `isAdmin` = `admin` ou `super_admin`. Les fonctions d'aide `is_admin_or_above()`, `can_certify()` et `can_moderate()` sont appelées mais leur source n'est pas livrée **(base)**. Le rôle `user` est le seul que retiennent les suggestions Bibax et la recherche par nom. Voir `SECURITY.md`.
+Les règles d'accès des scripts livrés et la fonction Edge d'IA admettent `editor`, `super_editor`, `moderator`, `admin`, `super_admin` ; les Stories officielles sont réservées à `admin` et `super_admin` ; dans l'app, `isAdmin` = `admin` ou `super_admin` (il ne sert plus qu'au bloc chiffre d'affaires, voir plus haut). Les fonctions d'aide `is_admin_or_above()`, `can_certify()` et `can_moderate()` sont appelées mais leur source n'est pas livrée **(base)**. Le rôle `user` est le seul que retiennent les suggestions Bibax et la recherche par nom. Voir `SECURITY.md`.
 
 ## Fiches : produits, IA, styles (zip du 2026-10-05)
 

@@ -1,7 +1,7 @@
 # PROFIL — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-24 (nom d'utilisateur @nom : changement par un administrateur, recherche par @nom, « Ton lien » ; 2026-10-23 pour le reste ; 2026-10-18 pour le réglage des arrivées en BibaClub ; 2026-10-13 pour le reste, 2026-10-15 pour les colonnes réservées). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
+> Dernière mise à jour : 2026-11-05 (ligne « Mode administrateur actif » / « Accès administrateur » et écran d'accès retirés ; 2026-10-24 pour nom d'utilisateur @nom : changement par un administrateur, recherche par @nom, « Ton lien » ; 2026-10-23 pour le reste ; 2026-10-18 pour le réglage des arrivées en BibaClub ; 2026-10-13 pour le reste, 2026-10-15 pour les colonnes réservées). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
 
 ---
 
@@ -61,7 +61,7 @@ Accessible uniquement depuis `AccountScreen` (ligne « Supprimer mon compte ») 
 
 ## Statut administrateur
 
-Il est **automatique**, déduit du rôle du compte (`role` = `admin` ou `super_admin`). L'écran `AdminUnlockScreen` est purement informatif (« il n'y a plus de passphrase à saisir »). Il n'y a plus de déblocage par saisie.
+Il est **automatique**, déduit du rôle du compte (`role` = `admin` ou `super_admin`). Depuis le 2026-11-05, l'app n'affiche plus aucun mode administrateur : la ligne « 🛡️ Mode administrateur actif » (ou le lien « 🔐 Accès administrateur ») du profil et l'écran `AdminUnlockScreen` ont été retirés, avec tous les outils d'administration (voir `ADMIN-PLATFORM.md`). `isAdmin` ne sert plus qu'au bloc de lecture « Admin — Chiffre d'affaires » des fiches Produit et Lieu.
 
 ## Autres écrans liés
 

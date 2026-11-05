@@ -14,7 +14,7 @@ import { normalizeSearchText, makeSearchMatcher, entityNames } from "../utils.js
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
-export function BrandDirectoryScreen({ myBrands = [], myBibroCode, isAdmin, addIntent, onBack, onOpenBrand, goToSubmit, activeCountry, setActiveCountry }) {
+export function BrandDirectoryScreen({ myBrands = [], myBibroCode, addIntent, onBack, onOpenBrand, goToSubmit, activeCountry, setActiveCountry }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [all, setAll] = useState([]);

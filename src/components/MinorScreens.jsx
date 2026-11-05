@@ -16,7 +16,7 @@ import { loadMyStories, upsertPushSubscription } from "../data/sharedDirectories
 import { loadSalonTokEnabled, setSalonTokEnabled } from "../data/toks.js";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
 
-export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBack, isAdmin, goToImport, onLogout, goToCategory }) {
+export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBack, onLogout, goToCategory }) {
   const [activeStories, setActiveStories] = useState([]);
   useEffect(() => {
     loadMyStories().then((list) => setActiveStories(list.filter((s) => new Date(s.expiresAt) > new Date())));
@@ -114,16 +114,6 @@ export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBac
           <SettingsRow icon={<NavIcon name="logout" size={18} color={COLORS.wine} />} title="Déconnexion" subtitle="Se déconnecter de Bibamus" onClick={onLogout} danger />
         </div>
       </SettingsGroup>
-
-      {isAdmin && (
-        <button
-          onClick={goToImport}
-          style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "14px 16px", textAlign: "left", cursor: "pointer", color: COLORS.ink, marginBottom: "10px" }}
-        >
-          <div style={{ fontWeight: 700, fontSize: "14.5px", marginBottom: "4px" }}>⬆️ Importer des données</div>
-          <div style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Charger un export JSON depuis l'artefact Claude (admin uniquement)</div>
-        </button>
-      )}
 
       <PageFooterNav onBack={onBack} />
     </div>

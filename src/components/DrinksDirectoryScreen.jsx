@@ -19,7 +19,6 @@ const PAGE_SIZE = 40;
 const LETTER_THRESHOLD = 20;
 
 export function DrinksDirectoryScreen({
-  isAdmin,
   myBibroCode,
   onBack,
   openedFromDrink = false,
