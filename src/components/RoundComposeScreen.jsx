@@ -219,7 +219,9 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
       return;
     }
     const timer = setTimeout(() => {
-      searchDrinks(q, 8).then(setBibAtlasResults);
+      // Sans limite explicite : la limite par défaut de searchDrinks, la même que la barre de recherche BibAtlas, « Ajouter un Produit » de
+      // BibaSolo et « Me servir » (@Home), pour que tous les produits trouvés s'affichent (une limite à 8 laissait croire qu'il n'y en avait que 8).
+      searchDrinks(q).then(setBibAtlasResults);
     }, 350);
     return () => clearTimeout(timer);
   }, [bibAtlasQuery]);
