@@ -18,7 +18,7 @@ import { getDrinkFeatureItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { displayedAbv, formatMoney, formatWeekdayDDMMYYYY, isAtpDrink } from "../utils.js";
+import { displayedAbv, formatWeekdayDDMMYYYY, isAtpDrink } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -26,7 +26,7 @@ import { EvolutionCard } from "./EvolutionCard.jsx";
 import { NotesCard, formatRating } from "./NotesCard.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { OTHER_STYLE_TYPES } from "../data/otherStyleLabels.js";
-import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadDrinkRevenueStats, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import atpIconUrl from "../assets/brand/atp.svg";
@@ -96,7 +96,6 @@ function findAnchor(key) {
 
 export function DrinkDetailScreen({
   drink,
-  isAdmin,
   myBibroCode,
   myUserId,
   isOnWishlist,
@@ -453,14 +452,6 @@ export function DrinkDetailScreen({
     );
   }, [drink.id]);
 
-  // Chiffre d'affaires — réservé aux admins pour l'instant, en attendant la future plateforme
-  // Business (voir bibamus-schema-owner-stats.sql).
-  const [revenueStats, setRevenueStats] = useState(null);
-  useEffect(() => {
-    if (!isAdmin) return;
-    loadDrinkRevenueStats(drink.id).then(setRevenueStats);
-  }, [drink.id, isAdmin]);
-
   const handleCheckConfirmed = async (result) => {
     setShowCheckModal(false);
     if (!result) {
@@ -790,29 +781,6 @@ export function DrinkDetailScreen({
             >
               Produits communs
             </button>
-          </div>
-        )}
-
-        {isAdmin && revenueStats && revenueStats.orderCount > 0 && (
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.wine}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-              <span style={{ width: "4px", height: "18px", background: COLORS.wine, borderRadius: "2px", display: "inline-block" }} />
-              <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Admin — Chiffre d'affaires (tous utilisateurs)</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px" }}>
-              {revenueStats.totalEuro > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: COLORS.inkSoft }}>Total en euros</span>
-                  <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(revenueStats.totalEuro, "euro")}</span>
-                </div>
-              )}
-              {revenueStats.avgPriceEuro != null && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: COLORS.inkSoft }}>Prix moyen payé</span>
-                  <span style={{ fontWeight: 700, fontFamily: "'Urbanist', sans-serif" }}>{formatMoney(revenueStats.avgPriceEuro, "euro")}</span>
-                </div>
-              )}
-            </div>
           </div>
         )}
 

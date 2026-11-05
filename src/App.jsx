@@ -2333,7 +2333,6 @@ export default function App() {
                   return v ? { ...v, isFavorite: favoriteVenueIds.includes(v.id) } : v;
                 })()}
                 myBibroCode={profile.myBibroCode}
-                isAdmin={!!profile.isAdmin}
                 myUserId={session.user.id}
                 onToggleLike={() => toggleVenueLike(viewedVenueId)}
                 onCheckIn={(opts) => checkInVenue(viewedVenueId, opts)}
@@ -2401,7 +2400,6 @@ export default function App() {
               <DrinkDetailScreen
                 claimsEnabled={featureFlags.claims_enabled !== false}
                 drink={viewedDrink}
-                isAdmin={!!profile.isAdmin}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
                 isTasted={tastedDrinkIds.includes(viewedDrinkId)}

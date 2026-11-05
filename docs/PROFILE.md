@@ -61,7 +61,7 @@ Accessible uniquement depuis `AccountScreen` (ligne « Supprimer mon compte ») 
 
 ## Statut administrateur
 
-Il est **automatique**, déduit du rôle du compte (`role` = `admin` ou `super_admin`). Depuis le 2026-11-05, l'app n'affiche plus aucun mode administrateur : la ligne « 🛡️ Mode administrateur actif » (ou le lien « 🔐 Accès administrateur ») du profil et l'écran `AdminUnlockScreen` ont été retirés, avec tous les outils d'administration (voir `ADMIN-PLATFORM.md`). `isAdmin` ne sert plus qu'au bloc de lecture « Admin — Chiffre d'affaires » des fiches Produit et Lieu.
+Il est **automatique**, déduit du rôle du compte (`role` = `admin` ou `super_admin`). Depuis le 2026-11-05, l'app n'affiche plus aucun mode administrateur : la ligne « 🛡️ Mode administrateur actif » (ou le lien « 🔐 Accès administrateur ») du profil et l'écran `AdminUnlockScreen` ont été retirés, avec tous les outils d'administration (voir `ADMIN-PLATFORM.md`). `profile.isAdmin` n'est plus utilisé par aucun écran (le bloc « Admin — Chiffre d'affaires » des fiches Produit et Lieu a été retiré le même jour).
 
 ## Autres écrans liés
 
