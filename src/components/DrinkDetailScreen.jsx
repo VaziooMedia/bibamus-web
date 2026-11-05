@@ -506,14 +506,15 @@ export function DrinkDetailScreen({
           <EntityAvatar photoUrl={drink.photoUrl} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
-          {/* L'icône de certification reste en haut à droite du nom, à hauteur de la 1re ligne : elle ne suit pas le texte quand le nom passe sur
-              plusieurs lignes. (3,4 px = de quoi la centrer sur une ligne de 23,75 px : sur une seule ligne, rien ne change.) */}
-          <div ref={titleRef} style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
-            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{drink.name}</h1>
-            <span style={{ display: "flex", flexShrink: 0, marginTop: "3.4px" }}>
-              <CertificationIcon level={drink.certificationLevel} size={17} />
-            </span>
+          {/* L'icône de certification est toujours dans le coin en haut à droite du bloc du nom, à hauteur de la 1re ligne (même pour un nom court),
+              et ne suit pas le texte quand le nom passe sur plusieurs lignes. Le nom lui laisse sa place à droite (23 px). 3,4 px = de quoi la
+              centrer sur une ligne de 23,75 px. */}
+          <div ref={titleRef}>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, paddingRight: "23px", lineHeight: 1.25, color: COLORS.chalkWhite }}>{drink.name}</h1>
           </div>
+          <span style={{ position: "absolute", top: "3.4px", right: 0, display: "flex" }}>
+            <CertificationIcon level={drink.certificationLevel} size={17} />
+          </span>
           {SUBTYPE_LABELS[drink.beverageSubtype] && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{SUBTYPE_LABELS[drink.beverageSubtype]}</p>}
           <div style={{ position: "absolute", top: `${32 + titleExtra}px`, right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
             {canShareEntity() && (
