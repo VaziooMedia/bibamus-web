@@ -1412,6 +1412,16 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   const [previousPeriodStart, setPreviousPeriodStart] = useState(null); // début (6 h) de la période d'avant : sa date s'affiche dans la barre de séparation
   const [spentInfoOpen, setSpentInfoOpen] = useState(false); // bulle de détail du bloc « Dépensé » (mes consommations / consommations offertes / jetons achetés)
   const [periodInfoOpen, setPeriodInfoOpen] = useState(null); // bulle d'explication des périodes ouverte : null | "today" | "previous" (icône « info » de chaque barre)
+  const spentTileRef = useRef(null);
+  // Comme la bulle des périodes ci-dessous : un appui n'importe où ailleurs que sur le bloc « Dépensé » referme sa bulle (un appui sur le bloc la referme déjà).
+  useEffect(() => {
+    if (!spentInfoOpen) return undefined;
+    const close = (e) => {
+      if (spentTileRef.current && !spentTileRef.current.contains(e.target)) setSpentInfoOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [spentInfoOpen]);
   const todayBarRef = useRef(null);
   const previousBarRef = useRef(null);
   useEffect(() => {
@@ -2125,6 +2135,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         {/* Un appui sur le bloc ouvre / ferme une bulle (même style que la bulle des périodes) qui détaille le Dépensé. */}
         <div
           data-spent-tile="1"
+          ref={spentTileRef}
           role="button"
           tabIndex={0}
           aria-expanded={spentInfoOpen}
