@@ -217,6 +217,7 @@ export const resolveMenuItem =(item, drinksDirectory) => {
     ...item,
     name: master.name,
     type: normalizeDrinkType(master.type),
+    beverageSubtype: master.beverageSubtype,
     photoUrl: master.photoUrl,
     kcalPer100ml: master.kcalPer100ml,
     beerTags: master.beerTags,
@@ -521,17 +522,20 @@ export function getAlcoholTierBadge(abv) {
   return null;
 }
 
-// « Softs & Eaux » : sans alcool par définition. Les anciens produits de cette catégorie, encodés avant la refonte des fiches, ont un
-// degré à 0 (les nouveaux n'en ont pas) : ce 0 ne s'affiche pas, ni en « 0.0% ABV » ni en pastille « 0.0% » (DrinkDisplay n'affiche déjà
-// aucune pastille d'alcool pour ces catégories). Un degré au-dessus de 0 (rare) reste affiché. Les autres catégories sont inchangées.
-// `drink` : un produit du répertoire ou une entrée de carte déjà résolue (resolveMenuItem), qui porte `type` et `abv`.
+// « Softs & Eaux » et « Boissons chaudes » : sans alcool par définition, sauf la sous-catégorie « Hot Mix » des Boissons chaudes (Irish Coffee
+// et autres boissons chaudes alcoolisées), qui garde son affichage habituel. Les anciens produits de ces catégories, encodés avant la refonte
+// des fiches, ont un degré à 0 (les nouveaux n'en ont pas) : ce 0 ne s'affiche pas, ni en « 0.0% ABV » ni en pastille « 0.0% » (DrinkDisplay
+// n'affiche déjà aucune pastille d'alcool pour ces catégories). Un degré au-dessus de 0 (rare) reste affiché. Les autres catégories sont inchangées.
+// `drink` : un produit du répertoire ou une entrée de carte déjà résolue (resolveMenuItem), qui porte `type`, `beverageSubtype` et `abv`.
+const isAlcoholFreeByDefinition = (drink) =>
+  drink?.type === "Softs & Eaux" || (drink?.type === "Boissons chaudes" && drink?.beverageSubtype !== "hot_mix");
 export const displayedAbv = (drink) => {
   const n = drink?.abv;
   if (n == null) return null;
-  return drink.type === "Softs & Eaux" && !(n > 0) ? null : n;
+  return isAlcoholFreeByDefinition(drink) && !(n > 0) ? null : n;
 };
-// La pastille d'alcool (0.0 % / Alcohol free / Alcohol low) d'un produit : aucune pour un Soft & Eau.
-export const displayedAlcoholTier = (drink) => (drink?.type === "Softs & Eaux" ? null : getAlcoholTierBadge(drink?.abv));
+// La pastille d'alcool (0.0 % / Alcohol free / Alcohol low) d'un produit : aucune pour ces catégories (Hot Mix excepté).
+export const displayedAlcoholTier = (drink) => (isAlcoholFreeByDefinition(drink) ? null : getAlcoholTierBadge(drink?.abv));
 
 
 export function drinkSummaryParts(d, includeType = true) {
