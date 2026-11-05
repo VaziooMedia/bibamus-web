@@ -16,7 +16,7 @@ import { NotesCard, RatingFraction } from "./NotesCard.jsx";
 import { BrandRatingModal } from "./BrandRatingModal.jsx";
 import { HintBubble } from "./HintBubble.jsx";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
-import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand, loadBrandFollowStatus, toggleFollowBrand, loadBrandFavoriteStatus, toggleFavoriteBrand } from "../data/sharedDirectories.js";
+import { loadDrinksByBrewery, loadDrinksByBrandId, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand, loadBrandFollowStatus, toggleFollowBrand, loadBrandFavoriteStatus, toggleFavoriteBrand } from "../data/sharedDirectories.js";
 import { customNames } from "../venueLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
@@ -331,10 +331,11 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
   // Nom sur plusieurs lignes : les icônes de l'en-tête et le contenu en dessous descendent d'autant (voir useWrappedTitleExtra).
   const [titleRef, titleExtra] = useWrappedTitleExtra();
 
+  // Les produits de la marque, par la clé brand_id (et non plus par le nom : la plateforme de gestion n'écrit pas toujours le nom de la marque sur le produit).
   const [relatedDrinks, setRelatedDrinks] = useState([]);
   useEffect(() => {
-    loadDrinksByBrand(brand.name).then(setRelatedDrinks);
-  }, [brand.name]);
+    loadDrinksByBrandId(brand.id).then(setRelatedDrinks);
+  }, [brand.id]);
 
   // Cloche « Suivre sur Pulse » et cœur « Favoris » de la marque : un état par personne, enregistré en base (brand_follows et brand_favorites).
   // Lus à l'ouverture de la fiche ; une bascule attend la réponse du serveur (le bouton est inactif entre-temps), comme la cloche d'un produit.
