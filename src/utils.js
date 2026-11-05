@@ -171,7 +171,7 @@ export const directoryDrinkIdsConsumedBy = (event, myBibroCode) => {
 // @Home — ce que chaque personne a bu, par participant puis par produit (et volume), pour l'écran
 // du salon. Les plus servis d'abord ; à égalité, par prénom. Un verre est une entrée de
 // event.homeDrinks : { id, code, name, drinkId, timestamp }. Chaque ligne porte aussi le type de service
-// de l'entrée (servingMode : "" | bouteille | canette | fut | verre), pour l'afficher sous le nom, et `shot` (vrai si
+// de l'entrée (servingMode : "" | bouteille | canette | fut | verre | pet | brique | carton), pour l'afficher sous le nom, et `shot` (vrai si
 // l'entrée est un shot : menuCategory "Shots") : un shot et un spiritueux de même volume sont deux lignes, la pastille les distingue.
 export const homeDrinksByPerson = (event) => {
   const people = new Map();
@@ -304,6 +304,9 @@ export const SERVING_MODE_OPTIONS = [
   ["canette", "Canette"],
   ["fut", "On Tap"],
   ["verre", "Au verre"],
+  ["pet", "PET"],
+  ["brique", "Brique"],
+  ["carton", "Carton"],
 ];
 // Une clé connue est gardée telle quelle ; tout le reste (absent, inconnu, mal écrit) donne "" (« Non défini »).
 export const safeServingMode = (raw) => (SERVING_MODE_OPTIONS.some(([key]) => key === raw) ? raw : "");
