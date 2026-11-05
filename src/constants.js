@@ -385,7 +385,7 @@ export const SUBTYPE_LABELS = {
   biscuits_gateaux: "Biscuits & Gâteaux",
 };
 
-export const SERVING_MODE_LABELS = { bouteille: "Bouteille", canette: "Canette", verre: "Au verre", fut: "On tap" };
+export const SERVING_MODE_LABELS = { bouteille: "Bouteille", canette: "Canette", verre: "Au verre", fut: "On tap", pet: "PET", brique: "Brique", carton: "Carton" };
 
 export const BEER_STYLE_TAGS = [
   "Blonde",

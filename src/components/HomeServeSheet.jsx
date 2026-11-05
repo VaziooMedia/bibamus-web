@@ -27,6 +27,9 @@ const SERVING_MODE_OPTIONS = [
   ["canette", "Canette"],
   ["fut", "On Tap"],
   ["verre", "Au verre"],
+  ["pet", "PET"],
+  ["brique", "Brique"],
+  ["carton", "Carton"],
 ];
 
 // Champ « Volume (cl.) » : même gabarit (largeur, valeur centrée) que le champ de volume de BibaSolo.
