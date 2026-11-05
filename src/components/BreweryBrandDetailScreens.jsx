@@ -25,10 +25,10 @@ import { usernameLinkUrl } from "../usernameLinks.js";
 // Bouton « Partager » des fiches producteur et marque : même icône et même emplacement que sur la fiche lieu.
 // Le lien partagé est bibamus.app/@nom de la fiche (lien général si elle n'a pas encore de @nom). Rien ne
 // s'affiche si le partage natif n'existe pas sur l'appareil.
-function ShareEntityButton({ name, username }) {
+function ShareEntityButton({ name, username, extraTop = 0 }) {
   if (!canShareEntity()) return null;
   return (
-    <div style={{ position: "absolute", top: "32px", right: "8px", display: "flex", alignItems: "center" }}>
+    <div style={{ position: "absolute", top: `${32 + extraTop}px`, right: "8px", display: "flex", alignItems: "center" }}>
       <button
         onClick={() => shareEntity({ title: name, text: `Découvre ${name} sur Bibamus !`, url: usernameLinkUrl(username) })}
         title="Partager"
@@ -92,6 +92,8 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  // Nom sur plusieurs lignes : « Partager » et le contenu en dessous descendent d'autant (voir useWrappedTitleExtra).
+  const [titleRef, titleExtra] = useWrappedTitleExtra();
 
   const [relatedDrinks, setRelatedDrinks] = useState([]);
   useEffect(() => {
@@ -126,23 +128,23 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
           <EntityAvatar photoUrl={brewery.profilePhotoUrl} photoEmoji={brewery.avatarEmoji} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
-          <div style={{ paddingRight: canShareEntity() ? "34px" : 0 }}>
+          <div>
             {/* L'icône de certification est toujours dans le coin en haut à droite du bloc du nom, à hauteur de la 1re ligne (même pour un nom court),
             et ne suit pas le texte quand le nom passe sur plusieurs lignes. Le nom lui laisse sa place à droite (23 px). 3,4 px = de quoi la
             centrer sur une ligne de 23,75 px. */}
-            <div>
+            <div ref={titleRef}>
               <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, paddingRight: "23px", lineHeight: 1.25, color: COLORS.chalkWhite }}>{brewery.name}</h1>
             </div>
             <span style={{ position: "absolute", top: "3.4px", right: 0, display: "flex" }}>
               <CertificationIcon level={brewery.certificationLevel} size={17} />
             </span>
-            {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{brewery.country}</p>}
+            {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0", paddingRight: canShareEntity() ? "34px" : 0 }}>{brewery.country}</p>}
           </div>
-          <ShareEntityButton name={brewery.name} username={brewery.username} />
+          <ShareEntityButton name={brewery.name} username={brewery.username} extraTop={titleExtra} />
         </div>
       </div>
 
-      <div style={{ marginTop: "76px" }}>
+      <div style={{ marginTop: `${76 + titleExtra}px` }}>
       {linkedVenue && (
         <button
           onClick={() => onOpenVenue(linkedVenue.id)}

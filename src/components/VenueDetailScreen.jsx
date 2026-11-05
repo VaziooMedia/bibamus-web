@@ -9,6 +9,7 @@ import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
+import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
 import { formatAddress, mapsUrlFor, normalizeUrl, buildWhatsAppLink } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
@@ -41,6 +42,8 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  // Nom sur plusieurs lignes : les icônes de l'en-tête et le contenu en dessous descendent d'autant (voir useWrappedTitleExtra).
+  const [titleRef, titleExtra] = useWrappedTitleExtra();
   // Cloche de notification — ses activités (check-ins de tes Bibax, plus tard ses événements et
   // nouveaux produits) apparaissent dans ton fil Pulse.
   const [isFollowed, setIsFollowed] = useState(false);
@@ -193,14 +196,14 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
           {/* L'icône de certification est toujours dans le coin en haut à droite du bloc du nom, à hauteur de la 1re ligne (même pour un nom court),
               et ne suit pas le texte quand le nom passe sur plusieurs lignes. Le nom lui laisse sa place à droite (23 px). 3,4 px = de quoi la
               centrer sur une ligne de 23,75 px. */}
-          <div>
+          <div ref={titleRef}>
             <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, paddingRight: "23px", lineHeight: 1.25, color: COLORS.chalkWhite }}>{venue.name}</h1>
           </div>
           <span style={{ position: "absolute", top: "3.4px", right: 0, display: "flex" }}>
             <CertificationIcon level={venue.certificationLevel} size={17} />
           </span>
           {venue.subtitle && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0" }}>{venue.subtitle}</p>}
-          <div style={{ position: "absolute", top: "32px", right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ position: "absolute", top: `${32 + titleExtra}px`, right: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
             {canShareEntity() && (
               <>
                 <button
@@ -261,7 +264,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
         </button>
       </div>
 
-      <div style={{ marginTop: "76px" }}>
+      <div style={{ marginTop: `${76 + titleExtra}px` }}>
         {venue.pendingContributionsCount > 0 && (
           <div style={{ background: "#332B14", border: "2px solid #c9a227", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: "#F2C94C" }}>
             📝 Une modification de la fiche est proposée, en attente de validation.
