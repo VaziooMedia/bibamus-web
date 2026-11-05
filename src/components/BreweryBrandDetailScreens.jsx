@@ -411,19 +411,20 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
             <div
               style={{
                 display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
+                alignItems: "baseline",
+                gap: "5px",
                 background: "#000",
                 border: `2px solid ${COLORS.amber}`,
                 borderRadius: "8px",
-                padding: "3px 8px",
+                padding: "5px 10px",
+                maxWidth: "100%",
               }}
             >
-              <NavIcon name="star" size={14} color={COLORS.amber} filled />
-              <span style={{ fontSize: "11px" }}>
-                <span style={{ color: COLORS.chalkWhite }}>{formatRating(ratingSummary.average)}</span>
-                <span style={{ color: COLORS.inkSoft }}> - {ratingSummary.count} avis</span>
+              <span style={{ display: "flex", alignSelf: "center" }}>
+                <NavIcon name="star" size={17} color={COLORS.amber} filled />
               </span>
+              <span style={{ fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>{formatRating(ratingSummary.average)}</span>
+              <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {ratingSummary.count} avis</span>
             </div>
           </div>
         )}

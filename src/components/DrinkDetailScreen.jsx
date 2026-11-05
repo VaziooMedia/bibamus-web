@@ -547,19 +547,20 @@ export function DrinkDetailScreen({
             <div
               style={{
                 display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
+                alignItems: "baseline",
+                gap: "5px",
                 background: "#000",
                 border: `2px solid ${COLORS.amber}`,
                 borderRadius: "8px",
-                padding: "3px 8px",
+                padding: "5px 10px",
+                maxWidth: "100%",
               }}
             >
-              <NavIcon name="star" size={14} color={COLORS.amber} filled />
-              <span style={{ fontSize: "11px" }}>
-                <span style={{ color: COLORS.chalkWhite }}>{formatRating(ratingAverage)}</span>
-                <span style={{ color: COLORS.inkSoft }}> - {ratingValues.length} avis</span>
+              <span style={{ display: "flex", alignSelf: "center" }}>
+                <NavIcon name="star" size={17} color={COLORS.amber} filled />
               </span>
+              <span style={{ fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>{formatRating(ratingAverage)}</span>
+              <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {ratingValues.length} avis</span>
             </div>
           </div>
         )}
