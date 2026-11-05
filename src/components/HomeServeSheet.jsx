@@ -85,7 +85,9 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
       return;
     }
     const timer = setTimeout(() => {
-      searchDrinks(q, 8).then(setResults);
+      // Sans limite explicite : la limite par défaut de searchDrinks, la même que la barre de recherche BibAtlas et « Ajouter un Produit »
+      // de BibaSolo, pour que tous les produits trouvés s'affichent (une limite à 8 laissait croire qu'il n'y en avait que 8).
+      searchDrinks(q).then(setResults);
     }, 350);
     return () => clearTimeout(timer);
   }, [query]);

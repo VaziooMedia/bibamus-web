@@ -339,7 +339,9 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
       return;
     }
     const timer = setTimeout(() => {
-      searchDrinks(query.trim(), 8).then(setRawDrinkResults);
+      // Sans limite explicite : la même recherche, avec la même limite par défaut, que la barre de recherche BibAtlas (SearchScreen),
+      // pour que tous les produits trouvés s'affichent (une limite à 8 laissait croire qu'il n'y en avait que 8).
+      searchDrinks(query.trim()).then(setRawDrinkResults);
     }, 350);
     return () => clearTimeout(timer);
   }, [q, query]);
