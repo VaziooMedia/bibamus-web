@@ -313,7 +313,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
     else setRatingHint((n) => n + 1);
   };
   // Note enregistrée ou retirée : la même confirmation encadrée en rose, en haut de l'écran, que celle d'un check (elle est dessinée par App ;
-  // le titre vient d'ici : « Note confirmée » ou « Note retirée », avec le nom de la marque dessous).
+  // le titre vient d'ici : « Note confirmée » (icône check) ou « Note retirée » (icône croix), avec le nom de la marque dessous).
   const saveMyRating = async (value) => {
     const ok = await rateMyBrand(brand.id, value);
     if (ok) {
@@ -326,7 +326,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
     const ok = await unrateMyBrand(brand.id);
     if (ok) {
       await reloadRatingSummary();
-      if (onRatingConfirmed) onRatingConfirmed({ title: "Note retirée", name: brand.name });
+      if (onRatingConfirmed) onRatingConfirmed({ title: "Note retirée", name: brand.name, icon: "x" });
     }
     return ok;
   };
@@ -422,7 +422,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
               <NavIcon name="star" size={14} color={COLORS.amber} filled />
               <span style={{ fontSize: "11px" }}>
                 <span style={{ color: COLORS.chalkWhite }}>{formatRating(ratingSummary.average)}</span>
-                <span style={{ color: COLORS.chalkWhite }}> - {ratingSummary.count} avis</span>
+                <span style={{ color: COLORS.inkSoft }}> - {ratingSummary.count} avis</span>
               </span>
             </div>
           </div>

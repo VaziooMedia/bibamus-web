@@ -324,7 +324,7 @@ export default function App() {
   // la personne est dans la recherche ou sur la fiche choisie — voir checkFlow.js. Il s'arrête dès qu'elle
   // part ailleurs, pour ne jamais ouvrir une fenêtre de check par surprise sur une fiche ouverte plus tard.
   const [homeCheckFlow, setHomeCheckFlow] = useState(null);
-  const [checkToast, setCheckToast] = useState(null); // { name, key, title? } | null — popup « Check confirmé » (ou « Note confirmée » / « Note retirée » : note d'une marque)
+  const [checkToast, setCheckToast] = useState(null); // { name, key, title?, icon? } | null — popup « Check confirmé » (ou « Note confirmée » / « Note retirée » : note d'une marque)
   useEffect(() => {
     if (homeCheckFlow && !isHomeCheckScreen(homeCheckFlow, screen)) setHomeCheckFlow(null);
   }, [homeCheckFlow, screen]);
@@ -3149,7 +3149,7 @@ export default function App() {
                 brandsDirectory={brandsDirectory}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
-                onRatingConfirmed={({ title, name }) => setCheckToast({ name: name || null, title, key: Date.now() })}
+                onRatingConfirmed={({ title, name, icon }) => setCheckToast({ name: name || null, title, icon, key: Date.now() })}
                 onBack={() => {
                   if (storyResumeState) {
                     setViewedStoryAuthor(storyResumeState.stories);
@@ -3498,7 +3498,7 @@ export default function App() {
           </div>
         </div>
       </ProfileNavContext.Provider>
-      {checkToast && <CheckConfirmedToast key={checkToast.key} name={checkToast.name} title={checkToast.title} onDone={() => setCheckToast(null)} />}
+      {checkToast && <CheckConfirmedToast key={checkToast.key} name={checkToast.name} title={checkToast.title} icon={checkToast.icon} onDone={() => setCheckToast(null)} />}
       {showBarcodeScanner && (
         <BarcodeScannerModal
           myBibroCode={profile.myBibroCode}
