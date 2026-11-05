@@ -149,6 +149,8 @@ La ligne-résumé sous les boutons (« Bixé par X et N autres Bibax », « N Bi
 | `get_pulse_event_preview(p_pulse_event_id)` | Aperçu « Check @ lieu » d'une carte, pour le texte des notifications | Réservée au serveur (déclencheurs de notification) ; non appelable depuis l'app |
 | `toggle_notify_pulse(p_target_code)` | Cloche « Suivre sur Pulse » d'un Bibax | **(base)** |
 | `toggle_follow_venue` / `toggle_follow_drink` | Cloche d'un lieu / d'un produit | **(base)** |
+| `toggle_follow_brand` / `get_brand_follow_status` | Cloche d'une marque (table fermée `brand_follows`) | Connectés seulement ; livrée le 2026-11-05 (`bibamus-sql-cloche-coeur-marques-1-cloche.sql`) ; n'alimente pas encore le fil |
+| `toggle_favorite_brand` / `get_brand_favorite_status` | Cœur « Favoris » d'une marque (table fermée `brand_favorites`) | Connectés seulement ; livrée le 2026-11-05 (`bibamus-sql-cloche-coeur-marques-2-coeur.sql`) ; ne change pas encore le fil |
 | `get_bibax_pulse_activity(p_target_user_id, p_before)` | Activité d'un Bibax sur sa fiche | **(base)** |
 | `get_pulse_moderation_details`, `moderate_pulse_content` | Modération (voir plus bas) | Réservées à `can_moderate()` |
 
@@ -192,7 +194,7 @@ Onglet « BibaPulse » sur les fiches **Produit**, **Marque**, **Lieu** et **Pro
 - Onglet « BibaPulse » de la barre du bas (toujours présent), mais **la barre est cachée sur l'écran BibaPulse lui-même** ; après un check publié depuis l'accueil, retour sur le Pulse avec une confirmation.
 - **Aperçu sur l'accueil** (titre « BibaPulse - Extraits », la fin du titre en gris comme « Bibax - Suggestions rapides ») : les 3 dernières cartes en version réduite, sans réactions (une carte `club_joined` y garde le nom du club cliquable ; une publication libre y tient sur une ligne : le début du texte seul, sans libellé « Publication » ; une publication avec photo et sans texte n'affiche que le nom de l'auteur), masqué si le drapeau `nav_bibapulse_visible` vaut faux. Ce drapeau n'agit pas sur la barre du bas.
 - Onglet « Pulse » dans l'écran d'un salon : fil construit localement à partir de l'état du salon, pas à partir de `pulse_events` — tournées, arrivées et départs, et les checks faits dans le salon (`event.drinkChecks`, y compris ceux qui n'ont pas été publiés dans BibaPulse). Voir `BIBAROOM.md`.
-- Cloche « Suivre sur Pulse » : sur la fiche d'un Bibax, d'un lieu et d'un produit. L'état initial de la cloche d'un Bibax est toujours « éteint » à l'ouverture de sa fiche (la propriété n'est jamais chargée). Pour un produit, aucun script livré ne montre que son suivi alimente le fil principal.
+- Cloche « Suivre sur Pulse » : sur la fiche d'un Bibax, d'un lieu, d'un produit et d'une **marque** (depuis le 2026-11-05). L'état initial de la cloche d'un Bibax est toujours « éteint » à l'ouverture de sa fiche (la propriété n'est jamais chargée). Pour un produit, aucun script livré ne montre que son suivi alimente le fil principal. **Marque** : la cloche et le cœur « Favoris » (icône cœur ; décision de Mehdi du 2026-11-05 : un favori doit faire arriver **en priorité** dans le fil les publications relatives à la marque) sont pour l'instant seulement **enregistrés** en base, sans aucun effet sur le fil ; la priorité dans le fil (fonction `get_pulse_feed`), et ce que veut dire « publications relatives à la marque » (checks de ses produits, publications taguées avec la marque, ou les deux), restent à faire.
 
 ## Notifications in-app
 
