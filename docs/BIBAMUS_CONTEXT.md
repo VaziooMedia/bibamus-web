@@ -1,7 +1,7 @@
 # BIBAMUS — Contexte du projet
 
 > Ce document est la référence générale de Bibamus. Il doit permettre à une nouvelle conversation Claude — ou à toute personne rejoignant le projet — de comprendre rapidement ce qu'est Bibamus sans relire l'historique des échanges. Il reste volontairement une synthèse : le détail de chaque module est dans les documents spécialisés listés en fin de fichier.
-> Dernière mise à jour : 2026-11-05 (BibaSolo : montant facultatif « Offert à quelqu'un » ; 2026-10-24 pour les liens @nom, recherche par @nom, aperçus de partage ; 2026-10-09 pour le reste). Les faits du produit et de la pile technique sont vérifiés contre le code de l'app (`src/`, version `26.32`). Les passages d'intention (vision, public visé) ne sont pas vérifiables dans le code et sont repris tels quels. Ce qui relève d'un autre dépôt ou d'un service externe est marqué **(hors dépôt)**.
+> Dernière mise à jour : 2026-11-05 (BibaSolo : montant facultatif « Offrir », en € ou en jetons ; 2026-10-24 pour les liens @nom, recherche par @nom, aperçus de partage ; 2026-10-09 pour le reste). Les faits du produit et de la pile technique sont vérifiés contre le code de l'app (`src/`, version `26.32`). Les passages d'intention (vision, public visé) ne sont pas vérifiables dans le code et sont repris tels quels. Ce qui relève d'un autre dépôt ou d'un service externe est marqué **(hors dépôt)**.
 
 ---
 
@@ -22,7 +22,7 @@
 | **Home** | Accueil : Stories, BibaLive (salons en cours, section de l'accueil et non un écran), aperçu BibaPulse (3 dernières cartes), suggestions Bibax (3 affichées), six tuiles — BibaGo, BibaPlay, BibaMeet *(« Soon »)*, BibAtlas, BibaCal *(« Soon »)*, BibaPing — et quatre boutons ronds (recherche, BibaSolo, DrinkCheck, PlaceCheck). BibaPulse n'a pas de tuile : il est dans la barre basse |
 | **BibaGo** | Trois cartes : **BibaRoom** (créer / rejoindre), **BibaSolo** et BibArena *(« Soon »)* |
 | **BibaRoom** | Salon partagé (tournées, cagnotte, addition, consommation libre) à trois onglets Room / Pulse / Ping — voir `BIBAROOM.md` |
-| **BibaSolo** | Journal personnel de consommations sans salon : boisson, prix en € ou en jetons (et, en €, un montant facultatif « Offert à quelqu'un » pour un verre payé à autrui), lieu optionnel, calories, BibaZERO et WaterAlert solo ; suivi des jetons (achats, trouvés / offerts, donnés, solde) dans un bloc qu'affiche l'icône « Jetons » de l'en-tête |
+| **BibaSolo** | Journal personnel de consommations sans salon : boisson, prix en € ou en jetons (et un montant facultatif « Offrir », dans la même monnaie, pour un verre payé à d'autres), lieu optionnel, calories, BibaZERO et WaterAlert solo ; suivi des jetons (achats, trouvés / offerts, donnés, solde) dans un bloc qu'affiche l'icône « Jetons » de l'en-tête |
 | **BibaMusic** | Playlist collaborative d'un BibaRoom (Spotify, Bix par morceau) |
 | **BibArena** | Événements de plus grande envergure — **non construit** : carte « Soon », aucun écran |
 | **BibaPulse** | Fil d'activité social — voir `BIBAPULSE.md` |
