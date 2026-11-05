@@ -1,7 +1,7 @@
 // ============================================================
-// Carte « Notes » (tout en haut de l'onglet Biba360 d'une fiche produit) : la note étoilée du produit en trois lignes —
-// You (ma note), Bibax (la moyenne de mes Bibax), Bibamus (la moyenne de tous les utilisateurs, exactement celle de la
-// bannière de la fiche). Les trois mots sont ceux du bloc « Checks », juste en dessous.
+// Carte « Notes » (tout en haut de l'onglet Biba360 d'une fiche produit ou d'une fiche marque) : la note étoilée en trois
+// lignes — You (ma note), Bibax (la moyenne de mes Bibax), Bibamus (la moyenne de tous les utilisateurs, exactement celle de la
+// bannière de la fiche). Les trois mots sont ceux du bloc « Checks » de la fiche produit, juste en dessous.
 //
 // Chaque ligne reçoit soit rien (lecture en cours, échouée, ou personne n'a noté : un tiret), soit une valeur sur 5 ; Bibax et
 // Bibamus reçoivent en plus le nombre d'avis. Les étoiles se remplissent au quart d'étoile (comme les notes elles-mêmes).

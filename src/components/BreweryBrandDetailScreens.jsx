@@ -12,7 +12,9 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { PillTabs } from "./PillTabs.jsx";
-import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce } from "../data/sharedDirectories.js";
+import { NotesCard, formatRating } from "./NotesCard.jsx";
+import { BrandRatingModal } from "./BrandRatingModal.jsx";
+import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand } from "../data/sharedDirectories.js";
 import { customNames } from "../venueLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
@@ -277,6 +279,53 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
     loadDrinksByBrand(brand.name).then(setRelatedDrinks);
   }, [brand.name]);
 
+  // Notes de la marque (étoiles sur 5, comme les produits). ratingSummary = { average, count, myRating, canRate } ; null = lecture en
+  // cours, ou échouée. Il sert à la bannière de la couverture, au bouton étoile et aux lignes You et Bibamus de la carte « Notes ».
+  // bibaxRating = la ligne Bibax ({ average, count }, ou null : un tiret).
+  const [ratingSummary, setRatingSummary] = useState(null);
+  const [bibaxRating, setBibaxRating] = useState(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingHint, setRatingHint] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    setRatingSummary(null);
+    setBibaxRating(null);
+    loadBrandRatingSummary(brand.id).then((s) => {
+      if (!cancelled) setRatingSummary(s);
+    });
+    loadMyBibaxBrandRating(brand.id).then((r) => {
+      if (!cancelled) setBibaxRating(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [brand.id]);
+  // L'explication « il faut avoir checké un produit » s'efface toute seule.
+  useEffect(() => {
+    if (!ratingHint) return undefined;
+    const timer = setTimeout(() => setRatingHint(false), 4500);
+    return () => clearTimeout(timer);
+  }, [ratingHint]);
+  const reloadRatingSummary = () => loadBrandRatingSummary(brand.id).then(setRatingSummary);
+  const handleRatingButton = () => {
+    if (!ratingSummary) {
+      reloadRatingSummary(); // lecture en cours ou échouée : on réessaie
+      return;
+    }
+    if (ratingSummary.canRate) setShowRatingModal(true);
+    else setRatingHint(true);
+  };
+  const saveMyRating = async (value) => {
+    const ok = await rateMyBrand(brand.id, value);
+    if (ok) await reloadRatingSummary();
+    return ok;
+  };
+  const removeMyRating = async () => {
+    const ok = await unrateMyBrand(brand.id);
+    if (ok) await reloadRatingSummary();
+    return ok;
+  };
+
   const [producers, setProducers] = useState([]);
   useEffect(() => {
     if (brand.producerIds?.length > 0) loadBreweriesByIds(brand.producerIds).then(setProducers);
@@ -349,13 +398,62 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
           </div>
           <ShareEntityButton name={brand.name} username={brand.username} />
         </div>
+        {/* Bannière de la note, puis bouton de note : mêmes emplacements que la bannière et le bouton Check de la fiche Produit
+            (en bas de la couverture, le bouton tout à droite). Sans le droit de noter (aucun produit de la marque checké), le
+            bouton est grisé et un appui affiche l'explication (message flottant plus bas). */}
+        {ratingSummary && ratingSummary.count > 0 && (
+          <div style={{ position: "absolute", bottom: "8px", right: "68px", left: "108px" }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "rgba(8,19,31,0.72)",
+                border: `2px solid ${COLORS.amber}`,
+                borderRadius: "8px",
+                padding: "3px 8px",
+              }}
+            >
+              <NavIcon name="star" size={14} color={COLORS.amber} filled />
+              <span style={{ fontSize: "11px" }}>
+                <span style={{ color: COLORS.chalkWhite }}>{formatRating(ratingSummary.average)}</span>
+                <span style={{ color: COLORS.inkSoft }}> - {ratingSummary.count} avis</span>
+              </span>
+            </div>
+          </div>
+        )}
+        <button
+          onClick={handleRatingButton}
+          title="Noter cette marque"
+          aria-label="Noter cette marque"
+          style={{
+            position: "absolute",
+            bottom: "8px",
+            right: "8px",
+            width: "52px",
+            height: "52px",
+            boxSizing: "border-box",
+            borderRadius: "50%",
+            background: "#000",
+            border: `3px solid ${COLORS.amber}`,
+            padding: 0,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: ratingSummary && ratingSummary.canRate ? 1 : 0.45,
+          }}
+        >
+          <NavIcon name="star" size={26} color={COLORS.amber} filled />
+        </button>
       </div>
 
       <div style={{ marginTop: "76px" }}>
-      {/* Même barre d'onglets que la fiche Produit. Biba360 viendra plus tard : pour l'instant Infos et BibaPulse. */}
+      {/* Même barre d'onglets que la fiche Produit. Biba360 ne contient pour l'instant que la carte « Notes » ; les autres blocs viendront. */}
       <PillTabs
         tabs={[
           { key: "infos", label: "Infos" },
+          { key: "biba360", label: { prefix: "Biba", accent: "360" } },
           { key: "bibapulse", label: { prefix: "Biba", accent: "Pulse" } },
         ]}
         active={activeTab}
@@ -533,12 +631,33 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
         </>
       )}
 
+      {/* Carte « Notes » : You (ma note), Bibax (la moyenne de mes Bibax), Bibamus (la moyenne de tous), comme sur la fiche Produit. */}
+      {activeTab === "biba360" && (
+        <NotesCard
+          mine={ratingSummary ? ratingSummary.myRating : null}
+          bibax={bibaxRating}
+          everyone={ratingSummary && ratingSummary.count > 0 ? { average: ratingSummary.average, count: ratingSummary.count } : null}
+        />
+      )}
+
       {/* Le fil de la marque : les checks et découvertes de ses produits, et les publications qui la taguent.
           Les pastilles d'autres marques ne sont pas cliquables ici (pas de pile de retour marque → marque). */}
       {activeTab === "bibapulse" && (
         <EntityPulseSection entityType="brand" entityId={brand.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} onOpenProducer={onOpenBrewery} />
       )}
 
+      {/* Message flottant, au bas de l'écran (il s'efface seul) : une bulle sur la couverture recouvrirait les boutons du haut. */}
+      {ratingHint && (
+        <div
+          role="status"
+          style={{ position: "fixed", left: "50%", transform: "translateX(-50%)", bottom: "calc(96px + env(safe-area-inset-bottom, 0px))", width: "calc(100% - 40px)", maxWidth: "340px", boxSizing: "border-box", background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px", lineHeight: 1.4, color: COLORS.ink, textAlign: "center", zIndex: 120 }}
+        >
+          Checke un produit de cette marque pour pouvoir la noter.
+        </div>
+      )}
+      {showRatingModal && ratingSummary && (
+        <BrandRatingModal brandName={brand.name} myRating={ratingSummary.myRating} onSave={saveMyRating} onRemove={removeMyRating} onClose={() => setShowRatingModal(false)} />
+      )}
       {claimsEnabled && claiming && <ClaimModal entityType="brand" entityId={brand.id} entityName={brand.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 
       {showActionsMenu && (
