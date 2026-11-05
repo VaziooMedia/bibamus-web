@@ -23,7 +23,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { EvolutionCard } from "./EvolutionCard.jsx";
-import { NotesCard, formatRating } from "./NotesCard.jsx";
+import { NotesCard, RatingFraction } from "./NotesCard.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { OTHER_STYLE_TYPES } from "../data/otherStyleLabels.js";
 import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
@@ -559,7 +559,7 @@ export function DrinkDetailScreen({
               <span style={{ display: "flex", alignSelf: "center" }}>
                 <NavIcon name="star" size={17} color={COLORS.amber} filled />
               </span>
-              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>{formatRating(ratingAverage)}</span>
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}><RatingFraction value={ratingAverage} /></span>
               <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {ratingValues.length} avis</span>
             </div>
           </div>

@@ -15,8 +15,21 @@ import { BlockTitle } from "./ui.jsx";
 
 // « 3,25/5 » : deux décimales, virgule. Les notes se donnent au quart d'étoile (0,25 ; 3,25…) : avec une seule décimale,
 // 3,25 s'afficherait « 3,3 » et 0,25 « 0,3 ». C'est aussi le format de la bannière de la fiche (elle l'utilise), pour que les
-// deux ne puissent jamais différer.
+// deux ne puissent jamais différer (la bannière passe par RatingFraction, juste en dessous).
 export const formatRating = (value) => `${value.toFixed(2).replace(".", ",")}/5`;
+
+// La même note pour la bannière de la couverture, avec le « / » en vert fluo et une espace de chaque côté (« 3,25 / 5 »). Mêmes chiffres que
+// formatRating : on le coupe au « / » plutôt que de refaire l'arrondi.
+export function RatingFraction({ value }) {
+  const [number, max] = formatRating(value).split("/");
+  return (
+    <>
+      {number}
+      <span style={{ color: COLORS.amber }}> / </span>
+      {max}
+    </>
+  );
+}
 
 function NoteRow({ label, value, count = null, first = false }) {
   const has = typeof value === "number" && isFinite(value);
