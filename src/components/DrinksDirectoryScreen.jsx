@@ -1,5 +1,5 @@
 // ============================================================
-// Écran "Produits" — catégories, groupement alphabétique,
+// Écran "Produits" — catégories, lettres (rangée de pastilles au-dessus de la liste),
 // recherche et pagination calculés côté serveur. Réécrit pour
 // tenir à l'échelle de plusieurs milliers de produits : rien
 // n'est plus chargé en bloc, chaque vue ne charge que ce dont
@@ -17,6 +17,95 @@ import { AiIcon } from "./AiIcon.jsx";
 
 const PAGE_SIZE = 40;
 const LETTER_THRESHOLD = 20;
+
+// Dernière lettre consultée dans chaque catégorie, le temps de la session : en rouvrant une catégorie, on reprend où l'on était.
+const lastLetterByCategory = new Map();
+
+// Rangée de pastilles des lettres, au-dessus de la liste. Elle défile horizontalement (jamais à la ligne), reste épinglée en haut
+// de l'écran quand on fait défiler la liste, et garde la pastille choisie visible (centrée). Un fondu sur un bord signale qu'il
+// reste des lettres de ce côté.
+function LetterPills({ letters, activeLetter, onSelect }) {
+  const stickyRef = React.useRef(null);
+  const scrollRef = React.useRef(null);
+  const firstRef = React.useRef(true);
+  const [edge, setEdge] = useState({ start: true, end: false });
+  const updateEdge = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setEdge({ start: el.scrollLeft <= 2, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2 });
+  };
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const selected = el.querySelector('[data-selected="true"]');
+    if (selected) {
+      const left = Math.max(0, selected.offsetLeft - el.clientWidth / 2 + selected.offsetWidth / 2);
+      el.scrollTo({ left, behavior: firstRef.current ? "auto" : "smooth" });
+    }
+    firstRef.current = false;
+    updateEdge();
+  }, [activeLetter, letters.length]);
+  // Changer de lettre ramène le haut de la liste sous les pastilles : si l'on avait défilé plus bas, on remonte juste ce qu'il faut
+  // (jamais plus haut que le début de la liste, et on ne descend jamais).
+  const choose = (letter) => {
+    onSelect(letter);
+    const box = stickyRef.current;
+    const list = box ? box.parentElement : null;
+    let scroller = list ? list.parentElement : null;
+    while (scroller && scroller !== document.body) {
+      const overflowY = getComputedStyle(scroller).overflowY;
+      if (overflowY === "auto" || overflowY === "scroll") break;
+      scroller = scroller.parentElement;
+    }
+    if (!list || !scroller || scroller === document.body) return;
+    const listTop = scroller.scrollTop + list.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    if (scroller.scrollTop > listTop) scroller.scrollTo({ top: listTop });
+  };
+  return (
+    <div ref={stickyRef} style={{ position: "sticky", top: 0, zIndex: 5, background: COLORS.paper, margin: "0 -20px 2px", paddingBottom: "2px" }}>
+      <div
+        ref={scrollRef}
+        onScroll={updateEdge}
+        role="group"
+        aria-label="Lettres"
+        style={{ position: "relative", display: "flex", flexWrap: "nowrap", gap: "8px", overflowX: "auto", padding: "8px 20px", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+      >
+        {letters.map((letter) => {
+          const selected = letter === activeLetter;
+          return (
+            <button
+              key={letter}
+              data-selected={selected ? "true" : "false"}
+              aria-pressed={selected}
+              onClick={() => choose(letter)}
+              style={{
+                flex: "0 0 auto",
+                minWidth: "42px",
+                height: "42px",
+                padding: "0 12px",
+                borderRadius: "999px",
+                border: `2px solid ${selected ? COLORS.amber : COLORS.paperAlt}`,
+                background: selected ? COLORS.amber : COLORS.surface,
+                color: selected ? COLORS.paper : COLORS.ink,
+                fontWeight: 700,
+                fontSize: "14.5px",
+                fontFamily: "'Urbanist', sans-serif",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {letter}
+            </button>
+          );
+        })}
+      </div>
+      {!edge.start && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "26px", background: `linear-gradient(to right, ${COLORS.paper}, transparent)`, pointerEvents: "none" }} />}
+      {!edge.end && <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "34px", background: `linear-gradient(to left, ${COLORS.paper}, transparent)`, pointerEvents: "none" }} />}
+    </div>
+  );
+}
 
 export function DrinksDirectoryScreen({
   myBibroCode,
@@ -87,22 +176,40 @@ export function DrinksDirectoryScreen({
     };
   }, [needsStyleLabels]);
 
-  // Regroupement alphabétique — chargé uniquement quand une catégorie assez fournie est
-  // sélectionnée, sans recherche active et sans lettre encore choisie.
+  // Les lettres (rangée de pastilles) — chargées uniquement quand une catégorie assez fournie est ouverte, sans recherche
+  // active : la rangée reste affichée une fois une lettre choisie. Une réponse tardive d'une autre catégorie est ignorée.
   useEffect(() => {
-    if (useLetterTier && !activeLetter) {
-      loadDrinkLetterCounts(activeCategory).then(setLetterCounts);
-    } else {
+    if (!useLetterTier) {
       setLetterCounts([]);
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [useLetterTier, activeLetter, activeCategory, refreshTick]);
+    let cancelled = false;
+    loadDrinkLetterCounts(activeCategory).then((counts) => {
+      if (!cancelled) setLetterCounts(counts);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [useLetterTier, activeCategory, refreshTick]);
 
-  const countForLetter = (letter) => letterCounts.find((l) => l.letter === letter)?.count || 0;
+  // À l'ouverture d'une catégorie à lettres : on reprend la dernière lettre consultée dans cette catégorie (si elle existe
+  // encore), sinon la première lettre de l'alphabet (« 0-9 » ou « ? » seulement s'il n'y en a pas d'autre).
+  useEffect(() => {
+    if (!useLetterTier || activeLetter || letterCounts.length === 0) return;
+    const remembered = lastLetterByCategory.get(activeCategory);
+    const firstAlpha = letterCounts.find((l) => /^[A-Z]$/.test(l.letter));
+    const pick = letterCounts.find((l) => l.letter === remembered) || firstAlpha || letterCounts[0];
+    setActiveLetter(pick.letter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useLetterTier, activeLetter, activeCategory, letterCounts]);
+
+  // On retient la lettre consultée.
+  useEffect(() => {
+    if (useLetterTier && activeLetter) lastLetterByCategory.set(activeCategory, activeLetter);
+  }, [useLetterTier, activeCategory, activeLetter]);
 
   // La page de résultats effectivement affichée — jamais chargée pour la simple vue "choisir une
-  // catégorie" ni pour la vue "choisir une lettre" (ces deux-là n'ont besoin que des comptages
-  // ci-dessus, pas des produits eux-mêmes).
+  // catégorie" (elle n'a besoin que des comptages), ni tant qu'une catégorie à lettres n'a pas sa lettre.
   const showingList = searching || (activeCategory && (!useLetterTier || activeLetter));
 
   // --- Pagination ---------------------------------------------------------------------------
@@ -202,10 +309,6 @@ export function DrinksDirectoryScreen({
     if (searching) return onBack();
     // Arrivé depuis une fiche par une étiquette : la flèche retour ramène à cette fiche.
     if (openedFromDrink && activeTagFilter) return onBack();
-    if (useLetterTier && activeLetter) {
-      setActiveLetter(null);
-      return;
-    }
     // Arrivé depuis une fiche, même après avoir retiré les puces : la catégorie vient de la fiche, on n'est
     // jamais passé par la liste des catégories — la flèche retour ramène directement à la fiche.
     if (openedFromDrink) return onBack();
@@ -331,7 +434,7 @@ export function DrinksDirectoryScreen({
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
           <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>
-            {useLetterTier && activeLetter ? `${drinkTypeLabel(activeCategory)} — ${activeLetter}` : activeCategory ? drinkTypeLabel(activeCategory) : "Produits"}
+            {activeCategory ? drinkTypeLabel(activeCategory) : "Produits"}
           </h1>
         </div>
         <button onClick={() => setRefreshTick((t) => t + 1)} style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} title="Actualiser" aria-label="Actualiser">
@@ -420,40 +523,15 @@ export function DrinksDirectoryScreen({
           )}
           <div style={{ display: "flex", justifyContent: "center", marginTop: "6px" }}>{addButton}</div>
         </div>
-      ) : activeCategory && useLetterTier && !activeLetter ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-          {letterCounts.map(({ letter }) => (
-            <button
-              key={letter}
-              onClick={() => setActiveLetter(letter)}
-              style={{
-                textAlign: "left",
-                background: COLORS.surface,
-                border: `2px solid ${COLORS.paperAlt}`,
-                borderRadius: "10px",
-                padding: "12px 14px",
-                cursor: "pointer",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px" }}>
-                <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-                {letter}
-              </span>
-              <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countForLetter(letter)} →</span>
-            </button>
-          ))}
-        </div>
       ) : activeCategory ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          {countLine}
-          {items.length === 0 && !loadingMore && (
+          {useLetterTier && letterCounts.length > 0 && <LetterPills letters={letterCounts.map((l) => l.letter)} activeLetter={activeLetter} onSelect={setActiveLetter} />}
+          {showingList && countLine}
+          {showingList && items.length === 0 && !loadingMore && (
             <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson dans cette catégorie pour l'instant.</p>
           )}
-          {items.map(renderDrinkRow)}
-          {hasMore && (
+          {showingList && items.map(renderDrinkRow)}
+          {showingList && hasMore && (
             <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
               Chargement...
             </div>
