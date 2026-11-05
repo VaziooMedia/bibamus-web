@@ -29,7 +29,7 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onBack, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, claimsEnabled = true }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onCheckConfirmed, onBack, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
   const [activeTab, setActiveTab] = useState("infos");
   const [justCheckedIn, setJustCheckedIn] = useState(false);
@@ -163,9 +163,14 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
       return;
     }
     setJustCheckedIn(true);
-    const pulseResult = await onCheckIn({ publishToPulse: result.publishToPulse, visibility: result.visibility, content: result.content, drink: result.drink, ratingChange: result.ratingChange });
+    // Si l'enregistrement de l'avis échoue, App prévient déjà la personne (le check, lui, est bien enregistré) : on n'annonce alors pas d'avis.
+    let ratingFailed = false;
+    const pulseResult = await onCheckIn({ publishToPulse: result.publishToPulse, visibility: result.visibility, content: result.content, drink: result.drink, ratingChange: result.ratingChange, onRatingFailed: () => { ratingFailed = true; } });
     if (pulseResult && pulseResult.error) alert("Ton check-in est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
-    if (inHomeCheckFlow) finishHomeFlow({ name: venue.name, published: !!result.publishToPulse && !(pulseResult && pulseResult.error) });
+    // La confirmation rose (dessinée par App) annonce le check, et l'avis s'il a été donné, modifié ou retiré.
+    const detail = result.ratingChange && !ratingFailed ? (result.ratingChange.value == null ? "Avis retiré" : "Avis confirmé") : null;
+    if (inHomeCheckFlow) finishHomeFlow({ name: venue.name, published: !!result.publishToPulse && !(pulseResult && pulseResult.error), detail });
+    else if (onCheckConfirmed) onCheckConfirmed({ name: venue.name, detail });
   };
 
   return (

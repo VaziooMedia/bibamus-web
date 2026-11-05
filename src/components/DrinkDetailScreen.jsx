@@ -23,7 +23,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { EvolutionCard } from "./EvolutionCard.jsx";
-import { NotesCard, formatRating } from "./NotesCard.jsx";
+import { NotesCard, RatingFraction } from "./NotesCard.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { OTHER_STYLE_TYPES } from "../data/otherStyleLabels.js";
 import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
@@ -547,19 +547,20 @@ export function DrinkDetailScreen({
             <div
               style={{
                 display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "rgba(8,19,31,0.72)",
+                alignItems: "baseline",
+                gap: "5px",
+                background: "#000",
                 border: `2px solid ${COLORS.amber}`,
                 borderRadius: "8px",
-                padding: "3px 8px",
+                padding: "5px 10px",
+                maxWidth: "100%",
               }}
             >
-              <NavIcon name="star" size={14} color={COLORS.amber} filled />
-              <span style={{ fontSize: "11px" }}>
-                <span style={{ color: COLORS.chalkWhite }}>{formatRating(ratingAverage)}</span>
-                <span style={{ color: COLORS.inkSoft }}> - {ratingValues.length} avis</span>
+              <span style={{ display: "flex", alignSelf: "center" }}>
+                <NavIcon name="star" size={17} color={COLORS.amber} filled />
               </span>
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}><RatingFraction value={ratingAverage} /></span>
+              <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {ratingValues.length} avis</span>
             </div>
           </div>
         )}

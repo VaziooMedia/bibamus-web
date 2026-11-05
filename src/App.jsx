@@ -324,7 +324,7 @@ export default function App() {
   // la personne est dans la recherche ou sur la fiche choisie — voir checkFlow.js. Il s'arrête dès qu'elle
   // part ailleurs, pour ne jamais ouvrir une fenêtre de check par surprise sur une fiche ouverte plus tard.
   const [homeCheckFlow, setHomeCheckFlow] = useState(null);
-  const [checkToast, setCheckToast] = useState(null); // { name, key } | null — popup « Check confirmé »
+  const [checkToast, setCheckToast] = useState(null); // { name, key, title?, icon?, detail? } | null — popup rose « Check confirmé » (ou « Note confirmée » / « Note retirée » : note d'une marque ou d'un produit ; `detail` : ligne en plus, « Avis confirmé » / « Avis retiré » après le check d'un lieu)
   useEffect(() => {
     if (homeCheckFlow && !isHomeCheckScreen(homeCheckFlow, screen)) setHomeCheckFlow(null);
   }, [homeCheckFlow, screen]);
@@ -1412,7 +1412,10 @@ export default function App() {
       return { ...prev, ratings, ratingDates, ratedServingModes };
     });
     const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
-    if (drink) unrateMyDrink(drinkId);
+    if (drink) {
+      unrateMyDrink(drinkId);
+      setCheckToast({ name: drink.name || null, title: "Note retirée", icon: "x", key: Date.now() });
+    }
   };
 
   // Même chose que rateDrink/unrateDrink, mais prenant le vrai produit directement en
@@ -1427,8 +1430,9 @@ export default function App() {
     }
   };
 
-  const unrateDrinkStandalone = (drinkId) => {
+  const unrateDrinkStandalone = (drinkId, drink = null) => {
     unrateMyDrink(drinkId);
+    setCheckToast({ name: (drink && drink.name) || null, title: "Note retirée", icon: "x", key: Date.now() });
   };
 
   const toggleTastedServingMode = (drinkId, mode) => {
@@ -1706,7 +1710,7 @@ export default function App() {
   // Si publishToPulse est faux, rien n'est publié mais le passage (et le produit) sont bien
   // enregistrés. L'émission d'événement ci-dessous ne sert qu'aux statistiques (skipPulse).
   // Renvoie le résultat de la publication ({ ok } ou { error }), ou null si rien n'a été publié.
-  const checkInVenue = async (venueId, { publishToPulse = true, visibility = null, content = null, drink = null, ratingChange = null } = {}) => {
+  const checkInVenue = async (venueId, { publishToPulse = true, visibility = null, content = null, drink = null, ratingChange = null, onRatingFailed = null } = {}) => {
     // Marquage local existant, conservé tel quel (présence en temps réel sur cet appareil).
     setCheckedInVenueId(venueId);
     emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId, skipPulse: true });
@@ -1718,7 +1722,10 @@ export default function App() {
     // le retirer, null s'il est inchangé. Un échec n'annule ni le check ni sa publication : on prévient l'utilisateur.
     if (ratingChange) {
       const ratingResult = ratingChange.value == null ? await removeVenueRating(venueId) : await submitVenueRating(venueId, ratingChange.value);
-      if (ratingResult && ratingResult.error) alert("Ton check-in est enregistré, mais ton avis n'a pas pu l'être. Tu pourras le donner lors d'un prochain check.");
+      if (ratingResult && ratingResult.error) {
+        if (onRatingFailed) onRatingFailed();
+        alert("Ton check-in est enregistré, mais ton avis n'a pas pu l'être. Tu pourras le donner lors d'un prochain check.");
+      }
     }
     if (drink) return checkInDrink(drink.id, venueId, { publishToPulse, visibility, content });
     if (!publishToPulse) return null;
@@ -1773,7 +1780,7 @@ export default function App() {
   const finishHomeCheck = (info) => {
     setHomeCheckFlow(null);
     if (!info) return;
-    setCheckToast({ name: info.name || null, key: Date.now() });
+    setCheckToast({ name: info.name || null, detail: info.detail || null, key: Date.now() });
     setScreen(info.published ? "bibaPulse" : "home");
   };
 
@@ -2331,6 +2338,7 @@ export default function App() {
                 onCheckIn={(opts) => checkInVenue(viewedVenueId, opts)}
                 autoOpenCheck={homeCheckFlow === "venue"}
                 onCheckFlowFinished={finishHomeCheck}
+                onCheckConfirmed={({ name, detail }) => setCheckToast({ name: name || null, detail: detail || null, key: Date.now() })}
                 onBack={() => {
                   if (storyResumeState) {
                     setViewedStoryAuthor(storyResumeState.stories);
@@ -3149,6 +3157,7 @@ export default function App() {
                 brandsDirectory={brandsDirectory}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
+                onRatingConfirmed={({ title, name, icon }) => setCheckToast({ name: name || null, title, icon, key: Date.now() })}
                 onBack={() => {
                   if (storyResumeState) {
                     setViewedStoryAuthor(storyResumeState.stories);
@@ -3497,7 +3506,7 @@ export default function App() {
           </div>
         </div>
       </ProfileNavContext.Provider>
-      {checkToast && <CheckConfirmedToast key={checkToast.key} name={checkToast.name} onDone={() => setCheckToast(null)} />}
+      {checkToast && <CheckConfirmedToast key={checkToast.key} name={checkToast.name} title={checkToast.title} detail={checkToast.detail} icon={checkToast.icon} onDone={() => setCheckToast(null)} />}
       {showBarcodeScanner && (
         <BarcodeScannerModal
           myBibroCode={profile.myBibroCode}

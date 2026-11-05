@@ -1,7 +1,7 @@
 # BIBAX — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-11-04 (recherche d'un Bibax : règle de recherche commune) ; 2026-10-24 (liens @nom, recherche par @nom ; 2026-10-13 pour le reste). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
+> Dernière mise à jour : 2026-11-05 (`get_my_bibax_brand_rating`, ligne « Bibax » des notes d'une marque) ; 2026-11-04 (recherche d'un Bibax : règle de recherche commune) ; 2026-10-24 (liens @nom, recherche par @nom ; 2026-10-13 pour le reste). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
 
 ---
 
@@ -53,6 +53,7 @@ Colonnes visibles dans les scripts : `requester_id`, `requestee_id`, `status` (`
 | `get_taggable_bibax(p_ids, p_surface)` | Bibax qu'on peut taguer | Voir « Tags » |
 | `get_my_bibax_drink_checks(p_drink_id)` | Checks de mes Bibax sur un produit (onglet Biba360 d'une fiche produit) | Bibax confirmés seulement, uniquement ceux dont `share_stats_drinks` est vrai, jamais une personne bloquée ; voir `DATABASE.md` |
 | `get_my_bibax_drink_rating(p_drink_id)` | Moyenne des notes de mes Bibax pour un produit (ligne « Bibax » de la carte « Notes », onglet Biba360) | Bibax confirmés seulement, uniquement ceux dont `share_stats_drinks` est vrai, jamais une personne bloquée ni soi-même ; ne rend que deux nombres (moyenne, nombre d'avis) ; voir `DATABASE.md` |
+| `get_my_bibax_brand_rating(p_brand_id)` | Moyenne des notes de mes Bibax pour une marque (ligne « Bibax » de la carte « Notes », onglet Biba360 d'une fiche Marque) | Mêmes règles que `get_my_bibax_drink_rating` : Bibax confirmés seulement, uniquement ceux dont `share_stats_drinks` est vrai, jamais une personne bloquée ni soi-même ; ne rend que deux nombres (moyenne, nombre d'avis) ; les notes viennent de la table fermée `brand_ratings` ; voir `DATABASE.md` |
 | `get_my_bibax_drink_venues(p_drink_id)` | Lieux où mes Bibax consomment un produit (classement « Mes Bibax » de la carte « Où ce produit est le plus consommé ? », onglet Biba360) | Bibax confirmés seulement, uniquement ceux dont `share_stats_drinks` **et** `share_stats_venues` sont vrais, jamais une personne bloquée ; ne rend que des lieux et des nombres ; voir `DATABASE.md` |
 
 Aucune de ces fonctions n'a de script livré : leur corps **(base)** n'est pas vérifié. Les exceptions sont `get_bibax_suggestions` et `search_bibax_by_name` (scripts `bibamus-sql-fix-bibax-roles-*`) `get_my_bibax_drink_checks` (script `bibamus-sql-biba360-1-checks-de-mes-bibax.sql`), `get_my_bibax_drink_rating` (script `bibamus-sql-biba360-12-note-de-mes-bibax.sql`), `get_my_bibax_drink_venues` (script `bibamus-sql-biba360-10-ou-le-produit-est-consomme.sql`) et `get_bibax_stats_drinks` (script `bibamus-sql-biba360-4-stats-boissons-d-un-bibax.sql`). Les corps de `get_bibax_stats_overview`, `_records` et `_venues` ont été relevés le 2026-10-23.

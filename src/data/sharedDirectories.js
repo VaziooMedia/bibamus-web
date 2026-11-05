@@ -3681,6 +3681,79 @@ export async function loadMyBibaxDrinkRating(drinkId) {
   return { average: avg, count };
 }
 
+// --- Notes des Marques (étoiles sur 5, au quart d'étoile, comme les produits) ---
+// Les notes sont gardées dans la table fermée brand_ratings : l'app n'y accède que par les fonctions serveur ci-dessous (scripts
+// bibamus-sql-notes-marques-1-table, -2-fonctions et -3-note-de-mes-bibax). On ne peut noter une marque qu'après avoir enregistré
+// un verre d'un de ses produits (check de fiche ou d'accueil, ou journal BibaSolo) : la lecture dit si c'est le cas (canRate).
+
+// Une seule lecture pour la bannière et la carte « Notes » : { average, count, myRating, canRate }. average vaut null quand count
+// vaut 0 ; myRating vaut null si je n'ai pas noté ; canRate dit si j'ai le droit de noter. Rend null si la lecture échoue ou si la
+// réponse est inattendue : on ne confond pas une erreur avec « aucune note ».
+export async function loadBrandRatingSummary(brandId) {
+  const { data, error } = await supabase.rpc("get_brand_rating_summary", { p_brand_id: brandId });
+  if (error || !Array.isArray(data) || data.length !== 1 || !data[0]) {
+    console.error("loadBrandRatingSummary:", error || "réponse inattendue");
+    return null;
+  }
+  const { rating_avg: avg, rating_count: count, my_rating: mine, can_rate: canRate } = data[0];
+  if (!Number.isInteger(count) || count < 0) {
+    console.error("loadBrandRatingSummary: nombre d'avis inattendu", count);
+    return null;
+  }
+  if (count > 0 && (typeof avg !== "number" || !isFinite(avg) || avg < 0 || avg > 5)) {
+    console.error("loadBrandRatingSummary: moyenne inattendue", avg);
+    return null;
+  }
+  const myRating = mine == null ? null : Number(mine);
+  if (myRating !== null && (!isFinite(myRating) || myRating < 0.25 || myRating > 5)) {
+    console.error("loadBrandRatingSummary: ma note inattendue", mine);
+    return null;
+  }
+  return { average: count > 0 ? avg : null, count, myRating, canRate: canRate === true };
+}
+
+// Ligne « Bibax » de la carte « Notes » d'une marque : la moyenne des notes de MES Bibax (confirmés, qui partagent « Boissons »)
+// et leur nombre. Même forme et mêmes précautions que loadMyBibaxDrinkRating : { average, count } ou null si la lecture échoue.
+export async function loadMyBibaxBrandRating(brandId) {
+  const { data, error } = await supabase.rpc("get_my_bibax_brand_rating", { p_brand_id: brandId });
+  if (error || !Array.isArray(data) || data.length !== 1 || !data[0]) {
+    console.error("loadMyBibaxBrandRating:", error || "réponse inattendue");
+    return null;
+  }
+  const { rating_avg: avg, rating_count: count } = data[0];
+  if (!Number.isInteger(count) || count < 0) {
+    console.error("loadMyBibaxBrandRating: nombre d'avis inattendu", count);
+    return null;
+  }
+  if (count === 0) return { average: null, count: 0 };
+  if (typeof avg !== "number" || !isFinite(avg) || avg < 0 || avg > 5) {
+    console.error("loadMyBibaxBrandRating: moyenne inattendue", avg);
+    return null;
+  }
+  return { average: avg, count };
+}
+
+// Noter une marque (ou remplacer sa note) : rend true si l'enregistrement a réussi, false sinon (erreur consignée dans la console).
+// Le serveur refuse une note hors de 0,25 à 5 (au quart d'étoile) et une personne qui n'a checké aucun produit de la marque.
+export async function rateMyBrand(brandId, rating) {
+  const { error } = await supabase.rpc("rate_my_brand", { p_brand_id: brandId, p_rating: rating });
+  if (error) {
+    console.error("rateMyBrand:", error);
+    return false;
+  }
+  return true;
+}
+
+// Retire MA note de cette marque.
+export async function unrateMyBrand(brandId) {
+  const { error } = await supabase.rpc("unrate_my_brand", { p_brand_id: brandId });
+  if (error) {
+    console.error("unrateMyBrand:", error);
+    return false;
+  }
+  return true;
+}
+
 // « Où ce produit est le plus consommé ? » (onglet Biba360) : jusqu'à 5 lieux de l'annuaire, du plus au moins consommé,
 // avec le nombre de consommations (la vue consumption_events : checks, BibaSolo, salons). Le serveur n'envoie jamais les
 // lieux rapides « @home » / « @event », ni les verres sans lieu — on les écarte quand même ici : un « @… » n'est pas un

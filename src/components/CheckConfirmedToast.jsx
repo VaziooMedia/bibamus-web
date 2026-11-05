@@ -1,12 +1,12 @@
 // ============================================================
-// Petite popup de confirmation d'un check (parcours depuis l'accueil). Disparaît toute seule après
-// 2,5 secondes ; un tap la ferme tout de suite.
+// Petite popup de confirmation, encadrée en rose, en haut de l'écran : un check (« Check confirmé », parcours depuis l'accueil, salon,
+// BibaSolo) ou la note d'une marque (« Note confirmée » / « Note retirée » : `title` ; `icon` : le check par défaut, une croix pour « Note retirée » ; `detail` : une ligne en plus sous le nom, par exemple « Avis confirmé » après le check d'un lieu). Disparaît toute seule après 2,5 secondes ; un tap la ferme tout de suite.
 // ============================================================
 import React, { useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 
-export function CheckConfirmedToast({ name, onDone, durationMs = 2500 }) {
+export function CheckConfirmedToast({ name, title = "Check confirmé", detail = null, icon = "check", onDone, durationMs = 2500 }) {
   // onDone est relu à chaque rendu sans relancer le minuteur : App se redessine souvent, et le minuteur
   // ne doit pas repartir de zéro à chaque fois (la popup ne disparaîtrait jamais).
   const doneRef = useRef(onDone);
@@ -40,11 +40,12 @@ export function CheckConfirmedToast({ name, onDone, durationMs = 2500 }) {
       }}
     >
       <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: COLORS.pinkFluo, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <NavIcon name="check" size={16} color="#000" />
+        <NavIcon name={icon} size={16} color="#000" />
       </span>
       <span style={{ minWidth: 0 }}>
-        <span style={{ display: "block", fontWeight: 800, fontSize: "14px", color: COLORS.ink }}>Check confirmé</span>
+        <span style={{ display: "block", fontWeight: 800, fontSize: "14px", color: COLORS.ink }}>{title}</span>
         {name && <span style={{ display: "block", fontSize: "12.5px", color: COLORS.inkSoft, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>}
+        {detail && <span style={{ display: "block", fontSize: "12.5px", color: COLORS.inkSoft }}>{detail}</span>}
       </span>
     </div>
   );

@@ -40,7 +40,7 @@ export function VenueRatingDisplay({ venueId }) {
         display: "inline-flex",
         alignItems: "baseline",
         gap: "5px",
-        background: "rgba(8,19,31,0.72)",
+        background: "#000",
         border: `2px solid ${COLORS.amber}`,
         borderRadius: "8px",
         padding: "5px 10px",
