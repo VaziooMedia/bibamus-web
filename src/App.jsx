@@ -181,6 +181,8 @@ function resolveEntity(directory, id) {
   return current;
 }
 
+const MIN_SPLASH_MS = 2000;
+
 export default function App() {
   // Permet d'accéder directement à la suppression de compte via l'URL bibamus.app/delete-account
   // (exigence Google : accessible même sans ouvrir l'app normalement) — la connexion reste
@@ -243,6 +245,13 @@ export default function App() {
   // connecté. authChecked distingue "en cours de vérification" de "vérifié, pas connecté".
   const [session, setSession] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  // Au démarrage, l'écran de chargement reste au moins le temps que l'animation de la bouteille
+  // arrive à son terme, même si l'app est prête avant.
+  const [splashDone, setSplashDone] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashDone(true), MIN_SPLASH_MS);
+    return () => clearTimeout(timer);
+  }, []);
   const [featureFlags, setFeatureFlags] = useState({});
 
   useEffect(() => {
@@ -1866,7 +1875,7 @@ export default function App() {
     return trimmed;
   };
 
-  if (!authChecked) {
+  if (!authChecked || !splashDone) {
     return <LoadingScreen />;
   }
 
