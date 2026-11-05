@@ -69,11 +69,12 @@ const STYLES = `
 `;
 
 export function LoadingScreen() {
+  // Calé sur la zone réellement visible (100vh dépasse l'écran sur iPhone) ; la marge basse remonte l'animation.
   return (
     <div
       role="status"
       aria-label="Chargement"
-      style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.paper, overflow: "hidden" }}
+      style={{ position: "fixed", inset: 0, paddingBottom: "12vh", display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.paper, overflow: "hidden" }}
     >
       <style>{STYLES}</style>
       <svg viewBox="0 0 380 966" aria-hidden="true" style={{ display: "block", height: "min(40vh, 300px)", width: "auto", overflow: "visible" }}>
