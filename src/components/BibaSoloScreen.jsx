@@ -1406,7 +1406,7 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
   );
 }
 
-export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onCheckConfirmed, onOpenDrink, onBack, onAddDrink }) {
+export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onCheckConfirmed, onOpenDrink, onBack, onAddDrink, startInHistory = false, onHistoryOpenChange }) {
   const [checkins, setCheckins] = useState(null); // période en cours (de 6 h à 6 h) : c'est elle que comptent les compteurs
   const [previousCheckins, setPreviousCheckins] = useState(null); // période d'avant, affichée grisée sous la liste
   const [previousPeriodStart, setPreviousPeriodStart] = useState(null); // début (6 h) de la période d'avant : sa date s'affiche dans la barre de séparation
@@ -1425,7 +1425,13 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   }, [periodInfoOpen]);
   const [recentDrinkIds, setRecentDrinkIds] = useState([]);
   const [adding, setAdding] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
+  // L'écran est démonté quand on ouvre une fiche produit : l'Historique ouvert est donc signalé à l'application (onHistoryOpenChange), qui nous le
+  // rend au retour de la fiche (startInHistory) pour qu'on retombe sur l'Historique et non sur l'accueil de BibaSolo.
+  const [historyOpen, setHistoryOpen] = useState(!!startInHistory);
+  useEffect(() => {
+    onHistoryOpenChange?.(historyOpen);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyOpen]);
   const [checkingDrinks, setCheckingDrinks] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   // Jetons — l'icône de l'en-tête affiche / masque le bloc Jetons ; ce choix est retenu sur cet appareil (comme le lieu actuel).

@@ -315,6 +315,9 @@ export default function App() {
   // cadre ouvert). Effacé quand on quitte la carte ou qu'on l'ouvre depuis l'annuaire : elle repart alors de zéro.
   const [venueMapView, setVenueMapView] = useState(null);
   const [screenBeforeBibaSolo, setScreenBeforeBibaSolo] = useState("sessionHub");
+  // L'Historique de BibaSolo est-il ouvert ? Tenu ici car l'écran BibaSolo est démonté quand on ouvre une fiche produit : au retour de la fiche,
+  // il se rouvre directement sur l'Historique (voir `startInHistory` plus bas).
+  const [bibaSoloHistoryOpen, setBibaSoloHistoryOpen] = useState(false);
   const [viewedClubId, setViewedClubId] = useState(null);
   // Écran où ramène la flèche retour de la page d'un club (liste des clubs, ou fil de notifications quand on y arrive par une invitation).
   const [clubDetailBack, setClubDetailBack] = useState("bibaClubsList");
@@ -3711,6 +3714,10 @@ export default function App() {
                   setScreen("drinkDetail");
                 }}
                 onBack={() => setScreen(screenBeforeBibaSolo)}
+                // Retour d'une fiche produit ouverte depuis l'Historique : on reprend sur l'Historique. Toute autre arrivée sur BibaSolo (accueil, menu…)
+                // démarre sur l'accueil de BibaSolo, même si un ancien Historique était resté marqué ouvert (screenRef = l'écran d'avant).
+                startInHistory={bibaSoloHistoryOpen && screenRef.current === "drinkDetail"}
+                onHistoryOpenChange={setBibaSoloHistoryOpen}
               />
             )}
             {screen === "notificationsFeed" && (
