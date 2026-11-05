@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { COLORS, BEER_STYLE_TAGS, BEER_TYPES, DRINK_VOLUMES_CL, MENU_CATEGORIES, SERVING_MODE_LABELS, SOFT_DRINK_TAGS, SPIRIT_TAGS, VOLUME_DISPLAY_TYPES, WINE_TAGS } from "../constants.js";
 import { BrewerySearchSelect } from "./BrewerySearchSelect.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
-import { capitalizeFirst, drinkTypeLabel, kcalForDrink } from "../utils.js";
+import { capitalizeFirst, displayedAbv, drinkTypeLabel, kcalForDrink } from "../utils.js";
 
 export function DrinkRow({
   drink,
@@ -47,10 +47,10 @@ export function DrinkRow({
   // ABV is worth showing at a glance; type/producer/kcal are visible in the expanded detail if
   // needed, but not cluttering the summary line.
   const summaryBits = forceLocked
-    ? [drink.abv != null ? `${drink.abv.toFixed(1)}% ABV` : null].filter(Boolean)
+    ? [displayedAbv(drink) != null ? `${drink.abv.toFixed(1)}% ABV` : null].filter(Boolean)
     : [
         drink.type ? drinkTypeLabel(drink.type) : null,
-        drink.abv != null ? `${drink.abv.toFixed(1)}% ABV` : null,
+        displayedAbv(drink) != null ? `${drink.abv.toFixed(1)}% ABV` : null,
         drink.servingMode ? SERVING_MODE_LABELS[drink.servingMode] : null,
         beerTags.length ? beerTags.join(", ") : null,
         drink.brewery || null,
@@ -258,7 +258,7 @@ export function DrinkRow({
           <div>
             <label style={fieldLabelStyle}>Degré d'alcool (% ABV)</label>
             {locked ? (
-              <div style={lockedValueStyle}>{drink.abv != null ? `${drink.abv.toFixed(1)}% ABV` : "—"}</div>
+              <div style={lockedValueStyle}>{displayedAbv(drink) != null ? `${drink.abv.toFixed(1)}% ABV` : "—"}</div>
             ) : (
               <input
                 type="text"

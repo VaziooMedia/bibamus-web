@@ -10,7 +10,7 @@ import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } f
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
-import { capitalizeFirst, drinkTypeLabel, isAlcoholicDrink, nextId, makeSearchMatcher, entityNames, flattenMenu, findMenuEntryById, defaultVolumeText, defaultServingModeText, canBeShot, startsAsShot, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
+import { capitalizeFirst, displayedAbv, drinkTypeLabel, isAlcoholicDrink, nextId, makeSearchMatcher, entityNames, flattenMenu, findMenuEntryById, defaultVolumeText, defaultServingModeText, canBeShot, startsAsShot, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { loadSalon } from "../data/salons.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
@@ -47,7 +47,7 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
   const count = countForFriendDrink(activeFriendId, selected.id);
   const hasVolume = VOLUME_DISPLAY_TYPES.includes(selected.type) && selected.volumeCl;
   const hasMultipleVolumes = variants.length > 1;
-  const hasInfo = selected.abv != null || selected.brewery || getDrinkBadgeItems(selected, { size: 10 }).length > 0;
+  const hasInfo = displayedAbv(selected) != null || selected.brewery || getDrinkBadgeItems(selected, { size: 10 }).length > 0;
 
   return (
     <div
@@ -145,8 +145,8 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
       {showInfo && (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
-            {selected.abv != null && <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{selected.abv.toFixed(1)}% ABV</span>}
-            {selected.abv != null && getDrinkBadgeItems(selected, { size: 10 }).length > 0 && (
+            {displayedAbv(selected) != null && <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{selected.abv.toFixed(1)}% ABV</span>}
+            {displayedAbv(selected) != null && getDrinkBadgeItems(selected, { size: 10 }).length > 0 && (
               <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
             )}
             <DrinkBadges drink={selected} size={10} />

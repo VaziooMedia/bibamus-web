@@ -18,7 +18,7 @@ import { getDrinkFeatureItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { formatDrinkFieldValue, formatMoney, formatWeekdayDDMMYYYY, isAtpDrink } from "../utils.js";
+import { displayedAbv, formatDrinkFieldValue, formatMoney, formatWeekdayDDMMYYYY, isAtpDrink } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -647,7 +647,7 @@ export function DrinkDetailScreen({
 
         {activeTab === "infos" && (
           <>
-        {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasCharacteristics || linkedBrand || linkedProducers.length > 0) && (
+        {(drink.originCity || drink.originRegion || drink.nationality || displayedAbv(drink) != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasCharacteristics || linkedBrand || linkedProducers.length > 0) && (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
             <div style={{ fontSize: "13px" }}>
               {[
@@ -681,12 +681,12 @@ export function DrinkDetailScreen({
                     </div>
                   ),
                 },
-                (drink.abv != null || drink.ibu != null || drink.colorEbc != null) && {
+                (displayedAbv(drink) != null || drink.ibu != null || drink.colorEbc != null) && {
                   key: "abv",
                   sep: "green",
                   node: (
                   <div key="abv" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                    {drink.abv != null && (
+                    {displayedAbv(drink) != null && (
                       <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         {/* Boîte de 15px, comme les icônes ci-dessous, pour que le point s'aligne bien sur elles */}
                         <span style={{ width: "15px", height: "15px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -695,7 +695,7 @@ export function DrinkDetailScreen({
                         {drink.abv}% vol. ABV
                       </span>
                     )}
-                    {drink.abv != null && (drink.ibu != null || drink.colorEbc != null) && (
+                    {displayedAbv(drink) != null && (drink.ibu != null || drink.colorEbc != null) && (
                       <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block" }} />
                     )}
                     {drink.ibu != null && <span>{drink.ibu} IBU</span>}
@@ -777,7 +777,7 @@ export function DrinkDetailScreen({
                 ))}
             </div>
 
-            {(drink.originCity || drink.originRegion || drink.nationality || drink.abv != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasCharacteristics) && (linkedBrand || linkedProducers.length > 0) && (
+            {(drink.originCity || drink.originRegion || drink.nationality || displayedAbv(drink) != null || drink.launchYear || drink.ibu != null || drink.colorEbc != null || hasCharacteristics) && (linkedBrand || linkedProducers.length > 0) && (
               <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />
             )}
 

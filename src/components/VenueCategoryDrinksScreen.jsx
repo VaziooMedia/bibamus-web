@@ -7,7 +7,7 @@ import { COLORS, SERVING_MODE_LABELS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
-import { resolveMenuItem, formatMoney, flattenMenu, getAlcoholTierBadge } from "../utils.js";
+import { resolveMenuItem, formatMoney, flattenMenu, displayedAbv, displayedAlcoholTier } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
@@ -48,7 +48,7 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {items.map((d) => {
-            const alcoholTier = getAlcoholTierBadge(d.abv);
+            const alcoholTier = displayedAlcoholTier(d);
             const priceText = formatMoney(d.price || 0, venue?.defaultCurrency);
             // Sépare le nombre du symbole/mot de devise pour styler ce dernier plus petit et grisé.
             const priceParts = priceText.split(" ");
@@ -63,7 +63,7 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
                 </span>
               ) : null,
               d.nationality ? <CountryFlagImg key="flag" country={d.nationality} size={16} /> : null,
-              d.abv != null ? (
+              displayedAbv(d) != null ? (
                 <span key="abv" style={{ fontSize: "11px", color: COLORS.inkSoft }}>
                   {d.abv.toFixed(1)}% ABV
                 </span>

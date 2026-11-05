@@ -521,6 +521,18 @@ export function getAlcoholTierBadge(abv) {
   return null;
 }
 
+// « Softs & Eaux » : sans alcool par définition. Les anciens produits de cette catégorie, encodés avant la refonte des fiches, ont un
+// degré à 0 (les nouveaux n'en ont pas) : ce 0 ne s'affiche pas, ni en « 0.0% ABV » ni en pastille « 0.0% » (DrinkDisplay n'affiche déjà
+// aucune pastille d'alcool pour ces catégories). Un degré au-dessus de 0 (rare) reste affiché. Les autres catégories sont inchangées.
+// `drink` : un produit du répertoire ou une entrée de carte déjà résolue (resolveMenuItem), qui porte `type` et `abv`.
+export const displayedAbv = (drink) => {
+  const n = drink?.abv;
+  if (n == null) return null;
+  return drink.type === "Softs & Eaux" && !(n > 0) ? null : n;
+};
+// La pastille d'alcool (0.0 % / Alcohol free / Alcohol low) d'un produit : aucune pour un Soft & Eau.
+export const displayedAlcoholTier = (drink) => (drink?.type === "Softs & Eaux" ? null : getAlcoholTierBadge(drink?.abv));
+
 
 export function drinkSummaryParts(d, includeType = true) {
   const abvText = d.abv != null ? `${d.abv.toFixed(1)}% ABV` : null;
