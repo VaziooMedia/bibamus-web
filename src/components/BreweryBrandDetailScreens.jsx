@@ -2,7 +2,7 @@
 // Fiches détaillées d'une brasserie/producteur et d'une marque
 // — copiées telles quelles depuis le prototype Claude.
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { COLORS, BRAND_TYPES, BRAND_CLASSIFICATIONS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
@@ -14,6 +14,7 @@ import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { NotesCard, formatRating } from "./NotesCard.jsx";
 import { BrandRatingModal } from "./BrandRatingModal.jsx";
+import { HintBubble } from "./HintBubble.jsx";
 import { loadDrinksByBrewery, loadDrinksByBrand, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand } from "../data/sharedDirectories.js";
 import { customNames } from "../venueLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
@@ -267,7 +268,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onOpenVenue, claimsEnabled = true }) {
+export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onOpenVenue, onRated, claimsEnabled = true }) {
   const [activeTab, setActiveTab] = useState("infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
@@ -285,7 +286,9 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
   const [ratingSummary, setRatingSummary] = useState(null);
   const [bibaxRating, setBibaxRating] = useState(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
-  const [ratingHint, setRatingHint] = useState(false);
+  // ratingHint : 0 = pas de bulle ; sinon un compteur, qui change à chaque appui sur le bouton grisé (la bulle repart de zéro).
+  const [ratingHint, setRatingHint] = useState(0);
+  const ratingButtonRef = useRef(null);
   useEffect(() => {
     let cancelled = false;
     setRatingSummary(null);
@@ -300,12 +303,6 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
       cancelled = true;
     };
   }, [brand.id]);
-  // L'explication « il faut avoir checké un produit » s'efface toute seule.
-  useEffect(() => {
-    if (!ratingHint) return undefined;
-    const timer = setTimeout(() => setRatingHint(false), 4500);
-    return () => clearTimeout(timer);
-  }, [ratingHint]);
   const reloadRatingSummary = () => loadBrandRatingSummary(brand.id).then(setRatingSummary);
   const handleRatingButton = () => {
     if (!ratingSummary) {
@@ -313,11 +310,15 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
       return;
     }
     if (ratingSummary.canRate) setShowRatingModal(true);
-    else setRatingHint(true);
+    else setRatingHint((n) => n + 1);
   };
+  // Note enregistrée : la même confirmation encadrée en rose, en haut de l'écran, que celle d'un check (elle est dessinée par App).
   const saveMyRating = async (value) => {
     const ok = await rateMyBrand(brand.id, value);
-    if (ok) await reloadRatingSummary();
+    if (ok) {
+      await reloadRatingSummary();
+      if (onRated) onRated({ name: brand.name });
+    }
     return ok;
   };
   const removeMyRating = async () => {
@@ -400,7 +401,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
         </div>
         {/* Bannière de la note, puis bouton de note : mêmes emplacements que la bannière et le bouton Check de la fiche Produit
             (en bas de la couverture, le bouton tout à droite). Sans le droit de noter (aucun produit de la marque checké), le
-            bouton est grisé et un appui affiche l'explication (message flottant plus bas). */}
+            bouton est grisé et un appui affiche l'explication (bulle accrochée au bouton). */}
         {ratingSummary && ratingSummary.count > 0 && (
           <div style={{ position: "absolute", bottom: "8px", right: "68px", left: "108px" }}>
             <div
@@ -417,12 +418,13 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
               <NavIcon name="star" size={14} color={COLORS.amber} filled />
               <span style={{ fontSize: "11px" }}>
                 <span style={{ color: COLORS.chalkWhite }}>{formatRating(ratingSummary.average)}</span>
-                <span style={{ color: COLORS.inkSoft }}> - {ratingSummary.count} avis</span>
+                <span style={{ color: COLORS.chalkWhite }}> - {ratingSummary.count} avis</span>
               </span>
             </div>
           </div>
         )}
         <button
+          ref={ratingButtonRef}
           onClick={handleRatingButton}
           title="Noter cette marque"
           aria-label="Noter cette marque"
@@ -646,14 +648,11 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
         <EntityPulseSection entityType="brand" entityId={brand.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} onOpenProducer={onOpenBrewery} />
       )}
 
-      {/* Message flottant, au bas de l'écran (il s'efface seul) : une bulle sur la couverture recouvrirait les boutons du haut. */}
-      {ratingHint && (
-        <div
-          role="status"
-          style={{ position: "fixed", left: "50%", transform: "translateX(-50%)", bottom: "calc(96px + env(safe-area-inset-bottom, 0px))", width: "calc(100% - 40px)", maxWidth: "340px", boxSizing: "border-box", background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px", lineHeight: 1.4, color: COLORS.ink, textAlign: "center", zIndex: 120 }}
-        >
+      {/* Bulle accrochée au bouton étoile grisé (elle s'efface seule) : pourquoi on ne peut pas encore noter. */}
+      {ratingHint > 0 && (
+        <HintBubble key={ratingHint} anchorRef={ratingButtonRef} onClose={() => setRatingHint(0)}>
           Checke un produit de cette marque pour pouvoir la noter.
-        </div>
+        </HintBubble>
       )}
       {showRatingModal && ratingSummary && (
         <BrandRatingModal brandName={brand.name} myRating={ratingSummary.myRating} onSave={saveMyRating} onRemove={removeMyRating} onClose={() => setShowRatingModal(false)} />
