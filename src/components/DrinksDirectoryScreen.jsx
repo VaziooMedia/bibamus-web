@@ -18,6 +18,15 @@ import { AiIcon } from "./AiIcon.jsx";
 const PAGE_SIZE = 40;
 const LETTER_THRESHOLD = 20;
 
+// Ordre des pastilles : les lettres de A à Z dans l'ordre du serveur, puis « 0-9 » toujours en dernier (le serveur le renvoie en
+// premier, avant « A »). Un éventuel autre groupe (« ? ») se place avant « 0-9 ».
+const letterRank = (letter) => (/^[A-Z]$/.test(letter) ? 0 : letter === "0-9" ? 2 : 1);
+const orderLetters = (counts) =>
+  counts
+    .map((entry, index) => ({ entry, index }))
+    .sort((a, b) => letterRank(a.entry.letter) - letterRank(b.entry.letter) || a.index - b.index)
+    .map((x) => x.entry);
+
 // Dernière lettre consultée dans chaque catégorie, le temps de la session : en rouvrant une catégorie, on reprend où l'on était.
 const lastLetterByCategory = new Map();
 
@@ -185,7 +194,7 @@ export function DrinksDirectoryScreen({
     }
     let cancelled = false;
     loadDrinkLetterCounts(activeCategory).then((counts) => {
-      if (!cancelled) setLetterCounts(counts);
+      if (!cancelled) setLetterCounts(orderLetters(counts));
     });
     return () => {
       cancelled = true;
