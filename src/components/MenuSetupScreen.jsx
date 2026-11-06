@@ -75,8 +75,10 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   // typically because they were added to the venue after this event/salon started.
   const missingFromVenue = computeMissingVenueItems(event, venue, drinksDirectory);
 
+  // Un produit repris de la carte du lieu garde son lien avec le répertoire quand il en a un (voir la note de genericItemToEventItem).
   const venueItemToEventItem = (vItem) => ({
     id: nextId(),
+    ...(vItem.fromDirectory && vItem.sourceDrinkId ? { fromDirectory: true, sourceDrinkId: vItem.sourceDrinkId } : {}),
     name: vItem.name,
     price: vItem.price || 0,
     type: vItem.type || "",
@@ -146,10 +148,15 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     };
   };
 
+  // Un produit ajouté à la carte du salon (générique ou choisi dans BibAtlas) reste relié à sa fiche du répertoire (`fromDirectory` + `sourceDrinkId`,
+  // comme les produits d'une carte de lieu) : c'est ce lien qui donne ses dérivés en BibaRoom (Mazout, Coca, Red Bull…) et qui rattache ses verres au bon
+  // produit dans les statistiques et le Drink Check. Les autres champs restent une copie figée, modifiable depuis la carte.
   const genericItemToEventItem = (g) => {
     const d = defaultsOf(g);
     return {
       id: nextId(),
+      fromDirectory: true,
+      sourceDrinkId: g.id,
       name: g.name,
       price: d.price,
       type: g.type || "",
@@ -199,6 +206,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
         ...e.menu,
         {
           id: nextId(),
+          fromDirectory: true,
+          sourceDrinkId: source.id,
           name: source.name,
           price: d.price,
           type: source.type || "",
