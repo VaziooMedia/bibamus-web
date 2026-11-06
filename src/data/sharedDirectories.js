@@ -499,7 +499,7 @@ export function subscribeToMyNotifications(userId, onNewNotification) {
 
 // BibaSolo — historique continu, sans notion de session. addSoloCheckin enregistre une
 // consommation ; loadMySoloCheckins charge l'historique (aujourd'hui par défaut).
-export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl, currency = "euro", servingMode = "", asShot = false, offeredPrice = 0) {
+export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl, currency = "euro", servingMode = "", asShot = false, offeredPrice = 0, variantCode = null) {
   // Un prix de 0 (verre offert, « Free ») est gardé tel quel ; seul un prix absent ou illisible devient NULL.
   const row = { user_id: userId, drink_id: drinkId, price: Number.isFinite(price) ? price : null, venue_id: venueId || null, volume_cl: volumeCl || null };
   // « euro » est la valeur par défaut de la colonne : seuls les jetons s'envoient explicitement.
@@ -511,6 +511,9 @@ export async function addSoloCheckin(userId, drinkId, price, venueId, volumeCl, 
   // Montant payé pour offrir un verre à d'autres pendant ce verre, dans la monnaie du verre (euros ou jetons, selon `currency`) :
   // `offered_price` est vide par défaut dans la base, seul un montant supérieur à 0 s'envoie explicitement.
   if (Number.isFinite(offeredPrice) && offeredPrice > 0) row.offered_price = offeredPrice;
+  // Dérivé d'une bière (Mazout, Tango…) : le verre reste le produit de base pour les statistiques ; `variant_code` est vide par défaut dans la base,
+  // seul un dérivé choisi s'envoie (jamais une chaîne vide). Voir beerDerivatives.js.
+  if (typeof variantCode === "string" && variantCode.trim() !== "") row.variant_code = variantCode.trim();
   const { error } = await supabase.from("solo_checkins").insert(row);
   if (error) return { error: error.message };
   return { ok: true };
@@ -527,6 +530,7 @@ function soloRowToCheckin(row) {
     servingMode: row.serving_mode || "",
     shot: row.as_shot === true,
     offeredPrice: Number(row.offered_price) || 0, // montant payé pour offrir un verre, dans la monnaie du verre (0 = aucun)
+    variantCode: row.variant_code || null, // dérivé de la bière (Mazout, Tango…), null = la bière telle quelle : ne change que les kcal
     createdAt: row.created_at,
   };
 }

@@ -48,6 +48,9 @@ import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
 import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
 import { AiIcon } from "./AiIcon.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
+import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
+import { useBeerDerivatives, useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
+import { derivativeKcalByCode, kcalPer100mlWithVariant } from "../beerDerivatives.js";
 import { ServicePill, serviceLabelOf } from "./ServiceTag.jsx";
 
 // La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
@@ -299,6 +302,15 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [asShot, setAsShot] = useState(false); // spiritueux pris en shot (choix Spiritueux / Shot)
   const [shotSource, setShotSource] = useState(null); // fiche complète du produit choisi : dit s'il peut être un shot et fournit ses valeurs par défaut
   const [saving, setSaving] = useState(false);
+  // Dérivé de la bière choisie (Mazout, Tango…) : aucune pastille active au départ = la bière telle quelle. Les dérivés proposés sont ceux
+  // cochés sur la fiche du produit dans la gestion ; le verre reste le produit de base, seule l'énergie change.
+  const [variantCode, setVariantCode] = useState(null);
+  const { forProduct: derivativesFor } = useBeerDerivatives(selectedDrink ? [selectedDrink.id] : []);
+  const derivatives = selectedDrink ? derivativesFor(selectedDrink.id) : [];
+  const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
+  useEffect(() => {
+    setVariantCode(null); // un autre produit (ou plus aucun) : on repart sans dérivé
+  }, [selectedDrink?.id]);
 
   // Trois portes d'entrée distinctes une fois qu'un lieu est choisi, comme dans un salon : sa
   // propre carte (par catégories), une recherche libre dans tout BibAtlas, ou une recherche
@@ -413,7 +425,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
     // @Home : pas de prix. « Free » : prix 0, en euros. Sinon, le prix saisi dans la monnaie choisie.
     const priceNum = isHome ? null : free ? 0 : parseFloat(price.replace(",", "."));
     const offeredNum = canOffer && offeredOpen ? parseFloat(String(offered).replace(",", ".")) : 0;
-    const result = await addSoloCheckin(myUserId, selectedDrink.id, priceNum, venue?.id, volumeNum, free ? "euro" : currency, servingMode, asShot, offeredNum);
+    const result = await addSoloCheckin(myUserId, selectedDrink.id, priceNum, venue?.id, volumeNum, free ? "euro" : currency, servingMode, asShot, offeredNum, activeVariant);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -725,7 +737,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
               borderRadius: "12px",
               padding: "5px 12px",
               marginTop: "18px",
-              marginBottom: canBeShot(shotSource) ? "28px" : "32px",
+              marginBottom: canBeShot(shotSource) || derivatives.length > 0 ? "28px" : "32px",
             }}
           >
             <EntityAvatar photoUrl={selectedDrink.photoUrl} photoEmoji={selectedDrink.avatarEmoji} size={28} fallbackIcon="bottle" />
@@ -737,6 +749,9 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
           {/* Spiritueux dont la fiche a la case « Shot » : choix Spiritueux / Shot (boutons fins), centré comme le formulaire en dessous */}
           {canBeShot(shotSource) && <SpiritKindToggle fine asShot={asShot} onChange={changeKind} style={{ margin: "0 auto 32px" }} />}
+
+          {/* Bière dont la fiche a des dérivés (Mazout, Tango…) : rangée de pastilles au même endroit et dans le même style que ce choix ; aucune active = la bière telle quelle */}
+          {derivatives.length > 0 && <BeerDerivativePills derivatives={derivatives} activeCode={activeVariant} onChange={setVariantCode} style={{ margin: "0 auto 32px" }} />}
 
           {/* Ligne 1 : « Volume » et « Type de service » côte à côte, chacun aussi large que sa pastille de titre.
               Ligne 2 : choix € / Jetons / Free et champ de prix, exactement aussi larges que la ligne 1 (@Home : pas de prix). */}
@@ -1410,6 +1425,8 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
 
 export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onCheckConfirmed, onOpenDrink, onBack, onAddDrink, startInHistory = false, onHistoryOpenChange }) {
   const [checkins, setCheckins] = useState(null); // période en cours (de 6 h à 6 h) : c'est elle que comptent les compteurs
+  // Dérivés des bières (Mazout, Tango…) : leur énergie propre compte dans les kcal dès que la liste est lue (ce que fait aussi la base pour les statistiques).
+  const derivativeList = useBeerDerivativeList();
   const [previousCheckins, setPreviousCheckins] = useState(null); // période d'avant, affichée grisée sous la liste
   const [previousPeriodStart, setPreviousPeriodStart] = useState(null); // début (6 h) de la période d'avant : sa date s'affiche dans la barre de séparation
   const [spentInfoOpen, setSpentInfoOpen] = useState(false); // bulle de détail du bloc « Dépensé » (mes consommations / consommations offertes / jetons achetés)
@@ -1713,6 +1730,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
 
   const totals = useMemo(() => {
     if (!checkins) return { count: 0, price: 0, own: 0, offered: 0, jetons: 0, kcal: 0 };
+    const kcalByCode = derivativeKcalByCode(derivativeList);
     return checkins.reduce(
       (acc, c) => {
         const drink = drinksById[String(c.drinkId)];
@@ -1722,12 +1740,12 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           own: acc.own + (c.currency === "jeton" ? 0 : c.price || 0), // euros : mes consommations seules
           offered: acc.offered + (c.currency === "jeton" ? 0 : c.offeredPrice || 0), // euros : consommations offertes seules
           jetons: acc.jetons + (c.currency === "jeton" ? (c.price || 0) + (c.offeredPrice || 0) : 0), // jetons : prix du verre + jetons offerts
-          kcal: acc.kcal + (drink ? drinkCalories(drink, c.volumeCl) : 0),
+          kcal: acc.kcal + (drink ? drinkCalories({ ...drink, kcalPer100ml: kcalPer100mlWithVariant(drink.kcalPer100ml, c.variantCode, kcalByCode) }, c.volumeCl) : 0),
         };
       },
       { count: 0, price: 0, own: 0, offered: 0, jetons: 0, kcal: 0 }
     );
-  }, [checkins, drinksById]);
+  }, [checkins, drinksById, derivativeList]);
 
   const handleDelete = async (id) => {
     setCheckins((prev) => prev.filter((c) => c.id !== id));
