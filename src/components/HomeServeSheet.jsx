@@ -100,7 +100,8 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
 
   // Les dérivés de la bière choisie ; un dérivé n'est actif que s'il fait partie de ceux proposés pour ce produit.
   const { forProduct: derivativesFor } = useBeerDerivatives(picked ? [picked.id] : []);
-  const derivatives = picked ? derivativesFor(picked.id) : [];
+  // Pris en Shot, un spiritueux n'a pas de dérivé (Coca, Tonic… ne concernent que le verre de spiritueux).
+  const derivatives = picked && !asShot ? derivativesFor(picked.id) : [];
   const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
 
   // BibaZERO actif : les boissons alcoolisées ne sont pas proposées, comme dans une tournée.
@@ -135,6 +136,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
   const changeKind = (shot) => {
     if (shot === asShot) return;
     setAsShot(shot);
+    setVariantCode(null); // le dérivé choisi pour le verre ne suit pas le passage en Shot (ni le retour)
     setVolume(defaultVolumeText(picked, shot));
     setServingMode(defaultServingMode(picked, shot));
   };
@@ -152,7 +154,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
   const again = (entry) => {
     if (myPaused || !entry?.sourceDrinkId) return;
     // « Reprendre » un verre en dérivé reprend le même dérivé (s'il existe encore).
-    onServe({ id: entry.sourceDrinkId, name: entry.name, kcalPer100ml: entry.kcalPer100ml }, { volumeCl: entry.volumeCl ?? null, servingMode: entry.servingMode || "", asShot: entry.menuCategory === "Shots", variantCode: entry.variantName ? entry.variantCode : null });
+    onServe({ id: entry.sourceDrinkId, name: entry.name, kcalPer100ml: entry.kcalPer100ml }, { volumeCl: entry.volumeCl ?? null, servingMode: entry.servingMode || "", asShot: entry.menuCategory === "Shots", variantCode: entry.variantName && entry.menuCategory !== "Shots" ? entry.variantCode : null });
     setJustAdded(`${drinkLabel(entry)}${volumeLabel(entry.volumeCl)}`);
   };
 

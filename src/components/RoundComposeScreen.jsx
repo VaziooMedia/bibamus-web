@@ -15,7 +15,7 @@ import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { loadSalon } from "../data/salons.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
 import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
-import { baseDrinkId, drinkIdWithVariant } from "../beerDerivatives.js";
+import { baseDrinkId, drinkIdWithVariant, isShotEntry } from "../beerDerivatives.js";
 
 // Un même produit peut exister sur la carte en plusieurs volumes ("Jupiler" 25cl. et 33cl.,
 // jusqu'ici deux blocs distincts) — regroupés ici sous un seul nom, triés du plus petit volume
@@ -49,7 +49,8 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
   const selected = variants.find((v) => v.id === selectedId) || variants[0];
   // Dérivés (Mazout, Tango…) que ce produit peut devenir : une rangée de pastilles (grises, roses quand active) sous les volumes, sans « Nature » : aucune pastille active = la bière telle quelle,
   // un second appui sur la pastille active la désactive. Le dérivé choisi s'ajoute à l'identifiant du verre : le compteur, le « + » et le « − » de la carte suivent donc la pastille active.
-  const derivatives = derivativesFor && selected.fromDirectory && selected.sourceDrinkId ? derivativesFor(selected.sourceDrinkId) : [];
+  // Les verres pris en Shot (catégorie « Shots » de la carte) n'ont jamais de dérivé : ceux d'un spiritueux ne concernent pas ses shots.
+  const derivatives = derivativesFor && selected.fromDirectory && selected.sourceDrinkId && !isShotEntry(selected) ? derivativesFor(selected.sourceDrinkId) : [];
   const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
   const orderId = drinkIdWithVariant(selected.id, activeVariant);
   // Le « + » clignote pour tout verre ajouté à cette carte, avec ou sans dérivé (la pastille se désactive juste après l'ajout).

@@ -968,7 +968,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             )}
           </StatSection>
 
-          {/* Dérivés des bières (Mazout, Tango…) : nombre de verres par dérivé. Le verre compte aussi pour son produit de base (classement ci-dessus).
+          {/* Dérivés des bières (Mazout, Tango…) et des spiritueux (Coca, Tonic…) : nombre de verres par dérivé, les deux listes réunies. Le verre compte aussi pour son produit de base (classement ci-dessus).
               Carte masquée tant qu'aucun verre n'a de dérivé. */}
           {derivativesByCount.length > 0 && (
             <StatSection title="Tes dérivés préférés" arrowColor={COLORS.amber} showBottomDivider>

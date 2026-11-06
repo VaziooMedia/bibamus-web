@@ -14,7 +14,7 @@
 import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
 import { searchTokens, searchRank } from "../utils.js";
-import { BEER_DERIVATIVE_LIST_KEY, buildDerivativeList, rememberDerivativeList, rememberedDerivativeList } from "../beerDerivatives.js";
+import { DERIVATIVE_LIST_KEYS, buildCombinedDerivativeList, rememberDerivativeList, rememberedDerivativeList } from "../beerDerivatives.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
@@ -2925,8 +2925,9 @@ function onceLoader(keys, label) {
 }
 
 // ============================================================
-// Dérivés des bières (Mazout, Tango…) : voir beerDerivatives.js. Deux lectures, toutes deux mémorisées pour la session :
-//   - la liste commune (custom_list_items, clé « beer_derivative », avec l'énergie propre à chaque dérivé) et son ordre ;
+// Dérivés des bières (Mazout, Tango…) et des spiritueux (Coca, Tonic…) : voir beerDerivatives.js. Deux lectures, toutes deux mémorisées pour la session :
+//   - les listes communes (custom_list_items, clés « beer_derivative » et « spirit_derivative », avec l'énergie propre à chaque dérivé)
+//     et leur ordre, lues d'un coup et réunies en une seule liste ;
 //   - les dérivés activés pour chaque produit (drinks_directory.derivatives), demandés seulement pour les produits dont on a besoin.
 // Un échec de lecture n'est pas mémorisé (le prochain écran réessaie) et n'empêche rien : sans dérivés, la carte reste celle d'avant.
 // ============================================================
@@ -2934,8 +2935,8 @@ let beerDerivativeListOnce = null;
 export function loadBeerDerivativeListOnce() {
   if (!beerDerivativeListOnce) {
     beerDerivativeListOnce = Promise.all([
-      supabase.from("custom_list_items").select("code, fr, hidden, kcal_per_100ml").eq("list_key", BEER_DERIVATIVE_LIST_KEY),
-      supabase.from("custom_list_order").select("codes").eq("list_key", BEER_DERIVATIVE_LIST_KEY).maybeSingle(),
+      supabase.from("custom_list_items").select("list_key, code, fr, hidden, kcal_per_100ml").in("list_key", DERIVATIVE_LIST_KEYS),
+      supabase.from("custom_list_order").select("list_key, codes").in("list_key", DERIVATIVE_LIST_KEYS),
     ])
       .then(([items, order]) => {
         if (items.error || !Array.isArray(items.data)) {
@@ -2944,7 +2945,7 @@ export function loadBeerDerivativeListOnce() {
           return null;
         }
         if (order.error) console.error("loadBeerDerivativeList (ordre):", order.error);
-        const list = buildDerivativeList(items.data, order.data?.codes);
+        const list = buildCombinedDerivativeList(items.data, order.data);
         rememberDerivativeList(list);
         return list;
       })
@@ -3626,7 +3627,7 @@ export async function loadMyDrinkRanking(metric, since = null, until = null, lim
   return data.map((r) => ({ drinkId: r.drink_id, value: r.value }));
 }
 
-// Dérivés des bières (Mazout, Tango…) les plus pris par la personne connectée : nombre de verres par dérivé (fonction
+// Dérivés (bières : Mazout, Tango… ; spiritueux : Coca, Tonic…) les plus pris par la personne connectée : nombre de verres par dérivé, les deux listes réunies (fonction
 // get_my_derivative_ranking, depuis le 2026-11-06). Seuls les dérivés encore présents dans la liste de la gestion y figurent ;
 // le verre compte aussi, comme toujours, pour son produit de base. Un échec de lecture rend une liste vide (la carte est alors masquée).
 export async function loadMyDerivativeRanking(since = null, until = null, limit = 10) {
