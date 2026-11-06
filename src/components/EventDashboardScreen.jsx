@@ -25,6 +25,7 @@ import { ServiceTag } from "./ServiceTag.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
+import { useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
 import { EmptyMenuBadge } from "./EmptyMenuBadge.jsx";
 
 // Retient, pour toute la durée de la session dans l'app (pas juste le montage de CE composant),
@@ -37,6 +38,8 @@ const waterAlertSessionInitialized = new Set();
 
 export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrink, onRemoveHomeDrink, onRecordPersonalDrink, onRemovePersonalDrink, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onGoToDrinkCheck, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, tabBar, tokButton }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
+  // Les dérivés (Mazout, Tango…) : leur énergie propre et leur nom ne sont connus qu'une fois la liste lue.
+  useBeerDerivativeList();
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");

@@ -9,9 +9,13 @@ import { NavIcon } from "./icons.jsx";
 import { PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { formatMoney, findMenuEntryById } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
+import { drinkLabel } from "../beerDerivatives.js";
+import { useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
 
 export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, onFinish }) {
   const [pausedCodes, setPausedCodes] = useState(new Set());
+  // Les dérivés (Mazout, Tango…) : leur nom s'affiche dans les lignes du ticket dès que la liste est lue.
+  useBeerDerivativeList();
 
   React.useEffect(() => {
     if (!event.salonCode) return;
@@ -26,7 +30,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
     };
   }, [event.salonCode]);
 
-  const drinkName = (id) => findMenuEntryById(event.menu, id)?.name || id;
+  const drinkName = (id) => drinkLabel(findMenuEntryById(event.menu, id)) || id;
   const drinkPrice = (id) => findMenuEntryById(event.menu, id)?.price || 0;
   const drinkVolume = (id) => {
     const d = findMenuEntryById(event.menu, id);

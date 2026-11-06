@@ -14,6 +14,8 @@ import { capitalizeFirst, displayedAbv, drinkTypeLabel, isAlcoholicDrink, nextId
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { loadSalon } from "../data/salons.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
+import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
+import { baseDrinkId, drinkIdWithVariant } from "../beerDerivatives.js";
 
 // Un même produit peut exister sur la carte en plusieurs volumes ("Jupiler" 25cl. et 33cl.,
 // jusqu'ici deux blocs distincts) — regroupés ici sous un seul nom, triés du plus petit volume
@@ -40,11 +42,23 @@ function groupDrinksByName(items) {
 // nouveau type de composant à chaque rendu du parent, et démonte/remonte entièrement chaque carte
 // au moindre changement d'état ailleurs sur l'écran, ce qui effacerait le volume choisi ici à
 // chaque fois.
-function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpenBar, currency, removeLastOrderFor, addOrder, flash }) {
+function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpenBar, currency, removeLastOrderFor, addOrder, flash, derivativesFor }) {
   const [selectedId, setSelectedId] = useState(() => (variants.find((v) => v.isDefault) || variants[0]).id);
   const [showInfo, setShowInfo] = useState(false);
+  const [variantCode, setVariantCode] = useState(null);
   const selected = variants.find((v) => v.id === selectedId) || variants[0];
-  const count = countForFriendDrink(activeFriendId, selected.id);
+  // Dérivés (Mazout, Tango…) que ce produit peut devenir : une rangée de pastilles (grises, roses quand active) sous les volumes, sans « Nature » : aucune pastille active = la bière telle quelle,
+  // un second appui sur la pastille active la désactive. Le dérivé choisi s'ajoute à l'identifiant du verre : le compteur, le « + » et le « − » de la carte suivent donc la pastille active.
+  const derivatives = derivativesFor && selected.fromDirectory && selected.sourceDrinkId ? derivativesFor(selected.sourceDrinkId) : [];
+  const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
+  const orderId = drinkIdWithVariant(selected.id, activeVariant);
+  // Le « + » clignote pour tout verre ajouté à cette carte, avec ou sans dérivé (la pastille se désactive juste après l'ajout).
+  const flashHere = !!flash && baseDrinkId(flash.drinkId) === baseDrinkId(orderId);
+  const count = countForFriendDrink(activeFriendId, orderId);
+  // Pour la ligne « Dans la commande » : la bière telle quelle (« nature ») puis chaque dérivé.
+  const countChoices = [{ code: null, name: "Nature" }, ...derivatives];
+  const countsByChoice = derivatives.length > 0 ? countChoices.map((c) => ({ ...c, n: countForFriendDrink(activeFriendId, drinkIdWithVariant(selected.id, c.code)) })) : [];
+  const totalCount = derivatives.length > 0 ? countsByChoice.reduce((sum, c) => sum + c.n, 0) : count;
   const hasVolume = VOLUME_DISPLAY_TYPES.includes(selected.type) && selected.volumeCl;
   const hasMultipleVolumes = variants.length > 1;
   const hasInfo = displayedAbv(selected) != null || selected.brewery || getDrinkBadgeItems(selected, { size: 10 }).length > 0;
@@ -52,8 +66,8 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
   return (
     <div
       style={{
-        background: count > 0 ? COLORS.surfaceAlt : COLORS.paperAlt,
-        border: `2px solid ${count > 0 ? COLORS.amber : "transparent"}`,
+        background: totalCount > 0 ? COLORS.surfaceAlt : COLORS.paperAlt,
+        border: `2px solid ${totalCount > 0 ? COLORS.amber : "transparent"}`,
         borderRadius: "12px",
         padding: "8px 10px",
       }}
@@ -112,7 +126,7 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
               <button
-                onClick={() => removeLastOrderFor(activeFriendId, selected.id)}
+                onClick={() => removeLastOrderFor(activeFriendId, orderId)}
                 disabled={count === 0}
                 style={{ width: "28px", height: "28px", borderRadius: "8px", border: "none", background: count === 0 ? "transparent" : COLORS.paperAlt, color: COLORS.inkSoft, fontSize: "16px", cursor: count === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
               >
@@ -120,8 +134,12 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
               </button>
               <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", minWidth: "14px", textAlign: "center" }}>{count}</span>
               <button
-                key={flash?.drinkId === selected.id ? flash.token : "idle"}
-                onClick={() => addOrder(selected.id)}
+                key={flashHere ? flash.token : "idle"}
+                onClick={() => {
+                  addOrder(orderId);
+                  // Le dérivé ne vaut que pour le verre ajouté : la pastille se désactive, le verre suivant est « nature » sauf nouveau choix.
+                  setVariantCode(null);
+                }}
                 style={{
                   width: "28px",
                   height: "28px",
@@ -132,13 +150,65 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
               fontSize: "16px",
               cursor: "pointer",
               fontWeight: 700,
-              animation: flash?.drinkId === selected.id ? "round-add-flash 0.4s ease-out" : "none",
+              animation: flashHere ? "round-add-flash 0.4s ease-out" : "none",
             }}
           >
             +
               </button>
             </div>
           </div>
+
+          {derivatives.length > 0 && (
+            <>
+              {/* Rangée de dérivés : défile à l'horizontale s'il y en a beaucoup ; grisées comme les volumes tant qu'elles sont inactives, rose fluo quand active (les volumes actifs sont verts). */}
+              <div
+                role="group"
+                aria-label="Dérivé"
+                style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "6px", overflowX: "auto", flexWrap: "nowrap", paddingBottom: "2px", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+              >
+                {derivatives.map((c) => {
+                  const on = c.code === activeVariant;
+                  return (
+                    <button
+                      key={c.code}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setVariantCode(on ? null : c.code)}
+                      style={{
+                        background: on ? COLORS.pinkFluo : "transparent",
+                        color: on ? COLORS.chalkWhite : COLORS.inkSoft,
+                        border: `1.5px solid ${on ? COLORS.pinkFluo : COLORS.inkSoft}`,
+                        borderRadius: "999px",
+                        padding: "2px 8px",
+                        fontSize: "11.5px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {c.name}
+                    </button>
+                  );
+                })}
+              </div>
+              {totalCount > 0 && (
+                <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>
+                  Dans la commande :{" "}
+                  {countsByChoice
+                    .filter((c) => c.n > 0)
+                    .map((c, i) => (
+                      <React.Fragment key={c.code || "nature"}>
+                        {i > 0 && " · "}
+                        <strong style={{ color: COLORS.ink }}>
+                          {c.n} {c.code ? c.name : "nature"}
+                        </strong>
+                      </React.Fragment>
+                    ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -322,6 +392,8 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   // l'impression qu'aucun clic n'avait été pris en compte. token force un nouveau cycle
   // d'animation même en cas de clics rapides et répétés sur le même produit.
   const [flash, setFlash] = useState(null);
+  // Dérivés des bières (Mazout, Tango…) : lus pour les produits du répertoire de la carte ; rien ne change sans dérivé.
+  const { forProduct: derivativesFor } = useBeerDerivatives(event.menu.filter((d) => d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId));
   const addOrder = (drinkId) => {
     if (!activeFriendId) return;
     setDraftOrders((prev) => [...prev, { id: nextId(), friendId: activeFriendId, drinkId }]);
@@ -376,6 +448,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
         removeLastOrderFor={removeLastOrderFor}
         addOrder={addOrder}
         flash={flash}
+        derivativesFor={derivativesFor}
       />
     ));
   const canValidateRound = draftOrders.length > 0;
@@ -387,7 +460,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
 
   // Favorites: the 4 most-ordered drinks so far this event, so common rounds skip the folders entirely.
   const orderCounts = {};
-  event.rounds.forEach((r) => r.orders.forEach((o) => (orderCounts[o.drinkId] = (orderCounts[o.drinkId] || 0) + 1)));
+  event.rounds.forEach((r) => r.orders.forEach((o) => (orderCounts[baseDrinkId(o.drinkId)] = (orderCounts[baseDrinkId(o.drinkId)] || 0) + 1)));
 
   // BibaBOB: while filtered, the person currently being ordered for only sees non-alcoholic
   // products across every browsing path — categories, search, and favorites alike.
@@ -696,6 +769,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                 removeLastOrderFor={removeLastOrderFor}
                 addOrder={addOrder}
                 flash={flash}
+                derivativesFor={derivativesFor}
               />
             ))}
           </div>
