@@ -147,7 +147,7 @@ import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
 import { useUsernameDeepLink } from "./hooks/useUsernameDeepLink.js";
-import { randomCode, todayISO, normalizeEvent, nextId, resolveMenuItem, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId, safeServingMode } from "./utils.js";
+import { randomCode, todayISO, normalizeEvent, nextId, resolveMenuItem, resolveVenueMenuForEvent, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId, safeServingMode } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -901,10 +901,7 @@ export default function App() {
     const venue = venueId && !isHome && !isEventPlace ? (await loadVenuesByIds([venueId]))[0] || null : null;
     const venueDrinkIds = [...new Set((venue?.menu || []).filter((d) => d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId))];
     const venueDrinks = venueDrinkIds.length > 0 ? await loadDrinksByIds(venueDrinkIds) : [];
-    const menu =
-      venue && venue.menu && venue.menu.length
-        ? venue.menu.map((d) => ({ ...resolveMenuItem(d, venueDrinks), id: `local-${Date.now()}-${Math.random()}` }))
-        : [];
+    const menu = venue ? resolveVenueMenuForEvent(venue.menu, venueDrinks) : [];
 
     const newEvent = {
       id: `local-${Date.now()}`,
@@ -3054,10 +3051,7 @@ export default function App() {
                       // Lieu inchangé — on ne touche pas à la carte déjà en place.
                       return { ...e, mode, currency, jetonUnitValue };
                     }
-                    const venueMenu =
-                      venue && venue.menu && venue.menu.length
-                        ? venue.menu.map((d) => ({ ...resolveMenuItem(d, venueDrinks), id: `local-${Date.now()}-${Math.random()}` }))
-                        : [];
+                    const venueMenu = venue ? resolveVenueMenuForEvent(venue.menu, venueDrinks) : [];
                     // La carte @Home est mémorisée en quittant @Home et rétablie en y revenant.
                     return withVenueChange(e, { mode, currency, jetonUnitValue, selectedVenueId, venueMenu });
                   });
