@@ -14,7 +14,7 @@
 import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
 import { searchTokens, searchRank } from "../utils.js";
-import { DERIVATIVE_LIST_KEYS, buildCombinedDerivativeList, rememberDerivativeList, rememberedDerivativeList } from "../beerDerivatives.js";
+import { DERIVATIVE_LIST_KEYS, buildCombinedDerivativeList, cleanDerivativeVolumes, rememberDerivativeList, rememberDerivativeVolumes, rememberedDerivativeList } from "../beerDerivatives.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
@@ -2961,23 +2961,34 @@ export function loadBeerDerivativeListOnce() {
 // La liste déjà lue (sans réseau), ou null tant qu'elle ne l'est pas : pour les calculs qui ne peuvent pas attendre.
 export const getBeerDerivativeListCached = () => rememberedDerivativeList();
 
-// { identifiantProduit: [codes] } pour les produits demandés ; un produit sans dérivé n'a pas d'entrée. Seuls les produits pas encore
-// lus sont demandés, par paquets.
-const derivativeCodesByDrink = new Map();
+// { identifiantProduit: { codes, volumes } } pour les produits demandés : `codes` = les dérivés cochés, `volumes` = { code: cl } le volume du verre
+// saisi dans la gestion pour ce produit et ce dérivé (spiritueux : Vodka + Red Bull = 20 cl ; {} sans volume). Un produit sans dérivé n'a pas
+// d'entrée. Seuls les produits pas encore lus sont demandés, par paquets ; les volumes sont aussi gardés pour les calculs qui ne peuvent pas
+// attendre (rememberDerivativeVolumes). Si la colonne des volumes n'existe pas encore dans la base, on relit les seuls dérivés cochés : le
+// verre garde alors le volume du produit.
+const derivativeInfoByDrink = new Map();
 export async function loadDrinkDerivatives(ids) {
   const wanted = [...new Set((ids || []).filter((id) => typeof id === "string" && id !== ""))];
-  const missing = wanted.filter((id) => !derivativeCodesByDrink.has(id));
+  const missing = wanted.filter((id) => !derivativeInfoByDrink.has(id));
   for (let i = 0; i < missing.length; i += 100) {
     const chunk = missing.slice(i, i + 100);
-    const { data, error } = await supabase.from("drinks_directory").select("id, derivatives").in("id", chunk);
+    let { data, error } = await supabase.from("drinks_directory").select("id, derivatives, derivative_volumes").in("id", chunk);
+    if (error || !Array.isArray(data)) {
+      ({ data, error } = await supabase.from("drinks_directory").select("id, derivatives").in("id", chunk));
+    }
     if (error || !Array.isArray(data)) {
       console.error("loadDrinkDerivatives:", error);
       continue;
     }
-    chunk.forEach((id) => derivativeCodesByDrink.set(id, []));
-    data.forEach((r) => derivativeCodesByDrink.set(r.id, Array.isArray(r.derivatives) ? r.derivatives.filter((c) => typeof c === "string") : []));
+    chunk.forEach((id) => derivativeInfoByDrink.set(id, { codes: [], volumes: {} }));
+    data.forEach((r) => {
+      const codes = Array.isArray(r.derivatives) ? r.derivatives.filter((c) => typeof c === "string") : [];
+      const volumes = cleanDerivativeVolumes(r.derivative_volumes);
+      derivativeInfoByDrink.set(r.id, { codes, volumes });
+      rememberDerivativeVolumes(r.id, volumes);
+    });
   }
-  return Object.fromEntries(wanted.filter((id) => (derivativeCodesByDrink.get(id) || []).length > 0).map((id) => [id, derivativeCodesByDrink.get(id)]));
+  return Object.fromEntries(wanted.filter((id) => (derivativeInfoByDrink.get(id)?.codes || []).length > 0).map((id) => [id, derivativeInfoByDrink.get(id)]));
 }
 
 // Types d'établissement et aménités d'un lieu : { venue_type: { rows, order }, amenity: { rows, order } } (fiche d'un lieu,

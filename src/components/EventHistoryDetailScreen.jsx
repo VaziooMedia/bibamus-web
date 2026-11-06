@@ -10,12 +10,13 @@ import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
 import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent } from "../utils.js";
 import { loadVenuesByIds } from "../data/sharedDirectories.js";
 import { drinkLabel } from "../beerDerivatives.js";
-import { useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
+import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
 
 export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, roundsSum, onBack, openVenue, onReopen, onDelete, onDeleteRound }) {
   const [venue, setVenue] = useState(null);
-  // Les dérivés (Mazout, Tango…) : leur nom et leur énergie propre ne sont connus qu'une fois la liste lue.
-  useBeerDerivativeList();
+  // Les dérivés (Mazout, Tango, Vodka + Red Bull…) : leur nom, leur énergie propre et le volume du verre (spiritueux : 20 cl) ne sont connus qu'une fois la liste
+  // et les produits de la carte lus.
+  useBeerDerivatives([...(event.menu || []), ...(event.homeMenu || [])].filter((d) => d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId));
   useEffect(() => {
     if (!event.venueId) {
       setVenue(null);

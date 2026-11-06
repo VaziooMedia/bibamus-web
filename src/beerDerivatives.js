@@ -75,11 +75,26 @@ export function buildCombinedDerivativeList(itemRows, orderRows) {
   return { items };
 }
 
+// Les volumes de verre saisis dans la gestion pour les dérivés d'un produit : { code du dérivé: cl } (colonne drinks_directory.derivative_volumes).
+// Un spiritueux pris en dérivé est un verre rempli (Vodka + Red Bull = 20 cl, pas les 4 cl de la vodka seule). On ne garde que des nombres
+// de 0 (exclu) à 100 cl ; tout le reste (vide, texte, tableau) est ignoré : le verre garde alors le volume du produit.
+export const MAX_DERIVATIVE_VOLUME_CL = 100;
+export function cleanDerivativeVolumes(raw) {
+  const out = {};
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    Object.entries(raw).forEach(([code, v]) => {
+      if (typeof v === "number" && Number.isFinite(v) && v > 0 && v <= MAX_DERIVATIVE_VOLUME_CL) out[code] = v;
+    });
+  }
+  return out;
+}
+
 // Les dérivés qu'un produit peut devenir, dans l'ordre de la liste : seuls ceux qui existent encore (non supprimés, non masqués).
-export function derivativesForProduct(list, codes) {
+// `volumes` (facultatif) = les volumes de verre du produit : chaque dérivé porte alors `volumeCl` (null s'il n'en a pas pour ce produit).
+export function derivativesForProduct(list, codes, volumes) {
   if (!list || !Array.isArray(codes) || codes.length === 0) return [];
   const wanted = new Set(codes.filter((c) => typeof c === "string"));
-  return list.items.filter((d) => wanted.has(d.code));
+  return list.items.filter((d) => wanted.has(d.code)).map((d) => ({ ...d, volumeCl: volumes && volumes[d.code] != null ? volumes[d.code] : null }));
 }
 
 // Une table code → énergie (kcal/100ml) des seuls dérivés qui en ont une.
@@ -110,12 +125,35 @@ export const rememberDerivativeList = (list) => {
 };
 export const rememberedDerivativeList = () => rememberedList;
 
+// Les volumes de verre des dérivés par produit, lus avec les dérivés cochés (loadDrinkDerivatives) et gardés ici pour la même raison : le
+// ticket, l'historique et les lignes de statistiques n'ont pas le temps d'attendre une lecture. { identifiant du produit: { code: cl } }.
+const rememberedVolumes = new Map();
+export const rememberDerivativeVolumes = (productId, volumes) => {
+  if (typeof productId === "string" && productId !== "") rememberedVolumes.set(productId, cleanDerivativeVolumes(volumes));
+};
+export const rememberedDerivativeVolume = (productId, variantCode) => rememberedVolumes.get(productId)?.[variantCode] ?? null;
+
+// Le volume (texte du champ) après un clic sur une pastille, pour « Je me sers » et BibaSolo où la personne voit et peut corriger le volume.
+// - le dérivé choisi a un volume sur la fiche (Vodka + Red Bull = 20 cl) : ce volume ;
+// - on le quitte (autre dérivé sans volume, ou pastille décochée) alors que le champ affiche toujours ce volume : on revient à `volumeAvant`,
+//   le volume qu'avait le verre avant le dérivé ;
+// - sinon (pas de volume sur le dérivé, ou volume corrigé à la main depuis) : le champ n'est pas touché.
+export function volumeAfterVariantChange({ currentText, previous, next, volumeAvant }) {
+  if (next && next.volumeCl != null) return String(next.volumeCl);
+  if (previous && previous.volumeCl != null && String(currentText ?? "").trim() === String(previous.volumeCl)) return String(volumeAvant ?? "");
+  return String(currentText ?? "");
+}
+
 // Une entrée de carte (déjà résolue sur un volume) devenue le verre « entrée + dérivé » : son code, son nom (null si le dérivé n'existe
-// plus ou si la liste n'est pas encore lue) et l'énergie du dérivé quand il en a une, sinon celle du produit. Le prix ne change pas.
+// plus ou si la liste n'est pas encore lue), l'énergie du dérivé quand il en a une (sinon celle du produit) et, pour un produit du répertoire,
+// le volume du verre saisi dans la gestion pour ce produit et ce dérivé (Vodka + Red Bull = 20 cl) à la place du volume de l'entrée. Le prix
+// ne change pas. Une entrée créée par « Je me sers » (`homeServed`) garde le volume saisi par la personne.
 export function withDerivative(entry, variantCode) {
   if (!entry || !variantCode) return entry;
+  const volumeCl = entry.fromDirectory && !entry.homeServed ? rememberedDerivativeVolume(entry.sourceDrinkId, variantCode) : null;
   return {
     ...entry,
+    ...(volumeCl != null ? { volumeCl } : {}),
     variantCode,
     variantName: derivativeName(rememberedList, variantCode),
     kcalPer100ml: kcalPer100mlWithVariant(entry.kcalPer100ml, variantCode, derivativeKcalByCode(rememberedList)),

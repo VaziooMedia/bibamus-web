@@ -256,6 +256,9 @@ export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "
     if (!(d.fromDirectory && d.sourceDrinkId === source.id)) continue;
     if ((d.servingMode || "") !== serving) continue;
     if ((d.menuCategory === "Shots") !== !!asShot) continue;
+    // Un verre en dérivé ne reprend qu'une entrée créée par « Je me sers » : le volume y est celui saisi par la personne, alors que celui d'une
+    // entrée de la carte pourrait être remplacé par le volume du dérivé (voir withDerivative).
+    if (variantCode && !d.homeServed) continue;
     const v = normalizeVolumes(d).find((x) => (x.cl ?? null) === cl);
     if (v) {
       entry = d;
@@ -266,7 +269,7 @@ export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "
   let newEntry = null;
   if (!entry) {
     newEntry = resolveMenuItem(
-      { id: `local-${Date.now()}-${Math.random()}`, fromDirectory: true, sourceDrinkId: source.id, servingMode: serving, ...(asShot ? { menuCategory: "Shots" } : {}), volumes: [{ id: nextId(), cl, price: 0, isDefault: true }] },
+      { id: `local-${Date.now()}-${Math.random()}`, fromDirectory: true, homeServed: true, sourceDrinkId: source.id, servingMode: serving, ...(asShot ? { menuCategory: "Shots" } : {}), volumes: [{ id: nextId(), cl, price: 0, isDefault: true }] },
       [source]
     );
     entry = newEntry;
