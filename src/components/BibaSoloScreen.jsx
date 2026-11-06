@@ -50,8 +50,8 @@ import { AiIcon } from "./AiIcon.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { useBeerDerivatives, useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
-import { derivativeKcalByCode, kcalPer100mlWithVariant } from "../beerDerivatives.js";
-import { ServicePill, serviceLabelOf } from "./ServiceTag.jsx";
+import { derivativeKcalByCode, derivativeName, kcalPer100mlWithVariant } from "../beerDerivatives.js";
+import { ServicePill, DerivativePill, serviceLabelOf } from "./ServiceTag.jsx";
 
 // La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
 // seule soirée. `current` = début de la période en cours (le dernier 6 h passé), `previous` = début de la période d'avant.
@@ -1046,6 +1046,10 @@ const formatJetonCount = (value) => {
 // cours et période précédente grisée) et dans l'Historique. Sans `onDelete`, pas de croix de suppression (Historique en lecture seule).
 function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
   const showMentions = drink && VOLUME_DISPLAY_TYPES.includes(drink.type);
+  // Bière prise en dérivé (Mazout, Tango…) : une pastille grisée sur la ligne 1, à droite du nom du produit. Un dérivé retiré ou masqué depuis
+  // ne s'affiche plus (le verre reste la bière de base).
+  const derivativeList = useBeerDerivativeList();
+  const variantName = c.variantCode ? derivativeName(derivativeList, c.variantCode) : null;
   return (
     <div
       style={{
@@ -1071,9 +1075,11 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
             disabled={!drink || !onOpenDrink}
             style={{ flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: drink && onOpenDrink ? "pointer" : "default" }}
           >
-            {/* Ligne 1 — produit (le volume est en tête de la ligne 2) */}
-            <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-              <span style={{ fontSize: "14px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
+            {/* Ligne 1 — produit, puis la pastille grisée du dérivé s'il y en a un (le volume est en tête de la ligne 2). Si la ligne est trop longue,
+                c'est le nom du produit qui se coupe par « … » : la pastille reste toujours visible. */}
+            <div style={{ display: "flex", alignItems: "baseline", gap: "6px", minWidth: 0 }}>
+              <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink?.name || "Boisson"}</span>
+              {variantName && <span style={{ flexShrink: 0, display: "inline-flex" }}><DerivativePill name={variantName} /></span>}
             </div>
           </button>
           {c.price != null && (
