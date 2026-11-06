@@ -3,7 +3,7 @@
 // depuis le prototype Claude.
 // ============================================================
 import { DRINK_TYPES, MENU_CATEGORIES, DRINK_TYPE_MIGRATIONS, NON_ALCOHOLIC_DRINK_TYPES, SERVING_MODE_LABELS, MONTH_NAMES_FR, DRINK_FIELD_LABELS } from "./constants.js";
-import { variantOfDrinkId, withDerivative, drinkLabel } from "./beerDerivatives.js";
+import { variantOfDrinkId, withDerivative, drinkLabel, drinkIdWithVariant, kcalPer100mlWithVariant, derivativeKcalByCode, rememberedDerivativeList } from "./beerDerivatives.js";
 
 // Lettres que la décomposition NFD ne sépare pas en « lettre + accent » : œ → oe, æ → ae, ß → ss, ø → o, ł → l… Mêmes correspondances que
 // `unaccent` de Postgres, que la base applique pour calculer `search_text` (fonction `bibamus_normalize_search_text`) : « œufs » se retrouve en
@@ -187,7 +187,7 @@ export const homeDrinksByPerson = (event) => {
       people.set(h.code, person);
     }
     const entry = findEntryForEvent(event, h.drinkId);
-    const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", count: 0 };
+    const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: drinkLabel(entry) || "Boisson", volumeCl: entry?.volumeCl ?? null, servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", count: 0 };
     item.count += 1;
     person.items.set(h.drinkId, item);
     person.total += 1;
@@ -243,7 +243,9 @@ export const resolveMenuItem =(item, drinksDirectory) => {
 // l'entrée de carte : le même produit au même volume mais servi autrement est une autre entrée.
 // Un shot (`asShot`) est une entrée à part, comme dans la carte boissons d'un salon : même produit (type « Spiritueux »)
 // avec `menuCategory: "Shots"` ; le même produit pris en spiritueux n'en reprend donc pas l'entrée, et inversement.
-export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "", asShot = false } = {}, me = {}) => {
+// Une bière servie en dérivé (Mazout, Tango… : `variantCode`) : le dérivé se glisse dans l'identifiant du verre (« entrée::volume::codeDérivé », voir
+// beerDerivatives.js) et la ligne de statistiques porte `variant_code` et l'énergie du dérivé quand il en a une. Sans dérivé, rien ne change.
+export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "", asShot = false, variantCode = null } = {}, me = {}) => {
   const cl = volumeCl ?? null;
   const serving = servingMode || "";
   let entry = null;
@@ -271,8 +273,16 @@ export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "
   const serveId = `home-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return {
     newEntry,
-    homeDrink: { id: serveId, code: me.code, name: me.name, drinkId: `${entry.id}::${vol.id}`, timestamp: Date.now() },
-    order: { bibro_code: me.code, guest_name: null, drink_id: source.id, unit_price: null, unit_volume_cl: cl, unit_kcal_per_100ml: source.kcalPer100ml ?? entry.kcalPer100ml ?? null },
+    homeDrink: { id: serveId, code: me.code, name: me.name, drinkId: drinkIdWithVariant(`${entry.id}::${vol.id}`, variantCode), timestamp: Date.now() },
+    order: {
+      bibro_code: me.code,
+      guest_name: null,
+      drink_id: source.id,
+      unit_price: null,
+      unit_volume_cl: cl,
+      unit_kcal_per_100ml: kcalPer100mlWithVariant(source.kcalPer100ml ?? entry.kcalPer100ml ?? null, variantCode, derivativeKcalByCode(rememberedDerivativeList())),
+      ...(variantCode ? { variant_code: variantCode } : {}),
+    },
   };
 };
 
