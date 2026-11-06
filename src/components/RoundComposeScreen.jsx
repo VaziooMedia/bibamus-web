@@ -47,7 +47,7 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
   const [showInfo, setShowInfo] = useState(false);
   const [variantCode, setVariantCode] = useState(null);
   const selected = variants.find((v) => v.id === selectedId) || variants[0];
-  // Dérivés (Mazout, Tango…) que ce produit peut devenir : une rangée de pastilles roses sous les volumes, sans « Nature » : aucune pastille active = la bière telle quelle,
+  // Dérivés (Mazout, Tango…) que ce produit peut devenir : une rangée de pastilles (grises, roses quand active) sous les volumes, sans « Nature » : aucune pastille active = la bière telle quelle,
   // un second appui sur la pastille active la désactive. Le dérivé choisi s'ajoute à l'identifiant du verre : le compteur, le « + » et le « − » de la carte suivent donc la pastille active.
   const derivatives = derivativesFor && selected.fromDirectory && selected.sourceDrinkId ? derivativesFor(selected.sourceDrinkId) : [];
   const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
@@ -154,7 +154,7 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
 
           {derivatives.length > 0 && (
             <>
-              {/* Rangée de dérivés : défile à l'horizontale s'il y en a beaucoup ; rose fluo pour les distinguer des volumes (vert). */}
+              {/* Rangée de dérivés : défile à l'horizontale s'il y en a beaucoup ; grisées comme les volumes tant qu'elles sont inactives, rose fluo quand active (les volumes actifs sont verts). */}
               <div
                 role="group"
                 aria-label="Dérivé"
@@ -170,8 +170,8 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
                       onClick={() => setVariantCode(on ? null : c.code)}
                       style={{
                         background: on ? COLORS.pinkFluo : "transparent",
-                        color: on ? COLORS.chalkWhite : COLORS.pinkFluo,
-                        border: `1.5px solid ${COLORS.pinkFluo}`,
+                        color: on ? COLORS.chalkWhite : COLORS.inkSoft,
+                        border: `1.5px solid ${on ? COLORS.pinkFluo : COLORS.inkSoft}`,
                         borderRadius: "999px",
                         padding: "2px 8px",
                         fontSize: "11.5px",
