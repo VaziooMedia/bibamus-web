@@ -98,7 +98,8 @@ Section **écrite et testée dans le dépôt de gestion le 2026-11-06** (branche
 - **Colonnes et fonctions** : voir `DATABASE.md`. **Ordre de mise en ligne** : la base d'abord (fait le 2026-11-06), le déploiement de la gestion ensuite ; sans les colonnes, l'enregistrement d'une fiche bière échoue (la clé `derivatives` est envoyée à l'enregistrement de toute fiche bière, cidre, vin ou spiritueux, avec `[]` quand le produit n'est pas une bière).
 - **Non vérifié** : un enregistrement réel d'une fiche sur la base de production (le déclencheur `protect_sensitive_fields` de `drinks_directory` n'a pas été lu) ; seul un essai après déploiement le dira.
 - **Statistiques (décidé le 2026-11-06, base prête)** : seul le produit de base compte ; le dérivé ne change que les calories et n'apparaît que dans Mes Statistiques (voir `DATABASE.md` et `PROFILE.md`).
-- **Pas encore décidé** : la composition de chaque dérivé (ex. « pils + cola », champ non construit) ; le prix d'un dérivé (même prix que la pils, ou supplément sur la carte du lieu) ; l'extension aux spiritueux (ex. Eristoff Red → Eristoff Brut Red Bull), avec la même mécanique de pastilles.
+- **Prix (décidé le 2026-11-06)** : un dérivé garde le prix du produit de base, selon le volume ; la gestion n'a donc pas de prix à saisir par dérivé.
+- **Pas encore décidé** : la composition de chaque dérivé (ex. « pils + cola », champ non construit) ; l'extension aux spiritueux (ex. Eristoff Red → Eristoff Brut Red Bull), avec la même mécanique de pastilles.
 
 ### Listes modifiables de la fiche produit (arômes & saveurs, accords, moment, verre, caractéristiques)
 
