@@ -8,7 +8,7 @@
 // de la personne qui l'a pris (event.homeDrinks) ; la liste « Mes verres » permet d'en reprendre
 // un identique (+) ou de retirer le dernier (−) en cas d'erreur.
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { EntityAvatar, PrimaryButton } from "./ui.jsx";
 import { NavIcon } from "./icons.jsx";
@@ -18,7 +18,7 @@ import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
-import { drinkLabel } from "../beerDerivatives.js";
+import { drinkLabel, volumeAfterVariantChange } from "../beerDerivatives.js";
 import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent, canBeShot, startsAsShot } from "../utils.js";
 import { searchDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 
@@ -103,6 +103,16 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
   // Pris en Shot, un spiritueux n'a pas de dérivé (Coca, Tonic… ne concernent que le verre de spiritueux).
   const derivatives = picked && !asShot ? derivativesFor(picked.id) : [];
   const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
+  // Un spiritueux « en dérivé » est un verre rempli : si la fiche donne le volume du verre pour ce dérivé (Vodka + Red Bull = 20 cl), le champ Volume
+  // le prend ; on revient au volume d'avant en décochant (sauf si la personne a corrigé le volume entre-temps).
+  const volumeBeforeVariant = useRef("");
+  const chooseVariant = (code) => {
+    const next = derivatives.find((d) => d.code === code) || null;
+    const previous = derivatives.find((d) => d.code === activeVariant) || null;
+    if (next?.volumeCl != null && previous?.volumeCl == null) volumeBeforeVariant.current = volume;
+    setVolume(volumeAfterVariantChange({ currentText: volume, previous, next, volumeAvant: volumeBeforeVariant.current }));
+    setVariantCode(code);
+  };
 
   // BibaZERO actif : les boissons alcoolisées ne sont pas proposées, comme dans une tournée.
   const visibleResults = zeroMode ? results.filter((d) => !isAlcoholicDrink(d)) : results;
@@ -260,7 +270,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
               {/* Spiritueux ou Shot : seulement pour un spiritueux dont la fiche a la case « Shot ». */}
               {canBeShot(picked) && <SpiritKindToggle asShot={asShot} onChange={changeKind} style={{ marginBottom: "12px" }} />}
               {/* Bière dont la fiche a des dérivés (Mazout, Tango…) : pastilles arrondies comme celles de BibaRoom ; aucune active = la bière telle quelle */}
-              {derivatives.length > 0 && <BeerDerivativePills derivatives={derivatives} activeCode={activeVariant} onChange={setVariantCode} style={{ marginBottom: "12px" }} />}
+              {derivatives.length > 0 && <BeerDerivativePills derivatives={derivatives} activeCode={activeVariant} onChange={chooseVariant} style={{ marginBottom: "12px" }} />}
               <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
                 <div data-encode="volume" style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
                   <label htmlFor="home-serve-volume" style={fieldLabelStyle}>Volume (cl.)</label>

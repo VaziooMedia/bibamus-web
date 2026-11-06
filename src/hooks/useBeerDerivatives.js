@@ -21,10 +21,11 @@ export function useBeerDerivativeList() {
 // Les dérivés (bières : Mazout, Tango… ; spiritueux : Coca, Tonic…) d'une carte de commande : la liste commune (une lecture par session) et, tant que
 // cette liste n'est pas vide, les dérivés activés pour les produits demandés. `forProduct(identifiantDuProduit)` rend les
 // dérivés que ce produit peut devenir, dans l'ordre de la gestion ([] sans dérivé, ou tant que la lecture n'est pas finie :
-// la carte s'affiche alors comme avant). Un échec de lecture ne change rien non plus.
+// la carte s'affiche alors comme avant). Un échec de lecture ne change rien non plus. Chaque dérivé rendu porte `volumeCl` : le volume du verre
+// saisi dans la gestion pour ce produit et ce dérivé (spiritueux : Vodka + Red Bull = 20 cl), ou null (le verre garde le volume du produit).
 export function useBeerDerivatives(sourceDrinkIds) {
   const list = useBeerDerivativeList();
-  const [codesById, setCodesById] = useState({});
+  const [infoById, setInfoById] = useState({}); // { id: { codes, volumes } }
   const key = useMemo(() => [...new Set((sourceDrinkIds || []).filter((id) => typeof id === "string" && id !== ""))].sort().join("|"), [sourceDrinkIds]);
 
   const hasDerivatives = !!list && list.items.length > 0;
@@ -32,13 +33,13 @@ export function useBeerDerivatives(sourceDrinkIds) {
     if (!hasDerivatives || !key) return undefined;
     let off = false;
     loadDrinkDerivatives(key.split("|")).then((byId) => {
-      if (!off) setCodesById((prev) => ({ ...prev, ...byId }));
+      if (!off) setInfoById((prev) => ({ ...prev, ...byId }));
     });
     return () => {
       off = true;
     };
   }, [hasDerivatives, key]);
 
-  const forProduct = useCallback((id) => (id ? derivativesForProduct(list, codesById[id]) : []), [list, codesById]);
+  const forProduct = useCallback((id) => (id ? derivativesForProduct(list, infoById[id]?.codes, infoById[id]?.volumes) : []), [list, infoById]);
   return { list, forProduct };
 }

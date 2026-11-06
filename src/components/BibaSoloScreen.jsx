@@ -50,7 +50,7 @@ import { AiIcon } from "./AiIcon.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { useBeerDerivatives, useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
-import { derivativeKcalByCode, derivativeName, kcalPer100mlWithVariant } from "../beerDerivatives.js";
+import { derivativeKcalByCode, derivativeName, kcalPer100mlWithVariant, volumeAfterVariantChange } from "../beerDerivatives.js";
 import { ServicePill, DerivativePill, serviceLabelOf } from "./ServiceTag.jsx";
 
 // La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
@@ -312,6 +312,16 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   useEffect(() => {
     setVariantCode(null); // un autre produit (ou plus aucun) : on repart sans dérivé
   }, [selectedDrink?.id]);
+  // Un spiritueux « en dérivé » est un verre rempli : si la fiche donne le volume du verre pour ce dérivé (Vodka + Red Bull = 20 cl), le champ Volume
+  // le prend ; on revient au volume d'avant en décochant (sauf si la personne a corrigé le volume entre-temps).
+  const volumeBeforeVariant = useRef("");
+  const chooseVariant = (code) => {
+    const next = derivatives.find((d) => d.code === code) || null;
+    const previous = derivatives.find((d) => d.code === activeVariant) || null;
+    if (next?.volumeCl != null && previous?.volumeCl == null) volumeBeforeVariant.current = volume;
+    setVolume(volumeAfterVariantChange({ currentText: volume, previous, next, volumeAvant: volumeBeforeVariant.current }));
+    setVariantCode(code);
+  };
 
   // Trois portes d'entrée distinctes une fois qu'un lieu est choisi, comme dans un salon : sa
   // propre carte (par catégories), une recherche libre dans tout BibAtlas, ou une recherche
@@ -753,7 +763,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
           {canBeShot(shotSource) && <SpiritKindToggle fine asShot={asShot} onChange={changeKind} style={{ margin: "0 auto 32px" }} />}
 
           {/* Bière dont la fiche a des dérivés (Mazout, Tango…) : rangée de pastilles au même endroit et dans le même style que ce choix ; aucune active = la bière telle quelle */}
-          {derivatives.length > 0 && <BeerDerivativePills derivatives={derivatives} activeCode={activeVariant} onChange={setVariantCode} style={{ margin: "0 auto 32px" }} />}
+          {derivatives.length > 0 && <BeerDerivativePills derivatives={derivatives} activeCode={activeVariant} onChange={chooseVariant} style={{ margin: "0 auto 32px" }} />}
 
           {/* Ligne 1 : « Volume » et « Type de service » côte à côte, chacun aussi large que sa pastille de titre.
               Ligne 2 : choix € / Jetons / Free et champ de prix, exactement aussi larges que la ligne 1 (@Home : pas de prix). */}
