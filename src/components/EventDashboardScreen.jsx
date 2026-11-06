@@ -25,7 +25,9 @@ import { ServiceTag } from "./ServiceTag.jsx";
 import { loadSalon } from "../data/salons.js";
 import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createSalonInviteNotification, sendPushNotification } from "../data/sharedDirectories.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
-import { useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
+import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
+import { PersonalDrinkRow } from "./PersonalDrinkRow.jsx";
+import { baseDrinkId } from "../beerDerivatives.js";
 import { EmptyMenuBadge } from "./EmptyMenuBadge.jsx";
 
 // Retient, pour toute la durée de la session dans l'app (pas juste le montage de CE composant),
@@ -38,8 +40,9 @@ const waterAlertSessionInitialized = new Set();
 
 export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrink, onRemoveHomeDrink, onRecordPersonalDrink, onRemovePersonalDrink, onManageMenu, onBack, updateEvent, myName, profile, myUserId, myBibroCode, bibros, onCloseEvent, onOpenSettings, onOpenVenue, onOpenWaterAlertSettings, onDeleteRound, onEditRound, onActivateBibaBob, onDeactivateBibaBob, onGoToBibaMusic, onGoToBibaPlay, onGoToDrinkCheck, onLeaveSalon, onAddStory, onOpenStoryAuthor, onPayTabAmount, tabBar, tokButton }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
-  // Les dérivés (Mazout, Tango…) : leur énergie propre et leur nom ne sont connus qu'une fois la liste lue.
-  useBeerDerivativeList();
+  // Les dérivés (Mazout, Tango…) : leur énergie propre et leur nom ne sont connus qu'une fois la liste lue ; et, pour « Ajouter une boisson
+  // hors tournée », ceux que chaque produit de la carte peut devenir (pastilles de PersonalDrinkRow).
+  const { forProduct: derivativesFor } = useBeerDerivatives((event.menu || []).filter((d) => d.fromDirectory && d.sourceDrinkId).map((d) => d.sourceDrinkId));
   const [showPersonalDetail, setShowPersonalDetail] = useState(false);
   const [caloriesHidden, setCaloriesHidden] = useState(false);
   const [personalDrinkQuery, setPersonalDrinkQuery] = useState("");
@@ -359,6 +362,8 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
   };
 
   const countPersonal = (drinkId) => event.personalOrders.filter((o) => o.drinkId === drinkId).length;
+  // Tous les verres d'un produit à un volume, dérivés compris (le verre en dérivé reste le produit de base) : une ligne y reste affichée.
+  const countPersonalAllVariants = (drinkId) => event.personalOrders.filter((o) => baseDrinkId(o.drinkId) === drinkId).length;
 
   const attendeeNames = new Set();
   event.rounds.forEach((r) => r.friends.forEach((f) => attendeeNames.add(f.name.toLowerCase())));
@@ -966,43 +971,24 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                 const matchesQuery = makeSearchMatcher(personalDrinkQuery);
                 const searching = personalDrinkQuery.trim().length > 0;
                 const flatEventMenu = flattenMenu(event.menu);
-                const list = searching ? flatEventMenu.filter((d) => matchesQuery(entityNames(d))) : flatEventMenu.filter((d) => countPersonal(d.id) > 0);
+                const list = searching ? flatEventMenu.filter((d) => matchesQuery(entityNames(d))) : flatEventMenu.filter((d) => countPersonalAllVariants(d.id) > 0);
                 if (list.length === 0) {
                   return searching ? (
                     <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic", margin: 0 }}>Aucune boisson ne correspond.</p>
                   ) : null;
                 }
-                return list.map((drink) => {
-                  const count = countPersonal(drink.id);
-                  return (
-                    <div
-                      key={drink.id}
-                      style={{ background: count > 0 ? COLORS.paperAlt : "transparent", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                    >
-                      <span style={{ fontSize: "13px", fontWeight: 600 }}>
-                        {drink.name}
-                        {drink.volumeCl && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {drink.volumeCl}cl.</span>}
-                      </span>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <button
-                          onClick={() => removeLastPersonalFor(drink.id)}
-                          disabled={count === 0}
-                          style={{ width: "22px", height: "22px", borderRadius: "6px", border: "none", background: COLORS.surface, fontSize: "13px", fontWeight: 700, cursor: count === 0 ? "default" : "pointer" }}
-                        >
-                          −
-                        </button>
-                        <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", minWidth: "12px", textAlign: "center" }}>{count}</span>
-                        <button
-                          onClick={() => !amIPaused && addPersonal(drink.id)}
-                          disabled={amIPaused}
-                          style={{ width: "22px", height: "22px", borderRadius: "6px", border: "none", background: amIPaused ? COLORS.paperAlt : COLORS.amber, fontSize: "13px", fontWeight: 700, cursor: amIPaused ? "default" : "pointer", color: amIPaused ? COLORS.inkSoft : COLORS.paper }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  );
-                });
+                return list.map((drink) => (
+                  <PersonalDrinkRow
+                    key={drink.id}
+                    drink={drink}
+                    derivatives={drink.fromDirectory && drink.sourceDrinkId ? derivativesFor(drink.sourceDrinkId) : []}
+                    countFor={countPersonal}
+                    totalCount={countPersonalAllVariants(drink.id)}
+                    paused={amIPaused}
+                    onAdd={addPersonal}
+                    onRemove={removeLastPersonalFor}
+                  />
+                ));
               })()}
             </div>
           </div>
