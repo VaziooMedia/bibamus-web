@@ -89,12 +89,21 @@ export function cleanDerivativeVolumes(raw) {
   return out;
 }
 
-// Les dérivés qu'un produit peut devenir, dans l'ordre de la liste : seuls ceux qui existent encore (non supprimés, non masqués).
+// Les dérivés qu'un produit peut devenir, dans l'ordre PROPRE À CE PRODUIT (celui de ses codes cochés dans la gestion : un rhum a le cola en premier,
+// un gin le tonic) : seuls ceux qui existent encore (non supprimés, non masqués) ; un code en double compte une fois.
 // `volumes` (facultatif) = les volumes de verre du produit : chaque dérivé porte alors `volumeCl` (null s'il n'en a pas pour ce produit).
 export function derivativesForProduct(list, codes, volumes) {
   if (!list || !Array.isArray(codes) || codes.length === 0) return [];
-  const wanted = new Set(codes.filter((c) => typeof c === "string"));
-  return list.items.filter((d) => wanted.has(d.code)).map((d) => ({ ...d, volumeCl: volumes && volumes[d.code] != null ? volumes[d.code] : null }));
+  const byCode = new Map(list.items.map((d) => [d.code, d]));
+  const out = [];
+  const seen = new Set();
+  for (const code of codes) {
+    const d = typeof code === "string" ? byCode.get(code) : null;
+    if (!d || seen.has(code)) continue;
+    seen.add(code);
+    out.push({ ...d, volumeCl: volumes && volumes[d.code] != null ? volumes[d.code] : null });
+  }
+  return out;
 }
 
 // Une table code → énergie (kcal/100ml) des seuls dérivés qui en ont une.
