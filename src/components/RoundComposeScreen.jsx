@@ -52,6 +52,8 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
   const derivatives = derivativesFor && selected.fromDirectory && selected.sourceDrinkId ? derivativesFor(selected.sourceDrinkId) : [];
   const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
   const orderId = drinkIdWithVariant(selected.id, activeVariant);
+  // Le « + » clignote pour tout verre ajouté à cette carte, avec ou sans dérivé (la pastille se désactive juste après l'ajout).
+  const flashHere = !!flash && baseDrinkId(flash.drinkId) === baseDrinkId(orderId);
   const count = countForFriendDrink(activeFriendId, orderId);
   // Pour la ligne « Dans la commande » : la bière telle quelle (« nature ») puis chaque dérivé.
   const countChoices = [{ code: null, name: "Nature" }, ...derivatives];
@@ -132,8 +134,12 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
               </button>
               <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", minWidth: "14px", textAlign: "center" }}>{count}</span>
               <button
-                key={flash?.drinkId === orderId ? flash.token : "idle"}
-                onClick={() => addOrder(orderId)}
+                key={flashHere ? flash.token : "idle"}
+                onClick={() => {
+                  addOrder(orderId);
+                  // Le dérivé ne vaut que pour le verre ajouté : la pastille se désactive, le verre suivant est « nature » sauf nouveau choix.
+                  setVariantCode(null);
+                }}
                 style={{
                   width: "28px",
                   height: "28px",
@@ -144,7 +150,7 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
               fontSize: "16px",
               cursor: "pointer",
               fontWeight: 700,
-              animation: flash?.drinkId === orderId ? "round-add-flash 0.4s ease-out" : "none",
+              animation: flashHere ? "round-add-flash 0.4s ease-out" : "none",
             }}
           >
             +
