@@ -235,6 +235,20 @@ export const resolveMenuItem =(item, drinksDirectory) => {
   };
 };
 
+// Un produit de la carte d'un lieu dont la fiche du répertoire n'existe plus (supprimée) : recopié dans un salon, il y serait sans nom ni type. `fichesLues` =
+// les identifiants des fiches lues pour cette carte ; quand aucune n'a été lue du tout (lecture échouée, ou pas encore finie), on ne peut rien juger : rien n'est
+// ignoré, comme avant.
+const isVenueItemWithoutFiche = (item, fichesLues) => fichesLues.size > 0 && !!item.fromDirectory && !!item.sourceDrinkId && !fichesLues.has(item.sourceDrinkId);
+
+// La carte d'un lieu recopiée dans un salon (création du salon, changement de lieu) : chaque produit du répertoire reprend sa fiche (resolveMenuItem),
+// avec un identifiant propre au salon. Un produit dont la fiche n'existe plus est IGNORÉ (voir isVenueItemWithoutFiche).
+export const resolveVenueMenuForEvent = (venueMenu, drinksDirectory) => {
+  const fichesLues = new Set((drinksDirectory || []).map((d) => d.id));
+  return (Array.isArray(venueMenu) ? venueMenu : [])
+    .filter((d) => !isVenueItemWithoutFiche(d, fichesLues))
+    .map((d) => ({ ...resolveMenuItem(d, drinksDirectory || []), id: `local-${Date.now()}-${Math.random()}` }));
+};
+
 // @Home — prépare « Je me sers » (fonction pure, testée à part). Renvoie : la nouvelle entrée de
 // carte à ajouter au salon (null si ce produit existe déjà à ce volume et à ce type de service, ajouté
 // par moi ou par quelqu'un d'autre), le verre à ranger dans event.homeDrinks, et la ligne de
@@ -469,7 +483,10 @@ export const personalDrinkRecord = (event, orderId, drinkId, myBibroCode) => {
 
 export const computeMissingVenueItems = (event, venue, drinksDirectory) => {
   if (!venue || !venue.menu) return [];
+  const fichesLues = new Set((drinksDirectory || []).map((d) => d.id));
   return venue.menu
+    // Un produit dont la fiche n'existe plus n'est pas « à ajouter à la session » : il arriverait sans nom (voir isVenueItemWithoutFiche).
+    .filter((vItem) => !isVenueItemWithoutFiche(vItem, fichesLues))
     .map((vItem) => resolveMenuItem(vItem, drinksDirectory))
     .filter((vItem) => !event.menu.some((eItem) => normalizeForSearch(eItem.name) === normalizeForSearch(vItem.name)));
 };
