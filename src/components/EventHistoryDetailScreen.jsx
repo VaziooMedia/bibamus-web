@@ -9,9 +9,13 @@ import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
 import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent } from "../utils.js";
 import { loadVenuesByIds } from "../data/sharedDirectories.js";
+import { drinkLabel } from "../beerDerivatives.js";
+import { useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
 
 export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, roundsSum, onBack, openVenue, onReopen, onDelete, onDeleteRound }) {
   const [venue, setVenue] = useState(null);
+  // Les dérivés (Mazout, Tango…) : leur nom et leur énergie propre ne sont connus qu'une fois la liste lue.
+  useBeerDerivativeList();
   useEffect(() => {
     if (!event.venueId) {
       setVenue(null);
@@ -57,7 +61,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
     { total: 0, missing: 0 }
   );
 
-  const drinkName = (id) => findEntryForEvent(event, id)?.name || id;
+  const drinkName = (id) => drinkLabel(findEntryForEvent(event, id)) || id;
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>

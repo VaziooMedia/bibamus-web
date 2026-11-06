@@ -14,6 +14,7 @@
 import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
 import { searchTokens, searchRank } from "../utils.js";
+import { BEER_DERIVATIVE_LIST_KEY, buildDerivativeList, rememberDerivativeList, rememberedDerivativeList } from "../beerDerivatives.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
@@ -2917,6 +2918,61 @@ function onceLoader(keys, label) {
     }
     return once;
   };
+}
+
+// ============================================================
+// Dérivés des bières (Mazout, Tango…) : voir beerDerivatives.js. Deux lectures, toutes deux mémorisées pour la session :
+//   - la liste commune (custom_list_items, clé « beer_derivative », avec l'énergie propre à chaque dérivé) et son ordre ;
+//   - les dérivés activés pour chaque produit (drinks_directory.derivatives), demandés seulement pour les produits dont on a besoin.
+// Un échec de lecture n'est pas mémorisé (le prochain écran réessaie) et n'empêche rien : sans dérivés, la carte reste celle d'avant.
+// ============================================================
+let beerDerivativeListOnce = null;
+export function loadBeerDerivativeListOnce() {
+  if (!beerDerivativeListOnce) {
+    beerDerivativeListOnce = Promise.all([
+      supabase.from("custom_list_items").select("code, fr, hidden, kcal_per_100ml").eq("list_key", BEER_DERIVATIVE_LIST_KEY),
+      supabase.from("custom_list_order").select("codes").eq("list_key", BEER_DERIVATIVE_LIST_KEY).maybeSingle(),
+    ])
+      .then(([items, order]) => {
+        if (items.error || !Array.isArray(items.data)) {
+          console.error("loadBeerDerivativeList:", items.error);
+          beerDerivativeListOnce = null;
+          return null;
+        }
+        if (order.error) console.error("loadBeerDerivativeList (ordre):", order.error);
+        const list = buildDerivativeList(items.data, order.data?.codes);
+        rememberDerivativeList(list);
+        return list;
+      })
+      .catch((e) => {
+        console.error("loadBeerDerivativeList:", e);
+        beerDerivativeListOnce = null;
+        return null;
+      });
+  }
+  return beerDerivativeListOnce;
+}
+
+// La liste déjà lue (sans réseau), ou null tant qu'elle ne l'est pas : pour les calculs qui ne peuvent pas attendre.
+export const getBeerDerivativeListCached = () => rememberedDerivativeList();
+
+// { identifiantProduit: [codes] } pour les produits demandés ; un produit sans dérivé n'a pas d'entrée. Seuls les produits pas encore
+// lus sont demandés, par paquets.
+const derivativeCodesByDrink = new Map();
+export async function loadDrinkDerivatives(ids) {
+  const wanted = [...new Set((ids || []).filter((id) => typeof id === "string" && id !== ""))];
+  const missing = wanted.filter((id) => !derivativeCodesByDrink.has(id));
+  for (let i = 0; i < missing.length; i += 100) {
+    const chunk = missing.slice(i, i + 100);
+    const { data, error } = await supabase.from("drinks_directory").select("id, derivatives").in("id", chunk);
+    if (error || !Array.isArray(data)) {
+      console.error("loadDrinkDerivatives:", error);
+      continue;
+    }
+    chunk.forEach((id) => derivativeCodesByDrink.set(id, []));
+    data.forEach((r) => derivativeCodesByDrink.set(r.id, Array.isArray(r.derivatives) ? r.derivatives.filter((c) => typeof c === "string") : []));
+  }
+  return Object.fromEntries(wanted.filter((id) => (derivativeCodesByDrink.get(id) || []).length > 0).map((id) => [id, derivativeCodesByDrink.get(id)]));
 }
 
 // Types d'établissement et aménités d'un lieu : { venue_type: { rows, order }, amenity: { rows, order } } (fiche d'un lieu,

@@ -3,6 +3,7 @@
 // depuis le prototype Claude.
 // ============================================================
 import { DRINK_TYPES, MENU_CATEGORIES, DRINK_TYPE_MIGRATIONS, NON_ALCOHOLIC_DRINK_TYPES, SERVING_MODE_LABELS, MONTH_NAMES_FR, DRINK_FIELD_LABELS } from "./constants.js";
+import { variantOfDrinkId, withDerivative, drinkLabel } from "./beerDerivatives.js";
 
 // Lettres que la décomposition NFD ne sépare pas en « lettre + accent » : œ → oe, æ → ae, ß → ss, ø → o, ł → l… Mêmes correspondances que
 // `unaccent` de Postgres, que la base applique pour calculer `search_text` (fonction `bibamus_normalize_search_text`) : « œufs » se retrouve en
@@ -132,7 +133,9 @@ export const findMenuEntryById = (menu, id) => {
   if (!entry) return null;
   const vol = normalizeVolumes(entry).find((v) => v.id === volId);
   if (!vol) return null;
-  return { ...entry, volumeCl: vol.cl, price: vol.price };
+  // « entréeId::volumeId::codeDérivé » : le même verre servi en dérivé (Mazout, Tango…) — même produit, même prix, mais son énergie
+  // (quand le dérivé en a une) et son nom de dérivé en plus. Voir beerDerivatives.js.
+  return withDerivative({ ...entry, volumeCl: vol.cl, price: vol.price }, variantOfDrinkId(id));
 };
 
 // L'entrée de carte d'un verre : la carte du salon, puis la carte @Home mémorisée (event.homeMenu).
@@ -204,7 +207,7 @@ export const myDrinksList = (event, orders = []) =>
   orders
     .map((o, i) => {
       const entry = findEntryForEvent(event, o.drinkId);
-      return { id: o.id ?? `verre-${i}`, name: entry?.name || "Boisson", volumeCl: entry?.volumeCl ?? null, kcal: entry ? kcalForDrink(entry) : null, servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", timestamp: o.timestamp ?? 0, order: i };
+      return { id: o.id ?? `verre-${i}`, name: drinkLabel(entry) || "Boisson", volumeCl: entry?.volumeCl ?? null, kcal: entry ? kcalForDrink(entry) : null, servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", timestamp: o.timestamp ?? 0, order: i };
     })
     .sort((a, b) => a.timestamp - b.timestamp || a.order - b.order)
     .map(({ order, ...glass }) => glass);
@@ -420,6 +423,8 @@ const statsRowFor = (drink) => ({
   unit_price: drink?.price ?? null,
   unit_volume_cl: drink?.volumeCl ?? null,
   unit_kcal_per_100ml: drink?.kcalPer100ml ?? null,
+  // Le dérivé (Mazout, Tango…) n'est écrit que s'il y en a un : pour les statistiques le verre reste le produit de base.
+  ...(drink?.variantCode ? { variant_code: drink.variantCode } : {}),
 });
 
 // Une ligne par verre commandé dans la tournée. Chaque participant est résolu vers son vrai compte
