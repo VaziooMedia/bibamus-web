@@ -16,6 +16,9 @@ import { AiIcon } from "./AiIcon.jsx";
 import { ServiceTag } from "./ServiceTag.jsx";
 import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
+import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
+import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
+import { drinkLabel } from "../beerDerivatives.js";
 import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent, canBeShot, startsAsShot } from "../utils.js";
 import { searchDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 
@@ -74,6 +77,9 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
   const [servingMode, setServingMode] = useState("");
   // Spiritueux dont la fiche a la case « Shot » : pris en shot ou non (au départ : le choix par défaut de la fiche).
   const [asShot, setAsShot] = useState(false);
+  // Dérivé de la bière choisie (Mazout, Tango…) : aucune pastille active au départ = la bière telle quelle. Les dérivés proposés sont ceux
+  // cochés sur la fiche du produit dans la gestion ; le verre reste le produit de base, seule l'énergie change.
+  const [variantCode, setVariantCode] = useState(null);
   const [justAdded, setJustAdded] = useState(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanNotice, setScanNotice] = useState(null);
@@ -91,6 +97,11 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
     }, 350);
     return () => clearTimeout(timer);
   }, [query]);
+
+  // Les dérivés de la bière choisie ; un dérivé n'est actif que s'il fait partie de ceux proposés pour ce produit.
+  const { forProduct: derivativesFor } = useBeerDerivatives(picked ? [picked.id] : []);
+  const derivatives = picked ? derivativesFor(picked.id) : [];
+  const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
 
   // BibaZERO actif : les boissons alcoolisées ne sont pas proposées, comme dans une tournée.
   const visibleResults = zeroMode ? results.filter((d) => !isAlcoholicDrink(d)) : results;
@@ -111,6 +122,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
 
   const pick = (drink) => {
     setPicked(drink);
+    setVariantCode(null);
     // Spiritueux ou Shot : le choix par défaut de la fiche (seul un spiritueux avec la case « Shot » peut être un shot).
     const shot = startsAsShot(drink);
     setAsShot(shot);
@@ -130,8 +142,8 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
   const confirm = () => {
     if (!picked || myPaused) return;
     const cl = parseVolume(volume);
-    onServe(picked, { volumeCl: cl, servingMode, asShot: canBeShot(picked) && asShot });
-    setJustAdded(`${picked.name}${volumeLabel(cl)}`);
+    onServe(picked, { volumeCl: cl, servingMode, asShot: canBeShot(picked) && asShot, variantCode: activeVariant });
+    setJustAdded(`${drinkLabel({ name: picked.name, variantName: activeVariant ? derivatives.find((d) => d.code === activeVariant)?.name : null })}${volumeLabel(cl)}`);
     setPicked(null);
     setQuery("");
     setResults([]);
@@ -139,8 +151,9 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
 
   const again = (entry) => {
     if (myPaused || !entry?.sourceDrinkId) return;
-    onServe({ id: entry.sourceDrinkId, name: entry.name, kcalPer100ml: entry.kcalPer100ml }, { volumeCl: entry.volumeCl ?? null, servingMode: entry.servingMode || "", asShot: entry.menuCategory === "Shots" });
-    setJustAdded(`${entry.name}${volumeLabel(entry.volumeCl)}`);
+    // « Reprendre » un verre en dérivé reprend le même dérivé (s'il existe encore).
+    onServe({ id: entry.sourceDrinkId, name: entry.name, kcalPer100ml: entry.kcalPer100ml }, { volumeCl: entry.volumeCl ?? null, servingMode: entry.servingMode || "", asShot: entry.menuCategory === "Shots", variantCode: entry.variantName ? entry.variantCode : null });
+    setJustAdded(`${drinkLabel(entry)}${volumeLabel(entry.volumeCl)}`);
   };
 
   // Une boisson reconnue par la lecture d'étiquette (IA) se choisit comme un résultat de recherche. BibaZERO actif : une boisson
@@ -244,6 +257,8 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
               <div style={{ fontWeight: 700, fontSize: "15px", marginBottom: "10px" }}>{picked.name}</div>
               {/* Spiritueux ou Shot : seulement pour un spiritueux dont la fiche a la case « Shot ». */}
               {canBeShot(picked) && <SpiritKindToggle asShot={asShot} onChange={changeKind} style={{ marginBottom: "12px" }} />}
+              {/* Bière dont la fiche a des dérivés (Mazout, Tango…) : pastilles arrondies comme celles de BibaRoom ; aucune active = la bière telle quelle */}
+              {derivatives.length > 0 && <BeerDerivativePills derivatives={derivatives} activeCode={activeVariant} onChange={setVariantCode} style={{ marginBottom: "12px" }} />}
               <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
                 <div data-encode="volume" style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
                   <label htmlFor="home-serve-volume" style={fieldLabelStyle}>Volume (cl.)</label>
@@ -298,7 +313,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
                     <span style={{ fontSize: "13px", fontWeight: 600, minWidth: 0, display: "flex", flexDirection: "column", whiteSpace: "pre" }}>
                       {/* Le nom se coupe par « … » si besoin ; le volume reste toujours visible. */}
                       <span style={{ display: "flex", alignItems: "baseline", minWidth: 0 }}>
-                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{g.entry?.name || "Boisson"}</span>
+                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{drinkLabel(g.entry) || "Boisson"}</span>
                         {g.entry?.volumeCl != null && <span style={{ color: COLORS.amber, fontWeight: 700, flexShrink: 0 }}>{volumeLabel(g.entry.volumeCl)}</span>}
                       </span>
                       {/* Le type de service (et « Shot » pour un shot), en petites pastilles sur la ligne du dessous. */}
@@ -307,7 +322,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                       <button
                         onClick={() => onRemove(g.lastServeId)}
-                        aria-label={`Retirer un verre : ${g.entry?.name || "Boisson"}`}
+                        aria-label={`Retirer un verre : ${drinkLabel(g.entry) || "Boisson"}`}
                         style={{ width: "22px", height: "22px", borderRadius: "6px", border: "none", background: COLORS.paperAlt, fontSize: "13px", fontWeight: 700, cursor: "pointer" }}
                       >
                         −
@@ -316,7 +331,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
                       <button
                         onClick={() => again(g.entry)}
                         disabled={myPaused || !g.entry?.sourceDrinkId}
-                        aria-label={`Reprendre : ${g.entry?.name || "Boisson"}`}
+                        aria-label={`Reprendre : ${drinkLabel(g.entry) || "Boisson"}`}
                         style={{ width: "22px", height: "22px", borderRadius: "6px", border: "none", background: myPaused ? COLORS.paperAlt : COLORS.amber, color: myPaused ? COLORS.inkSoft : COLORS.paper, fontSize: "13px", fontWeight: 700, cursor: myPaused ? "default" : "pointer" }}
                       >
                         +
