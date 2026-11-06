@@ -61,14 +61,17 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   };
 
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
+  // Tri par nom, sans jamais planter : un produit de la carte dont la fiche du répertoire n'a pas pu être retrouvée à la création du salon n'a pas de nom
+  // (voir resolveMenuItem) ; il se range en tête et reste supprimable avec sa croix.
+  const byName = (a, b) => (a.name || "").localeCompare(b.name || "");
   // Même règle de recherche que partout dans l'app (voir makeSearchMatcher).
   const matchesQuery = makeSearchMatcher(query);
   const searching = query.trim().length > 0;
   const searchResults = searching
-    ? [...event.menu].filter((d) => matchesQuery(entityNames(d))).sort((a, b) => a.name.localeCompare(b.name))
+    ? [...event.menu].filter((d) => matchesQuery(entityNames(d))).sort(byName)
     : [];
   const categoriesPresent = [...MENU_CATEGORIES, "Non classé"].filter((cat) => event.menu.some((d) => categoryOf(d) === cat));
-  const itemsIn = (cat) => [...event.menu.filter((d) => categoryOf(d) === cat)].sort((a, b) => a.name.localeCompare(b.name));
+  const itemsIn = (cat) => [...event.menu.filter((d) => categoryOf(d) === cat)].sort(byName);
   const toggleCategoryOpen = (cat) => setOpenCategory((prev) => (prev === cat ? null : cat));
 
   // Items present on the venue's live menu but missing from this event's own (frozen) menu —
@@ -518,7 +521,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
         ) : (
           <>
             {/* Premier bloc : tous les produits ajoutés, toutes catégories confondues (par ordre alphabétique). */}
-            {renderMenuBlock(ALL_PRODUCTS_BLOCK, "Tous les produits ajoutés", [...event.menu].sort((a, b) => a.name.localeCompare(b.name)))}
+            {renderMenuBlock(ALL_PRODUCTS_BLOCK, "Tous les produits ajoutés", [...event.menu].sort(byName))}
             {categoriesPresent.map((cat) => renderMenuBlock(cat, cat === "Non classé" ? cat : drinkTypeLabel(cat), itemsIn(cat)))}
           </>
         )}
