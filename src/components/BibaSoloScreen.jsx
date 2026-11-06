@@ -298,6 +298,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [offered, setOffered] = useState(""); // montant payé pour un verre offert à d'autres, dans la monnaie du verre (facultatif ; le champ ne s'ouvre qu'à la demande)
   const [offeredOpen, setOfferedOpen] = useState(false);
   const priceInputRef = useRef(null); // champ de prix : reçoit le curseur (et le clavier numérique) dès qu'on touche € ou Jetons
+  const priceTyped = useRef(false); // la personne a-t-elle commencé à taper le prix ? (voir l'effet des dérivés plus bas)
   const [servingMode, setServingMode] = useState(""); // type de service : "" (non défini) | bouteille | canette | fut | verre | pet | brique | carton
   const [asShot, setAsShot] = useState(false); // spiritueux pris en shot (choix Spiritueux / Shot)
   const [shotSource, setShotSource] = useState(null); // fiche complète du produit choisi : dit s'il peut être un shot et fournit ses valeurs par défaut
@@ -311,7 +312,14 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
   useEffect(() => {
     setVariantCode(null); // un autre produit (ou plus aucun) : on repart sans dérivé
+    priceTyped.current = false;
   }, [selectedDrink?.id]);
+  // Un produit qui a des dérivés : le clavier numérique du prix ne doit pas s'imposer, il masquerait les pastilles. Un produit déjà lu dans la session
+  // est connu dès l'affichage (le champ n'a alors pas le curseur) ; à la première lecture, les pastilles n'arrivent qu'après l'ouverture du champ : si le
+  // curseur y est encore et qu'aucun prix n'a été tapé, on le retire (le clavier se referme).
+  useEffect(() => {
+    if (derivatives.length > 0 && !priceTyped.current && priceInputRef.current && document.activeElement === priceInputRef.current) priceInputRef.current.blur();
+  }, [derivatives.length]);
   // Un spiritueux « en dérivé » est un verre rempli : si la fiche donne le volume du verre pour ce dérivé (Vodka + Red Bull = 20 cl), le champ Volume
   // le prend ; on revient au volume d'avant en décochant (sauf si la personne a corrigé le volume entre-temps).
   const volumeBeforeVariant = useRef("");
@@ -380,6 +388,11 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const categoryMatches = makeSearchMatcher(categoryQuery);
   const genericMatches = makeSearchMatcher(genericQuery);
   const genericResults = genericDrinks.filter((d) => genericMatches(entityNames(d))).filter((d) => !bibaZeroActive || !isAlcoholicDrink(d));
+  // Les dérivés des produits proposés (mes verres, carte du lieu, résultats de recherche) sont lus d'avance : au moment où on touche un produit, on sait
+  // déjà s'il a des dérivés, donc le clavier du prix ne s'ouvre pas pour rien (voir l'effet sur `derivatives`). 100 produits au plus.
+  useBeerDerivatives(
+    [...new Set([...visibleRecentDrinks.map((d) => d.id), ...venueMenuItems.map((d) => d.sourceDrinkId), ...drinkResults.map((d) => d.id), ...genericResults.map((d) => d.id)])].filter(Boolean).slice(0, 100)
+  );
 
   // Un spiritueux dont la fiche a la case « Shot » cochée propose le choix Spiritueux / Shot ; il démarre en Shot si la fiche
   // le dit par défaut. Volume et type de service reprennent alors les valeurs du shot de la fiche.
@@ -860,10 +873,13 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
                   inputMode="decimal"
                   aria-label="Prix"
                   value={free ? "-" : price}
-                  onChange={(e) => setPrice(e.target.value)}
+                  onChange={(e) => {
+                    priceTyped.current = true;
+                    setPrice(e.target.value);
+                  }}
                   disabled={free}
                   placeholder={currency === "jeton" ? "0" : "0,00"}
-                  autoFocus
+                  autoFocus={derivatives.length === 0}
                   style={free ? { ...encodeInputStyle, opacity: 0.45, background: COLORS.paper } : encodeInputStyle}
                 />
               </div>
