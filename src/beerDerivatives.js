@@ -1,11 +1,13 @@
 // ============================================================
-// Dérivés des bières (Mazout, Tango, Half…) : une façon de servir une bière de base. Le produit reste la bière de base
-// (statistiques, classements, notes) ; le dérivé n'en change que l'énergie (kcal/100ml) et s'affiche dans les commandes.
+// Dérivés des bières (Mazout, Tango, Half…) et des spiritueux (Coca, Tonic, Red Bull…) : une façon de servir un produit de base. Le produit
+// reste le produit de base (statistiques, classements, notes) ; le dérivé n'en change que l'énergie (kcal/100ml) et s'affiche dans les commandes.
 //
-// Ce fichier ne contient que de la logique pure (aucun accès réseau). La liste des dérivés est commune à toutes les bières :
-// table custom_list_items (list_key « beer_derivative », colonne kcal_per_100ml facultative), ordre dans custom_list_order ;
-// les dérivés activés pour un produit sont dans drinks_directory.derivatives (codes). Tout se gère depuis la plateforme de
-// gestion (fiche d'une bière, « Dérivés du produit »).
+// Ce fichier ne contient que de la logique pure (aucun accès réseau). Il y a DEUX listes de dérivés, une pour toutes les bières et une pour
+// tous les spiritueux : table custom_list_items (list_key « beer_derivative » ou « spirit_derivative », colonne kcal_per_100ml facultative),
+// ordre dans custom_list_order ; les dérivés activés pour un produit sont dans drinks_directory.derivatives (codes de sa liste). Tout se
+// gère depuis la plateforme de gestion (fiche du produit, « Dérivés du produit »). Les codes des deux listes ne se mélangent pas
+// (« perso_… » pour les bières, « perso_spirit_… » pour les spiritueux) : l'app lit les deux d'un coup et n'en fait qu'une liste, dans
+// laquelle chaque produit ne retrouve que ses propres codes. Les verres pris en Shot n'ont jamais de dérivé (voir isShotEntry).
 //
 // Dans une commande de BibaRoom, le dérivé se glisse dans l'identifiant du verre : « entréeId::volumeId » devient
 // « entréeId::volumeId::codeDérivé » (voir flattenMenu et findMenuEntryById dans utils.js, qui ignorent ce troisième morceau).
@@ -13,6 +15,11 @@
 // ============================================================
 
 export const BEER_DERIVATIVE_LIST_KEY = "beer_derivative";
+export const SPIRIT_DERIVATIVE_LIST_KEY = "spirit_derivative";
+export const DERIVATIVE_LIST_KEYS = [BEER_DERIVATIVE_LIST_KEY, SPIRIT_DERIVATIVE_LIST_KEY];
+
+// Un verre pris en Shot (catégorie de carte « Shots », ou ancien type « Shots ») : les dérivés d'un spiritueux ne le concernent pas.
+export const isShotEntry = (entry) => entry?.menuCategory === "Shots" || entry?.type === "Shots";
 
 const SEP = "::";
 
@@ -54,6 +61,18 @@ export function buildDerivativeList(rows, order) {
   const placed = items.filter((d) => rank.has(d.code)).sort((a, b) => rank.get(a.code) - rank.get(b.code));
   const rest = items.filter((d) => !rank.has(d.code)).sort((a, b) => a.name.localeCompare(b.name));
   return { items: [...placed, ...rest] };
+}
+
+// Les deux listes (bières puis spiritueux) lues d'un coup, en une seule : `itemRows` porte list_key + code + fr + hidden + kcal_per_100ml,
+// `orderRows` porte list_key + codes (l'ordre propre à chaque liste). Chaque liste garde son ordre ; les bières viennent d'abord.
+export function buildCombinedDerivativeList(itemRows, orderRows) {
+  const items = [];
+  DERIVATIVE_LIST_KEYS.forEach((key) => {
+    const rows = (Array.isArray(itemRows) ? itemRows : []).filter((r) => r && r.list_key === key);
+    const order = (Array.isArray(orderRows) ? orderRows : []).find((r) => r && r.list_key === key)?.codes;
+    items.push(...buildDerivativeList(rows, order).items);
+  });
+  return { items };
 }
 
 // Les dérivés qu'un produit peut devenir, dans l'ordre de la liste : seuls ceux qui existent encore (non supprimés, non masqués).

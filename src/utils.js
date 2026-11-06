@@ -243,9 +243,11 @@ export const resolveMenuItem =(item, drinksDirectory) => {
 // l'entrée de carte : le même produit au même volume mais servi autrement est une autre entrée.
 // Un shot (`asShot`) est une entrée à part, comme dans la carte boissons d'un salon : même produit (type « Spiritueux »)
 // avec `menuCategory: "Shots"` ; le même produit pris en spiritueux n'en reprend donc pas l'entrée, et inversement.
-// Une bière servie en dérivé (Mazout, Tango… : `variantCode`) : le dérivé se glisse dans l'identifiant du verre (« entrée::volume::codeDérivé », voir
+// Un produit servi en dérivé (Mazout, Tango… pour une bière, Coca, Tonic… pour un spiritueux : `variantCode`) : le dérivé se glisse dans l'identifiant du verre (« entrée::volume::codeDérivé », voir
 // beerDerivatives.js) et la ligne de statistiques porte `variant_code` et l'énergie du dérivé quand il en a une. Sans dérivé, rien ne change.
-export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "", asShot = false, variantCode = null } = {}, me = {}) => {
+export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "", asShot = false, variantCode: requestedVariant = null } = {}, me = {}) => {
+  // Un verre pris en Shot n'a jamais de dérivé (celui d'un spiritueux ne concerne pas ses shots).
+  const variantCode = asShot ? null : requestedVariant;
   const cl = volumeCl ?? null;
   const serving = servingMode || "";
   let entry = null;

@@ -27,7 +27,7 @@ import { loadRoomStories, loadMyClubs, loadClubMembers, linkSalonToClub, createS
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
 import { PersonalDrinkRow } from "./PersonalDrinkRow.jsx";
-import { baseDrinkId } from "../beerDerivatives.js";
+import { baseDrinkId, isShotEntry } from "../beerDerivatives.js";
 import { EmptyMenuBadge } from "./EmptyMenuBadge.jsx";
 
 // Retient, pour toute la durée de la session dans l'app (pas juste le montage de CE composant),
@@ -981,7 +981,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                   <PersonalDrinkRow
                     key={drink.id}
                     drink={drink}
-                    derivatives={drink.fromDirectory && drink.sourceDrinkId ? derivativesFor(drink.sourceDrinkId) : []}
+                    derivatives={drink.fromDirectory && drink.sourceDrinkId && !isShotEntry(drink) ? derivativesFor(drink.sourceDrinkId) : []}
                     countFor={countPersonal}
                     totalCount={countPersonalAllVariants(drink.id)}
                     paused={amIPaused}

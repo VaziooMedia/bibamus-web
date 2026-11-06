@@ -302,11 +302,12 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const [asShot, setAsShot] = useState(false); // spiritueux pris en shot (choix Spiritueux / Shot)
   const [shotSource, setShotSource] = useState(null); // fiche complète du produit choisi : dit s'il peut être un shot et fournit ses valeurs par défaut
   const [saving, setSaving] = useState(false);
-  // Dérivé de la bière choisie (Mazout, Tango…) : aucune pastille active au départ = la bière telle quelle. Les dérivés proposés sont ceux
+  // Dérivé du produit choisi (bière : Mazout, Tango… ; spiritueux : Coca, Tonic…) : aucune pastille active au départ = la bière telle quelle. Les dérivés proposés sont ceux
   // cochés sur la fiche du produit dans la gestion ; le verre reste le produit de base, seule l'énergie change.
   const [variantCode, setVariantCode] = useState(null);
   const { forProduct: derivativesFor } = useBeerDerivatives(selectedDrink ? [selectedDrink.id] : []);
-  const derivatives = selectedDrink ? derivativesFor(selectedDrink.id) : [];
+  // Un spiritueux pris en Shot n'a pas de dérivé (Coca, Tonic… ne concernent que le verre de spiritueux) : pas de pastilles, et jamais de dérivé envoyé.
+  const derivatives = selectedDrink && !asShot ? derivativesFor(selectedDrink.id) : [];
   const activeVariant = derivatives.some((d) => d.code === variantCode) ? variantCode : null;
   useEffect(() => {
     setVariantCode(null); // un autre produit (ou plus aucun) : on repart sans dérivé
@@ -385,6 +386,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
   const changeKind = (next) => {
     if (next === asShot) return;
     setAsShot(next);
+    setVariantCode(null); // le dérivé choisi pour le verre ne suit pas le passage en Shot (ni le retour)
     setVolume(String(defaultVolumeOf(shotSource, next) ?? VOLUME_FALLBACK_CL));
     setServingMode(defaultServingModeText(shotSource, next));
   };
