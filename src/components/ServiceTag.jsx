@@ -23,6 +23,16 @@ export function ShotPill({ style }) {
   );
 }
 
+// La pastille du dérivé d'une bière (« Mazout », « Tango »…) dans le journal de BibaSolo (ligne 1, à droite du nom du produit) :
+// grisée, du même style que celle du type de service. Rien sans nom de dérivé.
+export function DerivativePill({ name }) {
+  return name ? (
+    <span data-testid="derivative-pill" style={pillStyle}>
+      {name}
+    </span>
+  ) : null;
+}
+
 // La pastille de la ligne 3 du journal de BibaSolo (après le drapeau) : « Shot » seul pour un verre pris en shot, quel que soit son type de service
 // (un shot est d'office servi au verre, inutile de le répéter) ; sinon le type de service ; rien s'il n'est pas défini.
 export function ServicePill({ mode, shot = false }) {
