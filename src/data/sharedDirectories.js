@@ -2991,6 +2991,9 @@ export async function loadDrinkDerivatives(ids) {
   return Object.fromEntries(wanted.filter((id) => (derivativeInfoByDrink.get(id)?.codes || []).length > 0).map((id) => [id, derivativeInfoByDrink.get(id)]));
 }
 
+// Ce qu'on sait déjà (sans réseau) des dérivés d'un produit lu plus tôt dans la session : { codes, volumes }, ou undefined s'il n'a pas encore été lu.
+export const getCachedDrinkDerivatives = (id) => derivativeInfoByDrink.get(id);
+
 // Types d'établissement et aménités d'un lieu : { venue_type: { rows, order }, amenity: { rows, order } } (fiche d'un lieu,
 // assistant « Ajouter un lieu »).
 export const loadVenueListsOnce = onceLoader([VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY], "loadVenueLists");

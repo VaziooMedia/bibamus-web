@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getBeerDerivativeListCached, loadBeerDerivativeListOnce, loadDrinkDerivatives } from "../data/sharedDirectories.js";
+import { getBeerDerivativeListCached, getCachedDrinkDerivatives, loadBeerDerivativeListOnce, loadDrinkDerivatives } from "../data/sharedDirectories.js";
 import { derivativesForProduct } from "../beerDerivatives.js";
 
 // La liste commune des dérivés (bières et spiritueux réunis), lue une fois par session. Pour les écrans qui n'affichent que le nom ou l'énergie d'un verre déjà commandé
@@ -40,6 +40,14 @@ export function useBeerDerivatives(sourceDrinkIds) {
     };
   }, [hasDerivatives, key]);
 
-  const forProduct = useCallback((id) => (id ? derivativesForProduct(list, infoById[id]?.codes, infoById[id]?.volumes) : []), [list, infoById]);
+  // Un produit déjà lu plus tôt dans la session est connu tout de suite (sans attendre la lecture) : les pastilles s'affichent dès le premier rendu.
+  const forProduct = useCallback(
+    (id) => {
+      if (!id) return [];
+      const info = infoById[id] || getCachedDrinkDerivatives(id);
+      return derivativesForProduct(list, info?.codes, info?.volumes);
+    },
+    [list, infoById]
+  );
   return { list, forProduct };
 }
