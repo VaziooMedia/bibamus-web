@@ -3566,6 +3566,22 @@ export async function loadMyDrinkRanking(metric, since = null, until = null, lim
   return data.map((r) => ({ drinkId: r.drink_id, value: r.value }));
 }
 
+// Dérivés des bières (Mazout, Tango…) les plus pris par la personne connectée : nombre de verres par dérivé (fonction
+// get_my_derivative_ranking, depuis le 2026-11-06). Seuls les dérivés encore présents dans la liste de la gestion y figurent ;
+// le verre compte aussi, comme toujours, pour son produit de base. Un échec de lecture rend une liste vide (la carte est alors masquée).
+export async function loadMyDerivativeRanking(since = null, until = null, limit = 10) {
+  const { data, error } = await supabase.rpc("get_my_derivative_ranking", {
+    p_since: since ? since.toISOString() : null,
+    p_until: until ? until.toISOString() : null,
+    p_limit: limit,
+  });
+  if (error) {
+    console.error("loadMyDerivativeRanking:", error);
+    return [];
+  }
+  return (data || []).map((r) => ({ code: r.code, name: r.name, value: r.value }));
+}
+
 // --- Stats publiques sur les fiches — jamais d'argent ici (réservé propriétaire/admin),
 // uniquement des quantités, tous utilisateurs confondus.
 

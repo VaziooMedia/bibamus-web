@@ -13,6 +13,7 @@ import {
   loadMyStatsOverview,
   loadMyVenueRanking,
   loadMyDrinkRanking,
+  loadMyDerivativeRanking,
   loadVenuesByIds,
   loadDrinksByIds,
   loadMyHabits,
@@ -265,6 +266,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const [venuesByVisits, setVenuesByVisits] = useState([]);
   const [venuesBySpend, setVenuesBySpend] = useState([]);
   const [drinksByCount, setDrinksByCount] = useState([]);
+  const [derivativesByCount, setDerivativesByCount] = useState([]);
   const [drinksBySpend, setDrinksBySpend] = useState([]);
   const [homeStats, setHomeStats] = useState(null);
   const [eventStats, setEventStats] = useState(null);
@@ -272,6 +274,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
     loadMyVenueRanking("visits", since, null, 10).then(setVenuesByVisits);
     loadMyVenueRanking("spend_euro", since, null, 10).then(setVenuesBySpend);
     loadMyDrinkRanking("count", since, null, 10).then(setDrinksByCount);
+    loadMyDerivativeRanking(since, null, 10).then(setDerivativesByCount);
     loadMyDrinkRanking("spend_euro", since, null, 10).then(setDrinksBySpend);
     loadMyVenueStats("@home", since, null).then(setHomeStats);
     loadMyVenueStats("@event", since, null).then(setEventStats);
@@ -964,6 +967,32 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
               </div>
             )}
           </StatSection>
+
+          {/* Dérivés des bières (Mazout, Tango…) : nombre de verres par dérivé. Le verre compte aussi pour son produit de base (classement ci-dessus).
+              Carte masquée tant qu'aucun verre n'a de dérivé. */}
+          {derivativesByCount.length > 0 && (
+            <StatSection title="Tes dérivés préférés" arrowColor={COLORS.amber} showBottomDivider>
+              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "4px 14px" }}>
+                {derivativesByCount.map((r, i, arr) => (
+                  <div
+                    key={r.code}
+                    style={{
+                      borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
+                      padding: "10px 0",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "14px",
+                      color: COLORS.ink,
+                    }}
+                  >
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{r.name}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", textAlign: "right", flex: 1 }}><span style={{ color: COLORS.amber }}>{r.value}</span> <span style={{ color: COLORS.inkSoft }}>verre{r.value > 1 ? "s" : ""}</span></span></span>
+                  </div>
+                ))}
+              </div>
+            </StatSection>
+          )}
 
           {(newDrinksCount > 0 || priceStats?.avgPrice != null) && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
