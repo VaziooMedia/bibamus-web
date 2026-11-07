@@ -344,7 +344,7 @@ export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
           borderRadius: "9px",
           border: `2px solid ${COLORS.paperAlt}`,
           background: COLORS.surface,
-          color: COLORS.amber,
+          color: COLORS.ink,
           fontWeight: 700,
           fontSize: "13.5px",
           cursor: "pointer",
@@ -355,7 +355,9 @@ export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
         }}
       >
         <NavIcon name="search" size={16} color={COLORS.amber} />
-        Répertoire des lieux
+        <span>
+          Bib<span style={{ color: COLORS.amber }}>Atlas</span>
+        </span>
       </button>
 
       {open && (
@@ -458,11 +460,11 @@ export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
                   borderTop: filtered.length > 0 ? `1px dashed ${COLORS.paperAlt}` : "none",
                   fontSize: "13.5px",
                   fontWeight: 600,
-                  color: COLORS.wine,
+                  color: COLORS.pinkFluo,
                   cursor: "pointer",
                 }}
               >
-                + Ajouter un nouvel établissement{query.trim() ? ` "${query.trim()}"` : ""}
+                + Ajouter un nouveau lieu{query.trim() ? ` "${query.trim()}"` : ""}
               </button>
             </>
           )}

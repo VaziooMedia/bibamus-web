@@ -55,7 +55,7 @@ Hook `useGeolocation` (`getCurrentPosition`, précision normale, délai 8 s, cac
 
 | Écran | Déclenchement | Pour quoi |
 |---|---|---|
-| `NearbyVenueSuggestions` | bouton « Suggérer des lieux près de moi » | choix du lieu d'un salon |
+| `NearbyVenueSuggestions` | bouton « Suggérer des lieux autour de moi » | choix du lieu d'un salon |
 | `VenueDirectoryScreen` | bouton « Lieux proches de moi » | annuaire |
 | `VenueMapScreen` | bouton « Ma position » | recentre la carte, rien n'est envoyé |
 | Sécurité > Permissions | bascule « Localisation » | enregistre `consent_location` |

@@ -335,7 +335,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
 
       <div style={{ marginBottom: "12px" }}>
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>
-          {venues.length > 0 ? "Autres lieux" : "Un lieu déjà répertorié ?"}
+          Autres lieux
         </label>
         <NearbyVenueSuggestions onPick={pickFromDirectory} selectedVenueId={selectedVenueId} forceCollapseKey={directoryOpenCount} />
         <PublicVenueSearchPicker myVenues={venues} onPick={pickFromDirectory} onOpen={() => setDirectoryOpenCount((n) => n + 1)} />
