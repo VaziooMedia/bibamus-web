@@ -126,7 +126,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
 
       {(myOrderEntries.length > 0 || caloriesInfo.total > 0) && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes verres ce jour-là</div>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Mes produits ce jour-là</div>
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px" }}>{myOrderEntries.length}</div>
           {caloriesInfo.total > 0 && (
             <div style={{ fontSize: "12px", color: COLORS.inkSoft }}>
