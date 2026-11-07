@@ -1,5 +1,5 @@
 // ============================================================
-// Choix du dérivé d'un produit (bière : Mazout, Tango… ; spiritueux : Coca, Tonic…) dans le formulaire « Ajouter un Produit » de BibaSolo : une rangée de pastilles arrondies posée au même
+// Choix du dérivé d'un produit (bière : Mazout, Tango… ; spiritueux : Coca, Tonic… ; thé : Citron, Lait…) dans le formulaire « Ajouter un Produit » de BibaSolo : une rangée de pastilles arrondies posée au même
 // endroit que le choix Spiritueux / Shot (SpiritKindToggle), avec le même aspect que les pastilles de dérivés de la carte de commande de BibaRoom
 // (RoundComposeScreen) : inactive, grise comme les volumes ; active, rose fluo. Aucune pastille active = la bière telle quelle (pas de pastille
 // « Nature »), et un second appui sur la pastille active la désactive. La rangée est centrée et défile à l'horizontale quand il y en a trop.
