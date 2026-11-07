@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { drinkIdWithVariant } from "../beerDerivatives.js";
+import { volumeUnit } from "../utils.js";
 
 export function PersonalDrinkRow({ drink, derivatives = [], countFor, totalCount, paused, onAdd, onRemove }) {
   const [variantCode, setVariantCode] = useState(null);
@@ -25,7 +26,7 @@ export function PersonalDrinkRow({ drink, derivatives = [], countFor, totalCount
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: "13px", fontWeight: 600 }}>
           {drink.name}
-          {drink.volumeCl && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {drink.volumeCl}cl.</span>}
+          {drink.volumeCl && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {drink.volumeCl}{volumeUnit(drink.type)}</span>}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <button

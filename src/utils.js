@@ -187,7 +187,7 @@ export const homeDrinksByPerson = (event) => {
       people.set(h.code, person);
     }
     const entry = findEntryForEvent(event, h.drinkId);
-    const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: drinkLabel(entry) || "Boisson", volumeCl: entry?.volumeCl ?? null, servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", count: 0 };
+    const item = person.items.get(h.drinkId) || { drinkId: h.drinkId, name: drinkLabel(entry) || "Boisson", volumeCl: entry?.volumeCl ?? null, type: entry?.type || "", servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", count: 0 };
     item.count += 1;
     person.items.set(h.drinkId, item);
     person.total += 1;
@@ -207,7 +207,7 @@ export const myDrinksList = (event, orders = []) =>
   orders
     .map((o, i) => {
       const entry = findEntryForEvent(event, o.drinkId);
-      return { id: o.id ?? `verre-${i}`, name: drinkLabel(entry) || "Boisson", volumeCl: entry?.volumeCl ?? null, kcal: entry ? kcalForDrink(entry) : null, servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", timestamp: o.timestamp ?? 0, order: i };
+      return { id: o.id ?? `verre-${i}`, name: drinkLabel(entry) || "Boisson", volumeCl: entry?.volumeCl ?? null, type: entry?.type || "", kcal: entry ? kcalForDrink(entry) : null, servingMode: entry?.servingMode || "", shot: entry?.menuCategory === "Shots", timestamp: o.timestamp ?? 0, order: i };
     })
     .sort((a, b) => a.timestamp - b.timestamp || a.order - b.order)
     .map(({ order, ...glass }) => glass);
