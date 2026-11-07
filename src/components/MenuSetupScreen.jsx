@@ -10,7 +10,7 @@ import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { MenuProductRow, CHECK_MARK_BG } from "./MenuProductRow.jsx";
 import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems, safeServingMode, makeSearchMatcher, entityNames, startsAsShot } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
-import { loadGenericDrinks } from "../data/sharedDirectories.js";
+import { loadGenericDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 
 // Clé du bloc « Tous les produits ajoutés » dans le bloc déroulant ouvert (ne peut pas être confondue avec une catégorie).
 const ALL_PRODUCTS_BLOCK = "__tous__";
@@ -242,6 +242,21 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   const unitLabel = event.currency === "euro" ? "€" : "jetons";
   const step = event.currency === "euro" ? "0.10" : "1";
 
+  // Bascule Spiritueux / Shot dans la ligne d'un produit : le choix est pris tout de suite ; le volume et le type de service reprennent alors les valeurs par défaut
+  // de ce choix sur la fiche du produit (celles du shot, puis celles du spiritueux s'il n'y en a pas), comme dans la fenêtre BibAtlas d'une tournée. Le prix n'est pas
+  // touché. Les deux cadres redeviennent rose fluo (valeurs par défaut à contrôler). Un produit sans fiche dans le répertoire ne change que de choix.
+  const changeMenuCategory = async (drink, cat) => {
+    const sameChoice = cat === (drink.menuCategory === "Shots" ? "Shots" : "");
+    setDrinkFields(drink.id, { menuCategory: cat, menuCategoryChecked: true });
+    // Toucher le bouton déjà choisi le confirme, sans rien remettre à zéro.
+    if (sameChoice || !drink.sourceDrinkId) return;
+    let src = [...genericDrinks, ...drinksDirectory].find((x) => x.id === drink.sourceDrinkId);
+    if (!src) [src] = await loadDrinksByIds([drink.sourceDrinkId]);
+    if (!src) return;
+    const d = defaultsOf(src, cat === "Shots");
+    setDrinkFields(drink.id, { volumeCl: d.volumeCl, servingMode: d.servingMode, volumeChecked: false, servingModeChecked: false });
+  };
+
   // Une ligne produit modifiable (résultats de recherche et blocs de la carte) : rond-profil + nom + prix, puis flèche + croix ;
   // déroulée, seulement le volume et le type de service (et Spiritueux / Shot pour un spiritueux).
   const renderDrinkRow = (drink) => (
@@ -253,7 +268,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
       onChangePrice={(price) => setPrice(drink.id, price)}
       onChangeVolume={(vol) => setDrinkFields(drink.id, { volumeCl: vol, volumeChecked: true })}
       onChangeServingMode={(mode) => setDrinkFields(drink.id, { servingMode: mode, servingModeChecked: true })}
-      onChangeMenuCategory={(cat) => setDrinkFields(drink.id, { menuCategory: cat, menuCategoryChecked: true })}
+      onChangeMenuCategory={(cat) => changeMenuCategory(drink, cat)}
       onChangeVerified={(verified) => setDrinkFields(drink.id, { priceChecked: verified, volumeChecked: verified, servingModeChecked: verified, menuCategoryChecked: verified })}
       onRemove={() => removeDrink(drink.id)}
     />
