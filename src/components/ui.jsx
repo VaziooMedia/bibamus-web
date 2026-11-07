@@ -295,7 +295,22 @@ export function BackFooterLink({ onClick, label }) {
   return <PageFooterNav onBack={onClick} />;
 }
 
-export function PrimaryButton({ children, onClick, disabled, style }) {
+// Icône vert fluo dans un rond sombre, placée devant le texte des boutons principaux : la coche des boutons de
+// validation (PrimaryButton withCheck), ou une autre icône (PrimaryButton badgeIcon="door-enter" pour « Rejoindre »).
+// `muted` : bouton inactif, l'icône passe en gris pour ne pas paraître active.
+// La porte « Rejoindre », plus détaillée qu'une coche, a besoin d'un rond et d'une icône un peu plus grands pour rester lisible.
+const ICON_BADGE_SIZES = { "door-enter": { circle: 24, icon: 16 } };
+export function IconBadge({ name = "check", muted = false }) {
+  const { circle, icon } = ICON_BADGE_SIZES[name] || { circle: 20, icon: 13 };
+  return (
+    <span style={{ width: `${circle}px`, height: `${circle}px`, borderRadius: "50%", background: COLORS.paper, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <NavIcon name={name} size={icon} color={muted ? COLORS.inkSoft : COLORS.amber} />
+    </span>
+  );
+}
+
+export function PrimaryButton({ children, onClick, disabled, style, withCheck = false, badgeIcon }) {
+  const badge = badgeIcon || (withCheck ? "check" : null);
   return (
     <button
       onClick={onClick}
@@ -310,9 +325,11 @@ export function PrimaryButton({ children, onClick, disabled, style }) {
         fontSize: "16px",
         fontFamily: "'Work Sans', sans-serif",
         cursor: disabled ? "not-allowed" : "pointer",
+        ...(badge ? { display: "flex", alignItems: "center", justifyContent: "center", gap: "9px" } : null),
         ...style,
       }}
     >
+      {badge && <IconBadge name={badge} muted={disabled} />}
       {children}
     </button>
   );

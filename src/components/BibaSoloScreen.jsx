@@ -1056,7 +1056,7 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, checkinCount, onSave
         ))}
       </div>
 
-      <PrimaryButton onClick={handleSubmit} style={{ width: "100%" }}>
+      <PrimaryButton onClick={handleSubmit} withCheck style={{ width: "100%" }}>
         Valider
       </PrimaryButton>
       <BackFooterLink onClick={onBack} />

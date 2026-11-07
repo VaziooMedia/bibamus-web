@@ -492,6 +492,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
           )
         }
         style={{ width: "100%" }}
+        withCheck
       >
         Valider
       </PrimaryButton>
@@ -606,7 +607,7 @@ export function WaterAlertSettingsScreen({ event, onSave, onBack }) {
         ))}
       </div>
 
-      <PrimaryButton onClick={handleSubmit} style={{ width: "100%" }}>
+      <PrimaryButton onClick={handleSubmit} withCheck style={{ width: "100%" }}>
         Valider
       </PrimaryButton>
       <BackFooterLink onClick={onBack} />

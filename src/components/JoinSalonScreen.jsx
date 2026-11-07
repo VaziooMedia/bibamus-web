@@ -90,8 +90,8 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
         </button>
       </div>
       {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "12px" }}>{error}</p>}
-      <PrimaryButton onClick={() => handleSubmit()} disabled={!code.trim() || loading} style={{ width: "100%", marginTop: "auto" }}>
-        {loading ? "..." : "Rejoindre →"}
+      <PrimaryButton onClick={() => handleSubmit()} disabled={!code.trim() || loading} badgeIcon={loading ? undefined : "door-enter"} style={{ width: "100%", marginTop: "auto" }}>
+        {loading ? "..." : "Rejoindre"}
       </PrimaryButton>
       <PageFooterNav onBack={onCancel} />
       {scanning && <SalonQrScannerModal onClose={() => setScanning(false)} onScanned={handleScanned} />}
