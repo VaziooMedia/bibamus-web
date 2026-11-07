@@ -162,60 +162,61 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
               </button>
             </div>
           </div>
-
-          {derivatives.length > 0 && (
-            <>
-              {/* Rangée de dérivés : défile à l'horizontale s'il y en a beaucoup ; grisées comme les volumes tant qu'elles sont inactives, rose fluo quand active (les volumes actifs sont verts). */}
-              <div
-                role="group"
-                aria-label="Dérivé"
-                style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "6px", overflowX: "auto", flexWrap: "nowrap", paddingBottom: "2px", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
-              >
-                {derivatives.map((c) => {
-                  const on = c.code === activeVariant;
-                  return (
-                    <button
-                      key={c.code}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => setVariantCode(on ? null : c.code)}
-                      style={{
-                        background: on ? COLORS.pinkFluo : "transparent",
-                        color: on ? COLORS.chalkWhite : COLORS.inkSoft,
-                        border: `1.5px solid ${on ? COLORS.pinkFluo : COLORS.inkSoft}`,
-                        borderRadius: "999px",
-                        padding: "2px 8px",
-                        fontSize: "11.5px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        flexShrink: 0,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {c.name}
-                    </button>
-                  );
-                })}
-              </div>
-              {totalCount > 0 && (
-                <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>
-                  Dans la commande :{" "}
-                  {countsByChoice
-                    .filter((c) => c.n > 0)
-                    .map((c, i) => (
-                      <React.Fragment key={c.code || "nature"}>
-                        {i > 0 && " · "}
-                        <strong style={{ color: COLORS.ink }}>
-                          {c.n} {c.code ? c.name : "nature"}
-                        </strong>
-                      </React.Fragment>
-                    ))}
-                </div>
-              )}
-            </>
-          )}
         </div>
       </div>
+
+      {derivatives.length > 0 && (
+        <>
+          {/* Rangée de dérivés : sur toute la largeur de la carte, sous le rond du produit (le rond ne couvre que les deux premières lignes, la 3ᵉ commence donc au bord gauche du contenu de la carte) ; défile à l'horizontale s'il y en a beaucoup ;
+          grisées comme les volumes tant qu'elles sont inactives, rose fluo quand active (les volumes actifs sont verts). 10 px au-dessus : le rond déborde de 6 px sous les deux premières lignes. */}
+          <div
+            role="group"
+            aria-label="Dérivé"
+            style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "10px", overflowX: "auto", flexWrap: "nowrap", paddingBottom: "2px", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+          >
+            {derivatives.map((c) => {
+              const on = c.code === activeVariant;
+              return (
+                <button
+                  key={c.code}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setVariantCode(on ? null : c.code)}
+                  style={{
+                    background: on ? COLORS.pinkFluo : "transparent",
+                    color: on ? COLORS.chalkWhite : COLORS.inkSoft,
+                    border: `1.5px solid ${on ? COLORS.pinkFluo : COLORS.inkSoft}`,
+                    borderRadius: "999px",
+                    padding: "2px 8px",
+                    fontSize: "11.5px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {c.name}
+                </button>
+              );
+            })}
+          </div>
+          {totalCount > 0 && (
+            <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "4px" }}>
+              Dans la commande :{" "}
+              {countsByChoice
+                .filter((c) => c.n > 0)
+                .map((c, i) => (
+                  <React.Fragment key={c.code || "nature"}>
+                    {i > 0 && " · "}
+                    <strong style={{ color: COLORS.ink }}>
+                      {c.n} {c.code ? c.name : "nature"}
+                    </strong>
+                  </React.Fragment>
+                ))}
+            </div>
+          )}
+        </>
+      )}
 
       {showInfo && (
         <>
