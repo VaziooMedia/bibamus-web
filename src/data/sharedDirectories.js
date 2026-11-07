@@ -2925,8 +2925,8 @@ function onceLoader(keys, label) {
 }
 
 // ============================================================
-// Dérivés des bières (Mazout, Tango…) et des spiritueux (Coca, Tonic…) : voir beerDerivatives.js. Deux lectures, toutes deux mémorisées pour la session :
-//   - les listes communes (custom_list_items, clés « beer_derivative » et « spirit_derivative », avec l'énergie propre à chaque dérivé)
+// Dérivés des bières (Mazout, Tango…), des spiritueux (Coca, Tonic…) et des thés / infusions (citron, lait…) : voir beerDerivatives.js. Deux lectures, toutes deux mémorisées pour la session :
+//   - les listes communes (custom_list_items, clés « beer_derivative », « spirit_derivative » et « tea_derivative », avec l'énergie propre à chaque dérivé)
 //     et leur ordre, lues d'un coup et réunies en une seule liste ;
 //   - les dérivés activés pour chaque produit (drinks_directory.derivatives), demandés seulement pour les produits dont on a besoin.
 // Un échec de lecture n'est pas mémorisé (le prochain écran réessaie) et n'empêche rien : sans dérivés, la carte reste celle d'avant.
