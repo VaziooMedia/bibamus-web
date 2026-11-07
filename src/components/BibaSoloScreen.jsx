@@ -38,7 +38,7 @@ import {
   archiveMyJetonMovements,
   loadMyJetonSpentSince,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, displayedAbv, displayedAlcoholTier, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, displayedAbv, displayedAlcoholTier, volumeUnit, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
@@ -262,7 +262,7 @@ function MenuItemBlock({ item, onClick }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
           <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>{item.name}</span>
-          {item.volumeCl && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{item.volumeCl}cl.</span>}
+          {item.volumeCl && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{item.volumeCl}{volumeUnit(item.type)}</span>}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "5px", flexWrap: "wrap" }}>
@@ -783,7 +783,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
           <div data-encode="form" style={{ display: "flex", flexDirection: "column", alignItems: "stretch", width: "fit-content", margin: "0 auto 40px", gap: `${ENCODE_ROW_GAP}px` }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: `${ENCODE_COL_GAP}px` }}>
               <div data-encode="volume" style={{ ...encodeBlockStyle, flex: "0 0 auto", minWidth: 0 }}>
-                <label htmlFor="solo-volume" style={encodeTitleStyle}>Volume (cl.)</label>
+                <label htmlFor="solo-volume" style={encodeTitleStyle}>{selectedDrink.type === "Snacks" ? "Poids (g.)" : "Volume (cl.)"}</label>
                 <input
                   id="solo-volume"
                   type="text"
@@ -1132,7 +1132,7 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
             service ; sinon le type de service s'il est défini. */}
         {(() => {
           const detailParts = [];
-          if (c.volumeCl) detailParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}cl.</span>);
+          if (c.volumeCl) detailParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}{volumeUnit(drink?.type)}</span>);
           if (showMentions && displayedAbv(drink) != null) detailParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
           const alcoholTier = showMentions ? displayedAlcoholTier(drink) : null;
           if (alcoholTier) detailParts.push(<span key="tier" title={alcoholTier.title} style={{ whiteSpace: "nowrap" }}>{alcoholTier.label}</span>);

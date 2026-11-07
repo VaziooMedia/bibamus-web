@@ -380,7 +380,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
               min="0"
               value={variant.volumeCl}
               onChange={(e) => setVariant((v) => ({ ...v, volumeCl: e.target.value }))}
-              placeholder="Volume (cl.)"
+              placeholder={type === "Snacks" ? "Poids (g.)" : "Volume (cl.)"}
               style={{ ...inputStyle, flex: 1, padding: "10px 8px", textAlign: "center" }}
             />
           </div>

@@ -19,7 +19,7 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { SalonAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
-import { formatDate, formatTime, nextId, makeSearchMatcher, entityNames, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson, myDrinksList } from "../utils.js";
+import { formatDate, formatTime, nextId, makeSearchMatcher, entityNames, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson, myDrinksList, volumeUnit } from "../utils.js";
 import { HomeServeSheet } from "./HomeServeSheet.jsx";
 import { ServiceTag } from "./ServiceTag.jsx";
 import { loadSalon } from "../data/salons.js";
@@ -1201,7 +1201,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                       <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{`- ${glass.name}`}</span>
                       {/* Le volume en vert fluo, sans gras. */}
                       {glass.volumeCl != null && (
-                        <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400, flexShrink: 0, whiteSpace: "pre" }}>{` ${String(glass.volumeCl).replace(".", ",")}\u00a0cl.`}</span>
+                        <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400, flexShrink: 0, whiteSpace: "pre" }}>{` ${String(glass.volumeCl).replace(".", ",")}\u00a0${volumeUnit(glass.type)}`}</span>
                       )}
                     </span>
                     {/* Le type de service, en petite pastille sur la ligne du dessous ; « Shot » en plus pour un shot dans un salon @Home. */}
@@ -1618,7 +1618,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                             {/* Nom + volume sur une seule ligne : si c'est trop long, le nom se coupe par \u00ab \u2026 \u00bb ; le volume reste entier. */}
                             <span style={{ display: "flex", minWidth: 0 }}>
                               <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{`- ${it.name}`}</span>
-                              {it.volumeCl != null && <span style={{ flexShrink: 0, whiteSpace: "pre" }}>{` ${String(it.volumeCl).replace(".", ",")}\u00a0cl.`}</span>}
+                              {it.volumeCl != null && <span style={{ flexShrink: 0, whiteSpace: "pre" }}>{` ${String(it.volumeCl).replace(".", ",")}\u00a0${volumeUnit(it.type)}`}</span>}
                             </span>
                             {/* Le type de service (et « Shot » pour un shot), en petites pastilles sur la ligne du dessous. */}
                             <ServiceTag mode={it.servingMode} shot={it.shot} />

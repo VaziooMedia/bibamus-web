@@ -19,10 +19,10 @@ import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
 import { drinkLabel, volumeAfterVariantChange } from "../beerDerivatives.js";
-import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent, canBeShot, startsAsShot } from "../utils.js";
+import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent, canBeShot, startsAsShot, volumeUnit } from "../utils.js";
 import { searchDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 
-const volumeLabel = (cl) => (cl != null ? ` ${String(cl).replace(".", ",")} cl.` : "");
+const volumeLabel = (cl, type) => (cl != null ? ` ${String(cl).replace(".", ",")} ${volumeUnit(type)}` : "");
 
 // Type de service : même ordre et mêmes libellés que le « Type de service par défaut » de la fiche produit côté Gestion.
 const SERVING_MODE_OPTIONS = [
@@ -35,7 +35,7 @@ const SERVING_MODE_OPTIONS = [
   ["carton", "Carton"],
 ];
 
-// Champ « Volume (cl.) » : même gabarit (largeur, valeur centrée) que le champ de volume de BibaSolo.
+// Champ « Volume (cl.) » (« Poids (g.) » pour un snack) : même gabarit (largeur, valeur centrée) que le champ de volume de BibaSolo.
 const VOLUME_BLOCK_W = 114;
 const encodeFieldStyle = {
   width: "100%",
@@ -155,7 +155,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
     if (!picked || myPaused) return;
     const cl = parseVolume(volume);
     onServe(picked, { volumeCl: cl, servingMode, asShot: canBeShot(picked) && asShot, variantCode: activeVariant });
-    setJustAdded(`${drinkLabel({ name: picked.name, variantName: activeVariant ? derivatives.find((d) => d.code === activeVariant)?.name : null })}${volumeLabel(cl)}`);
+    setJustAdded(`${drinkLabel({ name: picked.name, variantName: activeVariant ? derivatives.find((d) => d.code === activeVariant)?.name : null })}${volumeLabel(cl, picked.type)}`);
     setPicked(null);
     setQuery("");
     setResults([]);
@@ -165,7 +165,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
     if (myPaused || !entry?.sourceDrinkId) return;
     // « Reprendre » un verre en dérivé reprend le même dérivé (s'il existe encore).
     onServe({ id: entry.sourceDrinkId, name: entry.name, kcalPer100ml: entry.kcalPer100ml }, { volumeCl: entry.volumeCl ?? null, servingMode: entry.servingMode || "", asShot: entry.menuCategory === "Shots", variantCode: entry.variantName && entry.menuCategory !== "Shots" ? entry.variantCode : null });
-    setJustAdded(`${drinkLabel(entry)}${volumeLabel(entry.volumeCl)}`);
+    setJustAdded(`${drinkLabel(entry)}${volumeLabel(entry.volumeCl, entry.type)}`);
   };
 
   // Une boisson reconnue par la lecture d'étiquette (IA) se choisit comme un résultat de recherche. BibaZERO actif : une boisson
@@ -273,7 +273,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
               {derivatives.length > 0 && <BeerDerivativePills derivatives={derivatives} activeCode={activeVariant} onChange={chooseVariant} style={{ marginBottom: "12px" }} />}
               <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
                 <div data-encode="volume" style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
-                  <label htmlFor="home-serve-volume" style={fieldLabelStyle}>Volume (cl.)</label>
+                  <label htmlFor="home-serve-volume" style={fieldLabelStyle}>{picked.type === "Snacks" ? "Poids (g.)" : "Volume (cl.)"}</label>
                   <input
                     id="home-serve-volume"
                     type="text"
@@ -326,7 +326,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
                       {/* Le nom se coupe par « … » si besoin ; le volume reste toujours visible. */}
                       <span style={{ display: "flex", alignItems: "baseline", minWidth: 0 }}>
                         <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{drinkLabel(g.entry) || "Boisson"}</span>
-                        {g.entry?.volumeCl != null && <span style={{ color: COLORS.amber, fontWeight: 700, flexShrink: 0 }}>{volumeLabel(g.entry.volumeCl)}</span>}
+                        {g.entry?.volumeCl != null && <span style={{ color: COLORS.amber, fontWeight: 700, flexShrink: 0 }}>{volumeLabel(g.entry.volumeCl, g.entry.type)}</span>}
                       </span>
                       {/* Le type de service (et « Shot » pour un shot), en petites pastilles sur la ligne du dessous. */}
                       <ServiceTag mode={g.entry?.servingMode} shot={g.entry?.menuCategory === "Shots"} />

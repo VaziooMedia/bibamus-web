@@ -985,7 +985,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
 
               <div data-encode="row" style={{ display: "flex", alignItems: "flex-start", gap: "10px", margin: `${SHEET_GAP}px 0` }}>
                 <div data-encode="volume" style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
-                  <label htmlFor="bibatlas-volume" style={encodeLabelStyle}>Volume (cl.)</label>
+                  <label htmlFor="bibatlas-volume" style={encodeLabelStyle}>{bibAtlasPicked.type === "Snacks" ? "Poids (g.)" : "Volume (cl.)"}</label>
                   <input
                     id="bibatlas-volume"
                     type="text"

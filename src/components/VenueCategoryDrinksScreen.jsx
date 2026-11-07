@@ -7,7 +7,7 @@ import { COLORS, SERVING_MODE_LABELS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
-import { resolveMenuItem, formatMoney, flattenMenu, displayedAbv, displayedAlcoholTier, venueMenuWithFiches } from "../utils.js";
+import { resolveMenuItem, formatMoney, flattenMenu, displayedAbv, displayedAlcoholTier, venueMenuWithFiches, volumeUnit } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
@@ -96,7 +96,7 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
                     <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>{d.name || "Sans nom"}</span>
-                    {d.volumeCl && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{d.volumeCl}cl.</span>}
+                    {d.volumeCl && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{d.volumeCl}{volumeUnit(d.type)}</span>}
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "5px", flexWrap: "wrap" }}>
