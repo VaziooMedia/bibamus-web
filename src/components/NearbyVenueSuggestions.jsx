@@ -175,7 +175,7 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseK
         borderRadius: "9px",
         border: `2px solid ${COLORS.paperAlt}`,
         background: COLORS.surface,
-        color: COLORS.amber,
+        color: COLORS.ink,
         fontWeight: 700,
         fontSize: "13.5px",
         cursor: "pointer",
@@ -191,7 +191,7 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseK
       ) : (
         <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
           <NavIcon name="map-pin" size={14} color={COLORS.amber} />
-          Suggérer des lieux près de moi
+          Suggérer des lieux autour de moi
         </span>
       )}
       {status === "denied" && <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>Position refusée — activez-la dans les réglages de votre navigateur pour réessayer.</span>}
