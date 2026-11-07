@@ -10,7 +10,7 @@ import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } f
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
-import { capitalizeFirst, displayedAbv, drinkTypeLabel, isAlcoholicDrink, nextId, makeSearchMatcher, entityNames, flattenMenu, findMenuEntryById, defaultVolumeText, defaultServingModeText, canBeShot, startsAsShot, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
+import { capitalizeFirst, displayedAbv, drinkTypeLabel, isAlcoholicDrink, nextId, makeSearchMatcher, entityNames, flattenMenu, isMenuEntryWithoutFiche, findMenuEntryById, defaultVolumeText, defaultServingModeText, canBeShot, startsAsShot, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { loadSalon } from "../data/salons.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
@@ -516,7 +516,8 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
 
   // BibaBOB: while filtered, the person currently being ordered for only sees non-alcoholic
   // products across every browsing path — categories, search, and favorites alike.
-  const flatMenu = flattenMenu(event.menu);
+  // Un produit relié au répertoire mais sans nom (fiche supprimée, recopiée avant que la copie les ignore) n'est pas proposé : il apparaîtrait sans nom dans « Non classé ».
+  const flatMenu = flattenMenu(event.menu.filter((d) => !isMenuEntryWithoutFiche(d)));
   // Le filtre BibaBob (participant au défi zéro alcool) et ce bouton manuel visent le même
   // résultat — l'un ou l'autre suffit à déclencher le filtrage, sans s'exclure mutuellement.
   const visibleMenu = activeFriendFiltered || zeroOnly ? flatMenu.filter((d) => !isAlcoholicDrink(d)) : flatMenu;

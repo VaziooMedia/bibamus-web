@@ -5,7 +5,7 @@ import React from "react";
 import { COLORS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
-import { resolveMenuItem } from "../utils.js";
+import { resolveMenuItem, venueMenuWithFiches } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import carteIconUrl from "../assets/brand/carte.svg";
 import pdfIconUrl from "../assets/brand/pdf-icone.svg";
@@ -15,9 +15,10 @@ const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCate
 export function VenueMenuCategoriesScreen({ venue, onBack, onOpenCategory }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   // Le menu tel que stocké ne contient que des références (sourceDrinkId, fromDirectory...),
-  // pas le nom/type réel — sans cette résolution, tout retombe dans "Non classé".
+  // pas le nom/type réel — sans cette résolution, tout retombe dans "Non classé". Un produit dont la fiche n'existe plus est ignoré (venueMenuWithFiches),
+  // sinon il apparaîtrait sans nom dans « Non classé ».
   const seenIds = new Set();
-  const menu = (venue?.menu || []).map((d) => resolveMenuItem(d, drinksDirectory)).filter((d) => !seenIds.has(d.id) && seenIds.add(d.id));
+  const menu = venueMenuWithFiches(venue?.menu, drinksDirectory).map((d) => resolveMenuItem(d, drinksDirectory)).filter((d) => !seenIds.has(d.id) && seenIds.add(d.id));
   const categoriesWithCount = [...MENU_CATEGORIES, "Non classé"]
     .map((cat) => ({ cat, count: menu.filter((d) => categoryOf(d) === cat).length }))
     .filter(({ count }) => count > 0);
