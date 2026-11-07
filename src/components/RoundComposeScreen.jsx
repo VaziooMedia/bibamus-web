@@ -19,7 +19,7 @@ import { baseDrinkId, drinkIdWithVariant, isShotEntry } from "../beerDerivatives
 
 // Un même produit peut exister sur la carte en plusieurs volumes ("Jupiler" 25cl. et 33cl.,
 // jusqu'ici deux blocs distincts) — regroupés ici sous un seul nom, triés du plus petit volume
-// au plus grand ; la sélection du volume se fait dans la carte elle-même (GroupedDrinkCard).
+// au plus grand (volume vide en dernier) ; la sélection du volume se fait dans la carte elle-même (GroupedDrinkCard).
 
 function groupDrinksByName(items) {
   const groups = [];
@@ -34,7 +34,17 @@ function groupDrinksByName(items) {
       groups.push({ key: item.name, variants });
     }
   }
-  for (const g of groups) g.variants.sort((a, b) => (a.volumeCl || 0) - (b.volumeCl || 0));
+  // Du plus petit volume au plus grand ; une ligne dont le volume n'est pas encore rempli (ajoutée avec le « + » de la carte boissons) passe en dernier, pour que la pastille
+  // choisie au départ (la première) soit toujours un vrai volume.
+  const volumeOf = (v) => (v.volumeCl > 0 ? v.volumeCl : null);
+  for (const g of groups) {
+    g.variants.sort((a, b) => {
+      const x = volumeOf(a);
+      const y = volumeOf(b);
+      if (x === null || y === null) return x === y ? 0 : x === null ? 1 : -1;
+      return x - y;
+    });
+  }
   return groups;
 }
 
