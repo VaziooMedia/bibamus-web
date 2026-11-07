@@ -5,7 +5,7 @@
 // envie. Tout passe donc par BibAtlas (le répertoire global) : on cherche un produit, on choisit
 // son volume et son type de service (facultatifs, pré-remplis avec les valeurs par défaut de la
 // fiche produit), et le verre est ajouté pour SOI seulement. Chaque verre porte le code
-// de la personne qui l'a pris (event.homeDrinks) ; la liste « Mes verres » permet d'en reprendre
+// de la personne qui l'a pris (event.homeDrinks) ; la liste « Mes produits » permet d'en reprendre
 // un identique (+) ou de retirer le dernier (−) en cas d'erreur.
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
@@ -318,7 +318,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
 
           {groups.length > 0 && (
             <div style={{ marginTop: "18px", paddingTop: "14px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
-              <div style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "8px" }}>Mes verres ({mine.length})</div>
+              <div style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "8px" }}>Mes produits ({mine.length})</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {groups.map((g) => (
                   <div key={g.drinkId} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
