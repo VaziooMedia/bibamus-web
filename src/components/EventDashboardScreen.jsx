@@ -1185,7 +1185,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             aria-expanded={showMyDrinks}
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
           >
-            <span style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft }}>Mes verres</span>
+            <span style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft }}>Mes produits</span>
             <span style={{ display: "inline-flex", transform: `rotate(${showMyDrinks ? -90 : 180}deg)`, transition: "transform 0.15s ease" }}>
               <NavIcon name="back-triangle" size={14} color={COLORS.amber} />
             </span>
