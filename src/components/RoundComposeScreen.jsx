@@ -73,8 +73,12 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
         padding: "8px 10px",
       }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-        <EntityAvatar photoUrl={selected.photoUrl} photoEmoji={selected.avatarEmoji} size={40} fallbackIcon="bottle" />
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+        {/* Rond du produit : aussi haut que les deux lignes de la carte (nom + prix, volumes + − / +) et le plus près possible des bords (4 px en haut, en bas et à gauche).
+            Les marges négatives reprennent le remplissage de la carte (8 px en haut et en bas, 10 px à gauche) sans agrandir la carte ; le rond mesure 58 px + 2 × 2 px de cadre. */}
+        <div style={{ display: "flex", flexShrink: 0, margin: "-6px 0 -6px -8px" }}>
+          <EntityAvatar photoUrl={selected.photoUrl} photoEmoji={selected.avatarEmoji} size={58} fallbackIcon="bottle" />
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
