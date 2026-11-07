@@ -3,7 +3,7 @@
 // le prototype Claude. L'ancienne fonction fetchRoom (basée sur
 // window.storage) est remplacée par loadSalon (Supabase).
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, TokenPinkIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } from "./ui.jsx";
@@ -268,9 +268,50 @@ function TokenStepper({ value, onChange }) {
   );
 }
 
+// Pastille de catégorie — même style que les étiquettes de la recherche BibAtlas. Le nombre de
+// produits n'est pas dedans : il s'affiche entre les pastilles et la liste.
+function CategoryPill({ label, star = false, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "5px",
+        background: active ? COLORS.amber : "none",
+        border: `2px solid ${COLORS.amber}`,
+        borderRadius: "999px",
+        padding: "6px 12px",
+        fontSize: "12.5px",
+        fontWeight: 700,
+        color: active ? COLORS.paper : COLORS.ink,
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+        flexShrink: 0,
+      }}
+    >
+      {star && <span style={{ color: active ? COLORS.paper : COLORS.amber }}>★</span>}
+      {label}
+    </button>
+  );
+}
+
 export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraftFriends, draftOrders, setDraftOrders, activeFriendId, setActiveFriendId, bibros, myBibroCode, onBack, onSeeTicket, onUseBibaBobJoker, onAddBibAtlasProduct }) {
-  const [activeCategory, setActiveCategory] = useState(null);
+  // Pastille choisie : "all" (Tous), "favorites" (Favoris) ou le nom d'une catégorie.
+  const [activePillRaw, setActivePillRaw] = useState("all");
   const [zeroOnly, setZeroOnly] = useState(false);
+  // Les pastilles restent collées juste sous la barre des participants (elle-même collée en haut) :
+  // on mesure donc sa hauteur. pillsAnchorRef marque la vraie place de la ligne de pastilles dans la page.
+  const friendsBarRef = useRef(null);
+  const pillsAnchorRef = useRef(null);
+  const pillsRowRef = useRef(null);
+  const [friendsBarH, setFriendsBarH] = useState(0);
+  useLayoutEffect(() => {
+    const el = friendsBarRef.current;
+    if (el) setFriendsBarH(el.offsetHeight);
+  });
+  const pillsTop = Math.max(0, friendsBarH - 4);
 
   // BibAtlas : la carte d'un lieu n'est jamais garantie à 100% à jour — ce comble le trou en
   // cherchant directement dans le répertoire global, pour un produit absent de cette carte.
@@ -380,12 +421,22 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   // holder is filtered too, unless they're actively spending it on this one add.
   const activeFriendFiltered = !!activeFriendBob && jokerUnlockedFor !== activeFriendId;
 
-  const goToCategory = (cat) => {
+  // Changer de pastille : on revient au début de la liste, juste sous les pastilles collées — sans
+  // remonter tout en haut de l'écran. Le vrai défilement se passe dans le conteneur dédié de l'app,
+  // jamais la fenêtre elle-même — window.scrollTo n'avait donc aucun effet réel ici.
+  const selectPill = (key) => {
     setQuery("");
-    setActiveCategory(cat);
-    // Le vrai défilement se passe dans le conteneur dédié de l'app, jamais la fenêtre elle-même
-    // — window.scrollTo n'avait donc aucun effet réel ici.
-    mainScrollRef?.current?.scrollTo(0, 0);
+    setActivePillRaw(key);
+    const scroller = mainScrollRef?.current;
+    if (!scroller) return;
+    const anchor = pillsAnchorRef.current;
+    if (!anchor) {
+      scroller.scrollTo(0, 0);
+      return;
+    }
+    const natural = anchor.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+    const target = Math.max(0, natural - pillsTop);
+    if (scroller.scrollTop > target) scroller.scrollTo(0, target);
   };
 
   // Confirmation visuelle brève sur le bouton "+" lui-même — le compteur par produit, lui, revient
@@ -479,7 +530,22 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
   const countFor = (cat) => visibleMenu.filter((d) => categoryOf(d) === cat).length;
   const itemsIn = (cat) => visibleMenu.filter((d) => categoryOf(d) === cat);
-  const uncategorizedCount = countFor("Non classé");
+
+  // Pastilles : « Tous », « Favoris » (seulement s'il y en a), puis les catégories qui ont au moins un produit.
+  const categoryPills = [...MENU_CATEGORIES, "Non classé"].filter((c) => countFor(c) > 0);
+  const pillKeys = ["all", ...(favoriteDrinks.length > 0 ? ["favorites"] : []), ...categoryPills];
+  // Si la pastille choisie disparaît (filtre « sans alcool » par exemple), on revient sur « Tous ».
+  const activePill = pillKeys.includes(activePillRaw) ? activePillRaw : "all";
+  const hasProducts = categoryPills.length > 0;
+  // Nombre de produits affichés (une carte = un produit, même avec plusieurs volumes).
+  const productCount = (items) => groupDrinksByName(items).length;
+  const shownCount =
+    activePill === "all"
+      ? categoryPills.reduce((n, c) => n + productCount(itemsIn(c)), 0)
+      : activePill === "favorites"
+      ? productCount(favoriteDrinks)
+      : productCount(itemsIn(activePill));
+  const drinkListStyle = { display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" };
 
   const handleConfirmBibAtlasAdd = async () => {
     if (!bibAtlasPicked) return;
@@ -495,14 +561,23 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
     setBibAtlasResults([]);
     // Direction la catégorie du produit tout juste ajouté, pour pouvoir le commander dans la
     // foulée — sans ça, il faudrait le rechercher une seconde fois dans sa propre catégorie.
-    goToCategory(categoryOf(created));
+    selectPill(categoryOf(created));
   };
 
   // Même règle de recherche que partout dans l'app (voir makeSearchMatcher).
   const matchesQuery = makeSearchMatcher(query);
   const searching = query.trim().length > 0;
   const searchResultsAll = searching ? visibleMenu.filter((d) => matchesQuery(entityNames(d))) : [];
-  const searchResultsInCategory = searching && activeCategory ? itemsIn(activeCategory).filter((d) => matchesQuery(entityNames(d))) : [];
+
+  // La pastille choisie reste visible dans la ligne qui défile (ex. choisie par programme, ou après une recherche).
+  useEffect(() => {
+    const row = pillsRowRef.current;
+    const btn = row ? row.querySelector('[aria-pressed="true"]') : null;
+    if (!row || !btn) return;
+    const r = row.getBoundingClientRect();
+    const b = btn.getBoundingClientRect();
+    row.scrollTo({ left: row.scrollLeft + (b.left - r.left) - (r.width - b.width) / 2, behavior: "smooth" });
+  }, [activePill, searching]);
 
 
   return (
@@ -514,6 +589,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           100% { transform: scale(1); }
         }
         .round-friends-bar::-webkit-scrollbar { display: none; }
+        .round-pills-row::-webkit-scrollbar { display: none; }
       `}</style>
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px", marginTop: "-6px" }}>
@@ -527,6 +603,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           horizontalement plutôt que de s'empiler sur plusieurs lignes, pour garder une hauteur
           fixe même avec beaucoup de participants. */}
       <div
+        ref={friendsBarRef}
         className="round-friends-bar"
         style={{
           position: "sticky",
@@ -710,7 +787,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
         </div>
       )}
 
-      {!activeCategory && !searching && event.menu.length > 4 && (
+      {!searching && event.menu.length > 4 && (
         <>
           <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} withCheck style={{ width: "100%" }}>
             {isOpenBar ? "Valider la tournée" : "Valider la commande"}
@@ -719,7 +796,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
         </>
       )}
 
-      {!activeCategory && !searching && !event.isHome && event.menu.length > 0 && (
+      {!searching && !event.isHome && event.menu.length > 0 && (
         <button
           onClick={() => setShowBibazard(true)}
           style={{
@@ -753,97 +830,6 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
         />
       )}
 
-      {favoriteDrinks.length > 0 && !activeCategory && !searching && (
-        <>
-          <div style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: COLORS.amber }}>★</span> Favoris
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "18px" }}>
-            {groupDrinksByName(favoriteDrinks).map((group) => (
-              <GroupedDrinkCard
-                key={group.key}
-                variants={group.variants}
-                activeFriendId={activeFriendId}
-                countForFriendDrink={countForFriendDrink}
-                isOpenBar={isOpenBar}
-                currency={event.currency}
-                removeLastOrderFor={removeLastOrderFor}
-                addOrder={addOrder}
-                flash={flash}
-                derivativesFor={derivativesFor}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
-      {activeCategory ? (
-        <>
-          <button
-                onClick={() => goToCategory(null)}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "10px", display: "flex", alignItems: "center" }}
-                title="Toutes les catégories"
-                aria-label="Toutes les catégories"
-              >
-                <NavIcon name="back-triangle" size={20} color={COLORS.amber} />
-              </button>
-          <div style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-            {drinkTypeLabel(activeCategory).toUpperCase()}
-          </div>
-          {itemsIn(activeCategory).length > 4 && (
-            <>
-              <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} withCheck style={{ width: "100%" }}>
-                {isOpenBar ? "Valider la tournée" : "Valider la commande"}
-              </PrimaryButton>
-              <div style={{ marginBottom: "16px" }} />
-            </>
-          )}
-          {itemsIn(activeCategory).length > 6 && (
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={`Rechercher dans les ${drinkTypeLabel(activeCategory)}`}
-              style={{ padding: "11px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "12px" }}
-            />
-          )}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-            {searching ? (
-              searchResultsInCategory.length === 0 ? (
-                <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucune boisson trouvée dans cette catégorie.</p>
-              ) : (
-                renderGroupedDrinks(searchResultsInCategory)
-              )
-            ) : (
-              renderGroupedDrinks(itemsIn(activeCategory))
-            )}
-          </div>
-          {/* Une catégorie fournie peut faire défiler longtemps avant d'atteindre de nouveau la
-              flèche de retour tout en haut — ces deux raccourcis flottants restent accessibles
-              quelle que soit la position de scroll dans la liste. */}
-          <div style={{ position: "fixed", bottom: "90px", right: "16px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 10 }}>
-            <button
-              onClick={() => mainScrollRef?.current?.scrollTo(0, 0)}
-              title="Remonter en haut de la liste"
-              aria-label="Remonter en haut de la liste"
-              style={{ width: "32px", height: "32px", borderRadius: "50%", border: "none", background: COLORS.surface, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            >
-              <span style={{ display: "flex", transform: "rotate(90deg)" }}>
-                <NavIcon name="back-triangle" size={13} color={COLORS.amber} />
-              </span>
-            </button>
-            <button
-              onClick={() => goToCategory(null)}
-              title="Toutes les catégories"
-              aria-label="Toutes les catégories"
-              style={{ width: "32px", height: "32px", borderRadius: "50%", border: "none", background: COLORS.amber, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            >
-              <NavIcon name="back-triangle" size={13} color={COLORS.paper} />
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
           {event.menu.length > 6 && (
             <input
               value={query}
@@ -874,53 +860,51 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
             </div>
           ) : (
         <>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-          {MENU_CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => goToCategory(cat)}
-              style={{
-                textAlign: "left",
-                background: COLORS.surface,
-                border: `2px solid ${COLORS.paperAlt}`,
-                borderRadius: "10px",
-                padding: "12px 14px",
-                cursor: "pointer",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "14.5px" }}>
-                <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-                {drinkTypeLabel(cat)}
-              </span>
-              <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{countFor(cat)} →</span>
-            </button>
-          ))}
-          {uncategorizedCount > 0 && (
-            <button
-              onClick={() => goToCategory("Non classé")}
-              style={{
-                textAlign: "left",
-                background: COLORS.surface,
-                border: `2px solid ${COLORS.paperAlt}`,
-                borderRadius: "10px",
-                padding: "12px 14px",
-                cursor: "pointer",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "14.5px" }}>
-                <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-                Non classé
-              </span>
-              <span style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>{uncategorizedCount} →</span>
-            </button>
+          <div ref={pillsAnchorRef} />
+          {hasProducts ? (
+            <>
+              {/* Pastilles : une seule ligne qui défile sur le côté, collée sous la barre des
+                  participants pendant le défilement de la liste. */}
+              <div style={{ position: "sticky", top: `${pillsTop}px`, zIndex: 4, background: COLORS.paper, paddingBottom: "8px" }}>
+                <div
+                  ref={pillsRowRef}
+                  className="round-pills-row"
+                  style={{ display: "flex", flexWrap: "nowrap", gap: "8px", overflowX: "auto", padding: "8px 0", scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  {pillKeys.map((key) => (
+                    <CategoryPill
+                      key={key}
+                      label={key === "all" ? "Tous" : key === "favorites" ? "Favoris" : drinkTypeLabel(key)}
+                      star={key === "favorites"}
+                      active={key === activePill}
+                      onClick={() => selectPill(key)}
+                    />
+                  ))}
+                  {/* Espace en fin de ligne : la dernière pastille, une fois tout défilé, ne reste pas sous le fondu de droite. */}
+                  <span aria-hidden="true" style={{ flex: "0 0 30px" }} />
+                </div>
+                <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "34px", background: `linear-gradient(to left, ${COLORS.paper}, transparent)`, pointerEvents: "none" }} />
+              </div>
+              <div style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, margin: "0 0 10px" }}>
+                {shownCount} produit{shownCount > 1 ? "s" : ""}
+              </div>
+              {activePill === "all" ? (
+                categoryPills.map((cat) => (
+                  <div key={cat}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
+                      {drinkTypeLabel(cat).toUpperCase()}
+                    </div>
+                    <div style={drinkListStyle}>{renderGroupedDrinks(itemsIn(cat))}</div>
+                  </div>
+                ))
+              ) : (
+                <div style={drinkListStyle}>{renderGroupedDrinks(activePill === "favorites" ? favoriteDrinks : itemsIn(activePill))}</div>
+              )}
+            </>
+          ) : (
+            <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Aucune boisson trouvée.</p>
           )}
-        </div>
 
         {/* La carte d'un lieu n'est jamais garantie à 100% à jour — BibAtlas (le répertoire
             global) comble ce trou pour un produit absent de cette carte précise. */}
@@ -1056,7 +1040,22 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
         )}
         </>
           )}
-        </>
+
+      {/* Une liste de produits peut faire défiler longtemps avant d'atteindre de nouveau le haut de
+          l'écran — ce raccourci flottant reste accessible quelle que soit la position de scroll. */}
+      {!searching && hasProducts && (
+        <div style={{ position: "fixed", bottom: "90px", right: "16px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 10 }}>
+          <button
+            onClick={() => mainScrollRef?.current?.scrollTo(0, 0)}
+            title="Remonter en haut de la liste"
+            aria-label="Remonter en haut de la liste"
+            style={{ width: "32px", height: "32px", borderRadius: "50%", border: "none", background: COLORS.surface, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+          >
+            <span style={{ display: "flex", transform: "rotate(90deg)" }}>
+              <NavIcon name="back-triangle" size={13} color={COLORS.amber} />
+            </span>
+          </button>
+        </div>
       )}
 
       <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} withCheck style={{ marginTop: "auto", width: "100%" }}>
