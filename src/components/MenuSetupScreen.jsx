@@ -8,7 +8,7 @@ import { NavIcon, TokenPinkIcon, AddPlusIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { MenuProductRow, CHECK_MARK_BG } from "./MenuProductRow.jsx";
-import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems, safeServingMode, makeSearchMatcher, entityNames, startsAsShot } from "../utils.js";
+import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems, safeServingMode, makeSearchMatcher, entityNames, startsAsShot, canBeShot } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import { loadGenericDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 
@@ -59,6 +59,22 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   const removeDrink = (drinkId) => {
     updateEvent(event.id, (e) => ({ ...e, menu: e.menu.filter((d) => d.id !== drinkId) }));
   };
+
+  // « + » sous le volume d'une ligne produit : ajoute une autre ligne du même produit (autre volume, avec son propre prix et son propre type de service). Elle reprend
+  // les valeurs de la ligne d'où l'on part (prix, type de service, y compris Shot / Spiritueux) SAUF le volume, laissé vide pour éviter deux volumes identiques ;
+  // tous les cadres redeviennent rose fluo (à contrôler), et elle s'ouvre tout de suite. Les lignes de même nom se regroupent en pastilles de volume dans les tournées.
+  const [newRowId, setNewRowId] = useState(null);
+  const addVolumeTo = (drink) => {
+    // eslint-disable-next-line no-unused-vars
+    const { id, volumes, priceChecked, volumeChecked, servingModeChecked, menuCategoryChecked, ...rest } = drink;
+    const copy = { ...rest, id: nextId(), volumeCl: null };
+    updateEvent(event.id, (e) => ({ ...e, menu: [...e.menu, copy] }));
+    setNewRowId(copy.id);
+  };
+  // La nouvelle ligne s'ouvre à son affichage ; ensuite on oublie son identifiant (elle ne se rouvrira pas toute seule plus tard).
+  useEffect(() => {
+    if (newRowId) setNewRowId(null);
+  }, [newRowId]);
 
   const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
   // Tri par nom, sans jamais planter : un produit de la carte dont la fiche du répertoire n'a pas pu être retrouvée à la création du salon n'a pas de nom
@@ -156,8 +172,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   // produit dans les statistiques et le Drink Check. Les autres champs restent une copie figée, modifiable depuis la carte.
   // Un spiritueux générique dont la fiche est « par défaut un Shot » (case « Shot » cochée) est ajouté comme Shot, avec les valeurs par défaut du shot : même règle
   // que pour un produit choisi dans BibAtlas (addDrinkFromDirectory).
-  const genericItemToEventItem = (g) => {
-    const asShot = startsAsShot(g);
+  const genericItemToEventItem = (g, asShot = startsAsShot(g)) => {
     const d = defaultsOf(g, asShot);
     return {
       id: nextId(),
@@ -183,13 +198,30 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
     };
   };
 
-  const isGenericItemPresent = (g) => event.menu.some((eItem) => normalizeForSearch(eItem.name) === normalizeForSearch(g.name));
+  // Les entrées de la carte qui viennent de ce produit générique (même nom) : une par volume, ou une par « Shot » / « Spiritueux ».
+  const genericEntriesOf = (g) => event.menu.filter((eItem) => normalizeForSearch(eItem.name) === normalizeForSearch(g.name));
+  const isGenericItemPresent = (g) => genericEntriesOf(g).length > 0;
 
-  // Beer is the one real exception where the same generic product might need to exist twice on
-  // the same event (e.g. on tap in 25cl AND bottled in 33cl) — so it gets a plain "add another"
-  // button instead of a single present/absent checkbox. Every other category only ever needs one.
+  // Deux façons d'ajouter un produit générique, selon sa catégorie :
+  // - Spiritueux et Cocktails / Mocktails : un « + » qui ajoute une entrée de plus à chaque appui (un spiritueux peut être servi en Shot ET en Spiritueux classique) ;
+  // - les autres (Bières, Vins, Boissons chaudes, Softs & Eaux, Snacks) : une coche, plus un bouton « + Volume » (« + Poids » pour un snack) qui ajoute un autre
+  //   volume du même produit. Les entrées de même nom sont regroupées en pastilles de volume dans les tournées.
+  const GENERIC_PLUS_TYPES = ["Spiritueux", "Cocktails / Mocktails"];
+
+  // Spiritueux dont la fiche a la case « Shot » : le « + » ajoute le choix qui n'est pas encore sur la carte (Shot si seul le Spiritueux y est, et inversement) ;
+  // quand les deux y sont déjà, ou qu'aucun n'y est, le choix par défaut de la fiche.
+  const nextGenericAsShot = (g) => {
+    if (!canBeShot(g)) return false;
+    const entries = genericEntriesOf(g);
+    const hasShot = entries.some((e) => e.menuCategory === "Shots");
+    const hasSpirit = entries.some((e) => e.menuCategory !== "Shots");
+    if (hasShot && !hasSpirit) return false;
+    if (hasSpirit && !hasShot) return true;
+    return startsAsShot(g);
+  };
+
   const addGenericItem = (g) => {
-    updateEvent(event.id, (e) => ({ ...e, menu: [...e.menu, genericItemToEventItem(g)] }));
+    updateEvent(event.id, (e) => ({ ...e, menu: [...e.menu, genericItemToEventItem(g, nextGenericAsShot(g))] }));
   };
 
   const toggleGenericItem = (g) => {
@@ -258,7 +290,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   };
 
   // Une ligne produit modifiable (résultats de recherche et blocs de la carte) : rond-profil + nom + prix, puis flèche + croix ;
-  // déroulée, seulement le volume et le type de service (et Spiritueux / Shot pour un spiritueux).
+  // déroulée, seulement le volume (avec le « + » d'un autre volume) et le type de service (et Spiritueux / Shot pour un spiritueux).
   const renderDrinkRow = (drink) => (
     <MenuProductRow
       key={drink.id}
@@ -270,6 +302,8 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
       onChangeServingMode={(mode) => setDrinkFields(drink.id, { servingMode: mode, servingModeChecked: true })}
       onChangeMenuCategory={(cat) => changeMenuCategory(drink, cat)}
       onChangeVerified={(verified) => setDrinkFields(drink.id, { priceChecked: verified, volumeChecked: verified, servingModeChecked: verified, menuCategoryChecked: verified })}
+      onAddVolume={() => addVolumeTo(drink)}
+      initiallyExpanded={drink.id === newRowId}
       onRemove={() => removeDrink(drink.id)}
     />
   );
@@ -429,7 +463,10 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                 Sélectionne les produits génériques disponibles.
                 <br />
                 <br />
-                Possibilité d'ajouter plusieurs fois certains produits si plusieurs volumes sont disponibles pour un même produit (exemple : Bières Pils 25cl. et 50cl.).
+                Bières, vins, boissons chaudes, eaux, softs et snacks : coche le produit. S'il existe en plusieurs volumes, déplie sa ligne avec la flèche et appuie sur le « + » sous le volume (exemple : Bières Pils 25cl. et 50cl.).
+                <br />
+                <br />
+                Spiritueux et cocktails : le « + » ajoute le produit, autant de fois que nécessaire (exemple : un spiritueux en Shot et en Spiritueux classique).
                 <br />
                 <br />
                 Possibilité d'adapter le volume et le type de service de tous les produits depuis les catégories.
@@ -439,13 +476,21 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {genericDirectoryItems.map((g) => {
-                  if (g.type === "Bières & Cidres" || g.type === "Vins & Bulles") {
-                    const count = event.menu.filter((eItem) => normalizeForSearch(eItem.name) === normalizeForSearch(g.name)).length;
+                  const count = genericEntriesOf(g).length;
+                  const rowStyle = { display: "flex", alignItems: "center", gap: "10px", background: COLORS.surfaceAlt, borderRadius: "8px", padding: "9px 12px" };
+                  if (GENERIC_PLUS_TYPES.includes(g.type)) {
+                    // Un spiritueux qui peut être un Shot : on dit ce qui est déjà sur la carte ; le prochain « + » ajoute l'autre choix (voir nextGenericAsShot).
+                    const shotCapable = canBeShot(g);
+                    const nextIsShot = shotCapable && nextGenericAsShot(g);
+                    const nShots = shotCapable ? genericEntriesOf(g).filter((e) => e.menuCategory === "Shots").length : 0;
+                    const nSpirits = count - nShots;
+                    const status = !count
+                      ? ""
+                      : shotCapable
+                      ? [nShots ? (nShots > 1 ? `${nShots} Shots` : "Shot") : null, nSpirits ? (nSpirits > 1 ? `${nSpirits} Spiritueux` : "Spiritueux") : null].filter(Boolean).join(" + ")
+                      : `${count} sur la carte`;
                     return (
-                      <div
-                        key={g.id}
-                        style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surfaceAlt, borderRadius: "8px", padding: "9px 12px" }}
-                      >
+                      <div key={g.id} style={rowStyle}>
                         <button
                           onClick={() => addGenericItem(g)}
                           style={{
@@ -466,31 +511,23 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                             lineHeight: 1,
                             padding: 0,
                           }}
-                          aria-label={`Ajouter ${g.name}`}
+                          aria-label={shotCapable ? `Ajouter ${g.name} en ${nextIsShot ? "Shot" : "Spiritueux"}` : `Ajouter ${g.name}`}
                         >
                           +
                         </button>
                         <span style={{ fontSize: "13.5px", fontWeight: 600, color: COLORS.ink }}>
                           {g.name}
-                          {count > 0 && <span style={{ color: COLORS.inkSoft, fontWeight: 500 }}> · {count} sur la carte</span>}
+                          {status && <span style={{ color: COLORS.inkSoft, fontWeight: 500 }}> · {status}</span>}
                         </span>
                       </div>
                     );
                   }
-                  const present = isGenericItemPresent(g);
+                  // Les autres catégories : une coche (produit sur la carte ou non). Un autre volume du même produit s'ajoute depuis sa ligne de la carte (« + » sous le volume,
+                  // flèche dépliée). Décocher retire le produit avec tous ses volumes.
+                  const present = count > 0;
+                  const isSnack = g.type === "Snacks";
                   return (
-                    <label
-                      key={g.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        background: COLORS.surfaceAlt,
-                        borderRadius: "8px",
-                        padding: "9px 12px",
-                        cursor: "pointer",
-                      }}
-                    >
+                    <label key={g.id} style={{ ...rowStyle, cursor: "pointer" }}>
                       <input
                         type="checkbox"
                         checked={present}
@@ -509,7 +546,10 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
                           cursor: "pointer",
                         }}
                       />
-                      <span style={{ fontSize: "13.5px", fontWeight: 600, color: COLORS.ink }}>{g.name}</span>
+                      <span style={{ fontSize: "13.5px", fontWeight: 600, color: COLORS.ink }}>
+                        {g.name}
+                        {count > 1 && <span style={{ color: COLORS.inkSoft, fontWeight: 500 }}> · {count} {isSnack ? "poids" : "volumes"}</span>}
+                      </span>
                     </label>
                   );
                 })}

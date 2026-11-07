@@ -10,7 +10,7 @@ import { PageHeader, PageFooterNav, PrimaryButton, MoneyAmount, EntityAvatar } f
 import { BibaxSearchPicker } from "./Pickers.jsx";
 import { BibazardModal } from "./BibazardModal.jsx";
 import { BobBadge, DrinkBadges, getDrinkBadgeItems } from "./DrinkDisplay.jsx";
-import { capitalizeFirst, displayedAbv, drinkTypeLabel, isAlcoholicDrink, nextId, makeSearchMatcher, entityNames, flattenMenu, isMenuEntryWithoutFiche, findMenuEntryById, defaultVolumeText, defaultServingModeText, canBeShot, startsAsShot, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
+import { capitalizeFirst, displayedAbv, drinkTypeLabel, isAlcoholicDrink, nextId, makeSearchMatcher, entityNames, flattenMenu, isMenuEntryWithoutFiche, findMenuEntryById, defaultVolumeText, defaultServingModeText, canBeShot, startsAsShot, volumeUnit, SERVING_MODE_OPTIONS, sanitizeDecimalText, sanitizeDigitsText, parsePositiveText, parsePriceText, parseTokensText, stepTokens } from "../utils.js";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { loadSalon } from "../data/salons.js";
 import { searchDrinks } from "../data/sharedDirectories.js";
@@ -118,14 +118,14 @@ function GroupedDrinkCard({ variants, activeFriendId, countForFriendDrink, isOpe
                         cursor: "pointer",
                       }}
                     >
-                      {v.volumeCl} cl.
+                      {v.volumeCl} {volumeUnit(v.type)}
                     </button>
                   ))
                 : hasVolume && (
                     // Même style "pilule" que les volumes sélectionnés multiples — pas une simple
                     // couleur de texte — même si rien n'est cliquable ici, un seul volume existant.
                     <span style={{ background: COLORS.amber, color: COLORS.paper, border: `1.5px solid ${COLORS.amber}`, borderRadius: "999px", padding: "2px 8px", fontSize: "11.5px", fontWeight: 700 }}>
-                      {selected.volumeCl} cl.
+                      {selected.volumeCl} {volumeUnit(selected.type)}
                     </span>
                   )}
             </div>
