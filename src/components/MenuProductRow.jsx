@@ -9,7 +9,7 @@
 // par défaut, à contrôler), vert fluo ensuite (`drink.priceChecked`, `drink.volumeChecked`, `drink.servingModeChecked`).
 // DrinkRow (plus complète) reste utilisée par le répertoire de produits.
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
 import { DefaultDataInfo } from "./DefaultDataInfo.jsx";
@@ -60,6 +60,12 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
   // Textes saisis gardés tels quels dans l'état local : sinon une virgule tapée en dernier serait effacée dès qu'elle est relue comme nombre.
   const [priceInput, setPriceInput] = useState(() => String(drink.price ?? "").replace(".", ","));
   const [volumeInput, setVolumeInput] = useState(() => (drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : ""));
+  // Le volume peut changer de l'extérieur (bascule Spiritueux / Shot : volume par défaut du choix) : le texte affiché le suit, sauf s'il en donne déjà la valeur
+  // (pour ne pas effacer « 3, » en cours de frappe).
+  useEffect(() => {
+    if (parsePositiveText(volumeInput) !== (drink.volumeCl ?? null)) setVolumeInput(drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drink.volumeCl]);
   const isSpirit = drink.type === "Spiritueux";
   const isShot = drink.menuCategory === "Shots";
   // « Données par défaut vérifiées » est coché quand le prix, le volume et le type de service sont tous vérifiés/adaptés (que ce soit en les modifiant ou en
