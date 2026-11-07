@@ -326,6 +326,8 @@ export const withoutHomeDrink = (e, serveId) => ({ ...e, homeDrinks: (e.homeDrin
 // (choix de la fiche). Les autres produits n'ont ni l'un ni l'autre : aucun choix Spiritueux / Shot ne leur est proposé.
 export const canBeShot = (drink) => drink?.type === "Spiritueux" && !!drink?.servesAsShot;
 export const startsAsShot = (drink) => canBeShot(drink) && !!drink?.defaultAsShot;
+// Unité de la « quantité » d'un produit de la carte : les centilitres, sauf pour un snack dont la valeur (même champ `volumeCl`) est un poids en grammes.
+export const volumeUnit = (type) => (type === "Snacks" ? "g." : "cl.");
 // Nombre strictement positif, sinon null (valeur de fiche absente, à 0 ou illisible).
 const positiveOrNull = (v) => {
   const n = Number(v);

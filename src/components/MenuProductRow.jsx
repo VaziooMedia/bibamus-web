@@ -4,7 +4,8 @@
 //   1ʳᵉ ligne : rond-profil du produit + nom + croix de suppression (tout à droite)
 //   2ᵉ ligne  : flèche de déroulement (vert fluo, à gauche) + à droite l'icône « info » (bulle d'explication), le rond « Données par défaut vérifiées » à cocher, puis le prix modifiable
 //   déroulé   : dans un « tiroir » creusé (fond plus sombre, sans trait) : volume (texte libre, clavier numérique) + type de
-//               service ; pour un spiritueux, le choix Spiritueux / Shot. Rien d'autre.
+//               service ; sous le volume, un « + » pour ajouter un autre volume du même produit ; pour un spiritueux, le choix
+//               Spiritueux / Shot. Rien d'autre.
 // Le cadre du prix, du volume et du type de service est rose fluo tant que la valeur n'a pas été vérifiée/adaptée (c'est peut-être une valeur
 // par défaut, à contrôler), vert fluo ensuite (`drink.priceChecked`, `drink.volumeChecked`, `drink.servingModeChecked`).
 // DrinkRow (plus complète) reste utilisée par le répertoire de produits.
@@ -55,8 +56,8 @@ function Chevron({ size, color, turn = 0, stroke = 2.6 }) {
 // Bouton ▲ / ▼ du prix : moitié de la hauteur du champ, chevron vert fluo.
 const stepButtonStyle = { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer" };
 
-export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, onChangeVolume, onChangeServingMode, onChangeMenuCategory, onChangeVerified, onRemove }) {
-  const [expanded, setExpanded] = useState(false);
+export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, onChangeVolume, onChangeServingMode, onChangeMenuCategory, onChangeVerified, onAddVolume, initiallyExpanded = false, onRemove }) {
+  const [expanded, setExpanded] = useState(initiallyExpanded);
   // Textes saisis gardés tels quels dans l'état local : sinon une virgule tapée en dernier serait effacée dès qu'elle est relue comme nombre.
   const [priceInput, setPriceInput] = useState(() => String(drink.price ?? "").replace(".", ","));
   const [volumeInput, setVolumeInput] = useState(() => (drink.volumeCl != null ? String(drink.volumeCl).replace(".", ",") : ""));
@@ -175,21 +176,49 @@ export function MenuProductRow({ drink, priceStep, priceSymbol, onChangePrice, o
       {expanded && (
         <div data-menu-row-details="1" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "10px", padding: "12px", borderRadius: "12px", background: COLORS.paper }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
-            <FusedField title="Volume (cl.)" htmlFor={`menu-volume-${drink.id}`} width={VOLUME_BLOCK_W} color={frameColor(drink.volumeChecked)}>
-              <input
-                id={`menu-volume-${drink.id}`}
-                type="text"
-                inputMode="decimal"
-                value={volumeInput}
-                onChange={(e) => {
-                  const text = sanitizeDecimalText(e.target.value, 6);
-                  setVolumeInput(text);
-                  onChangeVolume(parsePositiveText(text));
-                }}
-                placeholder="00"
-                style={fieldStyle}
-              />
-            </FusedField>
+            {/* Le champ de volume, puis dessous le « + » qui ajoute un autre volume du même produit (une ligne de plus, juste après celle-ci) */}
+            <div style={{ flex: `0 0 ${VOLUME_BLOCK_W}px`, minWidth: 0 }}>
+              <FusedField title={drink.type === "Snacks" ? "Poids (g.)" : "Volume (cl.)"} htmlFor={`menu-volume-${drink.id}`} width={VOLUME_BLOCK_W} color={frameColor(drink.volumeChecked)}>
+                <input
+                  id={`menu-volume-${drink.id}`}
+                  type="text"
+                  inputMode="decimal"
+                  value={volumeInput}
+                  onChange={(e) => {
+                    const text = sanitizeDecimalText(e.target.value, 6);
+                    setVolumeInput(text);
+                    onChangeVolume(parsePositiveText(text));
+                  }}
+                  placeholder="00"
+                  style={fieldStyle}
+                />
+              </FusedField>
+              {onAddVolume && (
+                <button
+                  onClick={onAddVolume}
+                  aria-label={`Ajouter ${drink.type === "Snacks" ? "un autre poids" : "un autre volume"} pour ${drink.name}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "30px",
+                    height: "30px",
+                    margin: "8px auto 0",
+                    padding: 0,
+                    borderRadius: "50%",
+                    border: `1.5px solid ${COLORS.amber}`,
+                    background: "transparent",
+                    color: COLORS.amber,
+                    fontSize: "19px",
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    cursor: "pointer",
+                  }}
+                >
+                  +
+                </button>
+              )}
+            </div>
             <FusedField title="Type de service" htmlFor={`menu-service-${drink.id}`} width={SERVICE_BLOCK_W} shrink color={frameColor(drink.servingModeChecked)}>
               <select
                 id={`menu-service-${drink.id}`}
