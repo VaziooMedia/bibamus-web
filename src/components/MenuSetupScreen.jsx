@@ -8,7 +8,7 @@ import { NavIcon, TokenPinkIcon, AddPlusIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { DrinkDirectoryPicker } from "./DrinkDirectoryPicker.jsx";
 import { MenuProductRow, CHECK_MARK_BG } from "./MenuProductRow.jsx";
-import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems, safeServingMode, makeSearchMatcher, entityNames } from "../utils.js";
+import { drinkTypeLabel, nextId, normalizeForSearch, computeMissingVenueItems, safeServingMode, makeSearchMatcher, entityNames, startsAsShot } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import { loadGenericDrinks } from "../data/sharedDirectories.js";
 
@@ -154,8 +154,11 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   // Un produit ajouté à la carte du salon (générique ou choisi dans BibAtlas) reste relié à sa fiche du répertoire (`fromDirectory` + `sourceDrinkId`,
   // comme les produits d'une carte de lieu) : c'est ce lien qui donne ses dérivés en BibaRoom (Mazout, Coca, Red Bull…) et qui rattache ses verres au bon
   // produit dans les statistiques et le Drink Check. Les autres champs restent une copie figée, modifiable depuis la carte.
+  // Un spiritueux générique dont la fiche est « par défaut un Shot » (case « Shot » cochée) est ajouté comme Shot, avec les valeurs par défaut du shot : même règle
+  // que pour un produit choisi dans BibAtlas (addDrinkFromDirectory).
   const genericItemToEventItem = (g) => {
-    const d = defaultsOf(g);
+    const asShot = startsAsShot(g);
+    const d = defaultsOf(g, asShot);
     return {
       id: nextId(),
       fromDirectory: true,
@@ -163,6 +166,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
       name: g.name,
       price: d.price,
       type: g.type || "",
+      ...(asShot ? { menuCategory: "Shots" } : {}),
       volumeCl: d.volumeCl,
       kcalPer100ml: g.kcalPer100ml != null ? g.kcalPer100ml : null,
       servingMode: d.servingMode,
@@ -201,7 +205,7 @@ export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDi
   // Un spiritueux choisi dans BibAtlas est ajouté tout de suite, sans question : comme Shot quand sa fiche est « par défaut un Shot » (case « Shot »
   // cochée dans la plateforme de gestion), comme Spiritueux sinon. Dans sa ligne, les boutons Spiritueux / Shot restent à vérifier (cadre rose).
   const addDrinkFromDirectory = (source) => {
-    const asShot = source.type === "Spiritueux" && !!source.servesAsShot && !!source.defaultAsShot;
+    const asShot = startsAsShot(source);
     const d = defaultsOf(source, asShot);
     updateEvent(event.id, (e) => ({
       ...e,
