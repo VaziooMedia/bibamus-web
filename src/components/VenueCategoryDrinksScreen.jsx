@@ -87,8 +87,12 @@ export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink
             ].filter(Boolean);
 
             return (
-              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: "12px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
-                <EntityAvatar photoUrl={d.photoUrl} size={44} fallbackIcon="bottle" />
+              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+                {/* Rond du produit : le plus grand possible sans agrandir la carte (72 px : la hauteur de la carte la plus basse, sans ligne « producteur », moins 4 px de chaque côté) et à 4 px
+                    du bord à gauche ; centré en hauteur. Les marges négatives reprennent le remplissage de la carte (14 px) sans changer sa hauteur. Même règle que sur la carte d'un produit de la tournée. */}
+                <div style={{ display: "flex", flexShrink: 0, margin: "-12px 0 -12px -12px" }}>
+                  <EntityAvatar photoUrl={d.photoUrl} size={68} fallbackIcon="bottle" />
+                </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
                     <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>{d.name || "Sans nom"}</span>
