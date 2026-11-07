@@ -250,8 +250,8 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
             </button>
           </div>
           {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "12px" }}>{error}</p>}
-          <PrimaryButton onClick={() => handleJoin()} disabled={!code.trim() || loading} style={{ width: "100%" }}>
-            {loading ? "..." : "Rejoindre →"}
+          <PrimaryButton onClick={() => handleJoin()} disabled={!code.trim() || loading} badgeIcon={loading ? undefined : "door-enter"} style={{ width: "100%" }}>
+            {loading ? "..." : "Rejoindre"}
           </PrimaryButton>
         </>
       )}

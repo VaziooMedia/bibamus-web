@@ -295,17 +295,22 @@ export function BackFooterLink({ onClick, label }) {
   return <PageFooterNav onBack={onClick} />;
 }
 
-// Coche vert fluo dans un rond sombre, placée devant le texte des boutons de validation (PrimaryButton withCheck).
-// `muted` : bouton inactif, la coche passe en gris pour ne pas paraître active.
-export function CheckBadge({ muted = false }) {
+// Icône vert fluo dans un rond sombre, placée devant le texte des boutons principaux : la coche des boutons de
+// validation (PrimaryButton withCheck), ou une autre icône (PrimaryButton badgeIcon="door-enter" pour « Rejoindre »).
+// `muted` : bouton inactif, l'icône passe en gris pour ne pas paraître active.
+// La porte « Rejoindre », plus détaillée qu'une coche, a besoin d'un rond et d'une icône un peu plus grands pour rester lisible.
+const ICON_BADGE_SIZES = { "door-enter": { circle: 24, icon: 16 } };
+export function IconBadge({ name = "check", muted = false }) {
+  const { circle, icon } = ICON_BADGE_SIZES[name] || { circle: 20, icon: 13 };
   return (
-    <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: COLORS.paper, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      <NavIcon name="check" size={13} color={muted ? COLORS.inkSoft : COLORS.amber} />
+    <span style={{ width: `${circle}px`, height: `${circle}px`, borderRadius: "50%", background: COLORS.paper, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <NavIcon name={name} size={icon} color={muted ? COLORS.inkSoft : COLORS.amber} />
     </span>
   );
 }
 
-export function PrimaryButton({ children, onClick, disabled, style, withCheck = false }) {
+export function PrimaryButton({ children, onClick, disabled, style, withCheck = false, badgeIcon }) {
+  const badge = badgeIcon || (withCheck ? "check" : null);
   return (
     <button
       onClick={onClick}
@@ -320,11 +325,11 @@ export function PrimaryButton({ children, onClick, disabled, style, withCheck = 
         fontSize: "16px",
         fontFamily: "'Work Sans', sans-serif",
         cursor: disabled ? "not-allowed" : "pointer",
-        ...(withCheck ? { display: "flex", alignItems: "center", justifyContent: "center", gap: "9px" } : null),
+        ...(badge ? { display: "flex", alignItems: "center", justifyContent: "center", gap: "9px" } : null),
         ...style,
       }}
     >
-      {withCheck && <CheckBadge muted={disabled} />}
+      {badge && <IconBadge name={badge} muted={disabled} />}
       {children}
     </button>
   );
