@@ -84,7 +84,7 @@ export function BrandRatingModal({ brandName, myRating, onSave, onRemove, onClos
           </p>
         )}
 
-        <PrimaryButton onClick={() => run("save", () => onSave(pendingValue))} disabled={!!busy || !touched} style={{ width: "100%", marginTop: "20px" }}>
+        <PrimaryButton onClick={() => run("save", () => onSave(pendingValue))} disabled={!!busy || !touched} withCheck={busy !== "save"} style={{ width: "100%", marginTop: "20px" }}>
           {busy === "save" ? "..." : "Valider"}
         </PrimaryButton>
 

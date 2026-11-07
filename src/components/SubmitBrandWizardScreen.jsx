@@ -279,7 +279,7 @@ export function SubmitBrandWizardScreen({ brandsDirectory, breweriesDirectory, o
         onBack={onCancel}
         onPrevious={() => setStep(5)}
         footer={
-          <PrimaryButton onClick={() => setShowConfirmPopup(true)} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setShowConfirmPopup(true)} withCheck style={{ width: "100%" }}>
             Valider
           </PrimaryButton>
         }

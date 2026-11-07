@@ -712,8 +712,8 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
 
       {!activeCategory && !searching && event.menu.length > 4 && (
         <>
-          <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} style={{ width: "100%" }}>
-            {isOpenBar ? "Valider la tournée →" : "Valider la commande →"}
+          <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} withCheck style={{ width: "100%" }}>
+            {isOpenBar ? "Valider la tournée" : "Valider la commande"}
           </PrimaryButton>
           <div style={{ marginBottom: "16px" }} />
         </>
@@ -793,8 +793,8 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
           </div>
           {itemsIn(activeCategory).length > 4 && (
             <>
-              <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} style={{ width: "100%" }}>
-                {isOpenBar ? "Valider la tournée →" : "Valider la commande →"}
+              <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} withCheck style={{ width: "100%" }}>
+                {isOpenBar ? "Valider la tournée" : "Valider la commande"}
               </PrimaryButton>
               <div style={{ marginBottom: "16px" }} />
             </>
@@ -1059,8 +1059,8 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
         </>
       )}
 
-      <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} style={{ marginTop: "auto", width: "100%" }}>
-        {isOpenBar ? "Valider la tournée →" : "Valider la commande →"}
+      <PrimaryButton onClick={onSeeTicket} disabled={!canValidateRound} withCheck style={{ marginTop: "auto", width: "100%" }}>
+        {isOpenBar ? "Valider la tournée" : "Valider la commande"}
       </PrimaryButton>
       <PageFooterNav onBack={onBack} />
     </div>

@@ -433,7 +433,7 @@ export function SubmitVenueWizardScreen({ onDone, onCancel }) {
         onBack={onCancel}
         onPrevious={() => setStep(6)}
         footer={
-          <PrimaryButton onClick={() => setShowConfirmPopup(true)} style={{ width: "100%" }}>
+          <PrimaryButton onClick={() => setShowConfirmPopup(true)} withCheck style={{ width: "100%" }}>
             Valider
           </PrimaryButton>
         }

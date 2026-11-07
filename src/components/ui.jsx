@@ -295,7 +295,17 @@ export function BackFooterLink({ onClick, label }) {
   return <PageFooterNav onBack={onClick} />;
 }
 
-export function PrimaryButton({ children, onClick, disabled, style }) {
+// Coche vert fluo dans un rond sombre, placée devant le texte des boutons de validation (PrimaryButton withCheck).
+// `muted` : bouton inactif, la coche passe en gris pour ne pas paraître active.
+export function CheckBadge({ muted = false }) {
+  return (
+    <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: COLORS.paper, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <NavIcon name="check" size={13} color={muted ? COLORS.inkSoft : COLORS.amber} />
+    </span>
+  );
+}
+
+export function PrimaryButton({ children, onClick, disabled, style, withCheck = false }) {
   return (
     <button
       onClick={onClick}
@@ -310,9 +320,11 @@ export function PrimaryButton({ children, onClick, disabled, style }) {
         fontSize: "16px",
         fontFamily: "'Work Sans', sans-serif",
         cursor: disabled ? "not-allowed" : "pointer",
+        ...(withCheck ? { display: "flex", alignItems: "center", justifyContent: "center", gap: "9px" } : null),
         ...style,
       }}
     >
+      {withCheck && <CheckBadge muted={disabled} />}
       {children}
     </button>
   );

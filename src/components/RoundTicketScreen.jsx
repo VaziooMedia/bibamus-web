@@ -522,6 +522,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
           )
         }
         style={{ marginTop: "6px", width: "100%" }}
+        withCheck
       >
         Retour à la session
       </PrimaryButton>

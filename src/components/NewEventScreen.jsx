@@ -395,24 +395,8 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
       {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginTop: "12px" }}>{error}</p>}
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 0" }} />
-      <PrimaryButton
-        onClick={handleSubmit}
-        disabled={!canCreate || loading}
-        style={{ marginTop: "24px", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "9px" }}
-      >
-        {loading ? (
-          "..."
-        ) : isSalon ? (
-          <>
-            {/* Coche vert fluo dans un rond sombre ; grisée quand le bouton est inactif. */}
-            <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: COLORS.paper, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <NavIcon name="check" size={13} color={canCreate ? COLORS.amber : COLORS.inkSoft} />
-            </span>
-            Créer le BibaRoom
-          </>
-        ) : (
-          "Créer l'événement →"
-        )}
+      <PrimaryButton onClick={handleSubmit} disabled={!canCreate || loading} withCheck={isSalon && !loading} style={{ marginTop: "24px", width: "100%" }}>
+        {loading ? "..." : isSalon ? "Créer le BibaRoom" : "Créer l'événement →"}
       </PrimaryButton>
       <PageFooterNav onBack={onCancel} />
     </div>
