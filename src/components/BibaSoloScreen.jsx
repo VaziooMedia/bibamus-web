@@ -38,7 +38,7 @@ import {
   archiveMyJetonMovements,
   loadMyJetonSpentSince,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, displayedAbv, displayedAlcoholTier, volumeUnit, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, displayedAbv, displayedAlcoholTier, volumeUnit, kcalOfPortion, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
@@ -199,8 +199,8 @@ function defaultVolumeOf(drink, asShot = false) {
 function drinkCalories(drink, volumeCl) {
   if (!drink?.kcalPer100ml) return 0;
   const volume = volumeCl || drink.volumeCl || 25;
-  // kcalPer100ml est par 100 ML, mais le volume est stocké en CL (1 cl = 10 ml) — d'où le ×10.
-  return Math.round((drink.kcalPer100ml * volume * 10) / 100);
+  // kcalPer100ml est par 100 ML, mais le volume est stocké en CL (1 cl = 10 ml) ; pour un snack, c'est par 100 g et le poids est en grammes (voir kcalOfPortion).
+  return kcalOfPortion(drink.kcalPer100ml, volume, drink.type);
 }
 
 const menuBadgeStyle = {

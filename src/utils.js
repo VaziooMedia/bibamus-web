@@ -93,8 +93,12 @@ export const nextId = () => {
   return `${Date.now()}-${idCounter}-${Math.random().toString(36).slice(2, 8)}`;
 };
 
+// Énergie d'une portion. `kcalPer100` est « pour 100 ml » pour une boisson (la quantité est un volume en cl : 1 cl = 10 ml, d'où le /10), mais « pour 100 g » pour un
+// snack (la quantité est un poids en grammes, stocké dans les mêmes champs : /100).
+export const kcalOfPortion = (kcalPer100, amount, type) => Math.round(type === "Snacks" ? (kcalPer100 * amount) / 100 : (kcalPer100 * amount) / 10);
+
 export const kcalForDrink = (drink) =>
-  drink.kcalPer100ml != null && drink.volumeCl != null ? Math.round((drink.kcalPer100ml * drink.volumeCl) / 10) : null;
+  drink.kcalPer100ml != null && drink.volumeCl != null ? kcalOfPortion(drink.kcalPer100ml, drink.volumeCl, drink.type) : null;
 
 export const normalizeDrinkType = (type) => {
   if (!type) return "";
