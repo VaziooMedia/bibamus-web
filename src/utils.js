@@ -240,14 +240,21 @@ export const resolveMenuItem =(item, drinksDirectory) => {
 // ignoré, comme avant.
 const isVenueItemWithoutFiche = (item, fichesLues) => fichesLues.size > 0 && !!item.fromDirectory && !!item.sourceDrinkId && !fichesLues.has(item.sourceDrinkId);
 
+// La carte d'un lieu sans les produits dont la fiche du répertoire n'existe plus (voir isVenueItemWithoutFiche). `drinksDirectory` = les fiches lues pour cette carte.
+// Sert aux écrans qui affichent la carte d'un lieu : un tel produit y apparaîtrait sans nom, dans « Non classé ».
+export const venueMenuWithFiches = (venueMenu, drinksDirectory) => {
+  const fichesLues = new Set((drinksDirectory || []).map((d) => d.id));
+  return (Array.isArray(venueMenu) ? venueMenu : []).filter((d) => !isVenueItemWithoutFiche(d, fichesLues));
+};
+
+// Un produit d'une carte de salon relié au répertoire mais sans nom : recopié d'un lieu alors que sa fiche n'existait déjà plus (avant que la copie ignore ces
+// produits). L'écran Commande ne le montre pas. Les produits d'un salon portent toujours leur nom (recopié de la fiche à l'ajout), donc le nom suffit à le repérer.
+export const isMenuEntryWithoutFiche = (entry) => !!entry && !!entry.fromDirectory && !!entry.sourceDrinkId && !entry.name;
+
 // La carte d'un lieu recopiée dans un salon (création du salon, changement de lieu) : chaque produit du répertoire reprend sa fiche (resolveMenuItem),
 // avec un identifiant propre au salon. Un produit dont la fiche n'existe plus est IGNORÉ (voir isVenueItemWithoutFiche).
-export const resolveVenueMenuForEvent = (venueMenu, drinksDirectory) => {
-  const fichesLues = new Set((drinksDirectory || []).map((d) => d.id));
-  return (Array.isArray(venueMenu) ? venueMenu : [])
-    .filter((d) => !isVenueItemWithoutFiche(d, fichesLues))
-    .map((d) => ({ ...resolveMenuItem(d, drinksDirectory || []), id: `local-${Date.now()}-${Math.random()}` }));
-};
+export const resolveVenueMenuForEvent = (venueMenu, drinksDirectory) =>
+  venueMenuWithFiches(venueMenu, drinksDirectory).map((d) => ({ ...resolveMenuItem(d, drinksDirectory || []), id: `local-${Date.now()}-${Math.random()}` }));
 
 // @Home — prépare « Je me sers » (fonction pure, testée à part). Renvoie : la nouvelle entrée de
 // carte à ajouter au salon (null si ce produit existe déjà à ce volume et à ce type de service, ajouté
