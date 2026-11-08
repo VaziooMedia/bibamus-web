@@ -19,6 +19,7 @@ import { VenueMapScreen } from "./components/VenueMapScreen.jsx";
 import { isBottomNavHidden } from "./bottomNav.js";
 import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
 import { LoadingScreen } from "./components/LoadingScreen.jsx";
+import { WelcomeScreen, shouldShowWelcome, markWelcomeSeen } from "./components/WelcomeScreen.jsx";
 import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
 import { PublicLinkGate } from "./components/PublicCardScreen.jsx";
@@ -290,6 +291,8 @@ export default function App() {
     bibroCodeRef.current = profile.myBibroCode;
   }, [profile.myBibroCode]);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  // L'écran de bienvenue (nouveau compte, première connexion) : le compte pour lequel il a été fermé pendant cette ouverture de l'app — il ne revient pas, même si le stockage de l'appareil est indisponible.
+  const [welcomeClosedFor, setWelcomeClosedFor] = useState(null);
   const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
   const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
   // Écran où ramène la flèche retour de la fiche d'un Bibax ; « home » partout sauf depuis la page Bibax de BibAtlas.
@@ -1957,6 +1960,18 @@ export default function App() {
           Bibamus est momentanément indisponible pour une opération de maintenance. Merci de repasser dans quelques instants.
         </p>
       </div>
+    );
+  }
+
+  if (welcomeClosedFor !== session.user.id && shouldShowWelcome(session.user.id, profile.registeredAt)) {
+    return (
+      <WelcomeScreen
+        firstName={profile.name}
+        onDone={() => {
+          markWelcomeSeen(session.user.id);
+          setWelcomeClosedFor(session.user.id);
+        }}
+      />
     );
   }
 
