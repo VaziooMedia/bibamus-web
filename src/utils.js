@@ -3,7 +3,7 @@
 // depuis le prototype Claude.
 // ============================================================
 import { DRINK_TYPES, MENU_CATEGORIES, DRINK_TYPE_MIGRATIONS, NON_ALCOHOLIC_DRINK_TYPES, SERVING_MODE_LABELS, MONTH_NAMES_FR, DRINK_FIELD_LABELS } from "./constants.js";
-import { variantOfDrinkId, withDerivative, drinkLabel, drinkIdWithVariant, kcalPer100mlWithVariant, derivativeKcalByCode, rememberedDerivativeList } from "./beerDerivatives.js";
+import { variantOfDrinkId, withDerivative, drinkLabel, drinkIdWithVariant, kcalPer100mlWithVariant } from "./beerDerivatives.js";
 
 // Lettres que la décomposition NFD ne sépare pas en « lettre + accent » : œ → oe, æ → ae, ß → ss, ø → o, ł → l… Mêmes correspondances que
 // `unaccent` de Postgres, que la base applique pour calculer `search_text` (fonction `bibamus_normalize_search_text`) : « œufs » se retrouve en
@@ -269,7 +269,7 @@ export const resolveVenueMenuForEvent = (venueMenu, drinksDirectory) =>
 // Un shot (`asShot`) est une entrée à part, comme dans la carte boissons d'un salon : même produit (type « Spiritueux »)
 // avec `menuCategory: "Shots"` ; le même produit pris en spiritueux n'en reprend donc pas l'entrée, et inversement.
 // Un produit servi en dérivé (Mazout, Tango… pour une bière, Coca, Tonic… pour un spiritueux : `variantCode`) : le dérivé se glisse dans l'identifiant du verre (« entrée::volume::codeDérivé », voir
-// beerDerivatives.js) et la ligne de statistiques porte `variant_code` et l'énergie du dérivé quand il en a une. Sans dérivé, rien ne change.
+// beerDerivatives.js) et la ligne de statistiques porte `variant_code` et l'énergie saisie pour CE produit et ce dérivé quand il y en a une (sinon celle du produit). Sans dérivé, rien ne change.
 export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "", asShot = false, variantCode: requestedVariant = null } = {}, me = {}) => {
   // Un verre pris en Shot n'a jamais de dérivé (celui d'un spiritueux ne concerne pas ses shots).
   const variantCode = asShot ? null : requestedVariant;
@@ -310,7 +310,7 @@ export const buildHomeServe = (event, source, { volumeCl = null, servingMode = "
       drink_id: source.id,
       unit_price: null,
       unit_volume_cl: cl,
-      unit_kcal_per_100ml: kcalPer100mlWithVariant(source.kcalPer100ml ?? entry.kcalPer100ml ?? null, variantCode, derivativeKcalByCode(rememberedDerivativeList())),
+      unit_kcal_per_100ml: kcalPer100mlWithVariant(source.kcalPer100ml ?? entry.kcalPer100ml ?? null, source.id, variantCode),
       ...(variantCode ? { variant_code: variantCode } : {}),
     },
   };

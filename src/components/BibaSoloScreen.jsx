@@ -50,7 +50,7 @@ import { AiIcon } from "./AiIcon.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { useBeerDerivatives, useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
-import { derivativeKcalByCode, derivativeName, kcalPer100mlWithVariant, volumeAfterVariantChange } from "../beerDerivatives.js";
+import { derivativeName, kcalPer100mlWithVariant, volumeAfterVariantChange } from "../beerDerivatives.js";
 import { ServicePill, DerivativePill, serviceLabelOf } from "./ServiceTag.jsx";
 
 // La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
@@ -1459,8 +1459,6 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
 
 export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onCheckConfirmed, onOpenDrink, onBack, onAddDrink, startInHistory = false, onHistoryOpenChange }) {
   const [checkins, setCheckins] = useState(null); // période en cours (de 6 h à 6 h) : c'est elle que comptent les compteurs
-  // Dérivés des bières (Mazout, Tango…) : leur énergie propre compte dans les kcal dès que la liste est lue (ce que fait aussi la base pour les statistiques).
-  const derivativeList = useBeerDerivativeList();
   const [previousCheckins, setPreviousCheckins] = useState(null); // période d'avant, affichée grisée sous la liste
   const [previousPeriodStart, setPreviousPeriodStart] = useState(null); // début (6 h) de la période d'avant : sa date s'affiche dans la barre de séparation
   const [spentInfoOpen, setSpentInfoOpen] = useState(false); // bulle de détail du bloc « Dépensé » (mes consommations / consommations offertes / jetons achetés)
@@ -1762,9 +1760,13 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     loadVenuesByIds([...venueIds]).then((results) => setVenuesById(Object.fromEntries(results.map((v) => [String(v.id), v]))));
   }, [checkins, previousCheckins, recentDrinkIds]);
 
+  // Dérivés (Mazout, Coca, Citron…) : l'énergie saisie pour CE produit et ce dérivé compte dans les kcal dès qu'elle est lue (ce que fait aussi la base pour les
+  // statistiques) ; sans valeur saisie, le verre garde l'énergie du produit. On ne lit que les produits des verres pris en dérivé.
+  const variantDrinkIds = useMemo(() => (checkins || []).filter((c) => c.variantCode).map((c) => String(c.drinkId)), [checkins]);
+  const { forProduct: derivativesOf } = useBeerDerivatives(variantDrinkIds);
+
   const totals = useMemo(() => {
     if (!checkins) return { count: 0, price: 0, own: 0, offered: 0, jetons: 0, kcal: 0 };
-    const kcalByCode = derivativeKcalByCode(derivativeList);
     return checkins.reduce(
       (acc, c) => {
         const drink = drinksById[String(c.drinkId)];
@@ -1774,12 +1776,12 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           own: acc.own + (c.currency === "jeton" ? 0 : c.price || 0), // euros : mes consommations seules
           offered: acc.offered + (c.currency === "jeton" ? 0 : c.offeredPrice || 0), // euros : consommations offertes seules
           jetons: acc.jetons + (c.currency === "jeton" ? (c.price || 0) + (c.offeredPrice || 0) : 0), // jetons : prix du verre + jetons offerts
-          kcal: acc.kcal + (drink ? drinkCalories({ ...drink, kcalPer100ml: kcalPer100mlWithVariant(drink.kcalPer100ml, c.variantCode, kcalByCode) }, c.volumeCl) : 0),
+          kcal: acc.kcal + (drink ? drinkCalories({ ...drink, kcalPer100ml: kcalPer100mlWithVariant(drink.kcalPer100ml, String(drink.id), c.variantCode) }, c.volumeCl) : 0),
         };
       },
       { count: 0, price: 0, own: 0, offered: 0, jetons: 0, kcal: 0 }
     );
-  }, [checkins, drinksById, derivativeList]);
+  }, [checkins, drinksById, derivativesOf]);
 
   const handleDelete = async (id) => {
     setCheckins((prev) => prev.filter((c) => c.id !== id));
