@@ -310,7 +310,8 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
           />
 
           {tab === "feed" && (
-            <div style={{ flex: 1, overflowY: "auto" }}>
+            // Le conteneur défilant porte la marge négative (sinon il rognerait la liste) ; le champ d'écriture garde la marge de 20 px de la page.
+            <div style={{ flex: 1, overflowY: "auto", margin: "0 -20px", padding: "0 20px" }}>
               <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
                 <input
                   value={postBody}
@@ -332,9 +333,9 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
               ) : posts.length === 0 ? (
                 <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center" }}>Aucune publication pour l'instant.</p>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
                   {posts.map((p) => (
-                    <div key={p.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px" }}>
+                    <div key={p.id} style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "12px 14px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
                         <EntityAvatar photoUrl={p.authorAvatarUrl} size={26} />
                         <span style={{ fontSize: "13px", fontWeight: 700 }}>{[p.authorName, p.authorLastName].filter(Boolean).join(" ")}</span>
