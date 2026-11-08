@@ -8,9 +8,9 @@ import { COLORS } from "../constants.js";
 // écrans et se pose exactement sur le fond de l'app.
 // Tracés : ceux de l'icône vectorielle Bibamus, avec les angles adoucis pour rester lisses en grand.
 
-const LOOP_SECONDS = 3;
-const POP_SECONDS = 1.05; // Moment où la bouteille saute le bouchon.
-const FADE_FROM = 90; // Pourcentage de la boucle où l'ensemble commence à s'estomper.
+export const LOOP_SECONDS = 3;
+export const POP_SECONDS = 1.05; // Moment où la bouteille saute le bouchon.
+export const FADE_FROM = 90; // Pourcentage de la boucle où l'ensemble commence à s'estomper.
 
 const BOTTLE = "M 166 277 Q 150 277 147 278 L 147 278 Q 144 279 140 282.5 L 140 282.5 Q 136 286 134 291.5 L 134 291.5 Q 132 297 132.5 301.5 L 132.5 301.5 Q 133 306 134.5 309 L 134.5 309 Q 136 312 139 315 L 139 315 Q 142 318 147 320.5 L 147 320.5 Q 152 323 150.5 338.9 L 134.5 514.1 Q 133 530 132 534.5 L 132 534.5 Q 131 539 127.5 546 L 127.5 546 Q 124 553 116.5 560.5 L 116.5 560.5 Q 109 568 102.5 577 L 102.5 577 Q 96 586 92 598.5 L 92 598.5 Q 88 611 88 627 L 88 899 Q 88 915 90 921.5 L 90 921.5 Q 92 928 94 931 L 94 931 Q 96 934 101.5 939.5 L 101.5 939.5 Q 107 945 115 948.5 L 115 948.5 Q 123 952 139 952.1 L 234 952.9 Q 250 953 256 951.5 L 256 951.5 Q 262 950 267.5 947 L 267.5 947 Q 273 944 279 937.5 L 279 937.5 Q 285 931 288 923 L 288 923 Q 291 915 291 899 L 291 629 Q 291 613 290 607.5 L 290 607.5 Q 289 602 286 594 L 286 594 Q 283 586 278.5 579.5 L 278.5 579.5 Q 274 573 263.5 561.5 L 263.5 561.5 Q 253 550 250 543 L 250 543 Q 247 536 246 530.5 L 246 530.5 Q 245 525 243.6 509.1 L 228.4 338.9 Q 227 323 232 320.5 L 232 320.5 Q 237 318 239.5 315.5 L 239.5 315.5 Q 242 313 244.5 306 L 244.5 306 Q 247 299 246 294.5 L 246 294.5 Q 245 290 243 287 L 243 287 Q 241 284 235 280.5 L 235 280.5 Q 229 277 213 277 Z";
 
@@ -68,14 +68,10 @@ const STYLES = `
   }
 `;
 
-export function LoadingScreen() {
-  // Calé sur la zone réellement visible (100vh dépasse l'écran sur iPhone) ; la marge basse remonte l'animation.
+// L'animation seule (la bouteille et ses éclats), sans fond ni cadre : l'écran de chargement la centre, l'écran « Tchin ! » de l'inscription (TchinScreen.jsx) la reprend telle quelle.
+export function LoadingBottle() {
   return (
-    <div
-      role="status"
-      aria-label="Chargement"
-      style={{ position: "fixed", inset: 0, paddingBottom: "12vh", display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.paper, overflow: "hidden" }}
-    >
+    <>
       <style>{STYLES}</style>
       <svg viewBox="0 0 380 966" aria-hidden="true" style={{ display: "block", height: "min(40vh, 300px)", width: "auto", overflow: "visible" }}>
         <g fillRule="evenodd" stroke="none">
@@ -85,6 +81,19 @@ export function LoadingScreen() {
           <path className="biba-load-part biba-load-bottle" d={BOTTLE} fill="#39FF66" />
         </g>
       </svg>
+    </>
+  );
+}
+
+export function LoadingScreen() {
+  // Calé sur la zone réellement visible (100vh dépasse l'écran sur iPhone) ; la marge basse remonte l'animation.
+  return (
+    <div
+      role="status"
+      aria-label="Chargement"
+      style={{ position: "fixed", inset: 0, paddingBottom: "12vh", display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.paper, overflow: "hidden" }}
+    >
+      <LoadingBottle />
     </div>
   );
 }
