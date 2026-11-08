@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS, PROFILE_COUNTRIES, COUNTRY_ISO_CODES } from "../constants.js";
 import { signUp, signIn, resetPassword, getMinimumAge, detectCurrentCountryCode } from "../data/sharedDirectories.js";
 import { BibamusLogo } from "./BibamusLogo.jsx";
-import { TchinScreen } from "./TchinScreen.jsx";
+import { AccountCreatedScreen } from "./AccountCreatedScreen.jsx";
 
 const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "4px", display: "block" };
@@ -201,7 +201,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
   const [country, setCountry] = useState("");
   const [step, setStep] = useState(1); // étape de l'inscription : 1, 2 ou 3
   const [direction, setDirection] = useState("forward"); // le sens du dernier changement d'étape : l'étape arrive de la droite (suivant) ou de la gauche (retour)
-  const [tchin, setTchin] = useState(null); // { next } pendant le « Tchin ! » qui suit la création du compte
+  const [created, setCreated] = useState(null); // { next } pendant l'animation qui suit la création du compte
 
   // Pré-remplit le pays de résidence selon la position actuelle de l'appareil, pour gagner un
   // clic — reste entièrement modifiable, et ne touche jamais à un choix déjà fait.
@@ -329,10 +329,10 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
         setError(result.error);
         return;
       }
-      // Compte créé : un petit « Tchin ! » (sauté si le système demande moins d'animations), puis l'écran suivant.
+      // Compte créé : l'animation de chargement (sautée si le système demande moins d'animations), puis l'écran suivant.
       const next = () => (result.session ? onAuthenticated(result.session) : setMode("confirmEmail"));
       if (prefersReducedMotion()) next();
-      else setTchin({ next });
+      else setCreated({ next });
       return;
     }
 
@@ -346,13 +346,12 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
     onAuthenticated(result.session);
   };
 
-  if (tchin) {
+  if (created) {
     return (
-      <TchinScreen
-        firstName={firstName.trim()}
+      <AccountCreatedScreen
         onDone={() => {
-          setTchin(null);
-          tchin.next();
+          setCreated(null);
+          created.next();
         }}
       />
     );
