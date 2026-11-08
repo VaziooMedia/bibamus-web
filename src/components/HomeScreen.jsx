@@ -219,7 +219,7 @@ export function HomeScreen({
         </div>
       </div>
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px 0" }} />
+      <div style={{ height: "1px", background: COLORS.amber, margin: "0 0 14px 0" }} />
       <div style={{ display: "flex", justifyContent: "center", gap: "28px", marginBottom: "14px" }}>
         <div data-tour="atlas" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
@@ -231,7 +231,7 @@ export function HomeScreen({
               width: "52px",
               height: "52px",
               borderRadius: "50%",
-              background: COLORS.surface,
+              background: COLORS.paper,
               border: `2px solid ${COLORS.paperAlt}`,
               cursor: "pointer",
             }}
@@ -253,7 +253,7 @@ export function HomeScreen({
               width: "52px",
               height: "52px",
               borderRadius: "50%",
-              background: COLORS.surface,
+              background: COLORS.paper,
               border: `2px solid ${COLORS.paperAlt}`,
               cursor: "pointer",
             }}
@@ -275,7 +275,7 @@ export function HomeScreen({
               width: "52px",
               height: "52px",
               borderRadius: "50%",
-              background: COLORS.surface,
+              background: COLORS.paper,
               border: `2px solid ${COLORS.paperAlt}`,
               cursor: "pointer",
             }}
@@ -297,7 +297,7 @@ export function HomeScreen({
               width: "52px",
               height: "52px",
               borderRadius: "50%",
-              background: COLORS.surface,
+              background: COLORS.paper,
               border: `2px solid ${COLORS.paperAlt}`,
               cursor: "pointer",
             }}
@@ -310,12 +310,12 @@ export function HomeScreen({
           </span>
         </div>
       </div>
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
+      <div style={{ height: "1px", background: COLORS.amber, margin: "0 0 18px 0" }} />
 
       <TravelAgeWarning profile={profile} />
       <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} officialStories={officialStories} />
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "-10px 0 18px 0" }} />
+      <div style={{ height: "1px", background: COLORS.amber, margin: "-10px 0 18px 0" }} />
 
       {bibros.some((b) => bibroStatuses[b.code] && (bibroStatuses[b.code].activeSalonName || isFreshCheckIn(bibroStatuses[b.code]))) && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
@@ -330,7 +330,7 @@ export function HomeScreen({
               return (
                 <div
                   key={b.code}
-                  style={{ background: COLORS.surface, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  style={{ background: COLORS.paper, border: `2px solid ${COLORS.amber}`, borderRadius: "12px", padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}
                 >
                   <span style={{ fontSize: "14px" }}>
                     {status.activeSalonName ? (
@@ -377,7 +377,7 @@ export function HomeScreen({
                     position: "relative",
                     textAlign: "left",
                     width: "100%",
-                    background: COLORS.surface,
+                    background: COLORS.paper,
                     border: `2px solid ${COLORS.paperAlt}`,
                     borderRadius: "12px",
                     padding: "14px 16px",
@@ -467,7 +467,7 @@ export function HomeScreen({
               ))}
           </div>
 
-          <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0" }} />
+          <div style={{ height: "1px", background: COLORS.amber, margin: "18px 0" }} />
         </>
       )}
 
@@ -514,11 +514,12 @@ export function HomeScreen({
               </button>
 
               {entries.length === 0 ? (
-                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+                <div style={{ background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
                   <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>En attente des premières activités.</p>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+                  {/* Extraits « à plat » (convention de DESIGN-SYSTEM.md) : pleine largeur (sort de la marge de 20 px), sans bloc, trait de bord à bord sous chaque ligne. */}
                   {entries.map((entry) => {
                     const obj = resolveObject(entry);
                     const objName = obj?.name || (entry.eventType === "venue_visit" ? "un établissement" : entry.eventType === "database_contribution" ? "une fiche" : "un produit");
@@ -532,7 +533,7 @@ export function HomeScreen({
                     const isPost = entry.eventType === "post";
                     const postText = isPost && typeof entry.metadata?.comment === "string" ? entry.metadata.comment.replace(/\s+/g, " ").trim() : "";
                     return (
-                      <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                      <div key={entry.id} style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
                         <button
                           onClick={() => (entry.actorId === myUserId ? goToProfile() : onOpenBibaxProfile(entry.actorBibroCode))}
                           style={{ background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0 }}
@@ -581,7 +582,7 @@ export function HomeScreen({
           );
         })()}
 
-      <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
+      <div style={{ height: "1px", background: COLORS.amber, margin: "0 0 18px 0" }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
         {gamesVisible && (
@@ -599,7 +600,7 @@ export function HomeScreen({
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>
-          <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
+          <div style={{ height: "1px", background: COLORS.amber, margin: "0 0 18px 0" }} />
           <button
             onClick={() => setSuggestionsExpanded((e) => !e)}
             style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: suggestionsExpanded ? "8px" : 0, background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer" }}
@@ -630,7 +631,7 @@ export function HomeScreen({
                   key={s.userId}
                   onClick={() => onOpenBibaxProfile(s.bibroCode)}
                   style={{
-                    background: COLORS.surface,
+                    background: COLORS.paper,
                     border: `2px solid ${COLORS.paperAlt}`,
                     borderRadius: "12px",
                     padding: "10px 14px",

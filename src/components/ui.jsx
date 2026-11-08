@@ -393,7 +393,7 @@ export function CategoryTile({ iconElement, title, subtitle, onClick, badge, cou
         display: "flex",
         flexDirection: "column",
         gap: "8px",
-        background: COLORS.surface,
+        background: COLORS.paper,
         border: `2px solid ${COLORS.paperAlt}`,
         borderRadius: "14px",
         padding: "12px 14px",
