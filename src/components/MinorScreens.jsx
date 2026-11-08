@@ -38,7 +38,8 @@ export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBac
         background: "none",
         border: "none",
         borderBottom: `1px solid ${COLORS.paperAlt}`,
-        padding: "14px 4px",
+        padding: "14px",
+        boxSizing: "border-box",
         textAlign: "left",
         cursor: "pointer",
         width: "100%",
@@ -56,8 +57,9 @@ export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBac
     </button>
   );
 
+  // Groupe « à plat » (convention de DESIGN-SYSTEM.md) : pleine largeur, sans bloc, traits de bord à bord entre les lignes.
   const SettingsGroup = ({ children }) => (
-    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "16px" }}>{children}</div>
+    <div style={{ margin: "0 -20px 16px", borderTop: `1px solid ${COLORS.paperAlt}` }}>{children}</div>
   );
 
   return (

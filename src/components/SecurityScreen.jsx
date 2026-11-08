@@ -29,7 +29,8 @@ function SecurityRow({ icon, title, subtitle, onClick, titleColor, disabled, bad
         background: "none",
         border: "none",
         borderBottom: `1px solid ${COLORS.paperAlt}`,
-        padding: "14px 4px",
+        padding: "14px",
+        boxSizing: "border-box",
         textAlign: "left",
         cursor: disabled ? "not-allowed" : "pointer",
         width: "100%",
@@ -53,14 +54,15 @@ function SecurityRow({ icon, title, subtitle, onClick, titleColor, disabled, bad
   );
 }
 
+// Groupe de réglages « à plat » (convention de DESIGN-SYSTEM.md) : pleine largeur, sans bloc, traits de bord à bord entre les lignes.
 function SecurityGroup({ title, children }) {
   return (
-    <div style={{ marginBottom: "22px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+    <div style={{ margin: "0 -20px 22px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px", padding: "0 14px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
+      <div style={{ borderTop: `1px solid ${COLORS.paperAlt}` }}>{children}</div>
     </div>
   );
 }
@@ -153,7 +155,7 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   };
 
   const CategoryRow = ({ title, description, field }) => (
-    <div style={{ padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
+    <div style={{ padding: "14px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <span style={{ fontWeight: 700, fontSize: "14px" }}>{title}</span>
@@ -181,7 +183,7 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
         </p>
       </div>
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+      <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
         <CategoryRow title="Aperçu" description="Visites, boissons commandées, produits et lieux différents." field="shareStatsOverview" />
         <CategoryRow title="Records" description="Ton lieu le plus visité, tes plus grosses sorties, ta plus longue série." field="shareStatsRecords" />
         <CategoryRow title="Boissons" description="Ta boisson préférée et ta catégorie la plus consommée." field="shareStatsDrinks" />
@@ -224,7 +226,7 @@ export function StoryTagsPrivacyScreen({ profile, onSaveProfile, onBack }) {
   const ToggleRow = ({ title, description, field, disabled, onToggle }) => {
     const isOn = p[field] !== false;
     return (
-      <div style={{ padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.5 : 1 }}>
+      <div style={{ padding: "14px", borderBottom: `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.5 : 1 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
@@ -326,11 +328,11 @@ export function BlockedUsersScreen({ onBack }) {
           <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>Vous n'avez bloqué personne pour l'instant.</p>
         </div>
       ) : (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+        <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
           {blocked.map((b, i) => (
             <div
               key={b.userId}
-              style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 4px", borderBottom: i < blocked.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none" }}
+              style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px", borderBottom: `1px solid ${COLORS.paperAlt}` }}
             >
               <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                 {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={18} color={COLORS.amber} />}
@@ -357,7 +359,7 @@ export function BlockedUsersScreen({ onBack }) {
 
 function PermRow({ icon, title, subtitle, disabled, badge, children }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.55 : 1 }}>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px", borderBottom: `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.55 : 1 }}>
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0, marginTop: "2px" }}>{icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -421,11 +423,11 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="check" size={22} color={COLORS.amber} />}>Permissions & consentements</PageTitleWithBar>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 -20px 8px", padding: "0 14px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Autorisations</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
+      <div style={{ margin: "0 -20px 22px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
         <PermRow icon={<NavIcon name="map-pin" size={17} color={COLORS.amber} />} title="Localisation" subtitle="Trouver des lieux proches">
           <MiniToggle
             checked={consents.consentLocation === true}
@@ -436,7 +438,7 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
           />
         </PermRow>
         {geoStatus === "denied" && consents.consentLocation === true && (
-          <p style={{ fontSize: "11px", color: "#FF3B3B", margin: "-8px 4px 8px 40px" }}>
+          <p style={{ fontSize: "11px", color: "#FF3B3B", margin: "-8px 14px 8px 54px" }}>
             Bibamus est autorisé dans vos réglages, mais votre navigateur a refusé l'accès — à modifier dans ses réglages.
           </p>
         )}
@@ -449,11 +451,11 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 -20px 8px", padding: "0 14px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Consentements</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
+      <div style={{ margin: "0 -20px 22px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
         <PermRow icon={<NavIcon name="shield-check" size={17} color={COLORS.amber} />} title="Données d'usage anonymisées" subtitle="Aider à améliorer Bibamus">
           <MiniToggle checked={consents.consentUsageData !== false} onChange={(v) => updateConsent("consentUsageData", v)} />
         </PermRow>
@@ -467,14 +469,14 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 -20px 8px", padding: "0 14px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Mes données</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
+      <div style={{ margin: "0 -20px 22px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
         <button
           onClick={goToDataExport}
-          style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", background: "none", border: "none", borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "14px 4px", textAlign: "left", cursor: "pointer", color: COLORS.ink }}
+          style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", background: "none", border: "none", borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "14px", boxSizing: "border-box", textAlign: "left", cursor: "pointer", color: COLORS.ink }}
         >
           <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0 }}>
             <NavIcon name="download" size={17} color={COLORS.amber} />

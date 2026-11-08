@@ -13,6 +13,8 @@ Le profil regroupe l'identité de l'utilisateur, ses préférences de confidenti
 
 `Profil` (`ProfileHubScreen`) → icône **Paramètres** → `SettingsScreen` → ligne **Compte** → `AccountScreen` → sous-écrans (`FieldEditScreen`, `GenderEditScreen`, `LocationEditScreen`, `EmailViewScreen`, `UsernameEditScreen`, `PhoneEditScreen`, `SocialLinkEditScreen`, `PhotoEditScreen`) ; la visibilité est dans `PublicProfileScreen` (Sécurité).
 
+**Présentation des écrans de Paramètres (Mehdi, 2026-11-08)** : tous les écrans de Paramètres (hub, Compte, Sécurité et sous-écrans, Préférences et sous-écrans, Apparence, Connecter, Aide & support, Notifications) sont « à plat, pleine largeur », comme le fil BibaPulse : plus de bloc arrondi autour des groupes de lignes ; chaque groupe sort de la marge de 20 px de la page (`margin: 0 -20px`), son titre et ses lignes sont à 14 px des bords, et un trait `1px` `COLORS.paperAlt` de bord à bord est au-dessus de la première ligne et sous chaque ligne (la dernière aussi). Seule la présentation a changé : aucune logique, aucun réglage n'est touché. Les cartes d'en-tête (identité en haut de Paramètres et de Compte), messages d'information, états vides et formulaires restent des blocs.
+
 `ProfileHubScreen` est une grille de raccourcis : Mes BibaClub, Mes Statistiques, Mes Produits, Mes Favoris, Mon Historique, Mes Photos, BibaCare (grisé, « Bientôt »), puis l'icône Paramètres.
 
 ## Champs du profil (table `profiles`)
