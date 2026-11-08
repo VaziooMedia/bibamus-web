@@ -560,6 +560,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
       {items.map((item) => (
         <button
           key={item.key}
+          data-tour={item.key === "bibaPulse" ? "pulse" : undefined}
           onClick={() => onNavigate(item.key)}
           style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "3px 8px", flex: 1 }}
         >
@@ -572,6 +573,7 @@ export function BottomNav({ screen, onNavigate, onGoToSessionHub, unreadNotifica
       ))}
 
       <button
+        data-tour="go"
         onClick={onGoToSessionHub}
         style={{
           background: "none",

@@ -19,6 +19,7 @@ import { VenueMapScreen } from "./components/VenueMapScreen.jsx";
 import { isBottomNavHidden } from "./bottomNav.js";
 import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
 import { LoadingScreen } from "./components/LoadingScreen.jsx";
+import { HomeTour, shouldShowHomeTour } from "./components/HomeTour.jsx";
 import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
 import { PublicLinkGate } from "./components/PublicCardScreen.jsx";
@@ -96,6 +97,7 @@ import {
   getSession,
   onAuthStateChange,
   loadMyProfile,
+  markHomeTourSeen,
   lookupBibroCode,
   uploadMyAvatarPhoto,
   loadFeatureFlags,
@@ -290,6 +292,8 @@ export default function App() {
     bibroCodeRef.current = profile.myBibroCode;
   }, [profile.myBibroCode]);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  // La visite de l'accueil (nouveau compte, première connexion) : le compte pour lequel elle a été fermée pendant cette ouverture de l'app — elle ne revient pas, même si l'enregistrement en base n'a pas abouti (hors ligne…).
+  const [tourClosedFor, setTourClosedFor] = useState(null);
   const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
   const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
   // Écran où ramène la flèche retour de la fiche d'un Bibax ; « home » partout sauf depuis la page Bibax de BibAtlas.
@@ -1960,6 +1964,8 @@ export default function App() {
     );
   }
 
+  const tourOpen = screen === "home" && tourClosedFor !== session.user.id && shouldShowHomeTour(session.user.id, profile.registeredAt, profile.homeTourSeenAt);
+
   return (
     <NavigationContext.Provider value={() => setScreen("home")}>
       <ProfileNavContext.Provider
@@ -1972,6 +1978,15 @@ export default function App() {
           },
         }}
       >
+        {tourOpen && (
+          <HomeTour
+            firstName={profile.name}
+            onDone={() => {
+              markHomeTourSeen(session.user.id);
+              setTourClosedFor(session.user.id);
+            }}
+          />
+        )}
         <div
           style={{
             fontFamily: "'Work Sans', sans-serif",
