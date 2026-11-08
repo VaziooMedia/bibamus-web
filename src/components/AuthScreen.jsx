@@ -102,24 +102,9 @@ function PasswordField({ value, onChange, placeholder, autoComplete }) {
   );
 }
 
-// Une étape de l'écran de confirmation : une petite icône, une phrase, et au plus une ligne de précision dessous.
-function ConfirmStep({ icon, title, hint }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-      <div aria-hidden="true" style={{ flexShrink: 0, width: "40px", height: "40px", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "19px" }}>
-        {icon}
-      </div>
-      <div>
-        <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink, lineHeight: 1.35 }}>{title}</p>
-        {hint && <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: COLORS.inkSoft, lineHeight: 1.45 }}>{hint}</p>}
-      </div>
-    </div>
-  );
-}
-
 // Écran affiché après inscription — spécifique à la version "web app" (PWA). À retirer
 // entièrement une fois les vraies apps App Store / Google Play disponibles.
-// Allégé : trois étapes courtes avec icônes ; les instructions pour ajouter Bibamus à l'écran d'accueil sont repliées tant qu'on ne les demande pas.
+// Allégé : pas d'explication sur le mail de confirmation (tout le monde sait comment ça marche) ; les instructions pour ajouter Bibamus à l'écran d'accueil sont repliées tant qu'on ne les demande pas.
 function ConfirmEmailScreen({ email, onBackToSignIn }) {
   const [platform, setPlatform] = useState("ios");
   const [showHomeScreen, setShowHomeScreen] = useState(false);
@@ -141,15 +126,9 @@ function ConfirmEmailScreen({ email, onBackToSignIn }) {
       <BibamusLogo width={140} style={{ margin: "0 auto 22px" }} />
       <div style={{ fontSize: "44px", textAlign: "center", marginBottom: "10px" }}>📩</div>
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 8px", textAlign: "center" }}>Vérifie ta boîte mail</h1>
-      <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, lineHeight: 1.5, margin: "0 0 24px", textAlign: "center" }}>
+      <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, lineHeight: 1.5, margin: "0 0 22px", textAlign: "center" }}>
         Un email vient de partir vers <strong style={{ color: COLORS.ink, wordBreak: "break-all" }}>{email}</strong>.
       </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "22px" }}>
-        <ConfirmStep icon="🔗" title="Ouvre l'email et appuie sur le lien" />
-        <ConfirmStep icon="✅" title="Ferme la page qui s'ouvre" hint="C'est normal : elle s'ouvre dans ton navigateur (Safari ou Chrome)." />
-        <ConfirmStep icon="📲" title="Reviens sur Bibamus" hint="Depuis l'icône de ton écran d'accueil, puis connecte-toi avec ton mot de passe." />
-      </div>
 
       <button
         type="button"
