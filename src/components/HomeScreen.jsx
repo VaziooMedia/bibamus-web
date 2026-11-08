@@ -221,7 +221,7 @@ export function HomeScreen({
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px 0" }} />
       <div style={{ display: "flex", justifyContent: "center", gap: "28px", marginBottom: "14px" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
+        <div data-tour="atlas" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
             onClick={goToSearch}
             style={{
@@ -243,7 +243,7 @@ export function HomeScreen({
             <span style={{ color: COLORS.amber }}>Atlas</span>
           </span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
+        <div data-tour="solo" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
             onClick={goToBibaSolo}
             style={{
@@ -265,7 +265,7 @@ export function HomeScreen({
             <span style={{ color: COLORS.amber }}>Solo</span>
           </span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
+        <div data-tour="drinkcheck" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
             onClick={goToDrinkCheck}
             style={{
@@ -287,7 +287,7 @@ export function HomeScreen({
             <span style={{ color: COLORS.amber }}>Check</span>
           </span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
+        <div data-tour="placecheck" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
             onClick={goToPlaceCheck}
             style={{

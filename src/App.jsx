@@ -19,7 +19,7 @@ import { VenueMapScreen } from "./components/VenueMapScreen.jsx";
 import { isBottomNavHidden } from "./bottomNav.js";
 import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
 import { LoadingScreen } from "./components/LoadingScreen.jsx";
-import { WelcomeScreen, shouldShowWelcome, markWelcomeSeen } from "./components/WelcomeScreen.jsx";
+import { HomeTour, shouldShowHomeTour, markHomeTourSeen } from "./components/HomeTour.jsx";
 import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
 import { PublicLinkGate } from "./components/PublicCardScreen.jsx";
@@ -291,8 +291,8 @@ export default function App() {
     bibroCodeRef.current = profile.myBibroCode;
   }, [profile.myBibroCode]);
   const [profileLoaded, setProfileLoaded] = useState(false);
-  // L'écran de bienvenue (nouveau compte, première connexion) : le compte pour lequel il a été fermé pendant cette ouverture de l'app — il ne revient pas, même si le stockage de l'appareil est indisponible.
-  const [welcomeClosedFor, setWelcomeClosedFor] = useState(null);
+  // La visite de l'accueil (nouveau compte, première connexion) : le compte pour lequel elle a été fermée pendant cette ouverture de l'app — elle ne revient pas, même si le stockage de l'appareil est indisponible.
+  const [tourClosedFor, setTourClosedFor] = useState(null);
   const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
   const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
   // Écran où ramène la flèche retour de la fiche d'un Bibax ; « home » partout sauf depuis la page Bibax de BibAtlas.
@@ -1963,17 +1963,7 @@ export default function App() {
     );
   }
 
-  if (welcomeClosedFor !== session.user.id && shouldShowWelcome(session.user.id, profile.registeredAt)) {
-    return (
-      <WelcomeScreen
-        firstName={profile.name}
-        onDone={() => {
-          markWelcomeSeen(session.user.id);
-          setWelcomeClosedFor(session.user.id);
-        }}
-      />
-    );
-  }
+  const tourOpen = screen === "home" && tourClosedFor !== session.user.id && shouldShowHomeTour(session.user.id, profile.registeredAt);
 
   return (
     <NavigationContext.Provider value={() => setScreen("home")}>
@@ -1987,6 +1977,15 @@ export default function App() {
           },
         }}
       >
+        {tourOpen && (
+          <HomeTour
+            firstName={profile.name}
+            onDone={() => {
+              markHomeTourSeen(session.user.id);
+              setTourClosedFor(session.user.id);
+            }}
+          />
+        )}
         <div
           style={{
             fontFamily: "'Work Sans', sans-serif",
