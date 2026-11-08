@@ -505,7 +505,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
         )}
         {mode === "forgot" && (
           <button onClick={() => setMode("signin")} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", cursor: "pointer" }}>
-            Retour à la connexion
+            Connexion
           </button>
         )}
       </div>
