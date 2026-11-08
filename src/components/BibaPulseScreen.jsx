@@ -117,7 +117,7 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {} 
   );
 }
 
-export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted }, ref) {
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -267,13 +267,24 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   return (
     <div
       ref={ref}
-      style={{
-        position: "relative",
-        background: COLORS.surface,
-        border: `2px solid ${highlighted ? COLORS.amber : COLORS.paperAlt}`,
-        borderRadius: "14px",
-        padding: "14px",
-      }}
+      style={
+        flat
+          ? {
+              // Publication « à plat » (fil BibaPulse) : ni bloc, ni bordure, ni coins arrondis — seulement un trait de séparation en dessous. La publication ouverte depuis une notification garde une barre verte à gauche.
+              position: "relative",
+              padding: "14px",
+              borderBottom: `1px solid ${COLORS.paperAlt}`,
+              background: highlighted ? COLORS.surface : "none",
+              boxShadow: highlighted ? `inset 3px 0 0 ${COLORS.amber}` : "none",
+            }
+          : {
+              position: "relative",
+              background: COLORS.surface,
+              border: `2px solid ${highlighted ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "14px",
+              padding: "14px",
+            }
+      }
     >
       <span style={{ position: "absolute", top: "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
 
@@ -861,10 +872,13 @@ export function BibaPulseScreen({
           </p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <>
+          {/* Pleine largeur : le fil sort de la marge de 20 px de la page, les traits de séparation vont d'un bord de l'écran à l'autre. */}
+          <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
           {entries.map((entry) => (
             <PulseCard
               key={entry.id}
+              flat
               ref={entry.id === focusEntryId ? focusedCardRef : null}
               entry={entry}
               directories={directories}
@@ -886,17 +900,18 @@ export function BibaPulseScreen({
               initialShowComments={entry.id === focusEntryId && openCommentsOnFocus}
             />
           ))}
+          </div>
 
           {hasMore && (
             <button
               onClick={loadMore}
               disabled={loadingMore}
-              style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "12px", fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
+              style={{ marginTop: "14px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "12px", fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
             >
               {loadingMore ? "Chargement..." : "Voir plus"}
             </button>
           )}
-        </div>
+        </>
       )}
     </div>
   );

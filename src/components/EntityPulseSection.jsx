@@ -122,10 +122,13 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
           </p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <>
+          {/* Comme le fil BibaPulse : publications à plat, pleine largeur (le fil sort de la marge de 20 px de la fiche), séparées par un trait. */}
+          <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
           {entries.map((entry) => (
             <PulseCard
               key={entry.id}
+              flat
               entry={entry}
               directories={directories}
               myUserId={myUserId}
@@ -143,17 +146,18 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
               onDeleted={removeEntry}
             />
           ))}
+          </div>
 
           {hasMore && (
             <button
               onClick={loadMore}
               disabled={loadingMore}
-              style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "12px", fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
+              style={{ display: "block", width: "100%", marginTop: "14px", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "12px", fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
             >
               {loadingMore ? "Chargement..." : "Voir plus"}
             </button>
           )}
-        </div>
+        </>
       )}
     </div>
   );
