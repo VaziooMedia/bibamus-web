@@ -212,8 +212,10 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
       ) : notifications.length === 0 ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucune notification pour l'instant.</p>
       ) : (
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
+        <div style={{ flex: 1, overflowY: "auto", margin: "0 -20px" }}>
+          {/* Pleine largeur (comme BibaPulse) : le fil sort de la marge de 20 px de la page — c'est le conteneur défilant qui porte la marge négative, sinon il rognerait les lignes —,
+              sans bloc, et chaque ligne est séparée de la suivante par un trait de bord à bord. */}
+          <div style={{ borderTop: `1px solid ${COLORS.paperAlt}` }}>
             {notifications.map((n, i) => {
               const pendingRequest = n.type === "bibax_request" ? pendingBibax.find((r) => r.userId === n.actorId) : null;
               const isActionable = (n.type === "bibax_request" && pendingRequest) || n.type === "salon_invite";
@@ -290,7 +292,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                 return (
                   <div
                     key={n.id}
-                    style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", borderBottom: i === notifications.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`, padding: "14px 0", color: COLORS.ink }}
+                    style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", boxSizing: "border-box", borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "14px", color: COLORS.ink }}
                   >
                     <div
                       onClick={clubState !== "declined" ? () => handleClick(n) : undefined}
@@ -340,8 +342,9 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                       flexDirection: "column",
                       gap: "10px",
                       width: "100%",
-                      borderBottom: i === notifications.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
-                      padding: "14px 0",
+                      boxSizing: "border-box",
+                      borderBottom: `1px solid ${COLORS.paperAlt}`,
+                      padding: "14px",
                       color: COLORS.ink,
                     }}
                   >
@@ -377,8 +380,8 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
                     alignItems: "center",
                     gap: "12px",
                     width: "100%",
-                    borderBottom: i === notifications.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
-                    padding: "14px 0",
+                    borderBottom: `1px solid ${COLORS.paperAlt}`,
+                    padding: "14px",
                     textAlign: "left",
                     cursor: "pointer",
                     color: COLORS.ink,
