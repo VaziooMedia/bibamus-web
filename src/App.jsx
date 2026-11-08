@@ -20,6 +20,7 @@ import { isBottomNavHidden } from "./bottomNav.js";
 import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
 import { LoadingScreen } from "./components/LoadingScreen.jsx";
 import { HomeTour, shouldShowHomeTour } from "./components/HomeTour.jsx";
+import { BibaGoTour, shouldShowBibaGoTour } from "./components/BibaGoTour.jsx";
 import { COLORS } from "./constants.js";
 import { AuthScreen } from "./components/AuthScreen.jsx";
 import { PublicLinkGate } from "./components/PublicCardScreen.jsx";
@@ -98,6 +99,7 @@ import {
   onAuthStateChange,
   loadMyProfile,
   markHomeTourSeen,
+  markBibaGoTourSeen,
   lookupBibroCode,
   uploadMyAvatarPhoto,
   loadFeatureFlags,
@@ -294,6 +296,12 @@ export default function App() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   // La visite de l'accueil (nouveau compte, première connexion) : le compte pour lequel elle a été fermée pendant cette ouverture de l'app — elle ne revient pas, même si l'enregistrement en base n'a pas abouti (hors ligne…).
   const [tourClosedFor, setTourClosedFor] = useState(null);
+  // La visite de BibaGo : même principe (compte pour lequel elle a été fermée pendant cette ouverture) + `bibagoTourManual` quand la personne la relance avec le bouton « ? » de BibaGo.
+  const [bibagoTourClosedFor, setBibagoTourClosedFor] = useState(null);
+  const [bibagoTourManual, setBibagoTourManual] = useState(false);
+  useEffect(() => {
+    if (screen !== "sessionHub") setBibagoTourManual(false); // quitter BibaGo (retour…) annule une visite relancée à la main
+  }, [screen]);
   const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
   const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
   // Écran où ramène la flèche retour de la fiche d'un Bibax ; « home » partout sauf depuis la page Bibax de BibAtlas.
@@ -1965,6 +1973,9 @@ export default function App() {
   }
 
   const tourOpen = screen === "home" && tourClosedFor !== session.user.id && shouldShowHomeTour(session.user.id, profile.registeredAt, profile.homeTourSeenAt);
+  const bibagoTourOpen =
+    screen === "sessionHub" &&
+    (bibagoTourManual || (bibagoTourClosedFor !== session.user.id && shouldShowBibaGoTour(session.user.id, profile.registeredAt, profile.bibagoTourSeenAt)));
 
   return (
     <NavigationContext.Provider value={() => setScreen("home")}>
@@ -1984,6 +1995,16 @@ export default function App() {
             onDone={() => {
               markHomeTourSeen(session.user.id);
               setTourClosedFor(session.user.id);
+            }}
+          />
+        )}
+        {bibagoTourOpen && (
+          <BibaGoTour
+            onDone={() => {
+              // Seule la première fois est enregistrée en base : un rejeu avec « ? » ne réécrit rien.
+              if (!profile.bibagoTourSeenAt && bibagoTourClosedFor !== session.user.id) markBibaGoTourSeen(session.user.id);
+              setBibagoTourClosedFor(session.user.id);
+              setBibagoTourManual(false);
             }}
           />
         )}
@@ -2093,6 +2114,7 @@ export default function App() {
                   setScreenBeforeBibaSolo("sessionHub");
                   setScreen("bibaSolo");
                 }}
+                onShowTour={() => setBibagoTourManual(true)}
               />
             )}
             {screen === "repertoireHub" && (

@@ -9,7 +9,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, ActionCard } from "./ui.jsx";
 import { AiIcon } from "./AiIcon.jsx";
 
-export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibArena, goToBibaSolo }) {
+export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibArena, goToBibaSolo, onShowTour }) {
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -32,10 +32,21 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibA
           <span style={{ color: COLORS.ink }}>Biba</span>
           <span style={{ color: COLORS.amber }}>Go</span>
         </h1>
+        {onShowTour && (
+          <button
+            type="button"
+            onClick={onShowTour}
+            title="Revoir la visite de BibaGo"
+            aria-label="Revoir la visite de BibaGo"
+            style={{ marginLeft: "auto", width: "34px", height: "34px", borderRadius: "50%", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.amber, fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", lineHeight: 1, cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            ?
+          </button>
+        )}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px" }}>
+        <div data-tour="room" style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
             <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
             <span style={{ fontWeight: 700, fontSize: "16px" }}>
@@ -45,10 +56,10 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibA
           </div>
           <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 12px 0" }}>Événement partagé, suivi des tournées entre amis</p>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={goToNewSalon} style={{ flex: 1, background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}>
+            <button data-tour="room-create" onClick={goToNewSalon} style={{ flex: 1, background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}>
               Créer
             </button>
-            <button onClick={goToJoinSalon} style={{ flex: 1, background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}>
+            <button data-tour="room-join" onClick={goToJoinSalon} style={{ flex: 1, background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}>
               Rejoindre
             </button>
           </div>

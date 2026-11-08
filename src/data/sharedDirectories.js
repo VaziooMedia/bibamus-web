@@ -1050,6 +1050,7 @@ export async function loadMyProfile(userId) {
     registeredAt: data.created_at || null,
     // Date à laquelle la visite de l'accueil a été vue ou passée (vide = pas encore). Lue avec le reste du profil ; colonne absente = vide.
     homeTourSeenAt: data.home_tour_seen_at || null,
+    bibagoTourSeenAt: data.bibago_tour_seen_at || null, // idem pour la visite de BibaGo
     name: data.name || "",
     lastName: data.last_name || "",
     nickname: data.nickname || "",
@@ -1356,6 +1357,13 @@ export async function markHomeTourSeen(userId) {
   if (!userId) return;
   const { error } = await supabase.from("profiles").update({ home_tour_seen_at: new Date().toISOString() }).eq("id", userId);
   if (error) console.error("markHomeTourSeen:", error);
+}
+
+// Idem pour la visite de BibaGo (colonne `bibago_tour_seen_at`).
+export async function markBibaGoTourSeen(userId) {
+  if (!userId) return;
+  const { error } = await supabase.from("profiles").update({ bibago_tour_seen_at: new Date().toISOString() }).eq("id", userId);
+  if (error) console.error("markBibaGoTourSeen:", error);
 }
 
 // Convertit un blob en base64 — nécessaire pour l'envoyer à la fonction serveur de
