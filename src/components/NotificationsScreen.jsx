@@ -37,7 +37,7 @@ import { upsertPushSubscription, hasActivePushSubscription, deleteMyPushSubscrip
 
 function NotifRow({ icon, title, subtitle, checked, onChange, disabled, badge }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.55 : 1 }}>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px", borderBottom: `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.55 : 1 }}>
       <span
         style={{
           display: "flex",
@@ -81,16 +81,18 @@ function NotifRow({ icon, title, subtitle, checked, onChange, disabled, badge })
   );
 }
 
+// Groupe de réglages « à plat » (même présentation que le fil BibaPulse et la page Notifications) : plus de bloc ; le groupe sort de la marge de 20 px de la page
+// pour occuper toute la largeur, son titre et ses lignes sont à 14 px des bords, et chaque ligne est séparée de la suivante par un trait de bord à bord.
 function NotifGroup({ title, children }) {
   return (
-    <div style={{ marginBottom: "22px" }}>
+    <div style={{ margin: "0 -20px 22px" }}>
       {title && (
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px", padding: "0 14px" }}>
           <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
           <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
         </div>
       )}
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
+      <div style={{ borderTop: `1px solid ${COLORS.paperAlt}` }}>{children}</div>
     </div>
   );
 }
@@ -152,7 +154,7 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
 
       <NotifGroup title="Alertes à recevoir">
         {pushRegistered !== null && !pushOn && (
-          <div style={{ fontSize: "12px", color: COLORS.inkSoft, padding: "12px 4px 0" }}>Active d'abord « Notifications push » pour choisir tes alertes.</div>
+          <div style={{ fontSize: "12px", color: COLORS.inkSoft, padding: "12px 14px 0" }}>Active d'abord « Notifications push » pour choisir tes alertes.</div>
         )}
         {/* Seuls réglages de cette liste, avec les notifications push, à piloter réellement
             quelque chose : Messages et Invitations BibaClub (le serveur écarte des destinataires
@@ -272,12 +274,13 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
         </div>
       </NotifGroup>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+      <div style={{ margin: "0 -20px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px", padding: "0 14px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>Fréquence récapitulative</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", opacity: 0.55 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", padding: "14px 4px" }}>
+      <div style={{ borderTop: `1px solid ${COLORS.paperAlt}`, opacity: 0.55 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", boxSizing: "border-box", padding: "14px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
           <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
             <NavIcon name="at" size={17} color={COLORS.amber} />
           </span>
@@ -289,6 +292,7 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
             <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Pas encore disponible</div>
           </span>
         </div>
+      </div>
       </div>
 
       <PageFooterNav onBack={onBack} />
