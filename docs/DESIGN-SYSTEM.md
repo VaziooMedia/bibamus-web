@@ -141,6 +141,7 @@ Résidus de « like » dans le code, sans effet visible : `PRODUCT_LIKED`, `togg
 
 ## Conventions de mise en page apprises
 
+- **Listes de publications ou de notifications « à plat » (décidé par Mehdi, 2026-11-08)** : pas de bloc par élément (ni fond `surface`, ni bordure, ni coins arrondis) ; la liste sort de la marge de 20 px de la page (`margin: 0 -20px`) pour occuper **toute la largeur**, chaque élément garde **14 px** de chaque côté et est séparé du suivant par **un trait `1px` `COLORS.paperAlt` de bord à bord** (un trait au-dessus du premier, un sous chacun). Appliqué au fil BibaPulse, aux fils BibaPulse des fiches (Produit, Lieu, Marque, Producteur), à la page Notifications et à l'écran de réglages des notifications (un groupe de réglages = une liste à plat) — voir `BIBAPULSE.md`. Attention : un conteneur `overflow-y: auto` rogne les marges négatives de ses enfants, la marge négative va sur ce conteneur.
 - Un bouton ne s'étend pas à la largeur de son conteneur : il faut `width: "100%"` explicite (cas de la carte BibaLive, titre tronqué corrigé). `ActionCard` le fait déjà ; `PrimaryButton` non.
 - Pour qu'un badge ou une flèche d'accès ne réduise jamais l'espace d'un texte voisin, le sortir du flux avec `position: absolute` (badge « EN COURS », flèche de la carte de salon, badge d'`ActionCard`, symbole « € » centré).
 
