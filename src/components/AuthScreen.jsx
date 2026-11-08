@@ -77,6 +77,19 @@ function EyeIcon({ crossed }) {
   );
 }
 
+// L'icône « email » de l'écran de confirmation : une enveloppe aux traits fins, vert fluo, dans un rond, avec une petite pastille « nouveau message ».
+function MailIcon() {
+  return (
+    <div aria-hidden="true" style={{ position: "relative", width: "76px", height: "76px", margin: "0 auto 14px", borderRadius: "50%", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={COLORS.amber} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="3" />
+        <path d="M3.5 7.5l8.5 6 8.5-6" />
+      </svg>
+      <span style={{ position: "absolute", top: "6px", right: "6px", width: "13px", height: "13px", borderRadius: "50%", background: COLORS.amber, border: `2px solid ${COLORS.paper}`, boxSizing: "border-box" }} />
+    </div>
+  );
+}
+
 function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -124,10 +137,12 @@ function ConfirmEmailScreen({ email, onBackToSignIn }) {
   return (
     <div style={{ minHeight: "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
       <BibamusLogo width={140} style={{ margin: "0 auto 22px" }} />
-      <div style={{ fontSize: "44px", textAlign: "center", marginBottom: "10px" }}>📩</div>
+      <MailIcon />
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 8px", textAlign: "center" }}>Vérifie ta boîte mail</h1>
       <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, lineHeight: 1.5, margin: "0 0 22px", textAlign: "center" }}>
-        Un email vient de partir vers <strong style={{ color: COLORS.ink, wordBreak: "break-all" }}>{email}</strong>.
+        Un email vient de partir vers
+        <br />
+        <strong style={{ color: COLORS.ink, wordBreak: "break-all" }}>{email}</strong>
       </p>
 
       <button
@@ -171,7 +186,7 @@ function ConfirmEmailScreen({ email, onBackToSignIn }) {
       )}
 
       <button onClick={onBackToSignIn} style={buttonStyle}>
-        Retour à la connexion
+        Connexion
       </button>
     </div>
   );
