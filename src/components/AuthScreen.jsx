@@ -102,83 +102,94 @@ function PasswordField({ value, onChange, placeholder, autoComplete }) {
   );
 }
 
+// Une étape de l'écran de confirmation : une petite icône, une phrase, et au plus une ligne de précision dessous.
+function ConfirmStep({ icon, title, hint }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+      <div aria-hidden="true" style={{ flexShrink: 0, width: "40px", height: "40px", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "19px" }}>
+        {icon}
+      </div>
+      <div>
+        <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: COLORS.ink, lineHeight: 1.35 }}>{title}</p>
+        {hint && <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: COLORS.inkSoft, lineHeight: 1.45 }}>{hint}</p>}
+      </div>
+    </div>
+  );
+}
+
 // Écran affiché après inscription — spécifique à la version "web app" (PWA). À retirer
 // entièrement une fois les vraies apps App Store / Google Play disponibles.
+// Allégé : trois étapes courtes avec icônes ; les instructions pour ajouter Bibamus à l'écran d'accueil sont repliées tant qu'on ne les demande pas.
 function ConfirmEmailScreen({ email, onBackToSignIn }) {
   const [platform, setPlatform] = useState("ios");
+  const [showHomeScreen, setShowHomeScreen] = useState(false);
+
+  const platformButtonStyle = (active) => ({
+    flex: 1,
+    padding: "7px",
+    borderRadius: "8px",
+    border: `2px solid ${active ? COLORS.amber : COLORS.paper}`,
+    background: active ? COLORS.amber : "none",
+    color: active ? COLORS.paper : COLORS.ink,
+    fontWeight: 700,
+    fontSize: "12.5px",
+    cursor: "pointer",
+  });
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
-      <BibamusLogo width={140} style={{ margin: "0 auto 24px" }} />
-      <div style={{ fontSize: "44px", textAlign: "center", marginBottom: "12px" }}>📩</div>
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 10px", textAlign: "center" }}>Vérifie ta boîte mail</h1>
-      <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, lineHeight: 1.6, marginBottom: "22px", textAlign: "center" }}>
-        Un email de confirmation vient de t'être envoyé à <strong>{email}</strong>. Cette étape confirme que ton adresse est correcte et bien la tienne.
+    <div style={{ minHeight: "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
+      <BibamusLogo width={140} style={{ margin: "0 auto 22px" }} />
+      <div style={{ fontSize: "44px", textAlign: "center", marginBottom: "10px" }}>📩</div>
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 8px", textAlign: "center" }}>Vérifie ta boîte mail</h1>
+      <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, lineHeight: 1.5, margin: "0 0 24px", textAlign: "center" }}>
+        Un email vient de partir vers <strong style={{ color: COLORS.ink, wordBreak: "break-all" }}>{email}</strong>.
       </p>
 
-      <div style={{ background: COLORS.paperAlt, borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
-        <p style={{ fontSize: "12.5px", color: COLORS.ink, fontWeight: 700, margin: "0 0 10px" }}>Marche à suivre :</p>
-        <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: COLORS.inkSoft, lineHeight: 1.8 }}>
-          <li>Ouvre l'email reçu et appuie sur le lien de confirmation.</li>
-          <li>Il s'ouvrira dans ton navigateur (Safari/Chrome) — c'est normal, ferme-le une fois le message de confirmation affiché.</li>
-          <li>
-            Retourne sur Bibamus depuis l'icône sur ton écran d'accueil <em>(voir ci-dessous si tu ne l'as pas encore ajoutée)</em>, puis connecte-toi avec ton mot de passe.
-          </li>
-        </ol>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "22px" }}>
+        <ConfirmStep icon="🔗" title="Ouvre l'email et appuie sur le lien" />
+        <ConfirmStep icon="✅" title="Ferme la page qui s'ouvre" hint="C'est normal : elle s'ouvre dans ton navigateur (Safari ou Chrome)." />
+        <ConfirmStep icon="📲" title="Reviens sur Bibamus" hint="Depuis l'icône de ton écran d'accueil, puis connecte-toi avec ton mot de passe." />
       </div>
 
-      <div style={{ background: COLORS.paperAlt, borderRadius: "12px", padding: "16px", marginBottom: "24px" }}>
-        <p style={{ fontSize: "12.5px", color: COLORS.ink, fontWeight: 700, margin: "0 0 10px" }}>Ajouter Bibamus à ton écran d'accueil</p>
-        <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
-          <button
-            onClick={() => setPlatform("ios")}
-            style={{
-              flex: 1,
-              padding: "7px",
-              borderRadius: "8px",
-              border: `2px solid ${platform === "ios" ? COLORS.amber : COLORS.paper}`,
-              background: platform === "ios" ? COLORS.amber : "none",
-              color: platform === "ios" ? COLORS.paper : COLORS.ink,
-              fontWeight: 700,
-              fontSize: "12.5px",
-              cursor: "pointer",
-            }}
-          >
-            iPhone (Safari)
-          </button>
-          <button
-            onClick={() => setPlatform("android")}
-            style={{
-              flex: 1,
-              padding: "7px",
-              borderRadius: "8px",
-              border: `2px solid ${platform === "android" ? COLORS.amber : COLORS.paper}`,
-              background: platform === "android" ? COLORS.amber : "none",
-              color: platform === "android" ? COLORS.paper : COLORS.ink,
-              fontWeight: 700,
-              fontSize: "12.5px",
-              cursor: "pointer",
-            }}
-          >
-            Android (Chrome)
-          </button>
+      <button
+        type="button"
+        onClick={() => setShowHomeScreen((v) => !v)}
+        aria-expanded={showHomeScreen}
+        style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", cursor: "pointer", padding: "6px", marginBottom: showHomeScreen ? "8px" : "14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+      >
+        Ajouter Bibamus à ton écran d'accueil
+        <span aria-hidden="true" style={{ display: "inline-block", transform: showHomeScreen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
+          ▾
+        </span>
+      </button>
+
+      {showHomeScreen && (
+        <div style={{ background: COLORS.paperAlt, borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
+            <button type="button" onClick={() => setPlatform("ios")} style={platformButtonStyle(platform === "ios")}>
+              iPhone (Safari)
+            </button>
+            <button type="button" onClick={() => setPlatform("android")} style={platformButtonStyle(platform === "android")}>
+              Android (Chrome)
+            </button>
+          </div>
+          {platform === "ios" ? (
+            <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: COLORS.inkSoft, lineHeight: 1.8 }}>
+              <li>
+                Appuie sur le bouton de partage <span style={{ fontWeight: 700 }}>􀈂</span> (un carré avec une flèche vers le haut), en bas de l'écran.
+              </li>
+              <li>Fais défiler et appuie sur "Sur l'écran d'accueil".</li>
+              <li>Appuie sur "Ajouter" en haut à droite.</li>
+            </ol>
+          ) : (
+            <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: COLORS.inkSoft, lineHeight: 1.8 }}>
+              <li>Appuie sur le menu (les trois points) en haut à droite de Chrome.</li>
+              <li>Appuie sur "Ajouter à l'écran d'accueil" ou "Installer l'application".</li>
+              <li>Confirme.</li>
+            </ol>
+          )}
         </div>
-        {platform === "ios" ? (
-          <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: COLORS.inkSoft, lineHeight: 1.8 }}>
-            <li>
-              Appuie sur le bouton de partage <span style={{ fontWeight: 700 }}>􀈂</span> (un carré avec une flèche vers le haut), en bas de l'écran.
-            </li>
-            <li>Fais défiler et appuie sur "Sur l'écran d'accueil".</li>
-            <li>Appuie sur "Ajouter" en haut à droite.</li>
-          </ol>
-        ) : (
-          <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", color: COLORS.inkSoft, lineHeight: 1.8 }}>
-            <li>Appuie sur le menu (les trois points) en haut à droite de Chrome.</li>
-            <li>Appuie sur "Ajouter à l'écran d'accueil" ou "Installer l'application".</li>
-            <li>Confirme.</li>
-          </ol>
-        )}
-      </div>
+      )}
 
       <button onClick={onBackToSignIn} style={buttonStyle}>
         Retour à la connexion
