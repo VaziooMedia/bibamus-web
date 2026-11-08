@@ -15,14 +15,15 @@ import { submitSupportMessage } from "../data/sharedDirectories.js";
 
 const SUPPORT_EMAIL = "support@bibamus.app";
 
+// Groupe de réglages « à plat » (convention de DESIGN-SYSTEM.md) : pleine largeur, sans bloc, traits de bord à bord entre les lignes.
 function HelpGroup({ title, children }) {
   return (
-    <div style={{ marginBottom: "22px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+    <div style={{ margin: "0 -20px 22px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px", padding: "0 14px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
+      <div style={{ borderTop: `1px solid ${COLORS.paperAlt}` }}>{children}</div>
     </div>
   );
 }
@@ -39,8 +40,9 @@ function HelpRow({ icon, title, disabled, onClick, last }) {
         width: "100%",
         background: "none",
         border: "none",
-        borderBottom: last ? "none" : `1px solid ${COLORS.paperAlt}`,
-        padding: "14px 4px",
+        borderBottom: `1px solid ${COLORS.paperAlt}`,
+        padding: "14px",
+        boxSizing: "border-box",
         textAlign: "left",
         cursor: disabled ? "not-allowed" : "pointer",
         color: COLORS.ink,

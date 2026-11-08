@@ -99,7 +99,8 @@ function AccountRow({ icon, title, value, onClick, titleColor, disabled }) {
         background: "none",
         border: "none",
         borderBottom: `1px solid ${COLORS.paperAlt}`,
-        padding: "14px 4px",
+        padding: "14px",
+        boxSizing: "border-box",
         textAlign: "left",
         cursor: disabled ? "not-allowed" : "pointer",
         width: "100%",
@@ -115,14 +116,15 @@ function AccountRow({ icon, title, value, onClick, titleColor, disabled }) {
   );
 }
 
+// Groupe de réglages « à plat » (convention de DESIGN-SYSTEM.md) : pleine largeur, sans bloc, traits de bord à bord entre les lignes.
 function AccountGroup({ title, children }) {
   return (
-    <div style={{ marginBottom: "22px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+    <div style={{ margin: "0 -20px 22px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px", padding: "0 14px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
+      <div style={{ borderTop: `1px solid ${COLORS.paperAlt}` }}>{children}</div>
     </div>
   );
 }
@@ -938,7 +940,7 @@ function ShareToggle({ checked, onChange }) {
 
 function VisibilityRow({ icon, title, children }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px", borderBottom: `1px solid ${COLORS.paperAlt}` }}>
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", flexShrink: 0, marginTop: "2px" }}>{icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "6px" }}>{title}</div>
@@ -963,7 +965,7 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
       <PageTitleWithBar icon={<NavIcon name="eye" size={22} color={COLORS.amber} />}>Profil public</PageTitleWithBar>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisissez ce que les autres utilisateurs peuvent voir sur votre profil.</p>
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+      <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
         <VisibilityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Surnom">
           <ShareToggle checked={p.shareSurnom} onChange={(v) => update({ shareSurnom: v })} />
         </VisibilityRow>

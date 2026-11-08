@@ -11,14 +11,15 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { PageTitleWithBar } from "./AccountScreen.jsx";
 
+// Groupe de réglages « à plat » (convention de DESIGN-SYSTEM.md) : pleine largeur, sans bloc, traits de bord à bord entre les lignes.
 function AppearanceGroup({ title, children }) {
   return (
-    <div style={{ marginBottom: "22px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+    <div style={{ margin: "0 -20px 22px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px", padding: "0 14px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
+      <div style={{ borderTop: `1px solid ${COLORS.paperAlt}` }}>{children}</div>
     </div>
   );
 }
@@ -31,8 +32,9 @@ function AppearanceRow({ icon, title, value, disabled, last }) {
         alignItems: "center",
         gap: "12px",
         width: "100%",
-        padding: "14px 4px",
-        borderBottom: last ? "none" : `1px solid ${COLORS.paperAlt}`,
+        boxSizing: "border-box",
+        padding: "14px",
+        borderBottom: `1px solid ${COLORS.paperAlt}`,
         opacity: disabled ? 0.55 : 1,
       }}
     >

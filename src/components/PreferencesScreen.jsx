@@ -13,14 +13,15 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { PageTitleWithBar } from "./AccountScreen.jsx";
 
+// Groupe de réglages « à plat » (convention de DESIGN-SYSTEM.md) : pleine largeur, sans bloc, traits de bord à bord entre les lignes.
 function PrefGroup({ title, children }) {
   return (
-    <div style={{ marginBottom: "22px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px 2px" }}>
+    <div style={{ margin: "0 -20px 22px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 0 8px", padding: "0 14px" }}>
         <span style={{ width: "4px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: 0 }}>{title}</h2>
       </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>{children}</div>
+      <div style={{ borderTop: `1px solid ${COLORS.paperAlt}` }}>{children}</div>
     </div>
   );
 }
@@ -40,8 +41,9 @@ function NavRow({ icon, title, value, onClick, disabled, badge, last }) {
         width: "100%",
         background: "none",
         border: "none",
-        borderBottom: last ? "none" : `1px solid ${COLORS.paperAlt}`,
-        padding: "14px 4px",
+        borderBottom: `1px solid ${COLORS.paperAlt}`,
+        padding: "14px",
+        boxSizing: "border-box",
         textAlign: "left",
         cursor: disabled ? "not-allowed" : "pointer",
         color: COLORS.ink,
@@ -62,7 +64,7 @@ function NavRow({ icon, title, value, onClick, disabled, badge, last }) {
 // Interrupteur ON/OFF — la seule exception qui reste en ligne, jamais sur une page à part.
 function ToggleRow({ icon, title, subtitle, checked, onChange, disabled, badge, trailingLabel, last }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 4px", borderBottom: last ? "none" : `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.55 : 1 }}>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px", borderBottom: `1px solid ${COLORS.paperAlt}`, opacity: disabled ? 0.55 : 1 }}>
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>{icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -103,7 +105,7 @@ export function ChoiceScreen({ icon, title, description, options, value, onChang
       <PageTitleWithBar icon={icon}>{title}</PageTitleWithBar>
       {description && <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>{description}</p>}
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+      <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
         {options.map((opt, i) => (
           <button
             key={opt.key}
@@ -116,8 +118,9 @@ export function ChoiceScreen({ icon, title, description, options, value, onChang
               width: "100%",
               background: "none",
               border: "none",
-              borderBottom: i < options.length - 1 ? `1px solid ${COLORS.paperAlt}` : "none",
-              padding: "16px 4px",
+              borderBottom: `1px solid ${COLORS.paperAlt}`,
+              padding: "16px 14px",
+              boxSizing: "border-box",
               textAlign: "left",
               cursor: opt.disabled ? "not-allowed" : "pointer",
               color: COLORS.ink,
@@ -301,7 +304,7 @@ export function StorySettingsScreen({ profile, onSaveProfile, onBack, goToChoice
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="stories" size={22} color={COLORS.amber} />}>Paramètres des Stories</PageTitleWithBar>
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px", marginBottom: "22px" }}>
+      <div style={{ margin: "0 -20px 22px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
         <NavRow
           icon={<NavIcon name="clock" size={17} color={COLORS.amber} />}
           title="Durée d'affichage à la lecture"
