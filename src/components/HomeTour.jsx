@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useState } from "react"
 import { COLORS } from "../constants.js";
 
 // Visite de l'accueil : montrée une seule fois, à la première connexion d'un nouveau compte. L'écran s'assombrit, chaque bouton important est mis en lumière à tour de rôle
-// (en rose fluo, la couleur d'accent de la visite ; les noms des modules gardent leur vert) et une bulle l'explique (BibaSolo, BibAtlas, DrinkCheck, PlaceCheck, BibaPulse, BibaGo). Les boutons visés sont repérés par un attribut `data-tour` (HomeScreen.jsx et la
+// (cadre arrondi en rose fluo, le reste de la visite en vert fluo) et une bulle l'explique (BibaSolo, BibAtlas, DrinkCheck, PlaceCheck, BibaPulse, BibaGo). Les boutons visés sont repérés par un attribut `data-tour` (HomeScreen.jsx et la
 // barre du bas dans ui.jsx) : une étape dont le bouton n'est pas à l'écran est sautée.
 // Pas de base de données : on retient « vu » dans le navigateur de l'appareil, et on ne la montre qu'aux comptes récents (les anciens comptes ne la voient jamais).
 
@@ -217,7 +217,7 @@ export function HomeTour({ firstName, onDone }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
           <div aria-hidden="true" style={{ display: "flex", gap: "5px", flexShrink: 0 }}>
             {STEPS.map((s, i) => (
-              <span key={s.id} style={{ width: i === index ? "16px" : "6px", height: "6px", borderRadius: "3px", background: i === index ? COLORS.pinkFluo : COLORS.paperAlt }} />
+              <span key={s.id} style={{ width: i === index ? "16px" : "6px", height: "6px", borderRadius: "3px", background: i === index ? COLORS.amber : COLORS.paperAlt }} />
             ))}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -230,7 +230,7 @@ export function HomeTour({ firstName, onDone }) {
               type="button"
               className="biba-tour-btn"
               onClick={goNext}
-              style={{ padding: "10px 16px", borderRadius: "10px", border: "none", background: COLORS.pinkFluo, color: COLORS.chalkWhite, fontWeight: 700, fontSize: "14px", cursor: "pointer", whiteSpace: "nowrap" }}
+              style={{ padding: "10px 16px", borderRadius: "10px", border: "none", background: COLORS.amber, color: COLORS.paper, fontWeight: 700, fontSize: "14px", cursor: "pointer", whiteSpace: "nowrap" }}
             >
               {isIntro ? "C'est parti !" : isLast ? "Terminé" : "Suivant"}
             </button>
