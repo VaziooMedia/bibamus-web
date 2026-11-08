@@ -300,7 +300,7 @@ export async function signUp(email, password, { firstName, lastName, nickname, b
   // contrairement à une vraie nouvelle inscription. C'est le seul signal fiable pour distinguer
   // les deux cas côté client.
   if (data.user && data.user.identities && data.user.identities.length === 0) {
-    return { error: "Un compte existe déjà avec cet email — connectez-vous plutôt, ou réinitialisez votre mot de passe." };
+    return { error: "Un compte existe déjà avec cet email — connecte-toi plutôt, ou réinitialise ton mot de passe." };
   }
   return { user: data.user, session: data.session };
 }

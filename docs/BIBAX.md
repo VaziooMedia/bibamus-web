@@ -90,7 +90,7 @@ Trois lignes : Prénom + Nom (gras) ; surnom (vert fluo italique, sur sa ligne, 
 
 ## Localisation du profil
 
-- **Pays** : exigé à l'inscription.
+- **Pays** : exigé à l'inscription (étape 2 sur 3, avec la date de naissance : l'âge minimum du pays est vérifié à ce moment-là, voir `BIBAMUS_CONTEXT.md`).
 - **Commune de résidence** : saisie avec **suggestions** (6 au plus, issues d'une liste statique par pays) mais en **texte libre** ; ni obligatoire à l'inscription, ni validée dans l'écran de modification réel. Changer de pays vide la commune.
 - **Ville / Village** (`locality`) : lue, enregistrée si elle existe et affichée, mais **plus aucun écran de l'app ne permet de la saisir** (seul le panneau d'administration le fait).
 - « Région » : abandonnée.
