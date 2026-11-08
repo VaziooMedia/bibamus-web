@@ -1,11 +1,12 @@
 // ============================================================
 // Dérivés des bières (Mazout, Tango, Half…), des spiritueux (Coca, Tonic, Red Bull…) et des thés / infusions (citron, lait, miel…) : une façon de servir un produit de base. Le produit
-// reste le produit de base (statistiques, classements, notes) ; le dérivé n'en change que l'énergie (kcal/100ml) et s'affiche dans les commandes.
+// reste le produit de base (statistiques, classements, notes) ; le dérivé n'en change que l'énergie (kcal/100ml) quand la fiche du produit en saisit une pour ce
+// dérivé (drinks_directory.derivative_kcal : une Jupiler Mazout n'a pas l'énergie d'une Leffe Mazout), et s'affiche dans les commandes. Sans valeur saisie sur la fiche, le
+// verre garde l'énergie du produit : un dérivé n'a JAMAIS d'énergie par défaut qui lui soit propre.
 //
 // Ce fichier ne contient que de la logique pure (aucun accès réseau). Il y a TROIS listes de dérivés, une pour toutes les bières, une pour
 // tous les spiritueux et une pour tous les thés et infusions : table custom_list_items (list_key « beer_derivative », « spirit_derivative » ou
-// « tea_derivative », colonne kcal_per_100ml facultative),
-// ordre dans custom_list_order ; les dérivés activés pour un produit sont dans drinks_directory.derivatives (codes de sa liste). Tout se
+// « tea_derivative »), ordre dans custom_list_order ; les dérivés activés pour un produit sont dans drinks_directory.derivatives (codes de sa liste). Tout se
 // gère depuis la plateforme de gestion (fiche du produit, « Dérivés du produit »). Les codes des trois listes ne se mélangent pas
 // (« perso_… » pour les bières, « perso_spirit_… » pour les spiritueux, « perso_tea_… » pour les thés) : l'app lit les trois d'un coup et n'en fait qu'une liste, dans
 // laquelle chaque produit ne retrouve que ses propres codes. Les verres pris en Shot n'ont jamais de dérivé (voir isShotEntry).
@@ -47,15 +48,13 @@ export function drinkIdWithVariant(drinkId, variantCode) {
 }
 
 const isRow = (r) => r && typeof r === "object" && typeof r.code === "string" && r.code !== "" && typeof r.fr === "string" && r.fr.trim() !== "";
-const cleanKcal = (v) => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null);
-
-// La liste des dérivés telle que l'app la lit : { items: [{ code, name, kcalPer100ml }] } dans l'ordre d'affichage de la gestion.
+// La liste des dérivés telle que l'app la lit : { items: [{ code, name }] } dans l'ordre d'affichage de la gestion. L'énergie n'y figure pas : elle est propre à chaque produit.
 // Les lignes mal formées et les dérivés masqués sont ignorés ; ceux que l'ordre ne cite pas viennent à la fin, par nom.
 export function buildDerivativeList(rows, order) {
   const items = (Array.isArray(rows) ? rows : [])
     .filter(isRow)
     .filter((r) => r.hidden !== true)
-    .map((r) => ({ code: r.code, name: r.fr.trim(), kcalPer100ml: cleanKcal(r.kcal_per_100ml) }));
+    .map((r) => ({ code: r.code, name: r.fr.trim() }));
   const rank = new Map();
   (Array.isArray(order) ? order : []).forEach((code, i) => {
     if (typeof code === "string" && !rank.has(code)) rank.set(code, i);
@@ -65,7 +64,7 @@ export function buildDerivativeList(rows, order) {
   return { items: [...placed, ...rest] };
 }
 
-// Les trois listes (bières, puis spiritueux, puis thés) lues d'un coup, en une seule : `itemRows` porte list_key + code + fr + hidden + kcal_per_100ml,
+// Les trois listes (bières, puis spiritueux, puis thés) lues d'un coup, en une seule : `itemRows` porte list_key + code + fr + hidden,
 // `orderRows` porte list_key + codes (l'ordre propre à chaque liste). Chaque liste garde son ordre ; les bières viennent d'abord.
 export function buildCombinedDerivativeList(itemRows, orderRows) {
   const items = [];
@@ -108,21 +107,6 @@ export function derivativesForProduct(list, codes, volumes) {
   return out;
 }
 
-// Une table code → énergie (kcal/100ml) des seuls dérivés qui en ont une.
-export function derivativeKcalByCode(list) {
-  const out = {};
-  (list?.items || []).forEach((d) => {
-    if (d.kcalPer100ml != null) out[d.code] = d.kcalPer100ml;
-  });
-  return out;
-}
-
-// L'énergie d'un verre : celle du dérivé quand il en a une, sinon celle du produit (qui peut être vide).
-export function kcalPer100mlWithVariant(productKcal, variantCode, kcalByCode) {
-  if (variantCode && kcalByCode && kcalByCode[variantCode] != null) return kcalByCode[variantCode];
-  return productKcal ?? null;
-}
-
 // Le nom d'un dérivé (« Mazout »), ou null s'il n'existe plus.
 export function derivativeName(list, variantCode) {
   return (list?.items || []).find((d) => d.code === variantCode)?.name || null;
@@ -144,6 +128,32 @@ export const rememberDerivativeVolumes = (productId, volumes) => {
 };
 export const rememberedDerivativeVolume = (productId, variantCode) => rememberedVolumes.get(productId)?.[variantCode] ?? null;
 
+// L'énergie (kcal/100ml) d'un dérivé saisie dans la gestion pour CE produit : { code du dérivé: kcal } (colonne drinks_directory.derivative_kcal). On ne garde que
+// des nombres de 0 (inclus : un « zéro » peut valoir 0) à 900 ; tout le reste (vide, texte, tableau) est ignoré : le verre garde alors l'énergie du produit.
+export const MAX_DERIVATIVE_KCAL = 900;
+export function cleanDerivativeKcal(raw) {
+  const out = {};
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    Object.entries(raw).forEach(([code, v]) => {
+      if (typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= MAX_DERIVATIVE_KCAL) out[code] = v;
+    });
+  }
+  return out;
+}
+
+// Les énergies des dérivés par produit, lues avec les dérivés cochés (loadDrinkDerivatives) et gardées ici comme les volumes : { identifiant du produit: { code: kcal } }.
+const rememberedKcal = new Map();
+export const rememberDerivativeKcal = (productId, kcal) => {
+  if (typeof productId === "string" && productId !== "") rememberedKcal.set(productId, cleanDerivativeKcal(kcal));
+};
+export const rememberedDerivativeKcal = (productId, variantCode) => rememberedKcal.get(productId)?.[variantCode] ?? null;
+
+// L'énergie d'un verre : celle saisie pour CE produit et ce dérivé quand il y en a une, sinon celle du produit (qui peut être vide). Jamais une valeur propre au dérivé.
+export function kcalPer100mlWithVariant(productKcal, productId, variantCode) {
+  const own = variantCode ? rememberedDerivativeKcal(productId, variantCode) : null;
+  return own != null ? own : productKcal ?? null;
+}
+
 // Le volume (texte du champ) après un clic sur une pastille, pour « Je me sers » et BibaSolo où la personne voit et peut corriger le volume.
 // - le dérivé choisi a un volume sur la fiche (Vodka + Red Bull = 20 cl) : ce volume ;
 // - on le quitte (autre dérivé sans volume, ou pastille décochée) alors que le champ affiche toujours ce volume : on revient à `volumeAvant`,
@@ -156,7 +166,7 @@ export function volumeAfterVariantChange({ currentText, previous, next, volumeAv
 }
 
 // Une entrée de carte (déjà résolue sur un volume) devenue le verre « entrée + dérivé » : son code, son nom (null si le dérivé n'existe
-// plus ou si la liste n'est pas encore lue), l'énergie du dérivé quand il en a une (sinon celle du produit) et, pour un produit du répertoire,
+// plus ou si la liste n'est pas encore lue), l'énergie saisie pour ce produit et ce dérivé quand il y en a une (sinon celle du produit) et, pour un produit du répertoire,
 // le volume du verre saisi dans la gestion pour ce produit et ce dérivé (Vodka + Red Bull = 20 cl) à la place du volume de l'entrée. Le prix
 // ne change pas. Une entrée créée par « Je me sers » (`homeServed`) garde le volume saisi par la personne.
 export function withDerivative(entry, variantCode) {
@@ -167,7 +177,7 @@ export function withDerivative(entry, variantCode) {
     ...(volumeCl != null ? { volumeCl } : {}),
     variantCode,
     variantName: derivativeName(rememberedList, variantCode),
-    kcalPer100ml: kcalPer100mlWithVariant(entry.kcalPer100ml, variantCode, derivativeKcalByCode(rememberedList)),
+    kcalPer100ml: kcalPer100mlWithVariant(entry.kcalPer100ml, entry.fromDirectory ? entry.sourceDrinkId : null, variantCode),
   };
 }
 
