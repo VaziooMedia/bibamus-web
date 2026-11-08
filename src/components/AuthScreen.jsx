@@ -17,11 +17,7 @@ function ageFromBirthDate(dateStr) {
 }
 
 // L'inscription se fait en 3 petites étapes : on fait connaissance (prénom, nom, surnom), l'âge et le pays, puis l'accès (email et mot de passe).
-const SIGNUP_STEPS = [
-  { title: "Enchanté ! 👋", subtitle: "Dis-nous comment tu t'appelles." },
-  { title: "Encore deux infos", subtitle: "Bibamus parle d'alcool : on vérifie ton âge avant d'entrer." },
-  { title: "Dernière étape", subtitle: "Ton email et un mot de passe pour retrouver ton compte." },
-];
+const SIGNUP_STEPS = [{ title: "Enchanté ! 👋" }, { title: "Encore deux infos" }, { title: "Dernière étape" }];
 
 function SignupProgress({ step }) {
   return (
@@ -328,8 +324,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
       {isSignup && (
         <>
           <SignupProgress step={step} />
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: "0 0 6px", textAlign: "center" }}>{SIGNUP_STEPS[step - 1].title}</h1>
-          <p style={{ textAlign: "center", color: COLORS.inkSoft, fontSize: "14px", lineHeight: 1.5, margin: "0 0 22px" }}>{SIGNUP_STEPS[step - 1].subtitle}</p>
+          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: "0 0 22px", textAlign: "center" }}>{SIGNUP_STEPS[step - 1].title}</h1>
         </>
       )}
 
@@ -349,7 +344,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
               <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={inputStyle} autoComplete="nickname" />
             </div>
             <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "-4px 0 0" }}>
-              Ton prénom, ton nom, ton surnom et ton nom d'utilisateur pourront être affichés aux autres Bibax — tu choisiras ce qui est visible dans tes paramètres.
+              Ton prénom, ton nom et ton surnom pourront être affichés aux autres Bibax — tu choisiras ce qui est visible dans tes paramètres.
             </p>
           </>
         )}
