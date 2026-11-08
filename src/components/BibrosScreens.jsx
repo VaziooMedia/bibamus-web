@@ -674,9 +674,9 @@ export function BibroPulseScreen({ bibro, onBack }) {
       ) : pulseActivity.length === 0 ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>Aucune activité visible pour l'instant.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
           {pulseActivity.map((e) => (
-            <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
+            <div key={e.id} style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "12px 14px", fontSize: "13px" }}>
               <div>
                 {pulseActivityLabel(e)}
               </div>
@@ -1153,9 +1153,9 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
           <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>Aucune activité visible pour l'instant.</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
           {pulseExcerpt.map((e) => (
-            <div key={e.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", fontSize: "13px" }}>
+            <div key={e.id} style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "12px 14px", fontSize: "13px" }}>
               <div>
                 {pulseActivityLabel(e)}
               </div>
