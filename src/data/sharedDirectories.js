@@ -1048,6 +1048,8 @@ export async function loadMyProfile(userId) {
     username: data.username || "",
     usernameChangedAt: data.username_changed_at || null,
     registeredAt: data.created_at || null,
+    // Date à laquelle la visite de l'accueil a été vue ou passée (vide = pas encore). Lue avec le reste du profil ; colonne absente = vide.
+    homeTourSeenAt: data.home_tour_seen_at || null,
     name: data.name || "",
     lastName: data.last_name || "",
     nickname: data.nickname || "",
@@ -1346,6 +1348,14 @@ export async function updateMyProfile(
 
   const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
   if (error) console.error("updateMyProfile:", error);
+}
+
+// Visite de l'accueil : retient en base qu'elle a été vue (ou passée), pour qu'elle ne revienne pas sur un autre appareil.
+// Écriture à part, comme useBibaZeroJokerSolo : ce n'est pas un réglage que la personne modifie, donc absent de updateMyProfile.
+export async function markHomeTourSeen(userId) {
+  if (!userId) return;
+  const { error } = await supabase.from("profiles").update({ home_tour_seen_at: new Date().toISOString() }).eq("id", userId);
+  if (error) console.error("markHomeTourSeen:", error);
 }
 
 // Convertit un blob en base64 — nécessaire pour l'envoyer à la fonction serveur de

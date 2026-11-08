@@ -4,30 +4,17 @@ import { COLORS } from "../constants.js";
 // Visite de l'accueil : montrée une seule fois, à la première connexion d'un nouveau compte. L'écran s'assombrit, chaque bouton important est mis en lumière à tour de rôle
 // (cadre arrondi en rose fluo, le reste de la visite en vert fluo) et une bulle l'explique (BibaSolo, BibAtlas, DrinkCheck, PlaceCheck, BibaPulse, BibaGo). Les boutons visés sont repérés par un attribut `data-tour` (HomeScreen.jsx et la
 // barre du bas dans ui.jsx) : une étape dont le bouton n'est pas à l'écran est sautée.
-// Pas de base de données : on retient « vu » dans le navigateur de l'appareil, et on ne la montre qu'aux comptes récents (les anciens comptes ne la voient jamais).
+// « Vu » est retenu en base (colonne `profiles.home_tour_seen_at`, écrite par markHomeTourSeen dans sharedDirectories.js) : la visite ne revient pas sur un autre appareil.
+// On ne la montre qu'aux comptes récents (les anciens comptes ne la voient jamais).
 
 const TOUR_RECENT_DAYS = 7; // un compte plus ancien que ça n'est plus « nouveau » : pas de visite
-const tourSeenKey = (userId) => `bibamus-home-tour-seen-${userId}`;
 
-// Faut-il montrer la visite ? Oui si le compte a moins de TOUR_RECENT_DAYS jours et qu'elle n'a pas déjà été vue sur cet appareil. Sans date d'inscription connue, non.
-// `storage` est injectable pour les tests ; si le stockage de l'appareil est indisponible (mode privé…), elle se montre au plus une fois par ouverture (voir App.jsx).
-export function shouldShowHomeTour(userId, registeredAt, { storage = typeof localStorage !== "undefined" ? localStorage : null, now = Date.now() } = {}) {
-  if (!userId || !registeredAt) return false;
+// Faut-il montrer la visite ? Oui si le compte a moins de TOUR_RECENT_DAYS jours et qu'elle n'a pas déjà été vue (ou passée) : `seenAt` vient du profil.
+// Sans compte ni date d'inscription connue (profil pas encore chargé), non. `now` est injectable pour les tests.
+export function shouldShowHomeTour(userId, registeredAt, seenAt, { now = Date.now() } = {}) {
+  if (!userId || !registeredAt || seenAt) return false;
   const registered = new Date(registeredAt).getTime();
-  if (Number.isNaN(registered) || now - registered > TOUR_RECENT_DAYS * 24 * 3600 * 1000) return false;
-  try {
-    return storage?.getItem(tourSeenKey(userId)) !== "1";
-  } catch {
-    return true;
-  }
-}
-
-export function markHomeTourSeen(userId, { storage = typeof localStorage !== "undefined" ? localStorage : null } = {}) {
-  try {
-    storage?.setItem(tourSeenKey(userId), "1");
-  } catch {
-    // stockage indisponible : la visite ne se remontrera pas avant la prochaine ouverture de l'app
-  }
+  return !Number.isNaN(registered) && now - registered <= TOUR_RECENT_DAYS * 24 * 3600 * 1000;
 }
 
 const twoTone = (ink, accent) => (
