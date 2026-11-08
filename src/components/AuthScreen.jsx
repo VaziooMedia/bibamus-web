@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, PROFILE_COUNTRIES, COUNTRY_ISO_CODES } from "../constants.js";
 import { signUp, signIn, resetPassword, getMinimumAge, detectCurrentCountryCode } from "../data/sharedDirectories.js";
+import { BibamusLogo } from "./BibamusLogo.jsx";
+import { TchinScreen } from "./TchinScreen.jsx";
 
 const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "4px", display: "block" };
@@ -16,6 +18,35 @@ function ageFromBirthDate(dateStr) {
   return age;
 }
 
+// Les petites animations de l'écran (discrètes) : une étape glisse doucement en place, un message d'erreur tressaute une fois, un bouton s'enfonce un peu quand on appuie.
+// Toutes sont coupées quand le système demande moins d'animations.
+const AUTH_STYLES = `
+  .biba-step { animation: bibaStepFromRight .32s cubic-bezier(.2,.8,.3,1) both; }
+  .biba-step-back { animation-name: bibaStepFromLeft; }
+  @keyframes bibaStepFromRight { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes bibaStepFromLeft { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: translateX(0); } }
+  .biba-step-title { animation: bibaTitleIn .35s ease-out both; }
+  @keyframes bibaTitleIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .biba-auth-error { animation: bibaErrorShake .4s ease-out both; }
+  @keyframes bibaErrorShake {
+    0% { opacity: 0; transform: translateX(0); }
+    20% { opacity: 1; transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+  .biba-auth-btn { transition: transform .1s, opacity .2s; }
+  .biba-auth-btn:active:not(:disabled) { transform: scale(.97); }
+  @media (prefers-reduced-motion: reduce) {
+    .biba-step, .biba-step-title, .biba-auth-error { animation: none; }
+    .biba-auth-btn { transition: none; }
+    .biba-auth-btn:active:not(:disabled) { transform: none; }
+  }
+`;
+
+const prefersReducedMotion = () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 // L'inscription se fait en 3 petites étapes : on fait connaissance (prénom, nom, surnom), l'âge et le pays, puis l'accès (email et mot de passe).
 const SIGNUP_STEPS = [{ title: "Enchanté ! 👋" }, { title: "Encore deux infos" }, { title: "Dernière étape" }];
 
@@ -24,7 +55,9 @@ function SignupProgress({ step }) {
     <div style={{ marginBottom: "22px" }}>
       <div role="progressbar" aria-label={`Étape ${step} sur ${SIGNUP_STEPS.length}`} aria-valuemin={1} aria-valuemax={SIGNUP_STEPS.length} aria-valuenow={step} style={{ display: "flex", gap: "6px" }}>
         {SIGNUP_STEPS.map((_, i) => (
-          <div key={i} style={{ flex: 1, height: "6px", borderRadius: "3px", background: i < step ? COLORS.amber : COLORS.paperAlt, transition: "background 0.3s" }} />
+          <div key={i} style={{ flex: 1, height: "6px", borderRadius: "3px", background: COLORS.paperAlt, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: i < step ? "100%" : "0%", background: COLORS.amber, borderRadius: "3px", transition: "width 0.45s cubic-bezier(.3,.7,.3,1)" }} />
+          </div>
         ))}
       </div>
       <p style={{ margin: "8px 0 0", fontSize: "12px", color: COLORS.inkSoft, textAlign: "center" }}>
@@ -76,7 +109,7 @@ function ConfirmEmailScreen({ email, onBackToSignIn }) {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
-      <img src="/bibamus-logo.svg" alt="Bibamus" style={{ width: "140px", margin: "0 auto 24px", display: "block" }} />
+      <BibamusLogo width={140} style={{ margin: "0 auto 24px" }} />
       <div style={{ fontSize: "44px", textAlign: "center", marginBottom: "12px" }}>📩</div>
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 10px", textAlign: "center" }}>Vérifie ta boîte mail</h1>
       <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, lineHeight: 1.6, marginBottom: "22px", textAlign: "center" }}>
@@ -167,6 +200,8 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
   const [birthDate, setBirthDate] = useState("");
   const [country, setCountry] = useState("");
   const [step, setStep] = useState(1); // étape de l'inscription : 1, 2 ou 3
+  const [direction, setDirection] = useState("forward"); // le sens du dernier changement d'étape : l'étape arrive de la droite (suivant) ou de la gauche (retour)
+  const [tchin, setTchin] = useState(null); // { next } pendant le « Tchin ! » qui suit la création du compte
 
   // Pré-remplit le pays de résidence selon la position actuelle de l'appareil, pour gagner un
   // clic — reste entièrement modifiable, et ne touche jamais à un choix déjà fait.
@@ -211,9 +246,14 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
     return ageFromBirthDate(birthDate) < minimumAge ? `Bibamus concerne des boissons alcoolisées — un âge minimum de ${minimumAge} ans est requis pour ce pays.` : null;
   };
 
+  const moveToStep = (n) => {
+    setDirection(n < step ? "back" : "forward");
+    setStep(n);
+  };
+
   const goToStep = (n) => {
     setError(null);
-    setStep(n);
+    moveToStep(n);
   };
 
   // Chaque étape repart du haut de l'écran.
@@ -257,14 +297,14 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
         }
       }
       if (step < SIGNUP_STEPS.length) {
-        setStep(step + 1);
+        moveToStep(step + 1);
         return;
       }
       // Dernière étape : on relit tout avant d'envoyer (les contrôles de l'âge sont refaits, c'est eux qui font foi).
       for (const n of [1, 2]) {
         const earlier = signupStepError(n);
         if (earlier) {
-          setStep(n);
+          moveToStep(n);
           setError(earlier);
           return;
         }
@@ -273,7 +313,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
       const ageError = await signupAgeError();
       if (ageError) {
         setLoading(false);
-        setStep(2);
+        moveToStep(2);
         setError(ageError);
         return;
       }
@@ -289,11 +329,10 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
         setError(result.error);
         return;
       }
-      if (!result.session) {
-        setMode("confirmEmail");
-        return;
-      }
-      onAuthenticated(result.session);
+      // Compte créé : un petit « Tchin ! » (sauté si le système demande moins d'animations), puis l'écran suivant.
+      const next = () => (result.session ? onAuthenticated(result.session) : setMode("confirmEmail"));
+      if (prefersReducedMotion()) next();
+      else setTchin({ next });
       return;
     }
 
@@ -307,6 +346,18 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
     onAuthenticated(result.session);
   };
 
+  if (tchin) {
+    return (
+      <TchinScreen
+        firstName={firstName.trim()}
+        onDone={() => {
+          setTchin(null);
+          tchin.next();
+        }}
+      />
+    );
+  }
+
   if (mode === "confirmEmail") {
     // Écran spécifique à la version "web app" (PWA) — à retirer entièrement une fois les
     // vraies apps App Store / Google Play disponibles, la confirmation par email restera mais
@@ -319,94 +370,103 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
 
   return (
     <div style={{ minHeight: "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
-      <img src="/bibamus-logo.svg" alt="Bibamus" style={{ width: isSignup ? "140px" : "180px", margin: isSignup ? "0 auto 20px" : "0 auto 28px", display: "block" }} />
+      <style>{AUTH_STYLES}</style>
+      <BibamusLogo width={isSignup ? 140 : 180} style={{ margin: isSignup ? "0 auto 20px" : "0 auto 28px" }} />
       {mode === "forgot" && <p style={{ textAlign: "center", color: COLORS.inkSoft, fontSize: "14px", marginBottom: "28px" }}>Mot de passe oublié</p>}
       {isSignup && (
         <>
           <SignupProgress step={step} />
-          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: "0 0 22px", textAlign: "center" }}>{SIGNUP_STEPS[step - 1].title}</h1>
+          <h1 key={step} className="biba-step-title" style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: "0 0 22px", textAlign: "center" }}>
+            {SIGNUP_STEPS[step - 1].title}
+          </h1>
         </>
       )}
 
       <form onSubmit={handleSubmit} noValidate={isSignup} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {isSignup && step === 1 && (
-          <>
-            <div>
-              <label style={labelStyle}>Prénom</label>
-              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required style={inputStyle} autoComplete="given-name" />
-            </div>
-            <div>
-              <label style={labelStyle}>Nom</label>
-              <input value={lastName} onChange={(e) => setLastName(e.target.value)} required style={inputStyle} autoComplete="family-name" />
-            </div>
-            <div>
-              <label style={labelStyle}>Surnom (optionnel)</label>
-              <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={inputStyle} autoComplete="nickname" />
-            </div>
-            <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "-4px 0 0" }}>
-              Ton prénom, ton nom et ton surnom pourront être affichés aux autres Bibax — tu choisiras ce qui est visible dans tes paramètres.
-            </p>
-          </>
-        )}
+        <div key={`${mode}-${step}`} className={isSignup ? `biba-step${direction === "back" ? " biba-step-back" : ""}` : undefined} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {isSignup && step === 1 && (
+            <>
+              <div>
+                <label style={labelStyle}>Prénom</label>
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required style={inputStyle} autoComplete="given-name" />
+              </div>
+              <div>
+                <label style={labelStyle}>Nom</label>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} required style={inputStyle} autoComplete="family-name" />
+              </div>
+              <div>
+                <label style={labelStyle}>Surnom (optionnel)</label>
+                <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={inputStyle} autoComplete="nickname" />
+              </div>
+              <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "-4px 0 0" }}>
+                Ton prénom, ton nom et ton surnom pourront être affichés aux autres Bibax — tu choisiras ce qui est visible dans tes paramètres.
+              </p>
+            </>
+          )}
 
-        {isSignup && step === 2 && (
-          <>
+          {isSignup && step === 2 && (
+            <>
+              <div>
+                <label style={labelStyle}>Date de naissance</label>
+                <input
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  required
+                  style={{ ...inputStyle, WebkitAppearance: "none", appearance: "none", maxWidth: "100%", minWidth: 0 }}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Pays</label>
+                <select value={country} onChange={(e) => setCountry(e.target.value)} required style={inputStyle}>
+                  <option value="">—</option>
+                  {PROFILE_COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.fr}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "-4px 0 0" }}>Ta date de naissance et ton pays servent uniquement à vérifier l'âge minimum requis (contenus liés à l'alcool).</p>
+            </>
+          )}
+
+          {(!isSignup || step === 3) && (
             <div>
-              <label style={labelStyle}>Date de naissance</label>
-              <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                required
-                style={{ ...inputStyle, WebkitAppearance: "none", appearance: "none", maxWidth: "100%", minWidth: 0 }}
-              />
+              {isSignup && <label style={labelStyle}>Email</label>}
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Adresse email" required style={inputStyle} autoComplete="email" />
             </div>
+          )}
+
+          {mode !== "forgot" && (!isSignup || step === 3) && (
             <div>
-              <label style={labelStyle}>Pays</label>
-              <select value={country} onChange={(e) => setCountry(e.target.value)} required style={inputStyle}>
-                <option value="">—</option>
-                {PROFILE_COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.fr}
-                  </option>
-                ))}
-              </select>
+              {isSignup && <label style={labelStyle}>Mot de passe</label>}
+              <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe" autoComplete={isSignup ? "new-password" : "current-password"} />
             </div>
-            <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "-4px 0 0" }}>Ta date de naissance et ton pays servent uniquement à vérifier l'âge minimum requis (contenus liés à l'alcool).</p>
-          </>
-        )}
+          )}
 
-        {(!isSignup || step === 3) && (
-          <div>
-            {isSignup && <label style={labelStyle}>Email</label>}
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Adresse email" required style={inputStyle} autoComplete="email" />
-          </div>
-        )}
+          {isSignup && step === 3 && (
+            <div>
+              <label style={labelStyle}>Confirme ton mot de passe</label>
+              <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirme ton mot de passe" autoComplete="new-password" />
+            </div>
+          )}
+        </div>
 
-        {mode !== "forgot" && (!isSignup || step === 3) && (
-          <div>
-            {isSignup && <label style={labelStyle}>Mot de passe</label>}
-            <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe" autoComplete={isSignup ? "new-password" : "current-password"} />
-          </div>
+        {error && (
+          <p key={error} role="alert" className="biba-auth-error" style={{ color: "#D64545", fontSize: "13px", margin: 0 }}>
+            {error}
+          </p>
         )}
-
-        {isSignup && step === 3 && (
-          <div>
-            <label style={labelStyle}>Confirme ton mot de passe</label>
-            <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirme ton mot de passe" autoComplete="new-password" />
-          </div>
-        )}
-
-        {error && <p style={{ color: "#D64545", fontSize: "13px", margin: 0 }}>{error}</p>}
         {message && <p style={{ color: COLORS.sage, fontSize: "13px", margin: 0 }}>{message}</p>}
 
         <div style={{ display: "flex", gap: "10px" }}>
           {isSignup && step > 1 && (
-            <button type="button" onClick={() => goToStep(step - 1)} disabled={loading} style={secondaryButtonStyle}>
+            <button type="button" className="biba-auth-btn" onClick={() => goToStep(step - 1)} disabled={loading} style={secondaryButtonStyle}>
               Retour
             </button>
           )}
-          <button type="submit" disabled={loading} style={{ ...buttonStyle, flex: 1, width: "auto", opacity: loading ? 0.6 : 1 }}>
+          <button type="submit" className="biba-auth-btn" disabled={loading} style={{ ...buttonStyle, flex: 1, width: "auto", opacity: loading ? 0.6 : 1 }}>
             {loading ? "..." : isSignup ? (lastStep ? "Créer mon compte" : "Suivant") : mode === "forgot" ? "Envoyer le lien" : "Se connecter"}
           </button>
         </div>
