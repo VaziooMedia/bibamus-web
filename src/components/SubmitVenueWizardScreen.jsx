@@ -49,11 +49,11 @@ const requiredStyle = (filled) => ({ ...inputStyle, border: `2px solid ${filled 
 const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
 const capitalizeFirst = (s) => (s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-export function SubmitVenueWizardScreen({ onDone, onCancel }) {
+export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel }) {
   const [step, setStep] = useState(1);
 
   // Page 1 — Dénomination
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
 
   // Repère les vraies correspondances existantes en direct pendant la saisie du nom, avec
   // leur vraie adresse (essentiel pour les lieux, vu la fréquence des homonymes).

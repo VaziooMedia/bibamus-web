@@ -14,6 +14,7 @@ import { drinkTypeLabel, drinkSummaryParts } from "../utils.js";
 import { styleTagLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadDrinksDirectoryCount, loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
 
 const PAGE_SIZE = 40;
 const LETTER_THRESHOLD = 20;
@@ -417,33 +418,6 @@ export function DrinksDirectoryScreen({
       </p>
     ) : null;
 
-  const addButton = (
-    <button
-      onClick={goToSubmit}
-      style={{
-        width: "56px",
-        height: "56px",
-        borderRadius: "50%",
-        background: COLORS.amber,
-        border: "none",
-        color: COLORS.paper,
-        fontSize: "32px",
-        fontWeight: 700,
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 0,
-        lineHeight: 1,
-        boxShadow: "0 4px 10px rgba(0,0,0,0.35)",
-      }}
-      title="Proposer une boisson"
-      aria-label="Proposer une boisson"
-    >
-      +
-    </button>
-  );
-
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={goBackOneLevel} />
@@ -502,8 +476,6 @@ export function DrinksDirectoryScreen({
         </button>
       )}
 
-      {activeCategory && !searching && <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>{addButton}</div>}
-
       <div
         style={{
           display: "flex",
@@ -540,7 +512,7 @@ export function DrinksDirectoryScreen({
               Chargement...
             </div>
           )}
-          <div style={{ display: "flex", justifyContent: "center", marginTop: "6px" }}>{addButton}</div>
+          {!(items.length === 0 && loadingMore) && <AddAfterSearch query={q} onAdd={goToSubmit} label="Proposer une boisson" />}
         </div>
       ) : activeCategory ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
@@ -560,7 +532,6 @@ export function DrinksDirectoryScreen({
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>{addButton}</div>
           {DRINK_TYPES.map((cat) => (
             <button
               key={cat}
@@ -591,7 +562,6 @@ export function DrinksDirectoryScreen({
         </div>
       )}
 
-      {activeCategory && !searching && <div style={{ display: "flex", justifyContent: "center", marginTop: "auto", paddingTop: "16px" }}>{addButton}</div>}
       {activeCategory && !searching && <ScrollToTopButton />}
       <BackFooterLink onClick={goBackOneLevel} />
     </div>

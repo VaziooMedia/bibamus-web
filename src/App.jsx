@@ -304,6 +304,8 @@ export default function App() {
   }, [screen]);
   const [spotifyConnectResult, setSpotifyConnectResult] = useState(null);
   const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
+  // Nom tapé dans la recherche de BibAtlas, repris dans le formulaire d'ajout d'un Produit ou d'un Lieu ; vide pour les autres entrées.
+  const [submitInitialName, setSubmitInitialName] = useState("");
   // Écran où ramène la flèche retour de la fiche d'un Bibax ; « home » partout sauf depuis la page Bibax de BibAtlas.
   const [screenBeforeBibaxProfile, setScreenBeforeBibaxProfile] = useState("home");
   const openBibaxProfile = (code, backTo = "home") => {
@@ -2178,7 +2180,10 @@ export default function App() {
                   setViewedVenueId(id);
                   setScreen("venueDetail");
                 }}
-                goToSubmit={() => setScreen("submitVenue")}
+                goToSubmit={(name) => {
+                  setSubmitInitialName(typeof name === "string" ? name : "");
+                  setScreen("submitVenue");
+                }}
                 goToMap={() => {
                   setVenueMapView(null);
                   setScreen("venueMap");
@@ -2331,7 +2336,10 @@ export default function App() {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
-                goToSubmit={() => setScreen("submitDrink")}
+                goToSubmit={(name) => {
+                  setSubmitInitialName(typeof name === "string" ? name : "");
+                  setScreen("submitDrink");
+                }}
                 goToScanBarcode={() => setShowBarcodeScanner(true)}
                 query={drinksDirQuery}
                 setQuery={setDrinksDirQuery}
@@ -2345,6 +2353,7 @@ export default function App() {
             )}
             {screen === "submitVenue" && (
               <SubmitVenueWizardScreen
+                initialName={submitInitialName}
                 onDone={(createdId) => {
                   emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: createdId });
                   trackEvent("venue_added", "venue", profile.myBibroCode);
@@ -2355,6 +2364,7 @@ export default function App() {
             )}
             {screen === "submitDrink" && (
               <SubmitDrinkWizardScreen
+                initialName={submitInitialName}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 onDone={(createdId) => {
@@ -3450,7 +3460,10 @@ export default function App() {
               <BibaSoloScreen
                 myUserId={session.user.id}
                 myBibroCode={profile.myBibroCode}
-                onAddDrink={() => setScreen("submitDrink")}
+                onAddDrink={() => {
+                  setSubmitInitialName("");
+                  setScreen("submitDrink");
+                }}
                 onRateDrink={rateDrinkStandalone}
                 onUnrateDrink={unrateDrinkStandalone}
                 onCheckDrink={publishDrinkCheckFromList}
@@ -3553,6 +3566,7 @@ export default function App() {
           onAddDrink={() => {
             setShowBarcodeScanner(false);
             setScanMode("direct");
+            setSubmitInitialName("");
             setScreen("submitDrink");
           }}
           onClose={() => {

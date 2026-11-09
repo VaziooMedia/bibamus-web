@@ -73,7 +73,7 @@ async function describeVariantError(error, barcode) {
   return `Le conditionnement n'a pas pu être enregistré (${error.code || "erreur"} — ${error.message}). Vous pouvez laisser le champ code-barre vide pour continuer.`;
 }
 
-export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, onDone, onCancel }) {
+export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, brandsDirectory, onDone, onCancel }) {
   const [step, setStep] = useState(1);
   const [drinkId, setDrinkId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -94,7 +94,7 @@ export function SubmitDrinkWizardScreen({ breweriesDirectory, brandsDirectory, o
   }, []);
 
   // Page 1 — Nom / Catégorie / Sous-catégorie
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
   const [type, setType] = useState("");
   const [beverageSubtype, setBeverageSubtype] = useState("");
   const subtypeOptions = type === "Bières & Cidres" ? BEER_CIDER_SUBTYPES : type === "Vins & Bulles" ? WINE_SUBTYPES : null;
