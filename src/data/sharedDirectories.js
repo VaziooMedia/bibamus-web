@@ -3028,8 +3028,7 @@ export const loadProducerListsOnce = onceLoader([PRODUCER_TYPE_LIST_KEY, PRODUCE
 // une marque », carte publique d'une marque).
 export const loadBrandListsOnce = onceLoader([BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY], "loadBrandLists");
 
-// Fiche producteur/marque — tous les produits d'une brasserie ou d'une marque donnée, jamais le
-// répertoire complet pour ça.
+// Par le NOM du producteur (texte « brewery » du produit) : n'est plus utilisée par la fiche Producteur, voir loadDrinksByProducerId.
 export async function loadDrinksByBrewery(breweryName) {
   if (!breweryName) return [];
   const { data, error } = await supabase.rpc("get_drinks_by_brewery", { p_brewery_name: breweryName });
@@ -3063,9 +3062,12 @@ export async function loadBrandsByProducer(producerId) {
   return data.map(rowToBrand);
 }
 
+// Les produits d'un producteur, par la clé producer_ids (fonction get_drinks_by_producer_id) : tous les produits liés au producteur, qu'un
+// texte « brewery » soit écrit dessus ou non, plus ceux sans producteur lié dont le texte « brewery » est le nom du producteur. Mêmes
+// statuts visibles que loadDrinksByBrewery. Jamais le répertoire complet pour ça.
 export async function loadDrinksByProducerId(producerId) {
   if (!producerId) return [];
-  const { data, error } = await supabase.from("drinks_directory").select("*").contains("producer_ids", [producerId]).order("name");
+  const { data, error } = await supabase.rpc("get_drinks_by_producer_id", { p_producer_id: producerId });
   if (error) {
     console.error("loadDrinksByProducerId:", error);
     return [];

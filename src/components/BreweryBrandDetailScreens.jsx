@@ -16,7 +16,7 @@ import { NotesCard, RatingFraction } from "./NotesCard.jsx";
 import { EntityRatingModal } from "./EntityRatingModal.jsx";
 import { HintBubble } from "./HintBubble.jsx";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
-import { loadDrinksByBrewery, loadDrinksByBrandId, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadProducerListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand, loadBrandFollowStatus, toggleFollowBrand, loadBrandFavoriteStatus, toggleFavoriteBrand, loadProducerRatingSummary, loadMyBibaxProducerRating, rateMyProducer, unrateMyProducer, loadProducerFollowStatus, toggleFollowProducer, loadProducerFavoriteStatus, toggleFavoriteProducer } from "../data/sharedDirectories.js";
+import { loadDrinksByProducerId, loadDrinksByBrandId, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadProducerListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand, loadBrandFollowStatus, toggleFollowBrand, loadBrandFavoriteStatus, toggleFavoriteBrand, loadProducerRatingSummary, loadMyBibaxProducerRating, rateMyProducer, unrateMyProducer, loadProducerFollowStatus, toggleFollowProducer, loadProducerFavoriteStatus, toggleFavoriteProducer } from "../data/sharedDirectories.js";
 import { customNames } from "../venueLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
@@ -632,10 +632,11 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
   const engagement = useEntityEngagement(brewery, PRODUCER_ENGAGEMENT_API, onRatingConfirmed);
   const { ratingSummary, bibaxRating } = engagement;
 
+  // Les produits du producteur, par la clé producer_ids (et non plus par le nom : la plateforme de gestion n'écrit pas toujours le nom du producteur sur le produit).
   const [relatedDrinks, setRelatedDrinks] = useState([]);
   useEffect(() => {
-    loadDrinksByBrewery(brewery.name).then(setRelatedDrinks);
-  }, [brewery.name]);
+    loadDrinksByProducerId(brewery.id).then(setRelatedDrinks);
+  }, [brewery.id]);
 
   const [relatedBrands, setRelatedBrands] = useState([]);
   useEffect(() => {
