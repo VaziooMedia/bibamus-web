@@ -299,14 +299,67 @@ function InfosLinkRow({ link, first }) {
   );
 }
 
-// Carte « Infos » de la fiche Producteur : copie de celle de la fiche Lieu (même cadre, mêmes pastilles de type, trait vert, ligne d'adresse avec
-// pastille de lieu et drapeau qui ouvre Google Maps, téléphone et courriel à droite de l'adresse, puis la rangée des icônes de réseaux, à droite).
-// Pas d'équipements (WiFi, PMR, danse) ni de Tripadvisor / Restaurant Guru : un producteur n'en a pas. Il a en plus LinkedIn et YouTube.
-// Le « B- » devant le code postal n'est mis que pour la Belgique. Le lieu lié (s'il y en a un) vient sous un trait fin.
 const iconCircle = { display: "inline-flex", width: "20px", height: "20px", borderRadius: "50%", overflow: "hidden" };
 // Le champ WhatsApp d'un producteur est un lien (« https://wa.me/… ») ; un simple numéro est aussi accepté.
 const whatsappHref = (v) => (/^[+\d\s().-]+$/.test(v.trim()) ? buildWhatsAppLink(v) : normalizeUrl(v));
 
+// Les icônes de réseaux d'une fiche Marque ou Producteur, dans l'ordre de la fiche Lieu (site, Google, WhatsApp, Facebook, Instagram, TikTok,
+// Snapchat), puis LinkedIn et YouTube. On ne met que ceux que la fiche a : une marque a le site, Facebook, Instagram, TikTok, Snapchat et YouTube ;
+// un producteur a en plus Google, WhatsApp et LinkedIn. Les liens sont encodés côté plateforme de gestion.
+function buildSocials(entity) {
+  return [
+    entity.website && {
+      key: "website",
+      title: "Site internet",
+      href: normalizeUrl(entity.website),
+      icon: (
+        <span style={iconCircle}>
+          <img src={internetIconUrl} alt="Site internet" width="20" height="20" style={{ display: "block", objectFit: "cover", filter: "invert(1)" }} />
+        </span>
+      ),
+    },
+    entity.googleUrl && { key: "google", title: "Page Google", href: normalizeUrl(entity.googleUrl), icon: <GoogleIcon size={20} /> },
+    entity.whatsappUrl && { key: "whatsapp", title: "WhatsApp", href: whatsappHref(entity.whatsappUrl), icon: <WhatsappIcon size={20} /> },
+    entity.facebookUrl && { key: "facebook", title: "Facebook", href: normalizeUrl(entity.facebookUrl), icon: <FacebookIcon size={20} /> },
+    entity.instagramUrl && { key: "instagram", title: "Instagram", href: normalizeUrl(entity.instagramUrl), icon: <InstagramIcon size={20} /> },
+    entity.tiktokUrl && { key: "tiktok", title: "TikTok", href: normalizeUrl(entity.tiktokUrl), icon: <TiktokIcon size={20} /> },
+    entity.snapchatUrl && {
+      key: "snapchat",
+      title: "Snapchat",
+      href: normalizeUrl(entity.snapchatUrl),
+      icon: (
+        <span style={iconCircle}>
+          <img src={snapchatIconUrl} alt="Snapchat" width="20" height="20" style={{ display: "block", objectFit: "cover" }} />
+        </span>
+      ),
+    },
+    entity.linkedinUrl && { key: "linkedin", title: "LinkedIn", href: normalizeUrl(entity.linkedinUrl), icon: <LinkedinIcon size={20} /> },
+    entity.youtubeUrl && {
+      key: "youtube",
+      title: "YouTube",
+      href: normalizeUrl(entity.youtubeUrl),
+      icon: <img src={youtubeIconUrl} alt="YouTube" width="26" height="18" style={{ display: "block" }} />,
+    },
+  ].filter(Boolean);
+}
+
+// La rangée d'icônes de réseaux, alignée à droite (comme sur la fiche Lieu).
+function SocialIconsRow({ socials }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px" }}>
+      {socials.map((x) => (
+        <a key={x.key} href={x.href} target="_blank" rel="noreferrer" title={x.title} style={{ lineHeight: 0 }}>
+          {x.icon}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// Carte « Infos » de la fiche Producteur : copie de celle de la fiche Lieu (même cadre, mêmes pastilles de type, trait vert, ligne d'adresse avec
+// pastille de lieu et drapeau qui ouvre Google Maps, téléphone et courriel à droite de l'adresse, puis la rangée des icônes de réseaux, à droite).
+// Pas d'équipements (WiFi, PMR, danse) ni de Tripadvisor / Restaurant Guru : un producteur n'en a pas. Il a en plus LinkedIn et YouTube.
+// Le « B- » devant le code postal n'est mis que pour la Belgique. Le lieu lié (s'il y en a un) vient sous un trait fin.
 function ProducerInfosCard({ producer, tags = [], link }) {
   const isBelgium = producer.country === "Belgique";
   const addressLine1 = [producer.streetName, producer.streetNumber].filter(Boolean).join(", ");
@@ -317,40 +370,7 @@ function ProducerInfosCard({ producer, tags = [], link }) {
   const hasPlace = hasAddress || !!producer.country;
   const hasPhone = !!producer.phone;
   const hasEmail = !!producer.email;
-  const socials = [
-    producer.website && {
-      key: "website",
-      title: "Site internet",
-      href: normalizeUrl(producer.website),
-      icon: (
-        <span style={iconCircle}>
-          <img src={internetIconUrl} alt="Site internet" width="20" height="20" style={{ display: "block", objectFit: "cover", filter: "invert(1)" }} />
-        </span>
-      ),
-    },
-    producer.googleUrl && { key: "google", title: "Page Google", href: normalizeUrl(producer.googleUrl), icon: <GoogleIcon size={20} /> },
-    producer.whatsappUrl && { key: "whatsapp", title: "WhatsApp", href: whatsappHref(producer.whatsappUrl), icon: <WhatsappIcon size={20} /> },
-    producer.facebookUrl && { key: "facebook", title: "Facebook", href: normalizeUrl(producer.facebookUrl), icon: <FacebookIcon size={20} /> },
-    producer.instagramUrl && { key: "instagram", title: "Instagram", href: normalizeUrl(producer.instagramUrl), icon: <InstagramIcon size={20} /> },
-    producer.tiktokUrl && { key: "tiktok", title: "TikTok", href: normalizeUrl(producer.tiktokUrl), icon: <TiktokIcon size={20} /> },
-    producer.snapchatUrl && {
-      key: "snapchat",
-      title: "Snapchat",
-      href: normalizeUrl(producer.snapchatUrl),
-      icon: (
-        <span style={iconCircle}>
-          <img src={snapchatIconUrl} alt="Snapchat" width="20" height="20" style={{ display: "block", objectFit: "cover" }} />
-        </span>
-      ),
-    },
-    producer.linkedinUrl && { key: "linkedin", title: "LinkedIn", href: normalizeUrl(producer.linkedinUrl), icon: <LinkedinIcon size={20} /> },
-    producer.youtubeUrl && {
-      key: "youtube",
-      title: "YouTube",
-      href: normalizeUrl(producer.youtubeUrl),
-      icon: <img src={youtubeIconUrl} alt="YouTube" width="26" height="18" style={{ display: "block" }} />,
-    },
-  ].filter(Boolean);
+  const socials = buildSocials(producer);
   const hasContact = hasPhone || hasEmail;
   if (tags.length === 0 && !hasPlace && !hasContact && socials.length === 0 && !link) return null;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([addressLine1, addressLine2, producer.country].filter(Boolean).join(", "))}`;
@@ -431,13 +451,7 @@ function ProducerInfosCard({ producer, tags = [], link }) {
       {socials.length > 0 && (
         <>
           {hasTop && thinRule}
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px" }}>
-            {socials.map((x) => (
-              <a key={x.key} href={x.href} target="_blank" rel="noreferrer" title={x.title} style={{ lineHeight: 0 }}>
-                {x.icon}
-              </a>
-            ))}
-          </div>
+          <SocialIconsRow socials={socials} />
         </>
       )}
       {link && (
@@ -453,9 +467,9 @@ function ProducerInfosCard({ producer, tags = [], link }) {
 // Carte « Infos » des fiches Marque et Producteur, même présentation que la fiche Produit : pastilles, ligne d'origine, puis les fiches liées
 // (le producteur d'une marque, le lieu lié d'un producteur) après un trait vert. Rien ne s'affiche si la fiche n'a rien de tout cela.
 // links : [{ key, onClick, photoUrl, photoEmoji, caption, name, certificationLevel }].
-function EntityInfosCard({ tags = [], originCity, originRegion, originCountry, links = [] }) {
+function EntityInfosCard({ tags = [], originCity, originRegion, originCountry, socials = [], links = [] }) {
   const hasOrigin = !!(originCity || originRegion || originCountry);
-  if (tags.length === 0 && !hasOrigin && links.length === 0) return null;
+  if (tags.length === 0 && !hasOrigin && socials.length === 0 && links.length === 0) return null;
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
       <div style={{ fontSize: "13px" }}>
@@ -492,6 +506,7 @@ function EntityInfosCard({ tags = [], originCity, originRegion, originCountry, l
               </div>
             ),
           },
+          socials.length > 0 && { key: "socials", sep: "thin", node: <SocialIconsRow key="socials" socials={socials} /> },
         ]
           .filter(Boolean)
           .map((row, i) => (
@@ -500,7 +515,7 @@ function EntityInfosCard({ tags = [], originCity, originRegion, originCountry, l
                 <div
                   style={{
                     borderBottom: row.sep === "green" ? `2px solid ${COLORS.amber}` : `1px solid ${COLORS.paperAlt}`,
-                    margin: row.sep === "green" ? "14px 0" : "10px 0",
+                    margin: row.sep === "green" ? "14px 0" : "12px 0",
                   }}
                 />
               )}
@@ -509,7 +524,7 @@ function EntityInfosCard({ tags = [], originCity, originRegion, originCountry, l
           ))}
       </div>
 
-      {(tags.length > 0 || hasOrigin) && links.length > 0 && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />}
+      {(tags.length > 0 || hasOrigin || socials.length > 0) && links.length > 0 && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />}
 
       {links.map((link, i) => (
         <InfosLinkRow key={link.key} link={link} first={i === 0} />
@@ -956,6 +971,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
         originCity={brand.originCity}
         originRegion={brand.originRegion}
         originCountry={brand.originCountry}
+        socials={buildSocials(brand)}
         links={producers.map((producer) => ({
           key: producer.id,
           onClick: () => onOpenBrewery(producer.id),
