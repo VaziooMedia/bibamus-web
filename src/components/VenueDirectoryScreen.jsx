@@ -371,7 +371,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack,
               Chargement...
             </div>
           )}
-          {!(items.length === 0 && loadingMore) && <AddAfterSearch query={q} onAdd={goToSubmit} label="Proposer un établissement" />}
+          {!(items.length === 0 && loadingMore) && <AddAfterSearch query={q} onAdd={goToSubmit} noun="lieu" label="Proposer un établissement" />}
         </div>
       ) : activeCity ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>

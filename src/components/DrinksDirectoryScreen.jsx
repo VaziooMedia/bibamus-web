@@ -512,7 +512,7 @@ export function DrinksDirectoryScreen({
               Chargement...
             </div>
           )}
-          {!(items.length === 0 && loadingMore) && <AddAfterSearch query={q} onAdd={goToSubmit} label="Proposer une boisson" />}
+          {!(items.length === 0 && loadingMore) && <AddAfterSearch query={q} onAdd={goToSubmit} noun="produit" label="Proposer une boisson" />}
         </div>
       ) : activeCategory ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>

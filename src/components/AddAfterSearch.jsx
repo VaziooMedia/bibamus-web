@@ -1,5 +1,6 @@
 // ============================================================
-// Bloc « Tu ne trouves pas … ? Ajoute-le » — le seul endroit d'où l'on peut proposer un
+// Bloc « Ce produit n'est pas encore présent sur BibAtlas ? Aucun problème. Tu peux l'ajouter
+// rapidement. » — le seul endroit d'où l'on peut proposer un
 // Produit ou un Lieu depuis BibAtlas : il n'apparaît qu'après une recherche, sous les
 // résultats (ou à la place d'eux quand il n'y en a aucun), pour inciter à vérifier d'abord
 // que la fiche n'existe pas déjà. Le nom tapé est repris tel quel dans le formulaire.
@@ -7,11 +8,13 @@
 import React from "react";
 import { COLORS } from "../constants.js";
 
-export function AddAfterSearch({ query, onAdd, label }) {
+export function AddAfterSearch({ query, onAdd, noun, label }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", marginTop: "6px", textAlign: "center" }}>
-      <p style={{ margin: 0, fontSize: "14px", color: COLORS.inkSoft, wordBreak: "break-word" }}>
-        Tu ne trouves pas « <strong style={{ color: COLORS.ink }}>{query}</strong> » ? Ajoute-le
+      <p style={{ margin: 0, fontSize: "14px", color: COLORS.inkSoft }}>
+        Ce {noun} n'est pas encore présent sur BibAtlas ?
+        <br />
+        Aucun problème. Tu peux l'ajouter rapidement.
       </p>
       <button
         onClick={() => onAdd(query)}
