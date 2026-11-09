@@ -2,10 +2,10 @@ import React, { useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 
-// Visionneuse de photo : la photo s'agrandit au centre de l'écran, sur un fond sombre. Elle se ferme en touchant
+// Visionneuse de photo (carrée ou ronde) : la photo s'agrandit au centre de l'écran, sur un fond sombre. Elle se ferme en touchant
 // n'importe où (photo comprise), avec la croix en haut à droite, ou avec la touche Échap. Surcouche plein écran
 // comme les autres modales de l'app (`position: fixed; inset: 0`, z-index 1000).
-export function PhotoLightbox({ url, alt = "", onClose }) {
+export function PhotoLightbox({ url, alt = "", onClose, round = false }) {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") onClose();
@@ -22,7 +22,8 @@ export function PhotoLightbox({ url, alt = "", onClose }) {
       aria-label={alt || "Photo"}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px", boxSizing: "border-box" }}
     >
-      <img src={url} alt={alt} style={{ width: "min(100%, 480px)", height: "auto", maxHeight: "100%", objectFit: "contain", borderRadius: "12px", display: "block" }} />
+      {/* Les photos de rond-profil sont toutes carrées (400 x 400 px) : le carré est affiché tel quel, ou en rond (round) comme dans le petit rond. Jamais plus grand que 400 px (la photo n'est pas étirée). */}
+      <img src={url} alt={alt} style={{ width: "min(100%, 400px, calc(100vh - 48px))", aspectRatio: "1 / 1", objectFit: "cover", borderRadius: round ? "50%" : "12px", display: "block" }} />
       <button
         onClick={(e) => {
           e.stopPropagation();
