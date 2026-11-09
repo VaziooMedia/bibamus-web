@@ -4,7 +4,7 @@
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS, BRAND_TYPES, BRAND_CLASSIFICATIONS, PRODUCER_TYPES, PRODUCER_PROFILES, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
-import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
+import { NavIcon, CertificationIcon, CountryFlagImg, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, LinkedinIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import { getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
@@ -22,6 +22,10 @@ import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandList
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
+import { normalizeUrl, buildWhatsAppLink } from "../utils.js";
+import snapchatIconUrl from "../assets/brand/snapchat.svg";
+import internetIconUrl from "../assets/brand/internet.svg";
+import youtubeIconUrl from "../assets/brand/youtube.svg";
 
 // Bouton « Partager » des fiches producteur et marque : même icône et même emplacement que sur la fiche lieu.
 // Le lien partagé est bibamus.app/@nom de la fiche (lien général si elle n'a pas encore de @nom). Rien ne
@@ -121,8 +125,13 @@ function InfosLinkRow({ link, first }) {
 }
 
 // Carte « Infos » de la fiche Producteur : copie de celle de la fiche Lieu (même cadre, mêmes pastilles de type, trait vert, ligne d'adresse avec
-// pastille de lieu et drapeau, qui ouvre Google Maps). Un producteur n'a ni téléphone, ni courriel, ni réseaux : ces rangées n'existent pas ici.
+// pastille de lieu et drapeau qui ouvre Google Maps, téléphone et courriel à droite de l'adresse, puis la rangée des icônes de réseaux, à droite).
+// Pas d'équipements (WiFi, PMR, danse) ni de Tripadvisor / Restaurant Guru : un producteur n'en a pas. Il a en plus LinkedIn et YouTube.
 // Le « B- » devant le code postal n'est mis que pour la Belgique. Le lieu lié (s'il y en a un) vient sous un trait fin.
+const iconCircle = { display: "inline-flex", width: "20px", height: "20px", borderRadius: "50%", overflow: "hidden" };
+// Le champ WhatsApp d'un producteur est un lien (« https://wa.me/… ») ; un simple numéro est aussi accepté.
+const whatsappHref = (v) => (/^[+\d\s().-]+$/.test(v.trim()) ? buildWhatsAppLink(v) : normalizeUrl(v));
+
 function ProducerInfosCard({ producer, tags = [], link }) {
   const isBelgium = producer.country === "Belgique";
   const addressLine1 = [producer.streetName, producer.streetNumber].filter(Boolean).join(", ");
@@ -131,7 +140,44 @@ function ProducerInfosCard({ producer, tags = [], link }) {
   ).trim();
   const hasAddress = !!(addressLine1 || addressLine2);
   const hasPlace = hasAddress || !!producer.country;
-  if (tags.length === 0 && !hasPlace && !link) return null;
+  const hasPhone = !!producer.phone;
+  const hasEmail = !!producer.email;
+  const socials = [
+    producer.website && {
+      key: "website",
+      title: "Site internet",
+      href: normalizeUrl(producer.website),
+      icon: (
+        <span style={iconCircle}>
+          <img src={internetIconUrl} alt="Site internet" width="20" height="20" style={{ display: "block", objectFit: "cover", filter: "invert(1)" }} />
+        </span>
+      ),
+    },
+    producer.googleUrl && { key: "google", title: "Page Google", href: normalizeUrl(producer.googleUrl), icon: <GoogleIcon size={20} /> },
+    producer.whatsappUrl && { key: "whatsapp", title: "WhatsApp", href: whatsappHref(producer.whatsappUrl), icon: <WhatsappIcon size={20} /> },
+    producer.facebookUrl && { key: "facebook", title: "Facebook", href: normalizeUrl(producer.facebookUrl), icon: <FacebookIcon size={20} /> },
+    producer.instagramUrl && { key: "instagram", title: "Instagram", href: normalizeUrl(producer.instagramUrl), icon: <InstagramIcon size={20} /> },
+    producer.tiktokUrl && { key: "tiktok", title: "TikTok", href: normalizeUrl(producer.tiktokUrl), icon: <TiktokIcon size={20} /> },
+    producer.snapchatUrl && {
+      key: "snapchat",
+      title: "Snapchat",
+      href: normalizeUrl(producer.snapchatUrl),
+      icon: (
+        <span style={iconCircle}>
+          <img src={snapchatIconUrl} alt="Snapchat" width="20" height="20" style={{ display: "block", objectFit: "cover" }} />
+        </span>
+      ),
+    },
+    producer.linkedinUrl && { key: "linkedin", title: "LinkedIn", href: normalizeUrl(producer.linkedinUrl), icon: <LinkedinIcon size={20} /> },
+    producer.youtubeUrl && {
+      key: "youtube",
+      title: "YouTube",
+      href: normalizeUrl(producer.youtubeUrl),
+      icon: <img src={youtubeIconUrl} alt="YouTube" width="26" height="18" style={{ display: "block" }} />,
+    },
+  ].filter(Boolean);
+  const hasContact = hasPhone || hasEmail;
+  if (tags.length === 0 && !hasPlace && !hasContact && socials.length === 0 && !link) return null;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([addressLine1, addressLine2, producer.country].filter(Boolean).join(", "))}`;
   const placeContent = (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -150,6 +196,10 @@ function ProducerInfosCard({ producer, tags = [], link }) {
       </span>
     </div>
   );
+  const placeStyle = { textDecoration: "none", color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 };
+  const contactLinkStyle = { lineHeight: 0, display: "flex", justifyContent: "center", alignItems: "center" };
+  const hasTop = hasPlace || hasContact;
+  const thinRule = <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, margin: "12px 0" }} />;
   return (
     <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
       {tags.length > 0 && (
@@ -161,20 +211,63 @@ function ProducerInfosCard({ producer, tags = [], link }) {
               </span>
             ))}
           </div>
-          {(hasPlace || link) && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "12px 0" }} />}
+          {(hasTop || socials.length > 0 || link) && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "12px 0" }} />}
         </>
       )}
-      {hasPlace &&
-        (hasAddress ? (
-          <a href={mapsUrl} target="_blank" rel="noreferrer" style={{ display: "block", textDecoration: "none", color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>
-            {placeContent}
-          </a>
-        ) : (
-          <div style={{ color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>{placeContent}</div>
-        ))}
+      {hasTop && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: hasPhone && hasEmail ? "1fr 1px 30px 1px 30px" : hasContact ? "1fr 1px 30px" : "1fr",
+            gap: "8px",
+            alignItems: "center",
+          }}
+        >
+          {hasAddress ? (
+            <a href={mapsUrl} target="_blank" rel="noreferrer" style={placeStyle}>
+              {placeContent}
+            </a>
+          ) : hasPlace ? (
+            <div style={placeStyle}>{placeContent}</div>
+          ) : (
+            <div />
+          )}
+          {hasContact && <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />}
+          {hasPhone && (
+            <a href={`tel:${producer.phone.replace(/\s+/g, "")}`} title={producer.phone} style={contactLinkStyle}>
+              <NavIcon name="phone" size={22} color={COLORS.amber} />
+            </a>
+          )}
+          {!hasPhone && hasEmail && (
+            <a href={`mailto:${producer.email}`} title={producer.email} style={contactLinkStyle}>
+              <NavIcon name="mail" size={22} color={COLORS.amber} />
+            </a>
+          )}
+          {hasPhone && hasEmail && (
+            <>
+              <div style={{ width: "1px", height: "32px", background: COLORS.paperAlt }} />
+              <a href={`mailto:${producer.email}`} title={producer.email} style={contactLinkStyle}>
+                <NavIcon name="mail" size={22} color={COLORS.amber} />
+              </a>
+            </>
+          )}
+        </div>
+      )}
+      {socials.length > 0 && (
+        <>
+          {hasTop && thinRule}
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px" }}>
+            {socials.map((x) => (
+              <a key={x.key} href={x.href} target="_blank" rel="noreferrer" title={x.title} style={{ lineHeight: 0 }}>
+                {x.icon}
+              </a>
+            ))}
+          </div>
+        </>
+      )}
       {link && (
         <>
-          {hasPlace && <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, margin: "12px 0" }} />}
+          {(hasTop || socials.length > 0) && thinRule}
           <InfosLinkRow link={link} first />
         </>
       )}

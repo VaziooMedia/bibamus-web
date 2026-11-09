@@ -4370,6 +4370,18 @@ function rowToBrewery(row) {
     lng: row.lng,
     producerTypes: row.producer_types || [],
     producerProfiles: row.producer_profiles || [],
+    // Coordonnées : colonnes remplies depuis la plateforme de gestion, jamais écrites par l'app (voir breweryToRow).
+    phone: row.phone,
+    email: row.email,
+    website: row.website,
+    googleUrl: row.google_url,
+    whatsappUrl: row.whatsapp_url,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+    linkedinUrl: row.linkedin_url,
+    youtubeUrl: row.youtube_url,
   };
 }
 
