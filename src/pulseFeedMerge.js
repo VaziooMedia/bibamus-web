@@ -1,7 +1,7 @@
 // Fusion des pages du fil BibaPulse (écran BibaPulse).
 //
 // Le serveur (get_pulse_feed) place en tête de la première page, avant le fil chronologique, un bloc de cartes
-// « prioritaires » : celles des marques que la personne a mises en favori (cœur sur la fiche de la marque).
+// « prioritaires » : celles des marques et des producteurs que la personne a mis en favori (cœur sur la fiche de la marque ou du producteur).
 // Chaque carte du bloc porte metadata.priority = true (valeur calculée à la lecture, jamais enregistrée).
 // Ce bloc compte 5 cartes au plus, toutes datant de moins de 7 jours.
 //
