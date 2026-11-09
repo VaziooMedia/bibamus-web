@@ -6,14 +6,18 @@
 // route (bouton retour, ou navigation ailleurs dans l'app) supprime le brouillon.
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
-import { COLORS, DRINK_TYPES, COUNTRIES } from "../constants.js";
+import { COLORS, DRINK_TYPES, COUNTRIES, SUBTYPE_LABELS } from "../constants.js";
 import { CONTAINER_TYPES } from "../data/beerCiderStyles.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariant, lookupBarcode, loadDrinksByIds, searchDrinks } from "../data/sharedDirectories.js";
-import { normalizeForDuplicateCheck, makeSearchMatcher, entityNames, drinkSummaryLine } from "../utils.js";
+import { normalizeForDuplicateCheck, makeSearchMatcher, entityNames, drinkSummaryParts, drinkTypeLabel } from "../utils.js";
 import { findSimilarNames } from "../similarNames.js";
 import { DuplicateBox, ExistingEntityRow, NotSameCheckbox, duplicateNoteStyle } from "./DuplicateWarning.jsx";
+
+// Détails d'une fiche existante dans les avertissements de doublon : sous-catégorie · degré · producteur (la catégorie seulement si la
+// fiche n'a pas de sous-catégorie, comme ailleurs dans l'app).
+const existingDrinkDetails = (d) => [SUBTYPE_LABELS[d.beverageSubtype] || drinkTypeLabel(d.type), ...drinkSummaryParts(d, false)].filter(Boolean).join(" · ");
 
 const BEER_CIDER_SUBTYPES = [
   { code: "biere", fr: "Bière" },
@@ -325,14 +329,18 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
                 photoEmoji={d.avatarEmoji}
                 fallbackIcon="bottle"
                 title={d.name}
-                subtitle={drinkSummaryLine(d)}
+                subtitle={existingDrinkDetails(d)}
                 tag={normalizeForDuplicateCheck(d.name) === nameKey ? "Même nom" : null}
                 onClick={() => onOpenExisting(d.id)}
               />
             ))}
             {exactMatch && (
               <>
-                <p style={duplicateNoteStyle}>Un produit porte déjà exactement ce nom. Ouvre sa fiche pour y suggérer une modification, ou coche la case si ce n'est pas le même produit.</p>
+                <p style={duplicateNoteStyle}>
+                  Un produit porte déjà exactement ce nom.
+                  <br />
+                  Ouvre sa fiche pour y suggérer une modification, ou coche la case si ce n'est pas le même produit.
+                </p>
                 <NotSameCheckbox checked={notSameChecked} onChange={(on) => setNotSameKey(on ? nameKey : null)} label="Ce n'est pas le même produit" />
               </>
             )}
@@ -593,7 +601,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
       {finalTwins.length > 0 && (
         <DuplicateBox title={finalBlocked ? "Ce produit existe déjà :" : "Un produit de même nom et du même producteur existe déjà, avec un autre degré :"} style={{ marginTop: "20px" }}>
           {finalTwins.map((d) => (
-            <ExistingEntityRow key={d.id} photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} fallbackIcon="bottle" title={d.name} subtitle={drinkSummaryLine(d)} onClick={() => onOpenExisting(d.id)} />
+            <ExistingEntityRow key={d.id} photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} fallbackIcon="bottle" title={d.name} subtitle={existingDrinkDetails(d)} onClick={() => onOpenExisting(d.id)} />
           ))}
           {finalBlocked ? (
             <p style={duplicateNoteStyle}>Ouvre sa fiche pour y suggérer une modification, ou reviens modifier ta saisie.</p>
