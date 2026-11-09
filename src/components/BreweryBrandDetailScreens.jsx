@@ -13,10 +13,10 @@ import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { NotesCard, RatingFraction } from "./NotesCard.jsx";
-import { BrandRatingModal } from "./BrandRatingModal.jsx";
+import { EntityRatingModal } from "./EntityRatingModal.jsx";
 import { HintBubble } from "./HintBubble.jsx";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
-import { loadDrinksByBrewery, loadDrinksByBrandId, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadProducerListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand, loadBrandFollowStatus, toggleFollowBrand, loadBrandFavoriteStatus, toggleFavoriteBrand } from "../data/sharedDirectories.js";
+import { loadDrinksByBrewery, loadDrinksByBrandId, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadProducerListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand, loadBrandFollowStatus, toggleFollowBrand, loadBrandFavoriteStatus, toggleFavoriteBrand, loadProducerRatingSummary, loadMyBibaxProducerRating, rateMyProducer, unrateMyProducer, loadProducerFollowStatus, toggleFollowProducer, loadProducerFavoriteStatus, toggleFavoriteProducer } from "../data/sharedDirectories.js";
 import { customNames } from "../venueLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
@@ -27,28 +27,11 @@ import snapchatIconUrl from "../assets/brand/snapchat.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 import youtubeIconUrl from "../assets/brand/youtube.svg";
 
-// Bouton « Partager » des fiches producteur et marque : même icône et même emplacement que sur la fiche lieu.
-// Le lien partagé est bibamus.app/@nom de la fiche (lien général si elle n'a pas encore de @nom). Rien ne
-// s'affiche si le partage natif n'existe pas sur l'appareil.
-function ShareEntityButton({ name, username, extraTop = 0 }) {
-  if (!canShareEntity()) return null;
-  return (
-    <div style={{ position: "absolute", top: `${32 + extraTop}px`, right: "8px", display: "flex", alignItems: "center" }}>
-      <button
-        onClick={() => shareEntity({ title: name, text: `Découvre ${name} sur Bibamus !`, url: usernameLinkUrl(username) })}
-        title="Partager"
-        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
-      >
-        <NavIcon name="share" size={24} color={COLORS.amber} />
-      </button>
-    </div>
-  );
-}
-
-// Icônes de l'en-tête de la fiche Marque : « Partager » | cloche « Suivre sur Pulse » | cœur « Favoris », comme le bloc de la fiche Produit
-// (mêmes emplacement, taille de 24 px et séparateurs verticaux). « Partager » n'apparaît que si le partage natif existe sur l'appareil.
+// Icônes de l'en-tête des fiches Marque et Producteur : « Partager » | cloche « Suivre sur Pulse » | cœur « Favoris », comme le bloc de la fiche
+// Produit (mêmes emplacement, taille de 24 px et séparateurs verticaux). « Partager » n'apparaît que si le partage natif existe sur l'appareil.
 // La cloche et le cœur sont pleins quand ils sont actifs. Pour l'instant, ils sont seulement enregistrés (l'effet sur le fil Pulse viendra après).
-function BrandHeaderIcons({ name, username, extraTop = 0, isFollowed, followBusy, onToggleFollow, isFavorite, favoriteBusy, onToggleFavorite }) {
+// followedTitle : l'infobulle de la cloche allumée, qui s'accorde avec la fiche (« Suivie » pour une marque, « Suivi » pour un producteur).
+function EntityHeaderIcons({ name, username, extraTop = 0, isFollowed, followBusy, onToggleFollow, isFavorite, favoriteBusy, onToggleFavorite, followedTitle = "Suivie sur Pulse — ses activités apparaissent" }) {
   const divider = <span aria-hidden="true" style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />;
   const iconButton = { background: "none", border: "none", padding: 0, display: "flex" };
   return (
@@ -69,7 +52,7 @@ function BrandHeaderIcons({ name, username, extraTop = 0, isFollowed, followBusy
       <button
         onClick={onToggleFollow}
         disabled={followBusy}
-        title={isFollowed ? "Suivie sur Pulse — ses activités apparaissent" : "Suivre sur Pulse"}
+        title={isFollowed ? followedTitle : "Suivre sur Pulse"}
         aria-label={isFollowed ? "Ne plus suivre sur Pulse" : "Suivre sur Pulse"}
         aria-pressed={isFollowed}
         style={{ ...iconButton, cursor: followBusy ? "default" : "pointer" }}
@@ -88,6 +71,198 @@ function BrandHeaderIcons({ name, username, extraTop = 0, isFollowed, followBusy
         <NavIcon name="heart" size={24} color={COLORS.amber} filled={isFavorite} />
       </button>
     </div>
+  );
+}
+
+// Les fonctions serveur de la cloche, du cœur et des notes de chaque sorte de fiche (marque, producteur) : la fiche passe la sienne à
+// useEntityEngagement, qui est le même pour les deux.
+const BRAND_ENGAGEMENT_API = {
+  loadFollow: loadBrandFollowStatus,
+  toggleFollow: toggleFollowBrand,
+  loadFavorite: loadBrandFavoriteStatus,
+  toggleFavorite: toggleFavoriteBrand,
+  loadSummary: loadBrandRatingSummary,
+  loadBibax: loadMyBibaxBrandRating,
+  rate: rateMyBrand,
+  unrate: unrateMyBrand,
+};
+const PRODUCER_ENGAGEMENT_API = {
+  loadFollow: loadProducerFollowStatus,
+  toggleFollow: toggleFollowProducer,
+  loadFavorite: loadProducerFavoriteStatus,
+  toggleFavorite: toggleFavoriteProducer,
+  loadSummary: loadProducerRatingSummary,
+  loadBibax: loadMyBibaxProducerRating,
+  rate: rateMyProducer,
+  unrate: unrateMyProducer,
+};
+
+// Cloche « Suivre sur Pulse », cœur « Favoris » et note (étoiles sur 5) d'une fiche Marque ou Producteur : un état par personne, enregistré en base.
+// Lus à l'ouverture de la fiche ; une bascule attend la réponse du serveur (le bouton est inactif entre-temps), comme la cloche d'un produit.
+// ratingSummary = { average, count, myRating, canRate } ; null = lecture en cours, ou échouée. Il sert à la bannière de la couverture, au bouton
+// étoile et aux lignes You et Bibamus de la carte « Notes ». bibaxRating = la ligne Bibax ({ average, count }, ou null : un tiret).
+// Note enregistrée ou retirée : la même confirmation encadrée en rose, en haut de l'écran, que celle d'un check (elle est dessinée par App ;
+// le titre vient d'ici : « Note confirmée » (icône check) ou « Note retirée » (icône croix), avec le nom de la fiche dessous).
+function useEntityEngagement(entity, api, onRatingConfirmed) {
+  const [isFollowed, setIsFollowed] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    setIsFollowed(false);
+    setIsFavorite(false);
+    api.loadFollow(entity.id).then((v) => {
+      if (!cancelled) setIsFollowed(v);
+    });
+    api.loadFavorite(entity.id).then((v) => {
+      if (!cancelled) setIsFavorite(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, entity.id]);
+  const handleToggleFollow = async () => {
+    setFollowBusy(true);
+    const result = await api.toggleFollow(entity.id);
+    setFollowBusy(false);
+    if (!result || result.error) {
+      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      return;
+    }
+    setIsFollowed(!!result.following);
+  };
+  const handleToggleFavorite = async () => {
+    setFavoriteBusy(true);
+    const result = await api.toggleFavorite(entity.id);
+    setFavoriteBusy(false);
+    if (!result || result.error) {
+      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      return;
+    }
+    setIsFavorite(!!result.favorite);
+  };
+
+  const [ratingSummary, setRatingSummary] = useState(null);
+  const [bibaxRating, setBibaxRating] = useState(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  // ratingHint : 0 = pas de bulle ; sinon un compteur, qui change à chaque appui sur le bouton grisé (la bulle repart de zéro).
+  const [ratingHint, setRatingHint] = useState(0);
+  const ratingButtonRef = useRef(null);
+  useEffect(() => {
+    let cancelled = false;
+    setRatingSummary(null);
+    setBibaxRating(null);
+    api.loadSummary(entity.id).then((s) => {
+      if (!cancelled) setRatingSummary(s);
+    });
+    api.loadBibax(entity.id).then((r) => {
+      if (!cancelled) setBibaxRating(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, entity.id]);
+  const reloadRatingSummary = () => api.loadSummary(entity.id).then(setRatingSummary);
+  const handleRatingButton = () => {
+    if (!ratingSummary) {
+      reloadRatingSummary(); // lecture en cours ou échouée : on réessaie
+      return;
+    }
+    if (ratingSummary.canRate) setShowRatingModal(true);
+    else setRatingHint((n) => n + 1);
+  };
+  const saveMyRating = async (value) => {
+    const ok = await api.rate(entity.id, value);
+    if (ok) {
+      await reloadRatingSummary();
+      if (onRatingConfirmed) onRatingConfirmed({ title: "Note confirmée", name: entity.name });
+    }
+    return ok;
+  };
+  const removeMyRating = async () => {
+    const ok = await api.unrate(entity.id);
+    if (ok) {
+      await reloadRatingSummary();
+      if (onRatingConfirmed) onRatingConfirmed({ title: "Note retirée", name: entity.name, icon: "x" });
+    }
+    return ok;
+  };
+
+  return {
+    isFollowed,
+    isFavorite,
+    followBusy,
+    favoriteBusy,
+    handleToggleFollow,
+    handleToggleFavorite,
+    ratingSummary,
+    bibaxRating,
+    showRatingModal,
+    setShowRatingModal,
+    ratingHint,
+    setRatingHint,
+    ratingButtonRef,
+    handleRatingButton,
+    saveMyRating,
+    removeMyRating,
+  };
+}
+
+// Bannière de la note, puis bouton de note, sur la couverture : mêmes emplacements que la bannière et le bouton Check de la fiche Produit (en
+// bas de la couverture, le bouton tout à droite). Sans le droit de noter (aucun produit de la fiche checké), le bouton est grisé et un appui
+// affiche l'explication (bulle accrochée au bouton).
+function CoverRating({ summary, buttonRef, onClick, buttonLabel }) {
+  return (
+    <>
+      {summary && summary.count > 0 && (
+        <div style={{ position: "absolute", bottom: "8px", right: "68px", left: "108px" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "baseline",
+              gap: "5px",
+              background: "#000",
+              border: `2px solid ${COLORS.amber}`,
+              borderRadius: "8px",
+              padding: "5px 10px",
+              maxWidth: "100%",
+            }}
+          >
+            <span style={{ display: "flex", alignSelf: "center" }}>
+              <NavIcon name="star" size={17} color={COLORS.amber} filled />
+            </span>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}><RatingFraction value={summary.average} /></span>
+            <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {summary.count} avis</span>
+          </div>
+        </div>
+      )}
+      <button
+        ref={buttonRef}
+        onClick={onClick}
+        title={buttonLabel}
+        aria-label={buttonLabel}
+        style={{
+          position: "absolute",
+          bottom: "8px",
+          right: "8px",
+          width: "52px",
+          height: "52px",
+          boxSizing: "border-box",
+          borderRadius: "50%",
+          background: "#000",
+          border: `3px solid ${COLORS.amber}`,
+          padding: 0,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: summary && summary.canRate ? 1 : 0.45,
+        }}
+      >
+        <NavIcon name="star" size={26} color={COLORS.amber} filled />
+      </button>
+    </>
   );
 }
 
@@ -429,14 +604,18 @@ function RelatedDrinksCard({ drinks, emptyText, onOpenDrink }) {
   );
 }
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, claimsEnabled = true }) {
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onRatingConfirmed, claimsEnabled = true }) {
   const [activeTab, setActiveTab] = useState("infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
-  // Nom sur plusieurs lignes : « Partager » et le contenu en dessous descendent d'autant (voir useWrappedTitleExtra).
+  // Nom sur plusieurs lignes : les icônes de l'en-tête et le contenu en dessous descendent d'autant (voir useWrappedTitleExtra).
   const [titleRef, titleExtra] = useWrappedTitleExtra();
+
+  // Cloche « Suivre sur Pulse », cœur « Favoris » et note du producteur (producer_follows, producer_favorites, producer_ratings) : voir useEntityEngagement.
+  const engagement = useEntityEngagement(brewery, PRODUCER_ENGAGEMENT_API, onRatingConfirmed);
+  const { ratingSummary, bibaxRating } = engagement;
 
   const [relatedDrinks, setRelatedDrinks] = useState([]);
   useEffect(() => {
@@ -500,15 +679,28 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
               <CertificationIcon level={brewery.certificationLevel} size={17} />
             </span>
           </div>
-          <ShareEntityButton name={brewery.name} username={brewery.username} extraTop={titleExtra} />
+          <EntityHeaderIcons
+            name={brewery.name}
+            username={brewery.username}
+            extraTop={titleExtra}
+            followedTitle="Suivi sur Pulse — ses activités apparaissent"
+            isFollowed={engagement.isFollowed}
+            followBusy={engagement.followBusy}
+            onToggleFollow={engagement.handleToggleFollow}
+            isFavorite={engagement.isFavorite}
+            favoriteBusy={engagement.favoriteBusy}
+            onToggleFavorite={engagement.handleToggleFavorite}
+          />
         </div>
+        <CoverRating summary={ratingSummary} buttonRef={engagement.ratingButtonRef} onClick={engagement.handleRatingButton} buttonLabel="Noter ce producteur" />
       </div>
 
       <div style={{ marginTop: `${76 + titleExtra}px` }}>
-      {/* Même barre d'onglets que les fiches Produit et Marque (Biba360 viendra avec les notes du producteur). */}
+      {/* Même barre d'onglets que les fiches Produit et Marque. Biba360 ne contient pour l'instant que la carte « Notes » ; les autres blocs viendront. */}
       <PillTabs
         tabs={[
           { key: "infos", label: "Infos" },
+          { key: "biba360", label: { prefix: "Biba", accent: "360" } },
           { key: "bibapulse", label: { prefix: "Biba", accent: "Pulse" } },
         ]}
         active={activeTab}
@@ -592,10 +784,28 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
         </>
       )}
 
+      {/* Carte « Notes » : You (ma note), Bibax (la moyenne de mes Bibax), Bibamus (la moyenne de tous), comme sur les fiches Produit et Marque. */}
+      {activeTab === "biba360" && (
+        <NotesCard
+          mine={ratingSummary ? ratingSummary.myRating : null}
+          bibax={bibaxRating}
+          everyone={ratingSummary && ratingSummary.count > 0 ? { average: ratingSummary.average, count: ratingSummary.count } : null}
+        />
+      )}
+
       {activeTab === "bibapulse" && (
         <EntityPulseSection entityType="producer" entityId={brewery.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} onOpenBrand={onOpenBrand} />
       )}
 
+      {/* Bulle accrochée au bouton étoile grisé (elle s'efface seule) : pourquoi on ne peut pas encore noter. */}
+      {engagement.ratingHint > 0 && (
+        <HintBubble key={engagement.ratingHint} anchorRef={engagement.ratingButtonRef} onClose={() => engagement.setRatingHint(0)}>
+          Checke un produit de ce producteur pour pouvoir le noter.
+        </HintBubble>
+      )}
+      {engagement.showRatingModal && ratingSummary && (
+        <EntityRatingModal title="Note ce producteur" entityName={brewery.name} myRating={ratingSummary.myRating} onSave={engagement.saveMyRating} onRemove={engagement.removeMyRating} onClose={() => engagement.setShowRatingModal(false)} />
+      )}
       {claimsEnabled && claiming && <ClaimModal entityType="producer" entityId={brewery.id} entityName={brewery.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 
       {showActionsMenu && (
@@ -655,97 +865,9 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
     loadDrinksByBrandId(brand.id).then(setRelatedDrinks);
   }, [brand.id]);
 
-  // Cloche « Suivre sur Pulse » et cœur « Favoris » de la marque : un état par personne, enregistré en base (brand_follows et brand_favorites).
-  // Lus à l'ouverture de la fiche ; une bascule attend la réponse du serveur (le bouton est inactif entre-temps), comme la cloche d'un produit.
-  const [isFollowed, setIsFollowed] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [followBusy, setFollowBusy] = useState(false);
-  const [favoriteBusy, setFavoriteBusy] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    setIsFollowed(false);
-    setIsFavorite(false);
-    loadBrandFollowStatus(brand.id).then((v) => {
-      if (!cancelled) setIsFollowed(v);
-    });
-    loadBrandFavoriteStatus(brand.id).then((v) => {
-      if (!cancelled) setIsFavorite(v);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [brand.id]);
-  const handleToggleFollow = async () => {
-    setFollowBusy(true);
-    const result = await toggleFollowBrand(brand.id);
-    setFollowBusy(false);
-    if (!result || result.error) {
-      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
-      return;
-    }
-    setIsFollowed(!!result.following);
-  };
-  const handleToggleFavorite = async () => {
-    setFavoriteBusy(true);
-    const result = await toggleFavoriteBrand(brand.id);
-    setFavoriteBusy(false);
-    if (!result || result.error) {
-      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
-      return;
-    }
-    setIsFavorite(!!result.favorite);
-  };
-
-  // Notes de la marque (étoiles sur 5, comme les produits). ratingSummary = { average, count, myRating, canRate } ; null = lecture en
-  // cours, ou échouée. Il sert à la bannière de la couverture, au bouton étoile et aux lignes You et Bibamus de la carte « Notes ».
-  // bibaxRating = la ligne Bibax ({ average, count }, ou null : un tiret).
-  const [ratingSummary, setRatingSummary] = useState(null);
-  const [bibaxRating, setBibaxRating] = useState(null);
-  const [showRatingModal, setShowRatingModal] = useState(false);
-  // ratingHint : 0 = pas de bulle ; sinon un compteur, qui change à chaque appui sur le bouton grisé (la bulle repart de zéro).
-  const [ratingHint, setRatingHint] = useState(0);
-  const ratingButtonRef = useRef(null);
-  useEffect(() => {
-    let cancelled = false;
-    setRatingSummary(null);
-    setBibaxRating(null);
-    loadBrandRatingSummary(brand.id).then((s) => {
-      if (!cancelled) setRatingSummary(s);
-    });
-    loadMyBibaxBrandRating(brand.id).then((r) => {
-      if (!cancelled) setBibaxRating(r);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [brand.id]);
-  const reloadRatingSummary = () => loadBrandRatingSummary(brand.id).then(setRatingSummary);
-  const handleRatingButton = () => {
-    if (!ratingSummary) {
-      reloadRatingSummary(); // lecture en cours ou échouée : on réessaie
-      return;
-    }
-    if (ratingSummary.canRate) setShowRatingModal(true);
-    else setRatingHint((n) => n + 1);
-  };
-  // Note enregistrée ou retirée : la même confirmation encadrée en rose, en haut de l'écran, que celle d'un check (elle est dessinée par App ;
-  // le titre vient d'ici : « Note confirmée » (icône check) ou « Note retirée » (icône croix), avec le nom de la marque dessous).
-  const saveMyRating = async (value) => {
-    const ok = await rateMyBrand(brand.id, value);
-    if (ok) {
-      await reloadRatingSummary();
-      if (onRatingConfirmed) onRatingConfirmed({ title: "Note confirmée", name: brand.name });
-    }
-    return ok;
-  };
-  const removeMyRating = async () => {
-    const ok = await unrateMyBrand(brand.id);
-    if (ok) {
-      await reloadRatingSummary();
-      if (onRatingConfirmed) onRatingConfirmed({ title: "Note retirée", name: brand.name, icon: "x" });
-    }
-    return ok;
-  };
+  // Cloche « Suivre sur Pulse », cœur « Favoris » et note de la marque (brand_follows, brand_favorites, brand_ratings) : voir useEntityEngagement.
+  const engagement = useEntityEngagement(brand, BRAND_ENGAGEMENT_API, onRatingConfirmed);
+  const { ratingSummary, bibaxRating } = engagement;
 
   const [producers, setProducers] = useState([]);
   useEffect(() => {
@@ -799,68 +921,19 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
               <CertificationIcon level={brand.certificationLevel} size={17} />
             </span>
           </div>
-          <BrandHeaderIcons
+          <EntityHeaderIcons
             name={brand.name}
             username={brand.username}
             extraTop={titleExtra}
-            isFollowed={isFollowed}
-            followBusy={followBusy}
-            onToggleFollow={handleToggleFollow}
-            isFavorite={isFavorite}
-            favoriteBusy={favoriteBusy}
-            onToggleFavorite={handleToggleFavorite}
+            isFollowed={engagement.isFollowed}
+            followBusy={engagement.followBusy}
+            onToggleFollow={engagement.handleToggleFollow}
+            isFavorite={engagement.isFavorite}
+            favoriteBusy={engagement.favoriteBusy}
+            onToggleFavorite={engagement.handleToggleFavorite}
           />
         </div>
-        {/* Bannière de la note, puis bouton de note : mêmes emplacements que la bannière et le bouton Check de la fiche Produit
-            (en bas de la couverture, le bouton tout à droite). Sans le droit de noter (aucun produit de la marque checké), le
-            bouton est grisé et un appui affiche l'explication (bulle accrochée au bouton). */}
-        {ratingSummary && ratingSummary.count > 0 && (
-          <div style={{ position: "absolute", bottom: "8px", right: "68px", left: "108px" }}>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "baseline",
-                gap: "5px",
-                background: "#000",
-                border: `2px solid ${COLORS.amber}`,
-                borderRadius: "8px",
-                padding: "5px 10px",
-                maxWidth: "100%",
-              }}
-            >
-              <span style={{ display: "flex", alignSelf: "center" }}>
-                <NavIcon name="star" size={17} color={COLORS.amber} filled />
-              </span>
-              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}><RatingFraction value={ratingSummary.average} /></span>
-              <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {ratingSummary.count} avis</span>
-            </div>
-          </div>
-        )}
-        <button
-          ref={ratingButtonRef}
-          onClick={handleRatingButton}
-          title="Noter cette marque"
-          aria-label="Noter cette marque"
-          style={{
-            position: "absolute",
-            bottom: "8px",
-            right: "8px",
-            width: "52px",
-            height: "52px",
-            boxSizing: "border-box",
-            borderRadius: "50%",
-            background: "#000",
-            border: `3px solid ${COLORS.amber}`,
-            padding: 0,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: ratingSummary && ratingSummary.canRate ? 1 : 0.45,
-          }}
-        >
-          <NavIcon name="star" size={26} color={COLORS.amber} filled />
-        </button>
+        <CoverRating summary={ratingSummary} buttonRef={engagement.ratingButtonRef} onClick={engagement.handleRatingButton} buttonLabel="Noter cette marque" />
       </div>
 
       <div style={{ marginTop: `${76 + titleExtra}px` }}>
@@ -944,13 +1017,13 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
       )}
 
       {/* Bulle accrochée au bouton étoile grisé (elle s'efface seule) : pourquoi on ne peut pas encore noter. */}
-      {ratingHint > 0 && (
-        <HintBubble key={ratingHint} anchorRef={ratingButtonRef} onClose={() => setRatingHint(0)}>
+      {engagement.ratingHint > 0 && (
+        <HintBubble key={engagement.ratingHint} anchorRef={engagement.ratingButtonRef} onClose={() => engagement.setRatingHint(0)}>
           Checke un produit de cette marque pour pouvoir la noter.
         </HintBubble>
       )}
-      {showRatingModal && ratingSummary && (
-        <BrandRatingModal brandName={brand.name} myRating={ratingSummary.myRating} onSave={saveMyRating} onRemove={removeMyRating} onClose={() => setShowRatingModal(false)} />
+      {engagement.showRatingModal && ratingSummary && (
+        <EntityRatingModal title="Note cette marque" entityName={brand.name} myRating={ratingSummary.myRating} onSave={engagement.saveMyRating} onRemove={engagement.removeMyRating} onClose={() => engagement.setShowRatingModal(false)} />
       )}
       {claimsEnabled && claiming && <ClaimModal entityType="brand" entityId={brand.id} entityName={brand.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
 

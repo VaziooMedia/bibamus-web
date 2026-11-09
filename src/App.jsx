@@ -3185,6 +3185,7 @@ export default function App() {
                 breweriesDirectory={breweriesDirectory}
                 myBibroCode={profile.myBibroCode}
                 myUserId={session.user.id}
+                onRatingConfirmed={({ title, name, icon }) => setCheckToast({ name: name || null, title, icon, key: Date.now() })}
                 onBack={() => {
                   if (storyResumeState) {
                     setViewedStoryAuthor(storyResumeState.stories);
