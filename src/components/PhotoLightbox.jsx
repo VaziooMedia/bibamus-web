@@ -23,8 +23,8 @@ export function PhotoLightbox({ url, alt = "", onClose }) {
       aria-label={alt || "Photo"}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px", boxSizing: "border-box" }}
     >
-      {/* Les photos de rond-profil sont toutes carrées (400 x 400 px) : elles s'affichent dans un grand rond, comme dans le petit rond (les coins sont coupés). Jamais plus grand que 400 px (la photo n'est pas étirée). */}
-      <img src={url} alt={alt} style={{ width: "min(100%, 400px, calc(100vh - 48px))", aspectRatio: "1 / 1", objectFit: "cover", borderRadius: "50%", display: "block" }} />
+      {/* Les photos de rond-profil sont toutes carrées (400 x 400 px) : elles s'affichent dans un grand rond, comme dans le petit rond (les coins sont coupés). Jamais plus grand que 400 px (la photo n'est pas étirée). Rebord vert fluo de 3 px (compris dans les 400 px). */}
+      <img src={url} alt={alt} style={{ width: "min(100%, 400px, calc(100vh - 48px))", aspectRatio: "1 / 1", objectFit: "cover", borderRadius: "50%", border: `3px solid ${COLORS.amber}`, boxSizing: "border-box", display: "block" }} />
       <button
         onClick={(e) => {
           e.stopPropagation();
