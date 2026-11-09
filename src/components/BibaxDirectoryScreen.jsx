@@ -124,7 +124,8 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile, onBack }
                     </span>
                   ) : null
                 }
-                avatar={<EntityAvatar photoUrl={b.avatarUrl} size={36} />}
+                avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}
+                enlargeAvatar
                 onClick={() => onOpenBibaxProfile(b.code)}
                 last={i === sortedBibros.length - 1}
               />
@@ -151,7 +152,8 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile, onBack }
                   {b.mutualBibaxCount > 0 && `${b.mutualBibaxCount} Bibax en commun`}
                 </span>
               }
-              avatar={<EntityAvatar photoUrl={b.avatarUrl} size={36} />}
+              avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}
+              enlargeAvatar
               onClick={() => onOpenBibaxProfile(b.bibroCode)}
               last={i === results.length - 1}
             />
