@@ -50,7 +50,7 @@ function TagButton({ label, count, filled, onClick }) {
   );
 }
 
-export function ResultRow({ title, subtitle, avatar, onClick, last, enlargeAvatar = false, flat = false }) {
+export function ResultRow({ title, subtitle, avatar, onClick, last, enlargeAvatar = false, band = false }) {
   return (
     <button
       onClick={onClick}
@@ -59,11 +59,14 @@ export function ResultRow({ title, subtitle, avatar, onClick, last, enlargeAvata
         alignItems: "center",
         gap: "12px",
         width: "100%",
-        background: "none",
+        // band : ligne en « bande » pleine largeur (liste hors bloc, bandes séparées par un écart) : même fond que les blocs des répertoires, bordure 2px en haut et en bas
+        // seulement (les côtés sont hors de l'écran), 14 px de chaque côté, hauteur 60 px.
+        background: band ? COLORS.surface : "none",
         border: "none",
-        // flat : ligne « à plat » pleine largeur (liste hors bloc) : 14 px de chaque côté et un trait sous chaque ligne, la dernière comprise.
-        borderBottom: last && !flat ? "none" : `1px solid ${COLORS.paperAlt}`,
-        padding: flat ? "12px 14px" : "12px 4px",
+        ...(band
+          ? { borderTop: `2px solid ${COLORS.paperAlt}`, borderBottom: `2px solid ${COLORS.paperAlt}` }
+          : { borderBottom: last ? "none" : `1px solid ${COLORS.paperAlt}` }),
+        padding: band ? "10px 14px" : "12px 4px",
         textAlign: "left",
         cursor: "pointer",
         color: COLORS.ink,
@@ -443,7 +446,7 @@ export function SearchScreen({
                   : "Aucun résultat dans cette catégorie."}
               </p>
             ) : (
-              <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "0 -20px" }}>
                 {activeTab === "lieux" &&
                   venueResults.map((v, i) => (
                     <ResultRow
@@ -457,7 +460,7 @@ export function SearchScreen({
                       }
                       avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={52} fallbackIcon="map-pin" />}
                       enlargeAvatar
-                      flat
+                      band
                       onClick={() => onOpenVenue(v.id)}
                       last={i === venueResults.length - 1}
                     />
@@ -470,7 +473,7 @@ export function SearchScreen({
                       subtitle={SUBTYPE_LABELS[d.beverageSubtype] || ""}
                       avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={52} fallbackIcon="bottle" />}
                       enlargeAvatar
-                      flat
+                      band
                       onClick={() => onOpenDrink(d.id)}
                       last={i === drinkResults.length - 1}
                     />
@@ -483,7 +486,7 @@ export function SearchScreen({
                       subtitle={(b.producerIds || []).map((id) => breweriesDirectory.find((br) => br.id === id)?.name).filter(Boolean).join(", ")}
                       avatar={<EntityAvatar photoUrl={b.logoUrl} size={52} fallbackIcon="tag" />}
                       enlargeAvatar
-                      flat
+                      band
                       onClick={() => onOpenBrand(b.id)}
                       last={i === brandResults.length - 1}
                     />
@@ -496,7 +499,7 @@ export function SearchScreen({
                       subtitle={b.country}
                       avatar={<EntityAvatar photoUrl={b.profilePhotoUrl} photoEmoji={b.avatarEmoji} size={52} fallbackIcon="world" />}
                       enlargeAvatar
-                      flat
+                      band
                       onClick={() => onOpenBrewery(b.id)}
                       last={i === breweryResults.length - 1}
                     />
@@ -518,7 +521,7 @@ export function SearchScreen({
                       }
                       avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}
                       enlargeAvatar
-                      flat
+                      band
                       onClick={() => onOpenBibaxProfile(b.bibroCode)}
                       last={i === bibaxResults.length - 1}
                     />
