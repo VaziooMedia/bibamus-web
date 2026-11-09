@@ -172,12 +172,16 @@ export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, addInten
       ) : searching ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {items.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun producteur trouvé.</p>}
-          {items.map(renderBreweryRow)}
+          {items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderBreweryRow)}</div>
+          )}
         </div>
       ) : activeCountry ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {items.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun producteur pour l'instant.</p>}
-          {items.map(renderBreweryRow)}
+          {items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderBreweryRow)}</div>
+          )}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>

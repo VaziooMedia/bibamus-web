@@ -446,7 +446,7 @@ export function SearchScreen({
                   : "Aucun résultat dans cette catégorie."}
               </p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "0 -20px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", margin: "0 -20px" }}>
                 {activeTab === "lieux" &&
                   venueResults.map((v, i) => (
                     <ResultRow

@@ -532,7 +532,9 @@ export function DrinksDirectoryScreen({
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {countLine}
           {items.length === 0 && !loadingMore && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson trouvée.</p>}
-          {items.map(renderDrinkRow)}
+          {items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderDrinkRow)}</div>
+          )}
           {hasMore && (
             <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
               Chargement...
@@ -547,7 +549,9 @@ export function DrinksDirectoryScreen({
           {showingList && items.length === 0 && !loadingMore && (
             <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson dans cette catégorie pour l'instant.</p>
           )}
-          {showingList && items.map(renderDrinkRow)}
+          {showingList && items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderDrinkRow)}</div>
+          )}
           {showingList && hasMore && (
             <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
               Chargement...

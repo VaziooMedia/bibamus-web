@@ -170,12 +170,16 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, addIntent, on
       ) : searching ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {items.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune marque trouvée.</p>}
-          {items.map(renderBrandRow)}
+          {items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderBrandRow)}</div>
+          )}
         </div>
       ) : activeCountry ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {items.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune marque pour l'instant.</p>}
-          {items.map(renderBrandRow)}
+          {items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderBrandRow)}</div>
+          )}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>

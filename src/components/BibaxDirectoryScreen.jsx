@@ -55,8 +55,8 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile, onBack }
     [bibros]
   );
 
-  // Liste en bandes pleine largeur : elle sort de la marge de 20 px de la page, bandes séparées par un écart de 10 px (même présentation que les répertoires BibAtlas).
-  const listBox = { display: "flex", flexDirection: "column", gap: "10px", margin: "0 -20px" };
+  // Liste en bandes pleine largeur : elle sort de la marge de 20 px de la page, bandes séparées par un écart de 6 px (même présentation que les répertoires BibAtlas).
+  const listBox = { display: "flex", flexDirection: "column", gap: "6px", margin: "0 -20px" };
   const emptyText = { fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" };
 
   return (

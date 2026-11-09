@@ -357,7 +357,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack,
               {nearbyVenues.length === 0 ? (
                 <p style={{ color: COLORS.inkSoft, fontSize: "13px", fontStyle: "italic" }}>Aucun établissement répertorié à proximité pour l'instant.</p>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>{nearbyVenues.map(renderVenueRow)}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{nearbyVenues.map(renderVenueRow)}</div>
               )}
               <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, margin: "18px 0" }} />
             </>
@@ -375,7 +375,9 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack,
       {searching ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {items.length === 0 && !loadingMore && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun établissement trouvé.</p>}
-          {items.map(renderVenueRow)}
+          {items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderVenueRow)}</div>
+          )}
           {hasMore && (
             <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
               Chargement...
@@ -385,7 +387,9 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack,
       ) : activeCity ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {items.length === 0 && !loadingMore && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun établissement pour l'instant.</p>}
-          {items.map(renderVenueRow)}
+          {items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderVenueRow)}</div>
+          )}
           {hasMore && (
             <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
               Chargement...
