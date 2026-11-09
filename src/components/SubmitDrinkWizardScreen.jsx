@@ -12,6 +12,8 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariant, lookupBarcode, loadDrinksByIds, searchDrinks } from "../data/sharedDirectories.js";
 import { normalizeForDuplicateCheck, makeSearchMatcher, entityNames, drinkSummaryLine } from "../utils.js";
+import { findSimilarNames } from "../similarNames.js";
+import { DuplicateBox, ExistingEntityRow, NotSameCheckbox, duplicateNoteStyle } from "./DuplicateWarning.jsx";
 
 const BEER_CIDER_SUBTYPES = [
   { code: "biere", fr: "Bière" },
@@ -102,6 +104,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
 
   // Repère les vraies correspondances existantes en direct pendant la saisie du nom — bien
   // plus efficace que de ne le signaler qu'à la toute fin du parcours.
+  // Les noms proches comptent aussi (mots en plus ou en moins, petite faute de frappe) : voir similarNames.js.
   const [nameMatches, setNameMatches] = useState([]);
   useEffect(() => {
     const q = name.trim();
@@ -109,11 +112,22 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
       setNameMatches([]);
       return;
     }
+    let cancelled = false;
     const timer = setTimeout(() => {
-      searchDrinks(q, 5).then(setNameMatches);
+      findSimilarNames(q, searchDrinks, 5).then((found) => {
+        if (!cancelled) setNameMatches(found);
+      });
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [name]);
+  // Une fiche qui porte exactement ce nom : on ne continue qu'en l'ouvrant ou en cochant « Ce n'est pas le même produit ».
+  const nameKey = normalizeForDuplicateCheck(name);
+  const exactMatch = nameMatches.find((d) => normalizeForDuplicateCheck(d.name) === nameKey);
+  const [notSameKey, setNotSameKey] = useState(null);
+  const notSameChecked = notSameKey === nameKey;
 
   // Page 2 — Degré d'alcool
   const [abv, setAbv] = useState("");
@@ -148,6 +162,43 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
       ? breweriesDirectory.filter((p) => matchesProducer(entityNames(p)) && !selectedProducers.some((sp) => sp.id === p.id)).slice(0, 8)
       : [];
 
+  // Dernière vérification, avec le producteur (ou la marque) et le degré : un produit de même nom et du même producteur existe-t-il déjà ?
+  //   - même degré (ou degré inconnu sur l'autre fiche) : très probablement le même produit, on bloque ; il faut ouvrir la fiche existante
+  //     (un autre volume ou un autre code-barres s'y ajoute comme conditionnement) ou revenir modifier ce produit ;
+  //   - degré différent : on avertit, et il faut cocher « Ce n'est pas le même produit » pour continuer.
+  // Le volume ne sert pas à départager : un autre volume du même produit est un conditionnement de cette fiche, pas un autre produit.
+  const [finalTwins, setFinalTwins] = useState([]);
+  const [finalNotSame, setFinalNotSame] = useState(false);
+  const [verifyingFinal, setVerifyingFinal] = useState(false);
+  const sameAbv = (d) => d.abv == null || Math.abs(d.abv - parseFloat(abv)) < 0.05;
+  const finalBlocked = finalTwins.some(sameAbv);
+  useEffect(() => {
+    setFinalTwins([]);
+    setFinalNotSame(false);
+  }, [name, abv, selectedBrand, selectedProducers]);
+  const handleValidateClick = async () => {
+    const producerIds = selectedProducers.map((p) => p.id);
+    if (producerIds.length === 0 && !selectedBrand) {
+      setShowConfirmPopup(true);
+      return;
+    }
+    setVerifyingFinal(true);
+    const key = normalizeForDuplicateCheck(name);
+    const results = await searchDrinks(name.trim(), 30);
+    setVerifyingFinal(false);
+    const twins = results.filter(
+      (d) =>
+        d.id !== drinkId &&
+        normalizeForDuplicateCheck(d.name) === key &&
+        (producerIds.length > 0 ? (d.producerIds || []).some((id) => producerIds.includes(id)) : d.brandId === selectedBrand.id)
+    );
+    if (twins.length === 0 || (!twins.some(sameAbv) && finalNotSame)) {
+      setShowConfirmPopup(true);
+      return;
+    }
+    setFinalTwins(twins);
+  };
+
   const handleAbandon = async () => {
     if (drinkId) {
       if (!window.confirm("Abandonner la création de ce produit ? Rien ne sera enregistré.")) return;
@@ -161,7 +212,9 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
     const trimmedName = name.trim();
     const results = await searchDrinks(trimmedName);
     const duplicate = results.find((d) => normalizeForDuplicateCheck(d.name) === normalizeForDuplicateCheck(trimmedName));
-    if (duplicate && !window.confirm(`Un produit nommé "${duplicate.name}" existe déjà. Continuer quand même et en créer un nouveau ?`)) {
+    if (duplicate && !notSameChecked) {
+      // Vérification faite avant la fin de la recherche en direct : on affiche la fiche trouvée, la case reste à cocher.
+      setNameMatches((prev) => (prev.some((d) => d.id === duplicate.id) ? prev : [duplicate, ...prev].slice(0, 5)));
       setSubmitting(false);
       return;
     }
@@ -255,7 +308,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
         title="Nom, catégorie & sous-catégorie"
         onBack={onCancel}
         footer={
-          <PrimaryButton onClick={goToStep1} disabled={!step1Valid || submitting} style={{ width: "100%" }}>
+          <PrimaryButton onClick={goToStep1} disabled={!step1Valid || submitting || (!!exactMatch && !notSameChecked)} style={{ width: "100%" }}>
             {submitting ? "Vérification..." : "Suivant"}
           </PrimaryButton>
         }
@@ -263,23 +316,26 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
         <label style={labelStyle}>Nom du produit</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du produit" style={{ ...inputStyle, marginBottom: nameMatches.length > 0 ? "8px" : "20px" }} autoFocus />
         {nameMatches.length > 0 && (
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "10px 12px", marginBottom: "20px" }}>
-            <p style={{ fontSize: "11.5px", color: COLORS.pinkFluo, fontWeight: 700, margin: "0 0 6px 0" }}>Produit(s) similaire(s) déjà existant(s) :</p>
+          <DuplicateBox title="Produit(s) similaire(s) déjà existant(s) :" style={{ marginBottom: "20px" }}>
             {nameMatches.map((d) => (
-              <button
+              <ExistingEntityRow
                 key={d.id}
+                photoUrl={d.photoUrl}
+                photoEmoji={d.avatarEmoji}
+                fallbackIcon="bottle"
+                title={d.name}
+                subtitle={drinkSummaryLine(d)}
+                tag={normalizeForDuplicateCheck(d.name) === nameKey ? "Même nom" : null}
                 onClick={() => onOpenExisting(d.id)}
-                style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", padding: "6px 0", background: "none", border: "none", textAlign: "left", cursor: "pointer", color: COLORS.ink }}
-              >
-                <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={36} fallbackIcon="bottle" />
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: "13px", fontWeight: 700 }}>{d.name}</span>
-                  <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft }}>{drinkSummaryLine(d)}</span>
-                </span>
-                <NavIcon name="arrow-right-circle" size={18} color={COLORS.amber} />
-              </button>
+              />
             ))}
-          </div>
+            {exactMatch && (
+              <>
+                <p style={duplicateNoteStyle}>Un produit porte déjà exactement ce nom. Ouvre sa fiche pour y ajouter ce qui manque, ou coche la case si ce n'est pas le même produit.</p>
+                <NotSameCheckbox checked={notSameChecked} onChange={(on) => setNotSameKey(on ? nameKey : null)} label="Ce n'est pas le même produit" />
+              </>
+            )}
+          </DuplicateBox>
         )}
 
         <label style={labelStyle}>Catégorie</label>
@@ -441,8 +497,8 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
       onBack={handleAbandon}
       onPrevious={() => setStep(4)}
       footer={
-        <PrimaryButton onClick={() => setShowConfirmPopup(true)} withCheck style={{ width: "100%" }}>
-          Valider
+        <PrimaryButton onClick={handleValidateClick} disabled={verifyingFinal || finalBlocked || (finalTwins.length > 0 && !finalNotSame)} withCheck style={{ width: "100%" }}>
+          {verifyingFinal ? "Vérification..." : "Valider"}
         </PrimaryButton>
       }
     >
@@ -531,6 +587,19 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
             </button>
           ))}
         </div>
+      )}
+
+      {finalTwins.length > 0 && (
+        <DuplicateBox title={finalBlocked ? "Ce produit existe déjà :" : "Un produit de même nom et du même producteur existe déjà, avec un autre degré :"} style={{ marginTop: "20px" }}>
+          {finalTwins.map((d) => (
+            <ExistingEntityRow key={d.id} photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} fallbackIcon="bottle" title={d.name} subtitle={drinkSummaryLine(d)} onClick={() => onOpenExisting(d.id)} />
+          ))}
+          {finalBlocked ? (
+            <p style={duplicateNoteStyle}>Ouvre sa fiche pour y ajouter ce qui manque (autre volume, code-barres…), ou reviens modifier ce produit.</p>
+          ) : (
+            <NotSameCheckbox checked={finalNotSame} onChange={setFinalNotSame} label="Ce n'est pas le même produit" />
+          )}
+        </DuplicateBox>
       )}
     </StepShell>
 

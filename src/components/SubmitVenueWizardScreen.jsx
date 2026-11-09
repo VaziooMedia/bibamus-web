@@ -7,12 +7,20 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, COUNTRIES, COUNTRY_ISO_CODES, VENUE_TYPES, VENUE_AMENITIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { PageHeader, PrimaryButton, EntityAvatar } from "./ui.jsx";
+import { PageHeader, PrimaryButton } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { createPublicVenue, saveGeocodeResult, geocodeAddress, searchVenues, loadVenueListsOnce, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
 import { orderedList, VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY } from "../venueLists.js";
 import { normalizeForDuplicateCheck } from "../utils.js";
+import { findSimilarNames } from "../similarNames.js";
+import { DuplicateBox, ExistingEntityRow, NotSameCheckbox, duplicateNoteStyle } from "./DuplicateWarning.jsx";
+
+// Le serveur compare des mots entiers : « Le Pavé » doit se chercher « Pavé » (même règle que la vérification d'adresse plus bas).
+const stripArticleForSearch = (s) => (s || "").trim().replace(/^(le|la|les|l')\s*/i, "");
+
+const addressLine = (v) =>
+  [v.streetName && v.streetNumber ? `${v.streetName}, ${v.streetNumber}` : v.streetName, v.postalCode && v.city ? `${v.postalCode} ${v.city}` : v.city].filter(Boolean).join(" - ");
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -64,10 +72,17 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
       setNameMatches([]);
       return;
     }
+    let cancelled = false;
     const timer = setTimeout(() => {
-      searchVenues(q, 5).then(setNameMatches);
+      // Les noms proches comptent aussi (mots en plus ou en moins, petite faute de frappe) : voir similarNames.js.
+      findSimilarNames(q, (text, limit) => searchVenues(stripArticleForSearch(text), limit), 5).then((found) => {
+        if (!cancelled) setNameMatches(found);
+      });
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [name]);
 
   // Page 2 — Pays
@@ -82,6 +97,14 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
   const [streetNumber, setStreetNumber] = useState("");
   const [village, setVillage] = useState("");
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
+  // Un autre lieu (au nom différent) est déjà enregistré à cette même adresse : on avertit, il faut cocher « Ce n'est pas le même lieu »
+  // pour continuer (plusieurs commerces peuvent partager une adresse, mais c'est aussi la forme que prend un doublon sous un autre nom).
+  const [sameAddressVenues, setSameAddressVenues] = useState([]);
+  const [sameAddressNotSame, setSameAddressNotSame] = useState(false);
+  useEffect(() => {
+    setSameAddressVenues([]);
+    setSameAddressNotSame(false);
+  }, [name, postalCode, city, streetName, streetNumber]);
 
   // Page 5 — Géocodage + vérification
   const [geocoding, setGeocoding] = useState(false);
@@ -142,6 +165,22 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
     if (duplicate) {
       alert(`Alerte :\n"${duplicate.name}, ${duplicate.streetName}, ${duplicate.streetNumber} - ${duplicate.postalCode} ${duplicate.city}" existe déjà.\nVous ne pouvez pas le rajouter.`);
       return;
+    }
+    if (!sameAddressNotSame) {
+      setCheckingDuplicate(true);
+      const nearby = await searchVenues(`${trimmedStreetName} ${postalCode.trim()}`, 30);
+      setCheckingDuplicate(false);
+      const sameAddress = nearby.filter(
+        (v) =>
+          normalizeForDuplicateCheck(v.postalCode || "") === normalizeForDuplicateCheck(postalCode) &&
+          normalizeForDuplicateCheck(v.city || "") === normalizeForDuplicateCheck(city) &&
+          normalizeForDuplicateCheck(v.streetName || "") === normalizeForDuplicateCheck(trimmedStreetName) &&
+          normalizeForDuplicateCheck(v.streetNumber || "") === normalizeForDuplicateCheck(trimmedStreetNumber)
+      );
+      if (sameAddress.length > 0) {
+        setSameAddressVenues(sameAddress);
+        return;
+      }
     }
     setStreetName(trimmedStreetName);
     setStreetNumber(trimmedStreetNumber);
@@ -230,27 +269,11 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
         <p style={{ fontSize: "13px", color: COLORS.pinkFluo, fontWeight: 600, margin: "0 0 20px 0" }}>Vérifie bien les majuscules et l'orthographe</p>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du lieu" style={requiredStyle(name.trim().length > 0)} autoFocus />
         {nameMatches.length > 0 && (
-          <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "10px 12px", marginTop: "10px" }}>
-            <p style={{ fontSize: "11.5px", color: COLORS.pinkFluo, fontWeight: 700, margin: "0 0 6px 0" }}>Lieu(x) similaire(s) déjà existant(s) :</p>
+          <DuplicateBox title="Lieu(x) similaire(s) déjà existant(s) :" style={{ marginTop: "10px" }}>
             {nameMatches.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => onOpenExisting(v.id)}
-                style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", padding: "6px 0", background: "none", border: "none", textAlign: "left", cursor: "pointer", color: COLORS.ink }}
-              >
-                <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} />
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: "13px", fontWeight: 700 }}>{v.name}</span>
-                  {(v.streetName || v.city) && (
-                    <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft }}>
-                      {[v.streetName && v.streetNumber ? `${v.streetName}, ${v.streetNumber}` : v.streetName, v.postalCode && v.city ? `${v.postalCode} ${v.city}` : v.city].filter(Boolean).join(" - ")}
-                    </span>
-                  )}
-                </span>
-                <NavIcon name="arrow-right-circle" size={18} color={COLORS.amber} />
-              </button>
+              <ExistingEntityRow key={v.id} photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} title={v.name} subtitle={addressLine(v)} onClick={() => onOpenExisting(v.id)} />
             ))}
-          </div>
+          </DuplicateBox>
         )}
       </StepShell>
     );
@@ -324,7 +347,7 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
         onBack={onCancel}
         onPrevious={() => setStep(3)}
         footer={
-          <PrimaryButton onClick={goToStep4} disabled={!streetName.trim() || !streetNumber.trim() || checkingDuplicate} style={{ width: "100%" }}>
+          <PrimaryButton onClick={goToStep4} disabled={!streetName.trim() || !streetNumber.trim() || checkingDuplicate || (sameAddressVenues.length > 0 && !sameAddressNotSame)} style={{ width: "100%" }}>
             {checkingDuplicate ? "Vérification..." : "Suivant"}
           </PrimaryButton>
         }
@@ -339,6 +362,15 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
         />
         <input type="text" value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="N°" style={{ ...requiredStyle(streetNumber.trim().length > 0), marginBottom: "16px", width: "100px" }} />
         <input type="text" value={village} onChange={(e) => setVillage(capitalizeFirst(e.target.value))} placeholder="Section / Village" style={inputStyle} />
+        {sameAddressVenues.length > 0 && (
+          <DuplicateBox title="Un autre lieu est déjà enregistré à cette adresse :" style={{ marginTop: "20px" }}>
+            {sameAddressVenues.map((v) => (
+              <ExistingEntityRow key={v.id} photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} title={v.name} subtitle={addressLine(v)} onClick={() => onOpenExisting(v.id)} />
+            ))}
+            <p style={duplicateNoteStyle}>S'il s'agit du même lieu sous un autre nom, ouvre sa fiche plutôt que d'en créer une nouvelle.</p>
+            <NotSameCheckbox checked={sameAddressNotSame} onChange={setSameAddressNotSame} label="Ce n'est pas le même lieu" />
+          </DuplicateBox>
+        )}
       </StepShell>
     );
   }
