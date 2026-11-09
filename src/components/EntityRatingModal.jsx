@@ -1,7 +1,8 @@
 // ============================================================
-// Fenêtre « Noter cette marque » — étoiles sur 5, réglables au quart d'étoile (0,25 à 5), comme la note d'un produit (même
-// curseur, RatingSlider). Ouverte depuis le bouton étoile de la couverture de la fiche Marque, seulement pour une personne qui a
-// le droit de noter (qui a checké un produit de la marque).
+// Fenêtre « Note cette marque » / « Note ce producteur » — étoiles sur 5, réglables au quart d'étoile (0,25 à 5), comme la note d'un
+// produit (même curseur, RatingSlider). Ouverte depuis le bouton étoile de la couverture de la fiche Marque ou Producteur, seulement
+// pour une personne qui a le droit de noter (qui a checké un produit de la fiche). Le titre (« Note cette marque », « Note ce
+// producteur ») et le nom de la fiche viennent de la fiche qui l'ouvre.
 //
 // Rien ne s'enregistre en déplaçant le curseur : c'est « Valider » qui enregistre. « Retirer ma note » n'apparaît que si une note
 // existe déjà. onSave(valeur) et onRemove() rendent true (réussi) ou false (échec) : la fenêtre se ferme seulement après un succès,
@@ -13,7 +14,7 @@ import { NavIcon } from "./icons.jsx";
 import { PrimaryButton } from "./ui.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 
-export function BrandRatingModal({ brandName, myRating, onSave, onRemove, onClose }) {
+export function EntityRatingModal({ title, entityName, myRating, onSave, onRemove, onClose }) {
   const initialValue = myRating != null ? myRating : 0.25;
   const [pendingValue, setPendingValue] = useState(initialValue);
   // Pas encore de note : « Valider » reste grisé tant que le curseur n'a pas bougé, pour qu'un simple appui ne laisse pas
@@ -65,9 +66,9 @@ export function BrandRatingModal({ brandName, myRating, onSave, onRemove, onClos
         </button>
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: COLORS.ink, margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          Note cette marque
+          {title}
         </h2>
-        {brandName && <p style={{ fontSize: "14px", fontWeight: 700, color: COLORS.amber, margin: "0 0 18px 14px", overflowWrap: "anywhere" }}>{brandName}</p>}
+        {entityName && <p style={{ fontSize: "14px", fontWeight: 700, color: COLORS.amber, margin: "0 0 18px 14px", overflowWrap: "anywhere" }}>{entityName}</p>}
 
         <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px", display: "block" }}>Ta note</label>
         <RatingSlider
