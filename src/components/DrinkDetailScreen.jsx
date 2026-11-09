@@ -13,6 +13,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS, BEER_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle, GoButton } from "./ui.jsx";
+import { PhotoLightbox } from "./PhotoLightbox.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { getDrinkFeatureItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
@@ -121,6 +122,8 @@ export function DrinkDetailScreen({
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  // Photo du produit agrandie (toucher le rond-profil) : seulement quand le produit a une photo.
+  const [photoZoom, setPhotoZoom] = useState(false);
   const [claiming, setClaiming] = useState(false);
   // Parcours « DrinkCheck depuis l'accueil » : la fenêtre de check est déjà ouverte à l'arrivée sur la fiche.
   const [showCheckModal, setShowCheckModal] = useState(autoOpenCheck);
@@ -503,7 +506,7 @@ export function DrinkDetailScreen({
           <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
-          <EntityAvatar photoUrl={drink.photoUrl} size={90} />
+          <EntityAvatar photoUrl={drink.photoUrl} size={90} onClick={drink.photoUrl ? () => setPhotoZoom(true) : undefined} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
           {/* L'icône de certification est toujours dans le coin en haut à droite du bloc du nom, à hauteur de la 1re ligne (même pour un nom court),
@@ -1026,6 +1029,8 @@ export function DrinkDetailScreen({
         )}
 
         {claimsEnabled && claiming && <ClaimModal entityType="drink" entityId={drink.id} entityName={drink.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
+
+        {photoZoom && drink.photoUrl && <PhotoLightbox url={drink.photoUrl} alt={drink.name} onClose={() => setPhotoZoom(false)} />}
 
         {showActionsMenu && (
           <div
