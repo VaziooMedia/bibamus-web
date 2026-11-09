@@ -164,9 +164,10 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
 
   // Dernière vérification, avec le producteur (ou la marque) et le degré : un produit de même nom et du même producteur existe-t-il déjà ?
   //   - même degré (ou degré inconnu sur l'autre fiche) : très probablement le même produit, on bloque ; il faut ouvrir la fiche existante
-  //     (un autre volume ou un autre code-barres s'y ajoute comme conditionnement) ou revenir modifier ce produit ;
+  //     (un utilisateur ne modifie jamais une fiche : il peut y suggérer une modification) ou revenir modifier sa saisie ;
   //   - degré différent : on avertit, et il faut cocher « Ce n'est pas le même produit » pour continuer.
-  // Le volume ne sert pas à départager : un autre volume du même produit est un conditionnement de cette fiche, pas un autre produit.
+  // Le volume ne sert pas à départager : un autre volume du même produit est un conditionnement de cette fiche, pas un autre produit (et seuls
+  // les Admin Bibamus ou les gérants modifient une fiche).
   const [finalTwins, setFinalTwins] = useState([]);
   const [finalNotSame, setFinalNotSame] = useState(false);
   const [verifyingFinal, setVerifyingFinal] = useState(false);
@@ -331,7 +332,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
             ))}
             {exactMatch && (
               <>
-                <p style={duplicateNoteStyle}>Un produit porte déjà exactement ce nom. Ouvre sa fiche pour y ajouter ce qui manque, ou coche la case si ce n'est pas le même produit.</p>
+                <p style={duplicateNoteStyle}>Un produit porte déjà exactement ce nom. Ouvre sa fiche pour y suggérer une modification, ou coche la case si ce n'est pas le même produit.</p>
                 <NotSameCheckbox checked={notSameChecked} onChange={(on) => setNotSameKey(on ? nameKey : null)} label="Ce n'est pas le même produit" />
               </>
             )}
@@ -595,7 +596,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
             <ExistingEntityRow key={d.id} photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} fallbackIcon="bottle" title={d.name} subtitle={drinkSummaryLine(d)} onClick={() => onOpenExisting(d.id)} />
           ))}
           {finalBlocked ? (
-            <p style={duplicateNoteStyle}>Ouvre sa fiche pour y ajouter ce qui manque (autre volume, code-barres…), ou reviens modifier ce produit.</p>
+            <p style={duplicateNoteStyle}>Ouvre sa fiche pour y suggérer une modification, ou reviens modifier ta saisie.</p>
           ) : (
             <NotSameCheckbox checked={finalNotSame} onChange={setFinalNotSame} label="Ce n'est pas le même produit" />
           )}
