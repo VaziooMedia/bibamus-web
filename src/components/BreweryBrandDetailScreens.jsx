@@ -101,6 +101,87 @@ const resolveTagLabels = (lists, codes, builtin, listKey) => {
     .filter(Boolean);
 };
 
+// Ligne cliquable d'une fiche liée (photo ronde, petite légende, nom, certification) : sous l'origine d'une marque, et dans la carte « Infos » d'un producteur.
+function InfosLinkRow({ link, first }) {
+  return (
+    <button
+      onClick={link.onClick}
+      style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginTop: first ? 0 : "10px" }}
+    >
+      <EntityAvatar photoUrl={link.photoUrl} photoEmoji={link.photoEmoji} size={28} />
+      <span>
+        <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>{link.caption}</span>
+        <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+          {link.name}
+          <CertificationIcon level={link.certificationLevel} size={13} />
+        </span>
+      </span>
+    </button>
+  );
+}
+
+// Carte « Infos » de la fiche Producteur : copie de celle de la fiche Lieu (même cadre, mêmes pastilles de type, trait vert, ligne d'adresse avec
+// pastille de lieu et drapeau, qui ouvre Google Maps). Un producteur n'a ni téléphone, ni courriel, ni réseaux : ces rangées n'existent pas ici.
+// Le « B- » devant le code postal n'est mis que pour la Belgique. Le lieu lié (s'il y en a un) vient sous un trait fin.
+function ProducerInfosCard({ producer, tags = [], link }) {
+  const isBelgium = producer.country === "Belgique";
+  const addressLine1 = [producer.streetName, producer.streetNumber].filter(Boolean).join(", ");
+  const addressLine2 = (
+    [producer.postalCode ? `${isBelgium ? "B-" : ""}${producer.postalCode}` : "", producer.city].filter(Boolean).join(" ") + (producer.village ? ` (${producer.village})` : "")
+  ).trim();
+  const hasAddress = !!(addressLine1 || addressLine2);
+  const hasPlace = hasAddress || !!producer.country;
+  if (tags.length === 0 && !hasPlace && !link) return null;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([addressLine1, addressLine2, producer.country].filter(Boolean).join(", "))}`;
+  const placeContent = (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <NavIcon name="map-pin" size={18} color={COLORS.amber} />
+      <span>
+        {hasAddress ? (
+          <>
+            {addressLine1}
+            {addressLine1 && addressLine2 && <br />}
+            {addressLine2}
+          </>
+        ) : (
+          producer.country
+        )}
+        {producer.country && <CountryFlagImg country={producer.country} size={20} style={{ verticalAlign: "-2px", marginLeft: "6px" }} />}
+      </span>
+    </div>
+  );
+  return (
+    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
+      {tags.length > 0 && (
+        <>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {tags.map((label) => (
+              <span key={label} style={{ padding: "4px 10px", borderRadius: "999px", border: `1.5px solid ${COLORS.paperAlt}`, color: COLORS.chalkWhite, fontSize: "11px", fontWeight: 600 }}>
+                {label}
+              </span>
+            ))}
+          </div>
+          {(hasPlace || link) && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "12px 0" }} />}
+        </>
+      )}
+      {hasPlace &&
+        (hasAddress ? (
+          <a href={mapsUrl} target="_blank" rel="noreferrer" style={{ display: "block", textDecoration: "none", color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>
+            {placeContent}
+          </a>
+        ) : (
+          <div style={{ color: COLORS.inkSoft, fontSize: "12.5px", lineHeight: 1.5 }}>{placeContent}</div>
+        ))}
+      {link && (
+        <>
+          {hasPlace && <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, margin: "12px 0" }} />}
+          <InfosLinkRow link={link} first />
+        </>
+      )}
+    </div>
+  );
+}
+
 // Carte « Infos » des fiches Marque et Producteur, même présentation que la fiche Produit : pastilles, ligne d'origine, puis les fiches liées
 // (le producteur d'une marque, le lieu lié d'un producteur) après un trait vert. Rien ne s'affiche si la fiche n'a rien de tout cela.
 // links : [{ key, onClick, photoUrl, photoEmoji, caption, name, certificationLevel }].
@@ -163,20 +244,7 @@ function EntityInfosCard({ tags = [], originCity, originRegion, originCountry, l
       {(tags.length > 0 || hasOrigin) && links.length > 0 && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />}
 
       {links.map((link, i) => (
-        <button
-          key={link.key}
-          onClick={link.onClick}
-          style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginTop: i > 0 ? "10px" : 0 }}
-        >
-          <EntityAvatar photoUrl={link.photoUrl} photoEmoji={link.photoEmoji} size={28} />
-          <span>
-            <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>{link.caption}</span>
-            <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-              {link.name}
-              <CertificationIcon level={link.certificationLevel} size={13} />
-            </span>
-          </span>
-        </button>
+        <InfosLinkRow key={link.key} link={link} first={i === 0} />
       ))}
     </div>
   );
@@ -356,24 +424,22 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
 
       {activeTab === "infos" && (
         <>
-      {/* Carte « Infos » : même présentation que la fiche Marque (pastilles, ligne d'origine, puis le lieu lié après un trait vert). */}
-      <EntityInfosCard
+      {/* Carte « Infos » : copie de celle de la fiche Lieu (pastilles, adresse, puis le lieu lié). */}
+      <ProducerInfosCard
+        producer={brewery}
         tags={producerTags}
-        originCountry={brewery.country}
-        links={
+        link={
           linkedVenue
-            ? [
-                {
-                  key: linkedVenue.id,
-                  onClick: () => onOpenVenue(linkedVenue.id),
-                  photoUrl: linkedVenue.profilePhotoUrl,
-                  photoEmoji: linkedVenue.avatarEmoji,
-                  caption: "Lieu lié",
-                  name: linkedVenue.name,
-                  certificationLevel: linkedVenue.certificationLevel,
-                },
-              ]
-            : []
+            ? {
+                key: linkedVenue.id,
+                onClick: () => onOpenVenue(linkedVenue.id),
+                photoUrl: linkedVenue.profilePhotoUrl,
+                photoEmoji: linkedVenue.avatarEmoji,
+                caption: "Lieu lié",
+                name: linkedVenue.name,
+                certificationLevel: linkedVenue.certificationLevel,
+              }
+            : null
         }
       />
 
