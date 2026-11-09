@@ -4518,6 +4518,13 @@ function rowToBrand(row) {
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
     pendingContributionsCount: row.pending_contributions_count || 0,
+    // Liens : colonnes remplies depuis la plateforme de gestion, jamais écrites par l'app (voir brandToRow).
+    website: row.website,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+    youtubeUrl: row.youtube_url,
   };
 }
 
