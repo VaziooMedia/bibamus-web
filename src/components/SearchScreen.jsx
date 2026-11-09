@@ -50,7 +50,7 @@ function TagButton({ label, count, filled, onClick }) {
   );
 }
 
-export function ResultRow({ title, subtitle, avatar, onClick, last, enlargeAvatar = false }) {
+export function ResultRow({ title, subtitle, avatar, onClick, last, enlargeAvatar = false, flat = false }) {
   return (
     <button
       onClick={onClick}
@@ -61,8 +61,9 @@ export function ResultRow({ title, subtitle, avatar, onClick, last, enlargeAvata
         width: "100%",
         background: "none",
         border: "none",
-        borderBottom: last ? "none" : `1px solid ${COLORS.paperAlt}`,
-        padding: "12px 4px",
+        // flat : ligne « à plat » pleine largeur (liste hors bloc) : 14 px de chaque côté et un trait sous chaque ligne, la dernière comprise.
+        borderBottom: last && !flat ? "none" : `1px solid ${COLORS.paperAlt}`,
+        padding: flat ? "12px 14px" : "12px 4px",
         textAlign: "left",
         cursor: "pointer",
         color: COLORS.ink,
@@ -428,7 +429,7 @@ export function SearchScreen({
             )}
           </div>
 
-          <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto" }}>
+          <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto", margin: "0 -20px", padding: "0 20px" }}>
             {totalResults === 0 && !bibaxLoading && !drinksLoading && !atLoading ? (
               <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
             ) : counts[activeTab] === 0 ? (
@@ -442,7 +443,7 @@ export function SearchScreen({
                   : "Aucun résultat dans cette catégorie."}
               </p>
             ) : (
-              <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" }}>
+              <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
                 {activeTab === "lieux" &&
                   venueResults.map((v, i) => (
                     <ResultRow
@@ -456,6 +457,7 @@ export function SearchScreen({
                       }
                       avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={52} fallbackIcon="map-pin" />}
                       enlargeAvatar
+                      flat
                       onClick={() => onOpenVenue(v.id)}
                       last={i === venueResults.length - 1}
                     />
@@ -468,6 +470,7 @@ export function SearchScreen({
                       subtitle={SUBTYPE_LABELS[d.beverageSubtype] || ""}
                       avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={52} fallbackIcon="bottle" />}
                       enlargeAvatar
+                      flat
                       onClick={() => onOpenDrink(d.id)}
                       last={i === drinkResults.length - 1}
                     />
@@ -480,6 +483,7 @@ export function SearchScreen({
                       subtitle={(b.producerIds || []).map((id) => breweriesDirectory.find((br) => br.id === id)?.name).filter(Boolean).join(", ")}
                       avatar={<EntityAvatar photoUrl={b.logoUrl} size={52} fallbackIcon="tag" />}
                       enlargeAvatar
+                      flat
                       onClick={() => onOpenBrand(b.id)}
                       last={i === brandResults.length - 1}
                     />
@@ -492,6 +496,7 @@ export function SearchScreen({
                       subtitle={b.country}
                       avatar={<EntityAvatar photoUrl={b.profilePhotoUrl} photoEmoji={b.avatarEmoji} size={52} fallbackIcon="world" />}
                       enlargeAvatar
+                      flat
                       onClick={() => onOpenBrewery(b.id)}
                       last={i === breweryResults.length - 1}
                     />
@@ -513,6 +518,7 @@ export function SearchScreen({
                       }
                       avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}
                       enlargeAvatar
+                      flat
                       onClick={() => onOpenBibaxProfile(b.bibroCode)}
                       last={i === bibaxResults.length - 1}
                     />
