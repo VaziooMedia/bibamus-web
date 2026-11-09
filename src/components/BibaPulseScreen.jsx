@@ -721,7 +721,7 @@ export function BibaPulseScreen({
       loadPulseFeed().then((freshTopAll) => {
         // Une carte que je viens de supprimer ne revient pas, même si cette réponse a été demandée juste avant.
         const freshTop = freshTopAll.filter((e) => !deletedIds.current.has(e.id));
-        // Garde en tête le bloc des marques en favori (voir pulseFeedMerge.js).
+        // Garde en tête le bloc des marques et des producteurs en favori (voir pulseFeedMerge.js).
         setEntries((prev) => mergePulseFeedTop(prev, freshTop));
       });
     }, 10000);
