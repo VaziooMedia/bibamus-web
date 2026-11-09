@@ -84,7 +84,10 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, addIntent, on
         <CertificationIcon level={b.certificationLevel} size={15} />
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <EntityAvatar photoUrl={b.logoUrl} size={44} />
+        {/* Rond-profil : le plus grand possible sans agrandir le bloc (68 px : la hauteur du bloc le plus bas, 76 px, moins 4 px de chaque côté), à 4 px du bord, centré en hauteur. Les marges négatives reprennent le remplissage du bloc (14 px en haut et en bas, 16 px à gauche) sans changer sa hauteur. Même règle que sur la carte d'un produit de la tournée. */}
+        <div style={{ display: "flex", flexShrink: 0, margin: "-12px 0 -12px -14px" }}>
+          <EntityAvatar photoUrl={b.logoUrl} size={68} />
+        </div>
         <div>
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}>
             {b.name}
