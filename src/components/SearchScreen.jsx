@@ -50,7 +50,7 @@ function TagButton({ label, count, filled, onClick }) {
   );
 }
 
-export function ResultRow({ title, subtitle, avatar, onClick, last }) {
+export function ResultRow({ title, subtitle, avatar, onClick, last, enlargeAvatar = false }) {
   return (
     <button
       onClick={onClick}
@@ -68,7 +68,13 @@ export function ResultRow({ title, subtitle, avatar, onClick, last }) {
         color: COLORS.ink,
       }}
     >
-      {avatar}
+      {enlargeAvatar ? (
+        // Rond plus grand que la ligne (52 px au lieu de 36 px, avatar passé par l'appelant) sans en changer la hauteur : les marges négatives de 8 px en haut et en bas
+        // reprennent exactement l'écart de 16 px ajouté, la ligne garde ses 60 px. Le rond reste à 4 px du haut et du bas de la ligne.
+        <span style={{ display: "flex", flexShrink: 0, margin: "-8px 0" }}>{avatar}</span>
+      ) : (
+        avatar
+      )}
       <span style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: "14px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</div>
         {subtitle && <div style={{ fontSize: "12px", color: COLORS.inkSoft, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</div>}
@@ -448,7 +454,8 @@ export function SearchScreen({
                           <CountryFlagImg country={v.country} size={13} />
                         </span>
                       }
-                      avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} fallbackIcon="map-pin" />}
+                      avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={52} fallbackIcon="map-pin" />}
+                      enlargeAvatar
                       onClick={() => onOpenVenue(v.id)}
                       last={i === venueResults.length - 1}
                     />
@@ -459,7 +466,8 @@ export function SearchScreen({
                       key={d.id}
                       title={d.name}
                       subtitle={SUBTYPE_LABELS[d.beverageSubtype] || ""}
-                      avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={36} fallbackIcon="bottle" />}
+                      avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={52} fallbackIcon="bottle" />}
+                      enlargeAvatar
                       onClick={() => onOpenDrink(d.id)}
                       last={i === drinkResults.length - 1}
                     />
@@ -470,7 +478,8 @@ export function SearchScreen({
                       key={b.id}
                       title={b.name}
                       subtitle={(b.producerIds || []).map((id) => breweriesDirectory.find((br) => br.id === id)?.name).filter(Boolean).join(", ")}
-                      avatar={<EntityAvatar photoUrl={b.logoUrl} size={36} fallbackIcon="tag" />}
+                      avatar={<EntityAvatar photoUrl={b.logoUrl} size={52} fallbackIcon="tag" />}
+                      enlargeAvatar
                       onClick={() => onOpenBrand(b.id)}
                       last={i === brandResults.length - 1}
                     />
@@ -481,7 +490,8 @@ export function SearchScreen({
                       key={b.id}
                       title={b.name}
                       subtitle={b.country}
-                      avatar={<EntityAvatar photoUrl={b.profilePhotoUrl} photoEmoji={b.avatarEmoji} size={36} fallbackIcon="world" />}
+                      avatar={<EntityAvatar photoUrl={b.profilePhotoUrl} photoEmoji={b.avatarEmoji} size={52} fallbackIcon="world" />}
+                      enlargeAvatar
                       onClick={() => onOpenBrewery(b.id)}
                       last={i === breweryResults.length - 1}
                     />
@@ -501,7 +511,8 @@ export function SearchScreen({
                           {b.mutualBibaxCount > 0 && `${b.mutualBibaxCount} Bibax en commun`}
                         </span>
                       }
-                      avatar={<EntityAvatar photoUrl={b.avatarUrl} size={36} />}
+                      avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}
+                      enlargeAvatar
                       onClick={() => onOpenBibaxProfile(b.bibroCode)}
                       last={i === bibaxResults.length - 1}
                     />
