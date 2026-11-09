@@ -313,9 +313,14 @@ export function HomeScreen({
       <div style={{ height: "2px", background: COLORS.amber, margin: "0 -20px 18px" }} />
 
       <TravelAgeWarning profile={profile} />
-      <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} officialStories={officialStories} />
+      {(stories.length > 0 || officialStories.length > 0) && (
+        <div>
+          {/* Sans Stories : ni barre de Stories ni deuxième trait vert, un seul trait sous les boutons ronds. */}
+          <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} officialStories={officialStories} />
 
-      <div style={{ height: "2px", background: COLORS.amber, margin: "-10px -20px 18px" }} />
+          <div style={{ height: "2px", background: COLORS.amber, margin: "-10px -20px 18px" }} />
+        </div>
+      )}
 
       {bibros.some((b) => bibroStatuses[b.code] && (bibroStatuses[b.code].activeSalonName || isFreshCheckIn(bibroStatuses[b.code]))) && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
