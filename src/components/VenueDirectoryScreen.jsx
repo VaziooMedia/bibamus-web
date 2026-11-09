@@ -12,6 +12,7 @@ import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAva
 import { sameVenueByNameCity, formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { loadNearbyVenues, loadVenueCountryCounts, loadVenueCityCounts, loadVenuesDirectoryPage, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
 
 const PAGE_SIZE = 40;
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
@@ -260,19 +261,6 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack,
         </PrimaryButton>
       )}
 
-      {!addIntent && !activeCity && !activeCountry && !searching && (
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
-          <button
-            onClick={goToSubmit}
-            style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-            title="Proposer un établissement"
-            aria-label="Proposer un établissement"
-          >
-            +
-          </button>
-        </div>
-      )}
-
       {!addIntent && !activeCity && !activeCountry && !searching && goToMap && (
         <button
           onClick={goToMap}
@@ -383,6 +371,7 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack,
               Chargement...
             </div>
           )}
+          {!(items.length === 0 && loadingMore) && <AddAfterSearch query={q} onAdd={goToSubmit} noun="lieu" label="Proposer un établissement" />}
         </div>
       ) : activeCity ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
@@ -455,19 +444,6 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack,
               </span>
             </button>
           ))}
-        </div>
-      )}
-
-      {!addIntent && !activeCity && !activeCountry && !searching && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
-          <button
-            onClick={goToSubmit}
-            style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-            title="Proposer un établissement"
-            aria-label="Proposer un établissement"
-          >
-            +
-          </button>
         </div>
       )}
 
