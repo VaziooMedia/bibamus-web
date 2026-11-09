@@ -367,7 +367,11 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
             {sameAddressVenues.map((v) => (
               <ExistingEntityRow key={v.id} photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} title={v.name} subtitle={addressLine(v)} onClick={() => onOpenExisting(v.id)} />
             ))}
-            <p style={duplicateNoteStyle}>S'il s'agit du même lieu sous un autre nom, ouvre sa fiche et suggère-y une modification plutôt que d'en créer une nouvelle.</p>
+            <p style={duplicateNoteStyle}>
+              S'il s'agit du même lieu sous un autre nom,
+              <br />
+              ouvre sa fiche et suggère-y une modification plutôt que d'en créer une nouvelle.
+            </p>
             <NotSameCheckbox checked={sameAddressNotSame} onChange={setSameAddressNotSame} label="Ce n'est pas le même lieu" />
           </DuplicateBox>
         )}
