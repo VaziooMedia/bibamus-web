@@ -11,7 +11,8 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
+import { PageHeader, PageFooterNav } from "./ui.jsx";
+import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import {
   NavIcon,
   FacebookIcon,
@@ -130,7 +131,7 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
         <>
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "10px 16px", marginTop: "4px", marginBottom: "10px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
-              <EntityAvatar photoUrl={identity.avatarUrl} size={106} fallbackIcon="user" />
+              <ZoomableAvatar photoUrl={identity.avatarUrl} alt={[identity.firstName || identity.displayName, identity.lastName].filter(Boolean).join(" ")} size={106} fallbackIcon="user" />
               <div style={{ minWidth: 0 }}>
                 <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0 }}>
                   {identity.firstName || identity.displayName}

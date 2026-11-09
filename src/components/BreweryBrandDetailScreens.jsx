@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS, BRAND_TYPES, BRAND_CLASSIFICATIONS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { drinkSummaryLine } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
@@ -125,7 +126,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
           <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
-          <EntityAvatar photoUrl={brewery.profilePhotoUrl} photoEmoji={brewery.avatarEmoji} size={90} />
+          <ZoomableAvatar photoUrl={brewery.profilePhotoUrl} photoEmoji={brewery.avatarEmoji} alt={brewery.name} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
           <div>
@@ -490,7 +491,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
           <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
-          <EntityAvatar photoUrl={brand.logoUrl} size={90} />
+          <ZoomableAvatar photoUrl={brand.logoUrl} alt={brand.name} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
           <div>
