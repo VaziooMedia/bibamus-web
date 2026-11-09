@@ -13,6 +13,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS, BEER_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle, GoButton } from "./ui.jsx";
+import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { getDrinkFeatureItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
@@ -503,7 +504,7 @@ export function DrinkDetailScreen({
           <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
-          <EntityAvatar photoUrl={drink.photoUrl} size={90} />
+          <ZoomableAvatar photoUrl={drink.photoUrl} alt={drink.name} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
           {/* L'icône de certification est toujours dans le coin en haut à droite du bloc du nom, à hauteur de la 1re ligne (même pour un nom court),

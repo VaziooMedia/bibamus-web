@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
@@ -190,7 +191,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
           <PageHeader onBack={onBack} />
         </div>
         <div style={{ position: "absolute", bottom: "-64px", left: "4px", border: `3px solid ${COLORS.paper}`, borderRadius: "50%", lineHeight: 0 }}>
-          <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={90} />
+          <ZoomableAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} alt={venue.name} size={90} />
         </div>
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
           {/* L'icône de certification est toujours dans le coin en haut à droite du bloc du nom, à hauteur de la 1re ligne (même pour un nom court),
