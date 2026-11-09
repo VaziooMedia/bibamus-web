@@ -343,9 +343,14 @@ export function DrinksDirectoryScreen({
       style={{
         textAlign: "left",
         background: COLORS.surface,
-        border: `2px solid ${COLORS.paperAlt}`,
-        borderRadius: "12px",
-        padding: "14px 16px",
+        // Bloc pleine largeur : il sort de la marge de 20 px de la page. Bordure gardée en haut et en bas seulement (les côtés sont hors de l'écran), sans coins arrondis ; la hauteur du bloc ne change pas.
+        margin: "0 -20px",
+        borderTop: `2px solid ${COLORS.paperAlt}`,
+        borderBottom: `2px solid ${COLORS.paperAlt}`,
+        borderLeft: "none",
+        borderRight: "none",
+        borderRadius: 0,
+        padding: "14px",
         cursor: "pointer",
         display: "flex",
         justifyContent: "space-between",
@@ -357,8 +362,8 @@ export function DrinksDirectoryScreen({
         <CertificationIcon level={d.certificationLevel} size={15} />
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
-        {/* Rond-profil : le plus grand possible sans agrandir le bloc (68 px : la hauteur du bloc le plus bas, 76 px, moins 4 px de chaque côté), à 4 px du bord, centré en hauteur. Les marges négatives reprennent le remplissage du bloc (14 px en haut et en bas, 16 px à gauche) sans changer sa hauteur. Même règle que sur la carte d'un produit de la tournée. */}
-        <div style={{ display: "flex", flexShrink: 0, margin: "-12px 0 -12px -14px" }}>
+        {/* Rond-profil : le plus grand possible sans agrandir le bloc (68 px : la hauteur du bloc le plus bas, 76 px, moins 4 px de chaque côté), à 4 px du haut et du bas, centré en hauteur, à 14 px du bord gauche. Les marges négatives du haut et du bas reprennent le remplissage du bloc (14 px) sans changer sa hauteur. Même règle que sur la carte d'un produit de la tournée. */}
+        <div style={{ display: "flex", flexShrink: 0, margin: "-12px 0" }}>
           <EntityAvatar photoUrl={d.photoUrl} size={68} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -527,7 +532,9 @@ export function DrinksDirectoryScreen({
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {countLine}
           {items.length === 0 && !loadingMore && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson trouvée.</p>}
-          {items.map(renderDrinkRow)}
+          {items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderDrinkRow)}</div>
+          )}
           {hasMore && (
             <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
               Chargement...
@@ -542,7 +549,9 @@ export function DrinksDirectoryScreen({
           {showingList && items.length === 0 && !loadingMore && (
             <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucune boisson dans cette catégorie pour l'instant.</p>
           )}
-          {showingList && items.map(renderDrinkRow)}
+          {showingList && items.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderDrinkRow)}</div>
+          )}
           {showingList && hasMore && (
             <div ref={sentinelRef} style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: COLORS.inkSoft }}>
               Chargement...

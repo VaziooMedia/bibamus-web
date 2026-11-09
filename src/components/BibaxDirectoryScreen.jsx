@@ -55,7 +55,8 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile, onBack }
     [bibros]
   );
 
-  const listBox = { background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 12px" };
+  // Liste en bandes pleine largeur : elle sort de la marge de 20 px de la page, bandes séparées par un écart de 6 px (même présentation que les répertoires BibAtlas).
+  const listBox = { display: "flex", flexDirection: "column", gap: "6px", margin: "0 -20px" };
   const emptyText = { fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" };
 
   return (
@@ -126,6 +127,7 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile, onBack }
                 }
                 avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}
                 enlargeAvatar
+                band
                 onClick={() => onOpenBibaxProfile(b.code)}
                 last={i === sortedBibros.length - 1}
               />
@@ -154,6 +156,7 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile, onBack }
               }
               avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}
               enlargeAvatar
+              band
               onClick={() => onOpenBibaxProfile(b.bibroCode)}
               last={i === results.length - 1}
             />
