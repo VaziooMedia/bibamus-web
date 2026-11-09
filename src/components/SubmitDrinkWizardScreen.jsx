@@ -11,7 +11,7 @@ import { CONTAINER_TYPES } from "../data/beerCiderStyles.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PrimaryButton, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariant, lookupBarcode, loadDrinksByIds, searchDrinks } from "../data/sharedDirectories.js";
-import { normalizeForDuplicateCheck, makeSearchMatcher, entityNames } from "../utils.js";
+import { normalizeForDuplicateCheck, makeSearchMatcher, entityNames, drinkSummaryLine } from "../utils.js";
 
 const BEER_CIDER_SUBTYPES = [
   { code: "biere", fr: "Bière" },
@@ -73,7 +73,7 @@ async function describeVariantError(error, barcode) {
   return `Le conditionnement n'a pas pu être enregistré (${error.code || "erreur"} — ${error.message}). Vous pouvez laisser le champ code-barre vide pour continuer.`;
 }
 
-export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, brandsDirectory, onDone, onCancel }) {
+export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, brandsDirectory, onDone, onCancel, onOpenExisting }) {
   const [step, setStep] = useState(1);
   const [drinkId, setDrinkId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -266,10 +266,18 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "10px 12px", marginBottom: "20px" }}>
             <p style={{ fontSize: "11.5px", color: COLORS.pinkFluo, fontWeight: 700, margin: "0 0 6px 0" }}>Produit(s) similaire(s) déjà existant(s) :</p>
             {nameMatches.map((d) => (
-              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0" }}>
-                <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={22} fallbackIcon="bottle" />
-                <span style={{ fontSize: "12.5px", fontWeight: 600 }}>{d.name}</span>
-              </div>
+              <button
+                key={d.id}
+                onClick={() => onOpenExisting(d.id)}
+                style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", padding: "6px 0", background: "none", border: "none", textAlign: "left", cursor: "pointer", color: COLORS.ink }}
+              >
+                <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={36} fallbackIcon="bottle" />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: "13px", fontWeight: 700 }}>{d.name}</span>
+                  <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft }}>{drinkSummaryLine(d)}</span>
+                </span>
+                <NavIcon name="arrow-right-circle" size={18} color={COLORS.amber} />
+              </button>
             ))}
           </div>
         )}

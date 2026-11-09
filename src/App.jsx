@@ -2354,6 +2354,11 @@ export default function App() {
             {screen === "submitVenue" && (
               <SubmitVenueWizardScreen
                 initialName={submitInitialName}
+                onOpenExisting={(id) => {
+                  setScreenBeforeVenueDetail("venueDirectory");
+                  setViewedVenueId(id);
+                  setScreen("venueDetail");
+                }}
                 onDone={(createdId) => {
                   emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: createdId });
                   trackEvent("venue_added", "venue", profile.myBibroCode);
@@ -2365,6 +2370,11 @@ export default function App() {
             {screen === "submitDrink" && (
               <SubmitDrinkWizardScreen
                 initialName={submitInitialName}
+                onOpenExisting={(id) => {
+                  setScreenBeforeDrinkDetail("drinksDirectory");
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 onDone={(createdId) => {

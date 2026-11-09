@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, COUNTRIES, COUNTRY_ISO_CODES, VENUE_TYPES, VENUE_AMENITIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { PageHeader, PrimaryButton } from "./ui.jsx";
+import { PageHeader, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { createPublicVenue, saveGeocodeResult, geocodeAddress, searchVenues, loadVenueListsOnce, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
@@ -49,7 +49,7 @@ const requiredStyle = (filled) => ({ ...inputStyle, border: `2px solid ${filled 
 const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
 const capitalizeFirst = (s) => (s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel }) {
+export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, onOpenExisting }) {
   const [step, setStep] = useState(1);
 
   // Page 1 — Dénomination
@@ -233,14 +233,22 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel }) 
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "10px 12px", marginTop: "10px" }}>
             <p style={{ fontSize: "11.5px", color: COLORS.pinkFluo, fontWeight: 700, margin: "0 0 6px 0" }}>Lieu(x) similaire(s) déjà existant(s) :</p>
             {nameMatches.map((v) => (
-              <div key={v.id} style={{ padding: "4px 0" }}>
-                <div style={{ fontSize: "12.5px", fontWeight: 600 }}>{v.name}</div>
-                {(v.streetName || v.city) && (
-                  <div style={{ fontSize: "11px", color: COLORS.inkSoft }}>
-                    {[v.streetName && v.streetNumber ? `${v.streetName}, ${v.streetNumber}` : v.streetName, v.postalCode && v.city ? `${v.postalCode} ${v.city}` : v.city].filter(Boolean).join(" - ")}
-                  </div>
-                )}
-              </div>
+              <button
+                key={v.id}
+                onClick={() => onOpenExisting(v.id)}
+                style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", padding: "6px 0", background: "none", border: "none", textAlign: "left", cursor: "pointer", color: COLORS.ink }}
+              >
+                <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: "13px", fontWeight: 700 }}>{v.name}</span>
+                  {(v.streetName || v.city) && (
+                    <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft }}>
+                      {[v.streetName && v.streetNumber ? `${v.streetName}, ${v.streetNumber}` : v.streetName, v.postalCode && v.city ? `${v.postalCode} ${v.city}` : v.city].filter(Boolean).join(" - ")}
+                    </span>
+                  )}
+                </span>
+                <NavIcon name="arrow-right-circle" size={18} color={COLORS.amber} />
+              </button>
             ))}
           </div>
         )}
