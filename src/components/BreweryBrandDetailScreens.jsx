@@ -3,12 +3,11 @@
 // — copiées telles quelles depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
-import { COLORS, BRAND_TYPES, BRAND_CLASSIFICATIONS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
+import { COLORS, BRAND_TYPES, BRAND_CLASSIFICATIONS, PRODUCER_TYPES, PRODUCER_PROFILES, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { ZoomableAvatar } from "./PhotoLightbox.jsx";
-import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
-import { drinkSummaryLine } from "../utils.js";
+import { getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -17,9 +16,10 @@ import { NotesCard, RatingFraction } from "./NotesCard.jsx";
 import { BrandRatingModal } from "./BrandRatingModal.jsx";
 import { HintBubble } from "./HintBubble.jsx";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
-import { loadDrinksByBrewery, loadDrinksByBrandId, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand, loadBrandFollowStatus, toggleFollowBrand, loadBrandFavoriteStatus, toggleFavoriteBrand } from "../data/sharedDirectories.js";
+import { loadDrinksByBrewery, loadDrinksByBrandId, loadBrandsByProducer, loadBreweriesByIds, loadVenueById, loadBrandListsOnce, loadProducerListsOnce, loadBrandRatingSummary, loadMyBibaxBrandRating, rateMyBrand, unrateMyBrand, loadBrandFollowStatus, toggleFollowBrand, loadBrandFavoriteStatus, toggleFavoriteBrand } from "../data/sharedDirectories.js";
 import { customNames } from "../venueLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
+import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
 
@@ -87,6 +87,187 @@ function BrandHeaderIcons({ name, username, extraTop = 0, isFollowed, followBusy
   );
 }
 
+// Noms affichés des codes d'une fiche (types, profils, catégories) : ceux de la plateforme de gestion (élément ajouté, élément renommé)
+// l'emportent sur la liste de départ. Un code inconnu dont le nom n'est pas chargé n'est jamais montré tel quel. Entre parenthèses,
+// l'explication de la liste de départ (« Bulles (champagne, crémant...) ») est omise.
+const resolveTagLabels = (lists, codes, builtin, listKey) => {
+  const names = lists ? customNames(lists[listKey].rows) : {};
+  return (codes || [])
+    .map((code) => {
+      const found = builtin.find((t) => t.code === code);
+      const label = names[code] || (found ? found.fr.replace(/\s*\(.*\)\s*$/, "") : "");
+      return label;
+    })
+    .filter(Boolean);
+};
+
+// Carte « Infos » des fiches Marque et Producteur, même présentation que la fiche Produit : pastilles, ligne d'origine, puis les fiches liées
+// (le producteur d'une marque, le lieu lié d'un producteur) après un trait vert. Rien ne s'affiche si la fiche n'a rien de tout cela.
+// links : [{ key, onClick, photoUrl, photoEmoji, caption, name, certificationLevel }].
+function EntityInfosCard({ tags = [], originCity, originRegion, originCountry, links = [] }) {
+  const hasOrigin = !!(originCity || originRegion || originCountry);
+  if (tags.length === 0 && !hasOrigin && links.length === 0) return null;
+  return (
+    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+      <div style={{ fontSize: "13px" }}>
+        {[
+          tags.length > 0 && {
+            key: "tags",
+            sep: null,
+            node: (
+              <div key="tags" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                {tags.map((label) => (
+                  <span key={label} style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "0.45em 0.9em", fontSize: "10px", fontWeight: 600, color: COLORS.ink }}>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            ),
+          },
+          hasOrigin && {
+            key: "origin",
+            sep: "green",
+            node: (
+              <div key="origin" style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                <NavIcon name="map-pin" size={15} color={COLORS.amber} />
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  {originCity && <span>{originCity}</span>}
+                  {originRegion && <span>{originRegion}</span>}
+                  {originCountry && (
+                    <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      {originCountry}
+                      <CountryFlagImg country={originCountry} size={14} />
+                    </span>
+                  )}
+                </div>
+              </div>
+            ),
+          },
+        ]
+          .filter(Boolean)
+          .map((row, i) => (
+            <React.Fragment key={row.key}>
+              {i > 0 && (
+                <div
+                  style={{
+                    borderBottom: row.sep === "green" ? `2px solid ${COLORS.amber}` : `1px solid ${COLORS.paperAlt}`,
+                    margin: row.sep === "green" ? "14px 0" : "10px 0",
+                  }}
+                />
+              )}
+              {row.node}
+            </React.Fragment>
+          ))}
+      </div>
+
+      {(tags.length > 0 || hasOrigin) && links.length > 0 && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />}
+
+      {links.map((link, i) => (
+        <button
+          key={link.key}
+          onClick={link.onClick}
+          style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginTop: i > 0 ? "10px" : 0 }}
+        >
+          <EntityAvatar photoUrl={link.photoUrl} photoEmoji={link.photoEmoji} size={28} />
+          <span>
+            <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>{link.caption}</span>
+            <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+              {link.name}
+              <CertificationIcon level={link.certificationLevel} size={13} />
+            </span>
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Titre à barre verte des cartes « Ses produits » / « Ses marques » : comme « Lieux qui le proposent » sur la fiche Produit.
+function CardTitle({ children }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+      <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
+      <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>{children}</span>
+    </div>
+  );
+}
+
+// Carte « Ses produits » des fiches Marque et Producteur : titre à barre verte et lignes imbriquées. Les produits sont regroupés par sous-catégorie
+// (« Bière », « Cidre », « Soda »… : SUBTYPE_LABELS), dans l'ordre du répertoire (catégorie, puis ordre des sous-catégories). Un produit sans
+// sous-catégorie nommée (les Spiritueux) est rangé sous le nom de sa catégorie. Une seule sous-catégorie = pas d'intertitre.
+function RelatedDrinksCard({ drinks, emptyText, onOpenDrink }) {
+  const subtypeKeys = Object.keys(SUBTYPE_LABELS);
+  const drinkGroups = [
+    ...drinks.reduce((m, d) => {
+      const label = SUBTYPE_LABELS[d.beverageSubtype] || d.type;
+      return m.set(label, { drinks: [...(m.get(label)?.drinks || []), d], type: d.type, subtypeRank: SUBTYPE_LABELS[d.beverageSubtype] ? subtypeKeys.indexOf(d.beverageSubtype) : -1 });
+    }, new Map()),
+  ]
+    .map(([label, g]) => ({ label, ...g, typeRank: DRINK_TYPES.indexOf(g.type) === -1 ? DRINK_TYPES.length : DRINK_TYPES.indexOf(g.type) }))
+    .sort((a, b) => a.typeRank - b.typeRank || a.subtypeRank - b.subtypeRank);
+
+  return (
+    <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+      <CardTitle>Ses produits ({drinks.length})</CardTitle>
+      {drinks.length === 0 ? (
+        <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "16px 0", margin: 0 }}>{emptyText}</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {drinkGroups.map(({ label, drinks: groupDrinks }, gi) => (
+            <React.Fragment key={label}>
+              {drinkGroups.length > 1 && (
+                <div style={{ fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px", marginTop: gi > 0 ? "6px" : 0 }}>
+                  {label.toUpperCase()} ({groupDrinks.length})
+                </div>
+              )}
+              {groupDrinks.map((d) => {
+                const parts = (d.type === "Bières & Cidres"
+                  ? [
+                      d.nationality ? <CountryFlagImg country={d.nationality} size={18.5} /> : null,
+                      d.abv != null ? <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span> : null,
+                      ...getDrinkBadgeItems(d, { hideCountry: true }).map((it) => renderDrinkBadgeItem(it, { drink: d, size: 11 })),
+                    ]
+                  : getDrinkBadgeItems(d).map((it) => renderDrinkBadgeItem(it, { drink: d, size: 11 }))
+                ).filter(Boolean);
+                return (
+                  <button
+                    key={d.id}
+                    onClick={() => onOpenDrink(d.id)}
+                    style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+                  >
+                    <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={28} />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                        {d.name}
+                        {d.pendingContributionsCount > 0 && (
+                          <span style={{ fontSize: "13px" }} title="Une modification est proposée">
+                            📝
+                          </span>
+                        )}
+                      </span>
+                      {parts.length > 0 && (
+                        <span style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
+                          {parts.map((part, i) => (
+                            <React.Fragment key={i}>
+                              {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+                              {part}
+                            </React.Fragment>
+                          ))}
+                        </span>
+                      )}
+                    </span>
+                    <CertificationIcon level={d.certificationLevel} size={15} />
+                  </button>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, claimsEnabled = true }) {
   const [activeTab, setActiveTab] = useState("infos");
   const [reporting, setReporting] = useState(false);
@@ -112,6 +293,24 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
     else setLinkedVenue(null);
   }, [brewery.linkedVenueId]);
 
+  // Les noms des types et des profils du producteur : mêmes règles que les types et les catégories d'une marque (voir resolveTagLabels).
+  const [producerLists, setProducerLists] = useState(null);
+  const hasProducerTags = (brewery.producerTypes || []).length > 0 || (brewery.producerProfiles || []).length > 0;
+  useEffect(() => {
+    if (!hasProducerTags) return undefined;
+    let cancelled = false;
+    loadProducerListsOnce().then((lists) => {
+      if (lists && !cancelled) setProducerLists(lists);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasProducerTags, brewery.id]);
+  const producerTags = [
+    ...resolveTagLabels(producerLists, brewery.producerTypes, PRODUCER_TYPES, PRODUCER_TYPE_LIST_KEY),
+    ...resolveTagLabels(producerLists, brewery.producerProfiles, PRODUCER_PROFILES, PRODUCER_PROFILE_LIST_KEY),
+  ];
+
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
       <div style={{ position: "relative", margin: "-28px -20px 0 -20px" }}>
@@ -131,118 +330,77 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
         <div style={{ position: "absolute", top: "158px", left: "108px", right: "12px", minWidth: 0 }}>
           <div>
             {/* L'icône de certification est toujours dans le coin en haut à droite du bloc du nom, à hauteur de la 1re ligne (même pour un nom court),
-            et ne suit pas le texte quand le nom passe sur plusieurs lignes. Le nom lui laisse sa place à droite (23 px). 3,4 px = de quoi la
-            centrer sur une ligne de 23,75 px. */}
+                et ne suit pas le texte quand le nom passe sur plusieurs lignes. Le nom lui laisse sa place à droite (23 px). 3,4 px = de quoi la
+                centrer sur une ligne de 23,75 px. */}
             <div ref={titleRef}>
               <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, paddingRight: "23px", lineHeight: 1.25, color: COLORS.chalkWhite }}>{brewery.name}</h1>
             </div>
             <span style={{ position: "absolute", top: "3.4px", right: 0, display: "flex" }}>
               <CertificationIcon level={brewery.certificationLevel} size={17} />
             </span>
-            {brewery.country && <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0", paddingRight: canShareEntity() ? "34px" : 0 }}>{brewery.country}</p>}
           </div>
           <ShareEntityButton name={brewery.name} username={brewery.username} extraTop={titleExtra} />
         </div>
       </div>
 
       <div style={{ marginTop: `${76 + titleExtra}px` }}>
-      {linkedVenue && (
-        <button
-          onClick={() => onOpenVenue(linkedVenue.id)}
-          style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%", marginBottom: "20px" }}
-        >
-          <EntityAvatar photoUrl={linkedVenue.profilePhotoUrl} photoEmoji={linkedVenue.avatarEmoji} size={28} />
-          <span>
-            <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>LIEU LIÉ</span>
-            <span style={{ fontWeight: 700, fontSize: "14px" }}>{linkedVenue.name}</span>
-          </span>
-        </button>
-      )}
-
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        {[
+      {/* Même barre d'onglets que les fiches Produit et Marque (Biba360 viendra avec les notes du producteur). */}
+      <PillTabs
+        tabs={[
           { key: "infos", label: "Infos" },
-          { key: "bibapulse", label: "BibaPulse" },
-        ].map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveTab(t.key)}
-            style={{
-              flex: 1,
-              background: activeTab === t.key ? COLORS.amber : "none",
-              color: activeTab === t.key ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${activeTab === t.key ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "6px 12px",
-              fontSize: "13px",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {t.key === "bibapulse" ? (
-              <>
-                Biba<span style={{ color: activeTab === t.key ? undefined : COLORS.amber }}>Pulse</span>
-              </>
-            ) : (
-              t.label
-            )}
-          </button>
-        ))}
-      </div>
+          { key: "bibapulse", label: { prefix: "Biba", accent: "Pulse" } },
+        ]}
+        active={activeTab}
+        onChange={setActiveTab}
+      />
 
       {activeTab === "infos" && (
         <>
-      <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-        SES MARQUES ({relatedBrands.length})
-      </div>
-      {relatedBrands.length === 0 ? (
-        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "20px" }}>
-          Aucune marque liée à ce producteur pour l'instant.
-        </p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-          {relatedBrands.map((b) => (
-            <button
-              key={b.id}
-              onClick={() => onOpenBrand(b.id)}
-              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
-            >
-              <EntityAvatar photoUrl={b.logoUrl} size={28} />
-              <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                {b.name}
-                <CertificationIcon level={b.certificationLevel} size={13} />
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Carte « Infos » : même présentation que la fiche Marque (pastilles, ligne d'origine, puis le lieu lié après un trait vert). */}
+      <EntityInfosCard
+        tags={producerTags}
+        originCountry={brewery.country}
+        links={
+          linkedVenue
+            ? [
+                {
+                  key: linkedVenue.id,
+                  onClick: () => onOpenVenue(linkedVenue.id),
+                  photoUrl: linkedVenue.profilePhotoUrl,
+                  photoEmoji: linkedVenue.avatarEmoji,
+                  caption: "Lieu lié",
+                  name: linkedVenue.name,
+                  certificationLevel: linkedVenue.certificationLevel,
+                },
+              ]
+            : []
+        }
+      />
 
-      <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", letterSpacing: "1.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-        SES PRODUITS ({relatedDrinks.length})
+      {/* Carte « Ses marques » : même présentation que « Ses produits ». */}
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <CardTitle>Ses marques ({relatedBrands.length})</CardTitle>
+        {relatedBrands.length === 0 ? (
+          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "16px 0", margin: 0 }}>Aucune marque liée à ce producteur pour l'instant.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {relatedBrands.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => onOpenBrand(b.id)}
+                style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
+              >
+                <EntityAvatar photoUrl={b.logoUrl} size={28} />
+                <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: "14px" }}>{b.name}</span>
+                <CertificationIcon level={b.certificationLevel} size={15} />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      {relatedDrinks.length === 0 ? (
-        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "20px" }}>
-          Aucune boisson de cette brasserie enregistrée pour l'instant.
-        </p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-          {relatedDrinks.map((d) => (
-            <button
-              key={d.id}
-              onClick={() => onOpenDrink(d.id)}
-              style={{ textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
-            >
-              <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                {d.name}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-                <DrinkBadges drink={d} />
-              </div>
-              {drinkSummaryLine(d) && <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>{drinkSummaryLine(d)}</div>}
-            </button>
-          ))}
-        </div>
-      )}
+
+      {/* Carte « Ses produits » : titre à barre verte et lignes imbriquées, comme sur la fiche Marque. */}
+      <RelatedDrinksCard drinks={relatedDrinks} emptyText="Aucune boisson de cette brasserie enregistrée pour l'instant." onOpenDrink={onOpenDrink} />
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
         {claimsEnabled && (
@@ -451,31 +609,8 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
       cancelled = true;
     };
   }, [hasBrandTags, brand.id]);
-  const tagLabels = (codes, builtin, listKey) => {
-    const names = brandLists ? customNames(brandLists[listKey].rows) : {};
-    return (codes || [])
-      .map((code) => {
-        const found = builtin.find((t) => t.code === code);
-        const label = names[code] || (found ? found.fr.replace(/\s*\(.*\)\s*$/, "") : "");
-        return label;
-      })
-      .filter(Boolean);
-  };
+  const tagLabels = (codes, builtin, listKey) => resolveTagLabels(brandLists, codes, builtin, listKey);
   const brandTags = [...tagLabels(brand.brandTypes, BRAND_TYPES, BRAND_TYPE_LIST_KEY), ...tagLabels(brand.classifications, BRAND_CLASSIFICATIONS, BRAND_CLASSIFICATION_LIST_KEY)];
-  const hasOrigin = !!(brand.originCity || brand.originRegion || brand.originCountry);
-
-  // Les produits, regroupés par sous-catégorie (« Bière », « Cidre », « Soda »… : SUBTYPE_LABELS), dans l'ordre du répertoire
-  // (catégorie, puis ordre des sous-catégories). Un produit sans sous-catégorie nommée (les Spiritueux) est rangé sous le nom
-  // de sa catégorie. Une seule sous-catégorie = pas d'intertitre.
-  const subtypeKeys = Object.keys(SUBTYPE_LABELS);
-  const drinkGroups = [
-    ...relatedDrinks.reduce((m, d) => {
-      const label = SUBTYPE_LABELS[d.beverageSubtype] || d.type;
-      return m.set(label, { drinks: [...(m.get(label)?.drinks || []), d], type: d.type, subtypeRank: SUBTYPE_LABELS[d.beverageSubtype] ? subtypeKeys.indexOf(d.beverageSubtype) : -1 });
-    }, new Map()),
-  ]
-    .map(([label, g]) => ({ label, ...g, typeRank: DRINK_TYPES.indexOf(g.type) === -1 ? DRINK_TYPES.length : DRINK_TYPES.indexOf(g.type) }))
-    .sort((a, b) => a.typeRank - b.typeRank || a.subtypeRank - b.subtypeRank);
 
   return (
     <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -584,142 +719,24 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
       {activeTab === "infos" && (
         <>
       {/* Carte « Infos » : même présentation que la fiche Produit (pastilles, ligne d'origine, puis le producteur après un trait vert). */}
-      {(brandTags.length > 0 || hasOrigin || producers.length > 0) && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "13px" }}>
-            {[
-              brandTags.length > 0 && {
-                key: "tags",
-                sep: null,
-                node: (
-                  <div key="tags" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    {brandTags.map((label) => (
-                      <span key={label} style={{ background: COLORS.paperAlt, borderRadius: "999px", padding: "0.45em 0.9em", fontSize: "10px", fontWeight: 600, color: COLORS.ink }}>
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                ),
-              },
-              hasOrigin && {
-                key: "origin",
-                sep: "green",
-                node: (
-                  <div key="origin" style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                    <NavIcon name="map-pin" size={15} color={COLORS.amber} />
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                      {brand.originCity && <span>{brand.originCity}</span>}
-                      {brand.originRegion && <span>{brand.originRegion}</span>}
-                      {brand.originCountry && (
-                        <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          {brand.originCountry}
-                          <CountryFlagImg country={brand.originCountry} size={14} />
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ),
-              },
-            ]
-              .filter(Boolean)
-              .map((row, i) => (
-                <React.Fragment key={row.key}>
-                  {i > 0 && (
-                    <div
-                      style={{
-                        borderBottom: row.sep === "green" ? `2px solid ${COLORS.amber}` : `1px solid ${COLORS.paperAlt}`,
-                        margin: row.sep === "green" ? "14px 0" : "10px 0",
-                      }}
-                    />
-                  )}
-                  {row.node}
-                </React.Fragment>
-              ))}
-          </div>
-
-          {(brandTags.length > 0 || hasOrigin) && producers.length > 0 && <div style={{ borderBottom: `2px solid ${COLORS.amber}`, margin: "14px 0" }} />}
-
-          {producers.map((producer, i) => (
-            <button
-              key={producer.id}
-              onClick={() => onOpenBrewery(producer.id)}
-              style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", marginTop: i > 0 ? "10px" : 0 }}
-            >
-              <EntityAvatar photoUrl={producer.profilePhotoUrl} photoEmoji={producer.avatarEmoji} size={28} />
-              <span>
-                <span style={{ display: "block", fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px" }}>Producteur</span>
-                <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  {producer.name}
-                  <CertificationIcon level={producer.certificationLevel} size={13} />
-                </span>
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+      <EntityInfosCard
+        tags={brandTags}
+        originCity={brand.originCity}
+        originRegion={brand.originRegion}
+        originCountry={brand.originCountry}
+        links={producers.map((producer) => ({
+          key: producer.id,
+          onClick: () => onOpenBrewery(producer.id),
+          photoUrl: producer.profilePhotoUrl,
+          photoEmoji: producer.avatarEmoji,
+          caption: "Producteur",
+          name: producer.name,
+          certificationLevel: producer.certificationLevel,
+        }))}
+      />
 
       {/* Carte « Ses produits » : titre à barre verte et lignes imbriquées, comme « Lieux qui le proposent » sur la fiche Produit. */}
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Ses produits ({relatedDrinks.length})</span>
-        </div>
-        {relatedDrinks.length === 0 ? (
-          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", padding: "16px 0", margin: 0 }}>Aucune boisson de cette marque enregistrée pour l'instant.</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {drinkGroups.map(({ label, drinks }, gi) => (
-              <React.Fragment key={label}>
-                {drinkGroups.length > 1 && (
-                  <div style={{ fontSize: "10px", color: COLORS.inkSoft, letterSpacing: "1px", marginTop: gi > 0 ? "6px" : 0 }}>
-                    {label.toUpperCase()} ({drinks.length})
-                  </div>
-                )}
-                {drinks.map((d) => {
-                  const parts = (d.type === "Bières & Cidres"
-                    ? [
-                        d.nationality ? <CountryFlagImg country={d.nationality} size={18.5} /> : null,
-                        d.abv != null ? <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>{d.abv.toFixed(1)}% ABV</span> : null,
-                        ...getDrinkBadgeItems(d, { hideCountry: true }).map((it) => renderDrinkBadgeItem(it, { drink: d, size: 11 })),
-                      ]
-                    : getDrinkBadgeItems(d).map((it) => renderDrinkBadgeItem(it, { drink: d, size: 11 }))
-                  ).filter(Boolean);
-                  return (
-                    <button
-                      key={d.id}
-                      onClick={() => onOpenDrink(d.id)}
-                      style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
-                    >
-                      <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={28} />
-                      <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                          {d.name}
-                          {d.pendingContributionsCount > 0 && (
-                            <span style={{ fontSize: "13px" }} title="Une modification est proposée">
-                              📝
-                            </span>
-                          )}
-                        </span>
-                        {parts.length > 0 && (
-                          <span style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-                            {parts.map((part, i) => (
-                              <React.Fragment key={i}>
-                                {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
-                                {part}
-                              </React.Fragment>
-                            ))}
-                          </span>
-                        )}
-                      </span>
-                      <CertificationIcon level={d.certificationLevel} size={15} />
-                    </button>
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </div>
-        )}
-      </div>
+      <RelatedDrinksCard drinks={relatedDrinks} emptyText="Aucune boisson de cette marque enregistrée pour l'instant." onOpenDrink={onOpenDrink} />
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
         {claimsEnabled && (
