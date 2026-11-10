@@ -3,7 +3,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 
 // Pastille d'interaction d'un PlaceCheck (« Qui est chaud pour un verre ?! »…), sur la carte BibaPulse. Avec `onClick`, c'est un bouton : il
-// ouvre les commentaires de la carte pour y répondre (`active` = les commentaires sont ouverts : la pastille se remplit de rose fluo).
+// ouvre les commentaires de la carte pour y répondre (`active` = les commentaires sont ouverts : la pastille se remplit de rose fluo, texte blanc).
 // Sans `onClick`, c'est un simple rappel, affiché en tête des commentaires pour voir à quoi l'on répond. L'icône est celle du bouton de commentaire.
 export function PulseInteractionPill({ label, active = false, onClick }) {
   // Petite, sur UNE ligne (même à côté d'une photo) : bord et icône en rose fluo. Le texte reste sur une ligne ; si l'écran est vraiment trop étroit,
@@ -15,7 +15,7 @@ export function PulseInteractionPill({ label, active = false, onClick }) {
     maxWidth: "100%",
     boxSizing: "border-box",
     background: active ? COLORS.pinkFluo : "none",
-    color: active ? COLORS.paper : COLORS.ink,
+    color: active ? "#FFFFFF" : COLORS.ink,
     border: `1.5px solid ${COLORS.pinkFluo}`,
     borderRadius: "999px",
     padding: "2px 6px",
@@ -30,7 +30,7 @@ export function PulseInteractionPill({ label, active = false, onClick }) {
   const content = (
     <>
       <span style={{ display: "flex", flexShrink: 0 }}>
-        <NavIcon name="comment" size={10} color={active ? COLORS.paper : COLORS.pinkFluo} />
+        <NavIcon name="comment" size={10} color={active ? "#FFFFFF" : COLORS.pinkFluo} />
       </span>
       <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
     </>
