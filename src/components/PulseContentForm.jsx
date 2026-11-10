@@ -16,6 +16,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
 import { TagRestrictedBadge } from "./TagRestrictedBadge.jsx";
+import { NavIcon } from "./icons.jsx";
+import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import { searchBibaxForTagging, uploadPulsePhoto } from "../data/sharedDirectories.js";
 import { fileToResizedJpegBlob } from "../imageUtils.js";
 
@@ -107,11 +109,26 @@ export async function buildPulseContent(form, { rating = null, tags = [] } = {})
 
 const labelStyle = { fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" };
 
+// Sous-titre d'une fenêtre de rédaction (PlaceCheck, DrinkCheck, publication) : une petite icône verte devant le texte.
+// `icon` = un nom d'icône de NavIcon, ou « drinkcheck » (l'icône DrinkCheck, celle de la ligne du produit sur la carte).
+export function SectionLabel({ icon, style, children }) {
+  return (
+    <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "6px", ...style }}>
+      {icon === "drinkcheck" ? (
+        <img src={beerCheckIconUrl} alt="" width="16" height="16" style={{ display: "block", flexShrink: 0 }} />
+      ) : (
+        <NavIcon name={icon} size={14} color={COLORS.amber} />
+      )}
+      <span>{children}</span>
+    </label>
+  );
+}
+
 export function PulseContentFields({ form, showBibax = true, commentLabel = "Commentaire", commentPlaceholder = "Ton avis, une anecdote..." }) {
   const { visibility, setVisibility, comment, setComment, photo, setPhoto, tagQuery, setTagQuery, tagResults, setTagResults, taggedPeople, setTaggedPeople, fileInputRef, handlePhotoPick } = form;
   return (
     <div style={{ marginBottom: "20px" }}>
-      <label style={{ ...labelStyle, marginBottom: "8px" }}>Confidentialité</label>
+      <SectionLabel icon="lock" style={{ marginBottom: "8px" }}>Confidentialité</SectionLabel>
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         {[
           { key: "public", label: "Public" },
@@ -137,7 +154,7 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
         ))}
       </div>
 
-      <label style={labelStyle}>{commentLabel}</label>
+      <SectionLabel icon="align-left">{commentLabel}</SectionLabel>
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
@@ -148,7 +165,7 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
       />
       <p style={{ margin: "2px 0 14px", fontSize: "11px", color: COLORS.inkSoft, textAlign: "right" }}>{comment.length}/280</p>
 
-      <label style={labelStyle}>Photo</label>
+      <SectionLabel icon="camera">Photo</SectionLabel>
       <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoPick} />
       {photo ? (
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
@@ -169,7 +186,7 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
         </button>
       )}
 
-      {showBibax && <label style={labelStyle}>Bibax</label>}
+      {showBibax && <SectionLabel icon="bibax">Bibax</SectionLabel>}
       {showBibax && taggedPeople.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
           {taggedPeople.map((person) => (

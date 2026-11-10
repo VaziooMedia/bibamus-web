@@ -24,10 +24,9 @@ import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { CheckButtonIcon } from "./CheckButtonIcon.jsx";
 import { searchDrinks } from "../data/sharedDirectories.js";
-import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
+import { usePulseContentForm, buildPulseContent, PulseContentFields, SectionLabel } from "./PulseContentForm.jsx";
 import { PLACE_INTERACTIONS } from "../placeInteractions.js";
 
-const labelStyle = { fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" };
 
 export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji, myRating, onClose }) {
   const [publishToPulse, setPublishToPulse] = useState(true);
@@ -132,7 +131,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
           </div>
         )}
 
-        <label style={labelStyle}>Ton avis sur ce lieu</label>
+        <SectionLabel icon="flame">Ton avis sur ce lieu</SectionLabel>
         {!editingRating ? (
           // Avis déjà donné : verrouillé par défaut — ni liste ni retrait, seulement l'avis actuel.
           // C'est à l'utilisateur de demander à le revoir (« Modifier »).
@@ -177,7 +176,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
           </>
         )}
 
-        <label style={labelStyle}>Produit</label>
+        <SectionLabel icon="drinkcheck">Produit</SectionLabel>
         {drink ? (
           <div style={{ marginBottom: "16px" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 6px 4px 5px", fontSize: "12.5px", color: COLORS.ink }}>
@@ -253,8 +252,8 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
 
         {publishToPulse && (
           <div style={{ marginBottom: "20px" }}>
-            <label style={labelStyle}>Interaction</label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            <SectionLabel icon="comment">Interaction</SectionLabel>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
               {PLACE_INTERACTIONS.map((opt) => {
                 const on = interaction === opt.code;
                 return (
@@ -262,7 +261,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
                     key={opt.code}
                     onClick={() => setInteraction(on ? null : opt.code)}
                     aria-pressed={on}
-                    style={{ background: on ? COLORS.amber : "none", color: on ? COLORS.paper : COLORS.ink, border: `2px solid ${on ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "999px", padding: "8px 14px", fontSize: "13px", fontWeight: 700, cursor: "pointer", textAlign: "left" }}
+                    style={{ background: on ? COLORS.amber : "none", color: on ? COLORS.paper : COLORS.ink, border: `1.5px solid ${on ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "999px", padding: "4px 9px", fontSize: "10px", fontWeight: 700, cursor: "pointer", textAlign: "left" }}
                   >
                     {opt.label}
                   </button>

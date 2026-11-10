@@ -20,7 +20,7 @@ import { EntityAvatar } from "./ui.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
 import { makeSearchMatcher } from "../utils.js";
-import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
+import { usePulseContentForm, buildPulseContent, PulseContentFields, SectionLabel } from "./PulseContentForm.jsx";
 
 const SPECIAL_VENUES = [
   { id: "@home", name: "@Home" },
@@ -147,7 +147,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
           </div>
         )}
 
-        <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "10px", display: "block" }}>Ta note</label>
+        <SectionLabel icon="star" style={{ marginBottom: "10px" }}>Ta note</SectionLabel>
         {isEditingRating ? (
           <>
             {/* « Pas de note » atténue le curseur ; le déplacer, ou retaper sur le bouton, annule ce choix. */}
@@ -215,7 +215,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
         )}
         <div style={{ borderBottom: `1px dashed ${COLORS.paperAlt}`, margin: "16px 0" }} />
 
-        <label style={{ fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Lieu</label>
+        <SectionLabel icon="map-pin">Lieu</SectionLabel>
         <div style={{ position: "relative", marginBottom: "18px" }}>
           <input
             value={selectedVenue ? selectedVenue.name : query}
