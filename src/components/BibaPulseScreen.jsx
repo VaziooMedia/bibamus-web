@@ -284,6 +284,43 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
     setComments(await loadPulseComments(entry.id));
   };
 
+  // Bouton Cheers : sur les Découvertes et sur les DrinkCheck (en premier de la rangée sur un DrinkCheck).
+  const cheersButton = (
+    <button
+      onClick={handleSante}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        background: "none",
+        border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+        borderRadius: "999px",
+        padding: "4px 10px",
+        fontSize: "11.5px",
+        fontWeight: 700,
+        color: entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+        <CheersIcon size={16} active={entry.santeCount > 0} />
+      </span>
+      {entry.santeCount > 0 && <span style={{ color: "#fff" }}>{entry.santeCount}</span>}
+    </button>
+  );
+  // Ligne-résumé « N Cheers » : sur un DrinkCheck elle passe avant « Bixé par » (comme les boutons), sur les autres cartes elle reste après.
+  const santeSummary =
+    entry.santeCount > 0 ? (
+      <button
+        onClick={() => openReactors("sante")}
+        style={{ display: "block", background: "none", border: "none", padding: isDrinkCheck ? "6px 0 0" : "4px 0 0", textAlign: "left", cursor: "pointer" }}
+      >
+        <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+          <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Cheers
+        </span>
+      </button>
+    ) : null;
+
   return (
     <div
       ref={ref}
@@ -435,6 +472,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           quel que soit le nombre de lignes. */}
       <div style={{ position: "relative", marginTop: "6px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {isDrinkCheck && cheersButton}
           <button
             onClick={handleBix}
             style={{
@@ -479,29 +517,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             </button>
           )}
 
-          {entry.eventType === "product_discovered" && (
-            <button
-              onClick={handleSante}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                background: "none",
-                border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
-                borderRadius: "999px",
-                padding: "4px 10px",
-                fontSize: "11.5px",
-                fontWeight: 700,
-                color: entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
-                cursor: "pointer",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-                <CheersIcon size={16} active={entry.santeCount > 0} />
-              </span>
-              {entry.santeCount > 0 && <span style={{ color: "#fff" }}>{entry.santeCount}</span>}
-            </button>
-          )}
+          {entry.eventType === "product_discovered" && cheersButton}
 
           <button
             onClick={toggleComments}
@@ -530,8 +546,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
         liste complète des personnes concernées. */}
         <div style={{ paddingRight: "30px" }}>
+        {isDrinkCheck && santeSummary}
         {entry.bixCount > 0 && (
-          <button onClick={() => openReactors("bix")} style={{ display: "block", background: "none", border: "none", padding: "6px 0 0", textAlign: "left", cursor: "pointer" }}>
+          <button
+            onClick={() => openReactors("bix")}
+            style={{ display: "block", background: "none", border: "none", padding: isDrinkCheck && entry.santeCount > 0 ? "4px 0 0" : "6px 0 0", textAlign: "left", cursor: "pointer" }}
+          >
             <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
               Bixé par <strong style={{ color: COLORS.ink }}>{entry.lastBixerName || "quelqu'un"}</strong>
               {entry.bixCount > 1 && (
@@ -550,13 +570,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             </span>
           </button>
         )}
-        {entry.santeCount > 0 && (
-          <button onClick={() => openReactors("sante")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
-            <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-              <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Cheers
-            </span>
-          </button>
-        )}
+        {!isDrinkCheck && santeSummary}
         </div>
 
         {myUserId && (isPost || isCheck) && entry.actorId === myUserId && (
@@ -651,7 +665,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   J'arrive ! ({entry.incomingCount})
                 </button>
               )}
-              {entry.eventType === "product_discovered" && (
+              {(entry.eventType === "product_discovered" || isDrinkCheck) && (
                 <button
                   onClick={() => setReactorsTab("sante")}
                   style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "sante" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "sante" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
