@@ -6,7 +6,8 @@
 //   - ajouter un produit (sans obligation) : le check compte alors aussi comme un check de ce produit
 //     dans ce lieu (statistiques) — une seule publication pour le geste, celle du lieu, qui mentionne le produit en petit texte ;
 //   - publier ou non sur BibaPulse, avec qui peut le voir (« Mes Bibax » par défaut), un
-//     commentaire, une photo et des Bibax tagués ;
+//     commentaire, une photo et des Bibax tagués, et une interaction prédéfinie (une pastille parmi quatre :
+//     « Qui est chaud pour un verre ?! »…, voir placeInteractions.js) qui apparaît sur la carte et ouvre les commentaires ;
 //   - donner, modifier ou retirer son avis sur le lieu : liste déroulante, « Pas encore d'avis de ta part » par défaut (en rose fluo).
 //     Un avis déjà donné est VERROUILLÉ : la liste n'apparaît pas d'office, seulement l'avis actuel et un
 //     bouton « Modifier » — c'est à l'utilisateur de demander à le revoir.
@@ -24,6 +25,7 @@ import { EntityAvatar } from "./ui.jsx";
 import { CheckButtonIcon } from "./CheckButtonIcon.jsx";
 import { searchDrinks } from "../data/sharedDirectories.js";
 import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
+import { PLACE_INTERACTIONS } from "../placeInteractions.js";
 
 const labelStyle = { fontSize: "12.5px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" };
 
@@ -35,6 +37,8 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
   const [drink, setDrink] = useState(null); // { id, name }
   const [drinkQuery, setDrinkQuery] = useState("");
   const [drinkResults, setDrinkResults] = useState([]);
+  // Interaction prédéfinie (une seule, ou aucune) : une pastille qui apparaît sur la carte et ouvre les commentaires pour y répondre.
+  const [interaction, setInteraction] = useState(null);
   // Avis sur le lieu : « Pas encore d'avis de ta part » (null) par défaut, ou l'avis déjà donné.
   const existingRating = myRating == null ? null : myRating;
   const [rating, setRating] = useState(existingRating);
@@ -77,6 +81,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
         return;
       }
       content = built.content;
+      if (interaction) content = { ...(content || {}), interaction };
     }
     // Rien à faire si l'avis est identique à celui déjà donné.
     const ratingChange = rating === existingRating ? null : { value: rating };
@@ -246,6 +251,26 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
           </span>
         </button>
 
+        {publishToPulse && (
+          <div style={{ marginBottom: "20px" }}>
+            <label style={labelStyle}>Interaction</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {PLACE_INTERACTIONS.map((opt) => {
+                const on = interaction === opt.code;
+                return (
+                  <button
+                    key={opt.code}
+                    onClick={() => setInteraction(on ? null : opt.code)}
+                    aria-pressed={on}
+                    style={{ background: on ? COLORS.amber : "none", color: on ? COLORS.paper : COLORS.ink, border: `2px solid ${on ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "999px", padding: "8px 14px", fontSize: "13px", fontWeight: 700, cursor: "pointer", textAlign: "left" }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {publishToPulse && <PulseContentFields form={form} />}
 
         {form.error && <p style={{ color: COLORS.wine, fontSize: "13px", margin: "0 0 12px" }}>{form.error}</p>}

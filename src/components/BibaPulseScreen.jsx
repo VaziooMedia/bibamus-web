@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { COLORS, RATING_LABELS } from "../constants.js";
+import { PLACE_INTERACTIONS } from "../placeInteractions.js";
+import { PulseInteractionPill } from "./PulseInteractionPill.jsx";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, deleteMyPulsePost, previewMyPulseCheckDeletion, deleteMyPulseCheck, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
@@ -191,6 +193,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const placeDrink = placeDrinkId ? (directories.drinksDirectory || []).find((d) => d.id === placeDrinkId) || null : null;
   const openPlaceDrink = placeDrink && onOpenDrink ? () => onOpenDrink(placeDrink.id) : null;
   const placeRating = isPlaceCheck ? RATING_LABELS.find((l) => l.value === entry.metadata?.venue_rating) || null : null;
+  // Interaction prédéfinie du PlaceCheck (metadata.interaction : un code, la phrase est reconstruite ici) : une pastille dans le sous-bloc de
+  // l'auteur, à droite de l'éventuelle photo, comme un commentaire ; elle ouvre les commentaires, où elle est rappelée en tête.
+  const placeInteraction = isPlaceCheck ? PLACE_INTERACTIONS.find((i) => i.code === entry.metadata?.interaction) || null : null;
   const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
 
   const handleDelete = async () => {
@@ -477,13 +482,13 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       )}
 
-      {isRedesigned && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName || placeDrink) && (
+      {isRedesigned && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName || placeDrink || placeInteraction) && (
         <div style={{ marginBottom: "18px" }}>
           {showProductBlock && isDrinkCheck && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
           {showProductBlock && isPlaceCheck && <PulseVenueCard venue={obj} rating={directories.venueRatingsById?.[obj.id] || null} onOpen={openObject || undefined} />}
           {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui. La photo y est entière (jamais recadrée),
               en petit et collée à gauche, le commentaire à sa droite. */}
-          {(checkNote.photoUrl || checkNote.comment) && (
+          {(checkNote.photoUrl || checkNote.comment || placeInteraction) && (
             <div
               style={{
                 margin: showProductBlock ? "8px 0 0" : 0,
@@ -507,12 +512,17 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   style={{ flexShrink: 0, maxWidth: "112px", maxHeight: "160px", width: "auto", height: "auto", borderRadius: "8px", display: "block" }}
                 />
               )}
-              {checkNote.comment && (
-                <p style={{ flex: 1, minWidth: 0, margin: 0, padding: "2px 4px", fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{checkNote.comment}</p>
+              {(checkNote.comment || placeInteraction) && (
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
+                  {placeInteraction && <PulseInteractionPill label={placeInteraction.label} active={showComments} onClick={toggleComments} />}
+                  {checkNote.comment && (
+                    <p style={{ alignSelf: "stretch", margin: 0, padding: "2px 4px", fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{checkNote.comment}</p>
+                  )}
+                </div>
               )}
             </div>
           )}
-          {placeDrink && <PulseDrinkLine drink={placeDrink} onOpen={openPlaceDrink || undefined} gapAbove={showProductBlock || !!checkNote.photoUrl || !!checkNote.comment} />}
+          {placeDrink && <PulseDrinkLine drink={placeDrink} onOpen={openPlaceDrink || undefined} gapAbove={showProductBlock || !!checkNote.photoUrl || !!checkNote.comment || !!placeInteraction} />}
           {checkVenueName && (
             <p style={{ margin: showProductBlock || checkNote.photoUrl || checkNote.comment || placeDrink ? "14px 0 0" : 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
               {/* Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ». */}
@@ -635,6 +645,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
 
       {showComments && (
         <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+          {/* Interaction du PlaceCheck rappelée en tête : on voit à quoi les commentaires répondent. */}
+          {placeInteraction && (
+            <div style={{ marginBottom: "10px" }}>
+              <PulseInteractionPill label={placeInteraction.label} />
+            </div>
+          )}
           {comments === null ? (
             <p style={{ fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
           ) : (
