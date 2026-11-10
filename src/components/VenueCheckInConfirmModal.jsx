@@ -24,7 +24,7 @@ import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { CheckButtonIcon } from "./CheckButtonIcon.jsx";
 import { searchDrinks } from "../data/sharedDirectories.js";
-import { usePulseContentForm, buildPulseContent, PulseContentFields, SectionLabel } from "./PulseContentForm.jsx";
+import { usePulseContentForm, buildPulseContent, PulseContentFields, SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
 import { PLACE_INTERACTIONS } from "../placeInteractions.js";
 
 
@@ -135,7 +135,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
         {!editingRating ? (
           // Avis déjà donné : verrouillé par défaut — ni liste ni retrait, seulement l'avis actuel.
           // C'est à l'utilisateur de demander à le revoir (« Modifier »).
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{existingRatingLabel || "Avis donné"}</span>
             <button
               onClick={() => setEditingRating(true)}
@@ -150,7 +150,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
             <select
               value={rating == null ? "" : String(rating)}
               onChange={(e) => setRating(e.target.value === "" ? null : Number(e.target.value))}
-              style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: rating == null ? "#ef007c" : COLORS.ink, fontSize: "14px", marginBottom: existingRating != null ? "8px" : "16px" }}
+              style={{ display: "block", width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: rating == null ? "#ef007c" : COLORS.ink, fontSize: "14px", marginBottom: existingRating != null ? "8px" : "0" }}
             >
               <option value="" style={{ color: "#ef007c" }}>Pas encore d'avis de ta part</option>
               {RATING_LABELS.map((level) => (
@@ -168,17 +168,18 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
                   setRating(existingRating);
                   setEditingRating(false);
                 }}
-                style={{ display: "block", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0, marginBottom: "16px" }}
+                style={{ display: "block", background: "none", border: "none", color: COLORS.inkSoft, fontSize: "11.5px", textDecoration: "underline", cursor: "pointer", padding: 0 }}
               >
                 Annuler
               </button>
             )}
           </>
         )}
+        <SectionDivider />
 
         <SectionLabel icon="drinkcheck">Produit</SectionLabel>
         {drink ? (
-          <div style={{ marginBottom: "16px" }}>
+          <div>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 6px 4px 5px", fontSize: "12.5px", color: COLORS.ink }}>
               <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={20} fallbackIcon="bottle" />
               {drink.name}
@@ -192,7 +193,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
             </span>
           </div>
         ) : (
-          <div style={{ marginBottom: "16px" }}>
+          <div>
             <input
               value={drinkQuery}
               onChange={(e) => setDrinkQuery(e.target.value)}
@@ -222,10 +223,11 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
             )}
           </div>
         )}
+        <SectionDivider />
 
         <button
           onClick={() => setPublishToPulse((v) => !v)}
-          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: "16px", background: "none", border: "none", padding: 0, textAlign: "left" }}
+          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: publishToPulse ? "0" : "16px", background: "none", border: "none", padding: 0, textAlign: "left" }}
         >
           <span
             style={{
@@ -250,8 +252,10 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
           </span>
         </button>
 
+        {publishToPulse && <SectionDivider />}
+
         {publishToPulse && (
-          <div style={{ marginBottom: "20px" }}>
+          <div>
             <SectionLabel icon="comment">Interaction</SectionLabel>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
               {PLACE_INTERACTIONS.map((opt) => {
@@ -270,7 +274,8 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
             </div>
           </div>
         )}
-        {publishToPulse && <PulseContentFields form={form} />}
+        {publishToPulse && <SectionDivider />}
+        {publishToPulse && <PulseContentFields form={form} dividers />}
 
         {form.error && <p style={{ color: COLORS.wine, fontSize: "13px", margin: "0 0 12px" }}>{form.error}</p>}
 
