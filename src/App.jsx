@@ -1347,8 +1347,12 @@ export default function App() {
   const [searchInitialTab, setSearchInitialTab] = useState("lieux");
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [focusPulseEntry, setFocusPulseEntry] = useState(null);
+  // Carte BibaPulse d'où l'on a ouvert une fiche (produit, lieu, marque, producteur, profil) : au retour, le fil se rouvre sur elle.
+  // Remise à zéro dès qu'on retourne à l'accueil, pour qu'une ouverture ultérieure de BibaPulse reparte du haut.
+  const [pulseReturnEntryId, setPulseReturnEntryId] = useState(null);
   useEffect(() => {
     if (screen !== "bibaPulse" && focusPulseEntry) setFocusPulseEntry(null);
+    if (screen === "home" && pulseReturnEntryId) setPulseReturnEntryId(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
   useEffect(() => {
@@ -2532,7 +2536,7 @@ export default function App() {
                 bibros={bibros}
                 checkIns={checkIns}
                 myUserId={session.user.id}
-                onBack={() => setScreen("home")}
+                onBack={() => setScreen(pulseReturnEntryId ? "bibaPulse" : "home")}
                 goToMyInfo={() => setScreen("myInfo")}
                 goToMyStats={() => setScreen("myStats")}
                 goToBibros={() => setScreen("bibrosList")}
@@ -3427,6 +3431,8 @@ export default function App() {
                 brandsDirectory={brandsDirectory}
                 focusEntryId={focusPulseEntry?.id}
                 openCommentsOnFocus={focusPulseEntry?.openComments}
+                returnEntryId={pulseReturnEntryId}
+                onRememberEntry={setPulseReturnEntryId}
                 myBibroCode={profile.myBibroCode}
                 onOpenVenue={(id) => {
                   setScreenBeforeVenueDetail("bibaPulse");
@@ -3510,6 +3516,7 @@ export default function App() {
                   }
                 }}
                 onOpenPulseEntry={(entryId, openComments) => {
+                  setPulseReturnEntryId(null);
                   setFocusPulseEntry({ id: entryId, openComments: !!openComments });
                   setScreen("bibaPulse");
                 }}

@@ -324,6 +324,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   return (
     <div
       ref={ref}
+      data-pulse-entry={entry.id}
       style={
         flat
           ? {
@@ -410,7 +411,10 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           {typeof entry.metadata?.rating === "number" && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
               <StarsDisplay value={entry.metadata.rating} size={16} />
-              <span style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink }}>{String(entry.metadata.rating).replace(".", ",")}/5</span>
+              <span style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink }}>
+                {String(entry.metadata.rating).replace(".", ",")}
+                <span style={{ color: COLORS.amber }}>/</span>5
+              </span>
             </span>
           )}
         </div>
@@ -765,6 +769,8 @@ export function BibaPulseScreen({
   onOpenClub,
   focusEntryId,
   openCommentsOnFocus,
+  returnEntryId,
+  onRememberEntry,
   storiesEnabled = true,
   onShareStory,
 }) {
@@ -793,6 +799,29 @@ export function BibaPulseScreen({
   const myUserId = myUserIdProp || sessionUserId;
   const focusedCardRef = React.useRef(null);
   const hasScrolledToFocus = React.useRef(false);
+  // Retour d'une fiche (produit, lieu, marque, producteur, profil…) ouverte depuis une carte : le fil se rouvre sur cette carte, pas en
+  // haut. L'identifiant vient de l'application (returnEntryId) ; on le lit une fois et on le remet à zéro.
+  const [returnTarget] = useState(returnEntryId || null);
+  useEffect(() => {
+    if (returnTarget && onRememberEntry) onRememberEntry(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const targetId = focusEntryId || returnTarget;
+  // Mémorise la carte avant d'ouvrir une fiche, pour y revenir.
+  const rememberThen = (entryId, fn) => (fn ? (...args) => { if (onRememberEntry) onRememberEntry(entryId); return fn(...args); } : undefined);
+  // Profil d'un Bibax ouvert ici même (rond de profil, personne taguée) : au retour, on remet la carte à l'écran.
+  const profileFromEntry = React.useRef(null);
+  const openProfileFrom = (entryId, code) => {
+    profileFromEntry.current = entryId;
+    setViewedProfileCode(code);
+  };
+  React.useLayoutEffect(() => {
+    if (viewedProfileCode || !profileFromEntry.current) return;
+    const id = profileFromEntry.current;
+    profileFromEntry.current = null;
+    const card = document.querySelector(`[data-pulse-entry="${id}"]`);
+    if (card) card.scrollIntoView({ block: "start" });
+  }, [viewedProfileCode]);
   // Le fil ne charge jamais qu'une poignée d'entrées à la fois (pagination) — les produits qu'il
   // référence forment donc un ensemble tout aussi borné, jamais besoin du répertoire complet.
   const [drinksDirectory, setDrinksDirectory] = useState([]);
@@ -855,13 +884,38 @@ export function BibaPulseScreen({
   // pas forcément dans les 20 premières du fil — on charge des pages supplémentaires jusqu'à la
   // trouver (borné à 10 tentatives), puis on y défile.
   useEffect(() => {
-    if (!focusEntryId || !entries) return;
-    if (entries.some((e) => e.id === focusEntryId)) return;
+    if (!targetId || !entries) return;
+    if (entries.some((e) => e.id === targetId)) return;
     if (!hasMore || focusAttempts >= 10) return;
     setFocusAttempts((n) => n + 1);
     loadMore();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusEntryId, entries, hasMore]);
+  }, [targetId, entries, hasMore]);
+
+  // Retour d'une fiche : la carte est remise en haut de l'écran, sans animation et avant l'affichage. Les produits, lieux et
+  // producteurs des cartes se chargent après le fil et changent leur hauteur : on réaligne à chaque chargement, jusqu'à ce que la
+  // personne touche l'écran ou, au plus, 4 secondes.
+  const keepAligning = React.useRef(!!returnTarget && !focusEntryId);
+  React.useLayoutEffect(() => {
+    if (!keepAligning.current || !focusedCardRef.current) return;
+    focusedCardRef.current.scrollIntoView({ block: "start" });
+  }, [entries, drinksDirectory, venuesById, producersById]);
+  useEffect(() => {
+    if (!keepAligning.current) return undefined;
+    const stop = () => {
+      keepAligning.current = false;
+    };
+    const timer = setTimeout(stop, 4000);
+    window.addEventListener("wheel", stop, { passive: true });
+    window.addEventListener("touchstart", stop, { passive: true });
+    window.addEventListener("keydown", stop);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+      window.removeEventListener("keydown", stop);
+    };
+  }, []);
 
   useEffect(() => {
     if (!focusEntryId || hasScrolledToFocus.current) return;
@@ -992,21 +1046,21 @@ export function BibaPulseScreen({
             <PulseCard
               key={entry.id}
               flat
-              ref={entry.id === focusEntryId ? focusedCardRef : null}
+              ref={entry.id === targetId ? focusedCardRef : null}
               entry={entry}
               directories={directories}
               myUserId={myUserId}
               myBibroCode={myBibroCode}
-              onOpenVenue={onOpenVenue}
+              onOpenVenue={rememberThen(entry.id, onOpenVenue)}
               onOpenTagged={(person) => {
-                if (person.id === myUserId) goToProfile();
-                else if (person.bibro_code) setViewedProfileCode(person.bibro_code);
+                if (person.id === myUserId) rememberThen(entry.id, goToProfile)();
+                else if (person.bibro_code) openProfileFrom(entry.id, person.bibro_code);
               }}
-              onOpenDrink={onOpenDrink}
-              onOpenBrand={onOpenBrand}
-              onOpenProducer={onOpenProducer}
-              onOpenClub={onOpenClub}
-              onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}
+              onOpenDrink={rememberThen(entry.id, onOpenDrink)}
+              onOpenBrand={rememberThen(entry.id, onOpenBrand)}
+              onOpenProducer={rememberThen(entry.id, onOpenProducer)}
+              onOpenClub={rememberThen(entry.id, onOpenClub)}
+              onOpenProfile={entry.actorId === myUserId ? rememberThen(entry.id, goToProfile) : (code) => openProfileFrom(entry.id, code)}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
               onDeleted={removeEntry}
               highlighted={entry.id === focusEntryId}
