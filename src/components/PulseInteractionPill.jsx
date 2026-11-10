@@ -30,7 +30,7 @@ export function PulseInteractionPill({ label, active = false, onClick }) {
   const content = (
     <>
       <span style={{ display: "flex", flexShrink: 0 }}>
-        <NavIcon name="comment" size={10} color={active ? COLORS.paper : COLORS.pinkFluo} />
+        <NavIcon name="comment" size={10} color={active ? "#FFFFFF" : COLORS.pinkFluo} />
       </span>
       <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
     </>
