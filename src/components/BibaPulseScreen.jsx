@@ -11,6 +11,8 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { PulsePostScreen } from "./PulsePostScreen.jsx";
 import { PulseTagPills, postTagsOf, usePostTagEntities } from "./PulseTags.jsx";
+import { PulseProductCard } from "./PulseProductCard.jsx";
+import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -157,6 +159,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // Publication libre : pas d'objet propre, seulement des tags de fiche dans son contenu.
   const isPost = entry.eventType === "post";
   const isCheck = CHECK_EVENT_TYPES.includes(entry.eventType);
+  // DrinkCheck (check d'un produit après le premier) : « DrinkCheck » avec l'icône du check, puis la fiche du produit en petit, puis le lieu du check.
+  const isDrinkCheck = entry.eventType === "drink_checked";
   const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
 
   const handleDelete = async () => {
@@ -311,7 +315,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
                 )}
               </>
-            ) : isPost ? null : (
+            ) : isPost ? null : isDrinkCheck ? (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700 }}>
+                <img src={beerCheckIconUrl} alt="" width="20" height="20" style={{ display: "block", flexShrink: 0 }} />
+                DrinkCheck
+              </span>
+            ) : (
               <>
                 {pulseActionFor(entry)} @{" "}
                 {obj && openObject ? (
@@ -323,7 +332,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                 )}
               </>
             )}
-            {checkVenueName && (
+            {checkVenueName && !isDrinkCheck && (
               <>
                 <span style={{ color: COLORS.inkSoft }}>{" — "}</span>
                 {openCheckVenue ? (
@@ -338,6 +347,23 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           </p>
         </div>
       </div>
+
+      {isDrinkCheck && (obj || checkVenueName) && (
+        <div style={{ marginBottom: "10px" }}>
+          {obj && <PulseProductCard drink={obj} onOpen={openObject || undefined} />}
+          {checkVenueName && (
+            <p style={{ margin: obj ? "6px 0 0" : 0, fontSize: "12.5px", color: COLORS.ink }}>
+              {openCheckVenue ? (
+                <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
+                  {checkVenueName.startsWith("@") ? checkVenueName : `@${checkVenueName}`}
+                </button>
+              ) : (
+                <span style={{ fontWeight: 700 }}>{checkVenueName.startsWith("@") ? checkVenueName : `@${checkVenueName}`}</span>
+              )}
+            </p>
+          )}
+        </div>
+      )}
 
       <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} />
 
