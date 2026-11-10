@@ -367,16 +367,18 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       )}
 
       {isDrinkCheck && (showProductBlock || checkVenueName) && (
-        <div style={{ marginBottom: "10px" }}>
+        <div style={{ marginBottom: "18px" }}>
           {showProductBlock && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
           {checkVenueName && (
-            <p style={{ margin: showProductBlock ? "6px 0 0" : 0, fontSize: "12.5px", color: COLORS.ink }}>
+            <p style={{ margin: showProductBlock ? "14px 0 0" : 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
+              {/* Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ». */}
+              <NavIcon name="map-pin" size={16} color={COLORS.amber} />
               {openCheckVenue ? (
                 <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
-                  {checkVenueName.startsWith("@") ? checkVenueName : `@${checkVenueName}`}
+                  {checkVenueName.replace(/^@/, "")}
                 </button>
               ) : (
-                <span style={{ fontWeight: 700 }}>{checkVenueName.startsWith("@") ? checkVenueName : `@${checkVenueName}`}</span>
+                <span style={{ fontWeight: 700 }}>{checkVenueName.replace(/^@/, "")}</span>
               )}
             </p>
           )}
@@ -385,95 +387,133 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
 
       <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} hideRating={isDrinkCheck} />
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
-        <button
-          onClick={handleBix}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            background: "none",
-            border: `2px solid ${entry.bixCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
-            borderRadius: "999px",
-            padding: "4px 10px",
-            fontSize: "11.5px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-            <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
-          </span>
-          {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
-        </button>
-
-        {entry.eventType === "venue_visit" && (
+      {/* Bloc d'actions : boutons de réaction, puis résumés (« Bixé par… »). L'icône Supprimer / Signaler est toujours dans son coin bas droit,
+          quel que soit le nombre de lignes. */}
+      <div style={{ position: "relative", marginTop: "6px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button
-            onClick={entry.actorId !== myUserId ? handleIncoming : undefined}
-            disabled={entry.actorId === myUserId}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              background: entry.iAmIncoming ? COLORS.amber : "none",
-              border: `2px solid ${entry.incomingCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "4px 10px",
-              fontSize: "11.5px",
-              fontWeight: 700,
-              color: entry.iAmIncoming ? COLORS.paper : entry.incomingCount > 0 ? COLORS.amber : COLORS.inkSoft,
-              cursor: entry.actorId === myUserId ? "default" : "pointer",
-              opacity: entry.actorId === myUserId ? 0.45 : 1,
-            }}
-          >
-            J'arrive !{entry.incomingCount > 0 && <span style={{ color: "#fff" }}>{` ${entry.incomingCount}`}</span>}
-          </button>
-        )}
-
-        {entry.eventType === "product_discovered" && (
-          <button
-            onClick={handleSante}
+            onClick={handleBix}
             style={{
               display: "flex",
               alignItems: "center",
               gap: "4px",
               background: "none",
-              border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+              border: `2px solid ${entry.bixCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "4px 10px",
               fontSize: "11.5px",
               fontWeight: 700,
-              color: entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
               cursor: "pointer",
             }}
           >
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-              <CheersIcon size={16} active={entry.santeCount > 0} />
+              <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
             </span>
-            {entry.santeCount > 0 && <span style={{ color: "#fff" }}>{entry.santeCount}</span>}
+            {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
+          </button>
+
+          {entry.eventType === "venue_visit" && (
+            <button
+              onClick={entry.actorId !== myUserId ? handleIncoming : undefined}
+              disabled={entry.actorId === myUserId}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                background: entry.iAmIncoming ? COLORS.amber : "none",
+                border: `2px solid ${entry.incomingCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+                borderRadius: "999px",
+                padding: "4px 10px",
+                fontSize: "11.5px",
+                fontWeight: 700,
+                color: entry.iAmIncoming ? COLORS.paper : entry.incomingCount > 0 ? COLORS.amber : COLORS.inkSoft,
+                cursor: entry.actorId === myUserId ? "default" : "pointer",
+                opacity: entry.actorId === myUserId ? 0.45 : 1,
+              }}
+            >
+              J'arrive !{entry.incomingCount > 0 && <span style={{ color: "#fff" }}>{` ${entry.incomingCount}`}</span>}
+            </button>
+          )}
+
+          {entry.eventType === "product_discovered" && (
+            <button
+              onClick={handleSante}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                background: "none",
+                border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+                borderRadius: "999px",
+                padding: "4px 10px",
+                fontSize: "11.5px",
+                fontWeight: 700,
+                color: entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
+                cursor: "pointer",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+                <CheersIcon size={16} active={entry.santeCount > 0} />
+              </span>
+              {entry.santeCount > 0 && <span style={{ color: "#fff" }}>{entry.santeCount}</span>}
+            </button>
+          )}
+
+          <button
+            onClick={toggleComments}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              background: "none",
+              border: `2px solid ${entry.commentsCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "4px 10px",
+              fontSize: "11.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+              <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
+            </span>
+            {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
+          </button>
+        </div>
+
+        {deleteError && <p style={{ color: COLORS.wine, fontSize: "12px", margin: "8px 0 0" }}>{deleteError}</p>}
+
+        {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
+        liste complète des personnes concernées. */}
+        <div style={{ paddingRight: "30px" }}>
+        {entry.bixCount > 0 && (
+          <button onClick={() => openReactors("bix")} style={{ display: "block", background: "none", border: "none", padding: "6px 0 0", textAlign: "left", cursor: "pointer" }}>
+            <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+              Bixé par <strong style={{ color: COLORS.ink }}>{entry.lastBixerName || "quelqu'un"}</strong>
+              {entry.bixCount > 1 && (
+                <>
+                  {" "}
+                  et <strong style={{ color: COLORS.ink }}>{entry.bixCount - 1} autre{entry.bixCount > 2 ? "s Bibax" : " Bibax"}</strong>
+                </>
+              )}
+            </span>
           </button>
         )}
-
-        <button
-          onClick={toggleComments}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            background: "none",
-            border: `2px solid ${entry.commentsCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
-            borderRadius: "999px",
-            padding: "4px 10px",
-            fontSize: "11.5px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-            <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
-          </span>
-          {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
-        </button>
+        {entry.incomingCount > 0 && (
+          <button onClick={() => openReactors("incoming")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
+            <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+              <strong style={{ color: COLORS.ink }}>{entry.incomingCount}</strong> Bibax {entry.incomingCount > 1 ? "arrivent" : "arrive"}
+            </span>
+          </button>
+        )}
+        {entry.santeCount > 0 && (
+          <button onClick={() => openReactors("sante")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
+            <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+              <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Cheers
+            </span>
+          </button>
+        )}
+        </div>
 
         {myUserId && (isPost || isCheck) && entry.actorId === myUserId && (
           <button
@@ -481,7 +521,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             disabled={deleting}
             aria-label={isPost ? "Supprimer ma publication" : "Supprimer mon check"}
             title="Supprimer"
-            style={{ marginLeft: "auto", display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", opacity: deleting ? 0.3 : 0.6, cursor: deleting ? "default" : "pointer" }}
+            style={{ position: "absolute", right: 0, bottom: 0, display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", opacity: deleting ? 0.3 : 0.6, cursor: deleting ? "default" : "pointer" }}
           >
             <NavIcon name="trash" size={15} color={COLORS.inkSoft} />
           </button>
@@ -492,44 +532,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             onClick={() => setReportTarget({ type: "pulse_event", id: entry.id })}
             aria-label="Signaler cette publication"
             title="Signaler"
-            style={{ marginLeft: "auto", display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", color: COLORS.inkSoft, opacity: 0.5, cursor: "pointer" }}
+            style={{ position: "absolute", right: 0, bottom: 0, display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", color: COLORS.inkSoft, opacity: 0.5, cursor: "pointer" }}
           >
             <ReportIcon size={12} />
           </button>
         )}
       </div>
-
-      {deleteError && <p style={{ color: COLORS.wine, fontSize: "12px", margin: "8px 0 0" }}>{deleteError}</p>}
-
-      {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
-      liste complète des personnes concernées. */}
-      {entry.bixCount > 0 && (
-        <button onClick={() => openReactors("bix")} style={{ display: "block", background: "none", border: "none", padding: "6px 0 0", textAlign: "left", cursor: "pointer" }}>
-          <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-            Bixé par <strong style={{ color: COLORS.ink }}>{entry.lastBixerName || "quelqu'un"}</strong>
-            {entry.bixCount > 1 && (
-              <>
-                {" "}
-                et <strong style={{ color: COLORS.ink }}>{entry.bixCount - 1} autre{entry.bixCount > 2 ? "s Bibax" : " Bibax"}</strong>
-              </>
-            )}
-          </span>
-        </button>
-      )}
-      {entry.incomingCount > 0 && (
-        <button onClick={() => openReactors("incoming")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
-          <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-            <strong style={{ color: COLORS.ink }}>{entry.incomingCount}</strong> Bibax {entry.incomingCount > 1 ? "arrivent" : "arrive"}
-          </span>
-        </button>
-      )}
-      {entry.santeCount > 0 && (
-        <button onClick={() => openReactors("sante")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
-          <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-            <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Cheers
-          </span>
-        </button>
-      )}
 
       {showComments && (
         <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
