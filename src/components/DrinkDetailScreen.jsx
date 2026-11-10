@@ -475,6 +475,7 @@ export function DrinkDetailScreen({
       publishToPulse: result.publishToPulse,
       visibility: result.visibility,
       content: result.content,
+      discovery: result.discovery,
     });
     setMyCheckCount((n) => (n == null ? 1 : n + 1));
     // Le check lui-même est enregistré ; seule la publication dans BibaPulse a échoué.
@@ -1073,6 +1074,7 @@ export function DrinkDetailScreen({
           drinkType={drink.type}
           myRating={myRating}
           enableContent
+          canDiscover={myCheckCount === 0}
           onRate={(value) => onRate(value, { skipDiscoveryPulse: true })}
           onUnrate={() => onUnrate(drink.id)}
           onClose={handleCheckConfirmed}

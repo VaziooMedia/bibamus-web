@@ -1780,14 +1780,15 @@ export default function App() {
   // produit, "Check" ensuite. L'émission d'événement ci-dessous ne sert qu'aux statistiques
   // (skipPulse) : la publication, elle, est faite une seule fois plus bas. Renvoie le résultat de
   // la publication ({ ok } ou { error }), ou null si rien n'a été publié.
-  const checkInDrink = async (drinkId, venueId, { publishToPulse = true, volumeCl = null, visibility = null, content = null } = {}) => {
+  const checkInDrink = async (drinkId, venueId, { publishToPulse = true, volumeCl = null, visibility = null, content = null, discovery } = {}) => {
     emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: true });
     await recordDrinkCheckIn(drinkId, venueId, volumeCl);
     trackEvent("drink_checked", "drink", profile.myBibroCode);
     if (!publishToPulse) return null;
     // Le check vient d'être enregistré : s'il est le seul, c'est le premier de cette personne.
     const checkCount = await loadMyDrinkCheckinCount(drinkId);
-    return publishDrinkCheckInToPulse(drinkId, venueId, { isDiscovery: checkCount <= 1, visibility, content });
+    // discovery : le choix de la personne (case « Je découvre ce produit ») ; non renseigné, la règle habituelle s'applique.
+    return publishDrinkCheckInToPulse(drinkId, venueId, { isDiscovery: checkCount <= 1 && discovery !== false, visibility, content });
   };
 
   // Check depuis l'écran Drink Check (BibaSolo et salons) : la fenêtre est la même que sur les fiches produit (photo,
