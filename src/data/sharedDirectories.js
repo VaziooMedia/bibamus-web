@@ -3067,9 +3067,12 @@ export async function loadDrinksByBrand(brandName) {
 
 // Câblage Producteur ↔ Marque ↔ Produit — via les vraies clés (producer_id, brand_id,
 // producer_ids), en plus des fonctions ci-dessus qui restent basées sur le nom.
+// Les marques d'un producteur : celles dont producer_ids contient son identifiant. producer_ids est une colonne jsonb (tableau d'identifiants) :
+// le filtre « contient » doit donc recevoir un JSON (["id"]) ; un tableau JavaScript est envoyé sous forme de tableau Postgres ({id}), que le serveur
+// refuse pour une colonne jsonb (la fiche Producteur affichait alors « Aucune marque liée »). Seules les marques visibles dans l'app sont rendues.
 export async function loadBrandsByProducer(producerId) {
   if (!producerId) return [];
-  const { data, error } = await supabase.from("brands_directory").select("*").contains("producer_ids", [producerId]).order("name");
+  const { data, error } = await supabase.from("brands_directory").select("*").in("status", APP_VISIBLE_STATUSES).contains("producer_ids", JSON.stringify([producerId])).order("name");
   if (error) {
     console.error("loadBrandsByProducer:", error);
     return [];
