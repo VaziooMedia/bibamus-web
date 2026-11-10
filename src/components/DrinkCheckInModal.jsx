@@ -31,7 +31,10 @@ const SPECIAL_VENUES = [
 // Le résultat renvoyé à onClose est { publishToPulse, venueId, visibility, content, rating } — content ne
 // contient que ce qui a été renseigné : { comment, rating, photoUrl, taggedIds } ; rating est la note du check
 // (null si « Pas de note »), même quand rien n'est publié dans BibaPulse.
-export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRating, presetVenue = null, enableContent = false, onRate, onUnrate, onClose }) {
+// canDiscover : c'est le premier check de ce produit par la personne ; la case « Je goûte ce produit pour la première fois » est alors proposée
+// (décochée par défaut : un premier check sur Bibamus n'est pas forcément une découverte) et le résultat porte discovery
+// (vrai / faux). Sans canDiscover, discovery vaut undefined : l'application garde sa règle habituelle.
+export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRating, presetVenue = null, enableContent = false, canDiscover = false, onRate, onUnrate, onClose }) {
   const hasRating = myRating != null;
   const [isEditingRating, setIsEditingRating] = useState(!hasRating);
   const [pendingValue, setPendingValue] = useState(hasRating ? myRating : 0.25);
@@ -39,6 +42,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
   // pour compléter le lieu et le reste ; c'est le bouton « DrinkCheck » qui valide.
   const [skipRating, setSkipRating] = useState(false);
   const [publishToPulse, setPublishToPulse] = useState(true);
+  const [discovery, setDiscovery] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedVenue, setSelectedVenue] = useState(presetVenue);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -96,7 +100,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
     }
 
     if (isEditingRating && !skipRating) onRate(pendingValue);
-    onClose({ publishToPulse, venueId: selectedVenue?.id || null, visibility: form.visibility, content, rating: ratingForPulse });
+    onClose({ publishToPulse, venueId: selectedVenue?.id || null, visibility: form.visibility, content, rating: ratingForPulse, discovery: canDiscover ? discovery : undefined });
   };
 
   return (
@@ -291,7 +295,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
 
         <button
           onClick={() => setPublishToPulse((v) => !v)}
-          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: "20px", background: "none", border: "none", padding: 0, textAlign: "left" }}
+          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: publishToPulse && canDiscover ? "12px" : "20px", background: "none", border: "none", padding: 0, textAlign: "left" }}
         >
           <span
             style={{
@@ -315,6 +319,33 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
             </strong>
           </span>
         </button>
+
+        {/* Premier check de ce produit : la personne dit elle-même si c'est une vraie découverte. */}
+        {publishToPulse && canDiscover && (
+          <button
+            type="button"
+            onClick={() => setDiscovery((v) => !v)}
+            aria-pressed={discovery}
+            style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 20px 28px", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", color: COLORS.ink }}
+          >
+            <span
+              style={{
+                width: "18px",
+                height: "18px",
+                flexShrink: 0,
+                borderRadius: "4px",
+                background: discovery ? COLORS.amber : "none",
+                border: `2px solid ${discovery ? COLORS.amber : COLORS.paperAlt}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {discovery && <NavIcon name="check" size={13} color="#000" />}
+            </span>
+            <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>Je goûte ce produit pour la première fois</span>
+          </button>
+        )}
 
         {enableContent && publishToPulse && <PulseContentFields form={form} />}
 
