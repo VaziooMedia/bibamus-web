@@ -85,8 +85,8 @@ export function PulsePostScreen({ onBack, onPublished, canShareStory = false }) 
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: 0, lineHeight: 1, color: COLORS.ink }}>Nouvelle publication</h1>
       </div>
 
-      <PulseContentFields form={form} commentLabel="Texte" commentPlaceholder="Qu'as-tu envie de partager ?" />
-      <PulseTagsPicker tags={tags} onChange={setTags} />
+      <PulseContentFields form={form} commentLabel="Texte" commentPlaceholder="Qu'as-tu envie de partager ?" dividers endDivider />
+      <PulseTagsPicker tags={tags} onChange={setTags} endDivider={showStoryOption} />
 
       {showStoryOption && (
         <div style={{ marginBottom: "20px" }}>

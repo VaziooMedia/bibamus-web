@@ -20,7 +20,7 @@ import { EntityAvatar } from "./ui.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
 import { makeSearchMatcher } from "../utils.js";
-import { usePulseContentForm, buildPulseContent, PulseContentFields, SectionLabel } from "./PulseContentForm.jsx";
+import { usePulseContentForm, buildPulseContent, PulseContentFields, SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
 
 const SPECIAL_VENUES = [
   { id: "@home", name: "@Home" },
@@ -50,6 +50,8 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
   const [searchedVenues, setSearchedVenues] = useState([]);
   const form = usePulseContentForm("public");
   const [sending, setSending] = useState(false);
+  // Champs de publication affichés (visibilité, commentaire, photo, Bibax) : ils ouvrent un nouveau bloc de sections.
+  const showContent = enableContent && publishToPulse;
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -163,7 +165,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
             <button
               onClick={() => setSkipRating((v) => !v)}
               aria-pressed={skipRating}
-              style={{ display: "flex", alignItems: "center", width: "100%", background: "none", border: "none", borderRadius: "10px", padding: "5px 0", cursor: "pointer", textAlign: "left", marginTop: "6px" }}
+              style={{ display: "flex", alignItems: "center", width: "100%", background: "none", border: "none", borderRadius: "10px", padding: "5px 0 0", cursor: "pointer", textAlign: "left", marginTop: "6px" }}
             >
               <span style={{ fontSize: "13px", fontWeight: 600, color: skipRating ? "#fff" : "#ef007c", background: skipRating ? "#ef007c" : "none", borderRadius: "999px", padding: "5px 12px", marginLeft: "-12px" }}>Pas de note</span>
             </button>
@@ -196,7 +198,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
         ) : (
           // Note déjà donnée : verrouillée par défaut — ni barre d'étoiles ni retrait, seulement la valeur actuelle.
           // C'est à l'utilisateur de demander à la revoir (« Modifier »).
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px" }}>
               <span style={{ color: COLORS.amber }}>{String(myRating).replace(".", ",")}</span>
               <span style={{ color: COLORS.ink }}>/5</span>
@@ -213,10 +215,10 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
             </button>
           </div>
         )}
-        <div style={{ borderBottom: `1px dashed ${COLORS.paperAlt}`, margin: "16px 0" }} />
+        <SectionDivider />
 
         <SectionLabel icon="map-pin">Lieu</SectionLabel>
-        <div style={{ position: "relative", marginBottom: "18px" }}>
+        <div style={{ position: "relative" }}>
           <input
             value={selectedVenue ? selectedVenue.name : query}
             onChange={(e) => {
@@ -292,10 +294,11 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
             </div>
           )}
         </div>
+        <SectionDivider />
 
         <button
           onClick={() => setPublishToPulse((v) => !v)}
-          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: publishToPulse && canDiscover ? "12px" : "20px", background: "none", border: "none", padding: 0, textAlign: "left" }}
+          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: publishToPulse && canDiscover ? "12px" : showContent ? "0" : "20px", background: "none", border: "none", padding: 0, textAlign: "left" }}
         >
           <span
             style={{
@@ -326,7 +329,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
             type="button"
             onClick={() => setDiscovery((v) => !v)}
             aria-pressed={discovery}
-            style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 20px 28px", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", color: COLORS.ink }}
+            style={{ display: "flex", alignItems: "center", gap: "10px", margin: showContent ? "0 0 0 28px" : "0 0 20px 28px", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", color: COLORS.ink }}
           >
             <span
               style={{
@@ -347,7 +350,8 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
           </button>
         )}
 
-        {enableContent && publishToPulse && <PulseContentFields form={form} />}
+        {showContent && <SectionDivider />}
+        {showContent && <PulseContentFields form={form} dividers />}
 
         {form.error && <p style={{ color: COLORS.wine, fontSize: "13px", margin: "0 0 12px" }}>{form.error}</p>}
 

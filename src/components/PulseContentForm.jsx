@@ -124,12 +124,24 @@ export function SectionLabel({ icon, style, children }) {
   );
 }
 
-export function PulseContentFields({ form, showBibax = true, commentLabel = "Commentaire", commentPlaceholder = "Ton avis, une anecdote..." }) {
+// Fine barre grise entre deux sections d'une fenêtre (PlaceCheck, DrinkCheck). Elle porte elle-même l'espace
+// au-dessus et au-dessous (16px) : la section qui la précède ne garde donc aucune marge basse.
+export function SectionDivider() {
+  return <div role="separator" style={{ height: "1px", background: COLORS.paperAlt, margin: "16px 0" }} />;
+}
+
+// `dividers`    : insère une barre SectionDivider entre les sections (Confidentialité, Commentaire, Photo, Bibax).
+// `afterPhoto`  : section supplémentaire glissée entre Photo et Bibax (PlaceCheck : Interaction) ; à utiliser avec `dividers`,
+//                 le bloc fourni ne porte alors aucune marge.
+// `endDivider`  : ajoute aussi une barre à la fin du bloc, quand une autre section le suit (« Nouvelle publication » : Tags).
+export function PulseContentFields({ form, showBibax = true, commentLabel = "Commentaire", commentPlaceholder = "Ton avis, une anecdote...", dividers = false, afterPhoto = null, endDivider = false }) {
   const { visibility, setVisibility, comment, setComment, photo, setPhoto, tagQuery, setTagQuery, tagResults, setTagResults, taggedPeople, setTaggedPeople, fileInputRef, handlePhotoPick } = form;
+  // Avec barres, c'est la barre qui porte l'espace entre deux sections : la section qui la précède n'a plus de marge basse.
+  const end = (px) => (dividers ? "0" : px);
   return (
-    <div style={{ marginBottom: "20px" }}>
+    <div style={{ marginBottom: endDivider ? "0" : "20px" }}>
       <SectionLabel icon="lock" style={{ marginBottom: "8px" }}>Confidentialité</SectionLabel>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: end("16px") }}>
         {[
           { key: "public", label: "Public" },
           { key: "relations", label: "Mes Bibax" },
@@ -153,6 +165,7 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
           </button>
         ))}
       </div>
+      {dividers && <SectionDivider />}
 
       <SectionLabel icon="align-left">{commentLabel}</SectionLabel>
       <textarea
@@ -163,12 +176,13 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
         placeholder={commentPlaceholder}
         style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontSize: "14px", fontFamily: "inherit", resize: "none" }}
       />
-      <p style={{ margin: "2px 0 14px", fontSize: "11px", color: COLORS.inkSoft, textAlign: "right" }}>{comment.length}/280</p>
+      <p style={{ margin: dividers ? "2px 0 0" : "2px 0 14px", fontSize: "11px", color: COLORS.inkSoft, textAlign: "right" }}>{comment.length}/280</p>
+      {dividers && <SectionDivider />}
 
       <SectionLabel icon="camera">Photo</SectionLabel>
       <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoPick} />
       {photo ? (
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: end("16px") }}>
           <img src={photo.previewUrl} alt="Aperçu de la photo" style={{ width: "72px", height: "72px", objectFit: "cover", borderRadius: "10px", flexShrink: 0 }} />
           <button
             onClick={() => setPhoto(null)}
@@ -180,15 +194,18 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
       ) : (
         <button
           onClick={() => fileInputRef.current && fileInputRef.current.click()}
-          style={{ display: "block", width: "100%", background: "none", border: `2px dashed ${COLORS.paperAlt}`, borderRadius: "10px", padding: "11px", color: COLORS.inkSoft, fontSize: "13.5px", fontWeight: 600, cursor: "pointer", marginBottom: "16px" }}
+          style={{ display: "block", width: "100%", background: "none", border: `2px dashed ${COLORS.paperAlt}`, borderRadius: "10px", padding: "11px", color: COLORS.inkSoft, fontSize: "13.5px", fontWeight: 600, cursor: "pointer", marginBottom: end("16px") }}
         >
           Ajouter une photo
         </button>
       )}
+      {dividers && (afterPhoto || showBibax) && <SectionDivider />}
+      {afterPhoto}
+      {dividers && afterPhoto && showBibax && <SectionDivider />}
 
       {showBibax && <SectionLabel icon="bibax">Bibax</SectionLabel>}
       {showBibax && taggedPeople.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: dividers && taggedPeople.length >= MAX_TAGS ? "0" : "8px" }}>
           {taggedPeople.map((person) => (
             <span key={person.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 6px 4px 5px", fontSize: "12.5px", color: COLORS.ink }}>
               <EntityAvatar photoUrl={person.avatarUrl} size={20} />
@@ -246,6 +263,7 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
           )}
         </div>
       )}
+      {endDivider && <SectionDivider />}
     </div>
   );
 }
