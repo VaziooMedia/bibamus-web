@@ -12,7 +12,9 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { PulsePostScreen } from "./PulsePostScreen.jsx";
 import { PulseTagPills, postTagsOf, usePostTagEntities } from "./PulseTags.jsx";
 import { PulseProductCard, usePulseProducersById } from "./PulseProductCard.jsx";
+import { PulseVenueCard } from "./PulseVenueCard.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
+import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -150,7 +152,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const [checkDialog, setCheckDialog] = useState(null);
 
   const obj = resolveObject(entry, directories);
-  // hideProduct : on est déjà sur la fiche de ce produit (onglet BibaPulse d'une fiche Produit) — inutile de la remontrer dans chaque carte.
+  // hideProduct : on est déjà sur la fiche de cet objet (onglet BibaPulse d'une fiche Produit pour un DrinkCheck, d'une fiche Lieu pour un
+  // PlaceCheck) — inutile de la remontrer dans chaque carte.
   const showProductBlock = !!obj && !hideProduct;
 
   const canOpenObject = obj && ((entry.objectType === "venue" && onOpenVenue) || (entry.objectType === "drink" && onOpenDrink));
@@ -175,8 +178,13 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const isCheck = CHECK_EVENT_TYPES.includes(entry.eventType);
   // DrinkCheck (check d'un produit après le premier) : « DrinkCheck » avec l'icône du check, puis la fiche du produit en petit, puis le lieu du check.
   const isDrinkCheck = entry.eventType === "drink_checked";
-  // DrinkCheck : photo et commentaire de l'auteur, montrés sous le bloc du produit (voir plus bas).
-  const checkNote = isDrinkCheck ? pulseNoteOf(entry) : { comment: "", photoUrl: null };
+  // PlaceCheck (check d'un lieu sans produit, `venue_visit`) : même présentation que le DrinkCheck — « PlaceCheck » avec l'icône du check
+  // de lieu, puis la fiche du lieu en petit.
+  const isPlaceCheck = entry.eventType === "venue_visit";
+  // Cartes refaites (une sorte de carte à la fois) : en-tête sur une seule ligne, ligne « DrinkCheck » / « PlaceCheck », bloc de la fiche.
+  const isRedesigned = isDrinkCheck || isPlaceCheck;
+  // DrinkCheck et PlaceCheck : photo et commentaire de l'auteur, montrés sous le bloc de la fiche (voir plus bas).
+  const checkNote = isRedesigned ? pulseNoteOf(entry) : { comment: "", photoUrl: null };
   const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
 
   const handleDelete = async () => {
@@ -344,9 +352,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             }
       }
     >
-      <span style={{ position: "absolute", top: isDrinkCheck ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
+      <span style={{ position: "absolute", top: isRedesigned ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
 
-      <div style={{ display: "flex", alignItems: isDrinkCheck ? "center" : "flex-start", gap: "10px", marginBottom: "10px" }}>
+      <div style={{ display: "flex", alignItems: isRedesigned ? "center" : "flex-start", gap: "10px", marginBottom: "10px" }}>
         {/* Le rond de profil mène à la fiche de son auteur. */}
         <EntityAvatar
           photoUrl={entry.actorAvatarUrl}
@@ -357,7 +365,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
           </p>
-          {!isDrinkCheck && (
+          {!isRedesigned && (
             <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
               {isClubJoin ? (
                 <>
@@ -399,13 +407,14 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       </div>
 
-      {/* DrinkCheck : une ligne à part sous l'en-tête — « DrinkCheck » (icône du check, « Check » en vert fluo) à gauche, la note de l'auteur à l'extrême droite. */}
-      {isDrinkCheck && (
+      {/* DrinkCheck / PlaceCheck : une ligne à part sous l'en-tête — « DrinkCheck » ou « PlaceCheck » (icône du check de la fiche, « Check » en vert fluo) à gauche, la note de l'auteur à l'extrême droite. */}
+      {isRedesigned && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "10px" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
-            <img src={beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
+            <img src={isPlaceCheck ? placeCheckIconUrl : beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
             <span>
-              Drink<span style={{ color: COLORS.amber }}>Check</span>
+              {isPlaceCheck ? "Place" : "Drink"}
+              <span style={{ color: COLORS.amber }}>Check</span>
             </span>
           </span>
           {typeof entry.metadata?.rating === "number" && (
@@ -420,9 +429,10 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       )}
 
-      {isDrinkCheck && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName) && (
+      {isRedesigned && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName) && (
         <div style={{ marginBottom: "18px" }}>
-          {showProductBlock && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
+          {showProductBlock && isDrinkCheck && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
+          {showProductBlock && isPlaceCheck && <PulseVenueCard venue={obj} onOpen={openObject || undefined} />}
           {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui. La photo y est entière (jamais recadrée),
               en petit et collée à gauche, le commentaire à sa droite. */}
           {(checkNote.photoUrl || checkNote.comment) && (
@@ -470,7 +480,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       )}
 
-      <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} hideRating={isDrinkCheck} hideNote={isDrinkCheck} />
+      <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} hideRating={isRedesigned} hideNote={isRedesigned} />
 
       {/* Bloc d'actions : boutons de réaction, puis résumés (« Bixé par… »). L'icône Supprimer / Signaler est toujours dans son coin bas droit,
           quel que soit le nombre de lignes. */}
