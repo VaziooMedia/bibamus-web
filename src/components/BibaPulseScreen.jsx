@@ -71,10 +71,21 @@ const SPECIAL_VENUE_LABELS = { "@home": "@Home", "@event": "@Event" };
 // de plus. Les textes passent par React (jamais interprétés comme du code).
 // Une publication libre porte aussi des tags de fiche (metadata.tags) : leurs noms viennent de tagEntities
 // (voir usePostTagEntities), et une pastille mène à la fiche quand tagHandlers sait l'ouvrir.
-function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {}, hideRating = false }) {
+// Photo et commentaire ajoutés par l'auteur de la carte.
+function pulseNoteOf(entry) {
   const meta = entry.metadata || {};
-  const comment = typeof meta.comment === "string" ? meta.comment : "";
-  const photoUrl = typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null;
+  return {
+    comment: typeof meta.comment === "string" ? meta.comment : "",
+    photoUrl: typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null,
+  };
+}
+
+function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {}, hideRating = false, hideNote = false }) {
+  const meta = entry.metadata || {};
+  const note = pulseNoteOf(entry);
+  // hideNote : la photo et le commentaire sont montrés ailleurs dans la carte (sous le bloc du produit, pour un DrinkCheck).
+  const comment = hideNote ? "" : note.comment;
+  const photoUrl = hideNote ? null : note.photoUrl;
   // hideRating : la note de l'auteur est déjà montrée ailleurs dans la carte (ligne « DrinkCheck »).
   const rating = !hideRating && typeof meta.rating === "number" ? meta.rating : null;
   const tagged = Array.isArray(meta.tagged) ? meta.tagged : [];
@@ -164,6 +175,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const isCheck = CHECK_EVENT_TYPES.includes(entry.eventType);
   // DrinkCheck (check d'un produit après le premier) : « DrinkCheck » avec l'icône du check, puis la fiche du produit en petit, puis le lieu du check.
   const isDrinkCheck = entry.eventType === "drink_checked";
+  // DrinkCheck : photo et commentaire de l'auteur, montrés sous le bloc du produit (voir plus bas).
+  const checkNote = isDrinkCheck ? pulseNoteOf(entry) : { comment: "", photoUrl: null };
   const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
 
   const handleDelete = async () => {
@@ -366,11 +379,22 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       )}
 
-      {isDrinkCheck && (showProductBlock || checkVenueName) && (
+      {isDrinkCheck && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName) && (
         <div style={{ marginBottom: "18px" }}>
           {showProductBlock && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
+          {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui (photo en haut, commentaire dessous). */}
+          {(checkNote.photoUrl || checkNote.comment) && (
+            <div style={{ margin: showProductBlock ? "8px 0 0" : 0, background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflow: "hidden" }}>
+              {checkNote.photoUrl && (
+                <img src={checkNote.photoUrl} alt="Photo de la publication" loading="lazy" style={{ width: "100%", maxHeight: "220px", objectFit: "cover", display: "block" }} />
+              )}
+              {checkNote.comment && (
+                <p style={{ margin: 0, padding: "10px 12px", fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{checkNote.comment}</p>
+              )}
+            </div>
+          )}
           {checkVenueName && (
-            <p style={{ margin: showProductBlock ? "14px 0 0" : 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
+            <p style={{ margin: showProductBlock || checkNote.photoUrl || checkNote.comment ? "14px 0 0" : 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
               {/* Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ». */}
               <NavIcon name="map-pin" size={16} color={COLORS.amber} />
               {openCheckVenue ? (
@@ -385,7 +409,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       )}
 
-      <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} hideRating={isDrinkCheck} />
+      <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} hideRating={isDrinkCheck} hideNote={isDrinkCheck} />
 
       {/* Bloc d'actions : boutons de réaction, puis résumés (« Bixé par… »). L'icône Supprimer / Signaler est toujours dans son coin bas droit,
           quel que soit le nombre de lignes. */}
