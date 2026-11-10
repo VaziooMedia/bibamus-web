@@ -109,7 +109,10 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
   const [hoursBlockHeight, setHoursBlockHeight] = useState(null);
   useLayoutEffect(() => {
     if (!hoursBlockRef.current) return undefined;
-    const measure = () => setHoursBlockHeight(hoursBlockRef.current.offsetHeight);
+    // Le bloc disparaît quand on change d'onglet : la mesure tardive de l'observateur ne doit alors rien lire.
+    const measure = () => {
+      if (hoursBlockRef.current) setHoursBlockHeight(hoursBlockRef.current.offsetHeight);
+    };
     measure();
     // Les horaires sont chargées de façon asynchrone (fetch Google) : le bloc affiche
     // d'abord "Chargement des horaires..." (pas de bordure/fond, hauteur différente) avant
