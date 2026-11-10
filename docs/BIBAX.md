@@ -1,7 +1,7 @@
 # BIBAX — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-11-05 (`get_my_bibax_brand_rating`, ligne « Bibax » des notes d'une marque) ; 2026-11-04 (recherche d'un Bibax : règle de recherche commune) ; 2026-10-24 (liens @nom, recherche par @nom ; 2026-10-13 pour le reste). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
+> Dernière mise à jour : 2026-11-10 (cloche « Suivre sur Pulse » d'un Bibax : son état réel est lu à l'ouverture de la fiche, `get_notify_pulse`) ; 2026-11-05 (`get_my_bibax_brand_rating`, ligne « Bibax » des notes d'une marque) ; 2026-11-04 (recherche d'un Bibax : règle de recherche commune) ; 2026-10-24 (liens @nom, recherche par @nom ; 2026-10-13 pour le reste). Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de toutes les fonctions de relation Bibax), donc non revérifié.
 
 ---
 
@@ -45,7 +45,8 @@ Colonnes visibles dans les scripts : `requester_id`, `requestee_id`, `status` (`
 | `lookup_username(p_username)` | Retrouver un compte, un lieu, une marque ou un producteur par son @nom exact | Livrée le 2026-10-24 ; comptes connectés seulement ; rend au plus une ligne (`kind`, `id`, `username`, `bibro_code`, ce dernier seulement pour un compte) ; voir `DATABASE.md` |
 | `search_bibax_by_name(p_query)`, `search_bibax(p_query)` | Recherche | Voir plus haut |
 | `block_user`, `unblock_user`, `get_my_blocked_users` | Blocage | Voir plus bas |
-| `toggle_notify_pulse(p_target_code)` | Cloche « Suivre sur Pulse » | |
+| `toggle_notify_pulse(p_target_code)` | Cloche « Suivre sur Pulse » (bascule la valeur enregistrée) | |
+| `get_notify_pulse(p_target_code)` | État réel de MA cloche « Suivre sur Pulse » sur ce Bibax (lecture seule ; `true` / `false`, `false` si non Bibax confirmé ou inconnu) ; script `bibamus-sql-cloche-bibax-1-lecture-etat.sql` (2026-11-10) | |
 | `toggle_follow(p_target_code)` | Suivi à sens unique | Aucun appelant dans l'app |
 | `get_bibax_stats_overview / records / venues` | Statistiques partagées d'un Bibax | Soumises aux réglages `share_stats_overview`, `share_stats_records`, `share_stats_venues` (voir `PROFILE.md`) ; relevées dans la base le 2026-10-23 |
 | `get_bibax_stats_drinks(p_user_id, p_since, p_until)` | Boisson préférée et catégorie la plus consommée d'un Bibax | Créée le 2026-10-23 (script `bibamus-sql-biba360-4-stats-boissons-d-un-bibax.sql`) : ne rend rien sauf si l'appelant est la personne elle-même, ou un Bibax **confirmé** non bloqué d'une personne dont `share_stats_drinks` est vrai. La catégorie est le code technique (`drinks_directory.type`, ex. `bieres_cidres`) : `loadBibaxStatsDrinks` le traduit en libellé |
@@ -115,7 +116,7 @@ Un Bibax peut être tagué dans une carte BibaPulse et dans une Story, sous rés
 
 ## Connu comme incomplet / non construit
 
-- `toggle_follow` (suivi à sens unique d'un Bibax) : fonction présente, aucune interface. La cloche « Suivre sur Pulse » (`toggle_notify_pulse`) est son remplaçant, mais son état n'est **jamais chargé** : elle s'affiche toujours éteinte à l'ouverture de la fiche.
+- `toggle_follow` (suivi à sens unique d'un Bibax) : fonction présente, aucune interface. La cloche « Suivre sur Pulse » (`toggle_notify_pulse`) est son remplaçant. Depuis le 2026-11-10, son **état réel est lu à l'ouverture de la fiche** (`loadNotifyPulse` → `get_notify_pulse`) : la cloche est grisée le temps de la lecture, puis allumée ou éteinte selon la valeur enregistrée (avant, elle s'affichait toujours éteinte alors que `toggle_notify_pulse` **bascule** la valeur : un appui sur une cloche affichée éteinte mais allumée côté serveur l'éteignait). Si la lecture échoue (ou si le script SQL n'est pas encore passé), elle redevient utilisable et s'affiche éteinte, comme avant.
 - `remove_bibax` (par identifiant) importée, jamais appelée ; le retrait par code n'attend pas son résultat — en cas d'échec, la synchronisation de 30 s ré-ajoute l'entrée.
 - Pinterest et Twitch des Bibax confirmés ne sont pas synchronisés.
 - Le blocage n'est possible que depuis la fiche d'un Bibax confirmé (pas depuis un profil public, une demande reçue ou une suggestion) ; les suggestions, elles, écartent les bloqués dans les deux sens.

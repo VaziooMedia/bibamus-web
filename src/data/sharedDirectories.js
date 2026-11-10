@@ -4658,6 +4658,18 @@ export async function toggleNotifyPulse(targetBibroCode) {
   return data;
 }
 
+// État réel de MA cloche « Suivre sur Pulse » sur un Bibax (fonction SQL get_notify_pulse, lecture seule). toggle_notify_pulse
+// BASCULE la valeur enregistrée : la fiche doit donc partir de cet état, sinon un appui sur une cloche affichée « éteinte » mais
+// allumée côté serveur l'éteint. Renvoie true / false, ou null si la lecture échoue (la fiche garde alors son comportement d'avant).
+export async function loadNotifyPulse(targetBibroCode) {
+  const { data, error } = await supabase.rpc("get_notify_pulse", { p_target_code: targetBibroCode });
+  if (error || typeof data !== "boolean") {
+    console.error("loadNotifyPulse:", error || "réponse inattendue");
+    return null;
+  }
+  return data;
+}
+
 export async function toggleFollow(targetBibroCode) {
   const { data, error } = await supabase.rpc("toggle_follow", { p_target_code: targetBibroCode });
   if (error) return { error: error.message };

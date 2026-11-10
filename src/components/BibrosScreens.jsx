@@ -25,6 +25,7 @@ import {
   searchBibaxByName,
   lookupUsername,
   toggleNotifyPulse,
+  loadNotifyPulse,
   loadPulseStories,
   loadBibaxPulseActivity,
   loadBibaxStatsOverview,
@@ -699,6 +700,9 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
   const [showRemoveSheet, setShowRemoveSheet] = useState(false);
   const [notifyPulse, setNotifyPulse] = useState(bibro?.notifyPulse || false);
   const [togglingNotify, setTogglingNotify] = useState(false);
+  // La cloche part de son état réel (lu côté serveur) : elle reste grisée le temps de la lecture, pour qu'un appui ne bascule
+  // jamais une cloche qu'on croit éteinte alors qu'elle est allumée. Si la lecture échoue, elle redevient utilisable (éteinte au départ).
+  const [notifyLoaded, setNotifyLoaded] = useState(false);
   const [activeStories, setActiveStories] = useState([]);
   // Extrait — seulement les 3 dernières, la page complète (BibroPulseScreen) charge le reste.
   const [pulseExcerpt, setPulseExcerpt] = useState(null);
@@ -727,6 +731,20 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
     if (!bibro?.userId) return;
     loadBibaxPulseActivity(bibro.userId).then((entries) => setPulseExcerpt(entries.slice(0, 3)));
   }, [bibro?.userId]);
+
+  useEffect(() => {
+    if (!bibro?.code) return;
+    let cancelled = false;
+    setNotifyLoaded(false);
+    loadNotifyPulse(bibro.code).then((value) => {
+      if (cancelled) return;
+      if (value !== null) setNotifyPulse(value);
+      setNotifyLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [bibro?.code]);
 
   const handleToggleNotify = async () => {
     setTogglingNotify(true);
@@ -800,7 +818,7 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
       <div style={{ position: "relative", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", padding: "10px 16px", marginTop: "4px", marginBottom: "10px" }}>
         <button
           onClick={handleToggleNotify}
-          disabled={togglingNotify}
+          disabled={togglingNotify || !notifyLoaded}
           title={notifyPulse ? "Suivi sur Pulse — toutes ses activités apparaissent" : "Suivre sur Pulse"}
           style={{
             position: "absolute",
@@ -813,7 +831,8 @@ export function BibroDetailScreen({ bibro, myUserId, onBack, previewNotice, onRe
             height: "32px",
             background: "none",
             border: "none",
-            cursor: togglingNotify ? "default" : "pointer",
+            cursor: togglingNotify || !notifyLoaded ? "default" : "pointer",
+            opacity: notifyLoaded ? 1 : 0.4,
             padding: 0,
           }}
         >
