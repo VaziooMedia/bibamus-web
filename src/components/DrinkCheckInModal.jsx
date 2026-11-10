@@ -31,7 +31,7 @@ const SPECIAL_VENUES = [
 // Le résultat renvoyé à onClose est { publishToPulse, venueId, visibility, content, rating } — content ne
 // contient que ce qui a été renseigné : { comment, rating, photoUrl, taggedIds } ; rating est la note du check
 // (null si « Pas de note »), même quand rien n'est publié dans BibaPulse.
-// canDiscover : c'est le premier check de ce produit par la personne ; la case « Je découvre ce produit » est alors proposée
+// canDiscover : c'est le premier check de ce produit par la personne ; la case « Je goûte ce produit pour la première fois » est alors proposée
 // (décochée par défaut : un premier check sur Bibamus n'est pas forcément une découverte) et le résultat porte discovery
 // (vrai / faux). Sans canDiscover, discovery vaut undefined : l'application garde sa règle habituelle.
 export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRating, presetVenue = null, enableContent = false, canDiscover = false, onRate, onUnrate, onClose }) {
@@ -326,7 +326,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
             type="button"
             onClick={() => setDiscovery((v) => !v)}
             aria-pressed={discovery}
-            style={{ display: "flex", alignItems: "flex-start", gap: "10px", margin: "0 0 20px 28px", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", color: COLORS.ink }}
+            style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 20px 28px", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", color: COLORS.ink }}
           >
             <span
               style={{
@@ -339,17 +339,11 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                marginTop: "1px",
               }}
             >
               {discovery && <NavIcon name="check" size={13} color="#000" />}
             </span>
-            <span>
-              <span style={{ display: "block", fontSize: "13.5px", fontWeight: 700 }}>Je découvre ce produit</span>
-              <span style={{ display: "block", fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "2px", lineHeight: 1.4 }}>
-                C'est ton premier check ici. Laisse décoché si tu le connais déjà : ta publication sera un simple DrinkCheck.
-              </span>
-            </span>
+            <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>Je goûte ce produit pour la première fois</span>
           </button>
         )}
 
