@@ -10,15 +10,21 @@
 // Sans effet pour une fiche Producteur ou Marque : leurs cartes portent sur des produits différents, jamais
 // sur le producteur ou la marque eux-mêmes.
 //
+// Retour sur la carte (returnEntryId, onRememberEntry) : quand on ouvre une autre fiche (produit, lieu, marque, producteur, son propre
+// profil) depuis une carte de cette liste, puis qu'on revient (flèche retour), la fiche se rouvre sur cet onglet et la liste se
+// replace sur la carte d'où l'on est parti — comme le fil principal (BibaPulseScreen). L'écran hôte garde l'identifiant de la carte
+// (onRememberEntry l'écrit, returnEntryId le rend) le temps de l'aller-retour ; la section le lit une fois puis le remet à zéro.
+//
 // Les publications libres qui TAGUENT cette fiche s'y affichent aussi (le serveur les ajoute au fil de la fiche).
 // Leurs propres tags (autres produits, marques, producteurs, lieux) sont des pastilles, cliquables seulement
 // pour les sortes de fiche que l'écran hôte sait ouvrir (onOpenDrink, onOpenVenue, onOpenBrand, onOpenProducer).
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { loadEntityPulse, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { PulseCard } from "./BibaPulseScreen.jsx";
 import { usePostTagEntities } from "./PulseTags.jsx";
+import { usePulseProducersById } from "./PulseProductCard.jsx";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 
@@ -28,13 +34,40 @@ const SCOPES = [
   { key: "bibax", label: "Mes Bibax" },
 ];
 
-export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, selfEntity }) {
+export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, selfEntity, returnEntryId = null, onRememberEntry }) {
   const [scope, setScope] = useState("all");
   const [entries, setEntries] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [viewedProfileCode, setViewedProfileCode] = useState(null);
   const { goToProfile } = React.useContext(ProfileNavContext);
+
+  // Retour d'une fiche ouverte depuis une carte : identifiant lu une fois, puis remis à zéro chez l'hôte.
+  const [returnTarget] = useState(returnEntryId || null);
+  useEffect(() => {
+    if (returnTarget && onRememberEntry) onRememberEntry(null, { consumed: returnTarget });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Mémorise la carte avant d'ouvrir une fiche, pour y revenir.
+  const rememberThen = (entryId, fn, opts) => (fn ? (...args) => { if (onRememberEntry) onRememberEntry(entryId, opts); return fn(...args); } : undefined);
+  const listRef = useRef(null);
+  const alignTo = (id) => {
+    const card = listRef.current ? listRef.current.querySelector(`[data-pulse-entry="${id}"]`) : null;
+    if (card) card.scrollIntoView({ block: "start" });
+  };
+  // Profil d'un Bibax ouvert ici même (rond de profil, personne taguée) : au retour, on remet la carte à l'écran.
+  const profileFromEntry = useRef(null);
+  const openProfileFrom = (entryId, code) => {
+    profileFromEntry.current = entryId;
+    setViewedProfileCode(code);
+  };
+  useLayoutEffect(() => {
+    if (viewedProfileCode || !profileFromEntry.current) return;
+    const id = profileFromEntry.current;
+    profileFromEntry.current = null;
+    alignTo(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewedProfileCode]);
 
   const seedDrinks = selfEntity?.type === "drink" ? [selfEntity.object] : [];
   const seedVenues = selfEntity?.type === "venue" ? { [selfEntity.object.id]: selfEntity.object } : {};
@@ -64,7 +97,10 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
   // Noms des fiches taguées dans les publications libres de cette liste.
   const tagEntities = usePostTagEntities(entries);
 
-  const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [], tagEntities };
+  // Producteurs des produits checkés (ligne « Producteur » de la fiche produit des cartes DrinkCheck).
+  const producersById = usePulseProducersById(entries, drinksDirectory);
+
+  const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [], tagEntities, producersById };
 
   useEffect(() => {
     setEntries(null);
@@ -84,6 +120,42 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
     setLoadingMore(false);
   };
 
+  // La carte d'où l'on vient n'est pas forcément dans la première page : on charge des pages supplémentaires jusqu'à la trouver
+  // (10 au plus), puis on la cale en haut de l'écran, sans animation et avant l'affichage. Les produits, lieux et producteurs des
+  // cartes se chargent après la liste et changent leur hauteur : on réaligne à chaque chargement, jusqu'à ce que la personne
+  // touche l'écran ou, au plus, 4 secondes.
+  const focusAttempts = useRef(0);
+  useEffect(() => {
+    if (!returnTarget || !entries || loadingMore) return;
+    if (entries.some((e) => e.id === returnTarget)) return;
+    if (!hasMore || focusAttempts.current >= 10) return;
+    focusAttempts.current += 1;
+    loadMore();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [returnTarget, entries, hasMore, loadingMore]);
+  const keepAligning = useRef(!!returnTarget);
+  useLayoutEffect(() => {
+    if (!keepAligning.current || !returnTarget) return;
+    alignTo(returnTarget);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries, drinksDirectory, venuesById, producersById]);
+  useEffect(() => {
+    if (!keepAligning.current) return undefined;
+    const stop = () => {
+      keepAligning.current = false;
+    };
+    const timer = setTimeout(stop, 4000);
+    window.addEventListener("wheel", stop, { passive: true });
+    window.addEventListener("touchstart", stop, { passive: true });
+    window.addEventListener("keydown", stop);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+      window.removeEventListener("keydown", stop);
+    };
+  }, []);
+
   const updateEntry = (id, patch) => {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
   };
@@ -98,7 +170,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
   }
 
   return (
-    <div>
+    <div ref={listRef}>
       {/* Liste déroulante plutôt que des boutons, pour bien la distinguer des onglets principaux
           Infos / BibaPulse, au-dessus. */}
       <select
@@ -130,18 +202,19 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
               key={entry.id}
               flat
               entry={entry}
+              hideProduct={selfEntity?.type === "drink" && entry.objectType === "drink" && entry.objectId === selfEntity.object.id}
               directories={directories}
               myUserId={myUserId}
               myBibroCode={myBibroCode}
-              onOpenVenue={onOpenVenue}
-              onOpenDrink={onOpenDrink}
-              onOpenBrand={onOpenBrand}
-              onOpenProducer={onOpenProducer}
+              onOpenVenue={rememberThen(entry.id, onOpenVenue)}
+              onOpenDrink={rememberThen(entry.id, onOpenDrink)}
+              onOpenBrand={rememberThen(entry.id, onOpenBrand)}
+              onOpenProducer={rememberThen(entry.id, onOpenProducer)}
               onOpenTagged={(person) => {
-                if (person.id === myUserId) goToProfile();
-                else if (person.bibro_code) setViewedProfileCode(person.bibro_code);
+                if (person.id === myUserId) rememberThen(entry.id, goToProfile, { profile: true })();
+                else if (person.bibro_code) openProfileFrom(entry.id, person.bibro_code);
               }}
-              onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}
+              onOpenProfile={entry.actorId === myUserId ? rememberThen(entry.id, goToProfile, { profile: true }) : (code) => openProfileFrom(entry.id, code)}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
               onDeleted={removeEntry}
             />

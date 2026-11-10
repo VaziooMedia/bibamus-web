@@ -31,9 +31,10 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onCheckConfirmed, onBack, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, claimsEnabled = true }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onCheckConfirmed, onBack, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, pulseReturnEntryId = null, onRememberPulseEntry, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
-  const [activeTab, setActiveTab] = useState("infos");
+  // Retour d'une fiche ouverte depuis une carte de l'onglet BibaPulse : on rouvre cet onglet (voir EntityPulseSection).
+  const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
   const [justCheckedIn, setJustCheckedIn] = useState(false);
 
   const [linkedProducer, setLinkedProducer] = useState(null);
@@ -108,7 +109,10 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
   const [hoursBlockHeight, setHoursBlockHeight] = useState(null);
   useLayoutEffect(() => {
     if (!hoursBlockRef.current) return undefined;
-    const measure = () => setHoursBlockHeight(hoursBlockRef.current.offsetHeight);
+    // Le bloc disparaît quand on change d'onglet : la mesure tardive de l'observateur ne doit alors rien lire.
+    const measure = () => {
+      if (hoursBlockRef.current) setHoursBlockHeight(hoursBlockRef.current.offsetHeight);
+    };
     measure();
     // Les horaires sont chargées de façon asynchrone (fetch Google) : le bloc affiche
     // d'abord "Chargement des horaires..." (pas de bordure/fond, hauteur différente) avant
@@ -655,6 +659,8 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
           onOpenDrink={onOpenDrink}
           onOpenProducer={onOpenBrewery}
           selfEntity={{ type: "venue", object: { id: venue.id, name: venue.name } }}
+          returnEntryId={pulseReturnEntryId}
+          onRememberEntry={onRememberPulseEntry}
         />
       )}
 

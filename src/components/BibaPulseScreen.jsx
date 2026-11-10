@@ -11,6 +11,8 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { PulsePostScreen } from "./PulsePostScreen.jsx";
 import { PulseTagPills, postTagsOf, usePostTagEntities } from "./PulseTags.jsx";
+import { PulseProductCard, usePulseProducersById } from "./PulseProductCard.jsx";
+import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -69,11 +71,23 @@ const SPECIAL_VENUE_LABELS = { "@home": "@Home", "@event": "@Event" };
 // de plus. Les textes passent par React (jamais interprétés comme du code).
 // Une publication libre porte aussi des tags de fiche (metadata.tags) : leurs noms viennent de tagEntities
 // (voir usePostTagEntities), et une pastille mène à la fiche quand tagHandlers sait l'ouvrir.
-function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {} }) {
+// Photo et commentaire ajoutés par l'auteur de la carte.
+function pulseNoteOf(entry) {
   const meta = entry.metadata || {};
-  const comment = typeof meta.comment === "string" ? meta.comment : "";
-  const photoUrl = typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null;
-  const rating = typeof meta.rating === "number" ? meta.rating : null;
+  return {
+    comment: typeof meta.comment === "string" ? meta.comment : "",
+    photoUrl: typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null,
+  };
+}
+
+function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {}, hideRating = false, hideNote = false }) {
+  const meta = entry.metadata || {};
+  const note = pulseNoteOf(entry);
+  // hideNote : la photo et le commentaire sont montrés ailleurs dans la carte (sous le bloc du produit, pour un DrinkCheck).
+  const comment = hideNote ? "" : note.comment;
+  const photoUrl = hideNote ? null : note.photoUrl;
+  // hideRating : la note de l'auteur est déjà montrée ailleurs dans la carte (ligne « DrinkCheck »).
+  const rating = !hideRating && typeof meta.rating === "number" ? meta.rating : null;
   const tagged = Array.isArray(meta.tagged) ? meta.tagged : [];
   const postTags = postTagsOf(entry).filter((t) => tagEntities[`${t.type}:${t.id}`]);
   if (!comment && !photoUrl && rating === null && tagged.length === 0 && postTags.length === 0) return null;
@@ -117,7 +131,7 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {} 
   );
 }
 
-export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat }, ref) {
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, hideProduct }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -136,6 +150,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const [checkDialog, setCheckDialog] = useState(null);
 
   const obj = resolveObject(entry, directories);
+  // hideProduct : on est déjà sur la fiche de ce produit (onglet BibaPulse d'une fiche Produit) — inutile de la remontrer dans chaque carte.
+  const showProductBlock = !!obj && !hideProduct;
 
   const canOpenObject = obj && ((entry.objectType === "venue" && onOpenVenue) || (entry.objectType === "drink" && onOpenDrink));
   // Lieu où le check a été fait (produit checké dans un lieu) : affiché à la suite du produit.
@@ -157,6 +173,10 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // Publication libre : pas d'objet propre, seulement des tags de fiche dans son contenu.
   const isPost = entry.eventType === "post";
   const isCheck = CHECK_EVENT_TYPES.includes(entry.eventType);
+  // DrinkCheck (check d'un produit après le premier) : « DrinkCheck » avec l'icône du check, puis la fiche du produit en petit, puis le lieu du check.
+  const isDrinkCheck = entry.eventType === "drink_checked";
+  // DrinkCheck : photo et commentaire de l'auteur, montrés sous le bloc du produit (voir plus bas).
+  const checkNote = isDrinkCheck ? pulseNoteOf(entry) : { comment: "", photoUrl: null };
   const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
 
   const handleDelete = async () => {
@@ -264,9 +284,47 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
     setComments(await loadPulseComments(entry.id));
   };
 
+  // Bouton Cheers : sur les Découvertes et sur les DrinkCheck (en premier de la rangée sur un DrinkCheck).
+  const cheersButton = (
+    <button
+      onClick={handleSante}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        background: "none",
+        border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+        borderRadius: "999px",
+        padding: "4px 10px",
+        fontSize: "11.5px",
+        fontWeight: 700,
+        color: entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+        <CheersIcon size={16} active={entry.santeCount > 0} />
+      </span>
+      {entry.santeCount > 0 && <span style={{ color: "#fff" }}>{entry.santeCount}</span>}
+    </button>
+  );
+  // Ligne-résumé « N Cheers » : sur un DrinkCheck elle passe avant « Bixé par » (comme les boutons), sur les autres cartes elle reste après.
+  const santeSummary =
+    entry.santeCount > 0 ? (
+      <button
+        onClick={() => openReactors("sante")}
+        style={{ display: "block", background: "none", border: "none", padding: isDrinkCheck ? "6px 0 0" : "4px 0 0", textAlign: "left", cursor: "pointer" }}
+      >
+        <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+          <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Cheers
+        </span>
+      </button>
+    ) : null;
+
   return (
     <div
       ref={ref}
+      data-pulse-entry={entry.id}
       style={
         flat
           ? {
@@ -286,9 +344,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             }
       }
     >
-      <span style={{ position: "absolute", top: "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
+      <span style={{ position: "absolute", top: isDrinkCheck ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
 
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
+      <div style={{ display: "flex", alignItems: isDrinkCheck ? "center" : "flex-start", gap: "10px", marginBottom: "10px" }}>
         {/* Le rond de profil mène à la fiche de son auteur. */}
         <EntityAvatar
           photoUrl={entry.actorAvatarUrl}
@@ -299,137 +357,225 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
           </p>
-          <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
-            {isClubJoin ? (
-              <>
-                A rejoint le BibaClub{" "}
-                {clubName && openClub ? (
-                  <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
-                    {clubName}
-                  </button>
-                ) : (
-                  <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
-                )}
-              </>
-            ) : isPost ? null : (
-              <>
-                {pulseActionFor(entry)} @{" "}
-                {obj && openObject ? (
-                  <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
-                    {obj.name}
-                  </button>
-                ) : (
-                  <strong style={{ color: COLORS.amber }}>{obj?.name || "une fiche"}</strong>
-                )}
-              </>
-            )}
-            {checkVenueName && (
-              <>
-                <span style={{ color: COLORS.inkSoft }}>{" — "}</span>
-                {openCheckVenue ? (
-                  <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
-                    {checkVenueName}
-                  </button>
-                ) : (
-                  <span style={{ fontWeight: 700 }}>{checkVenueName}</span>
-                )}
-              </>
-            )}
-          </p>
+          {!isDrinkCheck && (
+            <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
+              {isClubJoin ? (
+                <>
+                  A rejoint le BibaClub{" "}
+                  {clubName && openClub ? (
+                    <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                      {clubName}
+                    </button>
+                  ) : (
+                    <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
+                  )}
+                </>
+              ) : isPost ? null : (
+                <>
+                  {pulseActionFor(entry)} @{" "}
+                  {obj && openObject ? (
+                    <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                      {obj.name}
+                    </button>
+                  ) : (
+                    <strong style={{ color: COLORS.amber }}>{obj?.name || "une fiche"}</strong>
+                  )}
+                </>
+              )}
+              {checkVenueName && (
+                <>
+                  <span style={{ color: COLORS.inkSoft }}>{" — "}</span>
+                  {openCheckVenue ? (
+                    <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
+                      {checkVenueName}
+                    </button>
+                  ) : (
+                    <span style={{ fontWeight: 700 }}>{checkVenueName}</span>
+                  )}
+                </>
+              )}
+            </p>
+          )}
         </div>
       </div>
 
-      <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} />
-
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
-        <button
-          onClick={handleBix}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            background: "none",
-            border: `2px solid ${entry.bixCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
-            borderRadius: "999px",
-            padding: "4px 10px",
-            fontSize: "11.5px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-            <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
+      {/* DrinkCheck : une ligne à part sous l'en-tête — « DrinkCheck » (icône du check, « Check » en vert fluo) à gauche, la note de l'auteur à l'extrême droite. */}
+      {isDrinkCheck && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "10px" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
+            <img src={beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
+            <span>
+              Drink<span style={{ color: COLORS.amber }}>Check</span>
+            </span>
           </span>
-          {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
-        </button>
+          {typeof entry.metadata?.rating === "number" && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+              <StarsDisplay value={entry.metadata.rating} size={16} />
+              <span style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink }}>
+                {String(entry.metadata.rating).replace(".", ",")}
+                <span style={{ color: COLORS.amber }}>/</span>5
+              </span>
+            </span>
+          )}
+        </div>
+      )}
 
-        {entry.eventType === "venue_visit" && (
-          <button
-            onClick={entry.actorId !== myUserId ? handleIncoming : undefined}
-            disabled={entry.actorId === myUserId}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              background: entry.iAmIncoming ? COLORS.amber : "none",
-              border: `2px solid ${entry.incomingCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "4px 10px",
-              fontSize: "11.5px",
-              fontWeight: 700,
-              color: entry.iAmIncoming ? COLORS.paper : entry.incomingCount > 0 ? COLORS.amber : COLORS.inkSoft,
-              cursor: entry.actorId === myUserId ? "default" : "pointer",
-              opacity: entry.actorId === myUserId ? 0.45 : 1,
-            }}
-          >
-            J'arrive !{entry.incomingCount > 0 && <span style={{ color: "#fff" }}>{` ${entry.incomingCount}`}</span>}
-          </button>
-        )}
+      {isDrinkCheck && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName) && (
+        <div style={{ marginBottom: "18px" }}>
+          {showProductBlock && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
+          {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui. La photo y est entière (jamais recadrée),
+              en petit et collée à gauche, le commentaire à sa droite. */}
+          {(checkNote.photoUrl || checkNote.comment) && (
+            <div
+              style={{
+                margin: showProductBlock ? "8px 0 0" : 0,
+                background: COLORS.surfaceAlt,
+                border: `2px solid ${COLORS.paperAlt}`,
+                borderRadius: "10px",
+                padding: "8px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "10px",
+                // Photo seule : le cadre épouse la photo au lieu de s'étendre sur toute la largeur.
+                width: checkNote.comment ? undefined : "fit-content",
+                maxWidth: "100%",
+              }}
+            >
+              {checkNote.photoUrl && (
+                <img
+                  src={checkNote.photoUrl}
+                  alt="Photo de la publication"
+                  loading="lazy"
+                  style={{ flexShrink: 0, maxWidth: "112px", maxHeight: "160px", width: "auto", height: "auto", borderRadius: "8px", display: "block" }}
+                />
+              )}
+              {checkNote.comment && (
+                <p style={{ flex: 1, minWidth: 0, margin: 0, padding: "2px 4px", fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{checkNote.comment}</p>
+              )}
+            </div>
+          )}
+          {checkVenueName && (
+            <p style={{ margin: showProductBlock || checkNote.photoUrl || checkNote.comment ? "14px 0 0" : 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
+              {/* Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ». */}
+              <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+              {openCheckVenue ? (
+                <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
+                  {checkVenueName.replace(/^@/, "")}
+                </button>
+              ) : (
+                <span style={{ fontWeight: 700 }}>{checkVenueName.replace(/^@/, "")}</span>
+              )}
+            </p>
+          )}
+        </div>
+      )}
 
-        {entry.eventType === "product_discovered" && (
+      <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} hideRating={isDrinkCheck} hideNote={isDrinkCheck} />
+
+      {/* Bloc d'actions : boutons de réaction, puis résumés (« Bixé par… »). L'icône Supprimer / Signaler est toujours dans son coin bas droit,
+          quel que soit le nombre de lignes. */}
+      <div style={{ position: "relative", marginTop: "6px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {isDrinkCheck && cheersButton}
           <button
-            onClick={handleSante}
+            onClick={handleBix}
             style={{
               display: "flex",
               alignItems: "center",
               gap: "4px",
               background: "none",
-              border: `2px solid ${entry.santeCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+              border: `2px solid ${entry.bixCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
               padding: "4px 10px",
               fontSize: "11.5px",
               fontWeight: 700,
-              color: entry.santeCount > 0 ? COLORS.amber : COLORS.inkSoft,
               cursor: "pointer",
             }}
           >
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-              <CheersIcon size={16} active={entry.santeCount > 0} />
+              <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
             </span>
-            {entry.santeCount > 0 && <span style={{ color: "#fff" }}>{entry.santeCount}</span>}
+            {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
+          </button>
+
+          {entry.eventType === "venue_visit" && (
+            <button
+              onClick={entry.actorId !== myUserId ? handleIncoming : undefined}
+              disabled={entry.actorId === myUserId}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                background: entry.iAmIncoming ? COLORS.amber : "none",
+                border: `2px solid ${entry.incomingCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+                borderRadius: "999px",
+                padding: "4px 10px",
+                fontSize: "11.5px",
+                fontWeight: 700,
+                color: entry.iAmIncoming ? COLORS.paper : entry.incomingCount > 0 ? COLORS.amber : COLORS.inkSoft,
+                cursor: entry.actorId === myUserId ? "default" : "pointer",
+                opacity: entry.actorId === myUserId ? 0.45 : 1,
+              }}
+            >
+              J'arrive !{entry.incomingCount > 0 && <span style={{ color: "#fff" }}>{` ${entry.incomingCount}`}</span>}
+            </button>
+          )}
+
+          {entry.eventType === "product_discovered" && cheersButton}
+
+          <button
+            onClick={toggleComments}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              background: "none",
+              border: `2px solid ${entry.commentsCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "999px",
+              padding: "4px 10px",
+              fontSize: "11.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+              <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
+            </span>
+            {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
+          </button>
+        </div>
+
+        {deleteError && <p style={{ color: COLORS.wine, fontSize: "12px", margin: "8px 0 0" }}>{deleteError}</p>}
+
+        {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
+        liste complète des personnes concernées. */}
+        <div style={{ paddingRight: "30px" }}>
+        {isDrinkCheck && santeSummary}
+        {entry.bixCount > 0 && (
+          <button
+            onClick={() => openReactors("bix")}
+            style={{ display: "block", background: "none", border: "none", padding: isDrinkCheck && entry.santeCount > 0 ? "4px 0 0" : "6px 0 0", textAlign: "left", cursor: "pointer" }}
+          >
+            <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+              Bixé par <strong style={{ color: COLORS.ink }}>{entry.lastBixerName || "quelqu'un"}</strong>
+              {entry.bixCount > 1 && (
+                <>
+                  {" "}
+                  et <strong style={{ color: COLORS.ink }}>{entry.bixCount - 1} autre{entry.bixCount > 2 ? "s Bibax" : " Bibax"}</strong>
+                </>
+              )}
+            </span>
           </button>
         )}
-
-        <button
-          onClick={toggleComments}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            background: "none",
-            border: `2px solid ${entry.commentsCount > 0 ? COLORS.amber : COLORS.paperAlt}`,
-            borderRadius: "999px",
-            padding: "4px 10px",
-            fontSize: "11.5px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-            <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
-          </span>
-          {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
-        </button>
+        {entry.incomingCount > 0 && (
+          <button onClick={() => openReactors("incoming")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
+            <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+              <strong style={{ color: COLORS.ink }}>{entry.incomingCount}</strong> Bibax {entry.incomingCount > 1 ? "arrivent" : "arrive"}
+            </span>
+          </button>
+        )}
+        {!isDrinkCheck && santeSummary}
+        </div>
 
         {myUserId && (isPost || isCheck) && entry.actorId === myUserId && (
           <button
@@ -437,7 +583,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             disabled={deleting}
             aria-label={isPost ? "Supprimer ma publication" : "Supprimer mon check"}
             title="Supprimer"
-            style={{ marginLeft: "auto", display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", opacity: deleting ? 0.3 : 0.6, cursor: deleting ? "default" : "pointer" }}
+            style={{ position: "absolute", right: 0, bottom: 0, display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", opacity: deleting ? 0.3 : 0.6, cursor: deleting ? "default" : "pointer" }}
           >
             <NavIcon name="trash" size={15} color={COLORS.inkSoft} />
           </button>
@@ -448,44 +594,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             onClick={() => setReportTarget({ type: "pulse_event", id: entry.id })}
             aria-label="Signaler cette publication"
             title="Signaler"
-            style={{ marginLeft: "auto", display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", color: COLORS.inkSoft, opacity: 0.5, cursor: "pointer" }}
+            style={{ position: "absolute", right: 0, bottom: 0, display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", color: COLORS.inkSoft, opacity: 0.5, cursor: "pointer" }}
           >
             <ReportIcon size={12} />
           </button>
         )}
       </div>
-
-      {deleteError && <p style={{ color: COLORS.wine, fontSize: "12px", margin: "8px 0 0" }}>{deleteError}</p>}
-
-      {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
-      liste complète des personnes concernées. */}
-      {entry.bixCount > 0 && (
-        <button onClick={() => openReactors("bix")} style={{ display: "block", background: "none", border: "none", padding: "6px 0 0", textAlign: "left", cursor: "pointer" }}>
-          <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-            Bixé par <strong style={{ color: COLORS.ink }}>{entry.lastBixerName || "quelqu'un"}</strong>
-            {entry.bixCount > 1 && (
-              <>
-                {" "}
-                et <strong style={{ color: COLORS.ink }}>{entry.bixCount - 1} autre{entry.bixCount > 2 ? "s Bibax" : " Bibax"}</strong>
-              </>
-            )}
-          </span>
-        </button>
-      )}
-      {entry.incomingCount > 0 && (
-        <button onClick={() => openReactors("incoming")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
-          <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-            <strong style={{ color: COLORS.ink }}>{entry.incomingCount}</strong> Bibax {entry.incomingCount > 1 ? "arrivent" : "arrive"}
-          </span>
-        </button>
-      )}
-      {entry.santeCount > 0 && (
-        <button onClick={() => openReactors("sante")} style={{ display: "block", background: "none", border: "none", padding: "4px 0 0", textAlign: "left", cursor: "pointer" }}>
-          <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-            <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Cheers
-          </span>
-        </button>
-      )}
 
       {showComments && (
         <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
@@ -555,7 +669,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   J'arrive ! ({entry.incomingCount})
                 </button>
               )}
-              {entry.eventType === "product_discovered" && (
+              {(entry.eventType === "product_discovered" || isDrinkCheck) && (
                 <button
                   onClick={() => setReactorsTab("sante")}
                   style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "sante" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "sante" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
@@ -655,6 +769,8 @@ export function BibaPulseScreen({
   onOpenClub,
   focusEntryId,
   openCommentsOnFocus,
+  returnEntryId,
+  onRememberEntry,
   storiesEnabled = true,
   onShareStory,
 }) {
@@ -683,6 +799,30 @@ export function BibaPulseScreen({
   const myUserId = myUserIdProp || sessionUserId;
   const focusedCardRef = React.useRef(null);
   const hasScrolledToFocus = React.useRef(false);
+  // Retour d'une fiche (produit, lieu, marque, producteur, profil…) ouverte depuis une carte : le fil se rouvre sur cette carte, pas en
+  // haut. L'identifiant vient de l'application (returnEntryId) ; on le lit une fois et on le remet à zéro. Toute arrivée sur le fil
+  // efface aussi une mémoire laissée par une fiche (on n'y revient pas par ici).
+  const [returnTarget] = useState(returnEntryId || null);
+  useEffect(() => {
+    if (onRememberEntry) onRememberEntry(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const targetId = focusEntryId || returnTarget;
+  // Mémorise la carte avant d'ouvrir une fiche, pour y revenir.
+  const rememberThen = (entryId, fn, opts) => (fn ? (...args) => { if (onRememberEntry) onRememberEntry(entryId, opts); return fn(...args); } : undefined);
+  // Profil d'un Bibax ouvert ici même (rond de profil, personne taguée) : au retour, on remet la carte à l'écran.
+  const profileFromEntry = React.useRef(null);
+  const openProfileFrom = (entryId, code) => {
+    profileFromEntry.current = entryId;
+    setViewedProfileCode(code);
+  };
+  React.useLayoutEffect(() => {
+    if (viewedProfileCode || !profileFromEntry.current) return;
+    const id = profileFromEntry.current;
+    profileFromEntry.current = null;
+    const card = document.querySelector(`[data-pulse-entry="${id}"]`);
+    if (card) card.scrollIntoView({ block: "start" });
+  }, [viewedProfileCode]);
   // Le fil ne charge jamais qu'une poignée d'entrées à la fois (pagination) — les produits qu'il
   // référence forment donc un ensemble tout aussi borné, jamais besoin du répertoire complet.
   const [drinksDirectory, setDrinksDirectory] = useState([]);
@@ -707,7 +847,10 @@ export function BibaPulseScreen({
   // Noms des fiches taguées dans les publications libres du fil.
   const tagEntities = usePostTagEntities(entries);
 
-  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities };
+  // Producteurs des produits checkés (ligne « Producteur » de la fiche produit des cartes DrinkCheck).
+  const producersById = usePulseProducersById(entries, drinksDirectory);
+
+  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities, producersById };
 
   useEffect(() => {
     loadPulseFeed().then((data) => {
@@ -742,13 +885,38 @@ export function BibaPulseScreen({
   // pas forcément dans les 20 premières du fil — on charge des pages supplémentaires jusqu'à la
   // trouver (borné à 10 tentatives), puis on y défile.
   useEffect(() => {
-    if (!focusEntryId || !entries) return;
-    if (entries.some((e) => e.id === focusEntryId)) return;
+    if (!targetId || !entries) return;
+    if (entries.some((e) => e.id === targetId)) return;
     if (!hasMore || focusAttempts >= 10) return;
     setFocusAttempts((n) => n + 1);
     loadMore();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusEntryId, entries, hasMore]);
+  }, [targetId, entries, hasMore]);
+
+  // Retour d'une fiche : la carte est remise en haut de l'écran, sans animation et avant l'affichage. Les produits, lieux et
+  // producteurs des cartes se chargent après le fil et changent leur hauteur : on réaligne à chaque chargement, jusqu'à ce que la
+  // personne touche l'écran ou, au plus, 4 secondes.
+  const keepAligning = React.useRef(!!returnTarget && !focusEntryId);
+  React.useLayoutEffect(() => {
+    if (!keepAligning.current || !focusedCardRef.current) return;
+    focusedCardRef.current.scrollIntoView({ block: "start" });
+  }, [entries, drinksDirectory, venuesById, producersById]);
+  useEffect(() => {
+    if (!keepAligning.current) return undefined;
+    const stop = () => {
+      keepAligning.current = false;
+    };
+    const timer = setTimeout(stop, 4000);
+    window.addEventListener("wheel", stop, { passive: true });
+    window.addEventListener("touchstart", stop, { passive: true });
+    window.addEventListener("keydown", stop);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+      window.removeEventListener("keydown", stop);
+    };
+  }, []);
 
   useEffect(() => {
     if (!focusEntryId || hasScrolledToFocus.current) return;
@@ -879,21 +1047,21 @@ export function BibaPulseScreen({
             <PulseCard
               key={entry.id}
               flat
-              ref={entry.id === focusEntryId ? focusedCardRef : null}
+              ref={entry.id === targetId ? focusedCardRef : null}
               entry={entry}
               directories={directories}
               myUserId={myUserId}
               myBibroCode={myBibroCode}
-              onOpenVenue={onOpenVenue}
+              onOpenVenue={rememberThen(entry.id, onOpenVenue)}
               onOpenTagged={(person) => {
-                if (person.id === myUserId) goToProfile();
-                else if (person.bibro_code) setViewedProfileCode(person.bibro_code);
+                if (person.id === myUserId) rememberThen(entry.id, goToProfile, { profile: true })();
+                else if (person.bibro_code) openProfileFrom(entry.id, person.bibro_code);
               }}
-              onOpenDrink={onOpenDrink}
-              onOpenBrand={onOpenBrand}
-              onOpenProducer={onOpenProducer}
-              onOpenClub={onOpenClub}
-              onOpenProfile={entry.actorId === myUserId ? goToProfile : setViewedProfileCode}
+              onOpenDrink={rememberThen(entry.id, onOpenDrink)}
+              onOpenBrand={rememberThen(entry.id, onOpenBrand)}
+              onOpenProducer={rememberThen(entry.id, onOpenProducer)}
+              onOpenClub={rememberThen(entry.id, onOpenClub)}
+              onOpenProfile={entry.actorId === myUserId ? rememberThen(entry.id, goToProfile, { profile: true }) : (code) => openProfileFrom(entry.id, code)}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
               onDeleted={removeEntry}
               highlighted={entry.id === focusEntryId}

@@ -116,9 +116,12 @@ export function DrinkDetailScreen({
   returnMemo = null,
   onReturnMemoConsumed,
   onOpenTagFilter,
+  pulseReturnEntryId = null,
+  onRememberPulseEntry,
   claimsEnabled = true,
 }) {
-  const [activeTab, setActiveTab] = useState(returnMemo?.tab || "infos");
+  // Retour d'une fiche ouverte depuis une carte de l'onglet BibaPulse : on rouvre cet onglet (voir EntityPulseSection).
+  const [activeTab, setActiveTab] = useState(returnMemo?.tab || (pulseReturnEntryId ? "bibapulse" : "infos"));
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -1023,6 +1026,8 @@ export function DrinkDetailScreen({
             onOpenBrand={onOpenBrand}
             onOpenProducer={onOpenBrewery}
             selfEntity={{ type: "drink", object: { id: drink.id, name: drink.name } }}
+            returnEntryId={pulseReturnEntryId}
+            onRememberEntry={onRememberPulseEntry}
           />
         )}
 
