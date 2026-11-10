@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
-import { COLORS } from "../constants.js";
+import { COLORS, RATING_LABELS } from "../constants.js";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
 import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, deleteMyPulsePost, previewMyPulseCheckDeletion, deleteMyPulseCheck, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
@@ -11,7 +11,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { PulsePostScreen } from "./PulsePostScreen.jsx";
 import { PulseTagPills, postTagsOf, usePostTagEntities } from "./PulseTags.jsx";
-import { PulseProductCard, usePulseProducersById } from "./PulseProductCard.jsx";
+import { PulseProductCard, PulseDrinkLine, usePulseProducersById, pulseDrinkIdsOf } from "./PulseProductCard.jsx";
 import { PulseVenueCard, usePulseVenueRatingsById } from "./PulseVenueCard.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
@@ -185,6 +185,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const isRedesigned = isDrinkCheck || isPlaceCheck;
   // DrinkCheck et PlaceCheck : photo et commentaire de l'auteur, montrés sous le bloc de la fiche (voir plus bas).
   const checkNote = isRedesigned ? pulseNoteOf(entry) : { comment: "", photoUrl: null };
+  // PlaceCheck avec un produit : la carte reste centrée sur le lieu ; le produit bu (metadata.drink_id) n'est qu'un petit texte sous le bloc
+  // du lieu, et l'avis de l'auteur sur le lieu (metadata.venue_rating, de 1 à 5) est affiché à droite de la ligne « PlaceCheck ».
+  const placeDrinkId = isPlaceCheck && typeof entry.metadata?.drink_id === "string" ? entry.metadata.drink_id : null;
+  const placeDrink = placeDrinkId ? (directories.drinksDirectory || []).find((d) => d.id === placeDrinkId) || null : null;
+  const openPlaceDrink = placeDrink && onOpenDrink ? () => onOpenDrink(placeDrink.id) : null;
+  const placeRating = isPlaceCheck ? RATING_LABELS.find((l) => l.value === entry.metadata?.venue_rating) || null : null;
   const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
 
   const handleDelete = async () => {
@@ -453,6 +459,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
               <span style={{ color: COLORS.amber }}>Check</span>
             </span>
           </span>
+          {placeRating && (
+            <span title="Avis de l'auteur sur le lieu" style={{ display: "inline-flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
+              <NavIcon name="flame" size={15} color={COLORS.amber} filled />
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "12.5px", color: COLORS.ink }}>{placeRating.fr}</span>
+            </span>
+          )}
           {typeof entry.metadata?.rating === "number" && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
               <StarsDisplay value={entry.metadata.rating} size={16} />
@@ -465,7 +477,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       )}
 
-      {isRedesigned && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName) && (
+      {isRedesigned && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName || placeDrink) && (
         <div style={{ marginBottom: "18px" }}>
           {showProductBlock && isDrinkCheck && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
           {showProductBlock && isPlaceCheck && <PulseVenueCard venue={obj} rating={directories.venueRatingsById?.[obj.id] || null} onOpen={openObject || undefined} />}
@@ -500,8 +512,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
               )}
             </div>
           )}
+          {placeDrink && <PulseDrinkLine drink={placeDrink} onOpen={openPlaceDrink || undefined} gapAbove={showProductBlock || !!checkNote.photoUrl || !!checkNote.comment} />}
           {checkVenueName && (
-            <p style={{ margin: showProductBlock || checkNote.photoUrl || checkNote.comment ? "14px 0 0" : 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
+            <p style={{ margin: showProductBlock || checkNote.photoUrl || checkNote.comment || placeDrink ? "14px 0 0" : 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
               {/* Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ». */}
               <NavIcon name="map-pin" size={16} color={COLORS.amber} />
               {openCheckVenue ? (
@@ -847,7 +860,7 @@ export function BibaPulseScreen({
   const [drinksDirectory, setDrinksDirectory] = useState([]);
   useEffect(() => {
     const ids = new Set();
-    (entries || []).forEach((e) => e.objectType === "drink" && e.objectId && ids.add(e.objectId));
+    (entries || []).forEach((e) => pulseDrinkIdsOf(e).forEach((id) => ids.add(id)));
     if (ids.size === 0) return;
     loadDrinksByIds([...ids]).then((results) => setDrinksDirectory((prev) => [...prev.filter((d) => !ids.has(d.id)), ...results]));
   }, [entries]);
