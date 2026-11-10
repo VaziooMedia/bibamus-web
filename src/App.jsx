@@ -1744,15 +1744,26 @@ export default function App() {
     setScreen("drinkDetail");
   };
 
+  // Enregistre un verre dans les statistiques (consommation d'un produit, éventuellement dans un lieu) sans rien publier dans
+  // BibaPulse. L'émission d'événement ne sert qu'aux statistiques (skipPulse). Partagé par le check d'un produit et par le
+  // PlaceCheck qui porte un produit.
+  const recordDrinkConsumption = async (drinkId, venueId, volumeCl = null) => {
+    emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: true });
+    await recordDrinkCheckIn(drinkId, venueId, volumeCl);
+    trackEvent("drink_checked", "drink", profile.myBibroCode);
+  };
+
   // Check-in dans un lieu, confirmé depuis la fenêtre « Place Check-in ». Une seule publication
-  // par check-in, jamais deux, et la case « Publier » est respectée :
-  //   - avec un produit ajouté : c'est aussi un check de ce produit dans ce lieu — la publication
-  //     est celle du produit (« Découverte » ou « Check », avec le lieu) ;
-  //   - sans produit : une visite du lieu.
+  // par check-in, jamais deux, et la case « Publier » est respectée : toujours une visite du lieu (`venue_visit`),
+  // centrée sur le lieu — jamais une « Découverte » ni un check de produit :
+  //   - avec un produit ajouté : il est compté comme un check de ce produit dans ce lieu (statistiques), et la carte
+  //     le mentionne en petit texte (content.drinkId) ;
+  //   - l'avis de la personne sur le lieu, tel qu'il est après ce check, est rappelé dans la carte (content.venueRating)
+  //     — sauf si son enregistrement a échoué ou s'il a été retiré.
   // Si publishToPulse est faux, rien n'est publié mais le passage (et le produit) sont bien
   // enregistrés. L'émission d'événement ci-dessous ne sert qu'aux statistiques (skipPulse).
   // Renvoie le résultat de la publication ({ ok } ou { error }), ou null si rien n'a été publié.
-  const checkInVenue = async (venueId, { publishToPulse = true, visibility = null, content = null, drink = null, ratingChange = null, onRatingFailed = null } = {}) => {
+  const checkInVenue = async (venueId, { publishToPulse = true, visibility = null, content = null, drink = null, ratingChange = null, venueRating = null, onRatingFailed = null } = {}) => {
     // Marquage local existant, conservé tel quel (présence en temps réel sur cet appareil).
     setCheckedInVenueId(venueId);
     emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId, skipPulse: true });
@@ -1762,16 +1773,22 @@ export default function App() {
     // Avis sur le lieu, donné dans la fenêtre de check : APRÈS l'enregistrement du passage, puisque c'est lui
     // qui autorise l'avis. ratingChange : { value: 1..5 } pour donner ou modifier l'avis, { value: null } pour
     // le retirer, null s'il est inchangé. Un échec n'annule ni le check ni sa publication : on prévient l'utilisateur.
+    let ratingFailed = false;
     if (ratingChange) {
       const ratingResult = ratingChange.value == null ? await removeVenueRating(venueId) : await submitVenueRating(venueId, ratingChange.value);
       if (ratingResult && ratingResult.error) {
+        ratingFailed = true;
         if (onRatingFailed) onRatingFailed();
         alert("Ton check-in est enregistré, mais ton avis n'a pas pu l'être. Tu pourras le donner lors d'un prochain check.");
       }
     }
-    if (drink) return checkInDrink(drink.id, venueId, { publishToPulse, visibility, content });
+    // Le produit ajouté compte dans les statistiques, comme un check de ce produit dans ce lieu.
+    if (drink) await recordDrinkConsumption(drink.id, venueId);
     if (!publishToPulse) return null;
-    return publishVenueCheckInToPulse(venueId, { visibility, content });
+    const placeContent = { ...(content || {}) };
+    if (drink) placeContent.drinkId = drink.id;
+    if (venueRating != null && !ratingFailed) placeContent.venueRating = venueRating;
+    return publishVenueCheckInToPulse(venueId, { visibility, content: Object.keys(placeContent).length > 0 ? placeContent : content });
   };
 
   // Miroir de checkInVenue, mais pour un produit — répétable (pas de marquage local "présence
@@ -1781,9 +1798,7 @@ export default function App() {
   // (skipPulse) : la publication, elle, est faite une seule fois plus bas. Renvoie le résultat de
   // la publication ({ ok } ou { error }), ou null si rien n'a été publié.
   const checkInDrink = async (drinkId, venueId, { publishToPulse = true, volumeCl = null, visibility = null, content = null, discovery } = {}) => {
-    emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: true });
-    await recordDrinkCheckIn(drinkId, venueId, volumeCl);
-    trackEvent("drink_checked", "drink", profile.myBibroCode);
+    await recordDrinkConsumption(drinkId, venueId, volumeCl);
     if (!publishToPulse) return null;
     // Le check vient d'être enregistré : s'il est le seul, c'est le premier de cette personne.
     const checkCount = await loadMyDrinkCheckinCount(drinkId);

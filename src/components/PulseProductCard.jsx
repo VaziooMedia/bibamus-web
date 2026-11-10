@@ -7,6 +7,18 @@ import { displayedAbv } from "../utils.js";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { OTHER_STYLE_TYPES } from "../data/otherStyleLabels.js";
 import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadBreweriesByIds } from "../data/sharedDirectories.js";
+import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
+
+// Identifiants des produits qu'une carte du fil désigne : l'objet d'un check ou d'une découverte, et le produit bu pendant une visite de
+// lieu (PlaceCheck : metadata.drink_id, posé par le serveur). Partagé par le fil général et par la section Pulse des fiches, qui lisent
+// les produits par lots.
+export function pulseDrinkIdsOf(entry) {
+  const ids = [];
+  if (entry.objectType === "drink" && entry.objectId) ids.push(entry.objectId);
+  const bought = entry.eventType === "venue_visit" && entry.metadata ? entry.metadata.drink_id : null;
+  if (typeof bought === "string" && bought) ids.push(bought);
+  return ids;
+}
 
 // Producteurs des produits « checkés » dans un fil BibaPulse, par identifiant. Une seule lecture groupée pour toutes les cartes
 // DrinkCheck du fil (jamais une lecture par carte), et jamais deux fois le même producteur : les identifiants déjà demandés sont
@@ -147,5 +159,46 @@ export function PulseProductCard({ drink, producers = [], onOpen }) {
         </span>
       )}
     </button>
+  );
+}
+
+// Le produit bu pendant un PlaceCheck, en petit texte sous le bloc du lieu (la carte se concentre sur le lieu, pas sur le produit) :
+// l'icône DrinkCheck, le nom du produit en gras (il ouvre la fiche du produit), puis le drapeau du pays et le degré d'alcool (« 6.2% ABV »),
+// avec les mêmes règles et le même point vert fluo de séparation que la fiche produit d'un DrinkCheck (PulseProductCard). Même écriture
+// que la ligne du lieu d'un DrinkCheck : 12,5 px, 14 px d'écart au-dessus quand quelque chose précède (`gapAbove`).
+export function PulseDrinkLine({ drink, onOpen, gapAbove = false }) {
+  const showFlag = NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && !!drink.nationality;
+  const abvValue = displayedAbv(drink);
+  const abvText = abvValue != null ? `${abvValue.toFixed(1)}% ABV` : null;
+  const extras = [];
+  if (showFlag)
+    extras.push(
+      <span key="flag" title={drink.nationality} style={{ display: "inline-flex", flexShrink: 0 }}>
+        <CountryFlagImg country={drink.nationality} size={16} />
+      </span>
+    );
+  if (abvText) extras.push(<span key="abv" style={{ whiteSpace: "nowrap", color: COLORS.inkSoft, fontSize: "11.5px" }}>{abvText}</span>);
+  return (
+    <p style={{ margin: gapAbove ? "14px 0 0" : 0, display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
+      <img src={beerCheckIconUrl} alt="" width="18" height="18" style={{ display: "block", flexShrink: 0 }} />
+      {onOpen ? (
+        <button onClick={onOpen} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer", textAlign: "left", overflowWrap: "anywhere", minWidth: 0 }}>
+          {drink.name}
+        </button>
+      ) : (
+        <span style={{ fontWeight: 700, overflowWrap: "anywhere", minWidth: 0 }}>{drink.name}</span>
+      )}
+      {/* Drapeau et degré restent groupés (jamais coupés l'un de l'autre) : avec un nom long, le groupe passe tout entier à la ligne. */}
+      {extras.length > 0 && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
+          {extras.map((part) => (
+            <React.Fragment key={part.key}>
+              <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />
+              {part}
+            </React.Fragment>
+          ))}
+        </span>
+      )}
+    </p>
   );
 }

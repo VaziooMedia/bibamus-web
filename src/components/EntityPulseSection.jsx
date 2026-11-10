@@ -24,7 +24,7 @@ import { COLORS } from "../constants.js";
 import { loadEntityPulse, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { PulseCard } from "./BibaPulseScreen.jsx";
 import { usePostTagEntities } from "./PulseTags.jsx";
-import { usePulseProducersById } from "./PulseProductCard.jsx";
+import { usePulseProducersById, pulseDrinkIdsOf } from "./PulseProductCard.jsx";
 import { usePulseVenueRatingsById } from "./PulseVenueCard.jsx";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
@@ -77,7 +77,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
 
   useEffect(() => {
     const ids = new Set();
-    (entries || []).forEach((e) => e.objectType === "drink" && e.objectId && ids.add(e.objectId));
+    (entries || []).forEach((e) => pulseDrinkIdsOf(e).forEach((id) => ids.add(id)));
     seedDrinks.forEach((d) => ids.delete(d.id)); // déjà en mémoire, pas besoin de les recharger
     if (ids.size === 0) return;
     loadDrinksByIds([...ids]).then((results) => setDrinksDirectory((prev) => [...prev.filter((d) => !ids.has(d.id)), ...results]));
