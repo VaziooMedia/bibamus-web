@@ -3,6 +3,7 @@ import { COLORS, SUBTYPE_LABELS, NATIONALITY_ELIGIBLE_TYPES } from "../constants
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { RatingFraction } from "./NotesCard.jsx";
+import { displayedAbv } from "../utils.js";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { OTHER_STYLE_TYPES } from "../data/otherStyleLabels.js";
 import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadBreweriesByIds } from "../data/sharedDirectories.js";
@@ -29,11 +30,15 @@ export function usePulseProducersById(entries, drinks) {
   return producersById;
 }
 
-// Fiche produit en petit, dans une carte du fil BibaPulse (DrinkCheck) : la photo à gauche, puis cinq lignes —
+// Fiche produit en petit, dans une carte du fil BibaPulse (DrinkCheck). Le rond-profil (photo du produit) est centré sur les TROIS
+// premières lignes ; les suivantes reviennent sous lui, contre le bord gauche du bloc (décidé par Mehdi, 2026-11-10 : avec beaucoup de
+// pastilles de styles, le rond avait trop d'espace au-dessus et en dessous) :
 //   1. le nom ;
-//   2. la sous-catégorie, suivie du drapeau du pays (seulement pour les catégories où le pays est affiché ailleurs dans l'app) ;
+//   2. la sous-catégorie, le drapeau du pays (seulement pour les catégories où le pays est affiché ailleurs dans l'app) et le degré
+//      d'alcool (« 6.2% ABV », même écriture et même règle d'affichage que les listes du BibAtlas), séparés par un petit point vert
+//      fluo comme sur ces listes ;
 //   3. le ou les producteurs (dans l'ordre choisi dans la plateforme de gestion), à défaut le producteur saisi en texte ;
-//   4. les styles, en petites pastilles (même pastille que sur la fiche produit) ;
+//   4. les styles, en petites pastilles (même pastille que sur la fiche produit) — sur une ou plusieurs lignes ;
 //   5. la note moyenne du produit (moyenne de drink.ratings, même calcul et même format que la bannière de la fiche).
 // Une ligne sans donnée n'est pas affichée. Toute la fiche est un bouton qui ouvre le produit. Les données viennent du produit
 // lui-même (jamais copiées dans la carte). Les noms de styles modifiés depuis la plateforme de gestion sont chargés comme sur la
@@ -60,19 +65,30 @@ export function PulseProductCard({ drink, producers = [], onOpen }) {
   const ratingAverage = ratingValues.length > 0 ? ratingValues.reduce((s, v) => s + v, 0) / ratingValues.length : null;
   const subtypeLabel = SUBTYPE_LABELS[drink.beverageSubtype] || drink.type || "";
   const showFlag = NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && !!drink.nationality;
+  const abvValue = displayedAbv(drink);
+  const abvText = abvValue != null ? `${abvValue.toFixed(1)}% ABV` : null;
   const producerNames = producers.map((p) => p.name).filter(Boolean).join(", ") || drink.brewery || "";
 
   const lineStyle = { display: "block", marginTop: "3px" };
   const chipStyle = { background: COLORS.paperAlt, borderRadius: "999px", padding: "0.3em 0.8em", fontSize: "10px", fontWeight: 600, color: COLORS.ink, whiteSpace: "nowrap" };
+
+  // Ligne 2 : sous-catégorie, drapeau et degré, séparés par un petit point vert fluo (comme sur les listes du BibAtlas).
+  const line2 = [];
+  if (subtypeLabel) line2.push(<span key="sub" style={{ overflowWrap: "anywhere" }}>{subtypeLabel}</span>);
+  if (showFlag)
+    line2.push(
+      <span key="flag" title={drink.nationality} style={{ display: "inline-flex", flexShrink: 0 }}>
+        <CountryFlagImg country={drink.nationality} size={16} />
+      </span>
+    );
+  if (abvText) line2.push(<span key="abv" style={{ whiteSpace: "nowrap" }}>{abvText}</span>);
 
   return (
     <button
       type="button"
       onClick={onOpen || undefined}
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
+        display: "block",
         width: "100%",
         textAlign: "left",
         background: COLORS.surfaceAlt,
@@ -84,48 +100,52 @@ export function PulseProductCard({ drink, producers = [], onOpen }) {
         font: "inherit",
       }}
     >
-      <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={56} />
-      <span style={{ flex: 1, minWidth: 0 }}>
-        {/* Ligne 1 : nom */}
-        <span style={{ display: "block", fontWeight: 700, fontSize: "14px", overflowWrap: "anywhere" }}>{drink.name}</span>
-        {/* Ligne 2 : sous-catégorie + pays (drapeau) */}
-        {(subtypeLabel || showFlag) && (
-          <span style={{ ...lineStyle, display: "flex", alignItems: "center", gap: "8px", fontSize: "11.5px", color: COLORS.inkSoft }}>
-            {subtypeLabel && <span style={{ overflowWrap: "anywhere" }}>{subtypeLabel}</span>}
-            {showFlag && (
-              <span title={drink.nationality} style={{ display: "inline-flex", flexShrink: 0 }}>
-                <CountryFlagImg country={drink.nationality} size={16} />
-              </span>
-            )}
-          </span>
-        )}
-        {/* Ligne 3 : producteur(s) */}
-        {producerNames && <span style={{ ...lineStyle, fontSize: "11.5px", color: COLORS.inkSoft, overflowWrap: "anywhere" }}>{producerNames}</span>}
-        {/* Ligne 4 : styles, en petites pastilles */}
-        {styles.length > 0 && (
-          <span style={{ ...lineStyle, display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "5px" }}>
-            {styles.map((code) => (
-              <span key={code} style={chipStyle}>
-                {styleTagLabel(code)}
-              </span>
-            ))}
-          </span>
-        )}
-        {/* Ligne 5 : note moyenne */}
-        {ratingAverage != null && (
-          <span style={{ ...lineStyle, marginTop: "6px" }}>
-            <span
-              title="Note moyenne"
-              style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#000", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "3px 8px" }}
-            >
-              <NavIcon name="star" size={13} color={COLORS.amber} filled />
-              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "12px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>
-                <RatingFraction value={ratingAverage} />
-              </span>
+      {/* Rond-profil, centré sur les trois premières lignes : nom, sous-catégorie / drapeau / degré, producteur(s) */}
+      <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={56} />
+        <span style={{ flex: 1, minWidth: 0 }}>
+          {/* Ligne 1 : nom */}
+          <span style={{ display: "block", fontWeight: 700, fontSize: "14px", overflowWrap: "anywhere" }}>{drink.name}</span>
+          {/* Ligne 2 : sous-catégorie · drapeau · degré */}
+          {line2.length > 0 && (
+            <span style={{ ...lineStyle, display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px", fontSize: "11.5px", color: COLORS.inkSoft }}>
+              {line2.map((part, i) => (
+                <React.Fragment key={part.key}>
+                  {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+                  {part}
+                </React.Fragment>
+              ))}
+            </span>
+          )}
+          {/* Ligne 3 : producteur(s) */}
+          {producerNames && <span style={{ ...lineStyle, fontSize: "11.5px", color: COLORS.inkSoft, overflowWrap: "anywhere" }}>{producerNames}</span>}
+        </span>
+      </span>
+      {/* Lignes suivantes : sous le rond-profil, contre le bord gauche du bloc */}
+      {/* Ligne 4 (et 5 si beaucoup de styles) : styles, en petites pastilles */}
+      {styles.length > 0 && (
+        <span style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "8px" }}>
+          {styles.map((code) => (
+            <span key={code} style={chipStyle}>
+              {styleTagLabel(code)}
+            </span>
+          ))}
+        </span>
+      )}
+      {/* Dernière ligne : note moyenne */}
+      {ratingAverage != null && (
+        <span style={{ display: "block", marginTop: "8px" }}>
+          <span
+            title="Note moyenne"
+            style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#000", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "3px 8px" }}
+          >
+            <NavIcon name="star" size={13} color={COLORS.amber} filled />
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "12px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>
+              <RatingFraction value={ratingAverage} />
             </span>
           </span>
-        )}
-      </span>
+        </span>
+      )}
     </button>
   );
 }
