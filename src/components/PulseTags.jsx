@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { searchPulseTags, loadPulseTagEntities } from "../data/sharedDirectories.js";
-import { SectionLabel } from "./PulseContentForm.jsx";
+import { SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
 
 // Nombre maximum de tags de fiche dans une publication (le serveur applique la même limite).
 export const MAX_POST_TAGS = 5;
@@ -117,7 +117,7 @@ export function PulseTagPills({ tags, entities, handlers = {} }) {
 
 
 // Sélecteur de l'écran de rédaction : une seule recherche pour les quatre sortes de fiche, jusqu'à 5 tags.
-export function PulseTagsPicker({ tags, onChange }) {
+export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   // "idle" : pas de recherche en cours · "loading" · "done" (résultats, éventuellement vides, affichés)
@@ -158,7 +158,7 @@ export function PulseTagsPicker({ tags, onChange }) {
   };
 
   return (
-    <div style={{ marginBottom: "20px" }}>
+    <div style={{ marginBottom: endDivider ? "0" : "20px" }}>
       <SectionLabel icon="tag">
         Tags <span style={{ fontWeight: 400 }}>— produits, marques, producteurs, lieux</span>
       </SectionLabel>
@@ -214,6 +214,7 @@ export function PulseTagsPicker({ tags, onChange }) {
         </>
       )}
       {full && <p style={{ margin: 0, fontSize: "12px", color: COLORS.inkSoft }}>{MAX_POST_TAGS} tags : retire-en un pour en ajouter un autre.</p>}
+      {endDivider && <SectionDivider />}
     </div>
   );
 }

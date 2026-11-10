@@ -253,29 +253,32 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
         </button>
 
         {publishToPulse && <SectionDivider />}
-
         {publishToPulse && (
-          <div>
-            <SectionLabel icon="comment">Interaction</SectionLabel>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-              {PLACE_INTERACTIONS.map((opt) => {
-                const on = interaction === opt.code;
-                return (
-                  <button
-                    key={opt.code}
-                    onClick={() => setInteraction(on ? null : opt.code)}
-                    aria-pressed={on}
-                    style={{ background: on ? COLORS.amber : "none", color: on ? COLORS.paper : COLORS.ink, border: `1.5px solid ${on ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "999px", padding: "4px 9px", fontSize: "10px", fontWeight: 700, cursor: "pointer", textAlign: "left" }}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
+          <PulseContentFields
+            form={form}
+            dividers
+            afterPhoto={
+            <div>
+              <SectionLabel icon="comment">Interaction</SectionLabel>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                {PLACE_INTERACTIONS.map((opt) => {
+                  const on = interaction === opt.code;
+                  return (
+                    <button
+                      key={opt.code}
+                      onClick={() => setInteraction(on ? null : opt.code)}
+                      aria-pressed={on}
+                      style={{ background: on ? COLORS.amber : "none", color: on ? COLORS.paper : COLORS.ink, border: `1.5px solid ${on ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "999px", padding: "4px 9px", fontSize: "10px", fontWeight: 700, cursor: "pointer", textAlign: "left" }}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+            }
+          />
         )}
-        {publishToPulse && <SectionDivider />}
-        {publishToPulse && <PulseContentFields form={form} dividers />}
 
         {form.error && <p style={{ color: COLORS.wine, fontSize: "13px", margin: "0 0 12px" }}>{form.error}</p>}
 
