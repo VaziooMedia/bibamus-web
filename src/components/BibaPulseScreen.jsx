@@ -382,14 +382,31 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       {isDrinkCheck && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName) && (
         <div style={{ marginBottom: "18px" }}>
           {showProductBlock && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
-          {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui (photo en haut, commentaire dessous). */}
+          {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui. La photo y est entière (jamais recadrée),
+              en petit et collée à gauche, le commentaire à sa droite. */}
           {(checkNote.photoUrl || checkNote.comment) && (
-            <div style={{ margin: showProductBlock ? "8px 0 0" : 0, background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflow: "hidden" }}>
+            <div
+              style={{
+                margin: showProductBlock ? "8px 0 0" : 0,
+                background: COLORS.surfaceAlt,
+                border: `2px solid ${COLORS.paperAlt}`,
+                borderRadius: "10px",
+                padding: "8px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "10px",
+              }}
+            >
               {checkNote.photoUrl && (
-                <img src={checkNote.photoUrl} alt="Photo de la publication" loading="lazy" style={{ width: "100%", maxHeight: "220px", objectFit: "cover", display: "block" }} />
+                <img
+                  src={checkNote.photoUrl}
+                  alt="Photo de la publication"
+                  loading="lazy"
+                  style={{ flexShrink: 0, maxWidth: "112px", maxHeight: "160px", width: "auto", height: "auto", borderRadius: "8px", display: "block" }}
+                />
               )}
               {checkNote.comment && (
-                <p style={{ margin: 0, padding: "10px 12px", fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{checkNote.comment}</p>
+                <p style={{ flex: 1, minWidth: 0, margin: 0, padding: "2px 4px", fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{checkNote.comment}</p>
               )}
             </div>
           )}
