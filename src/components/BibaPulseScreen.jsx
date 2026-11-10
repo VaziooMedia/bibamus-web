@@ -12,7 +12,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { PulsePostScreen } from "./PulsePostScreen.jsx";
 import { PulseTagPills, postTagsOf, usePostTagEntities } from "./PulseTags.jsx";
 import { PulseProductCard, usePulseProducersById } from "./PulseProductCard.jsx";
-import { PulseVenueCard } from "./PulseVenueCard.jsx";
+import { PulseVenueCard, usePulseVenueRatingsById } from "./PulseVenueCard.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 
@@ -432,7 +432,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       {isRedesigned && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName) && (
         <div style={{ marginBottom: "18px" }}>
           {showProductBlock && isDrinkCheck && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
-          {showProductBlock && isPlaceCheck && <PulseVenueCard venue={obj} onOpen={openObject || undefined} />}
+          {showProductBlock && isPlaceCheck && <PulseVenueCard venue={obj} rating={directories.venueRatingsById?.[obj.id] || null} onOpen={openObject || undefined} />}
           {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui. La photo y est entière (jamais recadrée),
               en petit et collée à gauche, le commentaire à sa droite. */}
           {(checkNote.photoUrl || checkNote.comment) && (
@@ -859,8 +859,9 @@ export function BibaPulseScreen({
 
   // Producteurs des produits checkés (ligne « Producteur » de la fiche produit des cartes DrinkCheck).
   const producersById = usePulseProducersById(entries, drinksDirectory);
+  const venueRatingsById = usePulseVenueRatingsById(entries);
 
-  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities, producersById };
+  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities, producersById, venueRatingsById };
 
   useEffect(() => {
     loadPulseFeed().then((data) => {
@@ -910,7 +911,7 @@ export function BibaPulseScreen({
   React.useLayoutEffect(() => {
     if (!keepAligning.current || !focusedCardRef.current) return;
     focusedCardRef.current.scrollIntoView({ block: "start" });
-  }, [entries, drinksDirectory, venuesById, producersById]);
+  }, [entries, drinksDirectory, venuesById, producersById, venueRatingsById]);
   useEffect(() => {
     if (!keepAligning.current) return undefined;
     const stop = () => {

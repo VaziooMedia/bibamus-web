@@ -9,6 +9,13 @@ import { COLORS, RATING_LABELS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { loadVenueRatingSummary } from "../data/sharedDirectories.js";
 
+// Le texte de l'appréciation d'un lieu (« Excellent », « Premières appréciations »), partagé par la bannière de la fiche et le bloc du
+// lieu des cartes PlaceCheck de BibaPulse. null quand le lieu n'a aucun avis.
+export function venueRatingText(summary) {
+  if (!summary || summary.rating_status === "none") return null;
+  return summary.rating_status === "early" ? "Premières appréciations" : RATING_LABELS.find((l) => l.code === summary.rating_label)?.fr;
+}
+
 export function VenueRatingDisplay({ venueId }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,10 +36,7 @@ export function VenueRatingDisplay({ venueId }) {
 
   if (loading || !summary || summary.rating_status === "none") return null;
 
-  const text =
-    summary.rating_status === "early"
-      ? "Premières appréciations"
-      : RATING_LABELS.find((l) => l.code === summary.rating_label)?.fr;
+  const text = venueRatingText(summary);
 
   return (
     <div
