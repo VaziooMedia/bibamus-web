@@ -395,6 +395,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                 display: "flex",
                 alignItems: "flex-start",
                 gap: "10px",
+                // Photo seule : le cadre épouse la photo au lieu de s'étendre sur toute la largeur.
+                width: checkNote.comment ? undefined : "fit-content",
+                maxWidth: "100%",
               }}
             >
               {checkNote.photoUrl && (
