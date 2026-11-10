@@ -31,9 +31,10 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onCheckConfirmed, onBack, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, claimsEnabled = true }) {
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onCheckConfirmed, onBack, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, pulseReturnEntryId = null, onRememberPulseEntry, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
-  const [activeTab, setActiveTab] = useState("infos");
+  // Retour d'une fiche ouverte depuis une carte de l'onglet BibaPulse : on rouvre cet onglet (voir EntityPulseSection).
+  const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
   const [justCheckedIn, setJustCheckedIn] = useState(false);
 
   const [linkedProducer, setLinkedProducer] = useState(null);
@@ -655,6 +656,8 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
           onOpenDrink={onOpenDrink}
           onOpenProducer={onOpenBrewery}
           selfEntity={{ type: "venue", object: { id: venue.id, name: venue.name } }}
+          returnEntryId={pulseReturnEntryId}
+          onRememberEntry={onRememberPulseEntry}
         />
       )}
 

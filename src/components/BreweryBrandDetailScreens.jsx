@@ -619,8 +619,9 @@ function RelatedDrinksCard({ drinks, emptyText, onOpenDrink }) {
   );
 }
 
-export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onRatingConfirmed, claimsEnabled = true }) {
-  const [activeTab, setActiveTab] = useState("infos");
+export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrand, onOpenVenue, onRatingConfirmed, pulseReturnEntryId = null, onRememberPulseEntry, claimsEnabled = true }) {
+  // Retour d'une fiche ouverte depuis une carte de l'onglet BibaPulse : on rouvre cet onglet (voir EntityPulseSection).
+  const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
@@ -810,7 +811,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
       )}
 
       {activeTab === "bibapulse" && (
-        <EntityPulseSection entityType="producer" entityId={brewery.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} onOpenBrand={onOpenBrand} />
+        <EntityPulseSection entityType="producer" entityId={brewery.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} onOpenBrand={onOpenBrand} returnEntryId={pulseReturnEntryId} onRememberEntry={onRememberPulseEntry} />
       )}
 
       {/* Bulle accrochée au bouton étoile grisé (elle s'efface seule) : pourquoi on ne peut pas encore noter. */}
@@ -866,8 +867,9 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
   );
 }
 
-export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onOpenVenue, onRatingConfirmed, claimsEnabled = true }) {
-  const [activeTab, setActiveTab] = useState("infos");
+export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, myUserId, onBack, onOpenDrink, onOpenBrewery, onOpenVenue, onRatingConfirmed, pulseReturnEntryId = null, onRememberPulseEntry, claimsEnabled = true }) {
+  // Retour d'une fiche ouverte depuis une carte de l'onglet BibaPulse : on rouvre cet onglet (voir EntityPulseSection).
+  const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
   const [reporting, setReporting] = useState(false);
   const [reportInitialReason, setReportInitialReason] = useState(null);
   const [claiming, setClaiming] = useState(false);
@@ -1030,7 +1032,7 @@ export function BrandDetailScreen({ brand, brandsDirectory = [], myBibroCode, my
       {/* Le fil de la marque : les checks et découvertes de ses produits, et les publications qui la taguent.
           Les pastilles d'autres marques ne sont pas cliquables ici (pas de pile de retour marque → marque). */}
       {activeTab === "bibapulse" && (
-        <EntityPulseSection entityType="brand" entityId={brand.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} onOpenProducer={onOpenBrewery} />
+        <EntityPulseSection entityType="brand" entityId={brand.id} myUserId={myUserId} myBibroCode={myBibroCode} onOpenDrink={onOpenDrink} onOpenVenue={onOpenVenue} onOpenProducer={onOpenBrewery} returnEntryId={pulseReturnEntryId} onRememberEntry={onRememberPulseEntry} />
       )}
 
       {/* Bulle accrochée au bouton étoile grisé (elle s'efface seule) : pourquoi on ne peut pas encore noter. */}

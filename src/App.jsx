@@ -1347,12 +1347,30 @@ export default function App() {
   const [searchInitialTab, setSearchInitialTab] = useState("lieux");
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [focusPulseEntry, setFocusPulseEntry] = useState(null);
-  // Carte BibaPulse d'où l'on a ouvert une fiche (produit, lieu, marque, producteur, profil) : au retour, le fil se rouvre sur elle.
-  // Remise à zéro dès qu'on retourne à l'accueil, pour qu'une ouverture ultérieure de BibaPulse reparte du haut.
-  const [pulseReturnEntryId, setPulseReturnEntryId] = useState(null);
+  // Cartes BibaPulse d'où l'on a ouvert une fiche (produit, lieu, marque, producteur, profil), en pile : chaque élément est
+  // { screen, ficheId, entryId, profile }. « screen » est l'écran à rouvrir au retour : le fil principal (ficheId nul) ou la fiche
+  // dont l'onglet BibaPulse portait la carte (ficheId = son identifiant) ; « profile » vaut vrai quand c'est son propre profil qui a été
+  // ouvert. Une pile, car on peut enchaîner (fil → fiche lieu → carte de son onglet BibaPulse → fiche produit) et chaque retour
+  // doit ramener à la carte précédente. Au retour, l'écran rouvre la carte du haut de la pile et la retire. Remise à zéro dès qu'on
+  // retourne à l'accueil, à chaque arrivée sur le fil principal et à l'ouverture d'une carte depuis une notification, pour qu'une
+  // ouverture ultérieure reparte du haut.
+  const [pulseReturns, setPulseReturns] = useState([]);
+  const pulseTop = pulseReturns.length > 0 ? pulseReturns[pulseReturns.length - 1] : null;
+  const pulseReturnFor = (scr, ficheId = null) => (pulseTop && pulseTop.screen === scr && pulseTop.ficheId === ficheId ? pulseTop.entryId : null);
+  // Rappelée par le fil ou l'onglet d'une fiche : avec une carte, avant d'ouvrir une fiche (on empile) ; avec null, quand l'écran
+  // s'est rouvert sur sa carte (on la retire ; le fil principal, lui, vide toute la pile — on n'y arrive plus que par le haut).
+  const rememberPulseEntry = (scr, ficheId = null) => (entryId, opts = {}) => {
+    if (entryId) setPulseReturns((prev) => [...prev, { screen: scr, ficheId, entryId, profile: !!opts.profile }]);
+    else if (scr === "bibaPulse") setPulseReturns([]);
+    else
+      setPulseReturns((prev) => {
+        const top = prev[prev.length - 1];
+        return top && top.screen === scr && top.ficheId === ficheId && (!opts.consumed || top.entryId === opts.consumed) ? prev.slice(0, -1) : prev;
+      });
+  };
   useEffect(() => {
     if (screen !== "bibaPulse" && focusPulseEntry) setFocusPulseEntry(null);
-    if (screen === "home" && pulseReturnEntryId) setPulseReturnEntryId(null);
+    if (screen === "home" && pulseReturns.length > 0) setPulseReturns([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
   useEffect(() => {
@@ -2437,6 +2455,8 @@ export default function App() {
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
+                pulseReturnEntryId={pulseReturnFor("venueDetail", viewedVenueId)}
+                onRememberPulseEntry={rememberPulseEntry("venueDetail", viewedVenueId)}
               />
             )}
             {screen === "venueMenuCategories" && viewedVenue && (
@@ -2519,6 +2539,8 @@ export default function App() {
                 }}
                 returnMemo={drinkReturn.memoFor(viewedDrinkId)}
                 onReturnMemoConsumed={drinkReturn.forget}
+                pulseReturnEntryId={pulseReturnFor("drinkDetail", viewedDrinkId)}
+                onRememberPulseEntry={rememberPulseEntry("drinkDetail", viewedDrinkId)}
               />
             )}
             {screen === "drinkBibaxChecks" && drinkBibaxList && viewedDrink && drinkBibaxList.drinkId === viewedDrink.id && (
@@ -2536,7 +2558,7 @@ export default function App() {
                 bibros={bibros}
                 checkIns={checkIns}
                 myUserId={session.user.id}
-                onBack={() => setScreen(pulseReturnEntryId ? "bibaPulse" : "home")}
+                onBack={() => setScreen(pulseTop && pulseTop.profile ? pulseTop.screen : "home")}
                 goToMyInfo={() => setScreen("myInfo")}
                 goToMyStats={() => setScreen("myStats")}
                 goToBibros={() => setScreen("bibrosList")}
@@ -3200,6 +3222,7 @@ export default function App() {
                   }
                 }}
                 onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("breweryDetail");
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
@@ -3213,6 +3236,8 @@ export default function App() {
                   setScreenBeforeVenueDetail("breweryDetail");
                   setScreen("venueDetail");
                 }}
+                pulseReturnEntryId={pulseReturnFor("breweryDetail", viewedBreweryId)}
+                onRememberPulseEntry={rememberPulseEntry("breweryDetail", viewedBreweryId)}
               />
             )}
             {screen === "brandDetail" && (
@@ -3233,6 +3258,7 @@ export default function App() {
                   }
                 }}
                 onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("brandDetail");
                   setViewedDrinkId(id);
                   setScreen("drinkDetail");
                 }}
@@ -3246,6 +3272,8 @@ export default function App() {
                   setScreenBeforeVenueDetail("brandDetail");
                   setScreen("venueDetail");
                 }}
+                pulseReturnEntryId={pulseReturnFor("brandDetail", viewedBrandId)}
+                onRememberPulseEntry={rememberPulseEntry("brandDetail", viewedBrandId)}
               />
             )}
             {screen === "bibrosList" && (
@@ -3431,8 +3459,8 @@ export default function App() {
                 brandsDirectory={brandsDirectory}
                 focusEntryId={focusPulseEntry?.id}
                 openCommentsOnFocus={focusPulseEntry?.openComments}
-                returnEntryId={pulseReturnEntryId}
-                onRememberEntry={setPulseReturnEntryId}
+                returnEntryId={pulseReturnFor("bibaPulse")}
+                onRememberEntry={rememberPulseEntry("bibaPulse")}
                 myBibroCode={profile.myBibroCode}
                 onOpenVenue={(id) => {
                   setScreenBeforeVenueDetail("bibaPulse");
@@ -3516,7 +3544,7 @@ export default function App() {
                   }
                 }}
                 onOpenPulseEntry={(entryId, openComments) => {
-                  setPulseReturnEntryId(null);
+                  setPulseReturns([]);
                   setFocusPulseEntry({ id: entryId, openComments: !!openComments });
                   setScreen("bibaPulse");
                 }}

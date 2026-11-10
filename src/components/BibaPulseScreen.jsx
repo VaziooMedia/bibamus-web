@@ -800,15 +800,16 @@ export function BibaPulseScreen({
   const focusedCardRef = React.useRef(null);
   const hasScrolledToFocus = React.useRef(false);
   // Retour d'une fiche (produit, lieu, marque, producteur, profil…) ouverte depuis une carte : le fil se rouvre sur cette carte, pas en
-  // haut. L'identifiant vient de l'application (returnEntryId) ; on le lit une fois et on le remet à zéro.
+  // haut. L'identifiant vient de l'application (returnEntryId) ; on le lit une fois et on le remet à zéro. Toute arrivée sur le fil
+  // efface aussi une mémoire laissée par une fiche (on n'y revient pas par ici).
   const [returnTarget] = useState(returnEntryId || null);
   useEffect(() => {
-    if (returnTarget && onRememberEntry) onRememberEntry(null);
+    if (onRememberEntry) onRememberEntry(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const targetId = focusEntryId || returnTarget;
   // Mémorise la carte avant d'ouvrir une fiche, pour y revenir.
-  const rememberThen = (entryId, fn) => (fn ? (...args) => { if (onRememberEntry) onRememberEntry(entryId); return fn(...args); } : undefined);
+  const rememberThen = (entryId, fn, opts) => (fn ? (...args) => { if (onRememberEntry) onRememberEntry(entryId, opts); return fn(...args); } : undefined);
   // Profil d'un Bibax ouvert ici même (rond de profil, personne taguée) : au retour, on remet la carte à l'écran.
   const profileFromEntry = React.useRef(null);
   const openProfileFrom = (entryId, code) => {
@@ -1053,14 +1054,14 @@ export function BibaPulseScreen({
               myBibroCode={myBibroCode}
               onOpenVenue={rememberThen(entry.id, onOpenVenue)}
               onOpenTagged={(person) => {
-                if (person.id === myUserId) rememberThen(entry.id, goToProfile)();
+                if (person.id === myUserId) rememberThen(entry.id, goToProfile, { profile: true })();
                 else if (person.bibro_code) openProfileFrom(entry.id, person.bibro_code);
               }}
               onOpenDrink={rememberThen(entry.id, onOpenDrink)}
               onOpenBrand={rememberThen(entry.id, onOpenBrand)}
               onOpenProducer={rememberThen(entry.id, onOpenProducer)}
               onOpenClub={rememberThen(entry.id, onOpenClub)}
-              onOpenProfile={entry.actorId === myUserId ? rememberThen(entry.id, goToProfile) : (code) => openProfileFrom(entry.id, code)}
+              onOpenProfile={entry.actorId === myUserId ? rememberThen(entry.id, goToProfile, { profile: true }) : (code) => openProfileFrom(entry.id, code)}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
               onDeleted={removeEntry}
               highlighted={entry.id === focusEntryId}
