@@ -2691,6 +2691,21 @@ export async function searchDrinks(query, limit = 30) {
   return data.map(rowToDrink);
 }
 
+// Comme searchDrinks, mais sans les produits génériques (is_generic) : pour l'écran de recherche (barre de Home et BibAtlas). Un produit générique
+// (« Espresso », « Vin Blanc »…) ne sert qu'à ajouter un produit dans BibaSolo ou BibaRoom quand la marque précise n'est pas connue : on ne le consulte
+// pas et on ne le check pas, donc il n'a pas sa place dans les résultats de BibAtlas. Fonction search_drinks_no_generic : mêmes règles et même ordre
+// que search_drinks. Les autres écrans (BibaSolo, BibaRoom, stories, tags…) gardent searchDrinks et trouvent donc les produits génériques.
+export async function searchDrinksNoGeneric(query, limit = 30) {
+  const q = (query || "").trim();
+  if (!q) return [];
+  const { data, error } = await supabase.rpc("search_drinks_no_generic", { p_query: q, p_limit: limit });
+  if (error) {
+    console.error("searchDrinksNoGeneric:", error);
+    return [];
+  }
+  return data.map(rowToDrink);
+}
+
 // Lot d'identifiants précis — pour résoudre les produits déjà référencés quelque part (carte d'un
 // lieu, historique de checks...) sans jamais charger le répertoire entier. ids vide → tableau vide,
 // pas d'aller-retour réseau inutile.

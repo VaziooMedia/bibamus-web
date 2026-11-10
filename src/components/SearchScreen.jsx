@@ -21,7 +21,7 @@ import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, ActionCard } from "./ui.jsx";
 import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames } from "../utils.js";
-import { searchBibax, searchDrinks, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 
 function TagButton({ label, count, filled, onClick }) {
@@ -183,7 +183,7 @@ export function SearchScreen({
 
   // Recherche produits côté serveur plutôt qu'un filtre sur tout le répertoire en mémoire — seule
   // différence avec le comportement précédent : les alias ne sont pas (encore) inclus dans cette
-  // recherche serveur, contrairement à l'ancien filtre en mémoire.
+  // recherche serveur, contrairement à l'ancien filtre en mémoire. Sans les produits génériques : voir searchDrinksNoGeneric.
   useEffect(() => {
     if (!hasPlain) {
       setDrinkResults([]);
@@ -191,7 +191,7 @@ export function SearchScreen({
     }
     setDrinksLoading(true);
     const timer = setTimeout(() => {
-      searchDrinks(plain).then((results) => {
+      searchDrinksNoGeneric(plain).then((results) => {
         setDrinkResults(results);
         setDrinksLoading(false);
       });
