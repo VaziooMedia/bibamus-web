@@ -19,6 +19,7 @@ import { COLORS } from "../constants.js";
 import { loadEntityPulse, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { PulseCard } from "./BibaPulseScreen.jsx";
 import { usePostTagEntities } from "./PulseTags.jsx";
+import { usePulseProducersById } from "./PulseProductCard.jsx";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 
@@ -64,7 +65,10 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
   // Noms des fiches taguées dans les publications libres de cette liste.
   const tagEntities = usePostTagEntities(entries);
 
-  const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [], tagEntities };
+  // Producteurs des produits checkés (ligne « Producteur » de la fiche produit des cartes DrinkCheck).
+  const producersById = usePulseProducersById(entries, drinksDirectory);
+
+  const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [], tagEntities, producersById };
 
   useEffect(() => {
     setEntries(null);
@@ -130,6 +134,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
               key={entry.id}
               flat
               entry={entry}
+              hideProduct={selfEntity?.type === "drink" && entry.objectType === "drink" && entry.objectId === selfEntity.object.id}
               directories={directories}
               myUserId={myUserId}
               myBibroCode={myBibroCode}

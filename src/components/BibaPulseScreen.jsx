@@ -11,7 +11,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { PulsePostScreen } from "./PulsePostScreen.jsx";
 import { PulseTagPills, postTagsOf, usePostTagEntities } from "./PulseTags.jsx";
-import { PulseProductCard } from "./PulseProductCard.jsx";
+import { PulseProductCard, usePulseProducersById } from "./PulseProductCard.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
@@ -71,11 +71,12 @@ const SPECIAL_VENUE_LABELS = { "@home": "@Home", "@event": "@Event" };
 // de plus. Les textes passent par React (jamais interprétés comme du code).
 // Une publication libre porte aussi des tags de fiche (metadata.tags) : leurs noms viennent de tagEntities
 // (voir usePostTagEntities), et une pastille mène à la fiche quand tagHandlers sait l'ouvrir.
-function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {} }) {
+function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {}, hideRating = false }) {
   const meta = entry.metadata || {};
   const comment = typeof meta.comment === "string" ? meta.comment : "";
   const photoUrl = typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null;
-  const rating = typeof meta.rating === "number" ? meta.rating : null;
+  // hideRating : la note de l'auteur est déjà montrée ailleurs dans la carte (ligne « DrinkCheck »).
+  const rating = !hideRating && typeof meta.rating === "number" ? meta.rating : null;
   const tagged = Array.isArray(meta.tagged) ? meta.tagged : [];
   const postTags = postTagsOf(entry).filter((t) => tagEntities[`${t.type}:${t.id}`]);
   if (!comment && !photoUrl && rating === null && tagged.length === 0 && postTags.length === 0) return null;
@@ -119,7 +120,7 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {} 
   );
 }
 
-export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat }, ref) {
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, hideProduct }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -138,6 +139,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const [checkDialog, setCheckDialog] = useState(null);
 
   const obj = resolveObject(entry, directories);
+  // hideProduct : on est déjà sur la fiche de ce produit (onglet BibaPulse d'une fiche Produit) — inutile de la remontrer dans chaque carte.
+  const showProductBlock = !!obj && !hideProduct;
 
   const canOpenObject = obj && ((entry.objectType === "venue" && onOpenVenue) || (entry.objectType === "drink" && onOpenDrink));
   // Lieu où le check a été fait (produit checké dans un lieu) : affiché à la suite du produit.
@@ -290,9 +293,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             }
       }
     >
-      <span style={{ position: "absolute", top: "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
+      <span style={{ position: "absolute", top: isDrinkCheck ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
 
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
+      <div style={{ display: "flex", alignItems: isDrinkCheck ? "center" : "flex-start", gap: "10px", marginBottom: "10px" }}>
         {/* Le rond de profil mène à la fiche de son auteur. */}
         <EntityAvatar
           photoUrl={entry.actorAvatarUrl}
@@ -303,56 +306,71 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
           </p>
-          <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
-            {isClubJoin ? (
-              <>
-                A rejoint le BibaClub{" "}
-                {clubName && openClub ? (
-                  <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
-                    {clubName}
-                  </button>
-                ) : (
-                  <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
-                )}
-              </>
-            ) : isPost ? null : isDrinkCheck ? (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700 }}>
-                <img src={beerCheckIconUrl} alt="" width="20" height="20" style={{ display: "block", flexShrink: 0 }} />
-                DrinkCheck
-              </span>
-            ) : (
-              <>
-                {pulseActionFor(entry)} @{" "}
-                {obj && openObject ? (
-                  <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
-                    {obj.name}
-                  </button>
-                ) : (
-                  <strong style={{ color: COLORS.amber }}>{obj?.name || "une fiche"}</strong>
-                )}
-              </>
-            )}
-            {checkVenueName && !isDrinkCheck && (
-              <>
-                <span style={{ color: COLORS.inkSoft }}>{" — "}</span>
-                {openCheckVenue ? (
-                  <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
-                    {checkVenueName}
-                  </button>
-                ) : (
-                  <span style={{ fontWeight: 700 }}>{checkVenueName}</span>
-                )}
-              </>
-            )}
-          </p>
+          {!isDrinkCheck && (
+            <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
+              {isClubJoin ? (
+                <>
+                  A rejoint le BibaClub{" "}
+                  {clubName && openClub ? (
+                    <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                      {clubName}
+                    </button>
+                  ) : (
+                    <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
+                  )}
+                </>
+              ) : isPost ? null : (
+                <>
+                  {pulseActionFor(entry)} @{" "}
+                  {obj && openObject ? (
+                    <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                      {obj.name}
+                    </button>
+                  ) : (
+                    <strong style={{ color: COLORS.amber }}>{obj?.name || "une fiche"}</strong>
+                  )}
+                </>
+              )}
+              {checkVenueName && (
+                <>
+                  <span style={{ color: COLORS.inkSoft }}>{" — "}</span>
+                  {openCheckVenue ? (
+                    <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
+                      {checkVenueName}
+                    </button>
+                  ) : (
+                    <span style={{ fontWeight: 700 }}>{checkVenueName}</span>
+                  )}
+                </>
+              )}
+            </p>
+          )}
         </div>
       </div>
 
-      {isDrinkCheck && (obj || checkVenueName) && (
+      {/* DrinkCheck : une ligne à part sous l'en-tête — « DrinkCheck » (icône du check, « Check » en vert fluo) à gauche, la note de l'auteur à l'extrême droite. */}
+      {isDrinkCheck && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "10px" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
+            <img src={beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
+            <span>
+              Drink<span style={{ color: COLORS.amber }}>Check</span>
+            </span>
+          </span>
+          {typeof entry.metadata?.rating === "number" && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+              <StarsDisplay value={entry.metadata.rating} size={16} />
+              <span style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink }}>{String(entry.metadata.rating).replace(".", ",")}/5</span>
+            </span>
+          )}
+        </div>
+      )}
+
+      {isDrinkCheck && (showProductBlock || checkVenueName) && (
         <div style={{ marginBottom: "10px" }}>
-          {obj && <PulseProductCard drink={obj} onOpen={openObject || undefined} />}
+          {showProductBlock && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
           {checkVenueName && (
-            <p style={{ margin: obj ? "6px 0 0" : 0, fontSize: "12.5px", color: COLORS.ink }}>
+            <p style={{ margin: showProductBlock ? "6px 0 0" : 0, fontSize: "12.5px", color: COLORS.ink }}>
               {openCheckVenue ? (
                 <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
                   {checkVenueName.startsWith("@") ? checkVenueName : `@${checkVenueName}`}
@@ -365,7 +383,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       )}
 
-      <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} />
+      <PulseContent entry={entry} onOpenTagged={onOpenTagged} tagEntities={directories.tagEntities || {}} tagHandlers={tagHandlers} hideRating={isDrinkCheck} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
         <button
@@ -733,7 +751,10 @@ export function BibaPulseScreen({
   // Noms des fiches taguées dans les publications libres du fil.
   const tagEntities = usePostTagEntities(entries);
 
-  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities };
+  // Producteurs des produits checkés (ligne « Producteur » de la fiche produit des cartes DrinkCheck).
+  const producersById = usePulseProducersById(entries, drinksDirectory);
+
+  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities, producersById };
 
   useEffect(() => {
     loadPulseFeed().then((data) => {
