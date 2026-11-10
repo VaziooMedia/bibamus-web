@@ -25,6 +25,7 @@ import { loadEntityPulse, loadDrinksByIds, loadVenuesByIds } from "../data/share
 import { PulseCard } from "./BibaPulseScreen.jsx";
 import { usePostTagEntities } from "./PulseTags.jsx";
 import { usePulseProducersById } from "./PulseProductCard.jsx";
+import { usePulseVenueRatingsById } from "./PulseVenueCard.jsx";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 
@@ -99,8 +100,10 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
 
   // Producteurs des produits checkés (ligne « Producteur » de la fiche produit des cartes DrinkCheck).
   const producersById = usePulseProducersById(entries, drinksDirectory);
+  // Sur la fiche d'un lieu, la fiche du lieu n'est pas répétée dans ses PlaceCheck : inutile d'en lire l'appréciation.
+  const venueRatingsById = usePulseVenueRatingsById(selfEntity?.type === "venue" ? null : entries);
 
-  const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [], tagEntities, producersById };
+  const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [], tagEntities, producersById, venueRatingsById };
 
   useEffect(() => {
     setEntries(null);
@@ -138,7 +141,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
     if (!keepAligning.current || !returnTarget) return;
     alignTo(returnTarget);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, drinksDirectory, venuesById, producersById]);
+  }, [entries, drinksDirectory, venuesById, producersById, venueRatingsById]);
   useEffect(() => {
     if (!keepAligning.current) return undefined;
     const stop = () => {
@@ -202,7 +205,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
               key={entry.id}
               flat
               entry={entry}
-              hideProduct={selfEntity?.type === "drink" && entry.objectType === "drink" && entry.objectId === selfEntity.object.id}
+              hideProduct={(selfEntity?.type === "drink" && entry.objectType === "drink" && entry.objectId === selfEntity.object.id) || (selfEntity?.type === "venue" && entry.eventType === "venue_visit" && entry.objectType === "venue" && entry.objectId === selfEntity.object.id)}
               directories={directories}
               myUserId={myUserId}
               myBibroCode={myBibroCode}
