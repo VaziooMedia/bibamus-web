@@ -232,7 +232,7 @@ export function HomeScreen({
         </div>
       </div>
 
-      <div style={{ height: "2px", background: COLORS.amber, margin: "0 -20px 14px" }} />
+      <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 14px" }} />
       <div style={{ display: "flex", justifyContent: "center", gap: "28px", marginBottom: "14px" }}>
         <div data-tour="atlas" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
@@ -323,15 +323,15 @@ export function HomeScreen({
           </span>
         </div>
       </div>
-      <div style={{ height: "2px", background: COLORS.amber, margin: "0 -20px 18px" }} />
+      <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
 
       <TravelAgeWarning profile={profile} />
       {(stories.length > 0 || officialStories.length > 0) && (
         <div>
-          {/* Sans Stories : ni barre de Stories ni deuxième trait vert, un seul trait sous les boutons ronds. */}
+          {/* Sans Stories : ni barre de Stories ni deuxième trait, un seul trait sous les boutons ronds. */}
           <StoriesBar stories={stories} onOpenStory={onOpenStoryAuthor} myUserId={myUserId} officialStories={officialStories} />
 
-          <div style={{ height: "2px", background: COLORS.amber, margin: "-10px -20px 18px" }} />
+          <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "-10px -20px 18px" }} />
         </div>
       )}
 
@@ -490,7 +490,7 @@ export function HomeScreen({
               ))}
           </div>
 
-          <div style={{ height: "2px", background: COLORS.amber, margin: "18px -20px" }} />
+          <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "18px -20px" }} />
         </>
       )}
 
@@ -605,7 +605,7 @@ export function HomeScreen({
           );
         })()}
 
-      <div style={{ height: "2px", background: COLORS.amber, margin: "0 -20px 18px" }} />
+      <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
         {gamesVisible && (
@@ -623,7 +623,7 @@ export function HomeScreen({
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>
-          <div style={{ height: "2px", background: COLORS.amber, margin: "0 -20px 18px" }} />
+          <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
           <button
             onClick={() => setSuggestionsExpanded((e) => !e)}
             style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: suggestionsExpanded ? "8px" : 0, background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer" }}
