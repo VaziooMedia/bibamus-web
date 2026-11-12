@@ -535,8 +535,8 @@ export function HomeScreen({
                   <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>En attente des premières activités.</p>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", margin: "0 -20px" }}>
-                  {/* Extraits en petits blocs bleutés (surface), séparés par un petit espace de 8 px, toujours en pleine largeur (sortent de la marge de 20 px) — décision de Mehdi, 2026-11-12. */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", margin: "0 -20px" }}>
+                  {/* Extraits en bandes bleutées (surface), séparées par un petit espace de 6 px, toujours en pleine largeur (sortent de la marge de 20 px) — décision de Mehdi, 2026-11-12. */}
                   {entries.map((entry) => {
                     const obj = resolveObject(entry);
                     const objName = obj?.name || (entry.eventType === "venue_visit" ? "un établissement" : entry.eventType === "database_contribution" ? "une fiche" : "un produit");
