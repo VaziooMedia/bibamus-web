@@ -17,7 +17,7 @@ export function usePulseVenueRatingsById(entries) {
   useEffect(() => {
     const ids = new Set();
     (entries || []).forEach((e) => {
-      if (e.eventType === "venue_visit" && e.objectType === "venue" && e.objectId && !requested.current.has(e.objectId)) ids.add(e.objectId);
+      if ((e.eventType === "venue_visit" || e.eventType === "database_contribution") && e.objectType === "venue" && e.objectId && !requested.current.has(e.objectId)) ids.add(e.objectId);
     });
     ids.forEach((id) => {
       requested.current.add(id);
@@ -28,7 +28,7 @@ export function usePulseVenueRatingsById(entries) {
 }
 
 // Fiche lieu en petit, dans une carte du fil BibaPulse (PlaceCheck). Même cadre et même mise en page que la fiche produit d'un
-// DrinkCheck (PulseProductCard) : le rond-profil (photo du lieu, ou son emoji, ou le « B » Bibamus à défaut) est centré sur les TROIS
+// DrinkCheck (PulseProductCard) : le rond-profil (photo du lieu, ou son emoji, ou l'icône « lieu » (épingle) à défaut — comme la recherche) est centré sur les TROIS
 // premières lignes ; les suivantes reviennent sous lui, contre le bord gauche du bloc.
 //   1. le nom ;
 //   2. le sous-titre, en italique avec le petit point vert fluo de 6 px devant — comme sur les listes et le cadre de la carte du BibAtlas ;
@@ -79,7 +79,7 @@ export function PulseVenueCard({ venue, rating = null, onOpen }) {
     >
       {/* Rond-profil, centré sur les trois premières lignes : nom, sous-titre, adresse */}
       <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={56} />
+        <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={56} fallbackIcon="map-pin" />
         <span style={{ flex: 1, minWidth: 0 }}>
           {/* Ligne 1 : nom */}
           <span style={{ display: "block", fontWeight: 700, fontSize: "14px", overflowWrap: "anywhere" }}>{venue.name}</span>

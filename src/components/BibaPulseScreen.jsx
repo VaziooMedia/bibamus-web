@@ -17,6 +17,7 @@ import { PulseProductCard, PulseDrinkLine, usePulseProducersById, pulseDrinkIdsO
 import { PulseVenueCard, usePulseVenueRatingsById } from "./PulseVenueCard.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
+import bibAtlasIconUrl from "../assets/brand/bibatlas-carte.svg";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -183,8 +184,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // PlaceCheck (check d'un lieu sans produit, `venue_visit`) : même présentation que le DrinkCheck — « PlaceCheck » avec l'icône du check
   // de lieu, puis la fiche du lieu en petit.
   const isPlaceCheck = entry.eventType === "venue_visit";
-  // Cartes refaites (une sorte de carte à la fois) : en-tête sur une seule ligne, ligne « DrinkCheck » / « PlaceCheck », bloc de la fiche.
-  const isRedesigned = isDrinkCheck || isPlaceCheck;
+  // Contribution à BibAtlas (ajout d'un PRODUIT ou d'un LIEU à la base, `database_contribution`) : même présentation que le DrinkCheck et le
+  // PlaceCheck — ligne « Contribution à BibAtlas » avec l'icône de BibAtlas, puis la fiche ajoutée en petit. Les ajouts de marque et de
+  // producteur gardent pour l'instant l'ancienne carte (« Ajout @ nom »).
+  const isContribution = entry.eventType === "database_contribution" && (entry.objectType === "drink" || entry.objectType === "venue");
+  // Cartes refaites (une sorte de carte à la fois) : en-tête sur une seule ligne, ligne « DrinkCheck » / « PlaceCheck » / « Contribution à BibAtlas », bloc de la fiche.
+  const isRedesigned = isDrinkCheck || isPlaceCheck || isContribution;
   // DrinkCheck et PlaceCheck : photo et commentaire de l'auteur, montrés sous le bloc de la fiche (voir plus bas).
   const checkNote = isRedesigned ? pulseNoteOf(entry) : { comment: "", photoUrl: null };
   // PlaceCheck avec un produit : la carte reste centrée sur le lieu ; le produit bu (metadata.drink_id) n'est qu'un petit texte sous le bloc
@@ -458,11 +463,18 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       {isRedesigned && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "10px" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
-            <img src={isPlaceCheck ? placeCheckIconUrl : beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
-            <span>
-              {isPlaceCheck ? "Place" : "Drink"}
-              <span style={{ color: COLORS.amber }}>Check</span>
-            </span>
+            <img src={isContribution ? bibAtlasIconUrl : isPlaceCheck ? placeCheckIconUrl : beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
+            {isContribution ? (
+              <span>
+                Contribution à Bib
+                <span style={{ color: COLORS.amber }}>Atlas</span>
+              </span>
+            ) : (
+              <span>
+                {isPlaceCheck ? "Place" : "Drink"}
+                <span style={{ color: COLORS.amber }}>Check</span>
+              </span>
+            )}
           </span>
           {placeRating && (
             <span title="Avis de l'auteur sur le lieu" style={{ display: "inline-flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
@@ -485,7 +497,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       {isRedesigned && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName || placeDrink || placeInteraction) && (
         <div style={{ marginBottom: "18px" }}>
           {showProductBlock && isDrinkCheck && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
-          {showProductBlock && isPlaceCheck && <PulseVenueCard venue={obj} rating={directories.venueRatingsById?.[obj.id] || null} onOpen={openObject || undefined} />}
+          {showProductBlock && (isPlaceCheck || (isContribution && entry.objectType === "venue")) && <PulseVenueCard venue={obj} rating={directories.venueRatingsById?.[obj.id] || null} onOpen={openObject || undefined} />}
+          {showProductBlock && isContribution && entry.objectType === "drink" && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
           {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui. La photo y est entière (jamais recadrée),
               en petit et collée à gauche, le commentaire à sa droite. */}
           {(checkNote.photoUrl || checkNote.comment || placeInteraction) && (
