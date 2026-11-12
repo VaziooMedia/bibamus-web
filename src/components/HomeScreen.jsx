@@ -238,7 +238,7 @@ export function HomeScreen({
               width: "52px",
               height: "52px",
               borderRadius: "50%",
-              background: COLORS.paper,
+              background: COLORS.surface, // fond bleuté, comme les blocs de l'accueil (décision de Mehdi, 2026-11-12)
               border: `2px solid ${COLORS.paperAlt}`,
               cursor: "pointer",
             }}
@@ -260,7 +260,7 @@ export function HomeScreen({
               width: "52px",
               height: "52px",
               borderRadius: "50%",
-              background: COLORS.paper,
+              background: COLORS.surface, // fond bleuté, comme les blocs de l'accueil (décision de Mehdi, 2026-11-12)
               border: `2px solid ${COLORS.paperAlt}`,
               cursor: "pointer",
             }}
@@ -282,7 +282,7 @@ export function HomeScreen({
               width: "52px",
               height: "52px",
               borderRadius: "50%",
-              background: COLORS.paper,
+              background: COLORS.surface, // fond bleuté, comme les blocs de l'accueil (décision de Mehdi, 2026-11-12)
               border: `2px solid ${COLORS.paperAlt}`,
               cursor: "pointer",
             }}
@@ -304,7 +304,7 @@ export function HomeScreen({
               width: "52px",
               height: "52px",
               borderRadius: "50%",
-              background: COLORS.paper,
+              background: COLORS.surface, // fond bleuté, comme les blocs de l'accueil (décision de Mehdi, 2026-11-12)
               border: `2px solid ${COLORS.paperAlt}`,
               cursor: "pointer",
             }}
