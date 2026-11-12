@@ -370,7 +370,8 @@ export function HomeScreen({
               <span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Live</span>
             </span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* Blocs un peu plus larges que le texte de la page (8 px de chaque côté en plus : 12 px du bord de l'écran au lieu de 20), sans jamais toucher les bords. */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "0 -8px" }}>
             {[...events]
               .filter((ev) => !ev.closed)
               .reverse()
