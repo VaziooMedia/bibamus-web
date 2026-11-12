@@ -213,7 +213,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // producteur gardent pour l'instant l'ancienne carte (« Ajout @ nom »).
   const isContribution = entry.eventType === "database_contribution" && (entry.objectType === "drink" || entry.objectType === "venue");
   // Lancement d'un BibaRoom (`room_launched`, nouvelle carte) : même présentation que les autres cartes refaites — ligne « Lancement d'un BibaRoom »
-  // avec l'icône BibaGo, puis la fiche du salon en petit (nom, lieu, mode ; jamais le code du salon, qui est la clé d'accès).
+  // avec l'icône BibaGo, puis la fiche du salon en petit (nom, lieu, date et heure ; jamais le code du salon, qui est la clé d'accès).
   const isRoomLaunch = entry.eventType === "room_launched";
   // Le lancement d'un BibaRoom se supprime avec la même fonction Edge que les checks (delete-pulse-check, version 3), sans statistiques à retirer.
   // Cartes refaites (une sorte de carte à la fois) : en-tête sur une seule ligne, ligne « DrinkCheck » / « Découverte » / « PlaceCheck » /
@@ -539,7 +539,6 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           {isRoomLaunch && (
             <PulseRoomCard
               name={typeof entry.metadata?.room_name === "string" ? entry.metadata.room_name : "BibaRoom"}
-              mode={entry.metadata?.room_mode}
               special={entry.venueId === "@home" ? "home" : entry.venueId === "@event" ? "event" : null}
               venue={checkVenue}
               launchedAt={entry.createdAt}

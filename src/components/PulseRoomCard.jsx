@@ -2,12 +2,12 @@
 // Fiche d'un BibaRoom en petit, dans une carte « Lancement d'un BibaRoom » du fil BibaPulse (même cadre que la fiche d'un produit ou d'un
 // lieu : fond surfaceAlt, bordure paperAlt, rond de 56 px). Rond-profil : la photo du lieu du salon, à défaut son emoji, à défaut la
 // maison (salon @Home) ou le feu d'artifice (salon @Event), à défaut la pastille de lieu. Lignes : le nom du salon ; le lieu (pastille
-// verte + nom) quand le titre du salon n'est pas déjà le nom du lieu, sinon la ville, grisée ; la date et l'heure du lancement, grisées ;
-// le mode (ORBIS, ARCA, PARTES, LIBER).
+// verte + nom) quand le titre du salon n'est pas déjà le nom du lieu, sinon la ville, grisée ; la date et l'heure du lancement, grisées.
+// Pas de pastille du mode (ORBIS, ARCA…) : décision de Mehdi, elle n'apporte rien sur la carte.
 // Les données du salon viennent de la carte (jamais le code du salon, qui est la clé d'accès) ; le lieu est lu sur sa fiche.
 // ============================================================
 import React from "react";
-import { COLORS, EVENT_MODE_LABELS, EVENT_MODE_DESC } from "../constants.js";
+import { COLORS } from "../constants.js";
 import { SalonAvatar } from "./ui.jsx";
 import { NavIcon } from "./icons.jsx";
 
@@ -22,11 +22,9 @@ function launchLabel(value) {
   return `${day} · ${time}`;
 }
 
-export function PulseRoomCard({ name, mode, special = null, venue = null, launchedAt = null }) {
+export function PulseRoomCard({ name, special = null, venue = null, launchedAt = null }) {
   const showVenue = venue && venue.name !== name;
   const launch = launchLabel(launchedAt);
-  const modeLabel = EVENT_MODE_LABELS[mode] || null;
-  const chipStyle = { background: COLORS.paperAlt, borderRadius: "999px", padding: "0.3em 0.8em", fontSize: "10px", fontWeight: 600, color: COLORS.ink, whiteSpace: "nowrap" };
   return (
     <div
       style={{
@@ -58,14 +56,6 @@ export function PulseRoomCard({ name, mode, special = null, venue = null, launch
           {launch && <span style={{ display: "block", marginTop: "3px", fontSize: "11.5px", color: COLORS.inkSoft }}>{launch}</span>}
         </span>
       </span>
-      {modeLabel && (
-        <span style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "8px" }}>
-          <span style={chipStyle}>
-            {modeLabel}
-            {EVENT_MODE_DESC[mode] ? ` · ${EVENT_MODE_DESC[mode]}` : ""}
-          </span>
-        </span>
-      )}
     </div>
   );
 }
