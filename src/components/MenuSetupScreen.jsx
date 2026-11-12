@@ -15,7 +15,7 @@ import { loadGenericDrinks, loadDrinksByIds } from "../data/sharedDirectories.js
 // Clé du bloc « Tous les produits ajoutés » dans le bloc déroulant ouvert (ne peut pas être confondue avec une catégorie).
 const ALL_PRODUCTS_BLOCK = "__tous__";
 
-export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDirectory, onRegisterBrewery, onCleanupDuplicates }) {
+export function MenuSetupScreen({ event, venue, updateEvent, onBack, breweriesDirectory, onCleanupDuplicates }) {
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const [genericDrinks, setGenericDrinks] = useState([]);
   useEffect(() => {

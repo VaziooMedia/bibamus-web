@@ -84,7 +84,6 @@ import {
   setDrinkTastedServer,
   loadBreweriesDirectory,
   loadBrandsDirectory,
-  createBrewery,
   createPublicVenue,
   createDrink,
   updateDrink,
@@ -1905,23 +1904,6 @@ export default function App() {
     setEvents((prev) => prev.filter((e) => e.id !== id));
   };
 
-  const registerBrewery = (name, country) => {
-    const trimmed = (name || "").trim();
-    if (!trimmed) return trimmed;
-    const normalized = trimmed.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-    const existing = breweriesDirectory.find(
-      (b) => (b.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "") === normalized
-    );
-    if (existing) return existing.name;
-    const newBrewery = { id: `local-${Date.now()}`, name: trimmed, country: (country || "").trim(), status: "to_process" };
-    setBreweriesDirectory((prev) => [...prev, newBrewery]);
-    emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "producer", entityId: newBrewery.id });
-    createBrewery(newBrewery).then((created) => {
-      if (created) setBreweriesDirectory((prev) => prev.map((b) => (b.id === newBrewery.id ? created : b)));
-    });
-    return trimmed;
-  };
-
   if (!authChecked || !splashDone) {
     return <LoadingScreen />;
   }
@@ -2358,7 +2340,6 @@ export default function App() {
                 updateEvent={updateEvent}
                 onBack={() => setScreen("eventDashboard")}
                 breweriesDirectory={breweriesDirectory}
-                onRegisterBrewery={registerBrewery}
                 onCleanupDuplicates={() => cleanupDuplicates(currentEvent.venueId)}
               />
             )}
