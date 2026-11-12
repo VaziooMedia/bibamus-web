@@ -531,12 +531,12 @@ export function HomeScreen({
               </button>
 
               {entries.length === 0 ? (
-                <div style={{ background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
+                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
                   <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>En attente des premières activités.</p>
                 </div>
               ) : (
-                <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
-                  {/* Extraits « à plat » (convention de DESIGN-SYSTEM.md) : pleine largeur (sort de la marge de 20 px), sans bloc, trait de bord à bord sous chaque ligne. */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {/* Extraits en petits blocs bleutés (surface), séparés par un petit espace de 8 px, comme les suggestions rapides (décision de Mehdi, 2026-11-12) : ils ne sont plus « à plat ». */}
                   {entries.map((entry) => {
                     const obj = resolveObject(entry);
                     const objName = obj?.name || (entry.eventType === "venue_visit" ? "un établissement" : entry.eventType === "database_contribution" ? "une fiche" : "un produit");
@@ -553,7 +553,7 @@ export function HomeScreen({
                     const isRoomLaunch = entry.eventType === "room_launched";
                     const roomName = isRoomLaunch && typeof entry.metadata?.room_name === "string" ? entry.metadata.room_name : "";
                     return (
-                      <div key={entry.id} style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                      <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
                         <button
                           onClick={() => (entry.actorId === myUserId ? goToProfile() : onOpenBibaxProfile(entry.actorBibroCode))}
                           style={{ background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0 }}
