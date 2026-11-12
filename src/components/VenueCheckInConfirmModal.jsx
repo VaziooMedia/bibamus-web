@@ -13,10 +13,13 @@
 //     bouton « Modifier » — c'est à l'utilisateur de demander à le revoir.
 //
 // Résultat envoyé à onClose : null si annulé, sinon
-//   { publishToPulse, visibility, content, drink: { id, name } | null, ratingChange, venueRating }
+//   { publishToPulse, visibility, content, drink: { id, name } | null, ratingChange, venueRating, discovery }
 // où ratingChange vaut null (avis inchangé), { value: 1..5 } (donner / modifier l'avis)
 // ou { value: null } (retirer l'avis existant), et venueRating l'avis de la personne tel qu'il sera après ce check
-// (1..5, ou null s'il n'y en a pas) — c'est lui que la carte BibaPulse rappelle à droite de la ligne « PlaceCheck ».
+// (1..5, ou null s'il n'y en a pas) — c'est lui que la carte BibaPulse rappelle à droite de la ligne « PlaceCheck » —, et discovery
+// la déclaration « Je découvre ce lieu pour la première fois » (vrai / faux ; undefined sans la case, c'est-à-dire sans canDiscover).
+// canDiscover : c'est le premier passage de la personne dans ce lieu ; la case est alors proposée sous « Publier dans BibaPulse »,
+// décochée par défaut, comme « Je goûte ce produit pour la première fois » du DrinkCheck.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
@@ -28,8 +31,10 @@ import { usePulseContentForm, buildPulseContent, PulseContentFields, SectionLabe
 import { PLACE_INTERACTIONS } from "../placeInteractions.js";
 
 
-export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji, myRating, onClose }) {
+export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji, myRating, canDiscover = false, onClose }) {
   const [publishToPulse, setPublishToPulse] = useState(true);
+  // « Je découvre ce lieu pour la première fois » : décochée par défaut, la personne dit elle-même si c'est une vraie découverte.
+  const [discovery, setDiscovery] = useState(false);
   // Un passage dans un lieu se partage d'abord avec ses Bibax (comme avant) ; le public reste un choix.
   const form = usePulseContentForm("relations");
   const [sending, setSending] = useState(false);
@@ -84,7 +89,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
     }
     // Rien à faire si l'avis est identique à celui déjà donné.
     const ratingChange = rating === existingRating ? null : { value: rating };
-    onClose({ publishToPulse, visibility: form.visibility, content, drink: drink ? { id: drink.id, name: drink.name } : null, ratingChange, venueRating: rating });
+    onClose({ publishToPulse, visibility: form.visibility, content, drink: drink ? { id: drink.id, name: drink.name } : null, ratingChange, venueRating: rating, discovery: canDiscover ? discovery : undefined });
   };
 
   return (
@@ -227,7 +232,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
 
         <button
           onClick={() => setPublishToPulse((v) => !v)}
-          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: publishToPulse ? "0" : "16px", background: "none", border: "none", padding: 0, textAlign: "left" }}
+          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", marginBottom: publishToPulse && canDiscover ? "12px" : publishToPulse ? "0" : "16px", background: "none", border: "none", padding: 0, textAlign: "left" }}
         >
           <span
             style={{
@@ -251,6 +256,33 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
             </strong>
           </span>
         </button>
+
+        {/* Premier passage dans ce lieu : la personne dit elle-même si c'est une vraie découverte. */}
+        {publishToPulse && canDiscover && (
+          <button
+            type="button"
+            onClick={() => setDiscovery((v) => !v)}
+            aria-pressed={discovery}
+            style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 0 28px", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", color: COLORS.ink }}
+          >
+            <span
+              style={{
+                width: "18px",
+                height: "18px",
+                flexShrink: 0,
+                borderRadius: "4px",
+                background: discovery ? COLORS.amber : "none",
+                border: `2px solid ${discovery ? COLORS.amber : COLORS.paperAlt}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {discovery && <NavIcon name="check" size={13} color="#000" />}
+            </span>
+            <span style={{ fontSize: "13px", color: COLORS.inkSoft }}>Je découvre ce lieu pour la première fois</span>
+          </button>
+        )}
 
         {publishToPulse && <SectionDivider />}
         {publishToPulse && (

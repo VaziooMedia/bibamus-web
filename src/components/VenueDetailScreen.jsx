@@ -66,8 +66,13 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
   };
   // Mes propres visites/boissons dans ce lieu — plus le champ partagé stats de la ligne du lieu.
   const [stats, setStats] = useState({ visits: 0, drinksOrdered: 0 });
+  const [statsLoaded, setStatsLoaded] = useState(false);
   useEffect(() => {
-    loadMyStatsForVenue(venue.id).then(setStats);
+    setStatsLoaded(false);
+    loadMyStatsForVenue(venue.id).then((s) => {
+      setStats(s);
+      setStatsLoaded(true);
+    });
   }, [venue.id]);
   // Produits les plus populaires ici, tous utilisateurs confondus — jamais d'argent, juste des
   // quantités (voir bibamus-schema-public-stats.sql).
@@ -173,7 +178,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
     setJustCheckedIn(true);
     // Si l'enregistrement de l'avis échoue, App prévient déjà la personne (le check, lui, est bien enregistré) : on n'annonce alors pas d'avis.
     let ratingFailed = false;
-    const pulseResult = await onCheckIn({ publishToPulse: result.publishToPulse, visibility: result.visibility, content: result.content, drink: result.drink, ratingChange: result.ratingChange, venueRating: result.venueRating, onRatingFailed: () => { ratingFailed = true; } });
+    const pulseResult = await onCheckIn({ publishToPulse: result.publishToPulse, visibility: result.visibility, content: result.content, drink: result.drink, ratingChange: result.ratingChange, venueRating: result.venueRating, discovery: result.discovery, onRatingFailed: () => { ratingFailed = true; } });
     if (pulseResult && pulseResult.error) alert("Ton check-in est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
     // La confirmation rose (dessinée par App) annonce le check, et l'avis s'il a été donné, modifié ou retiré.
     const detail = result.ratingChange && !ratingFailed ? (result.ratingChange.value == null ? "Avis retiré" : "Avis confirmé") : null;
@@ -666,7 +671,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
 
       {claimsEnabled && claiming && <ClaimModal entityType="venue" entityId={venue.id} entityName={venue.name} myBibroCode={myBibroCode} myUserId={myUserId} onClose={() => setClaiming(false)} />}
       {showCheckInConfirm && (
-        <VenueCheckInConfirmModal venueName={venue.name} venuePhotoUrl={venue.profilePhotoUrl} venueEmoji={venue.avatarEmoji} myRating={checkInMyRating} onClose={handleCheckInConfirmed} />
+        <VenueCheckInConfirmModal venueName={venue.name} venuePhotoUrl={venue.profilePhotoUrl} venueEmoji={venue.avatarEmoji} myRating={checkInMyRating} canDiscover={statsLoaded && stats.visits === 0 && !justCheckedIn} onClose={handleCheckInConfirmed} />
       )}
 
       {showActionsMenu && (

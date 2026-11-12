@@ -1760,7 +1760,7 @@ export default function App() {
   // Si publishToPulse est faux, rien n'est publié mais le passage (et le produit) sont bien
   // enregistrés. L'émission d'événement ci-dessous ne sert qu'aux statistiques (skipPulse).
   // Renvoie le résultat de la publication ({ ok } ou { error }), ou null si rien n'a été publié.
-  const checkInVenue = async (venueId, { publishToPulse = true, visibility = null, content = null, drink = null, ratingChange = null, venueRating = null, onRatingFailed = null } = {}) => {
+  const checkInVenue = async (venueId, { publishToPulse = true, visibility = null, content = null, drink = null, ratingChange = null, venueRating = null, discovery = false, onRatingFailed = null } = {}) => {
     // Marquage local existant, conservé tel quel (présence en temps réel sur cet appareil).
     setCheckedInVenueId(venueId);
     emitEvent(EVENT_TYPES.VENUE_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: venueId, skipPulse: true });
@@ -1785,6 +1785,9 @@ export default function App() {
     const placeContent = { ...(content || {}) };
     if (drink) placeContent.drinkId = drink.id;
     if (venueRating != null && !ratingFailed) placeContent.venueRating = venueRating;
+    // « Je découvre ce lieu pour la première fois » (case de la fenêtre PlaceCheck, premier passage seulement) : la carte reste un PlaceCheck,
+    // marqué metadata.discovery par la fonction Edge create-pulse-event (version 10).
+    if (discovery === true) placeContent.discovery = true;
     return publishVenueCheckInToPulse(venueId, { visibility, content: Object.keys(placeContent).length > 0 ? placeContent : content });
   };
 
