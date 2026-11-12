@@ -114,7 +114,7 @@ export function PulseProductCard({ drink, producers = [], onOpen }) {
     >
       {/* Rond-profil, centré sur les trois premières lignes : nom, sous-catégorie / drapeau / degré, producteur(s) */}
       <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={56} />
+        <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={56} fallbackIcon="bottle" />
         <span style={{ flex: 1, minWidth: 0 }}>
           {/* Ligne 1 : nom */}
           <span style={{ display: "block", fontWeight: 700, fontSize: "14px", overflowWrap: "anywhere" }}>{drink.name}</span>
