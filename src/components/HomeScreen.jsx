@@ -53,7 +53,7 @@ const formatTime = (timestamp) => {
 
 
 // Diamètre du rond de profil d'un bloc BibaLive (px) : il grandit vers la gauche à partir d'un rond de 56 px (voir le bloc BibaLive plus bas).
-const BIBALIVE_ROUND = 64;
+const BIBALIVE_ROUND = 68;
 
 export function HomeScreen({
   profile,
