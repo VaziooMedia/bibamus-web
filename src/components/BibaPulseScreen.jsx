@@ -136,6 +136,19 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {},
   );
 }
 
+// Icône de la ligne « Découverte » : l'icône du rond-profil par défaut (bouteille pour un produit, épingle pour un lieu) dans un rond vert fluo
+// de 22 px, comme l'icône du check des deux autres cartes (décidé par Mehdi, 2026-11-12 : « une icône Lieu entourée et une icône Drink entourée »).
+function PulseRoundIcon({ name }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{ width: "22px", height: "22px", boxSizing: "border-box", borderRadius: "50%", border: `2px solid ${COLORS.amber}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+    >
+      <NavIcon name={name} size={13} color={COLORS.amber} />
+    </span>
+  );
+}
+
 export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, hideProduct }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
@@ -179,8 +192,17 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // Publication libre : pas d'objet propre, seulement des tags de fiche dans son contenu.
   const isPost = entry.eventType === "post";
   const isCheck = CHECK_EVENT_TYPES.includes(entry.eventType);
-  // DrinkCheck (check d'un produit après le premier) : « DrinkCheck » avec l'icône du check, puis la fiche du produit en petit, puis le lieu du check.
-  const isDrinkCheck = entry.eventType === "drink_checked";
+  // Découverte d'un PRODUIT (premier check, case « Je goûte ce produit pour la première fois » cochée, `product_discovered`) : même carte que le
+  // DrinkCheck (même fiche du produit en petit, même note à droite, Cheers en premier), seule la ligne « Découverte » change.
+  // Découverte d'un LIEU (premier passage, case « Je découvre ce lieu pour la première fois » cochée) : même carte que le PlaceCheck ; c'est un
+  // `venue_visit` marqué `metadata.discovery = true` par le serveur (create-pulse-event v10), donc toutes ses réactions et ses lectures sont celles
+  // d'un PlaceCheck.
+  const isVenueDiscovery = entry.eventType === "venue_visit" && entry.metadata?.discovery === true;
+  const isDiscovery = entry.eventType === "product_discovered" || isVenueDiscovery;
+  // DrinkCheck (check d'un produit après le premier) : « DrinkCheck » avec l'icône du check, puis la fiche du produit en petit, puis le lieu du
+  // check. La Découverte d'un produit passe par les mêmes lignes de code (`isDrinkCheck` couvre `drink_checked` et `product_discovered`) ; celle
+  // d'un lieu passe par celles du PlaceCheck (`isPlaceCheck`). `isDiscovery` ne change que la ligne « Découverte » (libellé et icône).
+  const isDrinkCheck = entry.eventType === "drink_checked" || entry.eventType === "product_discovered";
   // PlaceCheck (check d'un lieu sans produit, `venue_visit`) : même présentation que le DrinkCheck — « PlaceCheck » avec l'icône du check
   // de lieu, puis la fiche du lieu en petit.
   const isPlaceCheck = entry.eventType === "venue_visit";
@@ -188,7 +210,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // PlaceCheck — ligne « Contribution à BibAtlas » avec l'icône de BibAtlas, puis la fiche ajoutée en petit. Les ajouts de marque et de
   // producteur gardent pour l'instant l'ancienne carte (« Ajout @ nom »).
   const isContribution = entry.eventType === "database_contribution" && (entry.objectType === "drink" || entry.objectType === "venue");
-  // Cartes refaites (une sorte de carte à la fois) : en-tête sur une seule ligne, ligne « DrinkCheck » / « PlaceCheck » / « Contribution à BibAtlas », bloc de la fiche.
+  // Cartes refaites (une sorte de carte à la fois) : en-tête sur une seule ligne, ligne « DrinkCheck » / « Découverte » / « PlaceCheck » /
+  // « Contribution à BibAtlas », bloc de la fiche.
   const isRedesigned = isDrinkCheck || isPlaceCheck || isContribution;
   // DrinkCheck et PlaceCheck : photo et commentaire de l'auteur, montrés sous le bloc de la fiche (voir plus bas).
   const checkNote = isRedesigned ? pulseNoteOf(entry) : { comment: "", photoUrl: null };
@@ -308,7 +331,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
     setComments(await loadPulseComments(entry.id));
   };
 
-  // Bouton Cheers : sur les Découvertes et sur les DrinkCheck (en premier de la rangée sur un DrinkCheck).
+  // Bouton Cheers : sur les Découvertes et sur les DrinkCheck (en premier de la rangée).
   const cheersButton = (
     <button
       onClick={handleSante}
@@ -463,12 +486,18 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       {isRedesigned && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "10px" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
-            <img src={isContribution ? bibAtlasIconUrl : isPlaceCheck ? placeCheckIconUrl : beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
+            {isDiscovery ? (
+              <PulseRoundIcon name={isVenueDiscovery ? "map-pin" : "bottle"} />
+            ) : (
+              <img src={isContribution ? bibAtlasIconUrl : isPlaceCheck ? placeCheckIconUrl : beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
+            )}
             {isContribution ? (
               <span>
                 Contribution à Bib
                 <span style={{ color: COLORS.amber }}>Atlas</span>
               </span>
+            ) : isDiscovery ? (
+              <span>Découverte</span>
             ) : (
               <span>
                 {isPlaceCheck ? "Place" : "Drink"}
@@ -537,11 +566,13 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           )}
           {placeDrink && <PulseDrinkLine drink={placeDrink} onOpen={openPlaceDrink || undefined} gapAbove={showProductBlock || !!checkNote.photoUrl || !!checkNote.comment || !!placeInteraction} />}
           {checkVenueName && (
-            <p style={{ margin: showProductBlock || checkNote.photoUrl || checkNote.comment || placeDrink ? "14px 0 0" : 0, display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
+            <p style={{ margin: showProductBlock || checkNote.photoUrl || checkNote.comment || placeDrink ? "14px 0 0" : 0, display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
               {/* Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ». */}
-              <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+              <span style={{ display: "flex", flexShrink: 0, marginTop: "1px" }}>
+                <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+              </span>
               {openCheckVenue ? (
-                <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
+                <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}>
                   {checkVenueName.replace(/^@/, "")}
                 </button>
               ) : (
@@ -580,8 +611,6 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             </span>
             {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
           </button>
-
-          {entry.eventType === "product_discovered" && cheersButton}
 
           <button
             onClick={toggleComments}
@@ -730,7 +759,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   J'arrive ! ({entry.incomingCount})
                 </button>
               )}
-              {(entry.eventType === "product_discovered" || isDrinkCheck) && (
+              {isDrinkCheck && (
                 <button
                   onClick={() => setReactorsTab("sante")}
                   style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "sante" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "sante" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}

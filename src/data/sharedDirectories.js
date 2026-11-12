@@ -789,7 +789,8 @@ export async function recordVenueCheckIn(venueId) {
 // publie l'activité correspondante seulement à ce moment-là, séparément de emitEvent (dont le
 // insert analytics_events, lui, a déjà eu lieu au moment du check-in).
 // `content` peut aussi porter, pour un PlaceCheck, le produit bu sur place (`drinkId`) et l'avis de l'auteur sur le lieu (`venueRating`, de 1 à 5) :
-// la fonction Edge create-pulse-event (version 8) les vérifie et les enregistre dans la carte (metadata.drink_id / metadata.venue_rating).
+// la fonction Edge create-pulse-event (version 8) les vérifie et les enregistre dans la carte (metadata.drink_id / metadata.venue_rating) ;
+// `content.discovery` (vrai, version 10) déclare la visite « Découverte » (metadata.discovery) : la carte reste un venue_visit.
 export async function publishVenueCheckInToPulse(venueId, { visibility = null, content = null } = {}) {
   return createPulseEvent("venue_visit", "venue", venueId, { visibility, content });
 }
