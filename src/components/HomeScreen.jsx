@@ -54,6 +54,10 @@ const formatTime = (timestamp) => {
 
 // Diamètre du rond de profil d'un bloc BibaLive (px) : il grandit vers la gauche à partir d'un rond de 56 px (voir le bloc BibaLive plus bas).
 const BIBALIVE_ROUND = 68;
+// Même principe pour une ligne de « Suggestions rapides Bibax » : rond de profil de 42 px qui grandit vers la gauche (et un peu en haut et en bas)
+// à partir d'un rond de 32 px, donc sans décaler le texte ni changer la hauteur de la ligne (il reste à 4 px du bord intérieur à gauche).
+const SUGGESTION_ROUND = 42;
+const SUGGESTION_BASE = 32;
 
 export function HomeScreen({
   profile,
@@ -664,7 +668,9 @@ export function HomeScreen({
                     width: "100%",
                   }}
                 >
-                  <EntityAvatar photoUrl={s.avatarUrl} size={32} />
+                  <span style={{ display: "flex", flexShrink: 0, margin: `${-(SUGGESTION_ROUND - SUGGESTION_BASE) / 2}px 0 ${-(SUGGESTION_ROUND - SUGGESTION_BASE) / 2}px ${-(SUGGESTION_ROUND - SUGGESTION_BASE)}px` }}>
+                    <EntityAvatar photoUrl={s.avatarUrl} size={SUGGESTION_ROUND} />
+                  </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} style={{ fontSize: "13px", color: COLORS.ink }} />
                     <p style={{ margin: "1px 0 0", fontSize: "10.5px", color: COLORS.inkSoft }}>{s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}</p>
