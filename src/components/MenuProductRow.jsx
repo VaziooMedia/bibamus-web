@@ -8,7 +8,6 @@
 //               Spiritueux / Shot. Rien d'autre.
 // Le cadre du prix, du volume et du type de service est rose fluo tant que la valeur n'a pas été vérifiée/adaptée (c'est peut-être une valeur
 // par défaut, à contrôler), vert fluo ensuite (`drink.priceChecked`, `drink.volumeChecked`, `drink.servingModeChecked`).
-// DrinkRow (plus complète) reste utilisée par le répertoire de produits.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
