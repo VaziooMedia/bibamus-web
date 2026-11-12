@@ -17,7 +17,7 @@ export function usePulseVenueRatingsById(entries) {
   useEffect(() => {
     const ids = new Set();
     (entries || []).forEach((e) => {
-      if (e.eventType === "venue_visit" && e.objectType === "venue" && e.objectId && !requested.current.has(e.objectId)) ids.add(e.objectId);
+      if ((e.eventType === "venue_visit" || e.eventType === "database_contribution") && e.objectType === "venue" && e.objectId && !requested.current.has(e.objectId)) ids.add(e.objectId);
     });
     ids.forEach((id) => {
       requested.current.add(id);
