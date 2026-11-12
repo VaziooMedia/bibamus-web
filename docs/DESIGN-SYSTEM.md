@@ -156,5 +156,5 @@ Résidus de « like » dans le code, sans effet visible : `PRODUCT_LIKED`, `togg
 - Apparence : couleur d'accent et icône de l'app désactivées ; pas de thème clair.
 - Dette de cohérence : la clé `amber` qui contient du vert ; `tabPending` et Space Mono inutilisées ; `useInfiniteScroll` inutilisé ; deux roses ; manifeste et `body` de deux fonds différents ; `#39FF66` en dur ; pas d'échelle de z-index ; pas de composant de réglages commun.
 - `ScrollToTopButton` lit `window.scrollY` alors que le défilement est interne : son effet réel n'a pas été testé sur appareil.
-- Assets de marque présents mais non branchés (BibaMeet, BibaCal, BibaPulse, BibAtlas, BibaMe, BibaMusic, BibaGo, jetons bleu et orange).
+- Assets de marque présents mais non branchés (BibaMeet, BibaCal, BibaPulse, BibaMe, BibaMusic, BibaGo, jetons bleu et orange). L'icône BibAtlas (globe) est branchée depuis le 2026-11-12 sur la ligne « Contribution à BibAtlas » des cartes BibaPulse, par `bibatlas-carte.svg` (copie recadrée de `bibatlas.svg`, 22 px).
 - **34 modules hérités de la plateforme de gestion** (`Layout`, `TopBar`, `StatsCounterBar`, `PageTitle`, `ComingSoon`, `Dashboard`, `DataTable`, panneaux de détail…) ne sont atteignables depuis aucun écran de l'app ; ils ne font pas partie du design system de l'app (voir `ADMIN-PLATFORM.md`).

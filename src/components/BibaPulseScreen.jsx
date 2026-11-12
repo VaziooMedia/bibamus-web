@@ -17,7 +17,7 @@ import { PulseProductCard, PulseDrinkLine, usePulseProducersById, pulseDrinkIdsO
 import { PulseVenueCard, usePulseVenueRatingsById } from "./PulseVenueCard.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
-import loupeIconUrl from "../assets/brand/loupe.svg";
+import bibAtlasIconUrl from "../assets/brand/bibatlas-carte.svg";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -463,7 +463,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       {isRedesigned && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "10px" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
-            <img src={isContribution ? loupeIconUrl : isPlaceCheck ? placeCheckIconUrl : beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
+            <img src={isContribution ? bibAtlasIconUrl : isPlaceCheck ? placeCheckIconUrl : beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
             {isContribution ? (
               <span>
                 Contribution à Bib
