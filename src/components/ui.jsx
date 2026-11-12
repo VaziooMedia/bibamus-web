@@ -393,7 +393,8 @@ export function CategoryTile({ iconElement, title, subtitle, onClick, badge, cou
         display: "flex",
         flexDirection: "column",
         gap: "8px",
-        background: COLORS.paper,
+        // Fond bleuté (surface), comme les blocs BibaLive et les suggestions rapides (décision de Mehdi, 2026-11-12).
+        background: COLORS.surface,
         border: `2px solid ${COLORS.paperAlt}`,
         borderRadius: "14px",
         padding: "12px 14px",
