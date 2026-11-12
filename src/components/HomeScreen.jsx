@@ -553,9 +553,18 @@ export function HomeScreen({
                     const isRoomLaunch = entry.eventType === "room_launched";
                     const roomName = isRoomLaunch && typeof entry.metadata?.room_name === "string" ? entry.metadata.room_name : "";
                     return (
-                      <div key={entry.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                      <div
+                        key={entry.id}
+                        data-home-extrait
+                        role="button"
+                        tabIndex={0}
+                        // Un appui sur le bloc ouvre la page BibaPulse (Mehdi, 2026-11-12) ; l'avatar et les noms cliquables gardent leur propre action (stopPropagation).
+                        onClick={goToBibaPulse}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goToBibaPulse(); } }}
+                        style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}
+                      >
                         <button
-                          onClick={() => (entry.actorId === myUserId ? goToProfile() : onOpenBibaxProfile(entry.actorBibroCode))}
+                          onClick={(e) => { e.stopPropagation(); if (entry.actorId === myUserId) goToProfile(); else onOpenBibaxProfile(entry.actorBibroCode); }}
                           style={{ background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0 }}
                         >
                           <EntityAvatar photoUrl={entry.actorAvatarUrl} size={28} />
@@ -569,7 +578,7 @@ export function HomeScreen({
                               <>
                                 A rejoint le BibaClub{" "}
                                 {clubName && onOpenClub && entry.objectId ? (
-                                  <button onClick={() => onOpenClub(entry.objectId)} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                                  <button onClick={(e) => { e.stopPropagation(); onOpenClub(entry.objectId); }} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
                                     {clubName}
                                   </button>
                                 ) : (
@@ -586,7 +595,7 @@ export function HomeScreen({
                               <>
                                 {actionFor(entry)} @{" "}
                                 {objClickable ? (
-                                  <button onClick={() => openHandler(obj.id)} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                                  <button onClick={(e) => { e.stopPropagation(); openHandler(obj.id); }} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
                                     {objName}
                                   </button>
                                 ) : (
