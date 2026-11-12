@@ -651,7 +651,8 @@ export function HomeScreen({
                   key={s.userId}
                   onClick={() => onOpenBibaxProfile(s.bibroCode)}
                   style={{
-                    background: COLORS.paper,
+                    // Fond bleuté (surface), comme le bloc BibaLive (décision de Mehdi, 2026-11-12).
+                    background: COLORS.surface,
                     border: `2px solid ${COLORS.paperAlt}`,
                     borderRadius: "12px",
                     padding: "10px 14px",
