@@ -8,13 +8,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
-import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
+import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
 import { loadBrandsDirectory, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { normalizeSearchText, makeSearchMatcher, entityNames } from "../utils.js";
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
-export function BrandDirectoryScreen({ myBrands = [], myBibroCode, addIntent, onBack, onOpenBrand, goToSubmit, activeCountry, setActiveCountry }) {
+export function BrandDirectoryScreen({ myBrands = [], myBibroCode, onBack, onOpenBrand, activeCountry, setActiveCountry }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [all, setAll] = useState([]);
@@ -119,9 +119,6 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, addIntent, on
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={handleBack} />
-      {addIntent && !activeCountry && !searching && (
-        <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>AJOUTER UNE MARQUE</span>
-      )}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px", margin: "4px 0 24px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
           <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
@@ -133,30 +130,6 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, addIntent, on
           </button>
         </div>
       </div>
-      {!activeCountry && !searching && addIntent && (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>
-          Vérifie d'abord si elle existe déjà, pour éviter les doublons — sinon tu pourras la créer en bas de cette page.
-        </p>
-      )}
-
-      {addIntent && (
-        <PrimaryButton onClick={goToSubmit} style={{ width: "100%", marginBottom: "16px" }}>
-          Je ne la trouve pas, créer une fiche
-        </PrimaryButton>
-      )}
-
-      {!addIntent && !activeCountry && !searching && (
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
-          <button
-            onClick={goToSubmit}
-            style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-            title="Proposer une marque"
-            aria-label="Proposer une marque"
-          >
-            +
-          </button>
-        </div>
-      )}
 
       <input
         value={query}
@@ -210,19 +183,6 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, addIntent, on
               </span>
             </button>
           ))}
-        </div>
-      )}
-
-      {!addIntent && !activeCountry && !searching && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
-          <button
-            onClick={goToSubmit}
-            style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-            title="Proposer une marque"
-            aria-label="Proposer une marque"
-          >
-            +
-          </button>
         </div>
       )}
 

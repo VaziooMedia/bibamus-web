@@ -49,8 +49,6 @@ import { MenuSetupScreen } from "./components/MenuSetupScreen.jsx";
 import { DrinksDirectoryScreen } from "./components/DrinksDirectoryScreen.jsx";
 import { SubmitDrinkWizardScreen } from "./components/SubmitDrinkWizardScreen.jsx";
 import { SubmitVenueWizardScreen } from "./components/SubmitVenueWizardScreen.jsx";
-import { SubmitBreweryWizardScreen } from "./components/SubmitBreweryWizardScreen.jsx";
-import { SubmitBrandWizardScreen } from "./components/SubmitBrandWizardScreen.jsx";
 import { VenueDetailScreen } from "./components/VenueDetailScreen.jsx";
 import { VenueMenuCategoriesScreen } from "./components/VenueMenuCategoriesScreen.jsx";
 import { VenueCategoryDrinksScreen } from "./components/VenueCategoryDrinksScreen.jsx";
@@ -3180,18 +3178,6 @@ export default function App() {
                 }}
                 activeCountry={activeBreweryCountry}
                 setActiveCountry={setActiveBreweryCountry}
-                goToSubmit={() => setScreen("submitBrewery")}
-              />
-            )}
-            {screen === "submitBrewery" && (
-              <SubmitBreweryWizardScreen
-                breweriesDirectory={breweriesDirectory}
-                onDone={(createdId) => {
-                  emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "brewery", entityId: createdId });
-                  trackEvent("producer_added", "brewery", profile.myBibroCode);
-                  setScreen("breweryDirectory");
-                }}
-                onCancel={() => setScreen("breweryDirectory")}
               />
             )}
             {screen === "brandDirectory" && (
@@ -3205,19 +3191,6 @@ export default function App() {
                 }}
                 activeCountry={activeBrandCountry}
                 setActiveCountry={setActiveBrandCountry}
-                goToSubmit={() => setScreen("submitBrand")}
-              />
-            )}
-            {screen === "submitBrand" && (
-              <SubmitBrandWizardScreen
-                brandsDirectory={brandsDirectory}
-                breweriesDirectory={breweriesDirectory}
-                onDone={(createdId) => {
-                  emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "brand", entityId: createdId });
-                  trackEvent("brand_added", "brand", profile.myBibroCode);
-                  setScreen("brandDirectory");
-                }}
-                onCancel={() => setScreen("brandDirectory")}
               />
             )}
             {screen === "breweryDetail" && (
@@ -3600,7 +3573,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "submitBrewery", "submitBrand", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroStats", "bibroPulse", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStats", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "myProducts", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroStats", "bibroPulse", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

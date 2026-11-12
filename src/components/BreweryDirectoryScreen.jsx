@@ -10,13 +10,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
-import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
+import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
 import { loadBreweriesDirectory, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { normalizeSearchText, makeSearchMatcher, entityNames } from "../utils.js";
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
-export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, addIntent, onBack, onOpenBrewery, goToSubmit, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
+export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, onBack, onOpenBrewery, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [all, setAll] = useState([]);
@@ -121,9 +121,6 @@ export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, addInten
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={handleBack} />
-      {addIntent && !activeCountry && !searching && (
-        <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>AJOUTER UN PRODUCTEUR</span>
-      )}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px", margin: "4px 0 24px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
           <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
@@ -135,30 +132,6 @@ export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, addInten
           </button>
         </div>
       </div>
-      {!activeCountry && !searching && addIntent && (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>
-          Vérifie d'abord s'il existe déjà, pour éviter les doublons — sinon tu pourras le créer en bas de cette page.
-        </p>
-      )}
-
-      {addIntent && (
-        <PrimaryButton onClick={goToSubmit} style={{ width: "100%", marginBottom: "16px" }}>
-          Je ne le trouve pas, créer une fiche
-        </PrimaryButton>
-      )}
-
-      {!addIntent && !activeCountry && !searching && (
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
-          <button
-            onClick={goToSubmit}
-            style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-            title="Proposer un producteur"
-            aria-label="Proposer un producteur"
-          >
-            +
-          </button>
-        </div>
-      )}
 
       <input
         value={query}
@@ -212,19 +185,6 @@ export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, addInten
               </span>
             </button>
           ))}
-        </div>
-      )}
-
-      {!addIntent && !activeCountry && !searching && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
-          <button
-            onClick={goToSubmit}
-            style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-            title="Proposer un producteur"
-            aria-label="Proposer un producteur"
-          >
-            +
-          </button>
         </div>
       )}
 
