@@ -52,6 +52,9 @@ const formatTime = (timestamp) => {
 };
 
 
+// Diamètre du rond de profil d'un bloc BibaLive (px) : il grandit vers la gauche à partir d'un rond de 56 px (voir le bloc BibaLive plus bas).
+const BIBALIVE_ROUND = 64;
+
 export function HomeScreen({
   profile,
   events,
@@ -422,7 +425,10 @@ export function HomeScreen({
                     />
                     {ev.paused ? "EN PAUSE" : "EN COURS"}
                   </span>
-                  <SalonAvatar event={ev} venue={ev.venueId ? venuesById[ev.venueId] : null} size={56} />
+                  {/* Rond de profil agrandi vers la gauche (la place libre) et vers le haut / le bas : son encombrement reste celui d'un rond de 56 px, donc ni le texte ni la hauteur du bloc ne bougent. */}
+                  <span style={{ display: "flex", flexShrink: 0, margin: `${-(BIBALIVE_ROUND - 56) / 2}px 0 ${-(BIBALIVE_ROUND - 56) / 2}px ${-(BIBALIVE_ROUND - 56)}px` }}>
+                    <SalonAvatar event={ev} venue={ev.venueId ? venuesById[ev.venueId] : null} size={BIBALIVE_ROUND} />
+                  </span>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: "16px", lineHeight: 1.25, whiteSpace: "normal", wordBreak: "break-word" }}>{ev.name}</div>
                     {(() => {
