@@ -382,7 +382,8 @@ export function HomeScreen({
                     position: "relative",
                     textAlign: "left",
                     width: "100%",
-                    background: COLORS.paper,
+                    // Bleuté (COLORS.surface), comme avant le 2026-11-09 : le bloc BibaLive se détache du fond de la page, contrairement aux autres blocs de l'accueil.
+                    background: COLORS.surface,
                     border: `2px solid ${COLORS.paperAlt}`,
                     borderRadius: "12px",
                     padding: "14px 16px",
