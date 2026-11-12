@@ -18,6 +18,8 @@ import { PulseVenueCard, usePulseVenueRatingsById } from "./PulseVenueCard.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import bibAtlasIconUrl from "../assets/brand/bibatlas-carte.svg";
+import bibaGoIconUrl from "../assets/brand/bibago-carte.svg";
+import { PulseRoomCard } from "./PulseRoomCard.jsx";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -210,9 +212,13 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // PlaceCheck — ligne « Contribution à BibAtlas » avec l'icône de BibAtlas, puis la fiche ajoutée en petit. Les ajouts de marque et de
   // producteur gardent pour l'instant l'ancienne carte (« Ajout @ nom »).
   const isContribution = entry.eventType === "database_contribution" && (entry.objectType === "drink" || entry.objectType === "venue");
+  // Lancement d'un BibaRoom (`room_launched`, nouvelle carte) : même présentation que les autres cartes refaites — ligne « Lancement d'un BibaRoom »
+  // avec l'icône BibaGo, puis la fiche du salon en petit (nom, lieu, mode ; jamais le code du salon, qui est la clé d'accès).
+  const isRoomLaunch = entry.eventType === "room_launched";
+  // Le lancement d'un BibaRoom se supprime avec la même fonction Edge que les checks (delete-pulse-check, version 3), sans statistiques à retirer.
   // Cartes refaites (une sorte de carte à la fois) : en-tête sur une seule ligne, ligne « DrinkCheck » / « Découverte » / « PlaceCheck » /
   // « Contribution à BibAtlas », bloc de la fiche.
-  const isRedesigned = isDrinkCheck || isPlaceCheck || isContribution;
+  const isRedesigned = isDrinkCheck || isPlaceCheck || isContribution || isRoomLaunch;
   // DrinkCheck et PlaceCheck : photo et commentaire de l'auteur, montrés sous le bloc de la fiche (voir plus bas).
   const checkNote = isRedesigned ? pulseNoteOf(entry) : { comment: "", photoUrl: null };
   // PlaceCheck avec un produit : la carte reste centrée sur le lieu ; le produit bu (metadata.drink_id) n'est qu'un petit texte sous le bloc
@@ -232,7 +238,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
     deleteLock.current = true;
     setDeleting(true);
     setDeleteError("");
-    const result = await deleteMyPulsePost(entry.id);
+    const result = isRoomLaunch ? await deleteMyPulseCheck(entry.id, { alsoStats: false }) : await deleteMyPulsePost(entry.id);
     if (result.error) {
       deleteLock.current = false;
       setDeleting(false);
@@ -489,12 +495,17 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             {isDiscovery ? (
               <PulseRoundIcon name={isVenueDiscovery ? "map-pin" : "bottle"} />
             ) : (
-              <img src={isContribution ? bibAtlasIconUrl : isPlaceCheck ? placeCheckIconUrl : beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
+              <img src={isContribution ? bibAtlasIconUrl : isRoomLaunch ? bibaGoIconUrl : isPlaceCheck ? placeCheckIconUrl : beerCheckIconUrl} alt="" width="22" height="22" style={{ display: "block", flexShrink: 0 }} />
             )}
             {isContribution ? (
               <span>
                 Contribution à Bib
                 <span style={{ color: COLORS.amber }}>Atlas</span>
+              </span>
+            ) : isRoomLaunch ? (
+              <span>
+                Lancement d'un Biba
+                <span style={{ color: COLORS.amber }}>Room</span>
               </span>
             ) : isDiscovery ? (
               <span>Découverte</span>
@@ -523,8 +534,17 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         </div>
       )}
 
-      {isRedesigned && (showProductBlock || checkNote.photoUrl || checkNote.comment || checkVenueName || placeDrink || placeInteraction) && (
+      {isRedesigned && (showProductBlock || isRoomLaunch || checkNote.photoUrl || checkNote.comment || checkVenueName || placeDrink || placeInteraction) && (
         <div style={{ marginBottom: "18px" }}>
+          {isRoomLaunch && (
+            <PulseRoomCard
+              name={typeof entry.metadata?.room_name === "string" ? entry.metadata.room_name : "BibaRoom"}
+              mode={entry.metadata?.room_mode}
+              special={entry.venueId === "@home" ? "home" : entry.venueId === "@event" ? "event" : null}
+              venue={checkVenue}
+              launchedAt={entry.createdAt}
+            />
+          )}
           {showProductBlock && isDrinkCheck && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
           {showProductBlock && (isPlaceCheck || (isContribution && entry.objectType === "venue")) && <PulseVenueCard venue={obj} rating={directories.venueRatingsById?.[obj.id] || null} onOpen={openObject || undefined} />}
           {showProductBlock && isContribution && entry.objectType === "drink" && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
@@ -565,7 +585,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             </div>
           )}
           {placeDrink && <PulseDrinkLine drink={placeDrink} onOpen={openPlaceDrink || undefined} gapAbove={showProductBlock || !!checkNote.photoUrl || !!checkNote.comment || !!placeInteraction} />}
-          {checkVenueName && (
+          {checkVenueName && !isRoomLaunch && (
             <p style={{ margin: showProductBlock || checkNote.photoUrl || checkNote.comment || placeDrink ? "14px 0 0" : 0, display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
               {/* Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ». */}
               <span style={{ display: "flex", flexShrink: 0, marginTop: "1px" }}>
@@ -661,11 +681,11 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         {!isDrinkCheck && santeSummary}
         </div>
 
-        {myUserId && (isPost || isCheck) && entry.actorId === myUserId && (
+        {myUserId && (isPost || isCheck || isRoomLaunch) && entry.actorId === myUserId && (
           <button
-            onClick={isPost ? handleDelete : handleDeleteCheck}
+            onClick={isPost || isRoomLaunch ? handleDelete : handleDeleteCheck}
             disabled={deleting}
-            aria-label={isPost ? "Supprimer ma publication" : "Supprimer mon check"}
+            aria-label={isPost || isRoomLaunch ? "Supprimer ma publication" : "Supprimer mon check"}
             title="Supprimer"
             style={{ position: "absolute", right: 0, bottom: 0, display: "flex", alignItems: "center", background: "none", border: "none", padding: "4px", opacity: deleting ? 0.3 : 0.6, cursor: deleting ? "default" : "pointer" }}
           >

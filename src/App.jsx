@@ -143,6 +143,7 @@ import {
   deleteRoundOrdersByEvent,
   loadDrinkLinkedEntities,
   sendNotification,
+  publishRoomLaunchToPulse,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons, declineSalonInvite } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
@@ -905,7 +906,7 @@ export default function App() {
   // verre venu d'une tournée, jamais enregistré sous cet identifiant) n'est jamais touché.
   const removePersonalDrinkRecord = (orderId) => deleteRoundOrders(personalRoundId(orderId));
 
-  const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants, clubId, invitedBibros = []) => {
+  const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants, clubId, invitedBibros = [], publishToPulse = false) => {
     const isSalon = screen === "newSalonEvent";
     const isHome = venueId === "@home";
     const isEventPlace = venueId === "@event";
@@ -976,6 +977,10 @@ export default function App() {
       }
       if (clubId) await linkSalonToClub(clubId, code, session.user.id);
       emitEvent(EVENT_TYPES.BIBAROOM_CREATED, { actorBibroCode: profile.myBibroCode, entityType: "salon", entityId: newEvent.id, payload: { salonCode: code } });
+      // Carte « Lancement d'un BibaRoom » dans BibaPulse, visible par les relations de l'organisateur seulement : seulement si la case « Publier
+      // dans BibaPulse » du formulaire est cochée (elle l'est par défaut). Le salon existe déjà (le serveur le relit pour vérifier l'organisateur) ;
+      // un échec de publication ne gêne en rien la création du salon.
+      if (publishToPulse) publishRoomLaunchToPulse(code);
     }
 
     setEvents((prev) => [...prev, normalizeEvent(newEvent)]);

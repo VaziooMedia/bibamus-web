@@ -537,6 +537,9 @@ export function HomeScreen({
                     // Publication libre : pas d'objet, seulement son texte (une ligne, tronquée).
                     const isPost = entry.eventType === "post";
                     const postText = isPost && typeof entry.metadata?.comment === "string" ? entry.metadata.comment.replace(/\s+/g, " ").trim() : "";
+                    // Lancement d'un BibaRoom : le nom du salon est dans la carte elle-même (le salon ne s'ouvre pas d'ici : sans le code, personne ne peut y entrer).
+                    const isRoomLaunch = entry.eventType === "room_launched";
+                    const roomName = isRoomLaunch && typeof entry.metadata?.room_name === "string" ? entry.metadata.room_name : "";
                     return (
                       <div key={entry.id} style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
                         <button
@@ -560,6 +563,10 @@ export function HomeScreen({
                                 ) : (
                                   <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
                                 )}
+                              </>
+                            ) : isRoomLaunch ? (
+                              <>
+                                Lancement du BibaRoom <strong style={{ color: COLORS.amber }}>{roomName || "sans titre"}</strong>
                               </>
                             ) : isPost ? (
                               postText

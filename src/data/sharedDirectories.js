@@ -119,6 +119,9 @@ export async function createPulseEvent(eventType, objectType, objectId, options 
         sourceId: objectId,
         venueId: options.venueId || null,
         roomSalonCode: options.roomSalonCode || null,
+        // Lancement d'un BibaRoom (room_launched, version 11) : le code du salon sert seulement au serveur à vérifier que l'appelant en est
+        // l'organisateur et à lire le nom, le mode et le lieu ; il n'est jamais enregistré dans la carte.
+        salonCode: options.salonCode || null,
         visibility: options.visibility || null,
         // Contenu vérifié côté serveur : { comment, photoUrl, rating, taggedIds }.
         content: options.content || null,
@@ -819,6 +822,13 @@ export async function loadMyDrinkCheckinCount(drinkId) {
 // personne checke ce produit, "Check" (drink_checked) les fois suivantes. Renvoie { ok } ou { error }.
 export async function publishDrinkCheckInToPulse(drinkId, venueId = null, { isDiscovery = false, visibility = null, content = null } = {}) {
   return createPulseEvent(isDiscovery ? "product_discovered" : "drink_checked", "drink", drinkId, { venueId, visibility, content });
+}
+
+// Carte « Lancement d'un BibaRoom » (room_launched, fonction Edge create-pulse-event version 11) : publiée une seule fois, à la création du
+// salon, visible par les relations de l'organisateur seulement. Le client n'envoie que le code du salon : le serveur vérifie que l'appelant
+// en est l'organisateur, relit le nom, le mode et le lieu dans le salon et n'enregistre jamais le code. Renvoie { ok } ou { error }.
+export async function publishRoomLaunchToPulse(salonCode) {
+  return createPulseEvent("room_launched", null, null, { visibility: "relations", salonCode });
 }
 
 // Publication libre sur BibaPulse : un texte et/ou une photo, avec jusqu'à 5 tags de fiche (produits,
