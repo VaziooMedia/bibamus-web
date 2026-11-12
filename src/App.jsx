@@ -2107,6 +2107,11 @@ export default function App() {
                 gamesVisible={featureFlags.nav_games_visible !== false}
                 storiesEnabled={featureFlags.stories_enabled !== false}
                 goToBibaPulse={() => setScreen("bibaPulse")}
+                onOpenPulseEntry={(entryId) => {
+                  setPulseReturns([]);
+                  setFocusPulseEntry({ id: entryId, openComments: false });
+                  setScreen("bibaPulse");
+                }}
                 goToSettings={() => setScreen("settings")}
                 goToSearch={() => setScreen("atlasSearch")}
                 goToDrinkCheck={() => {
