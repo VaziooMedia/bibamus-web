@@ -58,6 +58,8 @@ const BIBALIVE_ROUND = 68;
 // à partir d'un rond de 32 px, donc sans décaler le texte ni changer la hauteur de la ligne (il reste à 4 px du bord intérieur à gauche).
 const SUGGESTION_ROUND = 42;
 const SUGGESTION_BASE = 32;
+// Rond de profil d'un extrait BibaPulse de l'accueil (px) : il s'étend sur les deux premières lignes du bloc (nom + début de l'action), Mehdi 2026-11-12 (avant : 28 px).
+const EXTRAIT_ROUND = 40;
 
 export function HomeScreen({
   profile,
@@ -564,7 +566,7 @@ export function HomeScreen({
                         style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}
                       >
                         <span style={{ display: "flex", flexShrink: 0 }}>
-                          <EntityAvatar photoUrl={entry.actorAvatarUrl} size={28} />
+                          <EntityAvatar photoUrl={entry.actorAvatarUrl} size={EXTRAIT_ROUND} />
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
