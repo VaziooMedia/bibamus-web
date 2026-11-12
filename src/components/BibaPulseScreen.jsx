@@ -179,8 +179,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // Publication libre : pas d'objet propre, seulement des tags de fiche dans son contenu.
   const isPost = entry.eventType === "post";
   const isCheck = CHECK_EVENT_TYPES.includes(entry.eventType);
-  // DrinkCheck (check d'un produit après le premier) : « DrinkCheck » avec l'icône du check, puis la fiche du produit en petit, puis le lieu du check.
-  const isDrinkCheck = entry.eventType === "drink_checked";
+  // Découverte (premier check d'un produit, case « Je goûte ce produit pour la première fois » cochée, `product_discovered`) : même carte que
+  // le DrinkCheck (même icône, même fiche du produit en petit, même note à droite, Cheers en premier), seul le libellé de la ligne change.
+  const isDiscovery = entry.eventType === "product_discovered";
+  // DrinkCheck (check d'un produit après le premier) : « DrinkCheck » avec l'icône du check, puis la fiche du produit en petit, puis le lieu du
+  // check. Les Découvertes passent par les mêmes lignes de code (`isDrinkCheck` couvre les deux), voir `isDiscovery` pour ce qui les distingue.
+  const isDrinkCheck = entry.eventType === "drink_checked" || isDiscovery;
   // PlaceCheck (check d'un lieu sans produit, `venue_visit`) : même présentation que le DrinkCheck — « PlaceCheck » avec l'icône du check
   // de lieu, puis la fiche du lieu en petit.
   const isPlaceCheck = entry.eventType === "venue_visit";
@@ -188,7 +192,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // PlaceCheck — ligne « Contribution à BibAtlas » avec l'icône de BibAtlas, puis la fiche ajoutée en petit. Les ajouts de marque et de
   // producteur gardent pour l'instant l'ancienne carte (« Ajout @ nom »).
   const isContribution = entry.eventType === "database_contribution" && (entry.objectType === "drink" || entry.objectType === "venue");
-  // Cartes refaites (une sorte de carte à la fois) : en-tête sur une seule ligne, ligne « DrinkCheck » / « PlaceCheck » / « Contribution à BibAtlas », bloc de la fiche.
+  // Cartes refaites (une sorte de carte à la fois) : en-tête sur une seule ligne, ligne « DrinkCheck » / « Découverte » / « PlaceCheck » /
+  // « Contribution à BibAtlas », bloc de la fiche.
   const isRedesigned = isDrinkCheck || isPlaceCheck || isContribution;
   // DrinkCheck et PlaceCheck : photo et commentaire de l'auteur, montrés sous le bloc de la fiche (voir plus bas).
   const checkNote = isRedesigned ? pulseNoteOf(entry) : { comment: "", photoUrl: null };
@@ -308,7 +313,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
     setComments(await loadPulseComments(entry.id));
   };
 
-  // Bouton Cheers : sur les Découvertes et sur les DrinkCheck (en premier de la rangée sur un DrinkCheck).
+  // Bouton Cheers : sur les Découvertes et sur les DrinkCheck (en premier de la rangée).
   const cheersButton = (
     <button
       onClick={handleSante}
@@ -469,6 +474,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                 Contribution à Bib
                 <span style={{ color: COLORS.amber }}>Atlas</span>
               </span>
+            ) : isDiscovery ? (
+              <span>Découverte</span>
             ) : (
               <span>
                 {isPlaceCheck ? "Place" : "Drink"}
@@ -580,8 +587,6 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             </span>
             {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
           </button>
-
-          {entry.eventType === "product_discovered" && cheersButton}
 
           <button
             onClick={toggleComments}
@@ -730,7 +735,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   J'arrive ! ({entry.incomingCount})
                 </button>
               )}
-              {(entry.eventType === "product_discovered" || isDrinkCheck) && (
+              {isDrinkCheck && (
                 <button
                   onClick={() => setReactorsTab("sante")}
                   style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "sante" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "sante" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
