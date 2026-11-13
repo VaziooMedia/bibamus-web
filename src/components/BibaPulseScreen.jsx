@@ -151,7 +151,7 @@ function PulseRoundIcon({ name }) {
   );
 }
 
-export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, hideProduct }, ref) {
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, separatorColor = COLORS.paperAlt, hideProduct }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -420,7 +420,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
               // Publication « à plat » (fil BibaPulse) : ni bloc, ni bordure, ni coins arrondis — seulement un trait de séparation en dessous. La publication ouverte depuis une notification garde une barre verte à gauche.
               position: "relative",
               padding: "14px",
-              borderBottom: `1px solid ${COLORS.paperAlt}`,
+              borderBottom: `1px solid ${separatorColor}`, // couleur du trait sous la publication : rose fluo sur la page BibaPulse (Mehdi, 2026-11-13), gris ailleurs
               background: highlighted ? COLORS.surface : "none",
               boxShadow: highlighted ? `inset 3px 0 0 ${COLORS.amber}` : "none",
             }
@@ -1152,11 +1152,12 @@ export function BibaPulseScreen({
       ) : (
         <>
           {/* Pleine largeur : le fil sort de la marge de 20 px de la page, les traits de séparation vont d'un bord de l'écran à l'autre. */}
-          <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+          <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.pinkFluo}` }}>
           {entries.map((entry) => (
             <PulseCard
               key={entry.id}
               flat
+              separatorColor={COLORS.pinkFluo}
               ref={entry.id === targetId ? focusedCardRef : null}
               entry={entry}
               directories={directories}
