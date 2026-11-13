@@ -293,9 +293,9 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
           <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px" }} />
 
           <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-            <StatCard label="Bibax" value={bibaxCount} />
-            <StatCard label="Drink Checks" value={stats ? stats.tastedDrinksCount : null} />
-            <StatCard label="Place Checks" value={stats ? stats.venueCheckinsCount : null} />
+            <StatCard label={<>Biba<span style={{ color: COLORS.amber }}>x</span></>} value={bibaxCount} />
+            <StatCard label={<>Drink<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.tastedDrinksCount : null} />
+            <StatCard label={<>Place<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.venueCheckinsCount : null} />
           </div>
         </>
       )}
