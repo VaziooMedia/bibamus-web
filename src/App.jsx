@@ -150,7 +150,7 @@ import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
 import { completeSpotifyAuth } from "./data/spotify.js";
 import { useUsernameDeepLink } from "./hooks/useUsernameDeepLink.js";
-import { randomCode, todayISO, normalizeEvent, nextId, resolveMenuItem, resolveVenueMenuForEvent, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId, safeServingMode } from "./utils.js";
+import { randomCode, todayISO, normalizeEvent, myShareOfEvent, nextId, resolveMenuItem, resolveVenueMenuForEvent, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId, safeServingMode } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
@@ -3102,7 +3102,7 @@ export default function App() {
             {screen === "eventHistoryDetail" && (
               <EventHistoryDetailScreen
                 event={events.find((e) => e.id === viewedHistoryEventId)}
-                displayTotal={0}
+                displayTotal={myShareOfEvent(events.find((e) => e.id === viewedHistoryEventId) || { rounds: [] }, profile.myBibroCode)}
                 myBibroCode={profile.myBibroCode}
                 roundsSum={(events.find((e) => e.id === viewedHistoryEventId)?.rounds || []).reduce((s, r) => s + (r.total || 0), 0)}
                 onBack={() => setScreen("eventHistory")}

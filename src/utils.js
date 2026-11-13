@@ -742,6 +742,24 @@ export const realMoneySpentFor = (ev) => {
   return purchased * (ev.jetonUnitValue || 0) + tip;
 };
 
+// « Ta part » d'une soirée (fiche d'une soirée de Mon Historique) : la valeur de MES verres en tournée, au prix de la carte, quel que soit celui qui a payé
+// — la même logique que les statistiques (lignes `round_orders` à mon code, `roundOrderRows`). On reconnaît mes verres au code Bibax de l'ami de tournée
+// (jamais à « self » : dans une tournée lancée par quelqu'un d'autre, « self » désigne cette autre personne). Ne comptent pas : les tournées offertes
+// (par un lieu ou un tiers), les verres hors tournée et ceux pris chez soi (sans prix), ni les pourboires. Sans compte Bibax, 0.
+export const myShareOfEvent = (ev, myBibroCode) => {
+  if (!myBibroCode) return 0;
+  let sum = 0;
+  (ev.rounds || []).forEach((r) => {
+    if (r.offeredBy) return;
+    const me = (r.friends || []).find((f) => f.code === myBibroCode);
+    if (!me) return;
+    (r.orders || []).forEach((o) => {
+      if (o.friendId === me.id) sum += findMenuEntryById(ev.menu || [], o.drinkId)?.price ?? 0;
+    });
+  });
+  return Math.round(sum * 100) / 100;
+};
+
 export const realMoneySpentSince = (ev, cutoffDate) => {
   if (!cutoffDate) return realMoneySpentFor(ev);
   const passes = (ts) => ts != null && ts >= cutoffDate;

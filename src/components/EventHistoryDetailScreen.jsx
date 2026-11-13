@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
-import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent } from "../utils.js";
+import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent, realMoneySpentFor } from "../utils.js";
 import { loadVenuesByIds } from "../data/sharedDirectories.js";
 import { drinkLabel } from "../beerDerivatives.js";
 import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
@@ -63,6 +63,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
   );
 
   const drinkName = (id) => drinkLabel(findEntryForEvent(event, id)) || id;
+  const tableTotal = event.currency === "euro" ? realMoneySpentFor(event) : roundsSum;
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -98,10 +99,11 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
       )}
 
       <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "16px" }}>
-        <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55 }}>TOTAL DÉPENSÉ</div>
+        <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55 }}>TA PART</div>
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "38px", color: COLORS.amber, lineHeight: 1.3 }}><MoneyAmount value={displayTotal} currency={event.currency} jetonIcon="pink" /></div>
-        {event.currency === "euro" && event.finalTotal != null && Math.abs(displayTotal - roundsSum) > 0.01 && (
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7 }}>Tournées suivies : <MoneyAmount value={roundsSum} currency={event.currency} jetonIcon="pink" /></div>
+        {/* Le total de la soirée, quand il diffère de ta part (la note finale encodée si elle existe, sinon la somme des tournées ; pourboires compris en euros). */}
+        {tableTotal > 0.005 && Math.abs(tableTotal - displayTotal) > 0.01 && (
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7 }}>Total de la soirée : <MoneyAmount value={tableTotal} currency={event.currency} jetonIcon="pink" /></div>
         )}
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7, marginTop: "6px" }}>
           {event.rounds.length} tournée{event.rounds.length > 1 ? "s" : ""} · {attendees.length} personne{attendees.length > 1 ? "s" : ""}
