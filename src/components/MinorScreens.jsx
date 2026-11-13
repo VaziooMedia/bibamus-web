@@ -1,17 +1,16 @@
 // ============================================================
-// Écrans annexes — Paramètres, Historique des événements, Hub
-// "Mes produits". Copiés tels quels depuis le prototype Claude.
+// Écrans annexes — Paramètres, Hub "Mes produits". Copiés tels quels depuis le prototype Claude.
+// (L'historique est dans MyHistoryScreen.jsx.)
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, WaterAlertIcon, TokenPinkIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, ActionCard, MoneyAmount, BackFooterLink, PrimaryButton, SectionTitle } from "./ui.jsx";
-import { ProfileHeader } from "./ProfileParts.jsx";
+import { PageHeader, PageFooterNav, ActionCard, BackFooterLink, PrimaryButton, SectionTitle } from "./ui.jsx";
 import settingsIconUrl from "../assets/brand/settings-icon.png";
 import tokIconUrl from "../assets/brand/tok.svg";
 import { PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
-import { formatDate, settingsAfterPlacePick } from "../utils.js";
+import { settingsAfterPlacePick } from "../utils.js";
 import { loadMyStories, upsertPushSubscription } from "../data/sharedDirectories.js";
 import { loadSalonTokEnabled, setSalonTokEnabled } from "../data/toks.js";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
@@ -117,84 +116,6 @@ export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBac
         </div>
       </SettingsGroup>
 
-      <PageFooterNav onBack={onBack} />
-    </div>
-  );
-}
-
-export function EventHistoryScreen({ myName, profile, bibros, checkIns, events, displayTotalFor, onBack, openEvent, onDeleteEvent }) {
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-  const sorted = [...events].sort((a, b) => {
-    const dateCompare = (b.date || "").localeCompare(a.date || "");
-    if (dateCompare !== 0) return dateCompare;
-    return (b.createdAt || 0) - (a.createdAt || 0);
-  });
-
-  return (
-    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={onBack} />
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>HISTORIQUE</span>
-
-      <ProfileHeader myName={myName} profile={profile} bibros={bibros} checkIns={checkIns} />
-
-      <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "34px", margin: "0 0 6px 0", lineHeight: 1 }}>Tes soirées passées</h2>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-        Retrouve combien tu as dépensé et avec qui, soirée par soirée — pratique pour ta comptabilité de fin de mois.
-      </p>
-
-      {sorted.length === 0 ? (
-        <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun événement enregistré pour l'instant.</p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {sorted.map((ev) => (
-            <div key={ev.id} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px 16px" }}>
-              <button
-                onClick={() => openEvent(ev.id)}
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: "15px" }}>
-                    {ev.name}
-                    {ev.salonCode ? " 🎉" : ""}
-                    {!ev.closed && <span style={{ fontSize: "10px", fontWeight: 700, color: COLORS.sage, marginLeft: "6px" }}>EN COURS</span>}
-                  </div>
-                  <div style={{ fontSize: "13px", color: COLORS.inkSoft, marginTop: "2px" }}>
-                    {ev.date && `${formatDate(ev.date)} · `}
-                    {ev.rounds.length} tournée{ev.rounds.length > 1 ? "s" : ""}
-                  </div>
-                </div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amberDark }}><MoneyAmount value={displayTotalFor(ev)} currency={ev.currency} jetonIcon="pink" /></div>
-              </button>
-              <button
-                onClick={() => (confirmDeleteId === ev.id ? onDeleteEvent(ev.id) : setConfirmDeleteId(ev.id))}
-                style={{
-                  marginTop: "8px",
-                  background: "none",
-                  border: confirmDeleteId === ev.id ? `2px solid ${COLORS.wine}` : "none",
-                  borderRadius: "8px",
-                  padding: confirmDeleteId === ev.id ? "6px 10px" : 0,
-                  color: COLORS.wine,
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                {confirmDeleteId === ev.id ? "Confirmer la suppression ?" : "Supprimer"}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
       <PageFooterNav onBack={onBack} />
     </div>
   );

@@ -562,6 +562,29 @@ export async function loadMySoloHistory(offset = 0, limit = 40) {
   return data.map(soloRowToCheckin);
 }
 
+// « Mon Historique » (Mon Profil) — toute l'activité de consommation de la personne connectée dans UNE liste, du plus récent au plus ancien :
+// verres BibaSolo (`solo`), DrinkChecks (`drink`) et PlaceChecks (`venue`). Le client ne lit jamais `drink_checkins` ni `venue_checkins`
+// directement : tout passe par la fonction `get_my_history` (voir docs/DATABASE.md). Les soirées BibaRoom, elles, viennent de la liste `events`
+// déjà en mémoire dans l'app (voir MyHistoryScreen). Pagination par décalage (`offset` = lignes déjà reçues), page de `limit` lignes (100 au plus).
+// Rend `null` en cas d'erreur (y compris tant que la fonction n'existe pas encore dans la base) : l'écran affiche alors « Réessayer ».
+// Chaque élément : { kind: 'solo' | 'drink' | 'venue', id, createdAt, ... } — `solo` porte en plus `checkin` (même forme que loadMySoloHistory).
+export async function loadMyHistory(offset = 0, limit = 40) {
+  const { data, error } = await supabase.rpc("get_my_history", { p_offset: offset, p_limit: limit });
+  if (error) {
+    console.error("loadMyHistory:", error);
+    return null;
+  }
+  const items = [];
+  for (const r of data || []) {
+    const row = r.row_data || {};
+    if (r.kind === "solo") items.push({ kind: "solo", id: `solo-${row.id}`, createdAt: r.created_at, checkin: soloRowToCheckin(row) });
+    else if (r.kind === "drink") items.push({ kind: "drink", id: `drink-${row.id}`, createdAt: r.created_at, drinkId: row.drink_id, venueId: row.venue_id || null, volumeCl: row.volume_cl });
+    else if (r.kind === "venue") items.push({ kind: "venue", id: `venue-${row.id}`, createdAt: r.created_at, venueId: row.venue_id });
+  }
+  // `rawCount` : lignes reçues du serveur (une ligne inconnue ignorée ne doit pas faire croire à la dernière page).
+  return { items, rawCount: (data || []).length };
+}
+
 // "Archiver" — la liste du jour disparaît de BibaSolo (et ses 3 compteurs repartent à zéro),
 // mais la vraie consommation reste comptée dans Mes Statistiques (contrairement à la croix de
 // suppression individuelle, qui reste un vrai DELETE définitif).
