@@ -7,7 +7,8 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
-import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent } from "../utils.js";
+import { NavIcon } from "./icons.jsx";
+import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent, realMoneySpentFor } from "../utils.js";
 import { loadVenuesByIds } from "../data/sharedDirectories.js";
 import { drinkLabel } from "../beerDerivatives.js";
 import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
@@ -63,20 +64,26 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
   );
 
   const drinkName = (id) => drinkLabel(findEntryForEvent(event, id)) || id;
+  const tableTotal = event.currency === "euro" ? realMoneySpentFor(event) : roundsSum;
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>
+      {/* Titre en premier : même style que « Mon Historique » (barre verte de 4 px, 22 px) ; la barre suit la hauteur du titre quand le nom passe sur plusieurs lignes. */}
+      <div style={{ display: "flex", alignItems: "stretch", gap: "10px", margin: "4px 0 8px" }}>
+        <span style={{ width: "4px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1.2 }}>{event.name}</h1>
+      </div>
+      {/* La date en deuxième, grisée */}
+      <span style={{ display: "block", fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.inkSoft, fontWeight: 700, marginBottom: "10px" }}>
         {event.date ? formatDate(event.date).toUpperCase() : "ÉVÉNEMENT"}
       </span>
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "4px 0 6px 0", lineHeight: 1 }}>{event.name}</h1>
       {event.closed ? (
         <button
           onClick={onReopen}
-          style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "12px" }}
+          style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "12px" }}
         >
-          Terminé · réouvrir cet événement
+          <span style={{ color: COLORS.pinkFluo }}>Terminé</span> · <span style={{ color: COLORS.amber }}>Réouvrir cet évènement</span>
         </button>
       ) : (
         <div style={{ fontSize: "12.5px", color: COLORS.sage, fontWeight: 600, marginBottom: "12px" }}>En cours</div>
@@ -93,15 +100,21 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
           onClick={() => openVenue(venue.id)}
           style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "16px" }}
         >
-          📖 {venue.name}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ display: "flex", flexShrink: 0 }}>
+              <NavIcon name="map-pin" size={13} color={COLORS.amber} />
+            </span>
+            {venue.name}
+          </span>
         </button>
       )}
 
       <div style={{ background: COLORS.surfaceAlt, color: COLORS.chalkWhite, borderRadius: "14px", padding: "18px", marginBottom: "16px" }}>
-        <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55 }}>TOTAL DÉPENSÉ</div>
+        <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "10.5px", opacity: 0.55 }}>TA PART</div>
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "38px", color: COLORS.amber, lineHeight: 1.3 }}><MoneyAmount value={displayTotal} currency={event.currency} jetonIcon="pink" /></div>
-        {event.currency === "euro" && event.finalTotal != null && Math.abs(displayTotal - roundsSum) > 0.01 && (
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7 }}>Tournées suivies : <MoneyAmount value={roundsSum} currency={event.currency} jetonIcon="pink" /></div>
+        {/* Le total de la soirée, quand il diffère de ta part (la note finale encodée si elle existe, sinon la somme des tournées ; pourboires compris en euros). */}
+        {tableTotal > 0.005 && Math.abs(tableTotal - displayTotal) > 0.01 && (
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7 }}>Total de la soirée : <MoneyAmount value={tableTotal} currency={event.currency} jetonIcon="pink" /></div>
         )}
         <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", opacity: 0.7, marginTop: "6px" }}>
           {event.rounds.length} tournée{event.rounds.length > 1 ? "s" : ""} · {attendees.length} personne{attendees.length > 1 ? "s" : ""}
@@ -117,7 +130,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
             {event.splitParticipants.map((p) => (
               <div key={p.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                 <span>{p.name}</span>
-                <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amberDark }}>{formatMoney(p.amount, "euro")}</span>
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amber }}>{formatMoney(p.amount, "euro")}</span>
               </div>
             ))}
           </div>
@@ -178,7 +191,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
                     {!r.offeredBy && !r.buyerName && !r.paidByPot && <span style={{ color: COLORS.inkSoft }}> · Free</span>}
                   </span>
                   {!isOpenBar && (
-                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: r.offeredBy ? COLORS.sage : isAddition || r.settledDirectly === false ? COLORS.wine : COLORS.sage }}>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: r.offeredBy ? COLORS.amber : isAddition || r.settledDirectly === false ? COLORS.wine : COLORS.amber }}>
                       <MoneyAmount value={r.total} currency={event.currency} jetonIcon="pink" />
                     </span>
                   )}
@@ -191,11 +204,13 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
                     {expanded ? "Cacher le détail" : "Voir le détail"}
                   </button>
                   {onDeleteRound && (
+                    // Croix grisée à l'extrême droite (comme dans BibaSolo) ; un premier appui demande « Confirmer ? ».
                     <button
                       onClick={() => (confirmDeleteRoundId === r.id ? onDeleteRound(r.id) : setConfirmDeleteRoundId(r.id))}
-                      style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: 0, marginLeft: "auto" }}
+                      aria-label="Supprimer la tournée"
+                      style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px -4px -4px auto", color: COLORS.wine, fontSize: "12px", fontWeight: 600 }}
                     >
-                      {confirmDeleteRoundId === r.id ? "Confirmer ?" : "Supprimer"}
+                      {confirmDeleteRoundId === r.id ? "Confirmer ?" : <NavIcon name="x" size={14} color={COLORS.paperAlt} />}
                     </button>
                   )}
                 </div>
@@ -231,14 +246,14 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
       <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
         {confirmDelete && (
           <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "10px", fontWeight: 600 }}>
-            ⚠️ Les statistiques liées à cet événement{venue ? ` (visites, boissons, argent dépensé de ${venue.name})` : ""} seront aussi supprimées. Cette action est irréversible.
+            Les statistiques liées à cet événement{venue ? ` (visites, boissons, argent dépensé de ${venue.name})` : ""} seront aussi supprimées. Cette action est irréversible.
           </p>
         )}
         <button
           onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
-          style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.wine, cursor: "pointer", width: "100%" }}
+          style={{ background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.pinkFluo, cursor: "pointer", width: "100%" }}
         >
-          {confirmDelete ? "Confirmer la suppression" : "Supprimer cet événement"}
+          {confirmDelete ? "Confirmer la suppression" : "Supprimer"}
         </button>
       </div>
       <BackFooterLink onClick={onBack} />

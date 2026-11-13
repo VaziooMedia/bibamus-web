@@ -72,16 +72,16 @@ const SOLO_ROUND_OUTLINE_BUTTON_STYLE = {
   flexShrink: 0,
 };
 // Les deux barres de séparation de la liste (« Aujourd'hui » et la date de la période précédente) ont le même style.
-const SOLO_BAR_LABEL_STYLE = { fontSize: "12px", fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" };
-const SOLO_BAR_LINE_STYLE = { flex: 1, height: "2px", borderRadius: "1px", background: COLORS.inkSoft, opacity: 0.5 };
+export const SOLO_BAR_LABEL_STYLE = { fontSize: "12px", fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" };
+export const SOLO_BAR_LINE_STYLE = { flex: 1, height: "2px", borderRadius: "1px", background: COLORS.inkSoft, opacity: 0.5 };
 const WEEKDAYS_FR = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 // « Dimanche 01/11 » : le jour où la période a commencé (à 6 h).
-function formatPeriodDay(iso) {
+export function formatPeriodDay(iso) {
   const d = new Date(iso);
   return `${WEEKDAYS_FR[d.getDay()]} ${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 // Début (le dernier 6 h passé, heure du téléphone) de la période qui contient l'instant donné.
-function soloPeriodStartOf(when) {
+export function soloPeriodStartOf(when) {
   const at = new Date(when);
   const start = new Date(at);
   start.setHours(SOLO_DAY_START_HOUR, 0, 0, 0);
@@ -95,11 +95,11 @@ function soloPeriodStarts(now = new Date()) {
   return { current: current.toISOString(), previous: previous.toISOString() };
 }
 
-function formatDateOnly(iso) {
+export function formatDateOnly(iso) {
   return new Date(iso).toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-function formatTimeOnly(iso) {
+export function formatTimeOnly(iso) {
   return new Date(iso).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" });
 }
 
@@ -128,7 +128,7 @@ const VENUE_PILL_STYLE = {
 const VENUE_PILL_ICON_STYLE = { display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 };
 
 // Lieux « rapides » : pas de vrai lieu en base, donc rien à afficher sur la ligne du lieu dans le journal.
-const QUICK_VENUE_IDS = ["@home", "@event"];
+export const QUICK_VENUE_IDS = ["@home", "@event"];
 
 // Icônes Bio / Gluten free de la ligne 2 du journal : les mêmes que sur les fiches, passées en gris
 // (même teinte que le texte voisin).
@@ -1072,7 +1072,9 @@ const formatJetonCount = (value) => {
 
 // Une ligne du journal (produit, volume, prix, lieu, date, croix de suppression) — la même dans la liste de BibaSolo (période en
 // cours et période précédente grisée) et dans l'Historique. Sans `onDelete`, pas de croix de suppression (Historique en lecture seule).
-function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
+// `typeLine` (facultatif) : une ligne en plus, juste sous le produit — « BibaSolo » dans « Mon Historique » (Mon Profil), où des DrinkChecks, des PlaceChecks et des
+// soirées BibaRoom se mêlent aux verres. Absente dans BibaSolo même.
+export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete, typeLine = null }) {
   const showMentions = drink && VOLUME_DISPLAY_TYPES.includes(drink.type);
   // Bière prise en dérivé (Mazout, Tango…) : une pastille grisée sur la ligne 1, à droite du nom du produit. Un dérivé retiré ou masqué depuis
   // ne s'affiche plus (le verre reste la bière de base).
@@ -1125,6 +1127,7 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
             </span>
           )}
         </div>
+        {typeLine}
         {/* Lignes 2 et 3 (sur toute la largeur, sous le prix ; points vert fluo entre les éléments ; chacune ouvre la fiche du produit ; chacune
             disparaît quand elle n'a rien à montrer).
             Ligne 2 — volume + % ABV + étiquette d'alcool (0.0 %…) + icône Bio + icône Gluten free.
@@ -1177,7 +1180,10 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
         {/* Ligne 4 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
         {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
           <div data-journal-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
-            <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+            {/* flexShrink 0 : sur un nom de lieu très long, l'icône garde sa taille (c'est le nom qui se coupe par « … »). */}
+            <span style={{ display: "flex", flexShrink: 0 }}>
+              <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+            </span>
             <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
           </div>
         )}
@@ -1204,7 +1210,7 @@ function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
 
 // Écran « Historique » : tous les verres, archivés compris, du plus récent au plus ancien, regroupés par période (6 h → 6 h) sous une
 // barre datée, par pages de HISTORY_PAGE_SIZE. En lecture seule : pas de croix de suppression.
-const HISTORY_PAGE_SIZE = 40;
+export const HISTORY_PAGE_SIZE = 40;
 function SoloHistoryScreen({ onBack, onOpenDrink }) {
   const [rows, setRows] = useState(null); // null = chargement de la première page
   const [hasMore, setHasMore] = useState(false);
