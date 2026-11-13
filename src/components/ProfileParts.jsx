@@ -13,12 +13,8 @@ import beerIconUrl from "../assets/brand/beer.svg";
 import { formatMemberSince, normalizeUrl, formatDDMMYYYY, formatSharedBirthDate, computeAgeFromBirthDate, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
 import { loadMyProfileStats, loadMyStories } from "../data/sharedDirectories.js";
 
-export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goToBibros, goToProducts, goToVenues, onOpenMyStory }) {
-  const [stats, setStats] = useState(null);
-  useEffect(() => {
-    if (myUserId) loadMyProfileStats(myUserId).then(setStats);
-  }, [myUserId]);
-
+// Bloc du rond de profil (photo, prénom, nom, surnom). Le rond s'entoure de rose quand la personne a une Story active.
+export function ProfileHeader({ myName, profile, myUserId, onOpenMyStory }) {
   const [activeStories, setActiveStories] = useState([]);
   useEffect(() => {
     loadMyStories().then((list) => setActiveStories(list.filter((s) => new Date(s.expiresAt) > new Date())));
@@ -31,29 +27,6 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
       activeStories.map((s) => ({ ...s, authorId: myUserId, authorName: myName, authorLastName: profile.lastName, authorAvatarUrl: profile.avatarUrl }))
     );
   };
-
-  const StatCard = ({ label, value, onClick }) => (
-    <button
-      onClick={onClick}
-      disabled={!onClick}
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "4px",
-        background: COLORS.surface,
-        border: `2px solid ${COLORS.paperAlt}`,
-        borderRadius: "12px",
-        padding: "8px",
-        textAlign: "center",
-        cursor: onClick ? "pointer" : "default",
-      }}
-    >
-      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
-    </button>
-  );
 
   return (
     <>
@@ -86,6 +59,14 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
         </div>
       </div>
 
+    </>
+  );
+}
+
+// Bloc des infos de la personne (citation, date de naissance, ville, ancienneté, réseaux). Rien si elle n'a rien renseigné.
+export function ProfileInfoBlock({ profile }) {
+  return (
+    <>
       {(profile.birthDate ||
         profile.city ||
         profile.registeredAt ||
@@ -198,7 +179,44 @@ export function ProfileHeader({ myName, profile, bibros, checkIns, myUserId, goT
           )}
         </div>
       )}
+    </>
+  );
+}
 
+function StatCard({ label, value, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={!onClick}
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "4px",
+        background: COLORS.surface,
+        border: `2px solid ${COLORS.paperAlt}`,
+        borderRadius: "12px",
+        padding: "8px",
+        textAlign: "center",
+        cursor: onClick ? "pointer" : "default",
+      }}
+    >
+      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
+    </button>
+  );
+}
+
+// Les trois blocs Bibax / Drink Checks / Place Checks, entre deux traits fins.
+export function ProfileStatCards({ bibros, myUserId, goToBibros, goToProducts, goToVenues }) {
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    if (myUserId) loadMyProfileStats(myUserId).then(setStats);
+  }, [myUserId]);
+
+  return (
+    <>
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>

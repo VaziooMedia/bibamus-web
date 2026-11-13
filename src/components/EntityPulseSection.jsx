@@ -4,6 +4,10 @@
 // (mes Bibax confirmés seulement). Ne se recharge jamais tout seul (contrairement au fil principal,
 // qui l'actualise toutes les 10 secondes) : cette section est consultée une fois, pas surveillée en continu.
 //
+// Mode « mine » (entityType = "mine", onglet BibaPulse de Mon Profil, depuis le 2026-11-13) : les publications de la personne
+// elle-même, tous types de cartes, de la plus récente à la plus ancienne (fonction SQL get_my_pulse_posts), sans liste
+// « Tout le monde / Mes Bibax » et sans rond de profil cliquable (on est déjà sur son profil). Le reste est identique.
+//
 // selfEntity (facultatif) : la fiche elle-même, déjà en mémoire (le produit d'une fiche Produit,
 // le lieu d'une fiche Lieu). Sert à afficher un nom juste immédiatement, sans attendre un aller-retour
 // réseau, pour les publications qui la concernent directement. Forme : { type: "drink" | "venue", object }.
@@ -21,7 +25,7 @@
 // ============================================================
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
-import { loadEntityPulse, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { loadEntityPulse, loadMyPulsePosts, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { PulseCard } from "./BibaPulseScreen.jsx";
 import { usePostTagEntities } from "./PulseTags.jsx";
 import { usePulseProducersById, pulseDrinkIdsOf } from "./PulseProductCard.jsx";
@@ -105,9 +109,12 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
 
   const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [], tagEntities, producersById, venueRatingsById };
 
+  const isMine = entityType === "mine";
+  const fetchEntries = (before = null) => (isMine ? loadMyPulsePosts(before) : loadEntityPulse(entityType, entityId, scope, before));
+
   useEffect(() => {
     setEntries(null);
-    loadEntityPulse(entityType, entityId, scope).then((data) => {
+    fetchEntries().then((data) => {
       setEntries(data);
       setHasMore(data.length >= 20);
     });
@@ -117,7 +124,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
     if (!entries || entries.length === 0) return;
     setLoadingMore(true);
     const oldest = entries[entries.length - 1].createdAt;
-    const more = await loadEntityPulse(entityType, entityId, scope, oldest);
+    const more = await fetchEntries(oldest);
     setEntries((prev) => [...prev, ...more]);
     setHasMore(more.length >= 20);
     setLoadingMore(false);
@@ -176,6 +183,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
     <div ref={listRef}>
       {/* Liste déroulante plutôt que des boutons, pour bien la distinguer des onglets principaux
           Infos / BibaPulse, au-dessus. */}
+      {!isMine && (
       <select
         value={scope}
         onChange={(e) => setScope(e.target.value)}
@@ -187,13 +195,14 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
           </option>
         ))}
       </select>
+      )}
 
       {entries === null ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
       ) : entries.length === 0 ? (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
           <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", margin: 0 }}>
-            {scope === "bibax" ? "Aucun de tes Bibax n'a encore publié ici." : "Aucune publication pour l'instant."}
+            {isMine ? "Tu n'as encore rien publié dans BibaPulse." : scope === "bibax" ? "Aucun de tes Bibax n'a encore publié ici." : "Aucune publication pour l'instant."}
           </p>
         </div>
       ) : (
@@ -217,7 +226,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
                 if (person.id === myUserId) rememberThen(entry.id, goToProfile, { profile: true })();
                 else if (person.bibro_code) openProfileFrom(entry.id, person.bibro_code);
               }}
-              onOpenProfile={entry.actorId === myUserId ? rememberThen(entry.id, goToProfile, { profile: true }) : (code) => openProfileFrom(entry.id, code)}
+              onOpenProfile={entry.actorId === myUserId ? (isMine ? undefined : rememberThen(entry.id, goToProfile, { profile: true })) : (code) => openProfileFrom(entry.id, code)}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
               onDeleted={removeEntry}
             />
