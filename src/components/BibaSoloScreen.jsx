@@ -1072,7 +1072,9 @@ const formatJetonCount = (value) => {
 
 // Une ligne du journal (produit, volume, prix, lieu, date, croix de suppression) — la même dans la liste de BibaSolo (période en
 // cours et période précédente grisée) et dans l'Historique. Sans `onDelete`, pas de croix de suppression (Historique en lecture seule).
-export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete }) {
+// `typeLine` (facultatif) : une ligne en plus, juste sous le produit — « BibaSolo » dans « Mon Historique » (Mon Profil), où des DrinkChecks, des PlaceChecks et des
+// soirées BibaRoom se mêlent aux verres. Absente dans BibaSolo même.
+export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete, typeLine = null }) {
   const showMentions = drink && VOLUME_DISPLAY_TYPES.includes(drink.type);
   // Bière prise en dérivé (Mazout, Tango…) : une pastille grisée sur la ligne 1, à droite du nom du produit. Un dérivé retiré ou masqué depuis
   // ne s'affiche plus (le verre reste la bière de base).
@@ -1125,6 +1127,7 @@ export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete 
             </span>
           )}
         </div>
+        {typeLine}
         {/* Lignes 2 et 3 (sur toute la largeur, sous le prix ; points vert fluo entre les éléments ; chacune ouvre la fiche du produit ; chacune
             disparaît quand elle n'a rien à montrer).
             Ligne 2 — volume + % ABV + étiquette d'alcool (0.0 %…) + icône Bio + icône Gluten free.

@@ -1,10 +1,13 @@
 // « Mon Historique » (Mon Profil) — toute l'activité de la personne dans UNE SEULE chronologie, du plus récent au plus ancien, regroupée par
 // période (6 h → 6 h) sous une barre datée, comme l'Historique de BibaSolo : verres BibaSolo, DrinkChecks, PlaceChecks et soirées BibaRoom.
 // Aucun montant (les anciens « 0,00 € » n'existaient pas vraiment) et aucune suppression ici : la fiche d'une soirée garde la sienne.
+// Chaque ligne porte sa « sorte » juste sous le titre (BibaSolo, DrinkCheck, PlaceCheck, BibaRoom : icône + nom).
 // Les verres / DrinkChecks / PlaceChecks viennent de la fonction `get_my_history` (par pages de HISTORY_PAGE_SIZE, bouton « Voir plus ») ;
 // les soirées viennent de la liste `events` déjà en mémoire, insérées à leur date tant qu'elles ne sont pas plus anciennes que la dernière
 // page chargée (sans quoi une soirée ancienne apparaîtrait avant des verres qu'on n'a pas encore reçus).
-import React, { useState, useEffect, useMemo } from "react";
+// Retour d'une fiche (produit, lieu, soirée) : l'écran se rouvre comme on l'avait laissé — mêmes pages chargées, même position — puis se met à
+// jour en silence (un DrinkCheck fait sur la fiche apparaît). La mémoire (`historyMemory`) est effacée à chaque entrée depuis Mon Profil.
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, EntityAvatar, SalonAvatar } from "./ui.jsx";
@@ -13,6 +16,14 @@ import { SoloCheckinRow, SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE, formatPeriod
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import bibaGoIconUrl from "../assets/brand/bibago-carte.svg";
+import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
+
+// Mémoire de l'écran entre une visite et le retour d'une fiche : { rows, received, hasMore, drinksById, venuesById, scrollTop }.
+let historyMemory = null;
+export const clearMyHistoryMemory = () => {
+  historyMemory = null;
+};
+export const hasMyHistoryMemory = () => historyMemory !== null;
 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
 
@@ -38,9 +49,20 @@ function DotLine({ parts, line }) {
   );
 }
 
+// « Sorte » de la ligne : icône + nom (« Check » / « Room » / « Solo » en vert fluo), en tête de la ligne qui suit le titre.
+const typePart = (icon, prefix, suffix) => (
+  <span key="type" style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontWeight: 700, color: COLORS.ink }}>
+    <img src={icon} alt="" width="16" height="16" style={{ display: "block", flexShrink: 0, objectFit: "contain" }} />
+    <span>
+      {prefix}
+      <span style={{ color: COLORS.amber }}>{suffix}</span>
+    </span>
+  </span>
+);
+
 // Ligne d'un DrinkCheck, d'un PlaceCheck ou d'une soirée BibaRoom — même squelette que SoloCheckinRow : rond de 40 px à gauche, à droite le
 // titre (gras), la ligne « type » (icône + nom du type, puis les détails), le lieu (icône vert fluo) et la date + l'heure.
-function HistoryRow({ avatar, title, typeIcon, typeLabel, details = [], venueName, dateParts, isLast, onOpen, kind }) {
+function HistoryRow({ avatar, title, typeIcon, typePrefix, typeSuffix, details = [], venueName, dateParts, isLast, onOpen, kind }) {
   return (
     <button
       type="button"
@@ -65,16 +87,7 @@ function HistoryRow({ avatar, title, typeIcon, typeLabel, details = [], venueNam
       <span style={{ flexShrink: 0, marginTop: "2px", display: "flex" }}>{avatar}</span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
         <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{title}</span>
-        <DotLine
-          line="type"
-          parts={[
-            <span key="type" style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontWeight: 700, color: COLORS.ink }}>
-              <img src={typeIcon} alt="" width="16" height="16" style={{ display: "block", flexShrink: 0 }} />
-              {typeLabel}
-            </span>,
-            ...details,
-          ]}
-        />
+        <DotLine line="type" parts={[typePart(typeIcon, typePrefix, typeSuffix), ...details]} />
         {venueName && (
           <div data-history-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
             <span style={{ display: "flex", flexShrink: 0 }}>
@@ -89,21 +102,16 @@ function HistoryRow({ avatar, title, typeIcon, typeLabel, details = [], venueNam
   );
 }
 
-const typeLabelNode = (prefix, suffix) => (
-  <span>
-    {prefix}
-    <span style={{ color: COLORS.amber }}>{suffix}</span>
-  </span>
-);
-
-export function MyHistoryScreen({ events = [], onBack, onOpenDrink, onOpenVenue, onOpenEvent }) {
-  const [rows, setRows] = useState(null); // null = chargement de la première page
-  const [received, setReceived] = useState(0); // lignes reçues du serveur (sert de décalage pour la page suivante)
-  const [hasMore, setHasMore] = useState(false);
+export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrink, onOpenVenue, onOpenEvent }) {
+  // Retour d'une fiche : on repart de ce qui était affiché (voir `historyMemory`). Lu une seule fois, au premier rendu.
+  const restored = useRef(historyMemory).current;
+  const [rows, setRows] = useState(restored ? restored.rows : null); // null = chargement de la première page
+  const [received, setReceived] = useState(restored ? restored.received : 0); // lignes reçues du serveur (sert de décalage pour la page suivante)
+  const [hasMore, setHasMore] = useState(restored ? restored.hasMore : false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
-  const [drinksById, setDrinksById] = useState({});
-  const [venuesById, setVenuesById] = useState({});
+  const [drinksById, setDrinksById] = useState(restored ? restored.drinksById : {});
+  const [venuesById, setVenuesById] = useState(restored ? restored.venuesById : {});
 
   const loadPage = async (offset) => {
     setLoadingMore(true);
@@ -119,10 +127,60 @@ export function MyHistoryScreen({ events = [], onBack, onOpenDrink, onOpenVenue,
     setReceived(offset + page.rawCount);
     setHasMore(page.rawCount === HISTORY_PAGE_SIZE);
   };
+
+  // Première visite : la première page. Retour d'une fiche : on recharge en silence tout ce qui était affiché (par lots de 100 au plus) et on ne remplace
+  // la liste que si elle a changé (un DrinkCheck fait sur la fiche, une ligne supprimée) ; si le chargement échoue, on garde ce qu'on avait.
   useEffect(() => {
-    loadPage(0);
+    if (!restored) {
+      loadPage(0);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      const target = Math.max(restored.received, HISTORY_PAGE_SIZE);
+      const fresh = [];
+      let offset = 0;
+      let more = true;
+      while (offset < target) {
+        const limit = Math.min(100, target - offset);
+        const page = await loadMyHistory(offset, limit);
+        if (cancelled || page === null) return;
+        fresh.push(...page.items);
+        offset += page.rawCount;
+        if (page.rawCount < limit) {
+          more = false;
+          break;
+        }
+      }
+      const signature = (list) => list.map((it) => it.id).join(",");
+      if (cancelled || signature(fresh) === signature(restored.rows)) return;
+      setRows(fresh);
+      setReceived(offset);
+      setHasMore(more);
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // La mémoire suit l'écran ; la position de défilement s'y ajoute au moment où l'on ouvre une fiche (`remembered`).
+  useEffect(() => {
+    if (rows === null) return;
+    historyMemory = { ...(historyMemory || {}), rows, received, hasMore, drinksById, venuesById };
+  }, [rows, received, hasMore, drinksById, venuesById]);
+  // Retour d'une fiche : on se replace à la hauteur où l'on était (App ne remonte pas en haut dans ce cas).
+  useLayoutEffect(() => {
+    if (restored) mainScrollRef?.current?.scrollTo(0, restored.scrollTop || 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const remembered = (open) => (id) => {
+    if (historyMemory) historyMemory.scrollTop = mainScrollRef?.current?.scrollTop || 0;
+    if (open) open(id);
+  };
+  const openDrink = onOpenDrink ? remembered(onOpenDrink) : null;
+  const openVenue = onOpenVenue ? remembered(onOpenVenue) : null;
+  const openEvent = onOpenEvent ? remembered(onOpenEvent) : null;
 
   // La chronologie : éléments du serveur + soirées, du plus récent au plus ancien (égalité : l'ordre du serveur, puis les soirées).
   const timeline = useMemo(() => {
@@ -206,7 +264,17 @@ export function MyHistoryScreen({ events = [], onBack, onOpenDrink, onOpenVenue,
   const renderItem = (it, isLast) => {
     if (it.kind === "solo") {
       const c = it.checkin;
-      return <SoloCheckinRow key={it.id} c={c} drink={drinksById[String(c.drinkId)]} venue={c.venueId ? venueOf(c.venueId) : null} isLast={isLast} onOpenDrink={onOpenDrink} />;
+      return (
+        <SoloCheckinRow
+          key={it.id}
+          c={c}
+          drink={drinksById[String(c.drinkId)]}
+          venue={c.venueId ? venueOf(c.venueId) : null}
+          isLast={isLast}
+          onOpenDrink={openDrink}
+          typeLine={<DotLine line="type" parts={[typePart(bibaSoloIconUrl, "Biba", "Solo")]} />}
+        />
+      );
     }
     if (it.kind === "drink") {
       const drink = drinksById[String(it.drinkId)];
@@ -217,12 +285,13 @@ export function MyHistoryScreen({ events = [], onBack, onOpenDrink, onOpenVenue,
           avatar={<EntityAvatar photoUrl={drink?.photoUrl} photoEmoji={drink?.avatarEmoji} size={40} fallbackIcon="bottle" />}
           title={drink?.name || "Boisson"}
           typeIcon={beerCheckIconUrl}
-          typeLabel={typeLabelNode("Drink", "Check")}
+          typePrefix="Drink"
+          typeSuffix="Check"
           details={it.volumeCl ? [<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{it.volumeCl}cl</span>] : []}
           venueName={shownVenueName(it.venueId)}
           dateParts={dateParts(it.at)}
           isLast={isLast}
-          onOpen={drink && onOpenDrink ? () => onOpenDrink(drink.id) : null}
+          onOpen={drink && openDrink ? () => openDrink(drink.id) : null}
         />
       );
     }
@@ -235,10 +304,11 @@ export function MyHistoryScreen({ events = [], onBack, onOpenDrink, onOpenVenue,
           avatar={<EntityAvatar photoUrl={venue?.profilePhotoUrl} photoEmoji={venue?.avatarEmoji} size={40} fallbackIcon="map-pin" />}
           title={venue?.name || "Lieu"}
           typeIcon={placeCheckIconUrl}
-          typeLabel={typeLabelNode("Place", "Check")}
+          typePrefix="Place"
+          typeSuffix="Check"
           dateParts={dateParts(it.at)}
           isLast={isLast}
-          onOpen={venue && onOpenVenue ? () => onOpenVenue(venue.id) : null}
+          onOpen={venue && openVenue ? () => openVenue(venue.id) : null}
         />
       );
     }
@@ -254,12 +324,13 @@ export function MyHistoryScreen({ events = [], onBack, onOpenDrink, onOpenVenue,
         avatar={<SalonAvatar event={ev} venue={venueOf(ev.venueId)} size={40} />}
         title={ev.name}
         typeIcon={bibaGoIconUrl}
-        typeLabel={typeLabelNode("Biba", "Room")}
+        typePrefix="Biba"
+        typeSuffix="Room"
         details={details}
         venueName={shownVenueName(ev.venueId)}
         dateParts={dateParts(it.at, it.timeKnown)}
         isLast={isLast}
-        onOpen={onOpenEvent ? () => onOpenEvent(ev.id) : null}
+        onOpen={openEvent ? () => openEvent(ev.id) : null}
       />
     );
   };

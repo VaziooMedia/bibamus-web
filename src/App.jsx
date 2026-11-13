@@ -72,7 +72,7 @@ import { HelpSupportScreen, ContactFormScreen, AboutScreen } from "./components/
 import { SearchScreen } from "./components/SearchScreen.jsx";
 import { NotificationsFeedScreen } from "./components/NotificationsFeedScreen.jsx";
 import { BibaSoloScreen } from "./components/BibaSoloScreen.jsx";
-import { MyHistoryScreen } from "./components/MyHistoryScreen.jsx";
+import { MyHistoryScreen, clearMyHistoryMemory, hasMyHistoryMemory } from "./components/MyHistoryScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
 import { BrandDirectoryScreen } from "./components/BrandDirectoryScreen.jsx";
@@ -209,6 +209,8 @@ export default function App() {
   const drinkReturn = useDrinkReturnMemo(screen);
   useEffect(() => {
     if (drinkReturn.keepsScroll(screen, viewedDrinkId)) return;
+    // Retour sur « Mon Historique » depuis une fiche : l'écran se replace lui-même à la hauteur où l'on l'avait laissé.
+    if (screen === "eventHistory" && hasMyHistoryMemory()) return;
     mainScrollRef.current?.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
@@ -2574,7 +2576,10 @@ export default function App() {
                 goToBibaClubs={() => setScreen("bibaClubsList")}
                 goToProducts={() => setScreen("myProducts")}
                 goToVenues={() => setScreen("venueDirectory")}
-                goToHistory={() => setScreen("eventHistory")}
+                goToHistory={() => {
+                  clearMyHistoryMemory(); // une entrée depuis Mon Profil repart toujours de zéro (le retour d'une fiche, lui, reprend la mémoire)
+                  setScreen("eventHistory");
+                }}
                 goToPhotos={() => setScreen("myPhotos")}
                 goToSettings={() => setScreen("settings")}
                 onOpenMyStory={setViewedStoryAuthor}
@@ -3076,6 +3081,7 @@ export default function App() {
             {screen === "eventHistory" && (
               <MyHistoryScreen
                 events={events}
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen("profile")}
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail("eventHistory");
