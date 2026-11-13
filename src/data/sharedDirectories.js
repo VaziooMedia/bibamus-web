@@ -4670,6 +4670,18 @@ export async function loadEntityPulse(entityType, entityId, scope = "all", befor
   return data.map(rowToPulseEntry);
 }
 
+// Mes propres publications dans BibaPulse (onglet BibaPulse de Mon Profil) : toutes mes cartes visibles dans le fil (checks,
+// découvertes, publications libres, lancements de BibaRoom, contributions, arrivées en BibaClub), les plus récentes d'abord.
+// Fonction SQL get_my_pulse_posts : mêmes colonnes que get_entity_pulse, donc le même rowToPulseEntry.
+export async function loadMyPulsePosts(before = null, limit = 20) {
+  const { data, error } = await supabase.rpc("get_my_pulse_posts", { p_limit: limit, p_before: before });
+  if (error) {
+    console.error("loadMyPulsePosts:", error);
+    return [];
+  }
+  return data.map(rowToPulseEntry);
+}
+
 export async function togglePulseBix(pulseEventId, alreadyBixed) {
   const {
     data: { user },

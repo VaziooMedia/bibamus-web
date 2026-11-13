@@ -1,13 +1,13 @@
 // ============================================================
-// Écran "Mes Statistiques" — reconstruit sur la vraie
+// Statistiques de la personne — reconstruites sur la vraie
 // consommation (round_orders + solo_checkins + drink_checkins),
 // avec un vrai sélecteur de période plutôt que l'ancien système
 // de réinitialisation irréversible par compteur.
+// Depuis le 2026-11-13, ce n'est plus un écran à part (« Mes Statistiques ») : c'est l'onglet Biba360 de
+// Mon Profil (ProfileHubScreen). Le composant ne porte donc ni flèche retour, ni titre, ni pied de page.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon } from "./icons.jsx";
-import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { WeekTracker } from "./ProfileParts.jsx";
 import {
   loadMyStatsOverview,
@@ -125,8 +125,20 @@ function StatSection({ title, children, arrowColor = COLORS.chalkWhite, showBott
   );
 }
 
-export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcoholFreeDay, onBack, openVenue, openBibro, openDrink, onOpenWrapped }) {
-  const [periodKey, setPeriodKey] = useState("all");
+// Mémoire de la période et de la catégorie choisies (décidé par Mehdi, 2026-11-13 : « Oui » à la mémorisation) : elles survivent
+// au changement d'onglet de Mon Profil et au retour d'une fiche, et repartent de « Toujours » / « Aperçu » au retour à l'accueil
+// (App.jsx appelle clearMyStatsMemory).
+let statsMemory = { periodKey: "all", category: "apercu" };
+export function clearMyStatsMemory() {
+  statsMemory = { periodKey: "all", category: "apercu" };
+}
+
+export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoholFreeDay, openVenue, openBibro, openDrink, onOpenWrapped }) {
+  const [periodKey, setPeriodKeyState] = useState(statsMemory.periodKey);
+  const setPeriodKey = (key) => {
+    statsMemory.periodKey = key;
+    setPeriodKeyState(key);
+  };
   const period = PERIODS.find((p) => p.key === periodKey);
   const since = period.since ? period.since() : null;
   // §10 — période équivalente précédente, pour la comparaison. Pas de comparaison possible pour
@@ -134,7 +146,11 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   const prevSince = period.prevSince && since ? period.prevSince(since) : null;
   const prevUntil = since;
 
-  const [activeCategory, setActiveCategory] = useState("apercu");
+  const [activeCategory, setActiveCategoryState] = useState(statsMemory.category);
+  const setActiveCategory = (key) => {
+    statsMemory.category = key;
+    setActiveCategoryState(key);
+  };
 
   const [overview, setOverview] = useState(null);
   useEffect(() => {
@@ -509,14 +525,7 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
   })();
 
   return (
-    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={onBack} />
-
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 14px 0" }}>
-        <NavIcon name="bar-chart" size={20} color={COLORS.amber} />
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Mes Statistiques</h1>
-      </div>
-
+    <>
       {onOpenWrapped && (
         <button
           onClick={onOpenWrapped}
@@ -525,7 +534,6 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
             border: `2px solid ${COLORS.amber}`,
             borderRadius: "12px",
             padding: "13px 16px",
-            marginTop: "14px",
             marginBottom: "16px",
             display: "flex",
             alignItems: "center",
@@ -1398,7 +1406,6 @@ export function MyStatsScreen({ events, bibros, alcoholFreeDays, onToggleAlcohol
           )}
         </>
       )}
-      <BackFooterLink onClick={onBack} />
-    </div>
+    </>
   );
 }
