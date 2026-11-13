@@ -81,9 +81,9 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
       {event.closed ? (
         <button
           onClick={onReopen}
-          style={{ background: "none", border: "none", color: COLORS.pinkFluo, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "12px" }}
+          style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "12px" }}
         >
-          Terminé · réouvrir cet événement
+          <span style={{ color: COLORS.pinkFluo }}>Terminé</span> · <span style={{ color: COLORS.amber }}>Réouvrir cet évènement</span>
         </button>
       ) : (
         <div style={{ fontSize: "12.5px", color: COLORS.sage, fontWeight: 600, marginBottom: "12px" }}>En cours</div>
@@ -251,9 +251,9 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
         )}
         <button
           onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
-          style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.wine, cursor: "pointer", width: "100%" }}
+          style={{ background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "10px", padding: "12px", fontWeight: 600, fontSize: "13.5px", color: COLORS.pinkFluo, cursor: "pointer", width: "100%" }}
         >
-          {confirmDelete ? "Confirmer la suppression" : "Supprimer cet événement"}
+          {confirmDelete ? "Confirmer la suppression" : "Supprimer"}
         </button>
       </div>
       <BackFooterLink onClick={onBack} />
