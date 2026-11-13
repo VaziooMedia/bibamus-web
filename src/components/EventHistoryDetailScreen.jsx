@@ -69,18 +69,19 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.amber, fontWeight: 700 }}>
-        {event.date ? formatDate(event.date).toUpperCase() : "ÉVÉNEMENT"}
-      </span>
-      {/* Titre : même style que « Mon Historique » (barre verte de 4 px, 22 px) ; la barre suit la hauteur du titre quand le nom passe sur plusieurs lignes. */}
-      <div style={{ display: "flex", alignItems: "stretch", gap: "10px", margin: "8px 0 10px" }}>
+      {/* Titre en premier : même style que « Mon Historique » (barre verte de 4 px, 22 px) ; la barre suit la hauteur du titre quand le nom passe sur plusieurs lignes. */}
+      <div style={{ display: "flex", alignItems: "stretch", gap: "10px", margin: "4px 0 8px" }}>
         <span style={{ width: "4px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1.2 }}>{event.name}</h1>
       </div>
+      {/* La date en deuxième, grisée */}
+      <span style={{ display: "block", fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.inkSoft, fontWeight: 700, marginBottom: "10px" }}>
+        {event.date ? formatDate(event.date).toUpperCase() : "ÉVÉNEMENT"}
+      </span>
       {event.closed ? (
         <button
           onClick={onReopen}
-          style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "12px" }}
+          style={{ background: "none", border: "none", color: COLORS.pinkFluo, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "12px" }}
         >
           Terminé · réouvrir cet événement
         </button>
