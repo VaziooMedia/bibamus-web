@@ -71,6 +71,7 @@ import { HelpSupportScreen, ContactFormScreen, AboutScreen } from "./components/
 import { SearchScreen } from "./components/SearchScreen.jsx";
 import { NotificationsFeedScreen } from "./components/NotificationsFeedScreen.jsx";
 import { BibaSoloScreen } from "./components/BibaSoloScreen.jsx";
+import { clearMyStatsMemory } from "./components/MyStatsScreen.jsx";
 import { MyHistoryScreen, clearMyHistoryMemory, hasMyHistoryMemory } from "./components/MyHistoryScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
@@ -1380,6 +1381,7 @@ export default function App() {
     if (screen !== "bibaPulse" && focusPulseEntry) setFocusPulseEntry(null);
     if (screen === "home" && pulseReturns.length > 0) setPulseReturns([]);
     if (screen === "home" && profileReturnTab) setProfileReturnTab(null); // retour à l'accueil : le profil repartira de « Infos »
+    if (screen === "home") clearMyStatsMemory(); // ... et les statistiques de « Toujours » / « Aperçu »
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
   useEffect(() => {

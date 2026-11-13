@@ -125,8 +125,20 @@ function StatSection({ title, children, arrowColor = COLORS.chalkWhite, showBott
   );
 }
 
+// Mémoire de la période et de la catégorie choisies (décidé par Mehdi, 2026-11-13 : « Oui » à la mémorisation) : elles survivent
+// au changement d'onglet de Mon Profil et au retour d'une fiche, et repartent de « Toujours » / « Aperçu » au retour à l'accueil
+// (App.jsx appelle clearMyStatsMemory).
+let statsMemory = { periodKey: "all", category: "apercu" };
+export function clearMyStatsMemory() {
+  statsMemory = { periodKey: "all", category: "apercu" };
+}
+
 export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoholFreeDay, openVenue, openBibro, openDrink, onOpenWrapped }) {
-  const [periodKey, setPeriodKey] = useState("all");
+  const [periodKey, setPeriodKeyState] = useState(statsMemory.periodKey);
+  const setPeriodKey = (key) => {
+    statsMemory.periodKey = key;
+    setPeriodKeyState(key);
+  };
   const period = PERIODS.find((p) => p.key === periodKey);
   const since = period.since ? period.since() : null;
   // §10 — période équivalente précédente, pour la comparaison. Pas de comparaison possible pour
@@ -134,7 +146,11 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
   const prevSince = period.prevSince && since ? period.prevSince(since) : null;
   const prevUntil = since;
 
-  const [activeCategory, setActiveCategory] = useState("apercu");
+  const [activeCategory, setActiveCategoryState] = useState(statsMemory.category);
+  const setActiveCategory = (key) => {
+    statsMemory.category = key;
+    setActiveCategoryState(key);
+  };
 
   const [overview, setOverview] = useState(null);
   useEffect(() => {
