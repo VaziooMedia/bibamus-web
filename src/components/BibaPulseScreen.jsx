@@ -420,7 +420,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
               // Publication « à plat » (fil BibaPulse) : ni bloc, ni bordure, ni coins arrondis — seulement un trait de séparation en dessous. La publication ouverte depuis une notification garde une barre verte à gauche.
               position: "relative",
               padding: "14px",
-              borderBottom: `1px solid ${COLORS.paperAlt}`,
+              borderBottom: `1px solid ${COLORS.pinkFluo}`,
               background: highlighted ? COLORS.surface : "none",
               boxShadow: highlighted ? `inset 3px 0 0 ${COLORS.amber}` : "none",
             }
@@ -1152,7 +1152,7 @@ export function BibaPulseScreen({
       ) : (
         <>
           {/* Pleine largeur : le fil sort de la marge de 20 px de la page, les traits de séparation vont d'un bord de l'écran à l'autre. */}
-          <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
+          <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.pinkFluo}` }}>
           {entries.map((entry) => (
             <PulseCard
               key={entry.id}
