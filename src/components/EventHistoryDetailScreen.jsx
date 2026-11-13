@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
+import { NavIcon } from "./icons.jsx";
 import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent, realMoneySpentFor } from "../utils.js";
 import { loadVenuesByIds } from "../data/sharedDirectories.js";
 import { drinkLabel } from "../beerDerivatives.js";
@@ -68,14 +69,18 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.wine, fontWeight: 700 }}>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "12px", letterSpacing: "2px", color: COLORS.amber, fontWeight: 700 }}>
         {event.date ? formatDate(event.date).toUpperCase() : "ÉVÉNEMENT"}
       </span>
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "40px", margin: "4px 0 6px 0", lineHeight: 1 }}>{event.name}</h1>
+      {/* Titre : même style que « Mon Historique » (barre verte de 4 px, 22 px) ; la barre suit la hauteur du titre quand le nom passe sur plusieurs lignes. */}
+      <div style={{ display: "flex", alignItems: "stretch", gap: "10px", margin: "8px 0 10px" }}>
+        <span style={{ width: "4px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, lineHeight: 1.2 }}>{event.name}</h1>
+      </div>
       {event.closed ? (
         <button
           onClick={onReopen}
-          style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "12px" }}
+          style={{ background: "none", border: "none", color: COLORS.amber, fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "12px" }}
         >
           Terminé · réouvrir cet événement
         </button>
@@ -94,7 +99,12 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
           onClick={() => openVenue(venue.id)}
           style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "13px", cursor: "pointer", padding: 0, textAlign: "left", marginBottom: "16px" }}
         >
-          📖 {venue.name}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ display: "flex", flexShrink: 0 }}>
+              <NavIcon name="map-pin" size={13} color={COLORS.amber} />
+            </span>
+            {venue.name}
+          </span>
         </button>
       )}
 
@@ -119,7 +129,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
             {event.splitParticipants.map((p) => (
               <div key={p.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
                 <span>{p.name}</span>
-                <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amberDark }}>{formatMoney(p.amount, "euro")}</span>
+                <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: COLORS.amber }}>{formatMoney(p.amount, "euro")}</span>
               </div>
             ))}
           </div>
@@ -180,7 +190,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
                     {!r.offeredBy && !r.buyerName && !r.paidByPot && <span style={{ color: COLORS.inkSoft }}> · Free</span>}
                   </span>
                   {!isOpenBar && (
-                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: r.offeredBy ? COLORS.sage : isAddition || r.settledDirectly === false ? COLORS.wine : COLORS.sage }}>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 700, color: r.offeredBy ? COLORS.amber : isAddition || r.settledDirectly === false ? COLORS.wine : COLORS.amber }}>
                       <MoneyAmount value={r.total} currency={event.currency} jetonIcon="pink" />
                     </span>
                   )}
@@ -193,11 +203,13 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
                     {expanded ? "Cacher le détail" : "Voir le détail"}
                   </button>
                   {onDeleteRound && (
+                    // Croix grisée à l'extrême droite (comme dans BibaSolo) ; un premier appui demande « Confirmer ? ».
                     <button
                       onClick={() => (confirmDeleteRoundId === r.id ? onDeleteRound(r.id) : setConfirmDeleteRoundId(r.id))}
-                      style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: 0, marginLeft: "auto" }}
+                      aria-label="Supprimer la tournée"
+                      style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px -4px -4px auto", color: COLORS.wine, fontSize: "12px", fontWeight: 600 }}
                     >
-                      {confirmDeleteRoundId === r.id ? "Confirmer ?" : "Supprimer"}
+                      {confirmDeleteRoundId === r.id ? "Confirmer ?" : <NavIcon name="x" size={14} color={COLORS.paperAlt} />}
                     </button>
                   )}
                 </div>
@@ -233,7 +245,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
       <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: `1px dashed ${COLORS.paperAlt}` }}>
         {confirmDelete && (
           <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "10px", fontWeight: 600 }}>
-            ⚠️ Les statistiques liées à cet événement{venue ? ` (visites, boissons, argent dépensé de ${venue.name})` : ""} seront aussi supprimées. Cette action est irréversible.
+            Les statistiques liées à cet événement{venue ? ` (visites, boissons, argent dépensé de ${venue.name})` : ""} seront aussi supprimées. Cette action est irréversible.
           </p>
         )}
         <button
