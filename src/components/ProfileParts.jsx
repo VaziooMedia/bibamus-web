@@ -220,9 +220,9 @@ export function ProfileStatCards({ bibros, myUserId, goToBibros, goToProducts, g
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
-        <StatCard label="Bibax" value={bibros.length} onClick={goToBibros} />
-        <StatCard label="Drink Checks" value={stats ? stats.tastedDrinksCount : "…"} onClick={goToProducts} />
-        <StatCard label="Place Checks" value={stats ? stats.venueCheckinsCount : "…"} onClick={goToVenues} />
+        <StatCard label={<>Biba<span style={{ color: COLORS.amber }}>x</span></>} value={bibros.length} onClick={goToBibros} />
+        <StatCard label={<>Drink<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.tastedDrinksCount : "…"} onClick={goToProducts} />
+        <StatCard label={<>Place<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.venueCheckinsCount : "…"} onClick={goToVenues} />
       </div>
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 18px 0" }} />
