@@ -86,7 +86,7 @@ Il est **automatique**, déduit du rôle du compte (`role` = `admin` ou `super_a
 - **Préférences** (`PreferencesScreen`) : unités, tri des lieux, confirmation de check-in, réglages des Stories.
 - **Apparence** : deux lignes grisées (couleur d'accent, icône de l'app), sans effet.
 - **Mes photos** (`MyPhotosScreen`) : les photos de Stories, même expirées, et leur suppression.
-- **Aperçu public d'un Bibax** : `BibaxProfilePreviewScreen`.
+- **Aperçu public d'un Bibax** : `BibaxProfilePreviewScreen` — mêmes trois onglets Infos / Biba360 / BibaPulse que Mon Profil depuis le 2026-11-13 (détails dans `BIBAX.md`).
 
 ## Mes Statistiques = onglet Biba360 de Mon Profil (`MyStatsContent`)
 

@@ -1077,7 +1077,21 @@ export function BibaPulseScreen({
   }, [composing]);
 
   if (viewedProfileCode) {
-    return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
+    // Les cartes du profil ouvert ici ouvrent lieux, produits, marques et producteurs comme celles du fil. Au retour d'une fiche, on
+    // retrouve la carte d'où l'on était parti (celle qui a ouvert ce profil).
+    const fromProfile = (fn) => (fn ? (...args) => { if (onRememberEntry && profileFromEntry.current) onRememberEntry(profileFromEntry.current); return fn(...args); } : undefined);
+    return (
+      <BibaxProfilePreviewScreen
+        bibroCode={viewedProfileCode}
+        onBack={() => setViewedProfileCode(null)}
+        myUserId={myUserId}
+        myBibroCode={myBibroCode}
+        onOpenVenue={fromProfile(onOpenVenue)}
+        onOpenDrink={fromProfile(onOpenDrink)}
+        onOpenBrand={fromProfile(onOpenBrand)}
+        onOpenProducer={fromProfile(onOpenProducer)}
+      />
+    );
   }
 
   // Arrivée depuis une notification : la carte visée est introuvable alors que tout le fil est chargé (supprimée par son

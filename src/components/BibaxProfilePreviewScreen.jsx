@@ -8,10 +8,21 @@
 //
 // Ce qui manque à l'écran n'est pas un oubli : chaque champ n'arrive du
 // serveur que si la personne accepte de le partager.
+//
+// Sous le bloc du rond de profil, trois onglets (mêmes pastilles que Mon Profil et la fiche d'un Bibax confirmé) :
+//   - Infos     : le bloc des infos de la personne, la relation (ajouter / confirmer / Bibax en commun) et les trois blocs
+//                 Bibax / Drink Checks / Place Checks ;
+//   - Biba360   : ses statistiques, dans la mesure où elle les partage (BibaxStatsContent) ;
+//   - BibaPulse : ses publications dans BibaPulse, dans la mesure où le serveur les montre à la personne qui regarde.
+// Les cartes ouvrent un lieu, un produit, une marque ou un producteur seulement quand l'écran hôte fournit les ouvreurs
+// (onOpenVenue…) : l'écran du routeur le fait, les profils ouverts à l'intérieur d'un fil ou d'une discussion non.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
+import { PillTabs } from "./PillTabs.jsx";
+import { BibaxStatsContent } from "./BibaxStatsContent.jsx";
+import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import {
   NavIcon,
@@ -34,7 +45,8 @@ import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
 
-export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
+export function BibaxProfilePreviewScreen({ bibroCode, onBack, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry }) {
+  const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
   // undefined = chargement, null = introuvable ou bloqué
   const [identity, setIdentity] = useState(undefined);
   const [bibaxCount, setBibaxCount] = useState(null);
@@ -146,6 +158,18 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
             </div>
           </div>
 
+          <PillTabs
+            tabs={[
+              { key: "infos", label: "Infos" },
+              { key: "biba360", label: { prefix: "Biba", accent: "360" } },
+              { key: "bibapulse", label: { prefix: "Biba", accent: "Pulse" } },
+            ]}
+            active={activeTab}
+            onChange={setActiveTab}
+          />
+
+          {activeTab === "infos" && (
+            <>
           {hasInfoBlock && (
             <div
               style={{
@@ -297,6 +321,25 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack }) {
             <StatCard label={<>Drink<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.tastedDrinksCount : null} />
             <StatCard label={<>Place<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.venueCheckinsCount : null} />
           </div>
+            </>
+          )}
+
+          {activeTab === "biba360" && <BibaxStatsContent userId={identity.userId} displayName={identity.firstName || identity.displayName} />}
+
+          {activeTab === "bibapulse" && (
+            <EntityPulseSection
+              entityType="bibax"
+              entityId={identity.userId}
+              myUserId={myUserId}
+              myBibroCode={myBibroCode}
+              onOpenVenue={onOpenVenue}
+              onOpenDrink={onOpenDrink}
+              onOpenBrand={onOpenBrand}
+              onOpenProducer={onOpenProducer}
+              returnEntryId={pulseReturnEntryId}
+              onRememberEntry={onRememberPulseEntry}
+            />
+          )}
         </>
       )}
 

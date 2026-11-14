@@ -42,7 +42,7 @@ function timeAgo(iso) {
   return `Il y a ${days} j`;
 }
 
-export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxProfile, onRespondSalonInvite, myGender, onOpenTaggedStory, onOpenClub }) {
+export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxProfile, onRespondSalonInvite, myGender, onOpenTaggedStory, onOpenClub, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer }) {
   const [notifications, setNotifications] = useState(null);
   const [pendingBibax, setPendingBibax] = useState([]);
   const [respondedIds, setRespondedIds] = useState({});
@@ -181,7 +181,19 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
   };
 
   if (viewedProfileCode) {
-    return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
+    // Les cartes du profil ouvrent lieux, produits, marques et producteurs ; au retour, on retrouve la liste des notifications.
+    return (
+      <BibaxProfilePreviewScreen
+        bibroCode={viewedProfileCode}
+        onBack={() => setViewedProfileCode(null)}
+        myUserId={myUserId}
+        myBibroCode={myBibroCode}
+        onOpenVenue={onOpenVenue}
+        onOpenDrink={onOpenDrink}
+        onOpenBrand={onOpenBrand}
+        onOpenProducer={onOpenProducer}
+      />
+    );
   }
 
   return (

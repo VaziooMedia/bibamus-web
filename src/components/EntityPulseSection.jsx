@@ -14,6 +14,11 @@
 // Sans effet pour une fiche Producteur ou Marque : leurs cartes portent sur des produits différents, jamais
 // sur le producteur ou la marque eux-mêmes.
 //
+// Mode « bibax » (entityType = "bibax", entityId = identifiant de compte de la personne, onglet BibaPulse de la fiche d'un Bibax et de son
+// profil public, depuis le 2026-11-13) : les publications de cette personne, telles que le serveur accepte de les montrer à la
+// personne qui regarde (fonction SQL get_bibax_pulse_activity), sans liste « Tout le monde / Mes Bibax » et sans rond de profil
+// cliquable sur ses propres cartes (on est déjà sur son profil). Le reste est identique.
+//
 // Retour sur la carte (returnEntryId, onRememberEntry) : quand on ouvre une autre fiche (produit, lieu, marque, producteur, son propre
 // profil) depuis une carte de cette liste, puis qu'on revient (flèche retour), la fiche se rouvre sur cet onglet et la liste se
 // replace sur la carte d'où l'on est parti — comme le fil principal (BibaPulseScreen). L'écran hôte garde l'identifiant de la carte
@@ -25,7 +30,7 @@
 // ============================================================
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
-import { loadEntityPulse, loadMyPulsePosts, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { loadEntityPulse, loadMyPulsePosts, loadBibaxPulseActivity, loadDrinksByIds, loadVenuesByIds, getSession } from "../data/sharedDirectories.js";
 import { PulseCard } from "./BibaPulseScreen.jsx";
 import { usePostTagEntities } from "./PulseTags.jsx";
 import { usePulseProducersById, pulseDrinkIdsOf } from "./PulseProductCard.jsx";
@@ -39,8 +44,15 @@ const SCOPES = [
   { key: "bibax", label: "Mes Bibax" },
 ];
 
-export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, selfEntity, returnEntryId = null, onRememberEntry }) {
+export function EntityPulseSection({ entityType, entityId, myUserId: myUserIdProp, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, selfEntity, returnEntryId = null, onRememberEntry }) {
   const [scope, setScope] = useState("all");
+  // L'identifiant du compte vient de l'écran hôte ; à défaut (profil public ouvert depuis le fil, une discussion…), de la session.
+  const [sessionUserId, setSessionUserId] = useState(null);
+  useEffect(() => {
+    if (myUserIdProp) return;
+    getSession().then((s) => setSessionUserId(s?.user?.id || null));
+  }, [myUserIdProp]);
+  const myUserId = myUserIdProp || sessionUserId;
   const [entries, setEntries] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -110,7 +122,8 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
   const directories = { venuesById, drinksDirectory, breweriesDirectory: [], brandsDirectory: [], tagEntities, producersById, venueRatingsById };
 
   const isMine = entityType === "mine";
-  const fetchEntries = (before = null) => (isMine ? loadMyPulsePosts(before) : loadEntityPulse(entityType, entityId, scope, before));
+  const isBibax = entityType === "bibax";
+  const fetchEntries = (before = null) => (isMine ? loadMyPulsePosts(before) : isBibax ? loadBibaxPulseActivity(entityId, before) : loadEntityPulse(entityType, entityId, scope, before));
 
   useEffect(() => {
     setEntries(null);
@@ -176,14 +189,28 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
   };
 
   if (viewedProfileCode) {
-    return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
+    // Les cartes du profil ouvert ici ouvrent lieux, produits, marques et producteurs comme les cartes de cette liste. Au retour d'une
+    // fiche, on retrouve la carte d'où l'on était parti (celle qui a ouvert ce profil), la liste étant rouverte à sa place.
+    const fromProfile = (fn) => (fn ? (...args) => { if (onRememberEntry && profileFromEntry.current) onRememberEntry(profileFromEntry.current); return fn(...args); } : undefined);
+    return (
+      <BibaxProfilePreviewScreen
+        bibroCode={viewedProfileCode}
+        onBack={() => setViewedProfileCode(null)}
+        myUserId={myUserId}
+        myBibroCode={myBibroCode}
+        onOpenVenue={fromProfile(onOpenVenue)}
+        onOpenDrink={fromProfile(onOpenDrink)}
+        onOpenBrand={fromProfile(onOpenBrand)}
+        onOpenProducer={fromProfile(onOpenProducer)}
+      />
+    );
   }
 
   return (
     <div ref={listRef}>
       {/* Liste déroulante plutôt que des boutons, pour bien la distinguer des onglets principaux
           Infos / BibaPulse, au-dessus. */}
-      {!isMine && (
+      {!isMine && !isBibax && (
       <select
         value={scope}
         onChange={(e) => setScope(e.target.value)}
@@ -202,7 +229,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
       ) : entries.length === 0 ? (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
           <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", margin: 0 }}>
-            {isMine ? "Tu n'as encore rien publié dans BibaPulse." : scope === "bibax" ? "Aucun de tes Bibax n'a encore publié ici." : "Aucune publication pour l'instant."}
+            {isMine ? "Tu n'as encore rien publié dans BibaPulse." : isBibax ? "Aucune activité visible pour l'instant." : scope === "bibax" ? "Aucun de tes Bibax n'a encore publié ici." : "Aucune publication pour l'instant."}
           </p>
         </div>
       ) : (
@@ -226,7 +253,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId, myBibroCode
                 if (person.id === myUserId) rememberThen(entry.id, goToProfile, { profile: true })();
                 else if (person.bibro_code) openProfileFrom(entry.id, person.bibro_code);
               }}
-              onOpenProfile={entry.actorId === myUserId ? (isMine ? undefined : rememberThen(entry.id, goToProfile, { profile: true })) : (code) => openProfileFrom(entry.id, code)}
+              onOpenProfile={entry.actorId === myUserId ? (isMine ? undefined : rememberThen(entry.id, goToProfile, { profile: true })) : isBibax && entry.actorId === entityId ? undefined : (code) => openProfileFrom(entry.id, code)}
               onUpdate={(patch) => updateEntry(entry.id, patch)}
               onDeleted={removeEntry}
             />
