@@ -43,7 +43,7 @@ function timeAgo(iso) {
   return new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "short" }).format(new Date(iso));
 }
 
-export function BibaPingScreen({ myUserId, bibros = [], onBack, onConversationOpenChange }) {
+export function BibaPingScreen({ myUserId, myBibroCode, bibros = [], onBack, onConversationOpenChange, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer }) {
   // null = pas encore chargé OU échec ; le drapeau d'erreur distingue les deux.
   const [conversations, setConversations] = useState(null);
   const [profilesById, setProfilesById] = useState({});
@@ -131,7 +131,19 @@ export function BibaPingScreen({ myUserId, bibros = [], onBack, onConversationOp
   // "Mes Bibax" exigerait tout un contexte dont BibaPing ne dispose pas, et ne conviendrait
   // pas pour quelqu'un qui n'est pas encore Bibax.
   if (viewedProfileCode) {
-    return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
+    // Les cartes du profil ouvrent lieux, produits, marques et producteurs ; au retour, on retrouve la liste des discussions.
+    return (
+      <BibaxProfilePreviewScreen
+        bibroCode={viewedProfileCode}
+        onBack={() => setViewedProfileCode(null)}
+        myUserId={myUserId}
+        myBibroCode={myBibroCode}
+        onOpenVenue={onOpenVenue}
+        onOpenDrink={onOpenDrink}
+        onOpenBrand={onOpenBrand}
+        onOpenProducer={onOpenProducer}
+      />
+    );
   }
 
   // Ouvre (ou crée) le tête-à-tête avec le Bibax choisi. Renvoie null si tout va bien, sinon le

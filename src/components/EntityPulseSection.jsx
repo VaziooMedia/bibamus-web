@@ -189,7 +189,21 @@ export function EntityPulseSection({ entityType, entityId, myUserId: myUserIdPro
   };
 
   if (viewedProfileCode) {
-    return <BibaxProfilePreviewScreen bibroCode={viewedProfileCode} onBack={() => setViewedProfileCode(null)} />;
+    // Les cartes du profil ouvert ici ouvrent lieux, produits, marques et producteurs comme les cartes de cette liste. Au retour d'une
+    // fiche, on retrouve la carte d'où l'on était parti (celle qui a ouvert ce profil), la liste étant rouverte à sa place.
+    const fromProfile = (fn) => (fn ? (...args) => { if (onRememberEntry && profileFromEntry.current) onRememberEntry(profileFromEntry.current); return fn(...args); } : undefined);
+    return (
+      <BibaxProfilePreviewScreen
+        bibroCode={viewedProfileCode}
+        onBack={() => setViewedProfileCode(null)}
+        myUserId={myUserId}
+        myBibroCode={myBibroCode}
+        onOpenVenue={fromProfile(onOpenVenue)}
+        onOpenDrink={fromProfile(onOpenDrink)}
+        onOpenBrand={fromProfile(onOpenBrand)}
+        onOpenProducer={fromProfile(onOpenProducer)}
+      />
+    );
   }
 
   return (

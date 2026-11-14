@@ -3482,6 +3482,27 @@ export default function App() {
                 onBack={() => setScreen("home")}
                 onConversationOpenChange={setBibaPingChatOpen}
                 onOpenConversation={(id) => console.log("conversation", id)}
+                myBibroCode={profile.myBibroCode}
+                onOpenVenue={(id) => {
+                  setScreenBeforeVenueDetail("bibaPing");
+                  setViewedVenueId(id);
+                  setScreen("venueDetail");
+                }}
+                onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("bibaPing");
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
+                onOpenBrand={(id) => {
+                  setScreenBeforeBrandDetail("bibaPing");
+                  setViewedBrandId(id);
+                  setScreen("brandDetail");
+                }}
+                onOpenProducer={(id) => {
+                  setScreenBeforeBreweryDetail("bibaPing");
+                  setViewedBreweryId(id);
+                  setScreen("breweryDetail");
+                }}
               />
             )}
               {screen === "bibaPulse" && (
@@ -3584,6 +3605,27 @@ export default function App() {
                   setScreen("bibaPulse");
                 }}
                 onOpenBibaxProfile={(code) => openBibaxProfile(code)}
+                myBibroCode={profile.myBibroCode}
+                onOpenVenue={(id) => {
+                  setScreenBeforeVenueDetail("notificationsFeed");
+                  setViewedVenueId(id);
+                  setScreen("venueDetail");
+                }}
+                onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("notificationsFeed");
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
+                onOpenBrand={(id) => {
+                  setScreenBeforeBrandDetail("notificationsFeed");
+                  setViewedBrandId(id);
+                  setScreen("brandDetail");
+                }}
+                onOpenProducer={(id) => {
+                  setScreenBeforeBreweryDetail("notificationsFeed");
+                  setViewedBreweryId(id);
+                  setScreen("breweryDetail");
+                }}
               />
             )}
             {screen === "bibaxProfilePreview" && viewedBibaxProfileCode && (
