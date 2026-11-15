@@ -4873,6 +4873,46 @@ export async function loadProducerFavoriteStatus(producerId) {
   return !!data;
 }
 
+// « Mes Favoris » (2026-11-15) : les LIEUX et les BIBAX favoris vivent désormais dans le compte (tables fermées venue_favorites et bibax_favorites ;
+// scripts bibamus-sql-favoris-1-lieux et -2-bibax), comme les cœurs des marques et des producteurs. Auparavant : l'étoile d'un lieu et le drapeau d'un
+// Bibax n'étaient gardés que dans le navigateur. Les bascules rendent { ok, favorite } (ou { error } si la base refuse) ; add… reprend en bloc ce qui était
+// gardé dans le navigateur et rend { ok, added } (ou { error }).
+export async function toggleFavoriteVenue(venueId) {
+  const { data, error } = await supabase.rpc("toggle_favorite_venue", { p_venue_id: venueId });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function addFavoriteVenues(venueIds) {
+  const { data, error } = await supabase.rpc("add_favorite_venues", { p_venue_ids: venueIds });
+  if (error) return { error: error.message };
+  return { ok: true, added: data };
+}
+
+export async function toggleFavoriteBibax(bibaxUserId) {
+  const { data, error } = await supabase.rpc("toggle_favorite_bibax", { p_bibax_user_id: bibaxUserId });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function addFavoriteBibax(bibaxUserIds) {
+  const { data, error } = await supabase.rpc("add_favorite_bibax", { p_bibax_user_ids: bibaxUserIds });
+  if (error) return { error: error.message };
+  return { ok: true, added: data };
+}
+
+// Tous mes favoris en une lecture (fonction get_my_favorites, script bibamus-sql-favoris-3-liste) : des identifiants seulement, du plus récent au plus
+// ancien, rangés par sorte : { venues, brands, producers, bibax } (bibax = identifiants de personnes). null si la lecture échoue.
+export async function loadMyFavorites() {
+  const { data, error } = await supabase.rpc("get_my_favorites");
+  if (error || !Array.isArray(data)) {
+    if (error) console.error("loadMyFavorites:", error);
+    return null;
+  }
+  const idsOf = (kind) => data.filter((r) => r.kind === kind && r.item_id).map((r) => String(r.item_id));
+  return { venues: idsOf("venue"), brands: idsOf("brand"), producers: idsOf("producer"), bibax: idsOf("bibax") };
+}
+
 export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
   const {
     data: { user },
