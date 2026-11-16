@@ -38,17 +38,37 @@ export function arrangeChecks(entries, sort, { nameOf, countOf, countryOf }) {
   return [{ key: "all", entries }];
 }
 
-// Les deux totaux de ce que la page affiche (la catégorie choisie, pour DrinkChecks), en deux blocs fins côte à côte, du même aspect que les blocs Bibax / DrinkChecks / PlaceChecks de
-// Mon Profil mais sur une seule ligne (libellé puis chiffre en vert fluo) : le nombre de checks (la somme du chiffre de droite des lignes) et le nombre d'éléments uniques (le nombre de lignes).
-// `brand` : « Drink » ou « Place » (le libellé du premier bloc est « DrinkChecks » / « PlaceChecks », « Checks » en vert) ; `uniqueLabel` : [singulier, pluriel]. Le singulier vaut pour 0 et 1.
+// Les deux totaux de ce que la page affiche (la catégorie choisie, pour DrinkChecks), en deux blocs fins côte à côte : l'intitulé à gauche, le chiffre en vert fluo à droite dans une colonne plus
+// sombre, avec un trait fin à gauche (comme la colonne du chiffre des lignes). Le premier est le nombre de checks (la somme du chiffre de droite des lignes), le second le nombre d'éléments uniques
+// (le nombre de lignes). `brand` : « Drink » ou « Place » (le libellé du premier bloc est « DrinkChecks » / « PlaceChecks », « Checks » en vert) ; `uniqueLabel` : [singulier, pluriel].
+// Le singulier vaut pour 0 et 1.
 export function CheckTotals({ checks, unique, brand, uniqueLabel }) {
   const block = (label, value, key) => (
     <div
       data-check-total={key}
-      style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "6px 8px", textAlign: "center" }}
+      style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "stretch", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", overflow: "hidden" }}
     >
-      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
+      <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "6px 8px 6px 10px", fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
+      <span
+        style={{
+          flexShrink: 0,
+          minWidth: "38px",
+          boxSizing: "border-box",
+          padding: "0 8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: COLORS.paper,
+          borderLeft: `1px solid ${COLORS.paperAlt}`,
+          fontFamily: "'Urbanist', sans-serif",
+          fontWeight: 800,
+          fontSize: "14px",
+          color: COLORS.amber,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {value}
+      </span>
     </div>
   );
   return (
