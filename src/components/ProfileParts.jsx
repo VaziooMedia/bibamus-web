@@ -209,7 +209,7 @@ function StatCard({ label, value, onClick }) {
 }
 
 // Les trois blocs Bibax / Drink Checks / Place Checks, entre deux traits fins.
-export function ProfileStatCards({ bibros, myUserId, goToBibros, goToProducts, goToVenues }) {
+export function ProfileStatCards({ bibros, myUserId, goToBibros, goToDrinkChecks, goToVenues }) {
   const [stats, setStats] = useState(null);
   useEffect(() => {
     if (myUserId) loadMyProfileStats(myUserId).then(setStats);
@@ -221,7 +221,7 @@ export function ProfileStatCards({ bibros, myUserId, goToBibros, goToProducts, g
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
         <StatCard label={<>Biba<span style={{ color: COLORS.amber }}>x</span></>} value={bibros.length} onClick={goToBibros} />
-        <StatCard label={<>Drink<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.tastedDrinksCount : "…"} onClick={goToProducts} />
+        <StatCard label={<>Drink<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.tastedDrinksCount : "…"} onClick={goToDrinkChecks} />
         <StatCard label={<>Place<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.venueCheckinsCount : "…"} onClick={goToVenues} />
       </div>
 
