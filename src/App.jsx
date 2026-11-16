@@ -62,7 +62,7 @@ import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { WrappedScreen } from "./components/WrappedScreen.jsx";
 import { SettingsScreen, EventSettingsScreen, WaterAlertSettingsScreen } from "./components/MinorScreens.jsx";
 import { MyProductsHubScreen, MyProductsListScreen } from "./components/MyProductsScreens.jsx";
-import { MyDrinkChecksScreen, clearMyDrinkChecksMemory, hasMyDrinkChecksMemory } from "./components/MyDrinkChecksScreen.jsx";
+import { MyDrinkChecksScreen } from "./components/MyDrinkChecksScreen.jsx";
 import { AccountScreen, FieldEditScreen, GenderEditScreen, EmailViewScreen, UsernameEditScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen, MyStatsPrivacyScreen, StoryTagsPrivacyScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
@@ -76,7 +76,8 @@ import { BibaSoloScreen } from "./components/BibaSoloScreen.jsx";
 import { clearMyStatsMemory } from "./components/MyStatsScreen.jsx";
 import { MyHistoryScreen, clearMyHistoryMemory, hasMyHistoryMemory } from "./components/MyHistoryScreen.jsx";
 import { MyFavoritesScreen, MyFavoritesListScreen } from "./components/MyFavoritesScreen.jsx";
-import { MyPlaceChecksScreen, clearMyPlaceChecksMemory, hasMyPlaceChecksMemory } from "./components/MyPlaceChecksScreen.jsx";
+import { hasListMemory, clearListMemory } from "./hooks/useListReturn.js";
+import { MyPlaceChecksScreen } from "./components/MyPlaceChecksScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
 import { BrandDirectoryScreen } from "./components/BrandDirectoryScreen.jsx";
@@ -216,6 +217,11 @@ export default function App() {
   // défilant) — sans ça, un écran hérite de la position de défilement laissée par le précédent,
   // au lieu de toujours démarrer en haut.
   const mainScrollRef = React.useRef(null);
+  // Entrée dans une page de liste depuis sa page parent : la liste repart toujours de zéro (le retour d'une fiche, lui, reprend la mémoire — hooks/useListReturn.js).
+  const enterList = (id) => {
+    clearListMemory(id);
+    setScreen(id);
+  };
   // Retour sur la fiche produit depuis un lieu ou un profil Bibax ouvert via l'onglet Biba360 : la fiche se replace
   // elle-même (même onglet, même hauteur), on ne remonte donc pas en haut.
   const drinkReturn = useDrinkReturnMemo(screen);
@@ -223,9 +229,8 @@ export default function App() {
     if (drinkReturn.keepsScroll(screen, viewedDrinkId)) return;
     // Retour sur « Mon Historique » depuis une fiche : l'écran se replace lui-même à la hauteur où l'on l'avait laissé.
     if (screen === "eventHistory" && hasMyHistoryMemory()) return;
-    // Idem pour « DrinkChecks » et « PlaceChecks » : au retour d'une fiche, la page se replace elle-même à la hauteur où l'on l'avait laissée.
-    if (screen === "myDrinkChecks" && hasMyDrinkChecksMemory()) return;
-    if (screen === "myPlaceChecks" && hasMyPlaceChecksMemory()) return;
+    // Idem pour toute page de liste qui suit la norme du retour d'une fiche (hooks/useListReturn.js) : elle se replace elle-même à la hauteur où l'on l'avait laissée.
+    if (hasListMemory(screen)) return;
     mainScrollRef.current?.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
@@ -2741,14 +2746,8 @@ export default function App() {
                 goToBibros={() => setScreen("bibrosList")}
                 goToBibaClubs={() => setScreen("bibaClubsList")}
                 goToProducts={() => setScreen("myProducts")}
-                goToDrinkChecks={() => {
-                  clearMyDrinkChecksMemory(); // une entrée depuis Mon Profil repart toujours de zéro (le retour d'une fiche, lui, reprend la mémoire)
-                  setScreen("myDrinkChecks");
-                }}
-                goToVenues={() => {
-                  clearMyPlaceChecksMemory();
-                  setScreen("myPlaceChecks");
-                }}
+                goToDrinkChecks={() => enterList("myDrinkChecks")}
+                goToVenues={() => enterList("myPlaceChecks")}
                 goToFavorites={() => setScreen("myFavorites")}
                 goToHistory={() => {
                   clearMyHistoryMemory(); // une entrée depuis Mon Profil repart toujours de zéro (le retour d'une fiche, lui, reprend la mémoire)
@@ -3319,12 +3318,14 @@ export default function App() {
               <MyFavoritesScreen
                 bibros={bibros}
                 onBack={() => setScreen("profile")}
-                goTo={(kind) => setScreen({ venues: "myFavoritesVenues", drinks: "myFavoritesDrinks", brands: "myFavoritesBrands", producers: "myFavoritesProducers", bibax: "myFavoritesBibax" }[kind])}
+                goTo={(kind) => enterList({ venues: "myFavoritesVenues", drinks: "myFavoritesDrinks", brands: "myFavoritesBrands", producers: "myFavoritesProducers", bibax: "myFavoritesBibax" }[kind])}
               />
             )}
             {["myFavoritesVenues", "myFavoritesDrinks", "myFavoritesBrands", "myFavoritesProducers", "myFavoritesBibax"].includes(screen) && (
               <MyFavoritesListScreen
                 key={screen}
+                screenId={screen}
+                mainScrollRef={mainScrollRef}
                 kind={{ myFavoritesVenues: "venues", myFavoritesDrinks: "drinks", myFavoritesBrands: "brands", myFavoritesProducers: "producers", myFavoritesBibax: "bibax" }[screen]}
                 bibros={bibros}
                 onBack={() => setScreen("myFavorites")}
@@ -3358,14 +3359,16 @@ export default function App() {
             {screen === "myProducts" && (
               <MyProductsHubScreen
                 onBack={() => setScreen("profile")}
-                goToToTry={() => setScreen("myProductsToTry")}
-                goToTasted={() => setScreen("myProductsTasted")}
-                goToRated={() => setScreen("myProductsRated")}
+                goToToTry={() => enterList("myProductsToTry")}
+                goToTasted={() => enterList("myProductsTasted")}
+                goToRated={() => enterList("myProductsRated")}
               />
             )}
             {(screen === "myProductsToTry" || screen === "myProductsTasted" || screen === "myProductsRated") && (
               <MyProductsListScreen
                 key={screen}
+                screenId={screen}
+                mainScrollRef={mainScrollRef}
                 kind={screen === "myProductsToTry" ? "toTry" : screen === "myProductsTasted" ? "tasted" : "rated"}
                 onBack={() => setScreen("myProducts")}
                 onOpenDrink={(id) => {

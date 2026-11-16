@@ -3,17 +3,18 @@
 // Au-dessus des quatre classements, une rangée de pastilles de catégories (Tout, Bières & Cidres, Vins & Bulles…, seules les catégories non vides) :
 // elle ne garde que les produits d'une catégorie, et le classement choisi s'applique à ce qui reste.
 // Une ligne ouvre la fiche du produit, dont le retour ramène ici.
-// Retour d'une fiche : la page se remet comme on l'avait laissée (catégorie, classement et hauteur de défilement, `drinkMemory`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
-// en silence et remplacée seulement si elle a changé (un DrinkCheck fait sur la fiche). Une entrée depuis Mon Profil repart de zéro (`clearMyDrinkChecksMemory`).
+// Retour d'une fiche : la page se remet comme on l'avait laissée (catégorie, classement et hauteur de défilement, voir `useListReturn`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
+// en silence et remplacée seulement si elle a changé (un DrinkCheck fait sur la fiche). Une entrée depuis Mon Profil repart de zéro.
 // Les identifiants viennent de la fonction `get_my_drink_checks` (script bibamus-sql-mes-drinkchecks-1-liste), puis les produits par `loadDrinksByIds`.
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { loadMyDrinkChecks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { PillTabs, FINE_PILL } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
-import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow, createListMemory } from "./CheckListParts.jsx";
+import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow } from "./CheckListParts.jsx";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 const SORT_FIELDS = { nameOf: (x) => x.drink.name, countOf: (x) => x.checks, countryOf: (x) => (x.drink.nationality && x.drink.nationality !== "Non renseigné" ? x.drink.nationality : "") };
 const hasFlag = (country) => !!COUNTRY_ISO_CODES[country] || country === "International" || country === "Autre";
@@ -46,13 +47,10 @@ function CategoryChips({ chips, active, onChange }) {
   );
 }
 
-const drinkMemory = createListMemory();
-export const clearMyDrinkChecksMemory = drinkMemory.clear;
-export const hasMyDrinkChecksMemory = drinkMemory.has;
 const signatureOf = (list) => list.map((x) => `${x.drinkId}:${x.checks}`).join(",");
 
 export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
-  const [restored] = useState(() => drinkMemory.get());
+  const { restored, save, open } = useListReturn("myDrinkChecks", mainScrollRef);
   const [items, setItems] = useState(restored ? restored.items : null); // null = chargement ; [{ drinkId, checks, lastAt }]
   const [drinksById, setDrinksById] = useState(restored ? restored.drinksById : {});
   const [error, setError] = useState(false);
@@ -90,19 +88,9 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
     if (items === null || error) return;
-    drinkMemory.patch({ items, drinksById, sort, category });
+    save({ items, drinksById, sort, category });
   }, [items, drinksById, sort, category, error]);
-  // Retour d'une fiche : on se replace à la hauteur où l'on était (App ne remonte pas en haut dans ce cas).
-  useLayoutEffect(() => {
-    if (restored) mainScrollRef?.current?.scrollTo(0, restored.scrollTop || 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const openDrink = onOpenDrink
-    ? (id) => {
-        drinkMemory.patch({ scrollTop: mainScrollRef?.current?.scrollTop || 0 });
-        onOpenDrink(id);
-      }
-    : null;
+  const openDrink = onOpenDrink ? open(onOpenDrink) : null;
 
   const loading = items === null;
   const allEntries = (items || []).map((x) => ({ ...x, drink: drinksById[x.drinkId] })).filter((x) => x.drink);
