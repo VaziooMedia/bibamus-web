@@ -2,7 +2,7 @@
 // avec à droite son nombre de DrinkChecks. Mêmes lignes et mêmes classements que « PlaceChecks » (CheckListParts.jsx) ; la ligne de détails ne porte que le sous-type du produit.
 // Au-dessus des quatre classements, une rangée de pastilles de catégories (Tout, Bières & Cidres, Vins & Bulles…, seules les catégories non vides) :
 // elle ne garde que les produits d'une catégorie, et le classement choisi s'applique à ce qui reste.
-// Sous les classements, deux totaux de ce qui est affiché (la catégorie choisie) : « X DrinkChecks » et « X Produits uniques ».
+// Sous les classements, deux blocs côte à côte avec les totaux de ce qui est affiché (la catégorie choisie) : « X DrinkChecks » et « X Produits uniques ».
 // Une ligne ouvre la fiche du produit, dont le retour ramène ici.
 // Retour d'une fiche : la page se remet comme on l'avait laissée (catégorie, classement et hauteur de défilement, voir `useListReturn`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
 // en silence et remplacée seulement si elle a changé (un DrinkCheck fait sur la fiche). Une entrée depuis Mon Profil repart de zéro.
@@ -128,7 +128,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
           <>
             <CategoryChips chips={chips} active={activeCategory} onChange={setCategory} />
             <PillTabs tabs={CHECK_SORTS} active={sort} onChange={setSort} fine />
-            <CheckTotals checks={entries.reduce((sum, x) => sum + x.checks, 0)} unique={entries.length} checkLabel={["DrinkCheck", "DrinkChecks"]} uniqueLabel={["Produit unique", "Produits uniques"]} />
+            <CheckTotals checks={entries.reduce((sum, x) => sum + x.checks, 0)} unique={entries.length} brand="Drink" uniqueLabel={["Produit unique", "Produits uniques"]} />
             {groups.map((g, gi) => (
               <CheckGroup key={g.key} label={g.label} flag={g.country && hasFlag(g.country) ? <CountryFlagImg country={g.country} size={16} /> : null} isFirst={gi === 0}>
                 {g.entries.map((x, i) => (

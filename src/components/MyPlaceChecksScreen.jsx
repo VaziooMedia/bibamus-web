@@ -3,7 +3,7 @@
 // Mêmes lignes que « Mes Favoris > Lieux » (rond de 40 px, nom en gras, ville · drapeau du pays) dans une carte, lignes pleine
 // largeur séparées par un trait fin. Une ligne ouvre la fiche du lieu, dont le retour ramène ici. Une liste vide dit quel geste l'alimente.
 // Les lignes, les groupes et les classements sont communs avec « DrinkChecks » (CheckListParts.jsx).
-// Sous les classements, deux totaux : « X PlaceChecks » (la somme des visites) et « X Lieux uniques ».
+// Sous les classements, deux blocs côte à côte avec les totaux : « X PlaceChecks » (la somme des visites) et « X Lieux uniques ».
 // Retour d'une fiche : la page se remet comme on l'avait laissée (classement et hauteur de défilement, voir `useListReturn`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
 // en silence et remplacée seulement si elle a changé (un PlaceCheck fait sur la fiche). Une entrée depuis Mon Profil repart de zéro.
 // Les identifiants viennent de la fonction `get_my_checked_venues` (script bibamus-sql-mes-lieux-1-liste), puis les lieux par `loadVenuesByIds`.
@@ -90,7 +90,7 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
         ) : (
           <>
             <PillTabs tabs={CHECK_SORTS} active={sort} onChange={setSort} fine />
-            <CheckTotals checks={entries.reduce((sum, x) => sum + x.visits, 0)} unique={entries.length} checkLabel={["PlaceCheck", "PlaceChecks"]} uniqueLabel={["Lieu unique", "Lieux uniques"]} />
+            <CheckTotals checks={entries.reduce((sum, x) => sum + x.visits, 0)} unique={entries.length} brand="Place" uniqueLabel={["Lieu unique", "Lieux uniques"]} />
             {arrangeChecks(entries, sort, SORT_FIELDS).map((g, gi) => (
               <CheckGroup key={g.key} label={g.label} flag={COUNTRY_ISO_CODES[g.country] ? <CountryFlagImg country={g.country} size={16} /> : null} isFirst={gi === 0}>
                 {g.entries.map((x, i) => (

@@ -38,18 +38,30 @@ export function arrangeChecks(entries, sort, { nameOf, countOf, countryOf }) {
   return [{ key: "all", entries }];
 }
 
-// Les deux totaux de ce que la page affiche (la catégorie choisie, pour DrinkChecks) : le nombre de checks (la somme du chiffre de droite des lignes) et le nombre d'éléments uniques
-// (le nombre de lignes). `checkLabel` et `uniqueLabel` : [singulier, pluriel] ; le singulier vaut pour 0 et 1.
-export function CheckTotals({ checks, unique, checkLabel, uniqueLabel }) {
-  const line = (n, [one, many], key) => (
-    <div data-check-total={key} style={{ fontSize: "13px", color: COLORS.ink }}>
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "16px", color: COLORS.amber }}>{n}</span> {n > 1 ? many : one}
+// Les deux totaux de ce que la page affiche (la catégorie choisie, pour DrinkChecks), en deux blocs côte à côte, du même aspect que les blocs Bibax / DrinkChecks / PlaceChecks de
+// Mon Profil (libellé en haut, chiffre en vert fluo dessous) : le nombre de checks (la somme du chiffre de droite des lignes) et le nombre d'éléments uniques (le nombre de lignes).
+// `brand` : « Drink » ou « Place » (le libellé du premier bloc est « DrinkChecks » / « PlaceChecks », « Checks » en vert) ; `uniqueLabel` : [singulier, pluriel]. Le singulier vaut pour 0 et 1.
+export function CheckTotals({ checks, unique, brand, uniqueLabel }) {
+  const block = (label, value, key) => (
+    <div
+      data-check-total={key}
+      style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "8px", textAlign: "center" }}
+    >
+      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
     </div>
   );
   return (
-    <div data-check-totals style={{ display: "flex", flexDirection: "column", gap: "2px", margin: "0 0 16px" }}>
-      {line(checks, checkLabel, "checks")}
-      {line(unique, uniqueLabel, "unique")}
+    <div data-check-totals style={{ display: "flex", gap: "10px", margin: "0 0 16px" }}>
+      {block(
+        <>
+          {brand}
+          <span style={{ color: COLORS.amber }}>{checks > 1 ? "Checks" : "Check"}</span>
+        </>,
+        checks,
+        "checks"
+      )}
+      {block(unique > 1 ? uniqueLabel[1] : uniqueLabel[0], unique, "unique")}
     </div>
   );
 }
