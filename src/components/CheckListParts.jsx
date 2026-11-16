@@ -6,6 +6,23 @@ import { EntityAvatar } from "./ui.jsx";
 import { DotLine } from "./MyFavoritesScreen.jsx";
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
 
+// Mémoire d'une page entre une visite et le retour d'une fiche (lieu ou produit) : { items, <lieux ou produits>, sort, category, scrollTop }. Au retour, la page se
+// remet comme on l'avait laissée — même classement, même catégorie, même hauteur de défilement — au lieu de repartir en haut. Une entrée depuis Mon Profil
+// la vide (`clear`), donc la page y repart toujours de zéro.
+export function createListMemory() {
+  let data = null;
+  return {
+    get: () => data,
+    has: () => data !== null,
+    clear: () => {
+      data = null;
+    },
+    patch: (part) => {
+      data = { ...(data || {}), ...part };
+    },
+  };
+}
+
 // Les classements au choix (pastilles de même largeur en haut de la page). « Récents » : l'ordre de la base, du dernier check au plus ancien.
 export const CHECK_SORTS = [
   { key: "recent", label: "Récents" },

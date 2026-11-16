@@ -62,7 +62,7 @@ import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { WrappedScreen } from "./components/WrappedScreen.jsx";
 import { SettingsScreen, EventSettingsScreen, WaterAlertSettingsScreen } from "./components/MinorScreens.jsx";
 import { MyProductsHubScreen, MyProductsListScreen } from "./components/MyProductsScreens.jsx";
-import { MyDrinkChecksScreen } from "./components/MyDrinkChecksScreen.jsx";
+import { MyDrinkChecksScreen, clearMyDrinkChecksMemory, hasMyDrinkChecksMemory } from "./components/MyDrinkChecksScreen.jsx";
 import { AccountScreen, FieldEditScreen, GenderEditScreen, EmailViewScreen, UsernameEditScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen, MyStatsPrivacyScreen, StoryTagsPrivacyScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
@@ -76,7 +76,7 @@ import { BibaSoloScreen } from "./components/BibaSoloScreen.jsx";
 import { clearMyStatsMemory } from "./components/MyStatsScreen.jsx";
 import { MyHistoryScreen, clearMyHistoryMemory, hasMyHistoryMemory } from "./components/MyHistoryScreen.jsx";
 import { MyFavoritesScreen, MyFavoritesListScreen } from "./components/MyFavoritesScreen.jsx";
-import { MyPlaceChecksScreen } from "./components/MyPlaceChecksScreen.jsx";
+import { MyPlaceChecksScreen, clearMyPlaceChecksMemory, hasMyPlaceChecksMemory } from "./components/MyPlaceChecksScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
 import { BrandDirectoryScreen } from "./components/BrandDirectoryScreen.jsx";
@@ -223,6 +223,9 @@ export default function App() {
     if (drinkReturn.keepsScroll(screen, viewedDrinkId)) return;
     // Retour sur « Mon Historique » depuis une fiche : l'écran se replace lui-même à la hauteur où l'on l'avait laissé.
     if (screen === "eventHistory" && hasMyHistoryMemory()) return;
+    // Idem pour « DrinkChecks » et « PlaceChecks » : au retour d'une fiche, la page se replace elle-même à la hauteur où l'on l'avait laissée.
+    if (screen === "myDrinkChecks" && hasMyDrinkChecksMemory()) return;
+    if (screen === "myPlaceChecks" && hasMyPlaceChecksMemory()) return;
     mainScrollRef.current?.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
@@ -2738,8 +2741,14 @@ export default function App() {
                 goToBibros={() => setScreen("bibrosList")}
                 goToBibaClubs={() => setScreen("bibaClubsList")}
                 goToProducts={() => setScreen("myProducts")}
-                goToDrinkChecks={() => setScreen("myDrinkChecks")}
-                goToVenues={() => setScreen("myPlaceChecks")}
+                goToDrinkChecks={() => {
+                  clearMyDrinkChecksMemory(); // une entrée depuis Mon Profil repart toujours de zéro (le retour d'une fiche, lui, reprend la mémoire)
+                  setScreen("myDrinkChecks");
+                }}
+                goToVenues={() => {
+                  clearMyPlaceChecksMemory();
+                  setScreen("myPlaceChecks");
+                }}
                 goToFavorites={() => setScreen("myFavorites")}
                 goToHistory={() => {
                   clearMyHistoryMemory(); // une entrée depuis Mon Profil repart toujours de zéro (le retour d'une fiche, lui, reprend la mémoire)
@@ -3368,6 +3377,7 @@ export default function App() {
             )}
             {screen === "myDrinkChecks" && (
               <MyDrinkChecksScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen("profile")}
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail("myDrinkChecks");
@@ -3378,6 +3388,7 @@ export default function App() {
             )}
             {screen === "myPlaceChecks" && (
               <MyPlaceChecksScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen("profile")}
                 onOpenVenue={(id) => {
                   setScreenBeforeVenueDetail("myPlaceChecks");
