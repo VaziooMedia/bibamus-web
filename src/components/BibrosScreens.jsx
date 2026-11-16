@@ -465,7 +465,7 @@ export function MutualBibaxScreen({ bibros, bibroName, onBack, onViewBibro, onOp
 //   - BibaPulse : ses publications dans BibaPulse, en vraies cartes (ex-extrait de trois lignes + écran « Activité de … »).
 // Retour sur l'onglet BibaPulse : quand on ouvre un lieu, un produit, une marque ou un producteur depuis une carte puis qu'on revient,
 // la fiche se rouvre sur cet onglet, calée sur la carte (pulseReturnEntryId / onRememberPulseEntry, comme sur Mon Profil).
-export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previewNotice, onRemove, goToBibaxPhotos, onBlock, onOpenStoryAuthor, onViewMutualBibax, goToBibroMedia, goToBibroClub, goToBibroHistory, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry }) {
+export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previewNotice, onToggleFavorite, onRemove, goToBibaxPhotos, onBlock, onOpenStoryAuthor, onViewMutualBibax, goToBibroMedia, goToBibroClub, goToBibroHistory, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry }) {
   const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
   const [mutualCount, setMutualCount] = useState(null);
   const [bibaxCount, setBibaxCount] = useState(null);
@@ -606,6 +606,30 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
         >
           <NavIcon name="bell" size={26} color={notifyPulse ? COLORS.amber : COLORS.paperAlt} filled={notifyPulse} />
         </button>
+        {onToggleFavorite && bibro.userId && (
+          <button
+            onClick={onToggleFavorite}
+            title={bibro.isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            aria-label={bibro.isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            aria-pressed={!!bibro.isFavorite}
+            style={{
+              position: "absolute",
+              top: "12px",
+              right: "42px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            <NavIcon name="heart" size={26} color={bibro.isFavorite ? COLORS.amber : COLORS.paperAlt} filled={!!bibro.isFavorite} />
+          </button>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
           <div
             onClick={activeStories.length > 0 ? () => onOpenStoryAuthor?.({ authorId: bibro.userId, authorName: bibro.name, authorAvatarUrl: bibro.avatarUrl, stories: activeStories }) : undefined}
@@ -626,9 +650,10 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
               {bibro.avatarUrl ? <img src={bibro.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={48} color={COLORS.amber} />}
             </div>
           </div>
-          <div style={{ minWidth: 0 }}>
-            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0 }}>{bibro.name}</h1>
-            {bibro.lastName && <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0 }}>{bibro.lastName}</h1>}
+          {/* paddingRight : le nom ne passe jamais sous le cœur et la cloche (placés en haut à droite du bloc) ; un très long nom revient à la ligne. */}
+          <div style={{ minWidth: 0, paddingRight: onToggleFavorite && bibro.userId ? "54px" : "36px" }}>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0, overflowWrap: "anywhere" }}>{bibro.name}</h1>
+            {bibro.lastName && <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0, overflowWrap: "anywhere" }}>{bibro.lastName}</h1>}
             {bibro.nickname && <p style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13.5px", color: COLORS.amber, margin: "3px 0 0" }}>{bibro.nickname}</p>}
           </div>
         </div>

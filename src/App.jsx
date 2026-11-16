@@ -73,6 +73,7 @@ import { NotificationsFeedScreen } from "./components/NotificationsFeedScreen.js
 import { BibaSoloScreen } from "./components/BibaSoloScreen.jsx";
 import { clearMyStatsMemory } from "./components/MyStatsScreen.jsx";
 import { MyHistoryScreen, clearMyHistoryMemory, hasMyHistoryMemory } from "./components/MyHistoryScreen.jsx";
+import { MyFavoritesScreen } from "./components/MyFavoritesScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
 import { BrandDirectoryScreen } from "./components/BrandDirectoryScreen.jsx";
@@ -135,6 +136,12 @@ import {
   createSalonInviteNotification,
   countMyRatedDrinks,
   loadVenuesByIds,
+  toggleFavoriteVenue,
+  addFavoriteVenues,
+  toggleFavoriteBibax,
+  toggleFavoriteDrink,
+  addFavoriteBibax,
+  loadMyFavorites,
   recordRoundOrders,
   markRoundPaid,
   recordPartialPayment,
@@ -344,6 +351,8 @@ export default function App() {
   // soit l'endroit d'où on l'avait ouverte (ex. depuis une fiche Produit).
   const [screenBeforeBrandDetail, setScreenBeforeBrandDetail] = useState("brandDirectory");
   const [screenBeforeBreweryDetail, setScreenBeforeBreweryDetail] = useState("breweryDirectory");
+  // Écran d'où l'on a ouvert la fiche d'un Bibax confirmé : « Mes Bibax » par défaut, « Mes Favoris » quand on y vient de là.
+  const [screenBeforeBibroDetail, setScreenBeforeBibroDetail] = useState("bibrosList");
   // Parcours « Check depuis l'accueil » : "drink" (bouton DrinkCheck) ou "venue" (bouton PlaceCheck) tant que
   // la personne est dans la recherche ou sur la fiche choisie — voir checkFlow.js. Il s'arrête dès qu'elle
   // part ailleurs, pour ne jamais ouvrir une fenêtre de check par surprise sur une fiche ouverte plus tard.
@@ -1508,8 +1517,54 @@ export default function App() {
     loadVenuesByIds(favoriteVenueIds).then(setMyFavoriteVenues);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [favoriteVenueIds]);
-  const toggleVenueFavorite = (venueId) =>
-    setFavoriteVenueIds((prev) => (prev.includes(venueId) ? prev.filter((id) => id !== venueId) : [...prev, venueId]));
+  // Étoile d'un lieu : le changement s'affiche tout de suite, puis la base dit ce qu'il en est vraiment (la liste du navigateur n'est plus qu'une copie
+  // qui s'affiche avant la réponse du serveur) ; si la base refuse, on revient en arrière et on le dit.
+  const setVenueFavorite = (venueId, favorite) =>
+    setFavoriteVenueIds((prev) => (favorite ? (prev.includes(venueId) ? prev : [...prev, venueId]) : prev.filter((id) => id !== venueId)));
+  const toggleVenueFavorite = async (venueId) => {
+    const wasFavorite = favoriteVenueIds.includes(venueId);
+    setVenueFavorite(venueId, !wasFavorite);
+    const result = await toggleFavoriteVenue(venueId);
+    if (result?.error) {
+      setVenueFavorite(venueId, wasFavorite);
+      alert(result.error);
+      return;
+    }
+    setVenueFavorite(venueId, !!result.favorite);
+  };
+
+  // Favoris enregistrés dans le compte (lieux, Bibax) : à la connexion, on reprend UNE FOIS ce que le navigateur avait gardé (étoiles des lieux, drapeaux
+  // des Bibax), puis on lit la liste du compte, qui devient la vérité. Si la base ne répond pas (ou n'a pas encore les fonctions), on garde la copie locale
+  // et la reprise sera retentée au prochain démarrage.
+  const [favoriteBibaxIds, setFavoriteBibaxIds] = useState([]); // identifiants de personnes (Bibax confirmés mis en favori dans le compte)
+  const [favoriteDrinkIds, setFavoriteDrinkIds] = useState([]); // identifiants de produits (cœur de la fiche d'un produit, dans le compte seulement)
+  const [favoritesSynced, setFavoritesSynced] = useState(false);
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId || !profileLoaded) return undefined;
+    let cancelled = false;
+    (async () => {
+      const migrationKey = `bibamus-favoris-migration-${userId}`;
+      if (!loadLocal(migrationKey, false)) {
+        const localVenues = loadLocal("bibamus-favorite-venues", []);
+        const localBibax = loadLocal("bibamus-bibros", []).filter((b) => b.isFavorite && b.userId).map((b) => b.userId);
+        const venuesResult = localVenues.length > 0 ? await addFavoriteVenues(localVenues) : { ok: true };
+        const bibaxResult = localBibax.length > 0 ? await addFavoriteBibax(localBibax) : { ok: true };
+        if (venuesResult.error || bibaxResult.error) return;
+        saveLocal(migrationKey, true);
+      }
+      const favs = await loadMyFavorites();
+      if (cancelled || !favs) return;
+      setFavoriteVenueIds(favs.venues);
+      setFavoriteBibaxIds(favs.bibax);
+      setFavoriteDrinkIds(favs.drinks);
+      setFavoritesSynced(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, profileLoaded]);
 
   const toggleVenueLike = (venueId) => {
     const venue = venuesById[venueId];
@@ -1862,6 +1917,14 @@ export default function App() {
     setProfile({ name: "", avatarUrl: null, myBibroCode: null });
     setProfileLoaded(false);
     setTastedDrinkIds([]);
+    // Les favoris du compte sont en base : on ne laisse pas leur copie locale à la personne qui se connectera ensuite depuis ce navigateur
+    // (sans quoi la reprise unique de ses étoiles les enregistrerait dans son compte).
+    if (favoritesSynced) {
+      setFavoriteVenueIds([]);
+      setFavoriteBibaxIds([]);
+      setFavoriteDrinkIds([]);
+      setFavoritesSynced(false);
+    }
   };
 
   const handleAccountDeleted = async () => {
@@ -1901,8 +1964,52 @@ export default function App() {
     removeBibaxByCode(code);
   };
   const setBibroAlias = (code, alias) => setBibros((prev) => prev.map((b) => (b.code === code ? { ...b, alias } : b)));
-  const toggleBibroFavorite = (code) =>
-    setBibros((prev) => prev.map((b) => (b.code === code ? { ...b, isFavorite: !b.isFavorite } : b)));
+  // Cœur de la fiche d'un Bibax confirmé : même principe que l'étoile d'un lieu (affichage immédiat, puis la réponse de la base). Le drapeau `isFavorite`
+  // des Bibax (tri de « Mes Bibax » et des sélecteurs) est recalculé depuis la liste du compte, voir l'effet juste après.
+  const setBibaxFavorite = (userId, favorite) =>
+    setFavoriteBibaxIds((prev) => (favorite ? (prev.includes(userId) ? prev : [...prev, userId]) : prev.filter((id) => id !== userId)));
+  // Cœur de la fiche d'un produit : même principe (affichage immédiat, puis la réponse de la base).
+  const setDrinkFavorite = (drinkId, favorite) =>
+    setFavoriteDrinkIds((prev) => (favorite ? (prev.includes(drinkId) ? prev : [...prev, drinkId]) : prev.filter((id) => id !== drinkId)));
+  const toggleDrinkFavorite = async (drinkId) => {
+    const id = String(drinkId);
+    const wasFavorite = favoriteDrinkIds.includes(id);
+    setDrinkFavorite(id, !wasFavorite);
+    const result = await toggleFavoriteDrink(id);
+    if (result?.error) {
+      setDrinkFavorite(id, wasFavorite);
+      alert(result.error);
+      return;
+    }
+    setDrinkFavorite(id, !!result.favorite);
+  };
+  const toggleBibroFavorite = async (code) => {
+    const bibro = bibros.find((b) => b.code === code);
+    if (!bibro?.userId) return;
+    const wasFavorite = favoriteBibaxIds.includes(bibro.userId);
+    setBibaxFavorite(bibro.userId, !wasFavorite);
+    const result = await toggleFavoriteBibax(bibro.userId);
+    if (result?.error) {
+      setBibaxFavorite(bibro.userId, wasFavorite);
+      alert(result.error);
+      return;
+    }
+    setBibaxFavorite(bibro.userId, !!result.favorite);
+  };
+  useEffect(() => {
+    if (!favoritesSynced) return;
+    setBibros((prev) => {
+      let changed = false;
+      const next = prev.map((b) => {
+        if (!b.userId) return b;
+        const favorite = favoriteBibaxIds.includes(b.userId);
+        if (!!b.isFavorite === favorite) return b;
+        changed = true;
+        return { ...b, isFavorite: favorite };
+      });
+      return changed ? next : prev;
+    });
+  }, [favoriteBibaxIds, favoritesSynced, bibros]);
 
   // Synchrone en apparence (comme dans le prototype Claude) : vérifie d'abord si une brasserie
   // très proche existe déjà en mémoire et renvoie son nom canonique immédiatement — sinon, l'ajoute
@@ -2511,6 +2618,8 @@ export default function App() {
                 onToggleTasted={() => toggleTastedDrink(viewedDrinkId)}
                 isOnWishlist={wishlistDrinkIds.includes(viewedDrinkId)}
                 onToggleWishlist={() => toggleWishlistDrink(viewedDrinkId)}
+                isFavorite={favoriteDrinkIds.includes(String(viewedDrinkId))}
+                onToggleFavorite={() => toggleDrinkFavorite(viewedDrinkId)}
                 onRate={(value, opts) => rateDrink(viewedDrinkId, value, opts)}
                 onUnrate={() => unrateDrink(viewedDrinkId)}
                 onToggleMode={(mode) => toggleTastedServingMode(viewedDrinkId, mode)}
@@ -2586,6 +2695,7 @@ export default function App() {
                 goToBibaClubs={() => setScreen("bibaClubsList")}
                 goToProducts={() => setScreen("myProducts")}
                 goToVenues={() => setScreen("venueDirectory")}
+                goToFavorites={() => setScreen("myFavorites")}
                 goToHistory={() => {
                   clearMyHistoryMemory(); // une entrée depuis Mon Profil repart toujours de zéro (le retour d'une fiche, lui, reprend la mémoire)
                   setScreen("eventHistory");
@@ -2611,6 +2721,7 @@ export default function App() {
                 }}
                 onOpenStatsBibro={(code) => {
                   setViewedBibroId(code);
+                  setScreenBeforeBibroDetail("bibrosList");
                   setScreen("bibroDetail");
                 }}
                 onOpenVenue={(id) => {
@@ -2693,6 +2804,7 @@ export default function App() {
                 }}
                 openBibro={(code) => {
                   setViewedBibroId(code);
+                  setScreenBeforeBibroDetail("bibrosList");
                   setScreen("bibroDetail");
                 }}
               />
@@ -3149,6 +3261,37 @@ export default function App() {
                 onDeleteRound={(roundId) => deleteRound(viewedHistoryEventId, roundId)}
               />
             )}
+            {screen === "myFavorites" && (
+              <MyFavoritesScreen
+                bibros={bibros}
+                onBack={() => setScreen("profile")}
+                onOpenVenue={(id) => {
+                  setScreenBeforeVenueDetail("myFavorites");
+                  setViewedVenueId(id);
+                  setScreen("venueDetail");
+                }}
+                onOpenBrand={(id) => {
+                  setViewedBrandId(id);
+                  setScreenBeforeBrandDetail("myFavorites");
+                  setScreen("brandDetail");
+                }}
+                onOpenProducer={(id) => {
+                  setViewedBreweryId(id);
+                  setScreenBeforeBreweryDetail("myFavorites");
+                  setScreen("breweryDetail");
+                }}
+                onOpenBibax={(code) => {
+                  setViewedBibroId(code);
+                  setScreenBeforeBibroDetail("myFavorites");
+                  setScreen("bibroDetail");
+                }}
+                onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail("myFavorites");
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
+              />
+            )}
             {screen === "myProducts" && (
               <MyProductsHubScreen
                 ratedCount={myRatedCount}
@@ -3341,6 +3484,7 @@ export default function App() {
                 onJoinSalon={joinSalon}
                 onViewBibro={(code) => {
                   setViewedBibroId(code);
+                  setScreenBeforeBibroDetail("bibrosList");
                   setScreen("bibroDetail");
                 }}
                 onBack={() => setScreen("profile")}
@@ -3351,7 +3495,12 @@ export default function App() {
                 bibro={bibros.find((b) => b.code === viewedBibroId)}
                 myUserId={session.user.id}
                 myBibroCode={profile.myBibroCode}
-                onBack={() => setScreen("bibrosList")}
+                onBack={() => {
+                  const back = screenBeforeBibroDetail;
+                  setScreenBeforeBibroDetail("bibrosList");
+                  setScreen(back);
+                }}
+                onToggleFavorite={() => toggleBibroFavorite(viewedBibroId)}
                 previewNotice={false}
                 onRemove={() => {
                   removeBibro(viewedBibroId);
@@ -3420,6 +3569,7 @@ export default function App() {
                 onBack={() => setScreen("bibroDetail")}
                 onViewBibro={(code) => {
                   setViewedBibroId(code);
+                  setScreenBeforeBibroDetail("bibrosList");
                   setScreen("bibroDetail");
                 }}
                 onOpenStoryAuthor={setViewedStoryAuthor}
@@ -3685,7 +3835,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStatsWrapped", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "eventHistoryDetail", "myProducts", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStatsWrapped", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "eventHistoryDetail", "myProducts", "myFavorites", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

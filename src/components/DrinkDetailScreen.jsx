@@ -101,6 +101,8 @@ export function DrinkDetailScreen({
   myBibroCode,
   myUserId,
   isOnWishlist,
+  isFavorite,
+  onToggleFavorite,
   onToggleWishlist,
   onRate,
   onUnrate,
@@ -550,7 +552,22 @@ export function DrinkDetailScreen({
                   title={isOnWishlist ? "Retirer de ma liste à goûter" : "Ajouter à ma liste à goûter"}
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
                 >
-                  <NavIcon name="star" size={24} color={COLORS.amber} filled={!!isOnWishlist} />
+                  <NavIcon name="checklist" size={24} color={COLORS.amber} accentColor={COLORS.pinkFluo} filled={!!isOnWishlist} />
+                </button>
+              </>
+            )}
+            {/* Cœur « produit favori » (liste « Mes Favoris » de Mon Profil) : comme sur les fiches d'une marque et d'un producteur. */}
+            {onToggleFavorite && !drink.isGeneric && (
+              <>
+                <span style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />
+                <button
+                  onClick={onToggleFavorite}
+                  title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  aria-pressed={!!isFavorite}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+                >
+                  <NavIcon name="heart" size={24} color={COLORS.amber} filled={!!isFavorite} />
                 </button>
               </>
             )}

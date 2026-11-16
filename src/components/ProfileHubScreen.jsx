@@ -38,6 +38,7 @@ export function ProfileHubScreen({
   goToBibros,
   goToProducts,
   goToVenues,
+  goToFavorites,
   goToHistory,
   goToPhotos,
   goToSettings,
@@ -91,7 +92,7 @@ export function ProfileHubScreen({
               title={<>Mes<br />Produits</>}
               onClick={goToProducts}
             />
-            <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title={<>Mes<br />Favoris</>} onClick={goToVenues} />
+            <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title={<>Mes<br />Favoris</>} onClick={goToFavorites} />
             <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title={<>Mon<br />Historique</>} onClick={goToHistory} />
             <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title={<>Mes<br />Photos</>} onClick={goToPhotos} />
             <ActionCard icon={<NavIcon name="activity" size={20} color={COLORS.inkSoft} />} title="BibaCare" disabled badge="Bientôt" />
