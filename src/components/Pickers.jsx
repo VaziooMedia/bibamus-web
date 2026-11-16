@@ -99,7 +99,11 @@ export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placehold
                   onClick={() => pick(b)}
                   style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: "14px", fontWeight: 600, color: COLORS.ink, cursor: "pointer" }}
                 >
-                  {b.isFavorite ? "⭐ " : ""}
+                  {b.isFavorite && (
+                    <span style={{ display: "inline-flex", verticalAlign: "-3px", marginRight: "7px" }}>
+                      <NavIcon name="heart" size={16} color={COLORS.amber} filled />
+                    </span>
+                  )}
                   {b.alias || [b.firstName || b.name, b.lastName].filter(Boolean).join(" ")}
                   {b.nickname && (
                     <span style={{ color: COLORS.amber, fontStyle: "italic", fontWeight: 600 }}>

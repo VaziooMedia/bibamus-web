@@ -16,7 +16,7 @@ import { normalizeSearchText, makeSearchMatcher, entityNames } from "../utils.js
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
-export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, onBack, onOpenBrewery, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
+export function BreweryDirectoryScreen({ myBibroCode, onBack, onOpenBrewery, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [all, setAll] = useState([]);
@@ -63,8 +63,6 @@ export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, onBack, 
     return [];
   }, [all, searching, debouncedQuery, activeCountry]);
 
-  const alreadyAdded = (b) => myBreweries.some((mb) => mb.isFavorite && mb.sourcePublicBreweryId === b.id);
-
   const renderBreweryRow = (b) => (
     <button
       key={b.id}
@@ -103,7 +101,6 @@ export function BreweryDirectoryScreen({ myBreweries = [], myBibroCode, onBack, 
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-        {alreadyAdded(b) && <span style={{ fontSize: "14px", color: COLORS.amber }}>★</span>}
         {b.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
       </div>
     </button>

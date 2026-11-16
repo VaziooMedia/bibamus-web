@@ -2361,7 +2361,6 @@ export default function App() {
             )}
             {screen === "venueDirectory" && (
               <VenueDirectoryScreen
-                myVenues={[]}
                 myBibroCode={profile.myBibroCode}
                 addIntent={false}
                 onBack={() => setScreen(screenBeforeVenueDirectory)}
@@ -3406,7 +3405,6 @@ export default function App() {
             )}
             {screen === "breweryDirectory" && (
               <BreweryDirectoryScreen
-                myBreweries={[]}
                 onBack={() => setScreen(screenBeforeBreweryDirectory)}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
@@ -3419,7 +3417,6 @@ export default function App() {
             )}
             {screen === "brandDirectory" && (
               <BrandDirectoryScreen
-                myBrands={[]}
                 onBack={() => setScreen(screenBeforeBrandDirectory)}
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);

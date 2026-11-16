@@ -1,15 +1,13 @@
 // ============================================================
 // Écran "Lieux" — pays, villes, recherche et
 // pagination calculés côté serveur, pour tenir à l'échelle de
-// plusieurs milliers de lieux. myVenues (mes favoris) reste une
-// petite liste passée telle quelle — seul le répertoire public
-// complet est concerné par cette réécriture.
+// plusieurs milliers de lieux.
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, PrimaryButton, EntityAvatar } from "./ui.jsx";
-import { sameVenueByNameCity, formatAddress } from "../utils.js";
+import { formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { loadNearbyVenues, loadVenueCountryCounts, loadVenueCityCounts, loadVenuesDirectoryPage, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { AddAfterSearch } from "./AddAfterSearch.jsx";
@@ -17,7 +15,7 @@ import { AddAfterSearch } from "./AddAfterSearch.jsx";
 const PAGE_SIZE = 40;
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
-export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack, onOpenVenue, goToSubmit, goToMap, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
+export function VenueDirectoryScreen({ myBibroCode, addIntent, onBack, onOpenVenue, goToSubmit, goToMap, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const { status: geoStatus, position, requestPosition } = useGeolocation();
@@ -168,10 +166,6 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sentinelRef.current]);
 
-  const alreadyAdded = (v) =>
-    myVenues.some((mv) => mv.isFavorite && mv.sourcePublicVenueId === v.id) ||
-    myVenues.some((mv) => mv.isFavorite && sameVenueByNameCity(mv, v));
-
   const renderVenueRow = (v) => (
     <button
       key={v.id}
@@ -216,7 +210,6 @@ export function VenueDirectoryScreen({ myVenues, myBibroCode, addIntent, onBack,
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-        {alreadyAdded(v) && <span style={{ fontSize: "14px", color: COLORS.amber }}>★</span>}
         {v.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
       </div>
     </button>
