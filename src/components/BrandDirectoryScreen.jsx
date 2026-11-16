@@ -14,7 +14,7 @@ import { normalizeSearchText, makeSearchMatcher, entityNames } from "../utils.js
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
-export function BrandDirectoryScreen({ myBrands = [], myBibroCode, onBack, onOpenBrand, activeCountry, setActiveCountry }) {
+export function BrandDirectoryScreen({ myBibroCode, onBack, onOpenBrand, activeCountry, setActiveCountry }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [all, setAll] = useState([]);
@@ -61,8 +61,6 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, onBack, onOpe
     return [];
   }, [all, searching, debouncedQuery, activeCountry]);
 
-  const alreadyAdded = (b) => myBrands.some((mb) => mb.isFavorite && mb.sourcePublicBrandId === b.id);
-
   const renderBrandRow = (b) => (
     <button
       key={b.id}
@@ -101,7 +99,6 @@ export function BrandDirectoryScreen({ myBrands = [], myBibroCode, onBack, onOpe
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-        {alreadyAdded(b) && <span style={{ fontSize: "14px", color: COLORS.amber }}>★</span>}
         {b.pendingContributionsCount > 0 && <span style={{ fontSize: "13px" }} title="Une modification est proposée">📝</span>}
       </div>
     </button>
