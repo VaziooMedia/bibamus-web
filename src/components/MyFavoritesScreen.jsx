@@ -1,5 +1,5 @@
 // « Mes Favoris » (Mon Profil) — tout ce que la personne a mis de côté, en cinq listes, chacune sur sa propre page (comme « Mes Produits ») :
-// Lieux (étoile de la fiche d'un lieu), Produits (cœur de la fiche d'un produit), Marques et Producteurs (cœur de leur fiche) et Bibax (cœur de la fiche d'un
+// Lieux (cœur de la fiche d'un lieu), Produits (cœur de la fiche d'un produit), Marques et Producteurs (cœur de leur fiche) et Bibax (cœur de la fiche d'un
 // Bibax confirmé). L'écran d'entrée ne montre que les cinq cartes, dans cet ordre, avec leur nombre ; chaque page range ses lignes du plus récent au plus ancien,
 // dans le style de « Mon Historique » : une carte, des lignes pleine largeur séparées par un trait fin. Une liste vide dit quel geste l'alimente.
 // Les identifiants viennent de la fonction `get_my_favorites` (puis les noms par les fonctions habituelles) ; les Bibax se lisent dans la liste `bibros` déjà en
@@ -61,7 +61,7 @@ function FavoriteRow({ kind, avatar, title, details = [], isLast, onOpen }) {
 
 // Les cinq listes, dans l'ordre voulu : titre de la page, nombre au singulier / au pluriel (sur la carte) et phrase d'une liste vide.
 const KINDS = [
-  { kind: "venues", title: "Lieux", count: (n) => `${n} lieu${n > 1 ? "x" : ""}`, empty: "Aucun lieu favori. Touche l'étoile sur la fiche d'un lieu." },
+  { kind: "venues", title: "Lieux", count: (n) => `${n} lieu${n > 1 ? "x" : ""}`, empty: "Aucun lieu favori. Touche le cœur sur la fiche d'un lieu." },
   { kind: "drinks", title: "Produits", count: (n) => `${n} produit${n > 1 ? "s" : ""}`, empty: "Aucun produit favori. Touche le cœur sur la fiche d'un produit." },
   { kind: "brands", title: "Marques", count: (n) => `${n} marque${n > 1 ? "s" : ""}`, empty: "Aucune marque favorite. Touche le cœur sur la fiche d'une marque." },
   { kind: "producers", title: "Producteurs", count: (n) => `${n} producteur${n > 1 ? "s" : ""}`, empty: "Aucun producteur favori. Touche le cœur sur la fiche d'un producteur." },

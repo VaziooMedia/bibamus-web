@@ -240,7 +240,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
               title={venue.isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
             >
-              <NavIcon name="star" size={24} color={COLORS.amber} filled={!!venue.isFavorite} />
+              <NavIcon name="heart" size={24} color={COLORS.amber} filled={!!venue.isFavorite} />
             </button>
           </div>
         </div>
