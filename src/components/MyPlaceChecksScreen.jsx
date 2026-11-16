@@ -1,5 +1,5 @@
 // « PlaceChecks » (Mon Profil) — la liste des lieux que la personne a déjà checkés : un lieu une seule fois, du plus récemment visité au plus ancien,
-// avec à droite son nombre de visites. Mêmes lignes que « Mes Favoris > Lieux » (rond de 40 px, nom en gras, ville · pays) dans une carte, lignes pleine
+// avec à droite son nombre de visites (le nombre seul). Mêmes lignes que « Mes Favoris > Lieux » (rond de 40 px, nom en gras, ville · pays) dans une carte, lignes pleine
 // largeur séparées par un trait fin. Une ligne ouvre la fiche du lieu, dont le retour ramène ici. Une liste vide dit quel geste l'alimente.
 // Les identifiants viennent de la fonction `get_my_checked_venues` (script bibamus-sql-mes-lieux-1-liste), puis les lieux par `loadVenuesByIds`.
 import React, { useState, useEffect } from "react";
@@ -7,8 +7,6 @@ import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
 import { loadMyCheckedVenues, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { DotLine, ScreenTitle } from "./MyFavoritesScreen.jsx";
-
-const visitsLabel = (n) => `${n} visite${n > 1 ? "s" : ""}`;
 
 function PlaceRow({ venue, visits, isLast, onOpen }) {
   return (
@@ -40,7 +38,7 @@ function PlaceRow({ venue, visits, isLast, onOpen }) {
         <DotLine parts={[venue.city, venue.country].filter(Boolean)} />
       </div>
       <span data-place-visits style={{ flexShrink: 0, fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>
-        {visitsLabel(visits)}
+        {visits}
       </span>
     </button>
   );
@@ -79,7 +77,9 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue }) {
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <ScreenTitle>Lieux checkés</ScreenTitle>
+      <ScreenTitle>
+        Place<span style={{ color: COLORS.amber }}>Checks</span>
+      </ScreenTitle>
 
       <div style={{ flex: 1 }}>
         {loading ? (
