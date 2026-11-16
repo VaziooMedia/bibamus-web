@@ -2,13 +2,14 @@
 // Liste, en lecture seule, des boissons d'une catégorie pour un
 // lieu donné — ouvert depuis VenueMenuCategoriesScreen.jsx.
 // ============================================================
-import React from "react";
+import React, { useEffect } from "react";
 import { COLORS, SERVING_MODE_LABELS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
 import { resolveMenuItem, formatMoney, flattenMenu, displayedAbv, displayedAlcoholTier, venueMenuWithFiches, volumeUnit } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
 
@@ -23,7 +24,14 @@ const badgeStyle = {
   whiteSpace: "nowrap",
 };
 
-export function VenueCategoryDrinksScreen({ venue, category, onBack, onOpenDrink }) {
+// Retour d'une fiche produit (norme de l'app, voir `useListReturn`) : la liste se remet à la hauteur où on l'avait laissée ; la flèche retour vers la carte du lieu efface la mémoire.
+export function VenueCategoryDrinksScreen({ venue, category, onBack: onBackProp, onOpenDrink: onOpenDrinkProp, mainScrollRef }) {
+  const { save, open, leave } = useListReturn("venueCategoryDrinks", mainScrollRef, { valid: (m) => m.ctx === `${venue?.id}|${category}` });
+  const onBack = leave(onBackProp);
+  const onOpenDrink = onOpenDrinkProp ? open(onOpenDrinkProp) : undefined;
+  useEffect(() => {
+    save({ ctx: `${venue?.id}|${category}` });
+  }, [venue?.id, category]);
   const drinksDirectory = useTargetedDrinks(venue?.menu);
   const seenIds = new Set();
   // Une entrée à plusieurs volumes devient ici plusieurs lignes affichées — une par volume,

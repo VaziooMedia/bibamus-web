@@ -2653,6 +2653,7 @@ export default function App() {
             )}
             {screen === "venueCategoryDrinks" && viewedVenue && (
               <VenueCategoryDrinksScreen
+                mainScrollRef={mainScrollRef}
                 venue={viewedVenue}
                 category={viewedMenuCategory}
                 onBack={() => setScreen("venueMenuCategories")}
@@ -2729,6 +2730,7 @@ export default function App() {
             )}
             {screen === "drinkBibaxChecks" && drinkBibaxList && viewedDrink && drinkBibaxList.drinkId === viewedDrink.id && (
               <DrinkBibaxChecksScreen
+                mainScrollRef={mainScrollRef}
                 drinkName={viewedDrink.name}
                 rows={drinkBibaxList.rows}
                 onBack={() => setScreen("drinkDetail")}
@@ -2947,7 +2949,7 @@ export default function App() {
                   setScreenBeforeBrandDetail(screen);
                   setScreen("brandDetail");
                 }}
-                onOpenBibaxProfile={(code) => openBibaxProfile(code)}
+                onOpenBibaxProfile={(code) => openBibaxProfile(code, screen)}
                 goToScan={() => setShowBarcodeScanner(true)}
                 goToAtlas={() => setScreen("repertoireHub")}
                 hideBibaxAndAtlas={screen === "search" && screenBeforeSearch === "repertoireHub"}
@@ -3582,7 +3584,7 @@ export default function App() {
                     });
                   });
                 }}
-                onOpenBibaxProfile={(code) => openBibaxProfile(code)}
+                onOpenBibaxProfile={(code) => openBibaxProfile(code, "bibrosList")}
                 onSeeAllSuggestions={() => {
                   setScreenBeforeBibaxSuggestions("bibrosList");
                   setScreen("bibaxAllSuggestions");
@@ -3631,7 +3633,7 @@ export default function App() {
                 onOpenStoryAuthor={setViewedStoryAuthor}
                 onViewMutualBibax={async (userId, name) => {
                   const list = await loadMutualBibaxList(userId);
-                  setMutualBibaxData({ list, name });
+                  setMutualBibaxData({ list, name, fromCode: viewedBibroId, fromBack: screenBeforeBibroDetail });
                   setScreen("mutualBibax");
                 }}
                 goToBibroMedia={() => {
@@ -3673,12 +3675,20 @@ export default function App() {
             )}
             {screen === "mutualBibax" && (
               <MutualBibaxScreen
+                mainScrollRef={mainScrollRef}
                 bibros={mutualBibaxData?.list || []}
                 bibroName={mutualBibaxData?.name}
-                onBack={() => setScreen("bibroDetail")}
+                onBack={() => {
+                  // On rouvre la fiche du Bibax d'où l'on est venu (celle d'un Bibax en commun a pu la remplacer), avec son propre retour.
+                  if (mutualBibaxData?.fromCode) {
+                    setViewedBibroId(mutualBibaxData.fromCode);
+                    setScreenBeforeBibroDetail(mutualBibaxData.fromBack || "bibrosList");
+                  }
+                  setScreen("bibroDetail");
+                }}
                 onViewBibro={(code) => {
                   setViewedBibroId(code);
-                  setScreenBeforeBibroDetail("bibrosList");
+                  setScreenBeforeBibroDetail("mutualBibax");
                   setScreen("bibroDetail");
                 }}
                 onOpenStoryAuthor={setViewedStoryAuthor}
@@ -3812,8 +3822,9 @@ export default function App() {
             )}
             {screen === "bibaxAllSuggestions" && (
               <BibaxAllSuggestionsScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen(screenBeforeBibaxSuggestions)}
-                onOpenProfile={(code) => openBibaxProfile(code)}
+                onOpenProfile={(code) => openBibaxProfile(code, "bibaxAllSuggestions")}
               />
             )}
             {screen === "bibaSolo" && (

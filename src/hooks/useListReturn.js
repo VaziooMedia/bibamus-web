@@ -4,7 +4,8 @@
 // la liste se remet COMME ON L'AVAIT LAISSÉE — même hauteur de défilement (le bloc cliqué est à nouveau à sa place), même classement, même filtre, même recherche —
 // et ne remonte jamais tout en haut. Toute nouvelle liste qui ouvre une fiche suit cette règle (voir docs/BIBAMUS_CONTEXT.md, « Normes de l'app »).
 //
-// Mode d'emploi pour une page de liste :
+// Mode d'emploi pour une page de liste (une sous-liste ouverte depuis une fiche — Bibax en commun, checks d'un produit… — est déclarée dans FICHE_SCREENS et enveloppe en plus
+// ses flèches retour vers la fiche par `leave(onBack)`) :
 //   1. `const { restored, save, open } = useListReturn(<identifiant de l'écran>, mainScrollRef, { valid });`  (mainScrollRef : le conteneur qui défile, fourni par App ;
 //      `valid(mémoire)` facultatif : rend false quand la mémoire ne correspond plus à ce que la page doit afficher — par exemple un autre filtre venu d'ailleurs —,
 //      la page repart alors de zéro)
@@ -91,6 +92,14 @@ export function useListReturn(key, mainScrollRef, { valid } = {}) {
   return {
     restored,
     save: (part) => patchListMemory(key, part),
+    // Sous-liste (ouverte depuis une fiche) : sa flèche retour vers la fiche d'où l'on vient passe par `leave(onBack)`, qui efface sa mémoire —
+    // une entrée depuis la fiche repart de zéro, comme pour toute liste.
+    leave:
+      (backFn) =>
+      (...args) => {
+        memories.delete(key);
+        backFn(...args);
+      },
     open:
       (openFn) =>
       (...args) => {

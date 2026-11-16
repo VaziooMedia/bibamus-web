@@ -6,11 +6,12 @@
 // (`BibaxCheckRows`). La liste vient de la fiche produit : cette page ne lit rien elle-même, sauf le code Bibax de la personne
 // touchée, au moment où l'on ouvre son profil.
 // ============================================================
-import React from "react";
+import React, { useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, BibaxName, BlockTitle, GoButton } from "./ui.jsx";
 import { loadBibroCodes } from "../data/profiles.js";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 // Les lignes de la liste : avatar, nom (avec surnom) suivi de la flèche d'accès au profil, et à droite le nombre de checks.
 // `rows` : { userId, name, lastName, nickname, avatarUrl, checkCount }. `onOpen(userId)` ouvre le profil.
@@ -33,7 +34,14 @@ export function BibaxCheckRows({ rows, onOpen }) {
   );
 }
 
-export function DrinkBibaxChecksScreen({ drinkName, rows, onBack, onOpenBibax }) {
+// Retour d'un profil (norme de l'app, voir `useListReturn`) : la page se remet à la hauteur où on l'avait laissée ; la flèche retour vers la fiche du produit efface la mémoire.
+export function DrinkBibaxChecksScreen({ drinkName, rows, onBack: onBackProp, onOpenBibax: onOpenBibaxProp, mainScrollRef }) {
+  const { save, open, leave } = useListReturn("drinkBibaxChecks", mainScrollRef, { valid: (m) => m.ctx === drinkName });
+  const onBack = leave(onBackProp);
+  const onOpenBibax = open(onOpenBibaxProp);
+  useEffect(() => {
+    save({ ctx: drinkName });
+  }, [drinkName]);
   // Le profil s'ouvre à partir du code Bibax, que la liste ne porte pas : on le retrouve à partir du compte.
   const openProfile = async (userId) => {
     const codes = await loadBibroCodes([userId]);
