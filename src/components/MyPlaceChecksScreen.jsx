@@ -1,5 +1,5 @@
 // « PlaceChecks » (Mon Profil) — la liste des lieux que la personne a déjà checkés : un lieu une seule fois, du plus récemment visité au plus ancien,
-// avec à droite son nombre de visites (le nombre seul). Mêmes lignes que « Mes Favoris > Lieux » (rond de 40 px, nom en gras, ville · pays) dans une carte, lignes pleine
+// avec à droite son nombre de visites (le nombre seul). Mêmes lignes que « Mes Favoris > Lieux » (rond de 40 px, nom en gras, ville · drapeau du pays) dans une carte, lignes pleine
 // largeur séparées par un trait fin. Une ligne ouvre la fiche du lieu, dont le retour ramène ici. Une liste vide dit quel geste l'alimente.
 // Les identifiants viennent de la fonction `get_my_checked_venues` (script bibamus-sql-mes-lieux-1-liste), puis les lieux par `loadVenuesByIds`.
 import React, { useState, useEffect } from "react";
@@ -7,6 +7,7 @@ import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
 import { loadMyCheckedVenues, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { DotLine, ScreenTitle } from "./MyFavoritesScreen.jsx";
+import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 
 function PlaceRow({ venue, visits, isLast, onOpen }) {
   return (
@@ -35,7 +36,8 @@ function PlaceRow({ venue, visits, isLast, onOpen }) {
       </span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
         <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{venue.name}</span>
-        <DotLine parts={[venue.city, venue.country].filter(Boolean)} />
+        {/* Le pays est montré par son drapeau (même image que partout dans l'app) ; un pays sans drapeau connu garde son nom écrit. */}
+        <DotLine parts={[venue.city, venue.country ? (COUNTRY_ISO_CODES[venue.country] ? <CountryFlagImg country={venue.country} size={14} /> : venue.country) : null].filter(Boolean)} />
       </div>
       <span data-place-visits style={{ flexShrink: 0, fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>
         {visits}
