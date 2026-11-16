@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar, ActionCard } from "./ui.jsx";
+import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
@@ -25,6 +26,12 @@ export function DotLine({ parts }) {
       ))}
     </div>
   );
+}
+
+// Le pays d'un lieu, pour une ligne de détails : son drapeau (même image que partout dans l'app) ; un pays sans drapeau connu garde son nom écrit.
+export function countryFlagPart(country) {
+  if (!country) return null;
+  return COUNTRY_ISO_CODES[country] ? <CountryFlagImg country={country} size={14} /> : country;
 }
 
 // Ligne d'un favori — même squelette que celles de « Mon Historique » : rond de 40 px à gauche, à droite le titre (gras) et une ligne de détails.
@@ -157,7 +164,7 @@ export function MyFavoritesListScreen({ kind, bibros = [], onBack, onOpenVenue, 
         kind="venue"
         avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={40} fallbackIcon="map-pin" />}
         title={v.name}
-        details={[v.city, v.country].filter(Boolean)}
+        details={[v.city, countryFlagPart(v.country)].filter(Boolean)}
         isLast={last(resolved, i)}
         onOpen={onOpenVenue ? () => onOpenVenue(v.id) : null}
       />
