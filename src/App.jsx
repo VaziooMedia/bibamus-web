@@ -2007,7 +2007,7 @@ export default function App() {
     removeBibaxByCode(code);
   };
   const setBibroAlias = (code, alias) => setBibros((prev) => prev.map((b) => (b.code === code ? { ...b, alias } : b)));
-  // Cœur de la fiche d'un Bibax confirmé : même principe que l'étoile d'un lieu (affichage immédiat, puis la réponse de la base). Le drapeau `isFavorite`
+  // Cœur de la fiche d'un Bibax confirmé : même principe que le cœur d'un lieu (affichage immédiat, puis la réponse de la base). Le drapeau `isFavorite`
   // des Bibax (tri de « Mes Bibax » et des sélecteurs) est recalculé depuis la liste du compte, voir l'effet juste après.
   const setBibaxFavorite = (userId, favorite) =>
     setFavoriteBibaxIds((prev) => (favorite ? (prev.includes(userId) ? prev : [...prev, userId]) : prev.filter((id) => id !== userId)));
