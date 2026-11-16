@@ -1,5 +1,6 @@
 // « DrinkChecks » (Mon Profil) — la liste des produits que la personne a déjà checkés : un produit une seule fois, par défaut du plus récemment checké au plus ancien,
-// avec à droite son nombre de DrinkChecks. Mêmes lignes et mêmes classements que « PlaceChecks » (CheckListParts.jsx) ; la ligne de détails ne porte que le sous-type du produit.
+// avec à droite son nombre de DrinkChecks. Mêmes lignes et mêmes classements que « PlaceChecks » (CheckListParts.jsx) ; la ligne de détails porte le sous-type du produit, puis son drapeau
+// (sauf classé par pays : la barre du pays le porte déjà, comme pour « PlaceChecks »), puis son degré « 6.5% ABV » (rien pour les produits sans alcool par définition, « 0.0% ABV » pour les autres à 0).
 // Au-dessus des quatre classements, une rangée de pastilles de catégories (Tout, Bières & Cidres, Vins & Bulles…, seules les catégories non vides) :
 // elle ne garde que les produits d'une catégorie, et le classement choisi s'applique à ce qui reste.
 // Sous les classements, deux blocs côte à côte avec les totaux de ce qui est affiché (la catégorie choisie) : « X DrinkChecks » et « X Produits uniques ». Classés par pays, la barre de chaque pays
@@ -17,9 +18,24 @@ import { PillTabs, FINE_PILL } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
+import { displayedAbv } from "../utils.js";
 
 const SORT_FIELDS = { nameOf: (x) => x.drink.name, countOf: (x) => x.checks, countryOf: (x) => (x.drink.nationality && x.drink.nationality !== "Non renseigné" ? x.drink.nationality : "") };
 const hasFlag = (country) => !!COUNTRY_ISO_CODES[country] || country === "International" || country === "Autre";
+
+// Le pays du produit, pour la ligne de détails : son drapeau (le globe pour « International » / « Autre ») ; un pays sans drapeau connu garde son nom écrit ; rien s'il n'est pas renseigné.
+const flagPart = (drink) => {
+  const country = drink.nationality;
+  if (!country || country === "Non renseigné") return null;
+  return hasFlag(country) ? <CountryFlagImg country={country} size={14} /> : country;
+};
+
+// Le degré d'alcool, pour la ligne de détails : « 6.5% ABV ». Rien pour les produits sans alcool par définition — Softs & Eaux, Boissons chaudes (Hot Mix excepté), Snacks —, sauf un degré
+// au-dessus de 0 (règle de l'app, `displayedAbv`). Dans toutes les autres catégories, un produit à 0 s'affiche « 0.0% ABV » (la version sans alcool d'une bière, d'un vin…) ; degré inconnu : rien.
+const abvPart = (drink) => {
+  const abv = drink.type === "Snacks" && !(drink.abv > 0) ? null : displayedAbv(drink);
+  return abv == null ? null : `${Number(abv).toFixed(1)}% ABV`;
+};
 
 const categoryOf = (x) => x.drink.type || "Autres";
 
@@ -139,7 +155,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
                     avatarEmoji={x.drink.avatarEmoji}
                     fallbackIcon="bottle"
                     name={x.drink.name}
-                    parts={[SUBTYPE_LABELS[x.drink.beverageSubtype] || null].filter(Boolean)}
+                    parts={[SUBTYPE_LABELS[x.drink.beverageSubtype] || null, sort !== "country" ? flagPart(x.drink) : null, abvPart(x.drink)].filter(Boolean)}
                     count={x.checks}
                     isLast={i === g.entries.length - 1}
                     onOpen={openDrink ? () => openDrink(x.drink.id) : null}
