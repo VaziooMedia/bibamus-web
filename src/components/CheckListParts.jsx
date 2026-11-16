@@ -38,17 +38,17 @@ export function arrangeChecks(entries, sort, { nameOf, countOf, countryOf }) {
   return [{ key: "all", entries }];
 }
 
-// Les deux totaux de ce que la page affiche (la catégorie choisie, pour DrinkChecks), en deux blocs côte à côte, du même aspect que les blocs Bibax / DrinkChecks / PlaceChecks de
-// Mon Profil (libellé en haut, chiffre en vert fluo dessous) : le nombre de checks (la somme du chiffre de droite des lignes) et le nombre d'éléments uniques (le nombre de lignes).
+// Les deux totaux de ce que la page affiche (la catégorie choisie, pour DrinkChecks), en deux blocs fins côte à côte, du même aspect que les blocs Bibax / DrinkChecks / PlaceChecks de
+// Mon Profil mais sur une seule ligne (libellé puis chiffre en vert fluo) : le nombre de checks (la somme du chiffre de droite des lignes) et le nombre d'éléments uniques (le nombre de lignes).
 // `brand` : « Drink » ou « Place » (le libellé du premier bloc est « DrinkChecks » / « PlaceChecks », « Checks » en vert) ; `uniqueLabel` : [singulier, pluriel]. Le singulier vaut pour 0 et 1.
 export function CheckTotals({ checks, unique, brand, uniqueLabel }) {
   const block = (label, value, key) => (
     <div
       data-check-total={key}
-      style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "8px", textAlign: "center" }}
+      style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "6px 8px", textAlign: "center" }}
     >
       <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
     </div>
   );
   return (
