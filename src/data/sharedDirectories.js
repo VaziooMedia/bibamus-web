@@ -4889,6 +4889,13 @@ export async function addFavoriteVenues(venueIds) {
   return { ok: true, added: data };
 }
 
+// Cœur de la fiche d'un produit (table fermée drink_favorites, script bibamus-sql-favoris-4-produits) : rend { ok, favorite } ou { error }.
+export async function toggleFavoriteDrink(drinkId) {
+  const { data, error } = await supabase.rpc("toggle_favorite_drink", { p_drink_id: String(drinkId) });
+  if (error) return { error: error.message };
+  return data;
+}
+
 export async function toggleFavoriteBibax(bibaxUserId) {
   const { data, error } = await supabase.rpc("toggle_favorite_bibax", { p_bibax_user_id: bibaxUserId });
   if (error) return { error: error.message };
@@ -4902,7 +4909,7 @@ export async function addFavoriteBibax(bibaxUserIds) {
 }
 
 // Tous mes favoris en une lecture (fonction get_my_favorites, script bibamus-sql-favoris-3-liste) : des identifiants seulement, du plus récent au plus
-// ancien, rangés par sorte : { venues, brands, producers, bibax } (bibax = identifiants de personnes). null si la lecture échoue.
+// ancien, rangés par sorte : { venues, brands, producers, bibax, drinks } (bibax = identifiants de personnes). null si la lecture échoue.
 export async function loadMyFavorites() {
   const { data, error } = await supabase.rpc("get_my_favorites");
   if (error || !Array.isArray(data)) {
@@ -4910,7 +4917,7 @@ export async function loadMyFavorites() {
     return null;
   }
   const idsOf = (kind) => data.filter((r) => r.kind === kind && r.item_id).map((r) => String(r.item_id));
-  return { venues: idsOf("venue"), brands: idsOf("brand"), producers: idsOf("producer"), bibax: idsOf("bibax") };
+  return { venues: idsOf("venue"), brands: idsOf("brand"), producers: idsOf("producer"), bibax: idsOf("bibax"), drinks: idsOf("drink") };
 }
 
 export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {

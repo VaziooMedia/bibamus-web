@@ -139,6 +139,7 @@ import {
   toggleFavoriteVenue,
   addFavoriteVenues,
   toggleFavoriteBibax,
+  toggleFavoriteDrink,
   addFavoriteBibax,
   loadMyFavorites,
   recordRoundOrders,
@@ -1536,6 +1537,7 @@ export default function App() {
   // des Bibax), puis on lit la liste du compte, qui devient la vérité. Si la base ne répond pas (ou n'a pas encore les fonctions), on garde la copie locale
   // et la reprise sera retentée au prochain démarrage.
   const [favoriteBibaxIds, setFavoriteBibaxIds] = useState([]); // identifiants de personnes (Bibax confirmés mis en favori dans le compte)
+  const [favoriteDrinkIds, setFavoriteDrinkIds] = useState([]); // identifiants de produits (cœur de la fiche d'un produit, dans le compte seulement)
   const [favoritesSynced, setFavoritesSynced] = useState(false);
   useEffect(() => {
     const userId = session?.user?.id;
@@ -1555,6 +1557,7 @@ export default function App() {
       if (cancelled || !favs) return;
       setFavoriteVenueIds(favs.venues);
       setFavoriteBibaxIds(favs.bibax);
+      setFavoriteDrinkIds(favs.drinks);
       setFavoritesSynced(true);
     })();
     return () => {
@@ -1919,6 +1922,7 @@ export default function App() {
     if (favoritesSynced) {
       setFavoriteVenueIds([]);
       setFavoriteBibaxIds([]);
+      setFavoriteDrinkIds([]);
       setFavoritesSynced(false);
     }
   };
@@ -1964,6 +1968,21 @@ export default function App() {
   // des Bibax (tri de « Mes Bibax » et des sélecteurs) est recalculé depuis la liste du compte, voir l'effet juste après.
   const setBibaxFavorite = (userId, favorite) =>
     setFavoriteBibaxIds((prev) => (favorite ? (prev.includes(userId) ? prev : [...prev, userId]) : prev.filter((id) => id !== userId)));
+  // Cœur de la fiche d'un produit : même principe (affichage immédiat, puis la réponse de la base).
+  const setDrinkFavorite = (drinkId, favorite) =>
+    setFavoriteDrinkIds((prev) => (favorite ? (prev.includes(drinkId) ? prev : [...prev, drinkId]) : prev.filter((id) => id !== drinkId)));
+  const toggleDrinkFavorite = async (drinkId) => {
+    const id = String(drinkId);
+    const wasFavorite = favoriteDrinkIds.includes(id);
+    setDrinkFavorite(id, !wasFavorite);
+    const result = await toggleFavoriteDrink(id);
+    if (result?.error) {
+      setDrinkFavorite(id, wasFavorite);
+      alert(result.error);
+      return;
+    }
+    setDrinkFavorite(id, !!result.favorite);
+  };
   const toggleBibroFavorite = async (code) => {
     const bibro = bibros.find((b) => b.code === code);
     if (!bibro?.userId) return;
@@ -2599,6 +2618,8 @@ export default function App() {
                 onToggleTasted={() => toggleTastedDrink(viewedDrinkId)}
                 isOnWishlist={wishlistDrinkIds.includes(viewedDrinkId)}
                 onToggleWishlist={() => toggleWishlistDrink(viewedDrinkId)}
+                isFavorite={favoriteDrinkIds.includes(String(viewedDrinkId))}
+                onToggleFavorite={() => toggleDrinkFavorite(viewedDrinkId)}
                 onRate={(value, opts) => rateDrink(viewedDrinkId, value, opts)}
                 onUnrate={() => unrateDrink(viewedDrinkId)}
                 onToggleMode={(mode) => toggleTastedServingMode(viewedDrinkId, mode)}
@@ -3243,7 +3264,6 @@ export default function App() {
             {screen === "myFavorites" && (
               <MyFavoritesScreen
                 bibros={bibros}
-                wishlistDrinkIds={wishlistDrinkIds}
                 onBack={() => setScreen("profile")}
                 onOpenVenue={(id) => {
                   setScreenBeforeVenueDetail("myFavorites");

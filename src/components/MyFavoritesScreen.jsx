@@ -1,10 +1,8 @@
 // « Mes Favoris » (Mon Profil) — tout ce que la personne a mis de côté, rangé par sorte sous une barre (comme les périodes de « Mon Historique ») :
-// Lieux (étoile de la fiche d'un lieu), Marques et Producteurs (cœur de leur fiche), Bibax (cœur de la fiche d'un Bibax confirmé) et Produits (la liste
-// « à goûter » de la fiche d'un produit, icône liste). Du plus récent au plus ancien dans chaque sorte ; une sorte vide reste affichée, avec le geste qui
+// Lieux (étoile de la fiche d'un lieu), Marques et Producteurs (cœur de leur fiche), Bibax (cœur de la fiche d'un Bibax confirmé) et Produits (cœur de la fiche d'un produit). Du plus récent au plus ancien dans chaque sorte ; une sorte vide reste affichée, avec le geste qui
 // l'alimente. Les lignes ont le style de « Mon Historique » : une carte, des lignes pleine largeur séparées par un trait fin.
-// Lieux, marques, producteurs et Bibax viennent de la fonction `get_my_favorites` (des identifiants, puis les noms par les fonctions habituelles) ;
-// les Bibax se lisent dans la liste `bibros` déjà en mémoire (un Bibax dont la relation n'est plus confirmée n'est de toute façon plus rendu par le serveur) ;
-// les produits viennent de la liste « à goûter » (`wishlistDrinkIds`, gardée dans le navigateur).
+// Lieux, marques, producteurs, Bibax et produits viennent de la fonction `get_my_favorites` (des identifiants, puis les noms par les fonctions habituelles) ;
+// les Bibax se lisent dans la liste `bibros` déjà en mémoire (un Bibax dont la relation n'est plus confirmée n'est de toute façon plus rendu par le serveur).
 // Chaque ligne ouvre la fiche ; son retour ramène ici.
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
@@ -80,8 +78,8 @@ function FavoriteSection({ kind, label, rows, emptyText, isFirst }) {
   );
 }
 
-export function MyFavoritesScreen({ bibros = [], wishlistDrinkIds = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenBibax, onOpenDrink }) {
-  const [favs, setFavs] = useState(null); // null = chargement ; { venues, brands, producers, bibax } (identifiants)
+export function MyFavoritesScreen({ bibros = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenBibax, onOpenDrink }) {
+  const [favs, setFavs] = useState(null); // null = chargement ; { venues, brands, producers, bibax, drinks } (identifiants)
   const [error, setError] = useState(false);
   const [venuesById, setVenuesById] = useState({});
   const [brandsById, setBrandsById] = useState({});
@@ -96,34 +94,26 @@ export function MyFavoritesScreen({ bibros = [], wishlistDrinkIds = [], onBack, 
       if (cancelled) return;
       if (!result) {
         setError(true);
-        setFavs((prev) => prev || { venues: [], brands: [], producers: [], bibax: [] });
+        setFavs((prev) => prev || { venues: [], brands: [], producers: [], bibax: [], drinks: [] });
         return;
       }
-      const [venues, brands, producers] = await Promise.all([loadVenuesByIds(result.venues), loadBrandsByIds(result.brands), loadBreweriesByIds(result.producers)]);
+      const [venues, brands, producers, drinks] = await Promise.all([
+        loadVenuesByIds(result.venues),
+        loadBrandsByIds(result.brands),
+        loadBreweriesByIds(result.producers),
+        loadDrinksByIds(result.drinks),
+      ]);
       if (cancelled) return;
       setVenuesById(Object.fromEntries(venues.map((v) => [String(v.id), v])));
       setBrandsById(Object.fromEntries(brands.map((b) => [String(b.id), b])));
       setProducersById(Object.fromEntries(producers.map((p) => [String(p.id), p])));
+      setDrinksById(Object.fromEntries(drinks.map((d) => [String(d.id), d])));
       setFavs(result);
     });
     return () => {
       cancelled = true;
     };
   }, [attempt]);
-
-  // Produits : la liste « à goûter », la dernière ajoutée en premier.
-  const wishlistKey = wishlistDrinkIds.join("|");
-  useEffect(() => {
-    if (wishlistDrinkIds.length === 0) return undefined;
-    let cancelled = false;
-    loadDrinksByIds(wishlistDrinkIds).then((drinks) => {
-      if (!cancelled) setDrinksById(Object.fromEntries(drinks.map((d) => [String(d.id), d])));
-    });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wishlistKey]);
 
   const loading = favs === null;
   const last = (arr, i) => i === arr.length - 1;
@@ -132,7 +122,7 @@ export function MyFavoritesScreen({ bibros = [], wishlistDrinkIds = [], onBack, 
   const brands = (favs?.brands || []).map((id) => brandsById[id]).filter(Boolean);
   const producers = (favs?.producers || []).map((id) => producersById[id]).filter(Boolean);
   const bibax = (favs?.bibax || []).map((userId) => bibros.find((b) => b.userId === userId)).filter(Boolean);
-  const drinks = [...wishlistDrinkIds].reverse().map((id) => drinksById[String(id)]).filter(Boolean);
+  const drinks = (favs?.drinks || []).map((id) => drinksById[id]).filter(Boolean);
 
   const venueRows = venues.map((v, i) => (
     <FavoriteRow
@@ -211,16 +201,16 @@ export function MyFavoritesScreen({ bibros = [], wishlistDrinkIds = [], onBack, 
                 </button>
               </p>
             )}
-            {/* Si la base n'a pas répondu, on ne prétend pas que ces sortes sont vides : seule la liste « à goûter » (gardée dans le navigateur) s'affiche. */}
+            {/* Si la base n'a pas répondu, on ne prétend pas que ces sortes sont vides : on n'affiche que le message d'erreur. */}
             {!error && (
               <>
                 <FavoriteSection kind="venues" label="Lieux" rows={venueRows} emptyText="Aucun lieu favori. Touche l'étoile sur la fiche d'un lieu." isFirst />
                 <FavoriteSection kind="brands" label="Marques" rows={brandRows} emptyText="Aucune marque favorite. Touche le cœur sur la fiche d'une marque." />
                 <FavoriteSection kind="producers" label="Producteurs" rows={producerRows} emptyText="Aucun producteur favori. Touche le cœur sur la fiche d'un producteur." />
                 <FavoriteSection kind="bibax" label="Bibax" rows={bibaxRows} emptyText="Aucun Bibax favori. Touche le cœur sur la fiche d'un Bibax." />
+                <FavoriteSection kind="drinks" label="Produits" rows={drinkRows} emptyText="Aucun produit favori. Touche le cœur sur la fiche d'un produit." />
               </>
             )}
-            <FavoriteSection kind="drinks" label="Produits" rows={drinkRows} emptyText="Aucun produit. Touche l'icône liste sur la fiche d'un produit." isFirst={!!error} />
           </>
         )}
       </div>
