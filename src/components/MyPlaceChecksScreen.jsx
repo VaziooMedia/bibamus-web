@@ -6,8 +6,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
 import { loadMyCheckedVenues, loadVenuesByIds } from "../data/sharedDirectories.js";
-import { DotLine, ScreenTitle } from "./MyFavoritesScreen.jsx";
-import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
+import { DotLine, ScreenTitle, countryFlagPart } from "./MyFavoritesScreen.jsx";
 
 function PlaceRow({ venue, visits, isLast, onOpen }) {
   return (
@@ -36,8 +35,7 @@ function PlaceRow({ venue, visits, isLast, onOpen }) {
       </span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
         <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{venue.name}</span>
-        {/* Le pays est montré par son drapeau (même image que partout dans l'app) ; un pays sans drapeau connu garde son nom écrit. */}
-        <DotLine parts={[venue.city, venue.country ? (COUNTRY_ISO_CODES[venue.country] ? <CountryFlagImg country={venue.country} size={14} /> : venue.country) : null].filter(Boolean)} />
+        <DotLine parts={[venue.city, countryFlagPart(venue.country)].filter(Boolean)} />
       </div>
       <span data-place-visits style={{ flexShrink: 0, fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>
         {visits}
