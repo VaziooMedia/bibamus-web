@@ -1,12 +1,12 @@
 // « Mes Produits » (Mon Profil) — trois listes de MES produits, chacune sur son écran : À goûter (le bouton « liste à goûter » de la fiche d'un produit),
-// Déjà goûtés et Notés (ma note, de la fiche d'un produit). L'écran d'entrée ne montre que les trois cartes et leur nombre de produits.
+// Déjà goûtés (tous les produits que j'ai checkés, notés ou non) et Notés (ma note, de la fiche d'un produit). L'écran d'entrée ne montre que les trois cartes et leur nombre de produits.
 // Dans chaque liste, les produits sont rangés par catégorie sous une barre (comme les sortes de « Mes Favoris »), du plus récent au plus ancien ; les lignes ont
 // le style de « Mon Historique » : une carte, des lignes pleine largeur séparées par un trait fin. Une ligne ouvre la fiche du produit, dont le retour ramène ici.
-// Les listes viennent de la base (get_my_wishlist, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
+// Les listes viennent de la base (get_my_wishlist, get_my_checked_drinks, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar, ActionCard } from "./ui.jsx";
-import { loadMyWishlist, loadMyRatedDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
+import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
 import { DotLine } from "./MyFavoritesScreen.jsx";
 import { RatingFraction } from "./NotesCard.jsx";
@@ -27,9 +27,9 @@ export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }
   const [counts, setCounts] = useState({ toTry: null, tasted: null, rated: null });
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadMyWishlist(), loadMyRatedDrinks()]).then(([wishlist, rated]) => {
+    Promise.all([loadMyWishlist(), loadMyCheckedDrinks(), loadMyRatedDrinks()]).then(([wishlist, checked, rated]) => {
       if (cancelled) return;
-      setCounts((prev) => ({ ...prev, toTry: wishlist ? wishlist.length : null, rated: rated ? rated.length : null }));
+      setCounts({ toTry: wishlist ? wishlist.length : null, tasted: checked ? checked.length : null, rated: rated ? rated.length : null });
     });
     return () => {
       cancelled = true;
@@ -53,11 +53,11 @@ export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }
 
 const LIST_TEXTS = {
   toTry: { title: "À goûter", empty: "Aucun produit à goûter. Touche l'icône liste sur la fiche d'un produit pour le mettre de côté.", error: "Impossible de charger ta liste." },
-  tasted: { title: "Déjà goûtés", empty: "Aucun produit goûté pour l'instant.", error: "Impossible de charger ta liste." },
+  tasted: { title: "Déjà goûtés", empty: "Aucun produit checké pour l'instant. Fais un DrinkCheck depuis la fiche d'un produit.", error: "Impossible de charger ta liste." },
   rated: { title: "Notés", empty: "Aucun produit noté. Note un produit depuis sa fiche.", error: "Impossible de charger tes notes." },
 };
 
-// Ligne d'un produit — même squelette que celles de « Mes Favoris » : rond de 40 px à gauche, au milieu le nom (gras) et une ligne de détails, à droite ma note (liste « Notés »).
+// Ligne d'un produit — même squelette que celles de « Mes Favoris » : rond de 40 px à gauche, au milieu le nom (gras) et une ligne de détails, à droite ma note (listes « Notés » et « Déjà goûtés », quand le produit est noté).
 function ProductRow({ drink, rating = null, isLast, onOpen }) {
   const subtype = SUBTYPE_LABELS[drink.beverageSubtype] || null;
   return (
@@ -126,7 +126,7 @@ function groupByCategory(entries) {
 // Chaque lecture rend [{ drinkId, rating? }], ou null si la base n'a pas répondu.
 const LOADERS = {
   toTry: async () => (await loadMyWishlist())?.map((id) => ({ drinkId: id })) ?? null,
-  tasted: async () => [],
+  tasted: loadMyCheckedDrinks,
   rated: loadMyRatedDrinks,
 };
 
@@ -191,7 +191,7 @@ export function MyProductsListScreen({ kind, onBack, onOpenDrink }) {
                 <ProductRow
                   key={x.drinkId}
                   drink={x.drink}
-                  rating={kind === "rated" && typeof x.rating === "number" ? x.rating : null}
+                  rating={kind !== "toTry" && typeof x.rating === "number" ? x.rating : null}
                   isLast={i === g.entries.length - 1}
                   onOpen={onOpenDrink ? () => onOpenDrink(x.drink.id) : null}
                 />
