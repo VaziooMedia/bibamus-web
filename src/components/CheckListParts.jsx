@@ -48,7 +48,7 @@ export function CheckTotals({ checks, unique, brand, uniqueLabel }) {
       data-check-total={key}
       style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "stretch", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", overflow: "hidden" }}
     >
-      <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "6px 8px 6px 10px", fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
+      <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "6px 8px 6px 10px", fontSize: "11px", fontWeight: 700, color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
       <span
         style={{
           flexShrink: 0,
