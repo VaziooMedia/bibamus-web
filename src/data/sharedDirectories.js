@@ -2822,17 +2822,6 @@ export async function searchDrinksByType(type, query = "", limit = 30) {
   return rows.map(rowToDrink);
 }
 
-// Combien de produits ce Bibro a-t-il notés au total — compte côté serveur, jamais besoin de
-// charger le répertoire complet pour ça (utilisé par le hub "Mes produits").
-export async function countMyRatedDrinks(myBibroCode) {
-  const { data, error } = await supabase.rpc("count_my_rated_drinks", { p_bibro_code: myBibroCode });
-  if (error) {
-    console.error("countMyRatedDrinks:", error);
-    return 0;
-  }
-  return data || 0;
-}
-
 // --- Écran "Produits" (DrinksDirectoryScreen) — catégories, groupement alphabétique et
 // pagination, tout calculé côté serveur. C'est l'écran destiné à afficher potentiellement des
 // milliers de produits, donc le seul qui a vraiment besoin de tout ça plutôt que d'un simple
@@ -4918,6 +4907,57 @@ export async function loadMyFavorites() {
   }
   const idsOf = (kind) => data.filter((r) => r.kind === kind && r.item_id).map((r) => String(r.item_id));
   return { venues: idsOf("venue"), brands: idsOf("brand"), producers: idsOf("producer"), bibax: idsOf("bibax"), drinks: idsOf("drink") };
+}
+
+// Ma liste « À goûter » dans le compte (table fermée drink_wishlist, script bibamus-sql-mes-produits-1-a-gouter). Bouton « liste à goûter » de la fiche d'un
+// produit : rend { ok, wishlist } ou { error }.
+export async function toggleWishlistDrinkServer(drinkId) {
+  const { data, error } = await supabase.rpc("toggle_wishlist_drink", { p_drink_id: String(drinkId) });
+  if (error) return { error: error.message };
+  return data;
+}
+
+// Reprise unique de la liste gardée dans le navigateur : rend { ok, added } ou { error }.
+export async function addWishlistDrinks(drinkIds) {
+  const { data, error } = await supabase.rpc("add_wishlist_drinks", { p_drink_ids: drinkIds.map(String) });
+  if (error) return { error: error.message };
+  return { ok: true, added: data };
+}
+
+// Ma liste « À goûter » : des identifiants de produits, du plus récent au plus ancien. null si la lecture échoue (ou si la fonction n'existe pas encore).
+export async function loadMyWishlist() {
+  const { data, error } = await supabase.rpc("get_my_wishlist");
+  if (error || !Array.isArray(data)) {
+    if (error) console.error("loadMyWishlist:", error);
+    return null;
+  }
+  return data.filter((r) => r.drink_id).map((r) => String(r.drink_id));
+}
+
+// Mes produits notés (fonction get_my_rated_drinks, script bibamus-sql-mes-produits-2-notes) : [{ drinkId, rating, ratedAt }], du produit noté le plus
+// récemment au plus ancien (ratedAt vide pour une très ancienne note sans date). null si la lecture échoue.
+export async function loadMyRatedDrinks() {
+  const { data, error } = await supabase.rpc("get_my_rated_drinks");
+  if (error || !Array.isArray(data)) {
+    if (error) console.error("loadMyRatedDrinks:", error);
+    return null;
+  }
+  return data
+    .filter((r) => r.drink_id && Number.isFinite(Number(r.rating)))
+    .map((r) => ({ drinkId: String(r.drink_id), rating: Number(r.rating), ratedAt: r.rated_at || null }));
+}
+
+// Mes produits « Déjà goûtés » = tous ceux que j'ai déjà checkés, notés ou non (fonction get_my_checked_drinks, script bibamus-sql-mes-produits-3-goutes) :
+// [{ drinkId, lastAt, rating }], du produit checké le plus récemment au plus ancien (rating vide si je ne l'ai pas noté). null si la lecture échoue.
+export async function loadMyCheckedDrinks() {
+  const { data, error } = await supabase.rpc("get_my_checked_drinks");
+  if (error || !Array.isArray(data)) {
+    if (error) console.error("loadMyCheckedDrinks:", error);
+    return null;
+  }
+  return data
+    .filter((r) => r.drink_id)
+    .map((r) => ({ drinkId: String(r.drink_id), lastAt: r.last_at || null, rating: r.rating !== null && r.rating !== undefined && Number.isFinite(Number(r.rating)) ? Number(r.rating) : null }));
 }
 
 export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
