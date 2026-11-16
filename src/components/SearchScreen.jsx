@@ -23,6 +23,7 @@ import { EntityAvatar, ActionCard } from "./ui.jsx";
 import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames } from "../utils.js";
 import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 function TagButton({ label, count, filled, onClick }) {
   return (
@@ -115,16 +116,28 @@ export function SearchScreen({
   goToBibax,
   initialTab = "lieux",
   onBack,
+  screenId = "search",
+  mainScrollRef,
 }) {
-  const [query, setQuery] = useState("");
-  const [activeTab, setActiveTab] = useState(initialTab);
-  const [bibaxSearchResults, setBibaxResults] = useState([]);
+  // Les résultats défilent avec toute la page, dans le conteneur principal d'App : c'est sa hauteur que l'on retient au clic sur une fiche.
+  const { restored, save, open } = useListReturn(screenId, mainScrollRef);
+  const wrap = (fn) => (fn ? open(fn) : fn);
+  const openVenue = wrap(onOpenVenue);
+  const openDrink = wrap(onOpenDrink);
+  const openBrewery = wrap(onOpenBrewery);
+  const openBrand = wrap(onOpenBrand);
+  const openBibaxProfile = wrap(onOpenBibaxProfile);
+  // Au retour d'une fiche, la première recherche de chaque sorte est sautée : les résultats mémorisés restent affichés.
+  const skipFirst = useRef({ bibax: !!restored, drinks: !!restored, venues: !!restored, at: !!restored, picked: !!restored });
+  const [query, setQuery] = useState(restored ? restored.query : "");
+  const [activeTab, setActiveTab] = useState(restored ? restored.activeTab : initialTab);
+  const [bibaxSearchResults, setBibaxResults] = useState(restored ? restored.bibaxSearchResults : []);
   const [bibaxLoading, setBibaxLoading] = useState(false);
   const inputRef = useRef(null);
   // Tant que la personne n'a pas cliqué elle-même sur un onglet pour cette recherche, l'onglet
   // affiché suit automatiquement celui qui a le plus de résultats. Un clic manuel arrête ce
   // suivi jusqu'à la prochaine requête tapée.
-  const userPickedTabRef = useRef(false);
+  const userPickedTabRef = useRef(restored ? !!restored.userPicked : false);
 
   const trimmed = query.trim();
   const hasQuery = trimmed.length >= 2;
@@ -135,15 +148,15 @@ export function SearchScreen({
   // des apostrophes, des tirets ni des espaces. Les marques et producteurs se cherchent dans leur nom, leur nom alternatif, leurs alias et leurs traductions.
   const matches = useMemo(() => makeSearchMatcher(plain), [plain]);
 
-  const [venueSearchResults, setVenueResults] = useState([]);
-  const [drinkResults, setDrinkResults] = useState([]);
+  const [venueSearchResults, setVenueResults] = useState(restored ? restored.venueSearchResults : []);
+  const [drinkResults, setDrinkResults] = useState(restored ? restored.drinkResults : []);
   const [drinksLoading, setDrinksLoading] = useState(false);
   // Recherche « @nom » exacte : atState garde le nom pour lequel la réponse a été reçue, et son résultat
   // ({ kind: "venue", venue } | { kind: "brand" | "brewery", id } | { kind: "user", bibax } | null).
   // Une réponse qui ne correspond plus à la saisie n'est jamais affichée, et « en cours » se déduit
   // directement de la saisie (pas d'image intermédiaire « Aucun résultat »).
   const atName = usernameFromQuery(trimmed);
-  const [atState, setAtState] = useState({ name: null, found: null });
+  const [atState, setAtState] = useState(restored ? restored.atState : { name: null, found: null });
   const atDone = atName !== null && atState.name === atName;
   const atFound = atDone ? atState.found : null;
   const atLoading = atName !== null && !atDone;
@@ -167,6 +180,10 @@ export function SearchScreen({
   );
 
   useEffect(() => {
+    if (skipFirst.current.bibax) {
+      skipFirst.current.bibax = false;
+      return undefined;
+    }
     if (hideBibaxAndAtlas || !hasPlain) {
       setBibaxResults([]);
       return;
@@ -185,6 +202,10 @@ export function SearchScreen({
   // différence avec le comportement précédent : les alias ne sont pas (encore) inclus dans cette
   // recherche serveur, contrairement à l'ancien filtre en mémoire. Sans les produits génériques : voir searchDrinksNoGeneric.
   useEffect(() => {
+    if (skipFirst.current.drinks) {
+      skipFirst.current.drinks = false;
+      return undefined;
+    }
     if (!hasPlain) {
       setDrinkResults([]);
       return;
@@ -201,6 +222,10 @@ export function SearchScreen({
 
   // Même principe côté serveur pour les lieux.
   useEffect(() => {
+    if (skipFirst.current.venues) {
+      skipFirst.current.venues = false;
+      return undefined;
+    }
     if (!hasPlain) {
       setVenueResults([]);
       return;
@@ -215,6 +240,10 @@ export function SearchScreen({
   // (la fiche du lieu, le profil de la personne) — les marques et producteurs viennent des répertoires
   // déjà en mémoire. Une réponse arrivée après une nouvelle frappe est ignorée.
   useEffect(() => {
+    if (skipFirst.current.at) {
+      skipFirst.current.at = false;
+      return undefined;
+    }
     if (!atName) {
       setAtState((prev) => (prev.name === null ? prev : { name: null, found: null }));
       return undefined;
@@ -259,8 +288,17 @@ export function SearchScreen({
   // Réinitialise le suivi automatique dès qu'une nouvelle requête est tapée — un clic manuel ne
   // vaut que pour la recherche en cours, pas pour toute la session.
   useEffect(() => {
+    if (skipFirst.current.picked) {
+      skipFirst.current.picked = false;
+      return;
+    }
     userPickedTabRef.current = false;
   }, [trimmed]);
+
+  // La mémoire suit la page ; la hauteur de la liste s'y ajoute au moment où l'on ouvre une fiche.
+  useEffect(() => {
+    save({ query, activeTab, userPicked: userPickedTabRef.current, bibaxSearchResults, venueSearchResults, drinkResults, atState });
+  }, [query, activeTab, bibaxSearchResults, venueSearchResults, drinkResults, atState]);
 
   // Suit automatiquement l'onglet qui a le plus de résultats, tant que la personne n'a pas
   // choisi elle-même un onglet pour cette recherche — recalculé à chaque arrivée de résultats
@@ -310,7 +348,7 @@ export function SearchScreen({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Rechercher..."
-              autoFocus={!atlas}
+              autoFocus={!atlas && !restored}
               style={{ flex: 1, minWidth: 0, border: "none", background: "none", color: COLORS.ink, fontSize: "14px", outline: "none" }}
             />
             <button
@@ -461,7 +499,7 @@ export function SearchScreen({
                       avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={52} fallbackIcon="map-pin" />}
                       enlargeAvatar
                       band
-                      onClick={() => onOpenVenue(v.id)}
+                      onClick={() => openVenue(v.id)}
                       last={i === venueResults.length - 1}
                     />
                   ))}
@@ -474,7 +512,7 @@ export function SearchScreen({
                       avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={52} fallbackIcon="bottle" />}
                       enlargeAvatar
                       band
-                      onClick={() => onOpenDrink(d.id)}
+                      onClick={() => openDrink(d.id)}
                       last={i === drinkResults.length - 1}
                     />
                   ))}
@@ -487,7 +525,7 @@ export function SearchScreen({
                       avatar={<EntityAvatar photoUrl={b.logoUrl} size={52} fallbackIcon="tag" />}
                       enlargeAvatar
                       band
-                      onClick={() => onOpenBrand(b.id)}
+                      onClick={() => openBrand(b.id)}
                       last={i === brandResults.length - 1}
                     />
                   ))}
@@ -500,7 +538,7 @@ export function SearchScreen({
                       avatar={<EntityAvatar photoUrl={b.profilePhotoUrl} photoEmoji={b.avatarEmoji} size={52} fallbackIcon="world" />}
                       enlargeAvatar
                       band
-                      onClick={() => onOpenBrewery(b.id)}
+                      onClick={() => openBrewery(b.id)}
                       last={i === breweryResults.length - 1}
                     />
                   ))}
@@ -522,7 +560,7 @@ export function SearchScreen({
                       avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}
                       enlargeAvatar
                       band
-                      onClick={() => onOpenBibaxProfile(b.bibroCode)}
+                      onClick={() => openBibaxProfile(b.bibroCode)}
                       last={i === bibaxResults.length - 1}
                     />
                   ))}

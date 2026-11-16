@@ -13,14 +13,19 @@ import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
 import { loadBreweriesDirectory, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { normalizeSearchText, makeSearchMatcher, entityNames } from "../utils.js";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
-export function BreweryDirectoryScreen({ myBibroCode, onBack, onOpenBrewery, activeCountry, setActiveCountry, activeCity, setActiveCity }) {
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [all, setAll] = useState([]);
-  const [loading, setLoading] = useState(true);
+// Retour d'une fiche (norme de l'app, voir `useListReturn`) : la page se remet à la hauteur où on l'avait laissée, avec la recherche tapée et le pays ouvert (gardé par App) ;
+// la liste est relue en silence. Une entrée depuis BibAtlas repart de zéro.
+export function BreweryDirectoryScreen({ myBibroCode, onBack, onOpenBrewery: onOpenBreweryProp, activeCountry, setActiveCountry, activeCity, setActiveCity, mainScrollRef }) {
+  const { restored, save, open } = useListReturn("breweryDirectory", mainScrollRef, { valid: (m) => (m.activeCountry || null) === (activeCountry || null) });
+  const onOpenBrewery = open(onOpenBreweryProp);
+  const [query, setQuery] = useState(restored ? restored.query : "");
+  const [debouncedQuery, setDebouncedQuery] = useState(restored ? restored.query : "");
+  const [all, setAll] = useState(restored ? restored.all : []);
+  const [loading, setLoading] = useState(!restored);
   const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
@@ -29,12 +34,18 @@ export function BreweryDirectoryScreen({ myBibroCode, onBack, onOpenBrewery, act
   }, [query]);
 
   useEffect(() => {
-    setLoading(true);
+    // Au retour d'une fiche, la liste déjà affichée reste en place pendant la relecture (pas de « Chargement... »).
+    if (!(restored && refreshTick === 0)) setLoading(true);
     loadBreweriesDirectory().then((list) => {
       setAll(list);
       setLoading(false);
     });
   }, [refreshTick]);
+
+  // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
+  useEffect(() => {
+    if (!loading) save({ query, all, activeCountry: activeCountry || null });
+  }, [query, all, loading, activeCountry]);
 
   const q = normalizeSearchText(debouncedQuery);
   const searching = q.length > 0;

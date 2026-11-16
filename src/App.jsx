@@ -76,7 +76,7 @@ import { BibaSoloScreen } from "./components/BibaSoloScreen.jsx";
 import { clearMyStatsMemory } from "./components/MyStatsScreen.jsx";
 import { MyHistoryScreen, clearMyHistoryMemory, hasMyHistoryMemory } from "./components/MyHistoryScreen.jsx";
 import { MyFavoritesScreen, MyFavoritesListScreen } from "./components/MyFavoritesScreen.jsx";
-import { hasListMemory, clearListMemory } from "./hooks/useListReturn.js";
+import { hasListMemory, pruneListMemories } from "./hooks/useListReturn.js";
 import { MyPlaceChecksScreen } from "./components/MyPlaceChecksScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
@@ -217,20 +217,24 @@ export default function App() {
   // défilant) — sans ça, un écran hérite de la position de défilement laissée par le précédent,
   // au lieu de toujours démarrer en haut.
   const mainScrollRef = React.useRef(null);
-  // Entrée dans une page de liste depuis sa page parent : la liste repart toujours de zéro (le retour d'une fiche, lui, reprend la mémoire — hooks/useListReturn.js).
-  const enterList = (id) => {
-    clearListMemory(id);
-    setScreen(id);
-  };
   // Retour sur la fiche produit depuis un lieu ou un profil Bibax ouvert via l'onglet Biba360 : la fiche se replace
   // elle-même (même onglet, même hauteur), on ne remonte donc pas en haut.
   const drinkReturn = useDrinkReturnMemo(screen);
+  // La mémoire d'une liste est relevée AVANT que la page n'écrive dans la sienne : une page qui sauvegarde dès son premier affichage (la liste des Bibax, par exemple)
+  // créerait sinon sa mémoire avant l'effet ci-dessous, et une première entrée serait prise pour un retour (donc sans remonter en haut).
+  const listMemoryOnEntryRef = React.useRef(false);
+  React.useLayoutEffect(() => {
+    listMemoryOnEntryRef.current = hasListMemory(screen);
+  }, [screen]);
   useEffect(() => {
+    // Norme du retour d'une fiche sur une liste (hooks/useListReturn.js) : la mémoire des listes ne vit que dans la boucle « liste <-> fiches ». Hors d'une fiche, on l'efface :
+    // une entrée dans une liste depuis sa page parent repart toujours de zéro.
+    pruneListMemories(screen);
     if (drinkReturn.keepsScroll(screen, viewedDrinkId)) return;
     // Retour sur « Mon Historique » depuis une fiche : l'écran se replace lui-même à la hauteur où l'on l'avait laissé.
     if (screen === "eventHistory" && hasMyHistoryMemory()) return;
     // Idem pour toute page de liste qui suit la norme du retour d'une fiche (hooks/useListReturn.js) : elle se replace elle-même à la hauteur où l'on l'avait laissée.
-    if (hasListMemory(screen)) return;
+    if (listMemoryOnEntryRef.current) return;
     mainScrollRef.current?.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
@@ -2349,7 +2353,7 @@ export default function App() {
               />
             )}
             {screen === "bibaxDirectory" && (
-              <BibaxDirectoryScreen bibros={bibros} onOpenBibaxProfile={(code) => openBibaxProfile(code, "bibaxDirectory")} onBack={() => setScreen("atlasSearch")} />
+              <BibaxDirectoryScreen mainScrollRef={mainScrollRef} bibros={bibros} onOpenBibaxProfile={(code) => openBibaxProfile(code, "bibaxDirectory")} onBack={() => setScreen("atlasSearch")} />
             )}
             {screen === "newSalonEvent" && (
               <NewEventScreen
@@ -2371,6 +2375,7 @@ export default function App() {
             )}
             {screen === "venueDirectory" && (
               <VenueDirectoryScreen
+                mainScrollRef={mainScrollRef}
                 myBibroCode={profile.myBibroCode}
                 addIntent={false}
                 onBack={() => setScreen(screenBeforeVenueDirectory)}
@@ -2526,6 +2531,7 @@ export default function App() {
             )}
             {screen === "drinksDirectory" && (
               <DrinksDirectoryScreen
+                mainScrollRef={mainScrollRef}
                 myBibroCode={profile.myBibroCode}
                 onBack={leaveDrinksDirectory}
                 openedFromDrink={drinksDirectoryOpenedFromDrink}
@@ -2746,8 +2752,8 @@ export default function App() {
                 goToBibros={() => setScreen("bibrosList")}
                 goToBibaClubs={() => setScreen("bibaClubsList")}
                 goToProducts={() => setScreen("myProducts")}
-                goToDrinkChecks={() => enterList("myDrinkChecks")}
-                goToVenues={() => enterList("myPlaceChecks")}
+                goToDrinkChecks={() => setScreen("myDrinkChecks")}
+                goToVenues={() => setScreen("myPlaceChecks")}
                 goToFavorites={() => setScreen("myFavorites")}
                 goToHistory={() => {
                   clearMyHistoryMemory(); // une entrée depuis Mon Profil repart toujours de zéro (le retour d'une fiche, lui, reprend la mémoire)
@@ -2803,6 +2809,7 @@ export default function App() {
             )}
             {screen === "bibaClubsList" && (
               <BibaClubsListScreen
+                mainScrollRef={mainScrollRef}
                 myUserId={session.user.id}
                 onBack={() => setScreen("profile")}
                 onOpenClub={(clubId) => {
@@ -2916,6 +2923,8 @@ export default function App() {
             {(screen === "search" || screen === "atlasSearch") && (
               <SearchScreen
                 key={screen}
+                screenId={screen}
+                mainScrollRef={mainScrollRef}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 onOpenVenue={(id) => {
@@ -3318,7 +3327,7 @@ export default function App() {
               <MyFavoritesScreen
                 bibros={bibros}
                 onBack={() => setScreen("profile")}
-                goTo={(kind) => enterList({ venues: "myFavoritesVenues", drinks: "myFavoritesDrinks", brands: "myFavoritesBrands", producers: "myFavoritesProducers", bibax: "myFavoritesBibax" }[kind])}
+                goTo={(kind) => setScreen({ venues: "myFavoritesVenues", drinks: "myFavoritesDrinks", brands: "myFavoritesBrands", producers: "myFavoritesProducers", bibax: "myFavoritesBibax" }[kind])}
               />
             )}
             {["myFavoritesVenues", "myFavoritesDrinks", "myFavoritesBrands", "myFavoritesProducers", "myFavoritesBibax"].includes(screen) && (
@@ -3359,9 +3368,9 @@ export default function App() {
             {screen === "myProducts" && (
               <MyProductsHubScreen
                 onBack={() => setScreen("profile")}
-                goToToTry={() => enterList("myProductsToTry")}
-                goToTasted={() => enterList("myProductsTasted")}
-                goToRated={() => enterList("myProductsRated")}
+                goToToTry={() => setScreen("myProductsToTry")}
+                goToTasted={() => setScreen("myProductsTasted")}
+                goToRated={() => setScreen("myProductsRated")}
               />
             )}
             {(screen === "myProductsToTry" || screen === "myProductsTasted" || screen === "myProductsRated") && (
@@ -3442,6 +3451,7 @@ export default function App() {
             )}
             {screen === "breweryDirectory" && (
               <BreweryDirectoryScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen(screenBeforeBreweryDirectory)}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
@@ -3454,6 +3464,7 @@ export default function App() {
             )}
             {screen === "brandDirectory" && (
               <BrandDirectoryScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen(screenBeforeBrandDirectory)}
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);
@@ -3538,6 +3549,7 @@ export default function App() {
             )}
             {screen === "bibrosList" && (
               <BibrosListScreen
+                mainScrollRef={mainScrollRef}
                 myName={profile.name}
                 profile={profile}
                 checkIns={checkIns}
