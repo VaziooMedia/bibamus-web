@@ -550,7 +550,7 @@ export function DrinkDetailScreen({
                   title={isOnWishlist ? "Retirer de ma liste à goûter" : "Ajouter à ma liste à goûter"}
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
                 >
-                  <NavIcon name="checklist" size={24} color={COLORS.amber} filled={!!isOnWishlist} />
+                  <NavIcon name="checklist" size={24} color={COLORS.amber} accentColor={COLORS.pinkFluo} filled={!!isOnWishlist} />
                 </button>
               </>
             )}
