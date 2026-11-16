@@ -13,7 +13,7 @@ import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx"
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
 
 // Éléments séparés par des points vert fluo (même rendu que les lignes de « Mon Historique »).
-function DotLine({ parts }) {
+export function DotLine({ parts }) {
   if (parts.length === 0) return null;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap", minWidth: 0 }}>

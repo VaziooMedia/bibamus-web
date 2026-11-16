@@ -1,11 +1,11 @@
 // ============================================================
-// Écrans annexes — Paramètres, Hub "Mes produits". Copiés tels quels depuis le prototype Claude.
-// (L'historique est dans MyHistoryScreen.jsx.)
+// Écrans annexes — Paramètres, réglages d'un salon, alerte d'eau. Copiés tels quels depuis le prototype Claude.
+// (L'historique est dans MyHistoryScreen.jsx ; « Mes Produits » dans MyProductsScreens.jsx.)
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, WaterAlertIcon, TokenPinkIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, ActionCard, BackFooterLink, PrimaryButton, SectionTitle } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, SectionTitle } from "./ui.jsx";
 import settingsIconUrl from "../assets/brand/settings-icon.png";
 import tokIconUrl from "../assets/brand/tok.svg";
 import { PublicVenueSearchPicker } from "./Pickers.jsx";
@@ -120,29 +120,6 @@ export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBac
     </div>
   );
 }
-
-export function MyProductsHubScreen({ ratedCount, toTryCount, onBack, goToRated, goToToTry }) {
-  return (
-    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
-      <PageHeader onBack={onBack} />
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
-        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "46px", height: "46px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 }}>
-          <NavIcon name="bottle" size={22} color={COLORS.amber} />
-        </span>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Mes Produits</h1>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <ActionCard icon="⭐" title="Mes bières déjà notées" subtitle={`${ratedCount} produit${ratedCount > 1 ? "s" : ""} — visible par tes Bibax`} onClick={goToRated} />
-        <ActionCard icon="🎯" title="Mes bières à goûter" subtitle={`${toTryCount} produit${toTryCount > 1 ? "s" : ""} mis de côté`} onClick={goToToTry} />
-        <ActionCard icon="⭐" title="Mes vins déjà notés" subtitle="0 produit — visible par tes Bibax" onClick={goToRated} />
-        <ActionCard icon="🎯" title="Mes vins à goûter" subtitle="0 produit mis de côté" onClick={goToToTry} />
-      </div>
-      <PageFooterNav onBack={onBack} />
-    </div>
-  );
-}
-
 
 export function EventSettingsScreen({ event, onSave, onBack, venues = [], onResolvePublicVenue }) {
   const [eventMode, setEventMode] = useState(event.mode || "tournees");

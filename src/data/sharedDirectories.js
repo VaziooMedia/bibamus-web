@@ -4920,6 +4920,44 @@ export async function loadMyFavorites() {
   return { venues: idsOf("venue"), brands: idsOf("brand"), producers: idsOf("producer"), bibax: idsOf("bibax"), drinks: idsOf("drink") };
 }
 
+// Ma liste « À goûter » dans le compte (table fermée drink_wishlist, script bibamus-sql-mes-produits-1-a-gouter). Bouton « liste à goûter » de la fiche d'un
+// produit : rend { ok, wishlist } ou { error }.
+export async function toggleWishlistDrinkServer(drinkId) {
+  const { data, error } = await supabase.rpc("toggle_wishlist_drink", { p_drink_id: String(drinkId) });
+  if (error) return { error: error.message };
+  return data;
+}
+
+// Reprise unique de la liste gardée dans le navigateur : rend { ok, added } ou { error }.
+export async function addWishlistDrinks(drinkIds) {
+  const { data, error } = await supabase.rpc("add_wishlist_drinks", { p_drink_ids: drinkIds.map(String) });
+  if (error) return { error: error.message };
+  return { ok: true, added: data };
+}
+
+// Ma liste « À goûter » : des identifiants de produits, du plus récent au plus ancien. null si la lecture échoue (ou si la fonction n'existe pas encore).
+export async function loadMyWishlist() {
+  const { data, error } = await supabase.rpc("get_my_wishlist");
+  if (error || !Array.isArray(data)) {
+    if (error) console.error("loadMyWishlist:", error);
+    return null;
+  }
+  return data.filter((r) => r.drink_id).map((r) => String(r.drink_id));
+}
+
+// Mes produits notés (fonction get_my_rated_drinks, script bibamus-sql-mes-produits-2-notes) : [{ drinkId, rating, ratedAt }], du produit noté le plus
+// récemment au plus ancien (ratedAt vide pour une très ancienne note sans date). null si la lecture échoue.
+export async function loadMyRatedDrinks() {
+  const { data, error } = await supabase.rpc("get_my_rated_drinks");
+  if (error || !Array.isArray(data)) {
+    if (error) console.error("loadMyRatedDrinks:", error);
+    return null;
+  }
+  return data
+    .filter((r) => r.drink_id && Number.isFinite(Number(r.rating)))
+    .map((r) => ({ drinkId: String(r.drink_id), rating: Number(r.rating), ratedAt: r.rated_at || null }));
+}
+
 export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
   const {
     data: { user },

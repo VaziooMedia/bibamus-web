@@ -60,7 +60,8 @@ import { ClubDetailScreen } from "./components/ClubDetailScreen.jsx";
 import { MyProfileScreen } from "./components/MyProfileScreen.jsx";
 import { MyPhotosScreen } from "./components/MyPhotosScreen.jsx";
 import { WrappedScreen } from "./components/WrappedScreen.jsx";
-import { SettingsScreen, MyProductsHubScreen, EventSettingsScreen, WaterAlertSettingsScreen } from "./components/MinorScreens.jsx";
+import { SettingsScreen, EventSettingsScreen, WaterAlertSettingsScreen } from "./components/MinorScreens.jsx";
+import { MyProductsHubScreen, MyProductsListScreen } from "./components/MyProductsScreens.jsx";
 import { AccountScreen, FieldEditScreen, GenderEditScreen, EmailViewScreen, UsernameEditScreen, PhoneEditScreen, LocationEditScreen, PhotoEditScreen, DeactivateAccountScreen, SettingsComingSoonScreen, PublicProfileScreen, SocialLinkEditScreen } from "./components/AccountScreen.jsx";
 import { SecurityScreen, PasswordChangeScreen, EmailVerifyScreen, ResetSessionsScreen, DataExportScreen, BlockedUsersScreen, PermissionsScreen, MyStatsPrivacyScreen, StoryTagsPrivacyScreen } from "./components/SecurityScreen.jsx";
 import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
@@ -134,7 +135,6 @@ import {
   loadDrinksByIds,
   sendPushNotification,
   createSalonInviteNotification,
-  countMyRatedDrinks,
   loadVenuesByIds,
   toggleFavoriteVenue,
   addFavoriteVenues,
@@ -142,6 +142,9 @@ import {
   toggleFavoriteDrink,
   addFavoriteBibax,
   loadMyFavorites,
+  toggleWishlistDrinkServer,
+  addWishlistDrinks,
+  loadMyWishlist,
   recordRoundOrders,
   markRoundPaid,
   recordPartialPayment,
@@ -1326,12 +1329,6 @@ export default function App() {
   const [viewedDrinkId, setViewedDrinkId] = useState(null);
   // Page « Voir tout » des Bibax qui ont checké le produit : la liste complète, transmise par la fiche produit au clic.
   const [drinkBibaxList, setDrinkBibaxList] = useState(null); // { drinkId, rows } | null
-  const [myRatedCount, setMyRatedCount] = useState(0);
-  useEffect(() => {
-    if (screen === "myProducts" && profile.myBibroCode) {
-      countMyRatedDrinks(profile.myBibroCode).then(setMyRatedCount);
-    }
-  }, [screen, profile.myBibroCode]);
   // Charge uniquement le produit consulté (avec résolution de doublon, comme le faisait
   // resolveEntity sur le répertoire complet) — jamais besoin du répertoire entier pour ça.
   const [viewedDrink, setViewedDrink] = useState(null);
@@ -1419,7 +1416,9 @@ export default function App() {
   };
 
   const [tastedDrinkIds, setTastedDrinkIds] = useState([]);
+  // Liste « À goûter » (bouton de la fiche d'un produit) : dans le compte dès que la base répond (wishlistSynced), sinon, en attendant, une copie du navigateur.
   const [wishlistDrinkIds, setWishlistDrinkIds] = useState(() => loadLocal("bibamus-wishlist-drinks", []));
+  const [wishlistSynced, setWishlistSynced] = useState(false);
 
   useEffect(() => {
     if (!session) return;
@@ -1435,7 +1434,21 @@ export default function App() {
       return alreadyTasted ? prev.filter((x) => x !== id) : [...prev, id];
     });
   };
-  const toggleWishlistDrink = (id) => setWishlistDrinkIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const setWishlisted = (id, on) => setWishlistDrinkIds((prev) => (on ? (prev.includes(id) ? prev : [...prev, id]) : prev.filter((x) => x !== id)));
+  // Affichage immédiat, puis la réponse de la base (même principe que les cœurs des favoris) ; en cas d'erreur on revient en arrière.
+  const toggleWishlistDrink = async (drinkId) => {
+    const id = String(drinkId);
+    const was = wishlistDrinkIds.includes(id);
+    setWishlisted(id, !was);
+    if (!wishlistSynced) return;
+    const result = await toggleWishlistDrinkServer(id);
+    if (result?.error) {
+      setWishlisted(id, was);
+      alert(result.error);
+      return;
+    }
+    setWishlisted(id, !!result.wishlist);
+  };
 
   // Note et modes goûtés : partagés sur la fiche du produit elle-même (comme dans le prototype
   // Claude) — chaque Bibax y ajoute sa propre entrée, indexée par son code personnel.
@@ -1559,6 +1572,31 @@ export default function App() {
       setFavoriteBibaxIds(favs.bibax);
       setFavoriteDrinkIds(favs.drinks);
       setFavoritesSynced(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, profileLoaded]);
+
+  // Liste « À goûter » dans le compte : à la connexion, on reprend UNE FOIS la liste que le navigateur avait gardée, puis on lit la liste du compte, qui
+  // devient la vérité. Si la base ne répond pas (ou n'a pas encore les fonctions), on garde la copie du navigateur et la reprise sera retentée au prochain démarrage.
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId || !profileLoaded) return undefined;
+    let cancelled = false;
+    (async () => {
+      const migrationKey = `bibamus-a-gouter-migration-${userId}`;
+      if (!loadLocal(migrationKey, false)) {
+        const local = loadLocal("bibamus-wishlist-drinks", []);
+        const migrated = local.length > 0 ? await addWishlistDrinks(local) : { ok: true };
+        if (migrated.error) return;
+        saveLocal(migrationKey, true);
+      }
+      const ids = await loadMyWishlist();
+      if (cancelled || !ids) return;
+      setWishlistDrinkIds(ids);
+      setWishlistSynced(true);
     })();
     return () => {
       cancelled = true;
@@ -1924,6 +1962,11 @@ export default function App() {
       setFavoriteBibaxIds([]);
       setFavoriteDrinkIds([]);
       setFavoritesSynced(false);
+    }
+    // Idem pour la liste « À goûter » du compte.
+    if (wishlistSynced) {
+      setWishlistDrinkIds([]);
+      setWishlistSynced(false);
     }
   };
 
@@ -3294,11 +3337,22 @@ export default function App() {
             )}
             {screen === "myProducts" && (
               <MyProductsHubScreen
-                ratedCount={myRatedCount}
-                toTryCount={wishlistDrinkIds.length}
                 onBack={() => setScreen("profile")}
-                goToRated={() => setScreen("drinksDirectory")}
-                goToToTry={() => setScreen("drinksDirectory")}
+                goToToTry={() => setScreen("myProductsToTry")}
+                goToTasted={() => setScreen("myProductsTasted")}
+                goToRated={() => setScreen("myProductsRated")}
+              />
+            )}
+            {(screen === "myProductsToTry" || screen === "myProductsTasted" || screen === "myProductsRated") && (
+              <MyProductsListScreen
+                key={screen}
+                kind={screen === "myProductsToTry" ? "toTry" : screen === "myProductsTasted" ? "tasted" : "rated"}
+                onBack={() => setScreen("myProducts")}
+                onOpenDrink={(id) => {
+                  setScreenBeforeDrinkDetail(screen);
+                  setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
               />
             )}
             {screen === "eventSettings" && currentEvent && (
@@ -3835,7 +3889,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStatsWrapped", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "eventHistoryDetail", "myProducts", "myFavorites", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "bibaPulse", "bibaPing", "bibaxAllSuggestions", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStatsWrapped", "settings", "settingsCategory", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "eventHistoryDetail", "myProducts", "myFavorites", "myProductsToTry", "myProductsTasted", "myProductsRated", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroClub", "bibroHistory", "mutualBibax", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
