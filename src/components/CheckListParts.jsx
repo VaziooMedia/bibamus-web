@@ -112,7 +112,14 @@ export function CheckGroup({ label, flag = null, counts = null, isFirst, childre
   );
 }
 
-// Une ligne : rond de 40 px, nom en gras, ligne de détails à points vert fluo, et à droite le nombre de checks.
+// Le rond de profil des lignes : plus grand que les 40 px d'origine, SANS bouger le texte ni changer la hauteur de la ligne (64 px). Il grandit vers la gauche — dans la marge de 14 px de la carte —
+// et vers le haut et le bas — dans l'espace au-dessus et au-dessous : le bord droit du rond, donc le départ du texte, reste exactement où il était.
+const AVATAR_BASE = 40; // la taille d'origine
+const AVATAR_SIZE = 48;
+const ROW_HEIGHT = 64;
+const ROW_PAD_Y = (ROW_HEIGHT - AVATAR_SIZE) / 2;
+
+// Une ligne : rond de profil, nom en gras, ligne de détails à points vert fluo, et à droite le nombre de checks.
 export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, count, isLast, onOpen }) {
   return (
     <button
@@ -125,7 +132,7 @@ export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, part
         alignItems: "center",
         gap: "10px",
         width: "100%",
-        padding: "12px 0",
+        padding: `${ROW_PAD_Y}px 0`,
         background: "none",
         border: "none",
         borderBottom: isLast ? "none" : `1px solid ${COLORS.paperAlt}`,
@@ -135,8 +142,8 @@ export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, part
         cursor: onOpen ? "pointer" : "default",
       }}
     >
-      <span style={{ flexShrink: 0, display: "flex" }}>
-        <EntityAvatar photoUrl={avatarPhotoUrl} photoEmoji={avatarEmoji} size={40} fallbackIcon={fallbackIcon} />
+      <span style={{ flexShrink: 0, display: "flex", marginLeft: `-${AVATAR_SIZE - AVATAR_BASE}px` }}>
+        <EntityAvatar photoUrl={avatarPhotoUrl} photoEmoji={avatarEmoji} size={AVATAR_SIZE} fallbackIcon={fallbackIcon} />
       </span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
         <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{name}</span>
@@ -152,7 +159,7 @@ export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, part
           minWidth: "52px",
           boxSizing: "border-box",
           padding: "0 8px",
-          margin: `-12px -14px ${isLast ? "-12px" : "-13px"} 6px`,
+          margin: `-${ROW_PAD_Y}px -14px -${isLast ? ROW_PAD_Y : ROW_PAD_Y + 1}px 6px`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
