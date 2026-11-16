@@ -37,6 +37,7 @@ export function ProfileHubScreen({
   goToMyInfo,
   goToBibros,
   goToProducts,
+  goToDrinkChecks,
   goToVenues,
   goToFavorites,
   goToHistory,
@@ -79,7 +80,7 @@ export function ProfileHubScreen({
       {activeTab === "infos" && (
         <>
           <ProfileInfoBlock profile={profile} />
-          <ProfileStatCards bibros={bibros} myUserId={myUserId} goToBibros={goToBibros} goToProducts={goToProducts} goToVenues={goToVenues} />
+          <ProfileStatCards bibros={bibros} myUserId={myUserId} goToBibros={goToBibros} goToDrinkChecks={goToDrinkChecks} goToVenues={goToVenues} />
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
             <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title={<>Mes<br />BibaClub</>} onClick={goToBibaClubs} />

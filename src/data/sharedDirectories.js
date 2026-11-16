@@ -4960,6 +4960,19 @@ export async function loadMyCheckedDrinks() {
     .map((r) => ({ drinkId: String(r.drink_id), lastAt: r.last_at || null, rating: r.rating !== null && r.rating !== undefined && Number.isFinite(Number(r.rating)) ? Number(r.rating) : null }));
 }
 
+// Mes produits checkés (Mon Profil > DrinkChecks) : fonction get_my_drink_checks (script bibamus-sql-mes-drinkchecks-1-liste) :
+// [{ drinkId, checks, lastAt }], un produit une seule fois, du produit checké le plus récemment au plus ancien (checks = mon nombre de DrinkChecks sur ce produit).
+// Seuls comptent les DrinkChecks de fiche ou d'accueil (table drink_checkins), pas les verres de BibaSolo ni des salons. null si la lecture échoue
+// (y compris tant que la fonction n'existe pas dans la base).
+export async function loadMyDrinkChecks() {
+  const { data, error } = await supabase.rpc("get_my_drink_checks");
+  if (error || !Array.isArray(data)) {
+    if (error) console.error("loadMyDrinkChecks:", error);
+    return null;
+  }
+  return data.filter((r) => r.drink_id).map((r) => ({ drinkId: String(r.drink_id), checks: Number(r.checks) || 0, lastAt: r.last_at || null }));
+}
+
 // Mes lieux checkés (Mon Profil > PlaceChecks) : fonction get_my_checked_venues (script bibamus-sql-mes-lieux-1-liste) :
 // [{ venueId, visits, lastAt }], un lieu une seule fois, du lieu checké le plus récemment au plus ancien (visits = mon nombre de visites dans ce lieu).
 // Les lieux rapides (@home, @event) n'y figurent pas. null si la lecture échoue (y compris tant que la fonction n'existe pas dans la base).
