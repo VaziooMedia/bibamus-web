@@ -38,6 +38,22 @@ export function arrangeChecks(entries, sort, { nameOf, countOf, countryOf }) {
   return [{ key: "all", entries }];
 }
 
+// Les deux totaux de ce que la page affiche (la catégorie choisie, pour DrinkChecks) : le nombre de checks (la somme du chiffre de droite des lignes) et le nombre d'éléments uniques
+// (le nombre de lignes). `checkLabel` et `uniqueLabel` : [singulier, pluriel] ; le singulier vaut pour 0 et 1.
+export function CheckTotals({ checks, unique, checkLabel, uniqueLabel }) {
+  const line = (n, [one, many], key) => (
+    <div data-check-total={key} style={{ fontSize: "13px", color: COLORS.ink }}>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "16px", color: COLORS.amber }}>{n}</span> {n > 1 ? many : one}
+    </div>
+  );
+  return (
+    <div data-check-totals style={{ display: "flex", flexDirection: "column", gap: "2px", margin: "0 0 16px" }}>
+      {line(checks, checkLabel, "checks")}
+      {line(unique, uniqueLabel, "unique")}
+    </div>
+  );
+}
+
 // Un groupe : sa barre (drapeau éventuel + nom en vert fluo + trait), puis la carte de ses lignes. Sans nom, la carte seule.
 export function CheckGroup({ label, flag = null, isFirst, children }) {
   return (
