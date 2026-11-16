@@ -86,8 +86,9 @@ export function CheckTotals({ checks, unique, brand, uniqueLabel }) {
   );
 }
 
-// Un groupe : sa barre (drapeau éventuel + nom en vert fluo + trait), puis la carte de ses lignes. Sans nom, la carte seule.
-export function CheckGroup({ label, flag = null, isFirst, children }) {
+// Un groupe : sa barre (drapeau éventuel + nom en vert fluo + trait + totaux éventuels en bout de ligne), puis la carte de ses lignes. Sans nom, la carte seule.
+// `counts` : { checks, unique } — les totaux du groupe, au bout de la barre, sous la forme « (12 / 3) » : parenthèses et barre en blanc, chiffres en vert fluo.
+export function CheckGroup({ label, flag = null, counts = null, isFirst, children }) {
   return (
     <section data-check-group={label || ""}>
       {label && (
@@ -97,6 +98,11 @@ export function CheckGroup({ label, flag = null, isFirst, children }) {
             {label}
           </span>
           <div style={SOLO_BAR_LINE_STYLE} />
+          {counts && (
+            <span data-check-group-counts style={{ ...SOLO_BAR_LABEL_STYLE, color: COLORS.ink }}>
+              (<span style={{ color: COLORS.amber }}>{counts.checks}</span> / <span style={{ color: COLORS.amber }}>{counts.unique}</span>)
+            </span>
+          )}
         </div>
       )}
       <div data-check-section style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px", overflow: "hidden" }}>
