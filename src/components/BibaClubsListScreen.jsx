@@ -8,6 +8,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { loadMyClubs, loadMyClubInvitations, searchPublicClubs } from "../data/sharedDirectories.js";
 import { ClubInvitationCard } from "./ClubInvitationCard.jsx";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 function ClubRow({ club, subtitle, onClick }) {
   return (
@@ -50,14 +51,23 @@ const inputStyle = {
   fontSize: "14px",
 };
 
-export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub }) {
-  const [myClubs, setMyClubs] = useState(null);
-  const [invitations, setInvitations] = useState([]);
-  const [searchInput, setSearchInput] = useState("");
-  const [searchResults, setSearchResults] = useState(null);
+// Retour d'un BibaClub (norme de l'app, voir `useListReturn`) : la page se remet à la hauteur où on l'avait laissée, avec ses clubs, ses invitations, la recherche tapée
+// et ses résultats ; les clubs et les invitations sont relus en silence. Une entrée depuis Mon Profil repart de zéro.
+export function BibaClubsListScreen({ myUserId, onBack, onOpenClub: onOpenClubProp, onCreateClub, mainScrollRef }) {
+  const { restored, save, open } = useListReturn("bibaClubsList", mainScrollRef);
+  const onOpenClub = open(onOpenClubProp);
+  const [myClubs, setMyClubs] = useState(restored ? restored.myClubs : null);
+  const [invitations, setInvitations] = useState(restored ? restored.invitations : []);
+  const [searchInput, setSearchInput] = useState(restored ? restored.searchInput : "");
+  const [searchResults, setSearchResults] = useState(restored ? restored.searchResults : null);
   const [searchBusy, setSearchBusy] = useState(false);
   const [searchError, setSearchError] = useState(null);
   const searchSeq = React.useRef(0);
+  // Au retour, les résultats de recherche déjà affichés sont gardés tels quels : la première recherche est sautée.
+  const skipFirstSearch = React.useRef(!!restored && restored.searchInput.trim().length >= 2);
+  useEffect(() => {
+    if (myClubs !== null) save({ myClubs, invitations, searchInput, searchResults });
+  }, [myClubs, invitations, searchInput, searchResults]);
 
   useEffect(() => {
     loadMyClubs(myUserId).then(setMyClubs);
@@ -67,6 +77,10 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub, onCreateClub
 
   // Recherche parmi les clubs publics : lancée 0,4 s après la dernière frappe, à partir de 2 caractères.
   useEffect(() => {
+    if (skipFirstSearch.current) {
+      skipFirstSearch.current = false;
+      return undefined;
+    }
     const text = searchInput.trim();
     searchSeq.current += 1;
     const seq = searchSeq.current;

@@ -6,6 +6,7 @@
 // mémoire (un Bibax dont la relation n'est plus confirmée n'est de toute façon plus rendu par le serveur).
 // Chaque ligne ouvre la fiche ; son retour ramène sur la page de la liste.
 import React, { useState, useEffect } from "react";
+import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar, ActionCard } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
@@ -122,11 +123,13 @@ export function MyFavoritesScreen({ bibros = [], onBack, goTo }) {
   );
 }
 
-// Une page de liste (kind : "venues" | "drinks" | "brands" | "producers" | "bibax").
-export function MyFavoritesListScreen({ kind, bibros = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenBibax, onOpenDrink }) {
+// Une page de liste (kind : "venues" | "drinks" | "brands" | "producers" | "bibax"). `screenId` : l'identifiant de l'écran dans App (la mémoire du retour d'une fiche
+// est rangée sous ce nom, voir `useListReturn`) : au retour d'une fiche, la liste se remet à la hauteur où l'on l'avait laissée ; une entrée depuis « Mes Favoris » repart de zéro.
+export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenBibax, onOpenDrink }) {
   const meta = KINDS.find((k) => k.kind === kind);
-  const [ids, setIds] = useState(null); // null = chargement ; identifiants de cette sorte, du plus récent au plus ancien
-  const [byId, setById] = useState({});
+  const { restored, save, open } = useListReturn(screenId, mainScrollRef);
+  const [ids, setIds] = useState(restored ? restored.ids : null); // null = chargement ; identifiants de cette sorte, du plus récent au plus ancien
+  const [byId, setById] = useState(restored ? restored.byId : {});
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
@@ -136,11 +139,16 @@ export function MyFavoritesListScreen({ kind, bibros = [], onBack, onOpenVenue, 
     loadMyFavorites().then(async (result) => {
       if (cancelled) return;
       if (!result) {
-        setError(true);
-        setIds((prev) => prev || []);
+        // Au retour d'une fiche, on garde en silence ce qu'on avait.
+        if (!restored) {
+          setError(true);
+          setIds((prev) => prev || []);
+        }
         return;
       }
       const wanted = result[kind] || [];
+      // Au retour d'une fiche, rien à remplacer si la liste n'a pas changé.
+      if (restored && wanted.join(",") === restored.ids.join(",")) return;
       const loader = { venues: loadVenuesByIds, drinks: loadDrinksByIds, brands: loadBrandsByIds, producers: loadBreweriesByIds }[kind];
       const items = loader ? await loader(wanted) : [];
       if (cancelled) return;
@@ -150,7 +158,19 @@ export function MyFavoritesListScreen({ kind, bibros = [], onBack, onOpenVenue, 
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, attempt]);
+
+  // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
+  useEffect(() => {
+    if (ids === null || error) return;
+    save({ ids, byId });
+  }, [ids, byId, error]);
+  const openVenue = onOpenVenue ? open(onOpenVenue) : null;
+  const openDrink = onOpenDrink ? open(onOpenDrink) : null;
+  const openBrand = onOpenBrand ? open(onOpenBrand) : null;
+  const openProducer = onOpenProducer ? open(onOpenProducer) : null;
+  const openBibax = onOpenBibax ? open(onOpenBibax) : null;
 
   const loading = ids === null;
   const last = (arr, i) => i === arr.length - 1;
@@ -166,7 +186,7 @@ export function MyFavoritesListScreen({ kind, bibros = [], onBack, onOpenVenue, 
         title={v.name}
         details={[v.city, countryFlagPart(v.country)].filter(Boolean)}
         isLast={last(resolved, i)}
-        onOpen={onOpenVenue ? () => onOpenVenue(v.id) : null}
+        onOpen={openVenue ? () => openVenue(v.id) : null}
       />
     ));
   } else if (kind === "drinks") {
@@ -178,7 +198,7 @@ export function MyFavoritesListScreen({ kind, bibros = [], onBack, onOpenVenue, 
         title={d.name}
         details={[d.type, d.brand].filter(Boolean)}
         isLast={last(resolved, i)}
-        onOpen={onOpenDrink ? () => onOpenDrink(d.id) : null}
+        onOpen={openDrink ? () => openDrink(d.id) : null}
       />
     ));
   } else if (kind === "brands") {
@@ -190,7 +210,7 @@ export function MyFavoritesListScreen({ kind, bibros = [], onBack, onOpenVenue, 
         title={b.name}
         details={[b.originCountry].filter(Boolean)}
         isLast={last(resolved, i)}
-        onOpen={onOpenBrand ? () => onOpenBrand(b.id) : null}
+        onOpen={openBrand ? () => openBrand(b.id) : null}
       />
     ));
   } else if (kind === "producers") {
@@ -202,7 +222,7 @@ export function MyFavoritesListScreen({ kind, bibros = [], onBack, onOpenVenue, 
         title={p.name}
         details={[p.city, p.country].filter(Boolean)}
         isLast={last(resolved, i)}
-        onOpen={onOpenProducer ? () => onOpenProducer(p.id) : null}
+        onOpen={openProducer ? () => openProducer(p.id) : null}
       />
     ));
   } else {
@@ -215,7 +235,7 @@ export function MyFavoritesListScreen({ kind, bibros = [], onBack, onOpenVenue, 
         title={[b.name, b.lastName].filter(Boolean).join(" ")}
         details={[b.nickname, b.city].filter(Boolean)}
         isLast={last(people, i)}
-        onOpen={onOpenBibax ? () => onOpenBibax(b.code) : null}
+        onOpen={openBibax ? () => openBibax(b.code) : null}
       />
     ));
   }

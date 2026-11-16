@@ -11,6 +11,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
 import { MyPhotosScreen } from "./MyPhotosScreen.jsx";
+import { useListReturn } from "../hooks/useListReturn.js";
 import { makeSearchMatcher, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery } from "../utils.js";
 import {
   loadPendingBibaxRequests,
@@ -266,8 +267,16 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
   );
 }
 
-export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack, onBibaxAdded, onOpenBibaxProfile, onSeeAllSuggestions }) {
-  const [query, setQuery] = useState("");
+// Retour d'une fiche (norme de l'app, voir `useListReturn`) : la liste se remet à la hauteur où on l'avait laissée, avec la recherche tapée ; une entrée depuis Mon Profil repart de zéro.
+export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack, onBibaxAdded, onOpenBibaxProfile, onSeeAllSuggestions, mainScrollRef }) {
+  const { restored, save, open } = useListReturn("bibrosList", mainScrollRef);
+  const [query, setQuery] = useState(restored ? restored.query : "");
+  useEffect(() => {
+    save({ query });
+  }, [query]);
+  const viewBibro = onViewBibro ? open(onViewBibro) : onViewBibro;
+  const openBibaxProfile = onOpenBibaxProfile ? open(onOpenBibaxProfile) : onOpenBibaxProfile;
+  const seeAllSuggestions = onSeeAllSuggestions ? open(onSeeAllSuggestions) : onSeeAllSuggestions;
 
   // Même règle de recherche que partout dans l'app (voir makeSearchMatcher) : prénom, nom, surnom, alias, ville et pays, dans n'importe quel ordre.
   const matchesText = makeSearchMatcher(query);
@@ -329,7 +338,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
         </button>
       </div>
 
-      <BibaxRequestsAndSuggestions onBibaxAdded={onBibaxAdded || (() => {})} onOpenProfile={onOpenBibaxProfile || (() => {})} onSeeAllSuggestions={onSeeAllSuggestions} />
+      <BibaxRequestsAndSuggestions onBibaxAdded={onBibaxAdded || (() => {})} onOpenProfile={openBibaxProfile || (() => {})} onSeeAllSuggestions={seeAllSuggestions} />
 
       <input
         value={query}
@@ -350,7 +359,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
           return (
             <div
               key={b.code}
-              onClick={() => onViewBibro(b.code)}
+              onClick={() => viewBibro(b.code)}
               style={{ background: COLORS.surface, border: `2px solid ${status ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", cursor: "pointer" }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -401,7 +410,14 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   );
 }
 
-export function MutualBibaxScreen({ bibros, bibroName, onBack, onViewBibro, onOpenStoryAuthor }) {
+// Retour d'une fiche (norme de l'app, voir `useListReturn`) : la liste se remet à la hauteur où on l'avait laissée ; la flèche retour vers la fiche du Bibax efface la mémoire.
+export function MutualBibaxScreen({ bibros, bibroName, onBack: onBackProp, onViewBibro: onViewBibroProp, onOpenStoryAuthor, mainScrollRef }) {
+  const { save, open, leave } = useListReturn("mutualBibax", mainScrollRef, { valid: (m) => m.ctx === `${bibroName}|${bibros.length}` });
+  const onBack = leave(onBackProp);
+  const onViewBibro = open(onViewBibroProp);
+  useEffect(() => {
+    save({ ctx: `${bibroName}|${bibros.length}` });
+  }, [bibroName, bibros.length]);
   const [pulseStories, setPulseStories] = useState([]);
 
   useEffect(() => {

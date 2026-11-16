@@ -76,6 +76,7 @@ import { BibaSoloScreen } from "./components/BibaSoloScreen.jsx";
 import { clearMyStatsMemory } from "./components/MyStatsScreen.jsx";
 import { MyHistoryScreen, clearMyHistoryMemory, hasMyHistoryMemory } from "./components/MyHistoryScreen.jsx";
 import { MyFavoritesScreen, MyFavoritesListScreen } from "./components/MyFavoritesScreen.jsx";
+import { hasListMemory, pruneListMemories } from "./hooks/useListReturn.js";
 import { MyPlaceChecksScreen } from "./components/MyPlaceChecksScreen.jsx";
 import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.jsx";
 import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
@@ -219,10 +220,21 @@ export default function App() {
   // Retour sur la fiche produit depuis un lieu ou un profil Bibax ouvert via l'onglet Biba360 : la fiche se replace
   // elle-même (même onglet, même hauteur), on ne remonte donc pas en haut.
   const drinkReturn = useDrinkReturnMemo(screen);
+  // La mémoire d'une liste est relevée AVANT que la page n'écrive dans la sienne : une page qui sauvegarde dès son premier affichage (la liste des Bibax, par exemple)
+  // créerait sinon sa mémoire avant l'effet ci-dessous, et une première entrée serait prise pour un retour (donc sans remonter en haut).
+  const listMemoryOnEntryRef = React.useRef(false);
+  React.useLayoutEffect(() => {
+    listMemoryOnEntryRef.current = hasListMemory(screen);
+  }, [screen]);
   useEffect(() => {
+    // Norme du retour d'une fiche sur une liste (hooks/useListReturn.js) : la mémoire des listes ne vit que dans la boucle « liste <-> fiches ». Hors d'une fiche, on l'efface :
+    // une entrée dans une liste depuis sa page parent repart toujours de zéro.
+    pruneListMemories(screen);
     if (drinkReturn.keepsScroll(screen, viewedDrinkId)) return;
     // Retour sur « Mon Historique » depuis une fiche : l'écran se replace lui-même à la hauteur où l'on l'avait laissé.
     if (screen === "eventHistory" && hasMyHistoryMemory()) return;
+    // Idem pour toute page de liste qui suit la norme du retour d'une fiche (hooks/useListReturn.js) : elle se replace elle-même à la hauteur où l'on l'avait laissée.
+    if (listMemoryOnEntryRef.current) return;
     mainScrollRef.current?.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
@@ -2341,7 +2353,7 @@ export default function App() {
               />
             )}
             {screen === "bibaxDirectory" && (
-              <BibaxDirectoryScreen bibros={bibros} onOpenBibaxProfile={(code) => openBibaxProfile(code, "bibaxDirectory")} onBack={() => setScreen("atlasSearch")} />
+              <BibaxDirectoryScreen mainScrollRef={mainScrollRef} bibros={bibros} onOpenBibaxProfile={(code) => openBibaxProfile(code, "bibaxDirectory")} onBack={() => setScreen("atlasSearch")} />
             )}
             {screen === "newSalonEvent" && (
               <NewEventScreen
@@ -2363,6 +2375,7 @@ export default function App() {
             )}
             {screen === "venueDirectory" && (
               <VenueDirectoryScreen
+                mainScrollRef={mainScrollRef}
                 myBibroCode={profile.myBibroCode}
                 addIntent={false}
                 onBack={() => setScreen(screenBeforeVenueDirectory)}
@@ -2518,6 +2531,7 @@ export default function App() {
             )}
             {screen === "drinksDirectory" && (
               <DrinksDirectoryScreen
+                mainScrollRef={mainScrollRef}
                 myBibroCode={profile.myBibroCode}
                 onBack={leaveDrinksDirectory}
                 openedFromDrink={drinksDirectoryOpenedFromDrink}
@@ -2639,6 +2653,7 @@ export default function App() {
             )}
             {screen === "venueCategoryDrinks" && viewedVenue && (
               <VenueCategoryDrinksScreen
+                mainScrollRef={mainScrollRef}
                 venue={viewedVenue}
                 category={viewedMenuCategory}
                 onBack={() => setScreen("venueMenuCategories")}
@@ -2715,6 +2730,7 @@ export default function App() {
             )}
             {screen === "drinkBibaxChecks" && drinkBibaxList && viewedDrink && drinkBibaxList.drinkId === viewedDrink.id && (
               <DrinkBibaxChecksScreen
+                mainScrollRef={mainScrollRef}
                 drinkName={viewedDrink.name}
                 rows={drinkBibaxList.rows}
                 onBack={() => setScreen("drinkDetail")}
@@ -2795,6 +2811,7 @@ export default function App() {
             )}
             {screen === "bibaClubsList" && (
               <BibaClubsListScreen
+                mainScrollRef={mainScrollRef}
                 myUserId={session.user.id}
                 onBack={() => setScreen("profile")}
                 onOpenClub={(clubId) => {
@@ -2908,6 +2925,8 @@ export default function App() {
             {(screen === "search" || screen === "atlasSearch") && (
               <SearchScreen
                 key={screen}
+                screenId={screen}
+                mainScrollRef={mainScrollRef}
                 breweriesDirectory={breweriesDirectory}
                 brandsDirectory={brandsDirectory}
                 onOpenVenue={(id) => {
@@ -2930,7 +2949,7 @@ export default function App() {
                   setScreenBeforeBrandDetail(screen);
                   setScreen("brandDetail");
                 }}
-                onOpenBibaxProfile={(code) => openBibaxProfile(code)}
+                onOpenBibaxProfile={(code) => openBibaxProfile(code, screen)}
                 goToScan={() => setShowBarcodeScanner(true)}
                 goToAtlas={() => setScreen("repertoireHub")}
                 hideBibaxAndAtlas={screen === "search" && screenBeforeSearch === "repertoireHub"}
@@ -3316,6 +3335,8 @@ export default function App() {
             {["myFavoritesVenues", "myFavoritesDrinks", "myFavoritesBrands", "myFavoritesProducers", "myFavoritesBibax"].includes(screen) && (
               <MyFavoritesListScreen
                 key={screen}
+                screenId={screen}
+                mainScrollRef={mainScrollRef}
                 kind={{ myFavoritesVenues: "venues", myFavoritesDrinks: "drinks", myFavoritesBrands: "brands", myFavoritesProducers: "producers", myFavoritesBibax: "bibax" }[screen]}
                 bibros={bibros}
                 onBack={() => setScreen("myFavorites")}
@@ -3357,6 +3378,8 @@ export default function App() {
             {(screen === "myProductsToTry" || screen === "myProductsTasted" || screen === "myProductsRated") && (
               <MyProductsListScreen
                 key={screen}
+                screenId={screen}
+                mainScrollRef={mainScrollRef}
                 kind={screen === "myProductsToTry" ? "toTry" : screen === "myProductsTasted" ? "tasted" : "rated"}
                 onBack={() => setScreen("myProducts")}
                 onOpenDrink={(id) => {
@@ -3368,6 +3391,7 @@ export default function App() {
             )}
             {screen === "myDrinkChecks" && (
               <MyDrinkChecksScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen("profile")}
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail("myDrinkChecks");
@@ -3378,6 +3402,7 @@ export default function App() {
             )}
             {screen === "myPlaceChecks" && (
               <MyPlaceChecksScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen("profile")}
                 onOpenVenue={(id) => {
                   setScreenBeforeVenueDetail("myPlaceChecks");
@@ -3428,6 +3453,7 @@ export default function App() {
             )}
             {screen === "breweryDirectory" && (
               <BreweryDirectoryScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen(screenBeforeBreweryDirectory)}
                 onOpenBrewery={(id) => {
                   setViewedBreweryId(id);
@@ -3440,6 +3466,7 @@ export default function App() {
             )}
             {screen === "brandDirectory" && (
               <BrandDirectoryScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen(screenBeforeBrandDirectory)}
                 onOpenBrand={(id) => {
                   setViewedBrandId(id);
@@ -3524,6 +3551,7 @@ export default function App() {
             )}
             {screen === "bibrosList" && (
               <BibrosListScreen
+                mainScrollRef={mainScrollRef}
                 myName={profile.name}
                 profile={profile}
                 checkIns={checkIns}
@@ -3556,7 +3584,7 @@ export default function App() {
                     });
                   });
                 }}
-                onOpenBibaxProfile={(code) => openBibaxProfile(code)}
+                onOpenBibaxProfile={(code) => openBibaxProfile(code, "bibrosList")}
                 onSeeAllSuggestions={() => {
                   setScreenBeforeBibaxSuggestions("bibrosList");
                   setScreen("bibaxAllSuggestions");
@@ -3605,7 +3633,7 @@ export default function App() {
                 onOpenStoryAuthor={setViewedStoryAuthor}
                 onViewMutualBibax={async (userId, name) => {
                   const list = await loadMutualBibaxList(userId);
-                  setMutualBibaxData({ list, name });
+                  setMutualBibaxData({ list, name, fromCode: viewedBibroId, fromBack: screenBeforeBibroDetail });
                   setScreen("mutualBibax");
                 }}
                 goToBibroMedia={() => {
@@ -3647,12 +3675,20 @@ export default function App() {
             )}
             {screen === "mutualBibax" && (
               <MutualBibaxScreen
+                mainScrollRef={mainScrollRef}
                 bibros={mutualBibaxData?.list || []}
                 bibroName={mutualBibaxData?.name}
-                onBack={() => setScreen("bibroDetail")}
+                onBack={() => {
+                  // On rouvre la fiche du Bibax d'où l'on est venu (celle d'un Bibax en commun a pu la remplacer), avec son propre retour.
+                  if (mutualBibaxData?.fromCode) {
+                    setViewedBibroId(mutualBibaxData.fromCode);
+                    setScreenBeforeBibroDetail(mutualBibaxData.fromBack || "bibrosList");
+                  }
+                  setScreen("bibroDetail");
+                }}
                 onViewBibro={(code) => {
                   setViewedBibroId(code);
-                  setScreenBeforeBibroDetail("bibrosList");
+                  setScreenBeforeBibroDetail("mutualBibax");
                   setScreen("bibroDetail");
                 }}
                 onOpenStoryAuthor={setViewedStoryAuthor}
@@ -3786,8 +3822,9 @@ export default function App() {
             )}
             {screen === "bibaxAllSuggestions" && (
               <BibaxAllSuggestionsScreen
+                mainScrollRef={mainScrollRef}
                 onBack={() => setScreen(screenBeforeBibaxSuggestions)}
-                onOpenProfile={(code) => openBibaxProfile(code)}
+                onOpenProfile={(code) => openBibaxProfile(code, "bibaxAllSuggestions")}
               />
             )}
             {screen === "bibaSolo" && (

@@ -1,16 +1,32 @@
 import React, { useState, useEffect } from "react";
+import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS } from "../constants.js";
 import { PageHeader, EntityAvatar, BibaxName } from "./ui.jsx";
 import { loadBibaxSuggestions, sendBibaxRequest } from "../data/sharedDirectories.js";
 
 // Toutes les suggestions de Bibax — pas seulement les 3 premières affichées sur l'accueil.
-export function BibaxAllSuggestionsScreen({ onBack, onOpenProfile }) {
-  const [suggestions, setSuggestions] = useState(null);
+// Retour d'un profil (norme de l'app, voir `useListReturn`) : la liste se remet à la hauteur où on l'avait laissée, puis elle est relue en silence
+// (quelqu'un qu'on vient d'ajouter depuis son profil disparaît) ; la flèche retour vers la page d'origine efface la mémoire.
+export function BibaxAllSuggestionsScreen({ onBack: onBackProp, onOpenProfile: onOpenProfileProp, mainScrollRef }) {
+  const { restored, save, open, leave } = useListReturn("bibaxAllSuggestions", mainScrollRef);
+  const onBack = leave(onBackProp);
+  const onOpenProfile = open(onOpenProfileProp);
+  const [suggestions, setSuggestions] = useState(restored ? restored.suggestions : null);
   const [busyCode, setBusyCode] = useState(null);
 
   useEffect(() => {
-    loadBibaxSuggestions(50).then(setSuggestions);
+    let alive = true;
+    loadBibaxSuggestions(50).then((list) => {
+      if (alive) setSuggestions((prev) => (prev && JSON.stringify(prev) === JSON.stringify(list) ? prev : list));
+    });
+    return () => {
+      alive = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (suggestions !== null) save({ suggestions });
+  }, [suggestions]);
 
   const addSuggestion = async (bibroCode) => {
     setBusyCode(bibroCode);

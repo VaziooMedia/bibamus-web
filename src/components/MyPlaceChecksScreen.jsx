@@ -3,6 +3,8 @@
 // Mêmes lignes que « Mes Favoris > Lieux » (rond de 40 px, nom en gras, ville · drapeau du pays) dans une carte, lignes pleine
 // largeur séparées par un trait fin. Une ligne ouvre la fiche du lieu, dont le retour ramène ici. Une liste vide dit quel geste l'alimente.
 // Les lignes, les groupes et les classements sont communs avec « DrinkChecks » (CheckListParts.jsx).
+// Retour d'une fiche : la page se remet comme on l'avait laissée (classement et hauteur de défilement, voir `useListReturn`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
+// en silence et remplacée seulement si elle a changé (un PlaceCheck fait sur la fiche). Une entrée depuis Mon Profil repart de zéro.
 // Les identifiants viennent de la fonction `get_my_checked_venues` (script bibamus-sql-mes-lieux-1-liste), puis les lieux par `loadVenuesByIds`.
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
@@ -12,15 +14,19 @@ import { ScreenTitle, countryFlagPart } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow } from "./CheckListParts.jsx";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 const SORT_FIELDS = { nameOf: (x) => x.venue.name, countOf: (x) => x.visits, countryOf: (x) => x.venue.country };
 
-export function MyPlaceChecksScreen({ onBack, onOpenVenue }) {
-  const [items, setItems] = useState(null); // null = chargement ; [{ venueId, visits, lastAt }]
-  const [venuesById, setVenuesById] = useState({});
+const signatureOf = (list) => list.map((x) => `${x.venueId}:${x.visits}`).join(",");
+
+export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
+  const { restored, save, open } = useListReturn("myPlaceChecks", mainScrollRef);
+  const [items, setItems] = useState(restored ? restored.items : null); // null = chargement ; [{ venueId, visits, lastAt }]
+  const [venuesById, setVenuesById] = useState(restored ? restored.venuesById : {});
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [sort, setSort] = useState("recent");
+  const [sort, setSort] = useState(restored ? restored.sort : "recent");
 
   useEffect(() => {
     let cancelled = false;
@@ -29,10 +35,15 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue }) {
       if (cancelled) return;
       if (!list) {
         // Si la base n'a pas répondu, on ne prétend pas que la liste est vide : on n'affiche que le message d'erreur.
-        setError(true);
-        setItems((prev) => prev || []);
+        // Au retour d'une fiche, on garde en silence ce qu'on avait.
+        if (!restored) {
+          setError(true);
+          setItems((prev) => prev || []);
+        }
         return;
       }
+      // Au retour d'une fiche, rien à remplacer si la liste n'a pas changé.
+      if (restored && signatureOf(list) === signatureOf(restored.items)) return;
       const venues = await loadVenuesByIds(list.map((x) => x.venueId));
       if (cancelled) return;
       setVenuesById(Object.fromEntries(venues.map((v) => [String(v.id), v])));
@@ -41,7 +52,15 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue }) {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
+
+  // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
+  useEffect(() => {
+    if (items === null || error) return;
+    save({ items, venuesById, sort });
+  }, [items, venuesById, sort, error]);
+  const openVenue = onOpenVenue ? open(onOpenVenue) : null;
 
   const loading = items === null;
   const entries = (items || []).map((x) => ({ ...x, venue: venuesById[x.venueId] })).filter((x) => x.venue);
@@ -82,7 +101,7 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue }) {
                     parts={[x.venue.city, sort !== "country" ? countryFlagPart(x.venue.country) : null].filter(Boolean)}
                     count={x.visits}
                     isLast={i === g.entries.length - 1}
-                    onOpen={onOpenVenue ? () => onOpenVenue(x.venue.id) : null}
+                    onOpen={openVenue ? () => openVenue(x.venue.id) : null}
                   />
                 ))}
               </CheckGroup>

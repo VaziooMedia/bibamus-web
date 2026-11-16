@@ -3,6 +3,8 @@
 // Au-dessus des quatre classements, une rangée de pastilles de catégories (Tout, Bières & Cidres, Vins & Bulles…, seules les catégories non vides) :
 // elle ne garde que les produits d'une catégorie, et le classement choisi s'applique à ce qui reste.
 // Une ligne ouvre la fiche du produit, dont le retour ramène ici.
+// Retour d'une fiche : la page se remet comme on l'avait laissée (catégorie, classement et hauteur de défilement, voir `useListReturn`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
+// en silence et remplacée seulement si elle a changé (un DrinkCheck fait sur la fiche). Une entrée depuis Mon Profil repart de zéro.
 // Les identifiants viennent de la fonction `get_my_drink_checks` (script bibamus-sql-mes-drinkchecks-1-liste), puis les produits par `loadDrinksByIds`.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
@@ -12,6 +14,7 @@ import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { PillTabs, FINE_PILL } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow } from "./CheckListParts.jsx";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 const SORT_FIELDS = { nameOf: (x) => x.drink.name, countOf: (x) => x.checks, countryOf: (x) => (x.drink.nationality && x.drink.nationality !== "Non renseigné" ? x.drink.nationality : "") };
 const hasFlag = (country) => !!COUNTRY_ISO_CODES[country] || country === "International" || country === "Autre";
@@ -44,13 +47,16 @@ function CategoryChips({ chips, active, onChange }) {
   );
 }
 
-export function MyDrinkChecksScreen({ onBack, onOpenDrink }) {
-  const [items, setItems] = useState(null); // null = chargement ; [{ drinkId, checks, lastAt }]
-  const [drinksById, setDrinksById] = useState({});
+const signatureOf = (list) => list.map((x) => `${x.drinkId}:${x.checks}`).join(",");
+
+export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
+  const { restored, save, open } = useListReturn("myDrinkChecks", mainScrollRef);
+  const [items, setItems] = useState(restored ? restored.items : null); // null = chargement ; [{ drinkId, checks, lastAt }]
+  const [drinksById, setDrinksById] = useState(restored ? restored.drinksById : {});
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [sort, setSort] = useState("recent");
-  const [category, setCategory] = useState("all");
+  const [sort, setSort] = useState(restored ? restored.sort : "recent");
+  const [category, setCategory] = useState(restored ? restored.category : "all");
 
   useEffect(() => {
     let cancelled = false;
@@ -59,10 +65,15 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink }) {
       if (cancelled) return;
       if (!list) {
         // Si la base n'a pas répondu, on ne prétend pas que la liste est vide : on n'affiche que le message d'erreur.
-        setError(true);
-        setItems((prev) => prev || []);
+        // Au retour d'une fiche, on garde en silence ce qu'on avait.
+        if (!restored) {
+          setError(true);
+          setItems((prev) => prev || []);
+        }
         return;
       }
+      // Au retour d'une fiche, rien à remplacer si la liste n'a pas changé.
+      if (restored && signatureOf(list) === signatureOf(restored.items)) return;
       const drinks = await loadDrinksByIds(list.map((x) => x.drinkId));
       if (cancelled) return;
       setDrinksById(Object.fromEntries(drinks.map((d) => [String(d.id), d])));
@@ -71,14 +82,24 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink }) {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
+
+  // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
+  useEffect(() => {
+    if (items === null || error) return;
+    save({ items, drinksById, sort, category });
+  }, [items, drinksById, sort, category, error]);
+  const openDrink = onOpenDrink ? open(onOpenDrink) : null;
 
   const loading = items === null;
   const allEntries = (items || []).map((x) => ({ ...x, drink: drinksById[x.drinkId] })).filter((x) => x.drink);
   // Les catégories dans l'ordre habituel de l'app, puis celles que la liste ne connaît pas ; seules les catégories non vides.
   const known = [...DRINK_TYPES, ...new Set(allEntries.map(categoryOf).filter((t) => !DRINK_TYPES.includes(t)))].filter((t) => allEntries.some((x) => categoryOf(x) === t));
   const chips = [{ key: "all", label: "Tout" }, ...known.map((t) => ({ key: t, label: t }))];
-  const entries = category !== "all" ? allEntries.filter((x) => categoryOf(x) === category) : allEntries;
+  // Une catégorie qui n'a plus de produit (liste relue au retour d'une fiche) ne laisse pas une liste vide : on revient à « Tout ».
+  const activeCategory = chips.some((c) => c.key === category) ? category : "all";
+  const entries = activeCategory !== "all" ? allEntries.filter((x) => categoryOf(x) === activeCategory) : allEntries;
   const groups = arrangeChecks(entries, sort, SORT_FIELDS);
 
   return (
@@ -104,7 +125,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink }) {
           </p>
         ) : (
           <>
-            <CategoryChips chips={chips} active={category} onChange={setCategory} />
+            <CategoryChips chips={chips} active={activeCategory} onChange={setCategory} />
             <PillTabs tabs={CHECK_SORTS} active={sort} onChange={setSort} fine />
             {groups.map((g, gi) => (
               <CheckGroup key={g.key} label={g.label} flag={g.country && hasFlag(g.country) ? <CountryFlagImg country={g.country} size={16} /> : null} isFirst={gi === 0}>
@@ -118,7 +139,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink }) {
                     parts={[SUBTYPE_LABELS[x.drink.beverageSubtype] || null].filter(Boolean)}
                     count={x.checks}
                     isLast={i === g.entries.length - 1}
-                    onOpen={onOpenDrink ? () => onOpenDrink(x.drink.id) : null}
+                    onOpen={openDrink ? () => openDrink(x.drink.id) : null}
                   />
                 ))}
               </CheckGroup>

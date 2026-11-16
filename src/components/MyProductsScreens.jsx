@@ -10,6 +10,7 @@ import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
 import { DotLine, ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { RatingFraction } from "./NotesCard.jsx";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 const countLabel = (n) => `${n} produit${n > 1 ? "s" : ""}`;
 
@@ -121,11 +122,13 @@ const LOADERS = {
   rated: loadMyRatedDrinks,
 };
 
-// kind : "toTry" | "tasted" | "rated".
-export function MyProductsListScreen({ kind, onBack, onOpenDrink }) {
+// kind : "toTry" | "tasted" | "rated". `screenId` : l'identifiant de l'écran dans App (la mémoire du retour d'une fiche est rangée sous ce nom, voir `useListReturn`) :
+// au retour d'une fiche produit, la liste se remet à la hauteur où l'on l'avait laissée ; une entrée depuis « Mes Produits » repart de zéro.
+export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, onOpenDrink }) {
   const texts = LIST_TEXTS[kind];
-  const [items, setItems] = useState(null); // null = chargement ; [{ drinkId, rating }]
-  const [drinksById, setDrinksById] = useState({});
+  const { restored, save, open } = useListReturn(screenId, mainScrollRef);
+  const [items, setItems] = useState(restored ? restored.items : null); // null = chargement ; [{ drinkId, rating }]
+  const [drinksById, setDrinksById] = useState(restored ? restored.drinksById : {});
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
@@ -135,10 +138,16 @@ export function MyProductsListScreen({ kind, onBack, onOpenDrink }) {
     LOADERS[kind]().then(async (list) => {
       if (cancelled) return;
       if (!list) {
-        setError(true);
-        setItems((prev) => prev || []);
+        // Au retour d'une fiche, on garde en silence ce qu'on avait.
+        if (!restored) {
+          setError(true);
+          setItems((prev) => prev || []);
+        }
         return;
       }
+      // Au retour d'une fiche, rien à remplacer si la liste n'a pas changé.
+      const signature = (l) => l.map((x) => `${x.drinkId}:${x.rating ?? ""}`).join(",");
+      if (restored && signature(list) === signature(restored.items)) return;
       const drinks = await loadDrinksByIds(list.map((x) => x.drinkId));
       if (cancelled) return;
       setDrinksById(Object.fromEntries(drinks.map((d) => [String(d.id), d])));
@@ -147,7 +156,15 @@ export function MyProductsListScreen({ kind, onBack, onOpenDrink }) {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, attempt]);
+
+  // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
+  useEffect(() => {
+    if (items === null || error) return;
+    save({ items, drinksById });
+  }, [items, drinksById, error]);
+  const openDrink = onOpenDrink ? open(onOpenDrink) : null;
 
   const loading = items === null;
   const entries = (items || []).map((x) => ({ ...x, drink: drinksById[x.drinkId] })).filter((x) => x.drink);
@@ -184,7 +201,7 @@ export function MyProductsListScreen({ kind, onBack, onOpenDrink }) {
                   drink={x.drink}
                   rating={kind !== "toTry" && typeof x.rating === "number" ? x.rating : null}
                   isLast={i === g.entries.length - 1}
-                  onOpen={onOpenDrink ? () => onOpenDrink(x.drink.id) : null}
+                  onOpen={openDrink ? () => openDrink(x.drink.id) : null}
                 />
               ))}
             />

@@ -15,6 +15,7 @@ import { styleTagLabel, registerCustomStyleLabels } from "../data/styleTagLabels
 import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadDrinksDirectoryCount, loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 const PAGE_SIZE = 40;
 const LETTER_THRESHOLD = 20;
@@ -117,11 +118,14 @@ function LetterPills({ letters, activeLetter, onSelect }) {
   );
 }
 
+// Retour d'une fiche (norme de l'app, voir `useListReturn`) : la page se remet à la hauteur où on l'avait laissée, avec la recherche tapée, la catégorie, la lettre et
+// l'étiquette de filtre (gardées par App) et les pages de produits déjà chargées. Une entrée depuis BibAtlas ou depuis une étiquette de fiche (filtre différent) repart de zéro.
 export function DrinksDirectoryScreen({
+  mainScrollRef,
   myBibroCode,
   onBack,
   openedFromDrink = false,
-  onOpenDrink,
+  onOpenDrink: onOpenDrinkProp,
   goToSubmit,
   goToScanBarcode,
   query,
@@ -133,17 +137,23 @@ export function DrinksDirectoryScreen({
   activeLetter,
   setActiveLetter,
 }) {
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const { restored, save, open } = useListReturn("drinksDirectory", mainScrollRef, {
+    valid: (m) => m.query === query && (m.activeCategory || null) === (activeCategory || null) && (m.activeLetter || null) === (activeLetter || null) && JSON.stringify(m.activeTagFilter || null) === JSON.stringify(activeTagFilter || null),
+  });
+  const onOpenDrink = open(onOpenDrinkProp);
+  const [debouncedQuery, setDebouncedQuery] = useState(restored ? restored.debouncedQuery : "");
   const [refreshTick, setRefreshTick] = useState(0);
 
-  const [categoryCounts, setCategoryCounts] = useState({});
-  const [letterCounts, setLetterCounts] = useState([]);
-  const [items, setItems] = useState([]);
-  const [hasMore, setHasMore] = useState(true);
+  const [categoryCounts, setCategoryCounts] = useState(restored ? restored.categoryCounts : {});
+  const [letterCounts, setLetterCounts] = useState(restored ? restored.letterCounts : []);
+  const [items, setItems] = useState(restored ? restored.items : []);
+  const [hasMore, setHasMore] = useState(restored ? restored.hasMore : true);
   // Nombre total de produits de la liste affichée (null tant qu'il n'est pas connu, ou s'il est indisponible).
-  const [totalCount, setTotalCount] = useState(null);
+  const [totalCount, setTotalCount] = useState(restored ? restored.totalCount : null);
   const [loadingMore, setLoadingMore] = useState(false);
   const sentinelRef = React.useRef(null);
+  // Au retour d'une fiche, les pages déjà chargées sont gardées telles quelles : la première lecture est sautée (tant que rien n'a changé dans ce qui les a produites).
+  const restoredListRef = React.useRef(restored);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 150);
@@ -236,9 +246,9 @@ export function DrinksDirectoryScreen({
   //    liste, qui devenait fausse dès qu'un doublon s'y glissait.
   const generationRef = React.useRef(0);
   const loadingRef = React.useRef(false);
-  const hasMoreRef = React.useRef(true);
-  const pageRef = React.useRef(0);
-  const loadParamsRef = React.useRef({});
+  const hasMoreRef = React.useRef(restored ? restored.hasMore : true);
+  const pageRef = React.useRef(restored ? restored.page : 0);
+  const loadParamsRef = React.useRef(restored ? restored.params : {});
 
   // Filet de sécurité : jamais deux fois le même produit, même si le serveur renvoie deux pages
   // qui se chevauchent (tri instable sur des noms identiques).
@@ -247,7 +257,10 @@ export function DrinksDirectoryScreen({
     return [...prev, ...results.filter((x) => !seen.has(x.id))];
   };
 
+  const listKey = [showingList, activeCategory, activeLetter, useLetterTier, searching, q, JSON.stringify(activeTagFilter || null), refreshTick].join("|");
   useEffect(() => {
+    if (restoredListRef.current && restoredListRef.current.listKey === listKey) return;
+    restoredListRef.current = null;
     const generation = ++generationRef.current;
     pageRef.current = 0;
     hasMoreRef.current = true;
@@ -279,6 +292,11 @@ export function DrinksDirectoryScreen({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showingList, activeCategory, activeLetter, useLetterTier, searching, q, activeTagFilter, refreshTick]);
+
+  // La mémoire suit la page (y compris les pages déjà chargées et où en est la pagination) ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
+  useEffect(() => {
+    save({ query, debouncedQuery, categoryCounts, letterCounts, items, hasMore, totalCount, page: pageRef.current, params: loadParamsRef.current, listKey, activeCategory: activeCategory || null, activeLetter: activeLetter || null, activeTagFilter: activeTagFilter || null });
+  }, [query, debouncedQuery, categoryCounts, letterCounts, items, hasMore, totalCount, listKey]);
 
   const loadMore = async () => {
     if (loadingRef.current || !hasMoreRef.current) return;

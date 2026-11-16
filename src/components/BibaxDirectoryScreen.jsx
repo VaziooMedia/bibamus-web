@@ -10,19 +10,25 @@
 //   seuls les profils qui partagent leur nom sont trouvables). Si on efface,
 //   la liste revient.
 // ============================================================
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, PageHeader } from "./ui.jsx";
 import { ResultRow } from "./SearchScreen.jsx";
 import { searchBibax } from "../data/sharedDirectories.js";
+import { useListReturn } from "../hooks/useListReturn.js";
 
 const fullNameOf = (b) => [b.firstName || b.name, b.lastName].filter(Boolean).join(" ") || "Bibax";
 
-export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile, onBack }) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
+// Retour d'un profil (norme de l'app, voir `useListReturn`) : la page se remet à la hauteur où on l'avait laissée, avec la recherche tapée et ses résultats.
+export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile: openProfileProp, onBack, mainScrollRef }) {
+  const { restored, save, open } = useListReturn("bibaxDirectory", mainScrollRef);
+  const onOpenBibaxProfile = open(openProfileProp);
+  const [query, setQuery] = useState(restored ? restored.query : "");
+  const [results, setResults] = useState(restored ? restored.results : []);
   const [loading, setLoading] = useState(false);
+  // Au retour, les résultats déjà affichés sont gardés tels quels : la première recherche est sautée.
+  const skipFirstSearch = useRef(!!restored && restored.query.trim().length >= 2);
 
   const trimmed = query.trim();
   const hasQuery = trimmed.length >= 2;
@@ -30,6 +36,10 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile, onBack }
   // Recherche côté serveur, avec un léger délai ; une réponse arrivée en retard ne remplace jamais
   // celle d'une saisie plus récente.
   useEffect(() => {
+    if (skipFirstSearch.current) {
+      skipFirstSearch.current = false;
+      return undefined;
+    }
     if (!hasQuery) {
       setResults([]);
       setLoading(false);
@@ -49,6 +59,11 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile, onBack }
       clearTimeout(timer);
     };
   }, [hasQuery, trimmed]);
+
+  // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre un profil.
+  useEffect(() => {
+    save({ query, results });
+  }, [query, results]);
 
   const sortedBibros = useMemo(
     () => bibros.filter((b) => b.code).sort((a, b) => fullNameOf(a).localeCompare(fullNameOf(b), "fr", { sensitivity: "base" })),
