@@ -1,6 +1,6 @@
 // « Mes Favoris » (Mon Profil) — tout ce que la personne a mis de côté, rangé par sorte sous une barre (comme les périodes de « Mon Historique ») :
 // Lieux (étoile de la fiche d'un lieu), Marques et Producteurs (cœur de leur fiche), Bibax (cœur de la fiche d'un Bibax confirmé) et Produits (la liste
-// étoilée « à goûter » de la fiche d'un produit). Du plus récent au plus ancien dans chaque sorte ; une sorte vide reste affichée, avec le geste qui
+// « à goûter » de la fiche d'un produit, icône liste). Du plus récent au plus ancien dans chaque sorte ; une sorte vide reste affichée, avec le geste qui
 // l'alimente. Les lignes ont le style de « Mon Historique » : une carte, des lignes pleine largeur séparées par un trait fin.
 // Lieux, marques, producteurs et Bibax viennent de la fonction `get_my_favorites` (des identifiants, puis les noms par les fonctions habituelles) ;
 // les Bibax se lisent dans la liste `bibros` déjà en mémoire (un Bibax dont la relation n'est plus confirmée n'est de toute façon plus rendu par le serveur) ;
@@ -220,7 +220,7 @@ export function MyFavoritesScreen({ bibros = [], wishlistDrinkIds = [], onBack, 
                 <FavoriteSection kind="bibax" label="Bibax" rows={bibaxRows} emptyText="Aucun Bibax favori. Touche le cœur sur la fiche d'un Bibax." />
               </>
             )}
-            <FavoriteSection kind="drinks" label="Produits" rows={drinkRows} emptyText="Aucun produit. Touche l'étoile sur la fiche d'un produit." isFirst={!!error} />
+            <FavoriteSection kind="drinks" label="Produits" rows={drinkRows} emptyText="Aucun produit. Touche l'icône liste sur la fiche d'un produit." isFirst={!!error} />
           </>
         )}
       </div>

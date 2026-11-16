@@ -490,6 +490,24 @@ M 591 35 L 579 41 L 574 47 L 571 53 L 571 56 L 570 57 L 570 67 L 571 68 L 571 72
           />
         </svg>
       );
+    case "checklist":
+      // « Ma liste à goûter » (fiche d'un produit) — une liste : avec un « + » quand le produit n'y est pas, avec une coche quand il y est (`filled`).
+      // Volontairement très différente du cœur (favori) et de l'étoile (lieu favori, note) dont elle se distinguait mal.
+      return (
+        <svg {...common}>
+          <path d="M16 6H3" />
+          <path d="M11 12H3" />
+          <path d="M11 18H3" />
+          {filled ? (
+            <path d="m15 15.5 2.5 2.5 4.5-5" />
+          ) : (
+            <>
+              <path d="M18.5 14v8" />
+              <path d="M14.5 18h8" />
+            </>
+          )}
+        </svg>
+      );
     case "star":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

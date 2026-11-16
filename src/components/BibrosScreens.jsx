@@ -614,8 +614,8 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
             aria-pressed={!!bibro.isFavorite}
             style={{
               position: "absolute",
-              top: "48px",
-              right: "12px",
+              top: "12px",
+              right: "42px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -650,9 +650,10 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
               {bibro.avatarUrl ? <img src={bibro.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="user" size={48} color={COLORS.amber} />}
             </div>
           </div>
-          <div style={{ minWidth: 0 }}>
-            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0 }}>{bibro.name}</h1>
-            {bibro.lastName && <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0 }}>{bibro.lastName}</h1>}
+          {/* paddingRight : le nom ne passe jamais sous le cœur et la cloche (placés en haut à droite du bloc) ; un très long nom revient à la ligne. */}
+          <div style={{ minWidth: 0, paddingRight: onToggleFavorite && bibro.userId ? "54px" : "36px" }}>
+            <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0, overflowWrap: "anywhere" }}>{bibro.name}</h1>
+            {bibro.lastName && <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", lineHeight: 1.25, margin: 0, overflowWrap: "anywhere" }}>{bibro.lastName}</h1>}
             {bibro.nickname && <p style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13.5px", color: COLORS.amber, margin: "3px 0 0" }}>{bibro.nickname}</p>}
           </div>
         </div>
