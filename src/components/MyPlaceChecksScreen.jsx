@@ -1,5 +1,5 @@
 // « PlaceChecks » (Mon Profil) — la liste des lieux que la personne a déjà checkés : un lieu une seule fois, du plus récemment visité au plus ancien,
-// avec à droite son nombre de visites (le nombre seul). Mêmes lignes que « Mes Favoris > Lieux » (rond de 40 px, nom en gras, ville · drapeau du pays) dans une carte, lignes pleine
+// avec à droite son nombre de visites (le nombre seul, en vert fluo, dans une colonne plus sombre). Mêmes lignes que « Mes Favoris > Lieux » (rond de 40 px, nom en gras, ville · drapeau du pays) dans une carte, lignes pleine
 // largeur séparées par un trait fin. Une ligne ouvre la fiche du lieu, dont le retour ramène ici. Une liste vide dit quel geste l'alimente.
 // Les identifiants viennent de la fonction `get_my_checked_venues` (script bibamus-sql-mes-lieux-1-liste), puis les lieux par `loadVenuesByIds`.
 import React, { useState, useEffect } from "react";
@@ -37,7 +37,30 @@ function PlaceRow({ venue, visits, isLast, onOpen }) {
         <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{venue.name}</span>
         <DotLine parts={[venue.city, countryFlagPart(venue.country)].filter(Boolean)} />
       </div>
-      <span data-place-visits style={{ flexShrink: 0, fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>
+      {/* Colonne du chiffre : sur toute la hauteur de la ligne et jusqu'au bord de la carte, plus sombre que la carte, avec un trait fin à gauche ; le trait de séparation
+          des lignes la traverse. Largeur d'au moins 52 px : les chiffres restent alignés d'une ligne à l'autre (jusqu'à 4 chiffres et au-delà, la colonne s'élargit). */}
+      <span
+        data-place-visits
+        style={{
+          flexShrink: 0,
+          alignSelf: "stretch",
+          minWidth: "52px",
+          boxSizing: "border-box",
+          padding: "0 8px",
+          margin: `-12px -14px ${isLast ? "-12px" : "-13px"} 6px`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: COLORS.paper,
+          borderLeft: `1px solid ${COLORS.paperAlt}`,
+          borderBottom: isLast ? "none" : `1px solid ${COLORS.paperAlt}`,
+          fontFamily: "'Urbanist', sans-serif",
+          fontWeight: 800,
+          fontSize: "16px",
+          color: COLORS.amber,
+          whiteSpace: "nowrap",
+        }}
+      >
         {visits}
       </span>
     </button>
@@ -96,7 +119,7 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue }) {
             Aucun lieu checké pour l'instant. Fais un PlaceCheck depuis la fiche d'un lieu.
           </p>
         ) : (
-          <div data-place-section style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
+          <div data-place-section style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px", overflow: "hidden" }}>
             {entries.map((x, i) => (
               <PlaceRow key={x.venueId} venue={x.venue} visits={x.visits} isLast={i === entries.length - 1} onOpen={onOpenVenue ? () => onOpenVenue(x.venue.id) : null} />
             ))}
