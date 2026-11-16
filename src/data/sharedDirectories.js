@@ -4960,6 +4960,20 @@ export async function loadMyCheckedDrinks() {
     .map((r) => ({ drinkId: String(r.drink_id), lastAt: r.last_at || null, rating: r.rating !== null && r.rating !== undefined && Number.isFinite(Number(r.rating)) ? Number(r.rating) : null }));
 }
 
+// Mes lieux checkés (Mon Profil > PlaceChecks) : fonction get_my_checked_venues (script bibamus-sql-mes-lieux-1-liste) :
+// [{ venueId, visits, lastAt }], un lieu une seule fois, du lieu checké le plus récemment au plus ancien (visits = mon nombre de visites dans ce lieu).
+// Les lieux rapides (@home, @event) n'y figurent pas. null si la lecture échoue (y compris tant que la fonction n'existe pas dans la base).
+export async function loadMyCheckedVenues() {
+  const { data, error } = await supabase.rpc("get_my_checked_venues");
+  if (error || !Array.isArray(data)) {
+    if (error) console.error("loadMyCheckedVenues:", error);
+    return null;
+  }
+  return data
+    .filter((r) => r.venue_id)
+    .map((r) => ({ venueId: String(r.venue_id), visits: Number.isFinite(Number(r.visits)) ? Number(r.visits) : 1, lastAt: r.last_at || null }));
+}
+
 export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
   const {
     data: { user },
