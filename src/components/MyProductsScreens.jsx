@@ -8,19 +8,10 @@ import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar, ActionCard } from "./ui.jsx";
 import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
-import { DotLine } from "./MyFavoritesScreen.jsx";
+import { DotLine, ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { RatingFraction } from "./NotesCard.jsx";
 
 const countLabel = (n) => `${n} produit${n > 1 ? "s" : ""}`;
-
-function ScreenTitle({ children }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
-      <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{children}</h1>
-    </div>
-  );
-}
 
 // Écran d'entrée : trois cartes, chacune avec le nombre de ses produits (rien tant que la base n'a pas répondu).
 export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }) {
