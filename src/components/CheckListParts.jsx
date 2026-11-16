@@ -38,6 +38,54 @@ export function arrangeChecks(entries, sort, { nameOf, countOf, countryOf }) {
   return [{ key: "all", entries }];
 }
 
+// Les deux totaux de ce que la page affiche (la catégorie choisie, pour DrinkChecks), en deux blocs fins côte à côte : l'intitulé à gauche, le chiffre en vert fluo à droite dans une colonne plus
+// sombre, avec un trait fin à gauche (comme la colonne du chiffre des lignes). Le premier est le nombre de checks (la somme du chiffre de droite des lignes), le second le nombre d'éléments uniques
+// (le nombre de lignes). `brand` : « Drink » ou « Place » (le libellé du premier bloc est « DrinkChecks » / « PlaceChecks », « Checks » en vert) ; `uniqueLabel` : [singulier, pluriel].
+// Le singulier vaut pour 0 et 1.
+export function CheckTotals({ checks, unique, brand, uniqueLabel }) {
+  const block = (label, value, key) => (
+    <div
+      data-check-total={key}
+      style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "stretch", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", overflow: "hidden" }}
+    >
+      <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "6px 8px 6px 10px", fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
+      <span
+        style={{
+          flexShrink: 0,
+          minWidth: "38px",
+          boxSizing: "border-box",
+          padding: "0 8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: COLORS.paper,
+          borderLeft: `1px solid ${COLORS.paperAlt}`,
+          fontFamily: "'Urbanist', sans-serif",
+          fontWeight: 800,
+          fontSize: "14px",
+          color: COLORS.amber,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+  return (
+    <div data-check-totals style={{ display: "flex", gap: "10px", margin: "0 0 16px" }}>
+      {block(
+        <>
+          {brand}
+          <span style={{ color: COLORS.amber }}>{checks > 1 ? "Checks" : "Check"}</span>
+        </>,
+        checks,
+        "checks"
+      )}
+      {block(unique > 1 ? uniqueLabel[1] : uniqueLabel[0], unique, "unique")}
+    </div>
+  );
+}
+
 // Un groupe : sa barre (drapeau éventuel + nom en vert fluo + trait), puis la carte de ses lignes. Sans nom, la carte seule.
 export function CheckGroup({ label, flag = null, isFirst, children }) {
   return (
