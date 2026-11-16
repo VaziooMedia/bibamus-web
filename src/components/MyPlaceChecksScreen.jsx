@@ -1,6 +1,6 @@
 // « PlaceChecks » (Mon Profil) — la liste des lieux que la personne a déjà checkés : un lieu une seule fois, par défaut du plus récemment visité au plus ancien
 // (quatre classements au choix : Récents, Checks, Pays, A–Z), avec à droite son nombre de visites (le nombre seul, en vert fluo, dans une colonne plus sombre).
-// Mêmes lignes que « Mes Favoris > Lieux » (rond de 40 px, nom en gras, ville · drapeau du pays) dans une carte, lignes pleine
+// Mêmes lignes que « Mes Favoris > Lieux » (rond de profil de 48 px, nom en gras, ville · drapeau du pays) dans une carte, lignes pleine
 // largeur séparées par un trait fin. Une ligne ouvre la fiche du lieu, dont le retour ramène ici. Une liste vide dit quel geste l'alimente.
 // Les lignes, les groupes et les classements sont communs avec « DrinkChecks » (CheckListParts.jsx).
 // Sous les classements, deux blocs côte à côte avec les totaux : « X PlaceChecks » (la somme des visites) et « X Lieux uniques ». Classés par pays, la barre de chaque pays porte, au bout de la ligne,
