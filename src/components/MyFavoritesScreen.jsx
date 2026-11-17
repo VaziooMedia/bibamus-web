@@ -10,6 +10,7 @@ import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar, HubCard } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
+import { formatAddress } from "../utils.js";
 import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
@@ -35,6 +36,26 @@ export function countryFlagPart(country) {
   return COUNTRY_ISO_CODES[country] ? <CountryFlagImg country={country} size={14} /> : country;
 }
 
+// La seconde ligne d'un lieu (Mehdi, 2026-11-17) : l'adresse postale complète, comme sur la fiche (rue, numéro - code postal, ville (village)), suivie d'un point vert fluo et du drapeau du pays.
+// L'adresse peut passer sur deux lignes plutôt que d'être coupée (sa fin, la ville, est ce qui compte) ; le point et le drapeau restent ensemble, à la fin du texte.
+function VenueAddressLine({ venue }) {
+  const address = formatAddress(venue);
+  const flag = countryFlagPart(venue.country);
+  if (!address && !flag) return null;
+  return (
+    <div data-favorite-address style={{ fontSize: "12px", color: COLORS.inkSoft, lineHeight: 1.3, minWidth: 0, overflowWrap: "anywhere" }}>
+      {address}
+      {address && flag ? " " : ""}
+      {flag && (
+        <span style={{ whiteSpace: "nowrap" }}>
+          {address && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", margin: "0 6px 2px 0", verticalAlign: "middle" }} />}
+          <span style={{ display: "inline-flex", verticalAlign: "middle" }}>{flag}</span>
+        </span>
+      )}
+    </div>
+  );
+}
+
 // Le rond de profil des lignes de liste de Mon Profil : plus grand que les 40 px d'origine, SANS bouger le texte ni changer la hauteur de la ligne (64 px). Il grandit vers la gauche — dans la marge
 // de 14 px de la carte — et vers le haut et le bas — dans l'espace au-dessus et au-dessous : son bord droit, donc le départ du texte, reste exactement où il était. Partagé avec DrinkChecks,
 // PlaceChecks et Mes Produits (CheckListParts.jsx).
@@ -44,7 +65,7 @@ export const ROW_HEIGHT = 64;
 export const ROW_PAD_Y = (ROW_HEIGHT - ROW_AVATAR) / 2;
 
 // Ligne d'un favori — même squelette que celles de « Mon Historique » : rond de 48 px à gauche (voir ROW_AVATAR), à droite le titre (gras) et une ligne de détails.
-function FavoriteRow({ kind, avatar, title, details = [], isLast, onOpen }) {
+function FavoriteRow({ kind, avatar, title, details = [], detailsNode = null, heart = null, isLast, onOpen }) {
   return (
     <button
       type="button"
@@ -69,8 +90,23 @@ function FavoriteRow({ kind, avatar, title, details = [], isLast, onOpen }) {
       <span style={{ flexShrink: 0, display: "flex", marginLeft: `-${ROW_AVATAR - ROW_AVATAR_BASE}px` }}>{avatar}</span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
         <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{title}</span>
-        <DotLine parts={details} />
+        {detailsNode || <DotLine parts={details} />}
       </div>
+      {heart && (
+        // Le cœur de la ligne (Mehdi, 2026-11-17) : le même que sur la fiche (plein = favori) ; un clic le retire (ou le remet) sans ouvrir la fiche.
+        <span
+          data-favorite-heart={heart.on ? "on" : "off"}
+          role="button"
+          aria-label={heart.on ? `Retirer ${title} des favoris` : `Remettre ${title} en favori`}
+          onClick={(e) => {
+            e.stopPropagation();
+            heart.onToggle();
+          }}
+          style={{ flexShrink: 0, alignSelf: "stretch", display: "flex", alignItems: "center", padding: "0 6px 0 10px", margin: "-8px -6px -8px 0", cursor: "pointer" }}
+        >
+          <NavIcon name="heart" size={22} color={COLORS.amber} filled={heart.on} />
+        </span>
+      )}
     </button>
   );
 }
@@ -146,7 +182,7 @@ export function MyFavoritesScreen({ bibros = [], onBack, goTo }) {
 
 // Une page de liste (kind : "venues" | "drinks" | "brands" | "producers" | "bibax"). `screenId` : l'identifiant de l'écran dans App (la mémoire du retour d'une fiche
 // est rangée sous ce nom, voir `useListReturn`) : au retour d'une fiche, la liste se remet à la hauteur où l'on l'avait laissée ; une entrée depuis « Mes Favoris » repart de zéro.
-export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenBibax, onOpenDrink }) {
+export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenBibax, onOpenDrink, favoriteVenueIds = null, onToggleVenueFavorite = null }) {
   const meta = KINDS.find((k) => k.kind === kind);
   const { restored, save, open } = useListReturn(screenId, mainScrollRef);
   const [ids, setIds] = useState(restored ? restored.ids : null); // null = chargement ; identifiants de cette sorte, du plus récent au plus ancien
@@ -205,7 +241,8 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         kind="venue"
         avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={ROW_AVATAR} fallbackIcon="map-pin" />}
         title={v.name}
-        details={[v.city, countryFlagPart(v.country)].filter(Boolean)}
+        detailsNode={<VenueAddressLine venue={v} />}
+        heart={onToggleVenueFavorite ? { on: (favoriteVenueIds || []).includes(String(v.id)) || (favoriteVenueIds || []).includes(v.id), onToggle: () => onToggleVenueFavorite(v.id) } : null}
         isLast={last(resolved, i)}
         onOpen={openVenue ? () => openVenue(v.id) : null}
       />
