@@ -165,12 +165,18 @@ const KIND_ICONS = {
   bibax: <NavIcon name="bibax" size={28} color={COLORS.amber} />,
 };
 
-// Le titre d'un écran de Mon Profil : petite barre verte puis le texte. Avec `iconUrl` (DrinkChecks, PlaceChecks), une icône de 24 px — comme celle du titre « Mes Bibax » — remplace la barre.
-export function ScreenTitle({ children, iconUrl = null }) {
+// Le titre d'un écran de Mon Profil : petite barre verte puis le texte. Avec `iconUrl` (DrinkChecks, PlaceChecks), une icône de 24 px — comme celle du titre « Mes Bibax » — remplace la barre ;
+// avec `icon` (un élément : une icône de l'app de 24 px, comme l'étoile vide de « Mes Produits » ou le cœur vide de « Mes Favoris »), c'est cette icône qui la remplace.
+export function ScreenTitle({ children, iconUrl = null, icon = null }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
-      {!iconUrl && <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />}
+      {!iconUrl && !icon && <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />}
       {iconUrl && <img data-screen-title-icon src={iconUrl} alt="" style={{ width: "24px", height: "24px", flexShrink: 0 }} />}
+      {icon && (
+        <span data-screen-title-icon style={{ display: "inline-flex", width: "24px", height: "24px", flexShrink: 0 }}>
+          {icon}
+        </span>
+      )}
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{children}</h1>
     </div>
   );
@@ -203,7 +209,7 @@ export function MyFavoritesScreen({ bibros = [], onBack, goTo }) {
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <ScreenTitle>Mes Favoris</ScreenTitle>
+      <ScreenTitle icon={<NavIcon name="heart" size={24} color={COLORS.amber} />}>Mes Favoris</ScreenTitle>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
         {KINDS.map((k) => {
           const n = counts && typeof counts[k.kind] === "number" ? counts[k.kind] : null;
