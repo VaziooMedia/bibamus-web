@@ -10,7 +10,8 @@ import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar, HubCard } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
-import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
+import { venueStreetLine, venuePostalCityLine } from "../utils.js";
+import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds, toggleFavoriteBrand, toggleFavoriteProducer } from "../data/sharedDirectories.js";
 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
 
@@ -35,6 +36,37 @@ export function countryFlagPart(country) {
   return COUNTRY_ISO_CODES[country] ? <CountryFlagImg country={country} size={14} /> : country;
 }
 
+// Les lignes d'adresse d'un lieu (Mehdi, 2026-11-17), d'office sur deux lignes comme sur la fiche : « rue, numéro » d'abord, puis « code postal ville (village) », un point vert fluo et le drapeau du pays.
+// Pas de rue (lieu sans adresse précise) : seule la seconde ligne reste. Le « B- » devant le code postal n'est mis que pour les lieux belges (utils.js).
+function VenueAddressLines({ venue }) {
+  const street = venueStreetLine(venue);
+  const postalCity = venuePostalCityLine(venue);
+  const flag = countryFlagPart(venue.country);
+  const lineStyle = { fontSize: "12px", color: COLORS.inkSoft, lineHeight: 1.3, minWidth: 0, overflowWrap: "anywhere" };
+  if (!street && !postalCity && !flag) return null;
+  return (
+    <>
+      {street && (
+        <div data-favorite-street style={{ ...lineStyle, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {street}
+        </div>
+      )}
+      {(postalCity || flag) && (
+        <div data-favorite-postal style={lineStyle}>
+          {postalCity}
+          {postalCity && flag ? " " : ""}
+          {flag && (
+            <span style={{ whiteSpace: "nowrap" }}>
+              {postalCity && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", margin: "0 6px 2px 0", verticalAlign: "middle" }} />}
+              <span style={{ display: "inline-flex", verticalAlign: "middle" }}>{flag}</span>
+            </span>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 // Le rond de profil des lignes de liste de Mon Profil : plus grand que les 40 px d'origine, SANS bouger le texte ni changer la hauteur de la ligne (64 px). Il grandit vers la gauche — dans la marge
 // de 14 px de la carte — et vers le haut et le bas — dans l'espace au-dessus et au-dessous : son bord droit, donc le départ du texte, reste exactement où il était. Partagé avec DrinkChecks,
 // PlaceChecks et Mes Produits (CheckListParts.jsx).
@@ -44,7 +76,7 @@ export const ROW_HEIGHT = 64;
 export const ROW_PAD_Y = (ROW_HEIGHT - ROW_AVATAR) / 2;
 
 // Ligne d'un favori — même squelette que celles de « Mon Historique » : rond de 48 px à gauche (voir ROW_AVATAR), à droite le titre (gras) et une ligne de détails.
-function FavoriteRow({ kind, avatar, title, details = [], isLast, onOpen }) {
+function FavoriteRow({ kind, avatar, title, details = [], detailsNode = null, heart = null, isLast, onOpen }) {
   return (
     <button
       type="button"
@@ -69,8 +101,39 @@ function FavoriteRow({ kind, avatar, title, details = [], isLast, onOpen }) {
       <span style={{ flexShrink: 0, display: "flex", marginLeft: `-${ROW_AVATAR - ROW_AVATAR_BASE}px` }}>{avatar}</span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
         <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{title}</span>
-        <DotLine parts={details} />
+        {detailsNode || <DotLine parts={details} />}
       </div>
+      {heart && (
+        // Le cœur de la ligne (Mehdi, 2026-11-17) : le même que sur la fiche (plein = favori) ; un clic le retire (ou le remet) sans ouvrir la fiche.
+        <span
+          data-favorite-heart={heart.on ? "on" : "off"}
+          role="button"
+          aria-label={heart.on ? `Retirer ${title} des favoris` : `Remettre ${title} en favori`}
+          onClick={(e) => {
+            e.stopPropagation();
+            heart.onToggle();
+          }}
+          // Colonne sombre (Mehdi, 2026-11-17) : la même que celle du chiffre dans « PlaceChecks » / « Mes Produits » (`CheckRow`) — sur toute la hauteur de la ligne et jusqu'au bord de la carte,
+          // fond de la page, trait fin à gauche, le trait de séparation des lignes la traverse, 52 px de large au moins.
+          style={{
+            flexShrink: 0,
+            alignSelf: "stretch",
+            minWidth: "52px",
+            boxSizing: "border-box",
+            padding: "0 8px",
+            margin: `-${ROW_PAD_Y}px -14px -${isLast ? ROW_PAD_Y : ROW_PAD_Y + 1}px 6px`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: COLORS.paper,
+            borderLeft: `1px solid ${COLORS.paperAlt}`,
+            borderBottom: isLast ? "none" : `1px solid ${COLORS.paperAlt}`,
+            cursor: "pointer",
+          }}
+        >
+          <NavIcon name="heart" size={20} color={COLORS.amber} filled={heart.on} />
+        </span>
+      )}
     </button>
   );
 }
@@ -146,7 +209,7 @@ export function MyFavoritesScreen({ bibros = [], onBack, goTo }) {
 
 // Une page de liste (kind : "venues" | "drinks" | "brands" | "producers" | "bibax"). `screenId` : l'identifiant de l'écran dans App (la mémoire du retour d'une fiche
 // est rangée sous ce nom, voir `useListReturn`) : au retour d'une fiche, la liste se remet à la hauteur où l'on l'avait laissée ; une entrée depuis « Mes Favoris » repart de zéro.
-export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenBibax, onOpenDrink }) {
+export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenBibax, onOpenDrink, favoriteVenueIds = null, onToggleVenueFavorite = null, favoriteDrinkIds = null, onToggleDrinkFavorite = null, favoriteBibaxIds = null, onToggleBibaxFavorite = null }) {
   const meta = KINDS.find((k) => k.kind === kind);
   const { restored, save, open } = useListReturn(screenId, mainScrollRef);
   const [ids, setIds] = useState(restored ? restored.ids : null); // null = chargement ; identifiants de cette sorte, du plus récent au plus ancien
@@ -187,6 +250,22 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
     if (ids === null || error) return;
     save({ ids, byId });
   }, [ids, byId, error]);
+  // Le cœur des lignes (Mehdi, 2026-11-17) : plein = favori ; un clic retire (ou remet) le favori sans ouvrir la fiche, et la ligne reste jusqu'à ce qu'on quitte la page (un second clic annule).
+  // Lieux, produits et Bibax : l'état et la bascule de l'application (les mêmes que le cœur de leur fiche). Marques et producteurs : la bascule de la base, avec l'état gardé ici
+  // (leurs fiches relisent le leur à l'ouverture) ; `heartOff[id]` = true quand le cœur est vide.
+  const [heartOff, setHeartOff] = useState({});
+  const toggleLocalHeart = async (apiToggle, id) => {
+    const key = String(id);
+    const wasOn = !heartOff[key];
+    setHeartOff((prev) => ({ ...prev, [key]: wasOn }));
+    const result = await apiToggle(id);
+    if (result?.error) {
+      setHeartOff((prev) => ({ ...prev, [key]: !wasOn }));
+      alert(result.error);
+      return;
+    }
+    setHeartOff((prev) => ({ ...prev, [key]: !result.favorite }));
+  };
   const openVenue = onOpenVenue ? open(onOpenVenue) : null;
   const openDrink = onOpenDrink ? open(onOpenDrink) : null;
   const openBrand = onOpenBrand ? open(onOpenBrand) : null;
@@ -205,7 +284,8 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         kind="venue"
         avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={ROW_AVATAR} fallbackIcon="map-pin" />}
         title={v.name}
-        details={[v.city, countryFlagPart(v.country)].filter(Boolean)}
+        detailsNode={<VenueAddressLines venue={v} />}
+        heart={onToggleVenueFavorite ? { on: (favoriteVenueIds || []).includes(v.id), onToggle: () => onToggleVenueFavorite(v.id) } : null}
         isLast={last(resolved, i)}
         onOpen={openVenue ? () => openVenue(v.id) : null}
       />
@@ -218,6 +298,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={ROW_AVATAR} fallbackIcon="bottle" />}
         title={d.name}
         details={[d.type, d.brand].filter(Boolean)}
+        heart={onToggleDrinkFavorite ? { on: (favoriteDrinkIds || []).includes(String(d.id)), onToggle: () => onToggleDrinkFavorite(d.id) } : null}
         isLast={last(resolved, i)}
         onOpen={openDrink ? () => openDrink(d.id) : null}
       />
@@ -230,6 +311,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         avatar={<EntityAvatar photoUrl={b.logoUrl} size={ROW_AVATAR} fallbackIcon="tag" />}
         title={b.name}
         details={[b.originCountry].filter(Boolean)}
+        heart={{ on: !heartOff[String(b.id)], onToggle: () => toggleLocalHeart(toggleFavoriteBrand, b.id) }}
         isLast={last(resolved, i)}
         onOpen={openBrand ? () => openBrand(b.id) : null}
       />
@@ -242,6 +324,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         avatar={<EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={ROW_AVATAR} />}
         title={p.name}
         details={[p.city, p.country].filter(Boolean)}
+        heart={{ on: !heartOff[String(p.id)], onToggle: () => toggleLocalHeart(toggleFavoriteProducer, p.id) }}
         isLast={last(resolved, i)}
         onOpen={openProducer ? () => openProducer(p.id) : null}
       />
@@ -255,6 +338,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         avatar={<EntityAvatar photoUrl={b.avatarUrl} size={ROW_AVATAR} fallbackIcon="user" />}
         title={[b.name, b.lastName].filter(Boolean).join(" ")}
         details={[b.nickname, b.city].filter(Boolean)}
+        heart={onToggleBibaxFavorite ? { on: (favoriteBibaxIds || []).includes(b.userId), onToggle: () => onToggleBibaxFavorite(b.code) } : null}
         isLast={last(people, i)}
         onOpen={openBibax ? () => openBibax(b.code) : null}
       />
@@ -282,7 +366,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
             {meta.empty}
           </p>
         ) : (
-          <div data-favorite-section={kind} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
+          <div data-favorite-section={kind} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px", overflow: "hidden" }}>
             {rows}
           </div>
         )}
