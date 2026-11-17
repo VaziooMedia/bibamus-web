@@ -157,16 +157,18 @@ const KINDS = [
 
 // Le rond d'icône de chaque carte de l'écran d'entrée (Mehdi, 2026-11-17) : celle que les lignes de la liste utilisent déjà quand l'élément n'a pas de photo (épingle, bouteille, étiquette,
 // monogramme Bibamus) et, pour les Bibax, l'icône Bibax de l'app (trois silhouettes, choisie par Mehdi) — rien d'inventé.
+const KIND_ICON_NAMES = { venues: "map-pin", drinks: "bottle", brands: "tag", producers: "bibamus-monogram", bibax: "bibax" };
+const kindIcon = (kind, size = 24) => <NavIcon name={KIND_ICON_NAMES[kind]} size={size} color={COLORS.amber} />;
 const KIND_ICONS = {
-  venues: <NavIcon name="map-pin" size={24} color={COLORS.amber} />,
-  drinks: <NavIcon name="bottle" size={24} color={COLORS.amber} />,
-  brands: <NavIcon name="tag" size={24} color={COLORS.amber} />,
-  producers: <NavIcon name="bibamus-monogram" size={24} color={COLORS.amber} />,
-  bibax: <NavIcon name="bibax" size={28} color={COLORS.amber} />,
+  venues: kindIcon("venues"),
+  drinks: kindIcon("drinks"),
+  brands: kindIcon("brands"),
+  producers: kindIcon("producers"),
+  bibax: kindIcon("bibax", 28),
 };
 
 // Le titre d'un écran de Mon Profil : petite barre verte puis le texte. Avec `iconUrl` (DrinkChecks, PlaceChecks), une icône de 24 px — comme celle du titre « Mes Bibax » — remplace la barre ;
-// avec `icon` (un élément : une icône de l'app de 24 px, comme l'étoile vide de « Mes Produits » ou le cœur vide de « Mes Favoris »), c'est cette icône qui la remplace.
+// avec `icon` (un élément : une icône de l'app de 24 px, comme l'étoile vide de « Mes Produits », le cœur vide de « Mes Favoris » ou l'icône de la carte d'une sous-page), c'est cette icône qui la remplace.
 export function ScreenTitle({ children, iconUrl = null, icon = null }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
@@ -400,7 +402,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <ScreenTitle>{meta.title}</ScreenTitle>
+      <ScreenTitle icon={kindIcon(kind)}>{meta.title}</ScreenTitle>
 
       <div style={{ flex: 1 }}>
         {loading ? (
