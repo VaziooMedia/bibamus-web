@@ -352,8 +352,24 @@ export function PrimaryButton({ children, onClick, disabled, style, withCheck = 
   );
 }
 
-export function ActionCard({ icon, title, subtitle, onClick, highlight, disabled, badge }) {
-  return (
+// `singleLine` (Mon Profil, Mehdi 2026-11-17) : icône + titre sur UNE seule ligne — carte plus basse (marges de 12 px), titre de 14 px au plus qui rétrécit sur les petits écrans
+// pour toujours tenir sur une ligne (« Mon Historique » est le plus long), `badge` à cheval sur le bord haut de la carte (il ne peut plus se poser sur la ligne du titre), en rose fluo.
+export function ActionCard({ icon, title, subtitle, onClick, highlight, disabled, badge, singleLine = false }) {
+  const badgeStyle = {
+    position: "absolute",
+    top: singleLine ? "-7px" : "10px",
+    right: singleLine ? "12px" : "10px",
+    fontSize: "9px",
+    fontWeight: 700,
+    letterSpacing: "0.5px",
+    color: singleLine ? COLORS.pinkFluo : COLORS.redFluo,
+    background: COLORS.paperAlt,
+    borderRadius: "999px",
+    padding: "3px 8px",
+  };
+  // singleLine : la pastille est posée à côté de la carte et non dedans, pour que l'opacité d'une carte grisée ne la ternisse pas (le rose fluo reste fluo).
+  const outsideBadge = singleLine && badge;
+  const card = (
     <button
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
@@ -362,41 +378,31 @@ export function ActionCard({ icon, title, subtitle, onClick, highlight, disabled
         textAlign: "left",
         display: "flex",
         alignItems: "center",
-        gap: "12px",
+        gap: singleLine ? "10px" : "12px",
         background: COLORS.surface,
         color: COLORS.ink,
         border: `2px solid ${highlight ? COLORS.amber : COLORS.paperAlt}`,
         borderRadius: "12px",
-        padding: "14px 16px",
+        padding: singleLine ? "12px" : "14px 16px",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.55 : 1,
         width: "100%",
       }}
     >
-      {icon && <span style={{ fontSize: "22px" }}>{icon}</span>}
-      <span style={{ display: "flex", flexDirection: "column" }}>
-        <span style={{ fontWeight: 700, fontSize: "15px" }}>{title}</span>
+      {icon && <span style={{ fontSize: "22px", display: singleLine ? "flex" : undefined, flexShrink: 0 }}>{icon}</span>}
+      <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span style={{ fontWeight: 700, fontSize: singleLine ? "min(14px, calc((100vw - 50px) / 15 - 7.9px))" : "15px", whiteSpace: singleLine ? "nowrap" : undefined }}>{title}</span>
         <span style={{ fontSize: "12.5px", opacity: 0.75, marginTop: "2px" }}>{subtitle}</span>
       </span>
-      {badge && (
-        <span
-          style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            fontSize: "9px",
-            fontWeight: 700,
-            letterSpacing: "0.5px",
-            color: COLORS.redFluo,
-            background: COLORS.paperAlt,
-            borderRadius: "999px",
-            padding: "3px 8px",
-          }}
-        >
-          {badge}
-        </span>
-      )}
+      {badge && !outsideBadge && <span style={badgeStyle}>{badge}</span>}
     </button>
+  );
+  if (!outsideBadge) return card;
+  return (
+    <div style={{ position: "relative" }}>
+      {card}
+      <span style={badgeStyle}>{badge}</span>
+    </div>
   );
 }
 

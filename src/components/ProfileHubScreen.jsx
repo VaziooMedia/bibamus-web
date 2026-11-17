@@ -75,6 +75,7 @@ export function ProfileHubScreen({
         ]}
         active={activeTab}
         onChange={setActiveTab}
+        fine
       />
 
       {activeTab === "infos" && (
@@ -83,20 +84,21 @@ export function ProfileHubScreen({
           <ProfileStatCards bibros={bibros} myUserId={myUserId} goToBibros={goToBibros} goToDrinkChecks={goToDrinkChecks} goToVenues={goToVenues} />
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-            <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title={<>Mes<br />BibaClub</>} onClick={goToBibaClubs} />
+            <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title="Mes BibaClub" onClick={goToBibaClubs} singleLine />
             <ActionCard
               icon={
                 <span style={{ display: "inline-flex", width: "20px", justifyContent: "center" }}>
                   <NavIcon name="bottle" size={20} color={COLORS.amber} />
                 </span>
               }
-              title={<>Mes<br />Produits</>}
+              title="Mes Produits"
               onClick={goToProducts}
+              singleLine
             />
-            <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title={<>Mes<br />Favoris</>} onClick={goToFavorites} />
-            <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title={<>Mon<br />Historique</>} onClick={goToHistory} />
-            <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title={<>Mes<br />Photos</>} onClick={goToPhotos} />
-            <ActionCard icon={<NavIcon name="activity" size={20} color={COLORS.inkSoft} />} title="BibaCare" disabled badge="Bientôt" />
+            <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title="Mes Favoris" onClick={goToFavorites} singleLine />
+            <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title="Mon Historique" onClick={goToHistory} singleLine />
+            <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title="Mes Photos" onClick={goToPhotos} singleLine />
+            <ActionCard icon={<NavIcon name="activity" size={20} color={COLORS.inkSoft} />} title="BibaCare" disabled badge="Soon" singleLine />
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>

@@ -16,7 +16,7 @@
 // `active` / `onChange(key)` : l'onglet choisi et le rappel au clic.
 // `marginBottom` : espace sous la barre (16 px par défaut).
 // `fine`  : pastilles plus fines (contour de 1 px, texte de 11,5 px, moins de hauteur) — voir FINE_PILL, qu'une autre rangée de pastilles peut reprendre pour avoir
-//           exactement la même taille (la page « DrinkChecks » : ses catégories et ses classements). Sans `fine`, l'aspect est celui de toute l'app.
+//           exactement la même taille (la page « DrinkChecks » : ses catégories et ses classements ; Mon Profil : ses trois onglets). Sans `fine`, l'aspect est celui de toute l'app.
 // ============================================================
 import React from "react";
 import { COLORS } from "../constants.js";
