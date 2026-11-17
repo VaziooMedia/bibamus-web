@@ -5,6 +5,7 @@ import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
 import { DotLine } from "./MyFavoritesScreen.jsx";
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
+import { FINE_PILL } from "./PillTabs.jsx";
 
 // Les classements au choix (pastilles de même largeur en haut de la page). « Récents » : l'ordre de la base, du dernier check au plus ancien.
 export const CHECK_SORTS = [
@@ -36,6 +37,34 @@ export function arrangeChecks(entries, sort, { nameOf, countOf, countryOf }) {
       .map((c) => ({ key: c || "none", country: c, label: c || "Pays non renseigné", entries: groups.get(c).sort(byChecks) }));
   }
   return [{ key: "all", entries }];
+}
+
+// La rangée de catégories (DrinkChecks et les trois listes de Mes Produits) : une pastille par catégorie (« Tout » d'abord), contour vert fin, de la même taille que les pastilles des classements (FINE_PILL) ;
+// celle qui est choisie est pleine. Un trait fin court au-dessus de la rangée, comme au-dessus des classements de PillTabs (qui apporte lui-même le trait en dessous) ; sans PillTabs derrière,
+// `bottomLine` ferme la rangée par un trait fin, comme PillTabs.
+export function CategoryChips({ chips, active, onChange, bottomLine = false }) {
+  return (
+    <div>
+      <div style={{ height: "1px", background: COLORS.paperAlt, marginBottom: "10px" }} />
+      <div data-check-categories style={{ display: "flex", flexWrap: "nowrap", gap: "8px", overflowX: "auto", paddingBottom: "10px", scrollbarWidth: "none" }}>
+        {chips.map((c) => {
+          const on = active === c.key;
+          return (
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => onChange(c.key)}
+              aria-pressed={on}
+              style={{ background: on ? COLORS.amber : "none", border: `${FINE_PILL.borderWidth} solid ${COLORS.amber}`, borderRadius: "999px", padding: FINE_PILL.padding, fontSize: FINE_PILL.fontSize, fontWeight: 700, color: on ? COLORS.paper : COLORS.ink, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+            >
+              {c.label}
+            </button>
+          );
+        })}
+      </div>
+      {bottomLine && <div style={{ height: "1px", background: COLORS.paperAlt, marginBottom: "16px" }} />}
+    </div>
+  );
 }
 
 // Les deux totaux de ce que la page affiche (la catégorie choisie, pour DrinkChecks), en deux blocs fins côte à côte : l'intitulé à gauche, le chiffre en vert fluo à droite dans une colonne plus
