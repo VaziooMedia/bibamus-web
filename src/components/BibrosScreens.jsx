@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard, CARD_AVATAR, avatarOverhang, RequestCardAvatar } from "./ui.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
@@ -138,7 +138,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
                 onClick={() => onOpenProfile(r.bibroCode)}
                 style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
               >
-                <EntityAvatar photoUrl={r.avatarUrl} size={36} />
+                <RequestCardAvatar photoUrl={r.avatarUrl} />
                 <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
                 <button
                   onClick={(e) => {
@@ -187,7 +187,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
                 onClick={() => onOpenProfile(r.bibroCode)}
                 style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
               >
-                <EntityAvatar photoUrl={r.avatarUrl} size={36} />
+                <RequestCardAvatar photoUrl={r.avatarUrl} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>En attente de confirmation</p>
@@ -240,7 +240,7 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
                   onClick={() => onOpenProfile(s.bibroCode)}
                   style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
                 >
-                  <EntityAvatar photoUrl={s.avatarUrl} size={36} />
+                  <RequestCardAvatar photoUrl={s.avatarUrl} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                     <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
@@ -366,8 +366,8 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
                   <div
                     style={{
-                      width: "38px",
-                      height: "38px",
+                      width: `${CARD_AVATAR}px`,
+                      height: `${CARD_AVATAR}px`,
                       borderRadius: "50%",
                       background: COLORS.surfaceAlt,
                       display: "flex",
@@ -375,11 +375,12 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                       justifyContent: "center",
                       fontSize: "19px",
                       flexShrink: 0,
-                      marginTop: "1px",
+                      // la place prise dans la ligne reste celle du rond de 38 px (+ 1 px en haut) : le texte et la hauteur de la carte ne bougent pas (voir `CARD_AVATAR`)
+                      margin: avatarOverhang(38, 39),
                       overflow: "hidden",
                     }}
                   >
-                    {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={19} color={COLORS.amber} />}
+                    {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={Math.round(CARD_AVATAR / 2)} color={COLORS.amber} />}
                   </div>
                   <div>
                     <BibaxName name={b.firstName || b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ fontSize: "15px" }} />
@@ -447,11 +448,14 @@ export function MutualBibaxScreen({ bibros, bibroName, onBack: onBackProp, onVie
               <div
                 onClick={hasStory ? (e) => { e.stopPropagation(); onOpenStoryAuthor?.({ authorId: b.userId, authorName: b.name, authorAvatarUrl: b.avatarUrl, stories }); } : undefined}
                 style={{
-                  width: "42px",
-                  height: "42px",
+                  // Même rond que dans « Mes Bibax » (voir `CARD_AVATAR`) : 48 px en tout ; avec une story, l'anneau rose (2 px + 2 px d'écart) est pris DANS les 48 px, sans story le rond est plein.
+                  width: `${CARD_AVATAR}px`,
+                  height: `${CARD_AVATAR}px`,
                   borderRadius: "50%",
-                  border: `2px solid ${hasStory ? "#FF2C8F" : "transparent"}`,
-                  padding: "2px",
+                  border: hasStory ? "2px solid #FF2C8F" : "none",
+                  padding: hasStory ? "2px" : 0,
+                  boxSizing: "border-box",
+                  margin: avatarOverhang(38, 39),
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
@@ -460,7 +464,7 @@ export function MutualBibaxScreen({ bibros, bibroName, onBack: onBackProp, onVie
                 }}
               >
                 <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                  {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={19} color={COLORS.amber} />}
+                  {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={Math.round((CARD_AVATAR - (hasStory ? 8 : 0)) / 2)} color={COLORS.amber} />}
                 </div>
               </div>
               <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ fontSize: "15px" }} />

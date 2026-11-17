@@ -208,6 +208,23 @@ export function EntityAvatar({ photoUrl, photoEmoji, size = 40, onClick, fallbac
   return <span style={style}>{content}</span>;
 }
 
+// Rond de profil des cartes de Bibax (Mehdi, 2026-11-17 ; même règle que les lignes de PlaceChecks et DrinkChecks) : « Mes Bibax » (liste, demandes reçues et envoyées, suggestions), « Bibax en commun »
+// et « Voir tout » des suggestions. Partout le même : 48 px, à 6 px du bord gauche de la carte, le texte démarrant à 64 px. Le rond déborde vers la gauche — dans la marge de la carte — et vers le haut
+// et le bas — dans l'espace au-dessus et au-dessous — : `flowWidth` × `flowHeight` est la place qu'il prend vraiment dans la ligne (ce qui décide du départ du texte et de la hauteur de la carte).
+export const CARD_AVATAR = 48;
+export const avatarOverhang = (flowWidth, flowHeight) => {
+  const extra = CARD_AVATAR - flowHeight; // partagé entre le haut et le bas, en pixels entiers
+  return `-${Math.floor(extra / 2)}px 0 -${Math.ceil(extra / 2)}px -${CARD_AVATAR - flowWidth}px`;
+};
+// Rond d'une carte de demande ou de suggestion (marge de 12 px + bordure de 2 px à gauche, texte à 64 px : place prise 40 × 36).
+export function RequestCardAvatar({ photoUrl }) {
+  return (
+    <span style={{ display: "flex", flexShrink: 0, margin: avatarOverhang(40, 36) }}>
+      <EntityAvatar photoUrl={photoUrl} size={CARD_AVATAR} />
+    </span>
+  );
+}
+
 // Rond de profil d'un salon : la photo ou l'emoji de son lieu s'il en a un ; sinon, un salon
 // @Home porte une maison et un salon @Event un feu d'artifice (au lieu du « B » Bibamus).
 export function SalonAvatar({ event, venue, size = 48 }) {
