@@ -352,6 +352,43 @@ export function PrimaryButton({ children, onClick, disabled, style, withCheck = 
   );
 }
 
+// Une carte d'un écran d'entrée de Mon Profil (« Mes Produits », « Mes Favoris » ; décidé par Mehdi, 2026-11-17) : un rond de 48 px avec l'icône de la liste à gauche, le titre, et à droite le nombre d'éléments en vert fluo dans une colonne plus
+// sombre qui va du haut en bas de la carte, avec un trait fin à gauche (comme la colonne du chiffre des lignes de DrinkChecks et PlaceChecks). Pas de sous-texte.
+export function HubCard({ title, count, countText = null, icon, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={count === null ? title : `${title}, ${countText ?? count}`}
+      style={{ width: "100%", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", color: COLORS.ink, font: "inherit", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", padding: "14px 0 14px 14px", overflow: "hidden" }}
+    >
+      <span style={{ width: "48px", height: "48px", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</span>
+      <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: "16px" }}>{title}</span>
+      <span
+        style={{
+          alignSelf: "stretch",
+          minWidth: "64px",
+          boxSizing: "border-box",
+          padding: "0 10px",
+          margin: "-14px 0 -14px 4px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: COLORS.paper,
+          borderLeft: `1px solid ${COLORS.paperAlt}`,
+          fontFamily: "'Urbanist', sans-serif",
+          fontWeight: 800,
+          fontSize: "22px",
+          color: COLORS.amber,
+        }}
+      >
+        {count === null ? "\u00A0" : count}
+      </span>
+    </button>
+  );
+}
+
+
 // `singleLine` (Mon Profil, Mehdi 2026-11-17) : icône + titre sur UNE seule ligne — carte plus basse (marges de 12 px), titre de 14 px au plus qui rétrécit sur les petits écrans
 // pour toujours tenir sur une ligne (« Mon Historique » est le plus long), `badge` à cheval sur le bord haut de la carte (il ne peut plus se poser sur la ligne du titre), en rose fluo.
 export function ActionCard({ icon, title, subtitle, onClick, highlight, disabled, badge, singleLine = false }) {
