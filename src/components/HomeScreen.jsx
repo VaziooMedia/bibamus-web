@@ -612,7 +612,7 @@ export function HomeScreen({
         <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Club</span></>} subtitle="Tes Clubs privés et publics" onClick={goToBibaClubs} />
         <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Cal</span></>} subtitle="Agenda des events autour de vous" badge="Soon" disabled />
         {gamesVisible && (
-          <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Play</span></>} subtitle="Jeux et défis autour d'un verre" onClick={goToGames} disabled />
+          <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Play</span></>} subtitle="Jeux et défis autour d'un verre" onClick={goToGames} badge="Soon" disabled />
         )}
         {bibaMeetVisible && (
           <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
