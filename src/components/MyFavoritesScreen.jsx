@@ -77,13 +77,13 @@ const KINDS = [
 ];
 
 // Le rond d'icône de chaque carte de l'écran d'entrée (Mehdi, 2026-11-17) : celle que les lignes de la liste utilisent déjà quand l'élément n'a pas de photo (épingle, bouteille, étiquette,
-// monogramme Bibamus, silhouette) — rien d'inventé.
+// monogramme Bibamus) et, pour les Bibax, l'icône Bibax de l'app (trois silhouettes, choisie par Mehdi) — rien d'inventé.
 const KIND_ICONS = {
   venues: <NavIcon name="map-pin" size={24} color={COLORS.amber} />,
   drinks: <NavIcon name="bottle" size={24} color={COLORS.amber} />,
   brands: <NavIcon name="tag" size={24} color={COLORS.amber} />,
   producers: <NavIcon name="bibamus-monogram" size={24} color={COLORS.amber} />,
-  bibax: <NavIcon name="user" size={24} color={COLORS.amber} />,
+  bibax: <NavIcon name="bibax" size={28} color={COLORS.amber} />,
 };
 
 // Le titre d'un écran de Mon Profil : petite barre verte puis le texte. Avec `iconUrl` (DrinkChecks, PlaceChecks), une icône de 24 px — comme celle du titre « Mes Bibax » — remplace la barre.
