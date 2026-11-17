@@ -15,6 +15,7 @@
 //             de messages non lus).
 // `active` / `onChange(key)` : l'onglet choisi et le rappel au clic.
 // `marginBottom` : espace sous la barre (16 px par défaut).
+// `medium` : taille intermédiaire entre la normale et la fine (voir MEDIUM_PILL) — les trois onglets de Mon Profil.
 // `fine`  : pastilles plus fines (contour de 1 px, texte de 11,5 px, moins de hauteur) — voir FINE_PILL, qu'une autre rangée de pastilles peut reprendre pour avoir
 //           exactement la même taille (la page « DrinkChecks » : ses catégories et ses classements ; Mon Profil : ses trois onglets). Sans `fine`, l'aspect est celui de toute l'app.
 // ============================================================
@@ -24,9 +25,11 @@ import { COLORS } from "../constants.js";
 // Taille des pastilles fines : contour, marges intérieures et taille du texte.
 export const FINE_PILL = { borderWidth: "1px", padding: "2px 10px", fontSize: "11.5px" };
 const NORMAL_PILL = { borderWidth: "2px", padding: "6px 12px", fontSize: "13px" };
+// Taille intermédiaire entre la normale et la fine (Mon Profil : ses trois onglets, Mehdi 2026-11-17 : la taille fine était « un peu trop fine »).
+export const MEDIUM_PILL = { borderWidth: "1.5px", padding: "4px 11px", fontSize: "12.5px" };
 
-export function PillTabs({ tabs, active, onChange, marginBottom = "16px", fine = false }) {
-  const size = fine ? FINE_PILL : NORMAL_PILL;
+export function PillTabs({ tabs, active, onChange, marginBottom = "16px", fine = false, medium = false }) {
+  const size = fine ? FINE_PILL : medium ? MEDIUM_PILL : NORMAL_PILL;
   return (
     <div style={{ marginBottom }}>
       <div style={{ height: "1px", background: COLORS.paperAlt, marginBottom: "10px" }} />

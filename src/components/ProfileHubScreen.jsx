@@ -75,7 +75,7 @@ export function ProfileHubScreen({
         ]}
         active={activeTab}
         onChange={setActiveTab}
-        fine
+        medium
       />
 
       {activeTab === "infos" && (
