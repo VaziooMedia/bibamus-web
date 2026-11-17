@@ -5,6 +5,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, WEEKDAY_SHORT_MON_FIRST } from "../constants.js";
+import { MEDIUM_PILL } from "./PillTabs.jsx";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
@@ -390,11 +391,11 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
             style={{
               background: mode === m.key ? COLORS.amber : "transparent",
               color: mode === m.key ? COLORS.paper : COLORS.inkSoft,
-              border: `2px solid ${mode === m.key ? COLORS.amber : COLORS.paperAlt}`,
+              border: `${MEDIUM_PILL.borderWidth} solid ${mode === m.key ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
-              padding: "6px 12px",
-              fontSize: "12px",
-              fontWeight: 600,
+              padding: MEDIUM_PILL.padding,
+              fontSize: MEDIUM_PILL.fontSize,
+              fontWeight: 700,
               cursor: "pointer",
             }}
           >
