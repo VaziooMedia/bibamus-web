@@ -363,7 +363,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
               style={{ background: COLORS.surface, border: `2px solid ${status ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", cursor: "pointer" }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <div
                     style={{
                       width: `${CARD_AVATAR}px`,
@@ -375,8 +375,8 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
                       justifyContent: "center",
                       fontSize: "19px",
                       flexShrink: 0,
-                      // la place prise dans la ligne reste celle du rond de 38 px (+ 1 px en haut) : le texte et la hauteur de la carte ne bougent pas (voir `CARD_AVATAR`)
-                      margin: avatarOverhang(38, 39),
+                      // le rond est centré sur le texte (2 lignes comme 3) ; la place prise dans la ligne reste celle d'un rond de 38 px : le texte ne bouge pas (voir `CARD_AVATAR`)
+                      margin: avatarOverhang(38, 38),
                       overflow: "hidden",
                     }}
                   >
@@ -455,7 +455,7 @@ export function MutualBibaxScreen({ bibros, bibroName, onBack: onBackProp, onVie
                   border: hasStory ? "2px solid #FF2C8F" : "none",
                   padding: hasStory ? "2px" : 0,
                   boxSizing: "border-box",
-                  margin: avatarOverhang(38, 39),
+                  margin: avatarOverhang(38, 38),
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
