@@ -11,6 +11,7 @@ import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from "re
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, EntityAvatar, SalonAvatar } from "./ui.jsx";
+import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { loadMyHistory, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { SoloCheckinRow, SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE, formatPeriodDay, soloPeriodStartOf, formatDateOnly, formatTimeOnly, QUICK_VENUE_IDS, HISTORY_PAGE_SIZE } from "./BibaSoloScreen.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
@@ -338,10 +339,7 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
-        <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Mon Historique</h1>
-      </div>
+      <ScreenTitle icon={<NavIcon name="calendar" size={24} color={COLORS.amber} />}>Mon Historique</ScreenTitle>
 
       <div style={{ flex: 1 }}>
         {rows === null ? (

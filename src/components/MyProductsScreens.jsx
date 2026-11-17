@@ -50,7 +50,7 @@ export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <ScreenTitle>Mes Produits</ScreenTitle>
+      <ScreenTitle icon={<NavIcon name="star" size={24} color={COLORS.amber} />}>Mes Produits</ScreenTitle>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
         {HUB_ITEMS.map((it) => (
           <HubCard key={it.key} title={it.title} count={counts[it.key]} countText={counts[it.key] === null ? null : countLabel(counts[it.key])} icon={icons[it.key]} onClick={go[it.key]} />
