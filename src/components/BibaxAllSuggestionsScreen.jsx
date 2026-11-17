@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS } from "../constants.js";
-import { PageHeader, EntityAvatar, BibaxName } from "./ui.jsx";
+import { PageHeader, RequestCardAvatar, BibaxName } from "./ui.jsx";
 import { loadBibaxSuggestions, sendBibaxRequest } from "../data/sharedDirectories.js";
 
 // Toutes les suggestions de Bibax — pas seulement les 3 premières affichées sur l'accueil.
@@ -66,7 +66,7 @@ export function BibaxAllSuggestionsScreen({ onBack: onBackProp, onOpenProfile: o
                 textAlign: "left",
               }}
             >
-              <EntityAvatar photoUrl={s.avatarUrl} size={36} />
+              <RequestCardAvatar photoUrl={s.avatarUrl} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                 <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
