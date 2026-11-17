@@ -38,12 +38,9 @@ export function MyPhotosScreen({ onBack, otherUserId, otherName, embedded = fals
   return (
     <div style={embedded ? {} : { padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       {!embedded && <PageHeader onBack={onBack} />}
-      {/* « Mes Médias » : le titre des autres écrans de Mon Profil (22 px, `ScreenTitle`) avec l'icône appareil photo de sa carte de Mon Profil à la place de la barre verte (Mehdi, 2026-11-17).
-          Les photos d'un autre Bibax (lecture seule) gardent leur titre d'origine. */}
-      {!embedded && !readOnly && <ScreenTitle icon={<NavIcon name="camera" size={24} color={COLORS.amber} />}>Mes Médias</ScreenTitle>}
-      {!embedded && readOnly && (
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 18px 0", color: COLORS.ink }}>{`Photos${otherName ? " de " + otherName : ""}`}</h1>
-      )}
+      {/* Le titre des autres écrans de Mon Profil (22 px, `ScreenTitle`) avec l'icône appareil photo de la carte « Mes Médias » de Mon Profil à la place de la barre verte (Mehdi, 2026-11-17) ;
+          même style pour les photos d'un autre Bibax (lecture seule) : « Photos de X ». */}
+      {!embedded && <ScreenTitle icon={<NavIcon name="camera" size={24} color={COLORS.amber} />}>{readOnly ? `Photos${otherName ? " de " + otherName : ""}` : "Mes Médias"}</ScreenTitle>}
 
       {photos === null ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
