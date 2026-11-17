@@ -12,7 +12,7 @@ import { PageHeader, PageFooterNav, EntityAvatar, HubCard } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
 import { venueStreetLine, venuePostalCityLine } from "../utils.js";
 import { flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
-import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds, toggleFavoriteBrand, toggleFavoriteProducer } from "../data/sharedDirectories.js";
+import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds, loadMyFavoriteBibaxDetails, toggleFavoriteBrand, toggleFavoriteProducer } from "../data/sharedDirectories.js";
 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
 
@@ -216,6 +216,9 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
   const { restored, save, open } = useListReturn(screenId, mainScrollRef);
   const [ids, setIds] = useState(restored ? restored.ids : null); // null = chargement ; identifiants de cette sorte, du plus récent au plus ancien
   const [byId, setById] = useState(restored ? restored.byId : {});
+  // Bibax : le @nom et le nombre de Bibax en commun, par identifiant de personne (une seule lecture, `get_my_favorite_bibax_details`) ; gardés dans la mémoire de la page
+  // pour que la liste ne change pas de hauteur au retour d'une fiche. `null` tant que la lecture n'a pas répondu (ou si elle a échoué).
+  const [details, setDetails] = useState(restored?.details || null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
@@ -250,8 +253,20 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
     if (ids === null || error) return;
-    save({ ids, byId });
-  }, [ids, byId, error]);
+    save({ ids, byId, details });
+  }, [ids, byId, details, error]);
+  useEffect(() => {
+    if (kind !== "bibax") return;
+    let cancelled = false;
+    loadMyFavoriteBibaxDetails().then((result) => {
+      // Au retour d'une fiche, une lecture qui échoue garde en silence ce qu'on avait.
+      if (!cancelled && result) setDetails(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, attempt]);
   // Le cœur des lignes (Mehdi, 2026-11-17) : plein = favori ; un clic retire (ou remet) le favori sans ouvrir la fiche, et la ligne reste jusqu'à ce qu'on quitte la page (un second clic annule).
   // Lieux, produits et Bibax : l'état et la bascule de l'application (les mêmes que le cœur de leur fiche). Marques et producteurs : la bascule de la base, avec l'état gardé ici
   // (leurs fiches relisent le leur à l'ouverture) ; `heartOff[id]` = true quand le cœur est vide.
@@ -336,18 +351,34 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
     ));
   } else {
     const people = (ids || []).map((userId) => bibros.find((b) => b.userId === userId)).filter(Boolean);
-    rows = people.map((b, i) => (
-      <FavoriteRow
-        key={b.userId}
-        kind="bibax"
-        avatar={<EntityAvatar photoUrl={b.avatarUrl} size={ROW_AVATAR} fallbackIcon="user" />}
-        title={[b.name, b.lastName].filter(Boolean).join(" ")}
-        details={[b.nickname, b.city].filter(Boolean)}
-        heart={onToggleBibaxFavorite ? { on: (favoriteBibaxIds || []).includes(b.userId), onToggle: () => onToggleBibaxFavorite(b.code) } : null}
-        isLast={last(people, i)}
-        onOpen={openBibax ? () => openBibax(b.code) : null}
-      />
-    ));
+    rows = people.map((b, i) => {
+      // Ligne 2 : le surnom, puis le @nom seulement s'il a été changé (au départ, le nom d'utilisateur est une copie du code Bibax). Ligne 3 : commune (village), puis le pays en drapeau.
+      // Ligne 4 : « N Bibax en commun » (rien à 0). Une ligne sans contenu n'est pas affichée. Mehdi, 2026-11-17 ; avant : surnom · ville sur une seule ligne.
+      const username = details?.[b.userId]?.username || "";
+      const usernameChanged = !!username && username.toLowerCase() !== String(b.code || "").toLowerCase();
+      const line2 = [b.nickname || null, usernameChanged ? `@${username}` : null].filter(Boolean);
+      const commune = b.city ? (b.locality ? `${b.city} (${b.locality})` : b.city) : ""; // comme `BibaxName` : sans commune, le village n'est pas affiché
+      const line3 = [commune || null, flagPart({ nationality: b.country })].filter(Boolean);
+      const common = details?.[b.userId]?.mutual || 0;
+      return (
+        <FavoriteRow
+          key={b.userId}
+          kind="bibax"
+          avatar={<EntityAvatar photoUrl={b.avatarUrl} size={ROW_AVATAR} fallbackIcon="user" />}
+          title={[b.name, b.lastName].filter(Boolean).join(" ")}
+          detailsNode={
+            <>
+              {line2.length > 0 && <DotLine parts={line2} noWrap />}
+              {line3.length > 0 && <DotLine parts={line3} noWrap />}
+              {common > 0 && <div data-favorite-mutual style={{ fontSize: "12px", color: COLORS.inkSoft }}>{common} Bibax en commun</div>}
+            </>
+          }
+          heart={onToggleBibaxFavorite ? { on: (favoriteBibaxIds || []).includes(b.userId), onToggle: () => onToggleBibaxFavorite(b.code) } : null}
+          isLast={last(people, i)}
+          onOpen={openBibax ? () => openBibax(b.code) : null}
+        />
+      );
+    });
   }
 
   return (

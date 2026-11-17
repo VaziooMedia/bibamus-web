@@ -37,6 +37,7 @@ Colonnes visibles dans les scripts : `requester_id`, `requestee_id`, `status` (`
 | `remove_bibax_by_code(p_target_code)` | Supprimer la relation **côté serveur** | Appelée sans attendre son résultat ; le retrait local se fait d'abord |
 | `remove_bibax(...)` | Supprimer par identifiant de relation | Importée, jamais appelée |
 | `get_my_bibax()` | Liste des Bibax confirmés | Identité, ville, localité, pays, date de naissance et `share_age`, bio, date d'inscription, 8 liens sociaux (Pinterest et Twitch ne sont pas remontés) |
+| `get_my_favorite_bibax_details()` | Le @nom (`username`) et le nombre de Bibax en commun de MES Bibax favoris (« Mes Favoris > Bibax ») | Script `bibamus-sql-favoris-5-details-bibax.sql` (2026-11-17) ; mes favoris dont la relation est confirmée seulement ; le nombre vient de `get_mutual_bibax_count` ; l'app n'affiche le @nom que s'il diffère du code Bibax ; voir `DATABASE.md` |
 | `get_pending_bibax_requests()` | Demandes reçues | Avec le code de l'expéditeur |
 | `get_sent_bibax_requests()` | Demandes envoyées | Code et commune ; **aucune distance** n'est lue par le client |
 | `get_bibax_suggestions(p_limit)` | Suggestions | Voir plus bas |

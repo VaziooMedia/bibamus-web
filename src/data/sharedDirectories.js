@@ -2676,6 +2676,17 @@ export async function loadMutualBibaxCount(otherUserId) {
   return data ?? 0;
 }
 
+// « Mes Favoris > Bibax » : le @nom et le nombre de Bibax en commun de MES Bibax favoris confirmés, en UNE lecture (`get_my_favorite_bibax_details`, script
+// `bibamus-sql-favoris-5-details-bibax.sql`). Rend `{ [userId]: { username, mutual } }`, ou `null` si la lecture échoue (la page n'affiche alors ni @nom ni Bibax en commun).
+export async function loadMyFavoriteBibaxDetails() {
+  const { data, error } = await supabase.rpc("get_my_favorite_bibax_details");
+  if (error) {
+    console.error("loadMyFavoriteBibaxDetails:", error);
+    return null;
+  }
+  return Object.fromEntries((data || []).map((r) => [r.user_id, { username: r.username || "", mutual: r.mutual_bibax_count || 0 }]));
+}
+
 export async function loadBibaxMediaAssets(otherUserId) {
   const { data, error } = await supabase.rpc("get_bibax_media_assets", { p_other_user_id: otherUserId });
   if (error) {
