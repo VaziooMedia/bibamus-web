@@ -83,6 +83,7 @@ export function HomeScreen({
   goToProfile,
   goToGames,
   goToBibaMeet,
+  goToBibaClubs,
   goToBibaPulse,
   onOpenPulseEntry,
   bibaMeetVisible = true,
@@ -608,18 +609,15 @@ export function HomeScreen({
       <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
+        <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Club</span></>} subtitle="Tes Clubs privés et publics" onClick={goToBibaClubs} />
+        <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Cal</span></>} subtitle="Agenda des events autour de vous" badge="Soon" disabled />
         {gamesVisible && (
-          <CategoryTile icon="ti-device-gamepad" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Play</span></>} subtitle="Jeux et défis autour d'un verre" onClick={goToGames} />
+          <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Play</span></>} subtitle="Jeux et défis autour d'un verre" onClick={goToGames} badge="Soon" disabled />
         )}
         {bibaMeetVisible && (
-          <CategoryTile icon="ti-users" title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
+          <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
         )}
-        <CategoryTile
-          title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Cal</span></>}
-          subtitle="Agenda des events autour de vous"
-          badge="Soon"
-          disabled
-        />
+        <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Care</span></>} subtitle="Suivi santé" badge="Soon" disabled />
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>

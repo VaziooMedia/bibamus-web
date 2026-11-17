@@ -406,8 +406,10 @@ export function ActionCard({ icon, title, subtitle, onClick, highlight, disabled
   );
 }
 
+// La pastille (« Soon ») est posée à cheval sur le bord haut de la tuile, en rose fluo comme celle des cartes de Mon Profil, et HORS de la zone grisée : l'opacité d'une tuile grisée ne la ternit pas
+// (décidé par Mehdi, 2026-11-17).
 export function CategoryTile({ iconElement, title, subtitle, onClick, badge, countBadge = 0, disabled }) {
-  return (
+  const tile = (
     <button
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
@@ -425,26 +427,10 @@ export function CategoryTile({ iconElement, title, subtitle, onClick, badge, cou
         opacity: disabled ? 0.55 : 1,
         position: "relative",
         minHeight: "80px",
+        flex: 1,
+        minWidth: 0,
       }}
     >
-      {badge && (
-        <span
-          style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            fontSize: "9px",
-            fontWeight: 700,
-            letterSpacing: "0.5px",
-            color: COLORS.redFluo,
-            background: COLORS.paperAlt,
-            borderRadius: "999px",
-            padding: "3px 8px",
-          }}
-        >
-          {badge}
-        </span>
-      )}
       {countBadge > 0 && (
         <span
           style={{
@@ -478,6 +464,29 @@ export function CategoryTile({ iconElement, title, subtitle, onClick, badge, cou
         {subtitle && <span style={{ fontSize: "11.5px", opacity: 0.7, color: COLORS.ink, display: "block", marginTop: "2px" }}>{subtitle}</span>}
       </span>
     </button>
+  );
+  return (
+    <div style={{ position: "relative", display: "flex" }}>
+      {tile}
+      {badge && (
+        <span
+          style={{
+            position: "absolute",
+            top: "-7px",
+            right: "12px",
+            fontSize: "9px",
+            fontWeight: 700,
+            letterSpacing: "0.5px",
+            color: COLORS.pinkFluo,
+            background: COLORS.paperAlt,
+            borderRadius: "999px",
+            padding: "3px 8px",
+          }}
+        >
+          {badge}
+        </span>
+      )}
+    </div>
   );
 }
 

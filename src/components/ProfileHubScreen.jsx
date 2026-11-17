@@ -3,7 +3,7 @@
 //
 // Sous le bloc du rond de profil, trois onglets (les mêmes pastilles que les fiches Produit et Lieu, `PillTabs`) :
 //   - Infos     : le bloc des infos de la personne (citation, date de naissance…), les trois blocs Bibax / Drink Checks /
-//                 Place Checks et les petits blocs d'accès (BibaClub, Produits, Favoris, Historique, Photos…), puis
+//                 Place Checks et les petits blocs d'accès (Produits, Favoris, Historique, Photos), puis
 //                 le raccourci des paramètres ;
 //   - Biba360   : toutes les statistiques (ex-écran « Mes Statistiques », devenu l'onglet : plus de petit bloc d'accès) ;
 //   - BibaPulse : les publications de la personne dans BibaPulse (cartes du fil, via `EntityPulseSection` en mode « mine »).
@@ -44,7 +44,6 @@ export function ProfileHubScreen({
   goToPhotos,
   goToSettings,
   onOpenMyStory,
-  goToBibaClubs,
   onOpenWrapped,
   onOpenStatsVenue,
   onOpenStatsDrink,
@@ -84,7 +83,6 @@ export function ProfileHubScreen({
           <ProfileStatCards bibros={bibros} myUserId={myUserId} goToBibros={goToBibros} goToDrinkChecks={goToDrinkChecks} goToVenues={goToVenues} />
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-            <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title="Mes BibaClub" onClick={goToBibaClubs} singleLine />
             <ActionCard
               icon={
                 <span style={{ display: "inline-flex", width: "20px", justifyContent: "center" }}>
@@ -98,7 +96,6 @@ export function ProfileHubScreen({
             <ActionCard icon={<NavIcon name="heart" size={20} color={COLORS.amber} />} title="Mes Favoris" onClick={goToFavorites} singleLine />
             <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title="Mon Historique" onClick={goToHistory} singleLine />
             <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title="Mes Photos" onClick={goToPhotos} singleLine />
-            <ActionCard icon={<NavIcon name="activity" size={20} color={COLORS.inkSoft} />} title="BibaCare" disabled badge="Soon" singleLine />
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
