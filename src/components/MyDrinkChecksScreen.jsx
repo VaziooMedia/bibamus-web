@@ -19,6 +19,7 @@ import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { displayedAbv } from "../utils.js";
+import drinkCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 const SORT_FIELDS = { nameOf: (x) => x.drink.name, countOf: (x) => x.checks, countryOf: (x) => (x.drink.nationality && x.drink.nationality !== "Non renseigné" ? x.drink.nationality : "") };
 const hasFlag = (country) => !!COUNTRY_ISO_CODES[country] || country === "International" || country === "Autre";
@@ -123,7 +124,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <ScreenTitle>
+      <ScreenTitle iconUrl={drinkCheckIconUrl}>
         Drink<span style={{ color: COLORS.amber }}>Checks</span>
       </ScreenTitle>
 
