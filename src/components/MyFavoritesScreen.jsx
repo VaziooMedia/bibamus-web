@@ -7,10 +7,11 @@
 // Chaque ligne ouvre la fiche ; son retour ramène sur la page de la liste.
 import React, { useState, useEffect } from "react";
 import { useListReturn } from "../hooks/useListReturn.js";
-import { COLORS } from "../constants.js";
+import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { PageHeader, PageFooterNav, EntityAvatar, HubCard } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
 import { venueStreetLine, venuePostalCityLine } from "../utils.js";
+import { flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
 import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds, toggleFavoriteBrand, toggleFavoriteProducer } from "../data/sharedDirectories.js";
 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
@@ -297,7 +298,8 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         kind="drink"
         avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={ROW_AVATAR} fallbackIcon="bottle" />}
         title={d.name}
-        details={[d.type, d.brand].filter(Boolean)}
+        // Même ligne de détails que « Mes Produits » (Mehdi, 2026-11-17) : sous-catégorie (à la place de la catégorie), drapeau du pays, degré, Bio, Sans gluten ; plus de marque.
+        details={[SUBTYPE_LABELS[d.beverageSubtype] || null, flagPart(d), abvPart(d), bioPart(d), glutenFreePart(d)].filter(Boolean)}
         heart={onToggleDrinkFavorite ? { on: (favoriteDrinkIds || []).includes(String(d.id)), onToggle: () => onToggleDrinkFavorite(d.id) } : null}
         isLast={last(resolved, i)}
         onOpen={openDrink ? () => openDrink(d.id) : null}
