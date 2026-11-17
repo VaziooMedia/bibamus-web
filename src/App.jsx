@@ -2275,6 +2275,7 @@ export default function App() {
                   setScreen("games");
                 }}
                 goToBibaMeet={() => setScreen("bibaMeet")}
+                goToBibaClubs={() => setScreen("bibaClubsList")}
                 bibaMeetVisible={featureFlags.nav_bibameet_visible !== false}
                 bibaPulseVisible={featureFlags.nav_bibapulse_visible !== false}
                 gamesVisible={featureFlags.nav_games_visible !== false}
@@ -2752,7 +2753,6 @@ export default function App() {
                 onBack={() => setScreen(pulseTop && pulseTop.profile ? pulseTop.screen : "home")}
                 goToMyInfo={() => setScreen("myInfo")}
                 goToBibros={() => setScreen("bibrosList")}
-                goToBibaClubs={() => setScreen("bibaClubsList")}
                 goToProducts={() => setScreen("myProducts")}
                 goToDrinkChecks={() => setScreen("myDrinkChecks")}
                 goToVenues={() => setScreen("myPlaceChecks")}
@@ -2813,7 +2813,7 @@ export default function App() {
               <BibaClubsListScreen
                 mainScrollRef={mainScrollRef}
                 myUserId={session.user.id}
-                onBack={() => setScreen("profile")}
+                onBack={() => setScreen("home")}
                 onOpenClub={(clubId) => {
                   setViewedClubId(clubId);
                   setClubDetailBack("bibaClubsList");
