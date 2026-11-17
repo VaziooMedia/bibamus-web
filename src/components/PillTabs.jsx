@@ -16,6 +16,7 @@
 // `active` / `onChange(key)` : l'onglet choisi et le rappel au clic.
 // `marginBottom` : espace sous la barre (16 px par défaut).
 // `medium` : taille intermédiaire entre la normale et la fine (voir MEDIUM_PILL) — les trois onglets de Mon Profil.
+// STATS_PILL (exportée) : la taille des trois rangées de pastilles de l'onglet Biba360 de Mon Profil, entre la intermédiaire et la fine (22 px de haut).
 // `fine`  : pastilles plus fines (contour de 1 px, texte de 11,5 px, moins de hauteur) — voir FINE_PILL, qu'une autre rangée de pastilles peut reprendre pour avoir
 //           exactement la même taille (la page « DrinkChecks » : ses catégories et ses classements ; Mon Profil : ses trois onglets). Sans `fine`, l'aspect est celui de toute l'app.
 // ============================================================
@@ -27,6 +28,8 @@ export const FINE_PILL = { borderWidth: "1px", padding: "2px 10px", fontSize: "1
 const NORMAL_PILL = { borderWidth: "2px", padding: "6px 12px", fontSize: "13px" };
 // Taille intermédiaire entre la normale et la fine (Mon Profil : ses trois onglets, Mehdi 2026-11-17 : la taille fine était « un peu trop fine »).
 export const MEDIUM_PILL = { borderWidth: "1.5px", padding: "4px 11px", fontSize: "12.5px" };
+// Taille des pastilles de l'onglet Biba360 de Mon Profil (périodes, catégories, modes du suivi hebdo), un peu plus fine que la taille intermédiaire : 22 px de haut (Mehdi 2026-11-17).
+export const STATS_PILL = { borderWidth: "1.5px", padding: "3px 10px", fontSize: "12px" };
 
 export function PillTabs({ tabs, active, onChange, marginBottom = "16px", fine = false, medium = false }) {
   const size = fine ? FINE_PILL : medium ? MEDIUM_PILL : NORMAL_PILL;

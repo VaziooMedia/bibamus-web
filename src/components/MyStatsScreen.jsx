@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { WeekTracker } from "./ProfileParts.jsx";
-import { MEDIUM_PILL } from "./PillTabs.jsx";
+import { STATS_PILL } from "./PillTabs.jsx";
 import {
   loadMyStatsOverview,
   loadMyVenueRanking,
@@ -565,10 +565,10 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
             style={{
               background: periodKey === p.key ? COLORS.amber : COLORS.surface,
               color: periodKey === p.key ? COLORS.paper : COLORS.ink,
-              border: `${MEDIUM_PILL.borderWidth} solid ${periodKey === p.key ? COLORS.amber : COLORS.paperAlt}`,
+              border: `${STATS_PILL.borderWidth} solid ${periodKey === p.key ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
-              padding: MEDIUM_PILL.padding,
-              fontSize: MEDIUM_PILL.fontSize,
+              padding: STATS_PILL.padding,
+              fontSize: STATS_PILL.fontSize,
               fontWeight: 700,
               cursor: "pointer",
             }}
@@ -588,10 +588,10 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
             style={{
               background: activeCategory === c.key ? COLORS.amber : "none",
               color: activeCategory === c.key ? COLORS.paper : COLORS.inkSoft,
-              border: `${MEDIUM_PILL.borderWidth} solid ${activeCategory === c.key ? COLORS.amber : COLORS.paperAlt}`,
+              border: `${STATS_PILL.borderWidth} solid ${activeCategory === c.key ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
-              padding: MEDIUM_PILL.padding,
-              fontSize: MEDIUM_PILL.fontSize,
+              padding: STATS_PILL.padding,
+              fontSize: STATS_PILL.fontSize,
               fontWeight: 700,
               cursor: "pointer",
             }}
