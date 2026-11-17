@@ -395,7 +395,7 @@ export function WeekTracker({ alcoholDaysMap, onToggleDay }) {
               borderRadius: "999px",
               padding: MEDIUM_PILL.padding,
               fontSize: MEDIUM_PILL.fontSize,
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: "pointer",
             }}
           >
