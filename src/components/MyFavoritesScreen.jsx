@@ -17,14 +17,15 @@ import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
 
 // Éléments séparés par des points vert fluo (même rendu que les lignes de « Mon Historique »).
-export function DotLine({ parts }) {
+// `noWrap` : tout sur une seule ligne — les textes se coupent par « … » au lieu de passer à la ligne, et les éléments qui ne sont pas du texte (drapeau, icône) gardent leur taille.
+export function DotLine({ parts, noWrap = false }) {
   if (parts.length === 0) return null;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: "wrap", minWidth: 0 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: noWrap ? "nowrap" : "wrap", minWidth: 0 }}>
       {parts.map((part, idx) => (
         <React.Fragment key={idx}>
           {idx > 0 && AMBER_DOT}
-          <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{part}</span>
+          <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", ...(noWrap && typeof part !== "string" ? { flexShrink: 0 } : null) }}>{part}</span>
         </React.Fragment>
       ))}
     </div>
@@ -312,7 +313,8 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         kind="brand"
         avatar={<EntityAvatar photoUrl={b.logoUrl} size={ROW_AVATAR} fallbackIcon="tag" />}
         title={b.name}
-        details={[b.originCountry].filter(Boolean)}
+        // Ville d'origine, région d'origine, puis le pays (drapeau) — sur une seule ligne (Mehdi, 2026-11-17 ; avant : le nom du pays seul). Même ordre que la fiche de la marque.
+        detailsNode={<DotLine parts={[b.originCity || null, b.originRegion || null, flagPart({ nationality: b.originCountry })].filter(Boolean)} noWrap />}
         heart={{ on: !heartOff[String(b.id)], onToggle: () => toggleLocalHeart(toggleFavoriteBrand, b.id) }}
         isLast={last(resolved, i)}
         onOpen={openBrand ? () => openBrand(b.id) : null}
