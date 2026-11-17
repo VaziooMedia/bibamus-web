@@ -17,7 +17,7 @@ import { PillTabs } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
-import placeCheckIconUrl from "../assets/brand/place-check.svg";
+import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 
 const SORT_FIELDS = { nameOf: (x) => x.venue.name, countOf: (x) => x.visits, countryOf: (x) => x.venue.country };
 

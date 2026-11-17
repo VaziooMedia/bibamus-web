@@ -19,7 +19,7 @@ import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { displayedAbv } from "../utils.js";
-import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
+import drinkCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 const SORT_FIELDS = { nameOf: (x) => x.drink.name, countOf: (x) => x.checks, countryOf: (x) => (x.drink.nationality && x.drink.nationality !== "Non renseigné" ? x.drink.nationality : "") };
 const hasFlag = (country) => !!COUNTRY_ISO_CODES[country] || country === "International" || country === "Autre";
