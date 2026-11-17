@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader } from "./ui.jsx";
+import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { loadMyMediaAssets, deleteMyMediaAsset, loadBibaxMediaAssets } from "../data/sharedDirectories.js";
 
 // Galerie personnelle — agrège les photos déjà envoyées par l'utilisateur (Stories, contributions
@@ -37,10 +38,11 @@ export function MyPhotosScreen({ onBack, otherUserId, otherName, embedded = fals
   return (
     <div style={embedded ? {} : { padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       {!embedded && <PageHeader onBack={onBack} />}
-      {!embedded && (
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 18px 0", color: COLORS.ink }}>
-          {readOnly ? `Photos${otherName ? " de " + otherName : ""}` : "Mes Photos"}
-        </h1>
+      {/* « Mes Médias » : le titre des autres écrans de Mon Profil (22 px, `ScreenTitle`) avec l'icône appareil photo de sa carte de Mon Profil à la place de la barre verte (Mehdi, 2026-11-17).
+          Les photos d'un autre Bibax (lecture seule) gardent leur titre d'origine. */}
+      {!embedded && !readOnly && <ScreenTitle icon={<NavIcon name="camera" size={24} color={COLORS.amber} />}>Mes Médias</ScreenTitle>}
+      {!embedded && readOnly && (
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 18px 0", color: COLORS.ink }}>{`Photos${otherName ? " de " + otherName : ""}`}</h1>
       )}
 
       {photos === null ? (
