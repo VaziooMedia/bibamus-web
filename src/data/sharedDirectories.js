@@ -585,6 +585,25 @@ export async function loadMyHistory(offset = 0, limit = 40) {
   return { items, rawCount: (data || []).length };
 }
 
+// « Mon Historique » — les JOURS où la personne a de l'activité (pour le calendrier « Aller à un jour »), du plus récent au plus ancien :
+// [{ day: 'AAAA-MM-JJ', n }] où `n` = nombre de lignes de `get_my_history` ce jour-là (sert à savoir combien de lignes charger pour atteindre un jour).
+// Le jour suit la règle de l'Historique (période 6 h → 6 h), calculée avec le fuseau du téléphone. Les soirées BibaRoom n'y sont pas (l'écran les ajoute lui-même).
+// Rend `null` en cas d'erreur (y compris tant que la fonction `get_my_history_days` n'existe pas encore dans la base) : le calendrier affiche alors « Réessayer ».
+export async function loadMyHistoryDays() {
+  let tz = "Europe/Brussels";
+  try {
+    tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz;
+  } catch {
+    /* on garde Bruxelles */
+  }
+  const { data, error } = await supabase.rpc("get_my_history_days", { p_tz: tz });
+  if (error) {
+    console.error("loadMyHistoryDays:", error);
+    return null;
+  }
+  return (data || []).map((r) => ({ day: String(r.day).slice(0, 10), n: Number(r.n) || 0 }));
+}
+
 // "Archiver" — la liste du jour disparaît de BibaSolo (et ses 3 compteurs repartent à zéro),
 // mais la vraie consommation reste comptée dans Mes Statistiques (contrairement à la croix de
 // suppression individuelle, qui reste un vrai DELETE définitif).

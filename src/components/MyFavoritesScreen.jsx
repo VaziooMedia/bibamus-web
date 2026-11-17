@@ -169,7 +169,7 @@ const KIND_ICONS = {
 
 // Le titre d'un écran de Mon Profil : petite barre verte puis le texte. Avec `iconUrl` (DrinkChecks, PlaceChecks), une icône de 24 px — comme celle du titre « Mes Bibax » — remplace la barre ;
 // avec `icon` (un élément : une icône de l'app de 24 px, comme l'étoile vide de « Mes Produits », le cœur vide de « Mes Favoris » ou l'icône de la carte d'une sous-page), c'est cette icône qui la remplace.
-export function ScreenTitle({ children, iconUrl = null, icon = null }) {
+export function ScreenTitle({ children, iconUrl = null, icon = null, right = null }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
       {!iconUrl && !icon && <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />}
@@ -180,6 +180,7 @@ export function ScreenTitle({ children, iconUrl = null, icon = null }) {
         </span>
       )}
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{children}</h1>
+      {right && <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center" }}>{right}</span>}
     </div>
   );
 }

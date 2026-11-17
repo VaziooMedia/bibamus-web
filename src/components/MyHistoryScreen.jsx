@@ -12,7 +12,8 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, EntityAvatar, SalonAvatar } from "./ui.jsx";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
-import { loadMyHistory, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { HistoryCalendar, dayKeyOf } from "./HistoryCalendar.jsx";
+import { loadMyHistory, loadMyHistoryDays, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { SoloCheckinRow, SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE, formatPeriodDay, soloPeriodStartOf, formatDateOnly, formatTimeOnly, QUICK_VENUE_IDS, HISTORY_PAGE_SIZE } from "./BibaSoloScreen.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
@@ -114,6 +115,16 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
   const [drinksById, setDrinksById] = useState(restored ? restored.drinksById : {});
   const [venuesById, setVenuesById] = useState(restored ? restored.venuesById : {});
 
+  // Le calendrier (« Aller à un jour ») : ouvert ou non ; les jours actifs lus sur le serveur (`serverDays` : [{ day, n }], null tant qu'ils ne sont pas lus) ; le jour en cours de chargement
+  // (`jumping`) ; l'erreur éventuelle (`calError` : « days » = les jours n'ont pas pu être lus, « jump » = l'historique n'a pas pu être chargé jusqu'au jour touché) ; le jour où défiler (`scrollTo`).
+  const [calOpen, setCalOpen] = useState(false);
+  const [serverDays, setServerDays] = useState(null);
+  const [daysLoading, setDaysLoading] = useState(false);
+  const [jumping, setJumping] = useState(null);
+  const [calError, setCalError] = useState(null);
+  const [scrollTo, setScrollTo] = useState(null);
+  const lastPicked = useRef(null);
+
   const loadPage = async (offset) => {
     setLoadingMore(true);
     const page = await loadMyHistory(offset, HISTORY_PAGE_SIZE);
@@ -127,6 +138,63 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
     setRows((prev) => (offset === 0 ? page.items : [...(prev || []), ...page.items]));
     setReceived(offset + page.rawCount);
     setHasMore(page.rawCount === HISTORY_PAGE_SIZE);
+  };
+
+  // Les jours qui ont de l'activité (une seule requête, légère, quelle que soit la longueur de l'historique).
+  const fetchDays = async () => {
+    setDaysLoading(true);
+    setCalError(null);
+    const list = await loadMyHistoryDays();
+    setDaysLoading(false);
+    if (list === null) setCalError("days");
+    else setServerDays(list);
+  };
+
+  // Charge l'historique jusqu'au jour demandé (et pas plus loin) : le nombre de lignes à lire se déduit des jours connus, les pages de 100 sont demandées par quatre à la fois ;
+  // puis une vérification page par page au cas où une ligne ajoutée entre-temps aurait décalé le compte. Rend false si une page n'a pas pu être lue.
+  const loadUntil = async (day) => {
+    const needed = (serverDays || []).filter((d) => d.day >= day).reduce((sum, d) => sum + d.n, 0);
+    const fresh = [];
+    let offset = received;
+    let more = hasMore;
+    while (more && offset < needed) {
+      const offsets = [];
+      for (let o = offset; o < needed && offsets.length < 4; o += 100) offsets.push(o);
+      const pages = await Promise.all(offsets.map((o) => loadMyHistory(o, 100)));
+      if (pages.some((pg) => pg === null)) return false;
+      for (const pg of pages) {
+        fresh.push(...pg.items);
+        offset += pg.rawCount;
+        if (pg.rawCount < 100) more = false;
+      }
+    }
+    let all = [...(rows || []), ...fresh];
+    const oldestDay = () => (all.length > 0 ? dayKeyOf(soloPeriodStartOf(all[all.length - 1].createdAt)) : null);
+    while (more && oldestDay() !== null && oldestDay() > day) {
+      const pg = await loadMyHistory(offset, 100);
+      if (pg === null) return false;
+      all = [...all, ...pg.items];
+      offset += pg.rawCount;
+      more = pg.rawCount === 100;
+    }
+    if (all.length > (rows || []).length) {
+      setRows(all);
+      setReceived(offset);
+      setHasMore(more);
+    }
+    return true;
+  };
+
+  // Échap ferme le calendrier.
+  useEffect(() => {
+    if (!calOpen) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") setCalOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [calOpen]);
+  const openCalendar = () => {
+    setCalOpen(true);
+    if (serverDays === null && !daysLoading) fetchDays();
   };
 
   // Première visite : la première page. Retour d'une fiche : on recharge en silence tout ce qui était affiché (par lots de 100 au plus) et on ne remplace
@@ -255,6 +323,48 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
     return g.start.getFullYear() === thisYear ? label : `${label}/${g.start.getFullYear()}`;
   };
 
+  // Calendrier : les jours (AAAA-MM-JJ, jour de 6 h à 6 h) qui ont de l'activité — ceux du serveur, ceux des soirées BibaRoom et ceux déjà affichés — et le saut vers la barre d'un jour.
+  const todayDay = dayKeyOf(soloPeriodStartOf(new Date()));
+  const activeDays = useMemo(() => {
+    const set = new Set((serverDays || []).map((d) => d.day));
+    for (const ev of events) {
+      const { at } = eventMoment(ev);
+      if (Number.isFinite(at)) set.add(dayKeyOf(soloPeriodStartOf(at)));
+    }
+    for (const g of groups) set.add(dayKeyOf(g.start));
+    return set;
+  }, [serverDays, events, groups]);
+  const sortedDays = useMemo(() => [...activeDays].sort(), [activeDays]);
+  const oldestDay = sortedDays.length > 0 ? sortedDays[0] : todayDay;
+  const newestDay = sortedDays.length > 0 ? sortedDays[sortedDays.length - 1] : todayDay;
+  const dayToGroupKey = useMemo(() => new Map(groups.map((g) => [dayKeyOf(g.start), g.key])), [groups]);
+  const pickDay = async (day) => {
+    lastPicked.current = day;
+    setCalError(null);
+    if (!dayToGroupKey.has(day)) {
+      setJumping(day);
+      const ok = await loadUntil(day);
+      setJumping(null);
+      if (!ok) {
+        setCalError("jump");
+        return;
+      }
+    }
+    setCalOpen(false);
+    setScrollTo(day);
+  };
+  const retryCalendar = () => (calError === "jump" && jumping === null && lastPicked.current ? pickDay(lastPicked.current) : fetchDays());
+  // Dès que la barre du jour touché est affichée, la liste défile jusqu'à elle (12 px sous le haut de l'écran).
+  useLayoutEffect(() => {
+    if (scrollTo === null) return;
+    const key = dayToGroupKey.get(scrollTo);
+    if (key === undefined) return;
+    const container = mainScrollRef?.current;
+    const bar = document.querySelector(`[data-history-bar="${key}"]`);
+    if (container && bar) container.scrollTop += bar.getBoundingClientRect().top - container.getBoundingClientRect().top - 12;
+    setScrollTo(null);
+  }, [scrollTo, dayToGroupKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const venueOf = (id) => (id ? venuesById[String(id)] : null);
   const shownVenueName = (id) => (id && !QUICK_VENUE_IDS.includes(String(id)) ? venueOf(id)?.name || null : null);
   const dateParts = (at, timeKnown = true) => {
@@ -339,7 +449,47 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <ScreenTitle icon={<NavIcon name="calendar" size={24} color={COLORS.amber} />}>Mon Historique</ScreenTitle>
+      <div data-history-day-picker style={{ position: "relative" }}>
+        <ScreenTitle
+          icon={<NavIcon name="calendar" size={24} color={COLORS.amber} />}
+          right={
+            rows !== null && groups.length > 0 ? (
+              <button
+                type="button"
+                data-history-day-trigger
+                aria-label="Aller à un jour"
+                aria-expanded={calOpen}
+                onClick={() => (calOpen ? setCalOpen(false) : openCalendar())}
+                style={{ background: "none", border: "none", padding: "4px", margin: "-4px", cursor: "pointer", display: "inline-flex" }}
+              >
+                <NavIcon name="calendar" size={24} color={COLORS.pinkFluo} />
+              </button>
+            ) : null
+          }
+        >
+          Mon Historique
+        </ScreenTitle>
+        {calOpen && (
+          <>
+            <div onClick={() => setCalOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 29 }} />
+            <div
+              style={{ position: "absolute", top: "calc(100% - 8px)", right: 0, width: "100%", maxWidth: "340px", boxSizing: "border-box", zIndex: 30, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px 12px", boxShadow: "0 8px 24px rgba(0,0,0,0.45)" }}
+            >
+              <HistoryCalendar
+                activeDays={activeDays}
+                todayDay={todayDay}
+                minDay={oldestDay}
+                maxDay={newestDay > todayDay ? newestDay : todayDay}
+                loading={daysLoading || (serverDays === null && calError === null)}
+                busy={jumping !== null}
+                error={calError}
+                onRetry={retryCalendar}
+                onPick={pickDay}
+              />
+            </div>
+          </>
+        )}
+      </div>
 
       <div style={{ flex: 1 }}>
         {rows === null ? (
@@ -353,7 +503,7 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
         ) : (
           groups.map((g, gi) => (
             <React.Fragment key={g.key}>
-              <div data-history-bar="1" style={{ display: "flex", alignItems: "center", gap: "10px", margin: gi === 0 ? "0 0 18px" : "20px 0 18px" }}>
+              <div data-history-bar={g.key} style={{ display: "flex", alignItems: "center", gap: "10px", margin: gi === 0 ? "0 0 18px" : "20px 0 18px" }}>
                 <span data-history-label="1" style={SOLO_BAR_LABEL_STYLE}>{groupLabel(g)}</span>
                 <div style={SOLO_BAR_LINE_STYLE} />
               </div>
@@ -375,7 +525,7 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
           <button
             type="button"
             data-history-more="1"
-            disabled={loadingMore}
+            disabled={loadingMore || jumping !== null}
             onClick={() => loadPage(received)}
             style={{ width: "100%", marginTop: "18px", padding: "12px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", color: COLORS.ink, fontSize: "13px", fontWeight: 700, cursor: loadingMore ? "default" : "pointer", opacity: loadingMore ? 0.6 : 1 }}
           >
