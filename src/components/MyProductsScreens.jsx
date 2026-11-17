@@ -1,11 +1,13 @@
 // « Mes Produits » (Mon Profil) — trois listes de MES produits, chacune sur son écran : À goûter (le bouton « liste à goûter » de la fiche d'un produit),
-// Déjà goûtés (tous les produits que j'ai checkés, notés ou non) et Notés (ma note, de la fiche d'un produit). L'écran d'entrée ne montre que les trois cartes et leur nombre de produits.
+// Déjà goûtés (tous les produits que j'ai checkés, notés ou non) et Notés (ma note, de la fiche d'un produit). L'écran d'entrée ne montre que les trois cartes (rond d'icône, titre, nombre de produits à droite).
 // Dans chaque liste, les produits sont rangés par catégorie sous une barre (comme les sortes de « Mes Favoris »), du plus récent au plus ancien ; les lignes ont
 // le style de « Mon Historique » : une carte, des lignes pleine largeur séparées par un trait fin. Une ligne ouvre la fiche du produit, dont le retour ramène ici.
 // Les listes viennent de la base (get_my_wishlist, get_my_checked_drinks, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
-import { PageHeader, PageFooterNav, EntityAvatar, ActionCard } from "./ui.jsx";
+import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
+import { NavIcon } from "./icons.jsx";
+import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
 import { DotLine, ScreenTitle } from "./MyFavoritesScreen.jsx";
@@ -13,6 +15,48 @@ import { RatingFraction } from "./NotesCard.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 
 const countLabel = (n) => `${n} produit${n > 1 ? "s" : ""}`;
+
+const HUB_ITEMS = [
+  { key: "toTry", title: "À goûter" },
+  { key: "tasted", title: "Déjà goûtés" },
+  { key: "rated", title: "Notés" },
+];
+
+// Une carte de l'écran d'entrée (décidé par Mehdi, 2026-11-17) : un rond de 48 px avec l'icône de la liste à gauche, le titre, et à droite le nombre de produits en vert fluo dans une colonne plus
+// sombre qui va du haut en bas de la carte, avec un trait fin à gauche (comme la colonne du chiffre des lignes de DrinkChecks et PlaceChecks). Pas de sous-texte.
+function HubCard({ title, count, icon, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={count === null ? title : `${title}, ${countLabel(count)}`}
+      style={{ width: "100%", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", color: COLORS.ink, font: "inherit", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", padding: "14px 0 14px 14px", overflow: "hidden" }}
+    >
+      <span style={{ width: "48px", height: "48px", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</span>
+      <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: "16px" }}>{title}</span>
+      <span
+        style={{
+          alignSelf: "stretch",
+          minWidth: "64px",
+          boxSizing: "border-box",
+          padding: "0 10px",
+          margin: "-14px 0 -14px 4px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: COLORS.paper,
+          borderLeft: `1px solid ${COLORS.paperAlt}`,
+          fontFamily: "'Urbanist', sans-serif",
+          fontWeight: 800,
+          fontSize: "22px",
+          color: COLORS.amber,
+        }}
+      >
+        {count === null ? "\u00A0" : count}
+      </span>
+    </button>
+  );
+}
 
 // Écran d'entrée : trois cartes, chacune avec le nombre de ses produits (rien tant que la base n'a pas répondu).
 export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }) {
@@ -27,16 +71,21 @@ export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }
       cancelled = true;
     };
   }, []);
-  // Espace insécable tant que le nombre n'est pas connu : la carte garde sa hauteur et ne saute pas quand il arrive.
-  const sub = (n) => (n === null ? "\u00A0" : countLabel(n));
+  const go = { toTry: goToToTry, tasted: goToTasted, rated: goToRated };
+  // Les icônes de l'app : la liste à goûter (celle de la fiche d'un produit), la chope du DrinkCheck (celle de l'accueil) et l'étoile des notes.
+  const icons = {
+    toTry: <NavIcon name="checklist" size={24} color={COLORS.amber} accentColor={COLORS.pinkFluo} />,
+    tasted: <img src={drinkCheckIconUrl} alt="" style={{ width: "26px", height: "26px" }} />,
+    rated: <NavIcon name="star" size={24} color={COLORS.amber} filled />,
+  };
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <ScreenTitle>Mes Produits</ScreenTitle>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
-        <ActionCard title="À goûter" subtitle={sub(counts.toTry)} onClick={goToToTry} />
-        <ActionCard title="Déjà goûtés" subtitle={sub(counts.tasted)} onClick={goToTasted} />
-        <ActionCard title="Notés" subtitle={sub(counts.rated)} onClick={goToRated} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+        {HUB_ITEMS.map((it) => (
+          <HubCard key={it.key} title={it.title} count={counts[it.key]} icon={icons[it.key]} onClick={go[it.key]} />
+        ))}
       </div>
       <PageFooterNav onBack={onBack} />
     </div>
