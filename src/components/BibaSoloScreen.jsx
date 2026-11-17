@@ -132,11 +132,11 @@ export const QUICK_VENUE_IDS = ["@home", "@event"];
 
 // Icônes Bio / Gluten free de la ligne 2 du journal : les mêmes que sur les fiches, passées en gris
 // (même teinte que le texte voisin).
-const MENTION_ICON_STYLE = { height: "14px", width: "auto", display: "block", filter: "grayscale(1) brightness(0.72)" };
+export const MENTION_ICON_STYLE = { height: "14px", width: "auto", display: "block", filter: "grayscale(1) brightness(0.72)" };
 // L'icône Bio a sa feuille en haut et ses lettres en bas : sans correction, ses lettres tombent ~1,8 px sous la
 // ligne de base du texte voisin. Remontée de 2,7 px (mesuré à l'écran), ses lettres posent sur la même ligne de base
 // que « % ABV » ; la feuille dépasse au-dessus, dans l'interligne.
-const BIO_ICON_STYLE = { ...MENTION_ICON_STYLE, transform: "translateY(-2.7px)" };
+export const BIO_ICON_STYLE = { ...MENTION_ICON_STYLE, transform: "translateY(-2.7px)" };
 
 // Mise en page du formulaire d'ajout, sur deux lignes : « Volume » et « Type de service » côte à côte, puis, une ligne plus
 // bas, le choix € / Jetons / Free avec le champ de prix. Chaque bloc d'encodage est UN seul bloc : un cadre gris arrondi qui

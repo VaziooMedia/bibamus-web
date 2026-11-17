@@ -1,19 +1,18 @@
 // « Mes Produits » (Mon Profil) — trois listes de MES produits, chacune sur son écran : À goûter (le bouton « liste à goûter » de la fiche d'un produit),
 // Déjà goûtés (tous les produits que j'ai checkés, notés ou non) et Notés (ma note, de la fiche d'un produit). L'écran d'entrée ne montre que les trois cartes (rond d'icône, titre, nombre de produits à droite).
 // Au-dessus de chaque liste, la rangée de pastilles de catégories de DrinkChecks (« Tout » + les catégories non vides) : une catégorie choisie ne garde que ses produits. Sous « Tout », les produits sont
-// rangés par catégorie sous une barre (comme les sortes de « Mes Favoris »), du plus récent au plus ancien ; les lignes ont
-// le style de « Mon Historique » : une carte, des lignes pleine largeur séparées par un trait fin. Une ligne ouvre la fiche du produit, dont le retour ramène ici.
+// rangés par catégorie sous une barre (comme les sortes de « Mes Favoris »), du plus récent au plus ancien ; les lignes sont celles de DrinkChecks (`CheckRow`) : rond de 48 px, nom, détails
+// (sous-catégorie · pays · ABV · Bio · Sans gluten) et, dans « Déjà goûtés » et « Notés », ma note dans la colonne sombre de droite. Une ligne ouvre la fiche du produit, dont le retour ramène ici.
 // Les listes viennent de la base (get_my_wishlist, get_my_checked_drinks, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
-import { PageHeader, PageFooterNav, EntityAvatar } from "./ui.jsx";
+import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { NavIcon } from "./icons.jsx";
 import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
-import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
-import { DotLine, ScreenTitle } from "./MyFavoritesScreen.jsx";
+import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { RatingFraction } from "./NotesCard.jsx";
-import { CategoryChips, CheckGroup } from "./CheckListParts.jsx";
+import { CategoryChips, CheckGroup, CheckRow, flagPart, abvPart, bioPart, glutenFreePart } from "./CheckListParts.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 
 const countLabel = (n) => `${n} produit${n > 1 ? "s" : ""}`;
@@ -100,56 +99,26 @@ const LIST_TEXTS = {
   rated: { title: "Notés", empty: "Aucun produit noté. Note un produit depuis sa fiche.", error: "Impossible de charger tes notes." },
 };
 
-// Ligne d'un produit — même squelette que celles de « Mes Favoris » : rond de 40 px à gauche, au milieu le nom (gras) et une ligne de détails, à droite ma note (listes « Notés » et « Déjà goûtés », quand le produit est noté).
-function ProductRow({ drink, rating = null, isLast, onOpen }) {
-  const subtype = SUBTYPE_LABELS[drink.beverageSubtype] || null;
-  return (
-    <button
-      type="button"
-      data-product-row
-      onClick={onOpen || undefined}
-      disabled={!onOpen}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        width: "100%",
-        padding: "12px 0",
-        background: "none",
-        border: "none",
-        borderBottom: isLast ? "none" : `1px solid ${COLORS.paperAlt}`,
-        textAlign: "left",
-        color: "inherit",
-        font: "inherit",
-        cursor: onOpen ? "pointer" : "default",
-      }}
-    >
-      <span style={{ flexShrink: 0, display: "flex" }}>
-        <EntityAvatar photoUrl={drink.photoUrl} photoEmoji={drink.avatarEmoji} size={40} fallbackIcon="bottle" />
-      </span>
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
-        <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{drink.name}</span>
-        <DotLine parts={[subtype, drink.brand].filter(Boolean)} />
-      </div>
-      {rating !== null && (
-        <span data-product-rating style={{ flexShrink: 0, fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}>
-          <RatingFraction value={rating} />
-        </span>
-      )}
-    </button>
-  );
-}
+// Ligne d'un produit — celle de DrinkChecks (`CheckRow`) : rond de 48 px à gauche (il déborde vers la gauche et en hauteur, le texte ne bouge pas), le nom (gras) et une ligne de détails —
+// sous-catégorie · pays (drapeau) · degré (« 6.5% ABV », rien pour les produits sans alcool par définition) · Bio · Sans gluten —, et, listes « Déjà goûtés » et « Notés », ma note à droite
+// dans la colonne plus sombre qui va du haut en bas de la ligne (la colonne reste là, vide, pour un produit goûté mais pas noté). « À goûter » : pas de colonne.
+const RATING_COLUMN_STYLE = { fontSize: "13px", color: COLORS.chalkWhite, minWidth: "64px" };
 
-// Une catégorie : sa barre (nom en vert fluo + trait), puis la carte de ses lignes.
-function CategorySection({ label, rows, isFirst }) {
+function ProductRow({ drink, kind, rating = null, isLast, onOpen }) {
+  const parts = [SUBTYPE_LABELS[drink.beverageSubtype] || null, flagPart(drink), abvPart(drink), bioPart(drink), glutenFreePart(drink)].filter(Boolean);
+  const count = kind === "toTry" ? null : rating !== null ? <RatingFraction value={rating} /> : "\u00A0";
   return (
-    <section data-product-category={label}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: isFirst ? "0 0 18px" : "20px 0 18px" }}>
-        <span style={SOLO_BAR_LABEL_STYLE}>{label}</span>
-        <div style={SOLO_BAR_LINE_STYLE} />
-      </div>
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>{rows}</div>
-    </section>
+    <CheckRow
+      avatarPhotoUrl={drink.photoUrl}
+      avatarEmoji={drink.avatarEmoji}
+      fallbackIcon="bottle"
+      name={drink.name}
+      parts={parts}
+      count={count}
+      countStyle={RATING_COLUMN_STYLE}
+      isLast={isLast}
+      onOpen={onOpen}
+    />
   );
 }
 
@@ -257,12 +226,17 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
                 <ProductRow
                   key={x.drinkId}
                   drink={x.drink}
+                  kind={kind}
                   rating={kind !== "toTry" && typeof x.rating === "number" ? x.rating : null}
                   isLast={i === g.entries.length - 1}
                   onOpen={openDrink ? () => openDrink(x.drink.id) : null}
                 />
               ));
-              return g.label ? <CategorySection key={g.label} label={g.label} isFirst={gi === 0} rows={rows} /> : <CheckGroup key="all" label="" isFirst>{rows}</CheckGroup>;
+              return (
+                <CheckGroup key={g.label || "all"} label={g.label} isFirst={gi === 0}>
+                  {rows}
+                </CheckGroup>
+              );
             })}
           </>
         )}
