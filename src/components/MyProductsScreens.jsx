@@ -2,7 +2,7 @@
 // Déjà goûtés (tous les produits que j'ai checkés, notés ou non) et Notés (ma note, de la fiche d'un produit). L'écran d'entrée ne montre que les trois cartes (rond d'icône, titre, nombre de produits à droite).
 // Au-dessus de chaque liste, la rangée de pastilles de catégories de DrinkChecks (« Tout » + les catégories non vides) : une catégorie choisie ne garde que ses produits. Sous « Tout », les produits sont
 // rangés par catégorie sous une barre (comme les sortes de « Mes Favoris »), du plus récent au plus ancien ; les lignes sont celles de DrinkChecks (`CheckRow`) : rond de 48 px, nom, détails
-// (sous-catégorie · pays · ABV · Bio · Sans gluten) et, dans « Déjà goûtés » et « Notés », ma note dans la colonne sombre de droite (« Pas noté » quand il ne l'est pas). Une ligne ouvre la fiche du produit, dont le retour ramène ici.
+// (sous-catégorie · pays · ABV · Bio · Sans gluten) et, dans « Déjà goûtés » et « Notés », ma note dans la colonne sombre de droite (« Pas noté » en gris avec une flèche entourée verte quand il ne l'est pas ; un clic dessus ouvre la fiche avec la fenêtre DrinkCheck déjà ouverte pour le noter, puis la liste se remet à la même hauteur). Une ligne ouvre la fiche du produit, dont le retour ramène ici.
 // Les listes viennent de la base (get_my_wishlist, get_my_checked_drinks, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
@@ -106,9 +106,16 @@ const RATING_COLUMN_STYLE = { fontSize: "13px", color: COLORS.chalkWhite, minWid
 // Produit goûté mais pas noté : la mention « Pas noté », plus discrète que la note (gris, plus petite, pas en gras).
 const UNRATED_STYLE = { fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft };
 
-function ProductRow({ drink, kind, rating = null, isLast, onOpen }) {
+function ProductRow({ drink, kind, rating = null, isLast, onOpen, onRate = null }) {
   const parts = [SUBTYPE_LABELS[drink.beverageSubtype] || null, flagPart(drink), abvPart(drink), bioPart(drink), glutenFreePart(drink)].filter(Boolean);
-  const count = kind === "toTry" ? null : rating !== null ? <RatingFraction value={rating} /> : "Pas noté";
+  // Produit pas noté : « Pas noté » en gris et, juste dessous, une flèche entourée de 16 px en vert fluo (elle dit que la case se touche pour noter le produit ; décidé par Mehdi, 2026-11-17).
+  const unrated = (
+    <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+      <span>Pas noté</span>
+      <NavIcon name="arrow-right-circle" size={16} color={COLORS.amber} />
+    </span>
+  );
+  const count = kind === "toTry" ? null : rating !== null ? <RatingFraction value={rating} /> : unrated;
   return (
     <CheckRow
       avatarPhotoUrl={drink.photoUrl}
@@ -118,6 +125,7 @@ function ProductRow({ drink, kind, rating = null, isLast, onOpen }) {
       parts={parts}
       count={count}
       countStyle={rating !== null ? RATING_COLUMN_STYLE : { ...RATING_COLUMN_STYLE, ...UNRATED_STYLE }}
+      onCountClick={rating === null ? onRate : null}
       isLast={isLast}
       onOpen={onOpen}
     />
@@ -146,7 +154,7 @@ const LOADERS = {
 
 // kind : "toTry" | "tasted" | "rated". `screenId` : l'identifiant de l'écran dans App (la mémoire du retour d'une fiche est rangée sous ce nom, voir `useListReturn`) :
 // au retour d'une fiche produit, la liste se remet à la hauteur où l'on l'avait laissée ; une entrée depuis « Mes Produits » repart de zéro.
-export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, onOpenDrink }) {
+export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, onOpenDrink, onRateDrink }) {
   const texts = LIST_TEXTS[kind];
   const { restored, save, open } = useListReturn(screenId, mainScrollRef);
   const [items, setItems] = useState(restored ? restored.items : null); // null = chargement ; [{ drinkId, rating }]
@@ -188,6 +196,8 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
     save({ items, drinksById, category });
   }, [items, drinksById, category, error]);
   const openDrink = onOpenDrink ? open(onOpenDrink) : null;
+  // « Pas noté » (liste « Déjà goûtés ») : ouvre la fiche avec la fenêtre DrinkCheck déjà ouverte (on y note le produit) ; la hauteur de la liste est retenue comme pour une fiche.
+  const rateDrink = onRateDrink ? open(onRateDrink) : null;
 
   const loading = items === null;
   const allEntries = (items || []).map((x) => ({ ...x, drink: drinksById[x.drinkId] })).filter((x) => x.drink);
@@ -232,6 +242,7 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
                   rating={kind !== "toTry" && typeof x.rating === "number" ? x.rating : null}
                   isLast={i === g.entries.length - 1}
                   onOpen={openDrink ? () => openDrink(x.drink.id) : null}
+                  onRate={rateDrink ? () => rateDrink(x.drink.id) : null}
                 />
               ));
               return (
