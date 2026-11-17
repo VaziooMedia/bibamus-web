@@ -327,8 +327,8 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         kind="producer"
         avatar={<EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={ROW_AVATAR} />}
         title={p.name}
-        // La commune, puis le pays en drapeau — sur une seule ligne (Mehdi, 2026-11-17 ; avant : ville · nom du pays). Pas de village (comme avant).
-        detailsNode={<DotLine parts={[p.city || null, flagPart({ nationality: p.country })].filter(Boolean)} noWrap />}
+        // « Commune (Village) » (comme sur la fiche du producteur), puis le pays en drapeau — sur une seule ligne (Mehdi, 2026-11-17 ; avant : ville · nom du pays, sans village).
+        detailsNode={<DotLine parts={[`${p.city || ""}${p.village ? ` (${p.village})` : ""}`.trim() || null, flagPart({ nationality: p.country })].filter(Boolean)} noWrap />}
         heart={{ on: !heartOff[String(p.id)], onToggle: () => toggleLocalHeart(toggleFavoriteProducer, p.id) }}
         isLast={last(resolved, i)}
         onOpen={openProducer ? () => openProducer(p.id) : null}
