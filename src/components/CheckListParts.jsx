@@ -3,7 +3,7 @@
 import React from "react";
 import { COLORS, GLUTEN_BIO_ELIGIBLE_TYPES } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
-import { DotLine } from "./MyFavoritesScreen.jsx";
+import { DotLine, ROW_AVATAR, ROW_AVATAR_BASE, ROW_PAD_Y as ROW_PAD_Y_SHARED } from "./MyFavoritesScreen.jsx";
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE, MENTION_ICON_STYLE, BIO_ICON_STYLE } from "./BibaSoloScreen.jsx";
 import { FINE_PILL } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
@@ -166,12 +166,10 @@ export function CheckGroup({ label, flag = null, counts = null, isFirst, childre
   );
 }
 
-// Le rond de profil des lignes : plus grand que les 40 px d'origine, SANS bouger le texte ni changer la hauteur de la ligne (64 px). Il grandit vers la gauche — dans la marge de 14 px de la carte —
-// et vers le haut et le bas — dans l'espace au-dessus et au-dessous : le bord droit du rond, donc le départ du texte, reste exactement où il était.
-const AVATAR_BASE = 40; // la taille d'origine
-const AVATAR_SIZE = 48;
-const ROW_HEIGHT = 64;
-const ROW_PAD_Y = (ROW_HEIGHT - AVATAR_SIZE) / 2;
+// Le rond de profil des lignes (48 px, sans bouger le texte) : voir ROW_AVATAR dans MyFavoritesScreen.jsx, partagé avec Mes Favoris.
+const AVATAR_BASE = ROW_AVATAR_BASE;
+const AVATAR_SIZE = ROW_AVATAR;
+const ROW_PAD_Y = ROW_PAD_Y_SHARED;
 
 // Une ligne : rond de profil, nom en gras, ligne de détails à points vert fluo, et à droite le nombre de checks.
 export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, count, countStyle = null, onCountClick = null, isLast, onOpen }) {
