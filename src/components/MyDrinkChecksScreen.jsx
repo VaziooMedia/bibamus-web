@@ -14,9 +14,9 @@ import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { loadMyDrinkChecks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
-import { PillTabs, FINE_PILL } from "./PillTabs.jsx";
+import { PillTabs } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
-import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
+import { CHECK_SORTS, arrangeChecks, CategoryChips, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { displayedAbv } from "../utils.js";
 import drinkCheckIconUrl from "../assets/brand/beer-check-profil.png";
@@ -39,32 +39,6 @@ const abvPart = (drink) => {
 };
 
 const categoryOf = (x) => x.drink.type || "Autres";
-
-// La rangée de catégories : une pastille par catégorie (« Tout » d'abord), contour vert fin, de la même taille que les pastilles des classements (FINE_PILL) ; celle qui est choisie est pleine. Un trait fin court au-dessus de la rangée,
-// comme au-dessus des classements de PillTabs (qui apporte lui-même le trait en dessous).
-function CategoryChips({ chips, active, onChange }) {
-  return (
-    <div>
-      <div style={{ height: "1px", background: COLORS.paperAlt, marginBottom: "10px" }} />
-      <div data-check-categories style={{ display: "flex", flexWrap: "nowrap", gap: "8px", overflowX: "auto", paddingBottom: "10px", scrollbarWidth: "none" }}>
-        {chips.map((c) => {
-          const on = active === c.key;
-          return (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => onChange(c.key)}
-              aria-pressed={on}
-              style={{ background: on ? COLORS.amber : "none", border: `${FINE_PILL.borderWidth} solid ${COLORS.amber}`, borderRadius: "999px", padding: FINE_PILL.padding, fontSize: FINE_PILL.fontSize, fontWeight: 700, color: on ? COLORS.paper : COLORS.ink, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
-            >
-              {c.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 const signatureOf = (list) => list.map((x) => `${x.drinkId}:${x.checks}`).join(",");
 

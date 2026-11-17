@@ -12,6 +12,7 @@ import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
 import { DotLine, ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { RatingFraction } from "./NotesCard.jsx";
+import { CategoryChips, CheckGroup } from "./CheckListParts.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 
 const countLabel = (n) => `${n} produit${n > 1 ? "s" : ""}`;
@@ -91,6 +92,9 @@ export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }
     </div>
   );
 }
+
+// Variante en essai : sous « Tout », garder les barres de catégories (true) ou une seule liste (false).
+const GROUP_ALL = false;
 
 const LIST_TEXTS = {
   toTry: { title: "À goûter", empty: "Aucun produit à goûter. Touche l'icône liste sur la fiche d'un produit pour le mettre de côté.", error: "Impossible de charger ta liste." },
@@ -180,6 +184,7 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   const [drinksById, setDrinksById] = useState(restored ? restored.drinksById : {});
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [category, setCategory] = useState(restored ? restored.category : "all");
 
   useEffect(() => {
     let cancelled = false;
@@ -211,13 +216,20 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
     if (items === null || error) return;
-    save({ items, drinksById });
-  }, [items, drinksById, error]);
+    save({ items, drinksById, category });
+  }, [items, drinksById, category, error]);
   const openDrink = onOpenDrink ? open(onOpenDrink) : null;
 
   const loading = items === null;
-  const entries = (items || []).map((x) => ({ ...x, drink: drinksById[x.drinkId] })).filter((x) => x.drink);
-  const groups = groupByCategory(entries);
+  const allEntries = (items || []).map((x) => ({ ...x, drink: drinksById[x.drinkId] })).filter((x) => x.drink);
+  // Les pastilles de catégories : « Tout », puis les catégories dans l'ordre habituel de l'app et celles que la liste ne connaît pas ; seules les catégories non vides.
+  const categoryOf = (x) => x.drink.type || "Autres";
+  const known = [...DRINK_TYPES, ...new Set(allEntries.map(categoryOf).filter((t) => !DRINK_TYPES.includes(t)))].filter((t) => allEntries.some((x) => categoryOf(x) === t));
+  const chips = [{ key: "all", label: "Tout" }, ...known.map((t) => ({ key: t, label: t }))];
+  // Une catégorie qui n'a plus de produit (liste relue au retour d'une fiche) ne laisse pas une liste vide : on revient à « Tout ».
+  const activeCategory = chips.some((c) => c.key === category) ? category : "all";
+  const entries = activeCategory !== "all" ? allEntries.filter((x) => categoryOf(x) === activeCategory) : allEntries;
+  const groups = GROUP_ALL && activeCategory === "all" ? groupByCategory(entries) : [{ label: "", entries }];
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -234,17 +246,15 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
               Réessayer
             </button>
           </p>
-        ) : groups.length === 0 ? (
+        ) : allEntries.length === 0 ? (
           <p data-product-empty style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" }}>
             {texts.empty}
           </p>
         ) : (
-          groups.map((g, gi) => (
-            <CategorySection
-              key={g.label}
-              label={g.label}
-              isFirst={gi === 0}
-              rows={g.entries.map((x, i) => (
+          <>
+            <CategoryChips chips={chips} active={activeCategory} onChange={setCategory} bottomLine />
+            {groups.map((g, gi) => {
+              const rows = g.entries.map((x, i) => (
                 <ProductRow
                   key={x.drinkId}
                   drink={x.drink}
@@ -252,9 +262,10 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
                   isLast={i === g.entries.length - 1}
                   onOpen={openDrink ? () => openDrink(x.drink.id) : null}
                 />
-              ))}
-            />
-          ))
+              ));
+              return g.label ? <CategorySection key={g.label} label={g.label} isFirst={gi === 0} rows={rows} /> : <CheckGroup key="all" label="" isFirst>{rows}</CheckGroup>;
+            })}
+          </>
         )}
       </div>
 
