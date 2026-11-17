@@ -76,10 +76,11 @@ const KINDS = [
   { kind: "bibax", title: "Bibax", count: (n) => `${n} Bibax`, empty: "Aucun Bibax favori. Touche le cœur sur la fiche d'un Bibax." },
 ];
 
-export function ScreenTitle({ children }) {
+export function ScreenTitle({ children, iconUrl = null }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px" }}>
       <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0 }} />
+      {iconUrl && <img data-screen-title-icon src={iconUrl} alt="" style={{ width: "24px", height: "24px", flexShrink: 0 }} />}
       <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{children}</h1>
     </div>
   );
