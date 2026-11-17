@@ -1,6 +1,7 @@
 // « Mes Produits » (Mon Profil) — trois listes de MES produits, chacune sur son écran : À goûter (le bouton « liste à goûter » de la fiche d'un produit),
 // Déjà goûtés (tous les produits que j'ai checkés, notés ou non) et Notés (ma note, de la fiche d'un produit). L'écran d'entrée ne montre que les trois cartes (rond d'icône, titre, nombre de produits à droite).
-// Dans chaque liste, les produits sont rangés par catégorie sous une barre (comme les sortes de « Mes Favoris »), du plus récent au plus ancien ; les lignes ont
+// Au-dessus de chaque liste, la rangée de pastilles de catégories de DrinkChecks (« Tout » + les catégories non vides) : une catégorie choisie ne garde que ses produits. Sous « Tout », les produits sont
+// rangés par catégorie sous une barre (comme les sortes de « Mes Favoris »), du plus récent au plus ancien ; les lignes ont
 // le style de « Mon Historique » : une carte, des lignes pleine largeur séparées par un trait fin. Une ligne ouvre la fiche du produit, dont le retour ramène ici.
 // Les listes viennent de la base (get_my_wishlist, get_my_checked_drinks, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
 import React, { useState, useEffect } from "react";
@@ -92,9 +93,6 @@ export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }
     </div>
   );
 }
-
-// Variante en essai : sous « Tout », garder les barres de catégories (true) ou une seule liste (false).
-const GROUP_ALL = false;
 
 const LIST_TEXTS = {
   toTry: { title: "À goûter", empty: "Aucun produit à goûter. Touche l'icône liste sur la fiche d'un produit pour le mettre de côté.", error: "Impossible de charger ta liste." },
@@ -229,7 +227,8 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   // Une catégorie qui n'a plus de produit (liste relue au retour d'une fiche) ne laisse pas une liste vide : on revient à « Tout ».
   const activeCategory = chips.some((c) => c.key === category) ? category : "all";
   const entries = activeCategory !== "all" ? allEntries.filter((x) => categoryOf(x) === activeCategory) : allEntries;
-  const groups = GROUP_ALL && activeCategory === "all" ? groupByCategory(entries) : [{ label: "", entries }];
+  // Sous « Tout », les produits restent rangés par catégorie sous leur barre ; une catégorie choisie n'a pas de barre (une seule carte).
+  const groups = activeCategory === "all" ? groupByCategory(entries) : [{ label: "", entries }];
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
