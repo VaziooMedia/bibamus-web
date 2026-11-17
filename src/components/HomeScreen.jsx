@@ -618,6 +618,7 @@ export function HomeScreen({
           <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
         )}
         <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Care</span></>} subtitle="Suivi santé" badge="Soon" disabled />
+        <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Flash</span></>} subtitle="Infos et anecdotes en bref" badge="Soon" disabled />
       </div>
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>
