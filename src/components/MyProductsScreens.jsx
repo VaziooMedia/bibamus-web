@@ -13,8 +13,9 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { RatingFraction } from "./NotesCard.jsx";
-import { PRODUCT_SORTS, arrangeChecks, letterOf, alphaRowFor, CategoryChips, CheckGroup, CheckRow, hasFlag, flagPart, abvPart, bioPart, glutenFreePart } from "./CheckListParts.jsx";
+import { PRODUCT_SORTS, arrangeChecks, countryOptions, letterOf, alphaRowFor, CategoryChips, CheckGroup, CheckRow, hasFlag, flagPart, abvPart, bioPart, glutenFreePart } from "./CheckListParts.jsx";
 import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
+import { CountryPicker } from "./CountryPicker.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 
@@ -133,6 +134,7 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   const [attempt, setAttempt] = useState(0);
   const [category, setCategory] = useState(restored ? restored.category : "all");
   const [sort, setSort] = useState(restored ? restored.sort : "recent");
+  const [country, setCountry] = useState(restored ? restored.country ?? null : null); // classé « Pays » : le pays choisi dans la liste déroulante (null = tous)
 
   useEffect(() => {
     let cancelled = false;
@@ -164,8 +166,8 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
     if (items === null || error) return;
-    save({ items, drinksById, category, sort });
-  }, [items, drinksById, category, sort, error]);
+    save({ items, drinksById, category, sort, country });
+  }, [items, drinksById, category, sort, country, error]);
   const openDrink = onOpenDrink ? open(onOpenDrink) : null;
   // « Pas noté » (liste « Déjà goûtés ») : ouvre la fiche avec la fenêtre DrinkCheck déjà ouverte (on y note le produit) ; la hauteur de la liste est retenue comme pour une fiche.
   const rateDrink = onRateDrink ? open(onRateDrink) : null;
@@ -179,9 +181,13 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   // Une catégorie qui n'a plus de produit (liste relue au retour d'une fiche) ne laisse pas une liste vide : on revient à « Tout ».
   const activeCategory = chips.some((c) => c.key === category) ? category : "all";
   const entries = activeCategory !== "all" ? allEntries.filter((x) => categoryOf(x) === activeCategory) : allEntries;
+  // « Pays » : la liste déroulante des pays de ce qui est affiché ; un pays choisi ne garde que ses produits.
+  const countryChoices = sort === "country" ? countryOptions(entries, SORT_FIELDS.countryOf) : [];
+  const activeCountry = countryChoices.some((o) => o.country === country) ? country : null;
+  const shown = activeCountry === null ? entries : entries.filter((x) => SORT_FIELDS.countryOf(x) === activeCountry);
   // « Récents » : sous « Tout », les produits restent rangés par catégorie sous leur barre (une catégorie choisie n'a pas de barre : une seule carte) ;
   // « Pays » : un groupe par pays sous sa barre drapeau + nom (la ligne ne répète pas le drapeau) ; « A–Z » : une seule carte de A à Z, avec l'index des lettres sur le bord droit.
-  const groups = sort === "recent" ? (activeCategory === "all" ? groupByCategory(entries) : [{ label: "", entries }]) : arrangeChecks(entries, sort, SORT_FIELDS);
+  const groups = sort === "recent" ? (activeCategory === "all" ? groupByCategory(entries) : [{ label: "", entries }]) : arrangeChecks(shown, sort, SORT_FIELDS);
   const listRef = React.useRef(null);
   const alphaOn = showAlphaIndex(sort, entries.length);
   const alphaLetters = alphaOn ? [...new Set(entries.map((x) => letterOf(x.drink.name)))] : [];
@@ -209,7 +215,8 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
         ) : (
           <>
             <CategoryChips chips={chips} active={activeCategory} onChange={setCategory} />
-            <PillTabs tabs={PRODUCT_SORTS} active={sort} onChange={setSort} fine />
+            <PillTabs tabs={PRODUCT_SORTS} active={sort} onChange={(k) => { if (k !== sort) setCountry(null); setSort(k); }} fine />
+            {countryChoices.length > 1 && <CountryPicker options={countryChoices} value={activeCountry} total={entries.length} onChange={setCountry} />}
             <div ref={listRef} style={{ position: "relative" }}>
             {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
             {groups.map((g, gi) => {

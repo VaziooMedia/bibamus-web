@@ -15,8 +15,9 @@ import { loadMyCheckedVenues, loadVenuesByIds } from "../data/sharedDirectories.
 import { ScreenTitle, countryFlagPart } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
-import { CHECK_SORTS, arrangeChecks, letterOf, alphaRowFor, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
+import { CHECK_SORTS, arrangeChecks, countryOptions, letterOf, alphaRowFor, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
 import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
+import { CountryPicker } from "./CountryPicker.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 
@@ -31,6 +32,7 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [sort, setSort] = useState(restored ? restored.sort : "recent");
+  const [country, setCountry] = useState(restored ? restored.country ?? null : null); // classé « Pays » : le pays choisi dans la liste déroulante (null = tous)
 
   useEffect(() => {
     let cancelled = false;
@@ -62,13 +64,17 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
     if (items === null || error) return;
-    save({ items, venuesById, sort });
-  }, [items, venuesById, sort, error]);
+    save({ items, venuesById, sort, country });
+  }, [items, venuesById, sort, country, error]);
   const openVenue = onOpenVenue ? open(onOpenVenue) : null;
 
   const loading = items === null;
   const entries = (items || []).map((x) => ({ ...x, venue: venuesById[x.venueId] })).filter((x) => x.venue);
-  const groups = arrangeChecks(entries, sort, SORT_FIELDS);
+  // Classé « Pays » : la liste déroulante des pays de la liste ; un pays choisi ne garde que ses lieux.
+  const countryChoices = sort === "country" ? countryOptions(entries, SORT_FIELDS.countryOf) : [];
+  const activeCountry = countryChoices.some((o) => o.country === country) ? country : null;
+  const shown = activeCountry === null ? entries : entries.filter((x) => (SORT_FIELDS.countryOf(x) || "") === activeCountry);
+  const groups = arrangeChecks(shown, sort, SORT_FIELDS);
   // Classé A–Z : l'index des lettres sur le bord droit (AlphaIndex).
   const listRef = React.useRef(null);
   const alphaOn = showAlphaIndex(sort, entries.length);
@@ -98,8 +104,9 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
           </p>
         ) : (
           <>
-            <PillTabs tabs={CHECK_SORTS} active={sort} onChange={setSort} fine />
-            <CheckTotals checks={entries.reduce((sum, x) => sum + x.visits, 0)} unique={entries.length} brand="Place" uniqueLabel={["Lieu unique", "Lieux uniques"]} />
+            <PillTabs tabs={CHECK_SORTS} active={sort} onChange={(k) => { if (k !== sort) setCountry(null); setSort(k); }} fine />
+            {countryChoices.length > 1 && <CountryPicker options={countryChoices} value={activeCountry} total={entries.length} onChange={setCountry} />}
+            <CheckTotals checks={shown.reduce((sum, x) => sum + x.visits, 0)} unique={shown.length} brand="Place" uniqueLabel={["Lieu unique", "Lieux uniques"]} />
             <div ref={listRef} style={{ position: "relative" }}>
             {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
             {groups.map((g, gi) => (

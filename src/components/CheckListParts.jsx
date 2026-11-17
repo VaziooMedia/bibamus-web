@@ -37,6 +37,18 @@ export function alphaRowFor(listEl, sortedEntries, nameOf, letter) {
   return at < 0 ? null : listEl.querySelectorAll("[data-check-row]")[at] || null;
 }
 
+// Les pays que propose le sélecteur de « Pays » (CountryPicker) : ceux des éléments affichés, de A à Z (« Pays non renseigné » à la fin), chacun avec son nombre d'éléments.
+export function countryOptions(entries, countryOf) {
+  const counts = new Map();
+  for (const x of entries) {
+    const c = countryOf(x) || "";
+    counts.set(c, (counts.get(c) || 0) + 1);
+  }
+  return [...counts.keys()]
+    .sort((a, b) => (a === "" ? 1 : b === "" ? -1 : compareText(a, b)))
+    .map((c) => ({ country: c, label: c || "Pays non renseigné", count: counts.get(c) }));
+}
+
 // Range les entrées selon le classement : une liste de groupes { key, label, country, entries } (un seul groupe, sans titre, sauf pour « Pays »).
 // Les fonctions à fournir : nameOf(entry) → le nom, countOf(entry) → le nombre de checks, countryOf(entry) → le pays (vide si inconnu).
 // Le tri de JavaScript est stable : à égalité de checks, l'ordre « Récents » est conservé.
