@@ -15,28 +15,12 @@ import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { loadMyDrinkChecks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
-import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
-import { CHECK_SORTS, arrangeChecks, CategoryChips, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
+import { CountryFlagImg } from "./icons.jsx";
+import { CHECK_SORTS, arrangeChecks, CategoryChips, CheckGroup, CheckRow, CheckTotals, hasFlag, flagPart, abvPart } from "./CheckListParts.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
-import { displayedAbv } from "../utils.js";
 import drinkCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
 const SORT_FIELDS = { nameOf: (x) => x.drink.name, countOf: (x) => x.checks, countryOf: (x) => (x.drink.nationality && x.drink.nationality !== "Non renseigné" ? x.drink.nationality : "") };
-const hasFlag = (country) => !!COUNTRY_ISO_CODES[country] || country === "International" || country === "Autre";
-
-// Le pays du produit, pour la ligne de détails : son drapeau (le globe pour « International » / « Autre ») ; un pays sans drapeau connu garde son nom écrit ; rien s'il n'est pas renseigné.
-const flagPart = (drink) => {
-  const country = drink.nationality;
-  if (!country || country === "Non renseigné") return null;
-  return hasFlag(country) ? <CountryFlagImg country={country} size={14} /> : country;
-};
-
-// Le degré d'alcool, pour la ligne de détails : « 6.5% ABV ». Rien pour les produits sans alcool par définition — Softs & Eaux, Boissons chaudes (Hot Mix excepté), Snacks —, sauf un degré
-// au-dessus de 0 (règle de l'app, `displayedAbv`). Dans toutes les autres catégories, un produit à 0 s'affiche « 0.0% ABV » (la version sans alcool d'une bière, d'un vin…) ; degré inconnu : rien.
-const abvPart = (drink) => {
-  const abv = drink.type === "Snacks" && !(drink.abv > 0) ? null : displayedAbv(drink);
-  return abv == null ? null : `${Number(abv).toFixed(1)}% ABV`;
-};
 
 const categoryOf = (x) => x.drink.type || "Autres";
 
