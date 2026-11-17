@@ -1,18 +1,21 @@
 // « Mes Produits » (Mon Profil) — trois listes de MES produits, chacune sur son écran : À goûter (le bouton « liste à goûter » de la fiche d'un produit),
 // Déjà goûtés (tous les produits que j'ai checkés, notés ou non) et Notés (ma note, de la fiche d'un produit). L'écran d'entrée ne montre que les trois cartes (rond d'icône, titre, nombre de produits à droite).
-// Au-dessus de chaque liste, la rangée de pastilles de catégories de DrinkChecks (« Tout » + les catégories non vides) : une catégorie choisie ne garde que ses produits. Sous « Tout », les produits sont
-// rangés par catégorie sous une barre (comme les sortes de « Mes Favoris »), du plus récent au plus ancien ; les lignes sont celles de DrinkChecks (`CheckRow`) : rond de 48 px, nom, détails
+// Au-dessus de chaque liste, la rangée de pastilles de catégories de DrinkChecks (« Tout » + les catégories non vides) : une catégorie choisie ne garde que ses produits ; puis trois classements
+// (PRODUCT_SORTS) : « Récents » (sous « Tout », les produits sont rangés par catégorie sous une barre, comme les sortes de « Mes Favoris », du plus récent au plus ancien), « Pays » (un groupe par pays
+// sous une barre drapeau + nom) et « A–Z » (une seule carte, avec, à partir de 30 produits, l'index des lettres AlphaIndex sur le bord droit). Chaque liste garde son classement au retour d'une fiche. Les lignes sont celles de DrinkChecks (`CheckRow`) : rond de 48 px, nom, détails
 // (sous-catégorie · pays · ABV · Bio · Sans gluten) et, dans « Déjà goûtés » et « Notés », ma note dans la colonne sombre de droite (« Pas noté » en gris avec une flèche entourée verte quand il ne l'est pas ; un clic dessus ouvre la fiche avec la fenêtre DrinkCheck déjà ouverte pour le noter, puis la liste se remet à la même hauteur). Une ligne ouvre la fiche du produit, dont le retour ramène ici.
 // Les listes viennent de la base (get_my_wishlist, get_my_checked_drinks, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { PageHeader, PageFooterNav, HubCard } from "./ui.jsx";
-import { NavIcon } from "./icons.jsx";
+import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { RatingFraction } from "./NotesCard.jsx";
-import { CategoryChips, CheckGroup, CheckRow, flagPart, abvPart, bioPart, glutenFreePart } from "./CheckListParts.jsx";
+import { PRODUCT_SORTS, arrangeChecks, letterOf, alphaRowFor, CategoryChips, CheckGroup, CheckRow, hasFlag, flagPart, abvPart, bioPart, glutenFreePart } from "./CheckListParts.jsx";
+import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
+import { PillTabs } from "./PillTabs.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 
 const countLabel = (n) => `${n} produit${n > 1 ? "s" : ""}`;
@@ -70,8 +73,8 @@ const RATING_COLUMN_STYLE = { fontSize: "13px", color: COLORS.chalkWhite, minWid
 // Produit goûté mais pas noté : la mention « Pas noté », plus discrète que la note (gris, plus petite, pas en gras).
 const UNRATED_STYLE = { fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft };
 
-function ProductRow({ drink, kind, rating = null, isLast, onOpen, onRate = null }) {
-  const parts = [SUBTYPE_LABELS[drink.beverageSubtype] || null, flagPart(drink), abvPart(drink), bioPart(drink), glutenFreePart(drink)].filter(Boolean);
+function ProductRow({ drink, kind, rating = null, isLast, onOpen, onRate = null, hideFlag = false }) {
+  const parts = [SUBTYPE_LABELS[drink.beverageSubtype] || null, hideFlag ? null : flagPart(drink), abvPart(drink), bioPart(drink), glutenFreePart(drink)].filter(Boolean);
   // Produit pas noté : « Pas noté » en gris et, juste dessous, une flèche entourée de 16 px en vert fluo (elle dit que la case se touche pour noter le produit ; décidé par Mehdi, 2026-11-17).
   const unrated = (
     <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
@@ -95,6 +98,9 @@ function ProductRow({ drink, kind, rating = null, isLast, onOpen, onRate = null 
     />
   );
 }
+
+// Pour `arrangeChecks` (classements « Pays » et « A–Z ») : ces listes n'ont pas de nombre de checks, l'ordre « Récents » est conservé à l'intérieur d'un pays.
+const SORT_FIELDS = { nameOf: (x) => x.drink.name, countOf: () => 0, countryOf: (x) => (x.drink.nationality && x.drink.nationality !== "Non renseigné" ? x.drink.nationality : "") };
 
 // Les catégories dans l'ordre habituel de l'app, puis celles que la liste ne connaît pas (dans l'ordre où elles se présentent).
 function groupByCategory(entries) {
@@ -126,6 +132,7 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [category, setCategory] = useState(restored ? restored.category : "all");
+  const [sort, setSort] = useState(restored ? restored.sort : "recent");
 
   useEffect(() => {
     let cancelled = false;
@@ -157,8 +164,8 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
     if (items === null || error) return;
-    save({ items, drinksById, category });
-  }, [items, drinksById, category, error]);
+    save({ items, drinksById, category, sort });
+  }, [items, drinksById, category, sort, error]);
   const openDrink = onOpenDrink ? open(onOpenDrink) : null;
   // « Pas noté » (liste « Déjà goûtés ») : ouvre la fiche avec la fenêtre DrinkCheck déjà ouverte (on y note le produit) ; la hauteur de la liste est retenue comme pour une fiche.
   const rateDrink = onRateDrink ? open(onRateDrink) : null;
@@ -172,8 +179,13 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   // Une catégorie qui n'a plus de produit (liste relue au retour d'une fiche) ne laisse pas une liste vide : on revient à « Tout ».
   const activeCategory = chips.some((c) => c.key === category) ? category : "all";
   const entries = activeCategory !== "all" ? allEntries.filter((x) => categoryOf(x) === activeCategory) : allEntries;
-  // Sous « Tout », les produits restent rangés par catégorie sous leur barre ; une catégorie choisie n'a pas de barre (une seule carte).
-  const groups = activeCategory === "all" ? groupByCategory(entries) : [{ label: "", entries }];
+  // « Récents » : sous « Tout », les produits restent rangés par catégorie sous leur barre (une catégorie choisie n'a pas de barre : une seule carte) ;
+  // « Pays » : un groupe par pays sous sa barre drapeau + nom (la ligne ne répète pas le drapeau) ; « A–Z » : une seule carte de A à Z, avec l'index des lettres sur le bord droit.
+  const groups = sort === "recent" ? (activeCategory === "all" ? groupByCategory(entries) : [{ label: "", entries }]) : arrangeChecks(entries, sort, SORT_FIELDS);
+  const listRef = React.useRef(null);
+  const alphaOn = showAlphaIndex(sort, entries.length);
+  const alphaLetters = alphaOn ? [...new Set(entries.map((x) => letterOf(x.drink.name)))] : [];
+  const alphaTarget = (letter) => alphaRowFor(listRef.current, groups.flatMap((g) => g.entries), (x) => x.drink.name, letter);
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -196,7 +208,10 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
           </p>
         ) : (
           <>
-            <CategoryChips chips={chips} active={activeCategory} onChange={setCategory} bottomLine />
+            <CategoryChips chips={chips} active={activeCategory} onChange={setCategory} />
+            <PillTabs tabs={PRODUCT_SORTS} active={sort} onChange={setSort} fine />
+            <div ref={listRef} style={{ position: "relative" }}>
+            {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
             {groups.map((g, gi) => {
               const rows = g.entries.map((x, i) => (
                 <ProductRow
@@ -207,14 +222,16 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
                   isLast={i === g.entries.length - 1}
                   onOpen={openDrink ? () => openDrink(x.drink.id) : null}
                   onRate={rateDrink ? () => rateDrink(x.drink.id) : null}
+                  hideFlag={sort === "country"}
                 />
               ));
               return (
-                <CheckGroup key={g.label || "all"} label={g.label} isFirst={gi === 0}>
+                <CheckGroup key={g.key || g.label || "all"} label={g.label} flag={g.country && hasFlag(g.country) ? <CountryFlagImg country={g.country} size={16} /> : null} isFirst={gi === 0}>
                   {rows}
                 </CheckGroup>
               );
             })}
+            </div>
           </>
         )}
       </div>

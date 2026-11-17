@@ -5,6 +5,7 @@
 // elle ne garde que les produits d'une catégorie, et le classement choisi s'applique à ce qui reste.
 // Sous les classements, deux blocs côte à côte avec les totaux de ce qui est affiché (la catégorie choisie) : « X DrinkChecks » et « X Produits uniques ». Classés par pays, la barre de chaque pays
 // porte, au bout de la ligne, ses propres totaux : « (checks / produits uniques) ».
+// Classés A–Z (à partir de 30 produits), un index des lettres (AlphaIndex) borde la liste à droite : toucher une lettre, ou y glisser le doigt, fait sauter au premier produit de cette lettre.
 // Une ligne ouvre la fiche du produit, dont le retour ramène ici.
 // Retour d'une fiche : la page se remet comme on l'avait laissée (catégorie, classement et hauteur de défilement, voir `useListReturn`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
 // en silence et remplacée seulement si elle a changé (un DrinkCheck fait sur la fiche). Une entrée depuis Mon Profil repart de zéro.
@@ -16,7 +17,8 @@ import { loadMyDrinkChecks, loadDrinksByIds } from "../data/sharedDirectories.js
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { CountryFlagImg } from "./icons.jsx";
-import { CHECK_SORTS, arrangeChecks, CategoryChips, CheckGroup, CheckRow, CheckTotals, hasFlag, flagPart, abvPart } from "./CheckListParts.jsx";
+import { CHECK_SORTS, arrangeChecks, letterOf, alphaRowFor, CategoryChips, CheckGroup, CheckRow, CheckTotals, hasFlag, flagPart, abvPart } from "./CheckListParts.jsx";
+import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import drinkCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
@@ -78,6 +80,11 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
   const activeCategory = chips.some((c) => c.key === category) ? category : "all";
   const entries = activeCategory !== "all" ? allEntries.filter((x) => categoryOf(x) === activeCategory) : allEntries;
   const groups = arrangeChecks(entries, sort, SORT_FIELDS);
+  // Classé A–Z : l'index des lettres sur le bord droit (AlphaIndex).
+  const listRef = React.useRef(null);
+  const alphaOn = showAlphaIndex(sort, entries.length);
+  const alphaLetters = alphaOn ? [...new Set(entries.map((x) => letterOf(x.drink.name)))] : [];
+  const alphaTarget = (letter) => alphaRowFor(listRef.current, groups.flatMap((g) => g.entries), (x) => x.drink.name, letter);
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -105,6 +112,8 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
             <CategoryChips chips={chips} active={activeCategory} onChange={setCategory} />
             <PillTabs tabs={CHECK_SORTS} active={sort} onChange={setSort} fine />
             <CheckTotals checks={entries.reduce((sum, x) => sum + x.checks, 0)} unique={entries.length} brand="Drink" uniqueLabel={["Produit unique", "Produits uniques"]} />
+            <div ref={listRef} style={{ position: "relative" }}>
+            {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
             {groups.map((g, gi) => (
               <CheckGroup key={g.key} label={g.label} flag={g.country && hasFlag(g.country) ? <CountryFlagImg country={g.country} size={16} /> : null} counts={g.label ? { checks: g.entries.reduce((sum, x) => sum + x.checks, 0), unique: g.entries.length } : null} isFirst={gi === 0}>
                 {g.entries.map((x, i) => (
@@ -122,6 +131,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
                 ))}
               </CheckGroup>
             ))}
+            </div>
           </>
         )}
       </div>

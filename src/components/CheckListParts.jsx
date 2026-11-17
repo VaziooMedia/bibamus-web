@@ -1,5 +1,5 @@
 // Pièces communes aux pages « PlaceChecks », « DrinkChecks » et « Mes Produits » (Mon Profil) : une liste de lieux ou de produits checkés, avec à droite le nombre de checks,
-// quatre classements au choix (Récents, Checks, Pays, A–Z) et, pour « Pays », un groupe par pays sous une barre drapeau + nom + trait.
+// quatre classements au choix (Récents, Checks, Pays, A–Z ; trois dans « Mes Produits », sans « Checks ») et, pour « Pays », un groupe par pays sous une barre drapeau + nom + trait.
 import React from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
@@ -18,7 +18,24 @@ export const CHECK_SORTS = [
   { key: "alpha", label: "A–Z" },
 ];
 
+// « Mes Produits » : les trois classements d'une liste (pas de « Checks » : un produit à goûter ou noté n'a pas de nombre de checks).
+export const PRODUCT_SORTS = CHECK_SORTS.filter((s) => s.key !== "checks");
+
 const compareText = (a, b) => a.localeCompare(b, "fr", { sensitivity: "base" });
+
+// La lettre sous laquelle un nom se range dans l'index A–Z : sa première lettre, sans accent, en majuscule ; « # » pour un chiffre ou un symbole.
+export const letterOf = (name) => {
+  const c = String(name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().charAt(0).toUpperCase();
+  return /[A-Z]/.test(c) ? c : "#";
+};
+
+// Pour l'index A–Z (AlphaIndex) : la ligne (`data-check-row`) du premier élément de la liste rangée qui commence par cette lettre.
+// `listEl` : le bloc qui contient les lignes ; `sortedEntries` : les entrées dans l'ordre où elles sont affichées.
+export function alphaRowFor(listEl, sortedEntries, nameOf, letter) {
+  if (!listEl) return null;
+  const at = sortedEntries.findIndex((x) => letterOf(nameOf(x)) === letter);
+  return at < 0 ? null : listEl.querySelectorAll("[data-check-row]")[at] || null;
+}
 
 // Range les entrées selon le classement : une liste de groupes { key, label, country, entries } (un seul groupe, sans titre, sauf pour « Pays »).
 // Les fonctions à fournir : nameOf(entry) → le nom, countOf(entry) → le nombre de checks, countryOf(entry) → le pays (vide si inconnu).

@@ -2,7 +2,7 @@
 // (quatre classements au choix : Récents, Checks, Pays, A–Z), avec à droite son nombre de visites (le nombre seul, en vert fluo, dans une colonne plus sombre).
 // Mêmes lignes que « Mes Favoris > Lieux » (rond de profil de 48 px, nom en gras, ville · drapeau du pays) dans une carte, lignes pleine
 // largeur séparées par un trait fin. Une ligne ouvre la fiche du lieu, dont le retour ramène ici. Une liste vide dit quel geste l'alimente.
-// Les lignes, les groupes et les classements sont communs avec « DrinkChecks » (CheckListParts.jsx).
+// Les lignes, les groupes et les classements sont communs avec « DrinkChecks » (CheckListParts.jsx). Classés A–Z, à partir de 30 lieux, un index des lettres (AlphaIndex) borde la liste à droite.
 // Sous les classements, deux blocs côte à côte avec les totaux : « X PlaceChecks » (la somme des visites) et « X Lieux uniques ». Classés par pays, la barre de chaque pays porte, au bout de la ligne,
 // ses propres totaux : « (checks / lieux uniques) ».
 // Retour d'une fiche : la page se remet comme on l'avait laissée (classement et hauteur de défilement, voir `useListReturn`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
@@ -15,7 +15,8 @@ import { loadMyCheckedVenues, loadVenuesByIds } from "../data/sharedDirectories.
 import { ScreenTitle, countryFlagPart } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
-import { CHECK_SORTS, arrangeChecks, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
+import { CHECK_SORTS, arrangeChecks, letterOf, alphaRowFor, CheckGroup, CheckRow, CheckTotals } from "./CheckListParts.jsx";
+import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 
@@ -67,6 +68,12 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
 
   const loading = items === null;
   const entries = (items || []).map((x) => ({ ...x, venue: venuesById[x.venueId] })).filter((x) => x.venue);
+  const groups = arrangeChecks(entries, sort, SORT_FIELDS);
+  // Classé A–Z : l'index des lettres sur le bord droit (AlphaIndex).
+  const listRef = React.useRef(null);
+  const alphaOn = showAlphaIndex(sort, entries.length);
+  const alphaLetters = alphaOn ? [...new Set(entries.map((x) => letterOf(x.venue.name)))] : [];
+  const alphaTarget = (letter) => alphaRowFor(listRef.current, groups.flatMap((g) => g.entries), (x) => x.venue.name, letter);
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -93,7 +100,9 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
           <>
             <PillTabs tabs={CHECK_SORTS} active={sort} onChange={setSort} fine />
             <CheckTotals checks={entries.reduce((sum, x) => sum + x.visits, 0)} unique={entries.length} brand="Place" uniqueLabel={["Lieu unique", "Lieux uniques"]} />
-            {arrangeChecks(entries, sort, SORT_FIELDS).map((g, gi) => (
+            <div ref={listRef} style={{ position: "relative" }}>
+            {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
+            {groups.map((g, gi) => (
               <CheckGroup key={g.key} label={g.label} flag={COUNTRY_ISO_CODES[g.country] ? <CountryFlagImg country={g.country} size={16} /> : null} counts={g.label ? { checks: g.entries.reduce((sum, x) => sum + x.visits, 0), unique: g.entries.length } : null} isFirst={gi === 0}>
                 {g.entries.map((x, i) => (
                   <CheckRow
@@ -110,6 +119,7 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
                 ))}
               </CheckGroup>
             ))}
+            </div>
           </>
         )}
       </div>
