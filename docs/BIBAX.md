@@ -36,7 +36,7 @@ Colonnes visibles dans les scripts : `requester_id`, `requestee_id`, `status` (`
 | `cancel_bibax_request(p_relationship_id)` | Annuler une demande envoyée | Signale `alreadyAccepted` si l'autre vient d'accepter ; l'écran d'aperçu de profil ne lit pas ce signal |
 | `remove_bibax_by_code(p_target_code)` | Supprimer la relation **côté serveur** | Appelée sans attendre son résultat ; le retrait local se fait d'abord |
 | `remove_bibax(...)` | Supprimer par identifiant de relation | Importée, jamais appelée |
-| `get_my_bibax()` | Liste des Bibax confirmés | Identité, ville, localité, pays, date de naissance et `share_age`, bio, date d'inscription, 8 liens sociaux (Pinterest et Twitch ne sont pas remontés) |
+| `get_my_bibax()` | Liste des Bibax confirmés | Identité, ville, localité, pays, date de naissance et `share_age`, bio, date d'inscription, 8 liens sociaux (Pinterest et Twitch ne sont pas remontés) ; **le @nom (`username`) n'est pas rendu** : le client le lit (`loadMyBibax`) dès qu'il le sera, pour « Mes Favoris > Bibax » (voir `PROFILE.md`) |
 | `get_pending_bibax_requests()` | Demandes reçues | Avec le code de l'expéditeur |
 | `get_sent_bibax_requests()` | Demandes envoyées | Code et commune ; **aucune distance** n'est lue par le client |
 | `get_bibax_suggestions(p_limit)` | Suggestions | Voir plus bas |

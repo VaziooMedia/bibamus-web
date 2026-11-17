@@ -5081,6 +5081,8 @@ export async function loadMyBibax() {
     name: r.name,
     lastName: r.last_name,
     nickname: r.nickname,
+    // Nom d'utilisateur (@nom) du Bibax : lu seulement si la fonction le rend (voir « Mes Favoris > Bibax », `MyFavoritesScreen.jsx`) ; vide sinon.
+    username: r.username || "",
     avatarUrl: r.avatar_url,
     bibroCode: r.bibro_code,
     city: r.city,
