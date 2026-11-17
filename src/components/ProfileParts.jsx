@@ -183,6 +183,9 @@ export function ProfileInfoBlock({ profile }) {
   );
 }
 
+// Largeur de la barre de séparation entre le texte et le chiffre des trois blocs : toute la largeur du bloc, marges comprises (choix de Mehdi).
+const STAT_BAR_WIDTH = "100%";
+
 function StatCard({ label, value, onClick }) {
   return (
     <button
@@ -202,7 +205,8 @@ function StatCard({ label, value, onClick }) {
         cursor: onClick ? "pointer" : "default",
       }}
     >
-      <span style={{ fontSize: "11px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
+      <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
+      <span data-stat-bar style={{ width: STAT_BAR_WIDTH, height: "2px", borderRadius: "1px", background: COLORS.paperAlt, flexShrink: 0 }} />
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
     </button>
   );
