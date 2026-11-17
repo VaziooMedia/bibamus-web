@@ -1494,6 +1494,8 @@ export default function App() {
   // Claude) — chaque Bibax y ajoute sa propre entrée, indexée par son code personnel.
   // skipDiscoveryPulse : la note vient du formulaire de check, qui publie lui-même UNE seule carte
   // (Découverte ou Check) — on ne publie donc pas en plus une Découverte à cause de cette note.
+  // La dernière écriture de note en cours (promesse) : le parcours « Pas noté » l'attend avant de ramener sur la liste (voir finishHomeCheck).
+  const lastRatingWriteRef = React.useRef(null);
   const rateDrink = (drinkId, value, { skipDiscoveryPulse = false } = {}) => {
     setViewedDrink((prev) =>
       prev && prev.id === drinkId
@@ -1506,7 +1508,7 @@ export default function App() {
     );
     const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
     if (drink) {
-      rateMyDrink(drinkId, value);
+      lastRatingWriteRef.current = rateMyDrink(drinkId, value);
       dropFromWishlist(drinkId);
       // Noter une bière n'a de sens que si on l'a goûtée — les deux restent synchronisés plutôt
       // que de risquer une bière notée mais jamais marquée dégustée, ou encore sur la liste d'envie.
@@ -1985,10 +1987,22 @@ export default function App() {
   // Fin du parcours « Check depuis l'accueil ». info = null : la fenêtre a été fermée sans confirmer, on reste
   // sur la fiche. Sinon le check est confirmé : on retombe sur le Pulse principal si une publication a été
   // faite (elle y apparaît en tête), sinon sur l'accueil — dans les deux cas avec une petite confirmation.
-  const finishHomeCheck = (info) => {
+  // Parcours "rate" (le « Pas noté » de « Déjà goûtés ») : la confirmation ramène sur la liste d'où l'on vient, qui se remet à la hauteur où on l'avait laissée (mémoire de liste,
+  // hooks/useListReturn.js). On attend d'abord que la note soit écrite en base, pour que la liste la montre tout de suite.
+  const finishHomeCheck = async (info) => {
+    const rateFlow = homeCheckFlow === "rate";
     setHomeCheckFlow(null);
     if (!info) return;
     setCheckToast({ name: info.name || null, detail: info.detail || null, key: Date.now() });
+    if (rateFlow) {
+      try {
+        await lastRatingWriteRef.current;
+      } catch {
+        /* la liste montrera ce que la base a */
+      }
+      setScreen(screenBeforeDrinkDetail);
+      return;
+    }
     setScreen(info.published ? "bibaPulse" : "home");
   };
 
@@ -2713,7 +2727,7 @@ export default function App() {
                 onUnrate={() => unrateDrink(viewedDrinkId)}
                 onToggleMode={(mode) => toggleTastedServingMode(viewedDrinkId, mode)}
                 onCheckDrink={(drinkId, venueId, opts) => checkInDrink(drinkId, venueId, opts)}
-                autoOpenCheck={homeCheckFlow === "drink"}
+                autoOpenCheck={homeCheckFlow === "drink" || homeCheckFlow === "rate"}
                 onCheckFlowFinished={finishHomeCheck}
                 onBack={() => {
                   if (storyResumeState) {
@@ -3414,6 +3428,13 @@ export default function App() {
                 onOpenDrink={(id) => {
                   setScreenBeforeDrinkDetail(screen);
                   setViewedDrinkId(id);
+                  setScreen("drinkDetail");
+                }}
+                // « Pas noté » : la fiche avec la fenêtre DrinkCheck déjà ouverte (parcours "rate", voir checkFlow.js et finishHomeCheck).
+                onRateDrink={(id) => {
+                  setScreenBeforeDrinkDetail(screen);
+                  setViewedDrinkId(id);
+                  setHomeCheckFlow("rate");
                   setScreen("drinkDetail");
                 }}
               />

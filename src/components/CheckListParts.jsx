@@ -174,7 +174,7 @@ const ROW_HEIGHT = 64;
 const ROW_PAD_Y = (ROW_HEIGHT - AVATAR_SIZE) / 2;
 
 // Une ligne : rond de profil, nom en gras, ligne de détails à points vert fluo, et à droite le nombre de checks.
-export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, count, countStyle = null, isLast, onOpen }) {
+export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, count, countStyle = null, onCountClick = null, isLast, onOpen }) {
   return (
     <button
       type="button"
@@ -209,7 +209,19 @@ export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, part
       {count !== null && count !== undefined && (
         <span
           data-check-count
+          // `onCountClick` : un clic sur la colonne fait autre chose que d'ouvrir la fiche (« Pas noté » → noter le produit) ; il ne remonte pas à la ligne.
+          onClick={
+            onCountClick
+              ? (e) => {
+                  e.stopPropagation();
+                  onCountClick();
+                }
+              : undefined
+          }
+          role={onCountClick ? "button" : undefined}
+          aria-label={onCountClick ? `${name} : noter ce produit` : undefined}
           style={{
+            cursor: onCountClick ? "pointer" : undefined,
             flexShrink: 0,
             alignSelf: "stretch",
             minWidth: "52px",

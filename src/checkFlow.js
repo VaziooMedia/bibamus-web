@@ -9,6 +9,8 @@
 const FLOW_SCREENS = {
   drink: ["drinksDirectory", "drinkDetail"],
   venue: ["venueDirectory", "venueMap", "venueDetail"],
+  // « Pas noté » de la liste « Déjà goûtés » (Mes Produits) : la fiche du produit avec la fenêtre DrinkCheck déjà ouverte ; la confirmation ramène sur la liste.
+  rate: ["drinkDetail"],
 };
 
 // hasOwnProperty : un nom de parcours comme "toString" ne doit jamais retrouver une méthode héritée des objets.
