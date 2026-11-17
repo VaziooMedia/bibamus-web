@@ -17,8 +17,9 @@ import { loadMyDrinkChecks, loadDrinksByIds } from "../data/sharedDirectories.js
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { CountryFlagImg } from "./icons.jsx";
-import { CHECK_SORTS, arrangeChecks, letterOf, alphaRowFor, CategoryChips, CheckGroup, CheckRow, CheckTotals, hasFlag, flagPart, abvPart } from "./CheckListParts.jsx";
+import { CHECK_SORTS, arrangeChecks, countryOptions, letterOf, alphaRowFor, CategoryChips, CheckGroup, CheckRow, CheckTotals, hasFlag, flagPart, abvPart } from "./CheckListParts.jsx";
 import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
+import { CountryPicker } from "./CountryPicker.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import drinkCheckIconUrl from "../assets/brand/beer-check-profil.png";
 
@@ -36,6 +37,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
   const [attempt, setAttempt] = useState(0);
   const [sort, setSort] = useState(restored ? restored.sort : "recent");
   const [category, setCategory] = useState(restored ? restored.category : "all");
+  const [country, setCountry] = useState(restored ? restored.country ?? null : null); // classé « Pays » : le pays choisi dans la liste déroulante (null = tous)
 
   useEffect(() => {
     let cancelled = false;
@@ -67,8 +69,8 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
     if (items === null || error) return;
-    save({ items, drinksById, sort, category });
-  }, [items, drinksById, sort, category, error]);
+    save({ items, drinksById, sort, category, country });
+  }, [items, drinksById, sort, category, country, error]);
   const openDrink = onOpenDrink ? open(onOpenDrink) : null;
 
   const loading = items === null;
@@ -79,7 +81,11 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
   // Une catégorie qui n'a plus de produit (liste relue au retour d'une fiche) ne laisse pas une liste vide : on revient à « Tout ».
   const activeCategory = chips.some((c) => c.key === category) ? category : "all";
   const entries = activeCategory !== "all" ? allEntries.filter((x) => categoryOf(x) === activeCategory) : allEntries;
-  const groups = arrangeChecks(entries, sort, SORT_FIELDS);
+  // Classé « Pays » : la liste déroulante des pays de ce qui est affiché ; un pays choisi (ou la catégorie qui l'a vidé : retour à « Tous les pays ») ne garde que ses produits.
+  const countryChoices = sort === "country" ? countryOptions(entries, SORT_FIELDS.countryOf) : [];
+  const activeCountry = countryChoices.some((o) => o.country === country) ? country : null;
+  const shown = activeCountry === null ? entries : entries.filter((x) => SORT_FIELDS.countryOf(x) === activeCountry);
+  const groups = arrangeChecks(shown, sort, SORT_FIELDS);
   // Classé A–Z : l'index des lettres sur le bord droit (AlphaIndex).
   const listRef = React.useRef(null);
   const alphaOn = showAlphaIndex(sort, entries.length);
@@ -110,8 +116,9 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
         ) : (
           <>
             <CategoryChips chips={chips} active={activeCategory} onChange={setCategory} />
-            <PillTabs tabs={CHECK_SORTS} active={sort} onChange={setSort} fine />
-            <CheckTotals checks={entries.reduce((sum, x) => sum + x.checks, 0)} unique={entries.length} brand="Drink" uniqueLabel={["Produit unique", "Produits uniques"]} />
+            <PillTabs tabs={CHECK_SORTS} active={sort} onChange={(k) => { if (k !== sort) setCountry(null); setSort(k); }} fine />
+            {countryChoices.length > 1 && <CountryPicker options={countryChoices} value={activeCountry} total={entries.length} onChange={setCountry} />}
+            <CheckTotals checks={shown.reduce((sum, x) => sum + x.checks, 0)} unique={shown.length} brand="Drink" uniqueLabel={["Produit unique", "Produits uniques"]} />
             <div ref={listRef} style={{ position: "relative" }}>
             {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
             {groups.map((g, gi) => (
