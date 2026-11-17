@@ -39,8 +39,8 @@ export function MyPhotosScreen({ onBack, otherUserId, otherName, embedded = fals
     <div style={embedded ? {} : { padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       {!embedded && <PageHeader onBack={onBack} />}
       {/* Le titre des autres écrans de Mon Profil (22 px, `ScreenTitle`) avec l'icône appareil photo de la carte « Mes Médias » de Mon Profil à la place de la barre verte (Mehdi, 2026-11-17) ;
-          même style pour les photos d'un autre Bibax (lecture seule) : « Photos de X ». */}
-      {!embedded && <ScreenTitle icon={<NavIcon name="camera" size={24} color={COLORS.amber} />}>{readOnly ? `Photos${otherName ? " de " + otherName : ""}` : "Mes Médias"}</ScreenTitle>}
+          même style pour les médias d'un autre Bibax (lecture seule) : « Médias de X ». */}
+      {!embedded && <ScreenTitle icon={<NavIcon name="camera" size={24} color={COLORS.amber} />}>{readOnly ? `Médias${otherName ? " de " + otherName : ""}` : "Mes Médias"}</ScreenTitle>}
 
       {photos === null ? (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>

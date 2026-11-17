@@ -196,7 +196,10 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <ScreenTitle>{texts.title}</ScreenTitle>
+      {/* L'icône de la carte de la liste dans « Mes Produits » à la place de la barre verte (Mehdi, 2026-11-17) : la liste à goûter, la chope du DrinkCheck, l'étoile pleine des notes. */}
+      <ScreenTitle {...(kind === "tasted" ? { iconUrl: drinkCheckIconUrl } : { icon: kind === "toTry" ? <NavIcon name="checklist" size={24} color={COLORS.amber} accentColor={COLORS.pinkFluo} /> : <NavIcon name="star" size={24} color={COLORS.amber} filled /> })}>
+        {texts.title}
+      </ScreenTitle>
 
       <div style={{ flex: 1 }}>
         {loading ? (
