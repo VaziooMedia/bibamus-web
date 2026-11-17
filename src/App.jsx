@@ -480,7 +480,6 @@ export default function App() {
               firstName: c.name,
               lastName: c.lastName || "",
               nickname: c.nickname || "",
-              username: c.username || "",
               avatarUrl: c.avatarUrl || null,
               city: c.city || "",
               locality: c.locality || "",
