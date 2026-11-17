@@ -1441,6 +1441,7 @@ export default function App() {
   useEffect(() => saveLocal("bibamus-wishlist-drinks", wishlistDrinkIds), [wishlistDrinkIds]);
 
   const toggleTastedDrink = (id, { skipPulse = false } = {}) => {
+    if (!tastedDrinkIds.includes(id)) dropFromWishlist(id);
     setTastedDrinkIds((prev) => {
       const alreadyTasted = prev.includes(id);
       setDrinkTastedServer(id, !alreadyTasted);
@@ -1463,6 +1464,31 @@ export default function App() {
     }
     setWishlisted(id, !!result.wishlist);
   };
+  // Un produit « À goûter » que je viens de goûter (check enregistré, note donnée, marqué goûté) quitte la liste (décidé par Mehdi, 2026-11-17) : il reste dans « Déjà goûtés »
+  // (et « Notés »). Sans effet si le produit n'est pas dans la liste. La base n'a qu'une bascule (`toggle_wishlist_drink`) : on ne l'appelle que pour un produit que la liste
+  // contient, une seule fois à la fois par produit (`wishlistDropsRef`), et si la base répond que le produit y est maintenant (il n'y était pas), on rebascule. En cas d'erreur,
+  // on remet silencieusement l'état du compte (le produit reste dans la liste) : c'est un effet de fond, on ne dérange pas la personne.
+  // `wishlistIdsRef` : la liste telle qu'elle est À CET INSTANT (pas celle de l'affichage où le geste a démarré : un check passe par plusieurs fonctions, dont certaines gardent un état ancien).
+  const wishlistDropsRef = React.useRef(new Set());
+  const wishlistIdsRef = React.useRef(wishlistDrinkIds);
+  wishlistIdsRef.current = wishlistDrinkIds;
+  const dropFromWishlist = async (drinkId) => {
+    const id = String(drinkId);
+    if (wishlistDropsRef.current.has(id) || !wishlistIdsRef.current.includes(id)) return;
+    wishlistDropsRef.current.add(id);
+    try {
+      wishlistIdsRef.current = wishlistIdsRef.current.filter((x) => x !== id);
+      setWishlisted(id, false);
+      if (!wishlistSynced) return;
+      let result = await toggleWishlistDrinkServer(id);
+      if (!result?.error && result?.wishlist) result = await toggleWishlistDrinkServer(id);
+      const stillThere = result?.error ? true : !!result?.wishlist;
+      if (stillThere) wishlistIdsRef.current = [...wishlistIdsRef.current, id];
+      setWishlisted(id, stillThere);
+    } finally {
+      wishlistDropsRef.current.delete(id);
+    }
+  };
 
   // Note et modes goûtés : partagés sur la fiche du produit elle-même (comme dans le prototype
   // Claude) — chaque Bibax y ajoute sa propre entrée, indexée par son code personnel.
@@ -1481,6 +1507,7 @@ export default function App() {
     const drink = viewedDrink?.id === drinkId ? viewedDrink : null;
     if (drink) {
       rateMyDrink(drinkId, value);
+      dropFromWishlist(drinkId);
       // Noter une bière n'a de sens que si on l'a goûtée — les deux restent synchronisés plutôt
       // que de risquer une bière notée mais jamais marquée dégustée, ou encore sur la liste d'envie.
       if (BEER_TYPES.includes(drink.type) && !tastedDrinkIds.includes(drinkId)) {
@@ -1514,6 +1541,7 @@ export default function App() {
   // lui-même UNE seule carte.
   const rateDrinkStandalone = (drinkId, value, drink, { skipDiscoveryPulse = false } = {}) => {
     rateMyDrink(drinkId, value);
+    dropFromWishlist(drinkId);
     if (BEER_TYPES.includes(drink.type) && !tastedDrinkIds.includes(drinkId)) {
       toggleTastedDrink(drinkId, { skipPulse: skipDiscoveryPulse });
     }
@@ -1867,7 +1895,8 @@ export default function App() {
   // PlaceCheck qui porte un produit.
   const recordDrinkConsumption = async (drinkId, venueId, volumeCl = null) => {
     emitEvent(EVENT_TYPES.DRINK_CHECKED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: drinkId, skipPulse: true });
-    await recordDrinkCheckIn(drinkId, venueId, volumeCl);
+    const recorded = await recordDrinkCheckIn(drinkId, venueId, volumeCl);
+    if (!recorded?.error) dropFromWishlist(drinkId);
     trackEvent("drink_checked", "drink", profile.myBibroCode);
   };
 
