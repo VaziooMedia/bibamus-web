@@ -6,7 +6,7 @@
 // Les listes viennent de la base (get_my_wishlist, get_my_checked_drinks, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
-import { PageHeader, PageFooterNav } from "./ui.jsx";
+import { PageHeader, PageFooterNav, HubCard } from "./ui.jsx";
 import { NavIcon } from "./icons.jsx";
 import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
@@ -22,42 +22,6 @@ const HUB_ITEMS = [
   { key: "tasted", title: "Déjà goûtés" },
   { key: "rated", title: "Notés" },
 ];
-
-// Une carte de l'écran d'entrée (décidé par Mehdi, 2026-11-17) : un rond de 48 px avec l'icône de la liste à gauche, le titre, et à droite le nombre de produits en vert fluo dans une colonne plus
-// sombre qui va du haut en bas de la carte, avec un trait fin à gauche (comme la colonne du chiffre des lignes de DrinkChecks et PlaceChecks). Pas de sous-texte.
-function HubCard({ title, count, icon, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={count === null ? title : `${title}, ${countLabel(count)}`}
-      style={{ width: "100%", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", color: COLORS.ink, font: "inherit", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", padding: "14px 0 14px 14px", overflow: "hidden" }}
-    >
-      <span style={{ width: "48px", height: "48px", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</span>
-      <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: "16px" }}>{title}</span>
-      <span
-        style={{
-          alignSelf: "stretch",
-          minWidth: "64px",
-          boxSizing: "border-box",
-          padding: "0 10px",
-          margin: "-14px 0 -14px 4px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: COLORS.paper,
-          borderLeft: `1px solid ${COLORS.paperAlt}`,
-          fontFamily: "'Urbanist', sans-serif",
-          fontWeight: 800,
-          fontSize: "22px",
-          color: COLORS.amber,
-        }}
-      >
-        {count === null ? "\u00A0" : count}
-      </span>
-    </button>
-  );
-}
 
 // Écran d'entrée : trois cartes, chacune avec le nombre de ses produits (rien tant que la base n'a pas répondu).
 export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }) {
@@ -85,7 +49,7 @@ export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }
       <ScreenTitle>Mes Produits</ScreenTitle>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
         {HUB_ITEMS.map((it) => (
-          <HubCard key={it.key} title={it.title} count={counts[it.key]} icon={icons[it.key]} onClick={go[it.key]} />
+          <HubCard key={it.key} title={it.title} count={counts[it.key]} countText={counts[it.key] === null ? null : countLabel(counts[it.key])} icon={icons[it.key]} onClick={go[it.key]} />
         ))}
       </div>
       <PageFooterNav onBack={onBack} />

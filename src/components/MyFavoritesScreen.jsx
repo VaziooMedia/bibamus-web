@@ -1,6 +1,6 @@
 // « Mes Favoris » (Mon Profil) — tout ce que la personne a mis de côté, en cinq listes, chacune sur sa propre page (comme « Mes Produits ») :
 // Lieux (cœur de la fiche d'un lieu), Produits (cœur de la fiche d'un produit), Marques et Producteurs (cœur de leur fiche) et Bibax (cœur de la fiche d'un
-// Bibax confirmé). L'écran d'entrée ne montre que les cinq cartes, dans cet ordre, avec leur nombre ; chaque page range ses lignes du plus récent au plus ancien,
+// Bibax confirmé). L'écran d'entrée ne montre que les cinq cartes (rond d'icône, titre, nombre dans la colonne sombre de droite — `HubCard`, comme « Mes Produits »), dans cet ordre ; chaque page range ses lignes du plus récent au plus ancien,
 // dans le style de « Mon Historique » : une carte, des lignes pleine largeur séparées par un trait fin. Une liste vide dit quel geste l'alimente.
 // Les identifiants viennent de la fonction `get_my_favorites` (puis les noms par les fonctions habituelles) ; les Bibax se lisent dans la liste `bibros` déjà en
 // mémoire (un Bibax dont la relation n'est plus confirmée n'est de toute façon plus rendu par le serveur).
@@ -8,8 +8,8 @@
 import React, { useState, useEffect } from "react";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS } from "../constants.js";
-import { PageHeader, PageFooterNav, EntityAvatar, ActionCard } from "./ui.jsx";
-import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
+import { PageHeader, PageFooterNav, EntityAvatar, HubCard } from "./ui.jsx";
+import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
 import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
@@ -76,6 +76,16 @@ const KINDS = [
   { kind: "bibax", title: "Bibax", count: (n) => `${n} Bibax`, empty: "Aucun Bibax favori. Touche le cœur sur la fiche d'un Bibax." },
 ];
 
+// Le rond d'icône de chaque carte de l'écran d'entrée (Mehdi, 2026-11-17) : celle que les lignes de la liste utilisent déjà quand l'élément n'a pas de photo (épingle, bouteille, étiquette,
+// monogramme Bibamus) et, pour les Bibax, l'icône Bibax de l'app (trois silhouettes, choisie par Mehdi) — rien d'inventé.
+const KIND_ICONS = {
+  venues: <NavIcon name="map-pin" size={24} color={COLORS.amber} />,
+  drinks: <NavIcon name="bottle" size={24} color={COLORS.amber} />,
+  brands: <NavIcon name="tag" size={24} color={COLORS.amber} />,
+  producers: <NavIcon name="bibamus-monogram" size={24} color={COLORS.amber} />,
+  bibax: <NavIcon name="bibax" size={28} color={COLORS.amber} />,
+};
+
 // Le titre d'un écran de Mon Profil : petite barre verte puis le texte. Avec `iconUrl` (DrinkChecks, PlaceChecks), une icône de 24 px — comme celle du titre « Mes Bibax » — remplace la barre.
 export function ScreenTitle({ children, iconUrl = null }) {
   return (
@@ -115,10 +125,11 @@ export function MyFavoritesScreen({ bibros = [], onBack, goTo }) {
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <ScreenTitle>Mes Favoris</ScreenTitle>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
-        {KINDS.map((k) => (
-          <ActionCard key={k.kind} title={k.title} subtitle={counts && typeof counts[k.kind] === "number" ? k.count(counts[k.kind]) : "\u00A0"} onClick={() => goTo(k.kind)} />
-        ))}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+        {KINDS.map((k) => {
+          const n = counts && typeof counts[k.kind] === "number" ? counts[k.kind] : null;
+          return <HubCard key={k.kind} title={k.title} count={n} countText={n === null ? null : k.count(n)} icon={KIND_ICONS[k.kind]} onClick={() => goTo(k.kind)} />;
+        })}
       </div>
       <PageFooterNav onBack={onBack} />
     </div>
