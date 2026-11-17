@@ -48,13 +48,16 @@ export const sameVenueByNameCity = (a, b) =>
   (a.name || "").trim().toLowerCase() === (b.name || "").trim().toLowerCase() &&
   (a.city || "").trim().toLowerCase() === (b.city || "").trim().toLowerCase();
 
-export const formatAddress = (venue) => {
-  const streetPart = [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
-  const postalPart = venue.postalCode ? `B-${venue.postalCode}` : "";
+// Les deux lignes de l'adresse postale d'un lieu : « rue, numéro » et « code postal ville (village) ». Le « B- » devant le code postal n'est mis que pour la Belgique (décidé par Mehdi,
+// 2026-11-17 : un lieu de Paris ne doit pas afficher « B-75001 ») ; un lieu sans pays est belge, c'est le pays par défaut de l'app.
+export const venueStreetLine = (venue) => [venue.streetName, venue.streetNumber].filter(Boolean).join(", ");
+export const venuePostalCityLine = (venue) => {
+  const belgian = !venue.country || venue.country === "Belgique";
+  const postalPart = venue.postalCode ? `${belgian ? "B-" : ""}${venue.postalCode}` : "";
   const cityBase = [postalPart, venue.city].filter(Boolean).join(" ");
-  const cityPart = venue.village ? `${cityBase} (${venue.village})`.trim() : cityBase;
-  return [streetPart, cityPart].filter(Boolean).join(" - ");
+  return venue.village ? `${cityBase} (${venue.village})`.trim() : cityBase;
 };
+export const formatAddress = (venue) => [venueStreetLine(venue), venuePostalCityLine(venue)].filter(Boolean).join(" - ");
 
 export const formatDate = (dateStr) => {
   if (!dateStr) return "";

@@ -3382,9 +3382,13 @@ export default function App() {
                 mainScrollRef={mainScrollRef}
                 kind={{ myFavoritesVenues: "venues", myFavoritesDrinks: "drinks", myFavoritesBrands: "brands", myFavoritesProducers: "producers", myFavoritesBibax: "bibax" }[screen]}
                 bibros={bibros}
-                // Le cœur des lignes de « Lieux » : le même état et la même bascule que le cœur de la fiche d'un lieu.
+                // Le cœur des lignes (lieux, produits, Bibax) : le même état et la même bascule que le cœur de leur fiche (marques et producteurs : voir MyFavoritesScreen).
                 favoriteVenueIds={favoriteVenueIds}
                 onToggleVenueFavorite={toggleVenueFavorite}
+                favoriteDrinkIds={favoriteDrinkIds}
+                onToggleDrinkFavorite={toggleDrinkFavorite}
+                favoriteBibaxIds={favoriteBibaxIds}
+                onToggleBibaxFavorite={toggleBibroFavorite}
                 onBack={() => setScreen("myFavorites")}
                 onOpenVenue={(id) => {
                   setScreenBeforeVenueDetail(screen);
