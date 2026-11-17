@@ -2,7 +2,7 @@
 // Déjà goûtés (tous les produits que j'ai checkés, notés ou non) et Notés (ma note, de la fiche d'un produit). L'écran d'entrée ne montre que les trois cartes (rond d'icône, titre, nombre de produits à droite).
 // Au-dessus de chaque liste, la rangée de pastilles de catégories de DrinkChecks (« Tout » + les catégories non vides) : une catégorie choisie ne garde que ses produits. Sous « Tout », les produits sont
 // rangés par catégorie sous une barre (comme les sortes de « Mes Favoris »), du plus récent au plus ancien ; les lignes sont celles de DrinkChecks (`CheckRow`) : rond de 48 px, nom, détails
-// (sous-catégorie · pays · ABV · Bio · Sans gluten) et, dans « Déjà goûtés » et « Notés », ma note dans la colonne sombre de droite. Une ligne ouvre la fiche du produit, dont le retour ramène ici.
+// (sous-catégorie · pays · ABV · Bio · Sans gluten) et, dans « Déjà goûtés » et « Notés », ma note dans la colonne sombre de droite (« Pas noté » quand il ne l'est pas). Une ligne ouvre la fiche du produit, dont le retour ramène ici.
 // Les listes viennent de la base (get_my_wishlist, get_my_checked_drinks, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
@@ -101,12 +101,14 @@ const LIST_TEXTS = {
 
 // Ligne d'un produit — celle de DrinkChecks (`CheckRow`) : rond de 48 px à gauche (il déborde vers la gauche et en hauteur, le texte ne bouge pas), le nom (gras) et une ligne de détails —
 // sous-catégorie · pays (drapeau) · degré (« 6.5% ABV », rien pour les produits sans alcool par définition) · Bio · Sans gluten —, et, listes « Déjà goûtés » et « Notés », ma note à droite
-// dans la colonne plus sombre qui va du haut en bas de la ligne (la colonne reste là, vide, pour un produit goûté mais pas noté). « À goûter » : pas de colonne.
+// dans la colonne plus sombre qui va du haut en bas de la ligne (« Pas noté » pour un produit goûté mais pas noté). « À goûter » : pas de colonne.
 const RATING_COLUMN_STYLE = { fontSize: "13px", color: COLORS.chalkWhite, minWidth: "64px" };
+// Produit goûté mais pas noté : la mention « Pas noté », plus discrète que la note (gris, plus petite, pas en gras).
+const UNRATED_STYLE = { fontSize: "11px", fontWeight: 600, color: COLORS.inkSoft };
 
 function ProductRow({ drink, kind, rating = null, isLast, onOpen }) {
   const parts = [SUBTYPE_LABELS[drink.beverageSubtype] || null, flagPart(drink), abvPart(drink), bioPart(drink), glutenFreePart(drink)].filter(Boolean);
-  const count = kind === "toTry" ? null : rating !== null ? <RatingFraction value={rating} /> : "\u00A0";
+  const count = kind === "toTry" ? null : rating !== null ? <RatingFraction value={rating} /> : "Pas noté";
   return (
     <CheckRow
       avatarPhotoUrl={drink.photoUrl}
@@ -115,7 +117,7 @@ function ProductRow({ drink, kind, rating = null, isLast, onOpen }) {
       name={drink.name}
       parts={parts}
       count={count}
-      countStyle={RATING_COLUMN_STYLE}
+      countStyle={rating !== null ? RATING_COLUMN_STYLE : { ...RATING_COLUMN_STYLE, ...UNRATED_STYLE }}
       isLast={isLast}
       onOpen={onOpen}
     />
