@@ -35,7 +35,15 @@ export function countryFlagPart(country) {
   return COUNTRY_ISO_CODES[country] ? <CountryFlagImg country={country} size={14} /> : country;
 }
 
-// Ligne d'un favori — même squelette que celles de « Mon Historique » : rond de 40 px à gauche, à droite le titre (gras) et une ligne de détails.
+// Le rond de profil des lignes de liste de Mon Profil : plus grand que les 40 px d'origine, SANS bouger le texte ni changer la hauteur de la ligne (64 px). Il grandit vers la gauche — dans la marge
+// de 14 px de la carte — et vers le haut et le bas — dans l'espace au-dessus et au-dessous : son bord droit, donc le départ du texte, reste exactement où il était. Partagé avec DrinkChecks,
+// PlaceChecks et Mes Produits (CheckListParts.jsx).
+export const ROW_AVATAR_BASE = 40; // la taille d'origine
+export const ROW_AVATAR = 48;
+export const ROW_HEIGHT = 64;
+export const ROW_PAD_Y = (ROW_HEIGHT - ROW_AVATAR) / 2;
+
+// Ligne d'un favori — même squelette que celles de « Mon Historique » : rond de 48 px à gauche (voir ROW_AVATAR), à droite le titre (gras) et une ligne de détails.
 function FavoriteRow({ kind, avatar, title, details = [], isLast, onOpen }) {
   return (
     <button
@@ -48,7 +56,7 @@ function FavoriteRow({ kind, avatar, title, details = [], isLast, onOpen }) {
         alignItems: "center",
         gap: "10px",
         width: "100%",
-        padding: "12px 0",
+        padding: `${ROW_PAD_Y}px 0`,
         background: "none",
         border: "none",
         borderBottom: isLast ? "none" : `1px solid ${COLORS.paperAlt}`,
@@ -58,7 +66,7 @@ function FavoriteRow({ kind, avatar, title, details = [], isLast, onOpen }) {
         cursor: onOpen ? "pointer" : "default",
       }}
     >
-      <span style={{ flexShrink: 0, display: "flex" }}>{avatar}</span>
+      <span style={{ flexShrink: 0, display: "flex", marginLeft: `-${ROW_AVATAR - ROW_AVATAR_BASE}px` }}>{avatar}</span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
         <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{title}</span>
         <DotLine parts={details} />
@@ -195,7 +203,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
       <FavoriteRow
         key={v.id}
         kind="venue"
-        avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={40} fallbackIcon="map-pin" />}
+        avatar={<EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={ROW_AVATAR} fallbackIcon="map-pin" />}
         title={v.name}
         details={[v.city, countryFlagPart(v.country)].filter(Boolean)}
         isLast={last(resolved, i)}
@@ -207,7 +215,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
       <FavoriteRow
         key={d.id}
         kind="drink"
-        avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={40} fallbackIcon="bottle" />}
+        avatar={<EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={ROW_AVATAR} fallbackIcon="bottle" />}
         title={d.name}
         details={[d.type, d.brand].filter(Boolean)}
         isLast={last(resolved, i)}
@@ -219,7 +227,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
       <FavoriteRow
         key={b.id}
         kind="brand"
-        avatar={<EntityAvatar photoUrl={b.logoUrl} size={40} fallbackIcon="tag" />}
+        avatar={<EntityAvatar photoUrl={b.logoUrl} size={ROW_AVATAR} fallbackIcon="tag" />}
         title={b.name}
         details={[b.originCountry].filter(Boolean)}
         isLast={last(resolved, i)}
@@ -231,7 +239,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
       <FavoriteRow
         key={p.id}
         kind="producer"
-        avatar={<EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={40} />}
+        avatar={<EntityAvatar photoUrl={p.profilePhotoUrl} photoEmoji={p.avatarEmoji} size={ROW_AVATAR} />}
         title={p.name}
         details={[p.city, p.country].filter(Boolean)}
         isLast={last(resolved, i)}
@@ -244,7 +252,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
       <FavoriteRow
         key={b.userId}
         kind="bibax"
-        avatar={<EntityAvatar photoUrl={b.avatarUrl} size={40} fallbackIcon="user" />}
+        avatar={<EntityAvatar photoUrl={b.avatarUrl} size={ROW_AVATAR} fallbackIcon="user" />}
         title={[b.name, b.lastName].filter(Boolean).join(" ")}
         details={[b.nickname, b.city].filter(Boolean)}
         isLast={last(people, i)}
