@@ -47,7 +47,7 @@ function VenueAddressLines({ venue }) {
   return (
     <>
       {street && (
-        <div data-favorite-street style={lineStyle}>
+        <div data-favorite-street style={{ ...lineStyle, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {street}
         </div>
       )}
@@ -113,7 +113,23 @@ function FavoriteRow({ kind, avatar, title, details = [], detailsNode = null, he
             e.stopPropagation();
             heart.onToggle();
           }}
-          style={{ flexShrink: 0, alignSelf: "stretch", display: "flex", alignItems: "center", padding: "0 6px 0 10px", margin: "-8px -6px -8px 0", cursor: "pointer" }}
+          // Colonne sombre (Mehdi, 2026-11-17) : la même que celle du chiffre dans « PlaceChecks » / « Mes Produits » (`CheckRow`) — sur toute la hauteur de la ligne et jusqu'au bord de la carte,
+          // fond de la page, trait fin à gauche, le trait de séparation des lignes la traverse, 52 px de large au moins.
+          style={{
+            flexShrink: 0,
+            alignSelf: "stretch",
+            minWidth: "52px",
+            boxSizing: "border-box",
+            padding: "0 8px",
+            margin: `-${ROW_PAD_Y}px -14px -${isLast ? ROW_PAD_Y : ROW_PAD_Y + 1}px 6px`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: COLORS.paper,
+            borderLeft: `1px solid ${COLORS.paperAlt}`,
+            borderBottom: isLast ? "none" : `1px solid ${COLORS.paperAlt}`,
+            cursor: "pointer",
+          }}
         >
           <NavIcon name="heart" size={20} color={COLORS.amber} filled={heart.on} />
         </span>
@@ -350,7 +366,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
             {meta.empty}
           </p>
         ) : (
-          <div data-favorite-section={kind} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
+          <div data-favorite-section={kind} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px", overflow: "hidden" }}>
             {rows}
           </div>
         )}
