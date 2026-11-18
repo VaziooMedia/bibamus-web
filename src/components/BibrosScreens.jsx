@@ -599,11 +599,16 @@ export function MutualBibaxScreen({ bibros, bibroName, onBack: onBackProp, onVie
 // Le bloc « Bibax » de la fiche d'un Bibax (Mehdi, 2026-11-19) : la liste de SES Bibax, avec les mêmes lignes que « Bibax en commun » (rond, nom, @nom, ville · pays). Elle est lue par
 // `get_bibax_of` (script bibamus-sql-bibax-listes-3-bibax), qui respecte son partage « Liste de Bibax » et ne dit jamais qui l'on est soi-même dans la liste ; une personne qui ne la partage
 // pas laisse un message à la place de la liste. Une ligne ouvre la fiche de la personne (`onViewBibro` : à Mes Bibax si c'est l'un des miens, sinon son profil public), dont le retour ramène ici.
+// Comme dans « Mes Bibax » (Mehdi, 2026-11-19) : un champ de recherche (prénom, nom, surnom, ville, pays ; croix pour l'effacer, nombre de résultats pendant une recherche) et, à partir de 30 Bibax,
+// l'index des lettres sur le bord droit (première lettre du prénom). Le classement reste celui du prénom ; la recherche est gardée au retour d'une fiche.
 export function BibroBibaxListScreen({ other, onBack: onBackProp, onViewBibro: onViewBibroProp, onOpenStoryAuthor, mainScrollRef }) {
   const { restored, save, open, leave } = useListReturn("bibroBibaxList", mainScrollRef, { valid: (m) => m.ctx === other.userId });
   const onBack = leave(onBackProp);
   const onViewBibro = open(onViewBibroProp);
   const [list, setList] = useState(restored ? restored.list : null); // null = chargement
+  const [query, setQuery] = useState(restored ? restored.query || "" : "");
+  const searchRef = useRef(null);
+  const listRef = useRef(null);
   const [hidden, setHidden] = useState(false);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -643,8 +648,21 @@ export function BibroBibaxListScreen({ other, onBack: onBackProp, onViewBibro: o
 
   useEffect(() => {
     if (list === null || error) return;
-    save({ list, ctx: other.userId });
-  }, [list, error]);
+    save({ list, ctx: other.userId, query });
+  }, [list, error, query]);
+
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher), même classement que « Mes Bibax » classé par prénom.
+  const matchesText = makeSearchMatcher(query);
+  const shown = (list || [])
+    .filter((b) => matchesText(b.name, b.lastName, b.nickname, b.city, b.country))
+    .sort((a, b) => bibaxCollator.compare(a.name || "", b.name || "") || bibaxCollator.compare(a.lastName || "", b.lastName || "") || bibaxCollator.compare(a.code || "", b.code || ""));
+  const searching = query.trim() !== "";
+  const alphaOn = showAlphaIndex("alpha", shown.length);
+  const alphaLetters = alphaOn ? [...new Set(shown.map((b) => letterOf(b.name || "")))] : [];
+  const alphaTarget = (letter) => {
+    const at = shown.findIndex((b) => letterOf(b.name || "") === letter);
+    return at < 0 ? null : listRef.current?.querySelectorAll("[data-bibax-az-row]")[at] || null;
+  };
 
   const note = { fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" };
   return (
@@ -668,11 +686,45 @@ export function BibroBibaxListScreen({ other, onBack: onBackProp, onViewBibro: o
       ) : list.length === 0 ? (
         <p data-check-empty style={note}>{other.name} n'a pas d'autre Bibax que toi pour l'instant.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {list.map((b) => (
-            <BibaxLinkRow key={b.code} b={b} stories={pulseStories.filter((s) => s.authorId === b.userId)} onOpen={onViewBibro} onOpenStoryAuthor={onOpenStoryAuthor} />
-          ))}
-        </div>
+        <>
+          {/* Champ de recherche avec une croix au bout (visible dès qu'il y a du texte), comme dans « Mes Bibax ». */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, marginBottom: "16px", boxSizing: "border-box" }}>
+            <input
+              ref={searchRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher : prénom, nom, surnom, ville..."
+              style={{ flex: 1, minWidth: 0, border: "none", background: "none", fontSize: "14px", outline: "none", padding: 0 }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                searchRef.current?.focus();
+              }}
+              aria-label="Effacer la recherche"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px", flexShrink: 0, display: query.length > 0 ? "flex" : "none" }}
+            >
+              <NavIcon name="x" size={15} color={COLORS.inkSoft} />
+            </button>
+          </div>
+          {shown.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "16px" }}>Aucun Bibax ne correspond à cette recherche.</p>}
+          {searching && shown.length > 0 && (
+            <p data-bibax-result-count style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 12px" }}>
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber }}>{formatCount(shown.length)}</span> Bibax
+            </p>
+          )}
+          {shown.length > 0 && (
+            <div ref={listRef} style={{ position: "relative", display: "flex", flexDirection: "column", gap: "10px" }}>
+              {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
+              {shown.map((b) => (
+                <div key={b.code} data-bibax-az-row="">
+                  <BibaxLinkRow b={b} stories={pulseStories.filter((s) => s.authorId === b.userId)} onOpen={onViewBibro} onOpenStoryAuthor={onOpenStoryAuthor} />
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <BackFooterLink onClick={onBack} />
