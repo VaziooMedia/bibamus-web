@@ -17,6 +17,7 @@ import { EntityAvatar, PageHeader } from "./ui.jsx";
 import { ResultRow } from "./SearchScreen.jsx";
 import { searchBibax } from "../data/sharedDirectories.js";
 import { useListReturn } from "../hooks/useListReturn.js";
+import { mutualLabel } from "../utils.js";
 
 const fullNameOf = (b) => [b.firstName || b.name, b.lastName].filter(Boolean).join(" ") || "Bibax";
 
@@ -163,10 +164,10 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile: openProf
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                   {b.city}
                   {b.country && <CountryFlagImg country={b.country} size={13} />}
-                  {(b.city || b.country) && b.mutualBibaxCount > 0 && (
+                  {(b.city || b.country) && (
                     <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block" }} />
                   )}
-                  {b.mutualBibaxCount > 0 && `${b.mutualBibaxCount} Bibax en commun`}
+                  {mutualLabel(b.mutualBibaxCount || 0)}
                 </span>
               }
               avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}

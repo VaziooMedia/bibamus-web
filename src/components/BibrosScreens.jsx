@@ -12,7 +12,7 @@ import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
 import { MyPhotosScreen } from "./MyPhotosScreen.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
-import { makeSearchMatcher, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery, formatCount } from "../utils.js";
+import { makeSearchMatcher, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery, formatCount, mutualLabel } from "../utils.js";
 import {
   loadPendingBibaxRequests,
   loadSentBibaxRequests,
@@ -333,7 +333,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
     return () => {
       alive = false;
     };
-  }, [tab]);
+  }, [tab, bibros.length]);
 
   const addSuggestion = async (bibroCode) => {
     setSuggestionBusyCode(bibroCode);
@@ -374,9 +374,8 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   // Classé par nom de famille, le nom s'écrit « Nom Prénom » (la lettre de l'index est la première du nom).
   const bibaxRow = (b, isLast, inAlphaList) => {
     // Trois lignes (Mehdi, 2026-11-18, même modèle que Mes Favoris > Bibax, voir `BibaxLines.jsx`) : 1. nom ; 2. @nom (« @ » vert fluo) puis surnom en italique ; 3. commune (village) puis drapeau du pays.
-    // Ligne 4 (Mehdi, 2026-11-18, comme dans Mes Favoris > Bibax) : « N Bibax en commun », rien à 0.
-    const common = (mutuals && mutuals[b.userId]) || 0;
-    const lines = [...bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country }), common > 0 ? [`${common} Bibax en commun`] : []];
+    // Ligne 4 (Mehdi, 2026-11-18, comme dans Mes Favoris > Bibax) : « N Bibax en commun », ou « Aucun Bibax en commun » à 0. La lecture ne rend que ceux qui en ont : une fois lue, un Bibax absent en a 0 ; tant qu'elle n'a pas répondu (ou si elle a échoué : `mutuals` est null), pas de 4ᵉ ligne.
+    const lines = [...bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country }), mutuals ? [mutualLabel(mutuals[b.userId] || 0)] : []];
     const first = b.firstName || b.name;
     const fullName = (sort === "last" ? [b.lastName, first] : [first, b.lastName]).filter(Boolean).join(" ") || "Bibax";
     return (
@@ -1190,7 +1189,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
       // Et le nombre de Bibax en commun (ligne 4), lu en même temps.
       const [names, mutuals] = await Promise.all([loadUsernamesByBibroCodes(results.map((r) => r.bibroCode)), loadMutualCountsByBibroCodes(results.map((r) => r.bibroCode))]);
       if (cancelled) return;
-      setNameResults(results.map((r) => ({ ...r, username: names[(r.bibroCode || "").toUpperCase()] || "", mutual: mutuals[(r.bibroCode || "").toUpperCase()] || 0 })));
+      setNameResults(results.map((r) => ({ ...r, username: names[(r.bibroCode || "").toUpperCase()] || "", mutual: mutuals[(r.bibroCode || "").toUpperCase()] ?? null })));
       setNameSearching(false);
     }, 350);
     return () => {
@@ -1503,7 +1502,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                 country={foundSocials.country}
                 style={{ fontSize: "17px" }}
               />
-              {mutualBibaxCount > 0 && <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{mutualBibaxCount} Bibax en commun</div>}
+              <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{mutualLabel(mutualBibaxCount)}</div>
             </div>
           </div>
         </div>
