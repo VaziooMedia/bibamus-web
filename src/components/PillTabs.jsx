@@ -75,3 +75,34 @@ export function PillTabs({ tabs, active, onChange, marginBottom = "16px", fine =
     </div>
   );
 }
+
+// Pastille rouge du nombre d'éléments non lus / à traiter, posée à cheval sur la bordure d'une pastille d'onglet (passée dans `badge` de `tabs`) :
+// BibaPulse et BibaPing d'un salon, « Demandes » de Mes Bibax. Rien si le nombre est nul ; « 9+ » au-delà de 9. Rouge à texte blanc par défaut ; `background` et `color` pour une autre teinte (« Demandes » de Mes Bibax : rose fluo, texte noir).
+export function TabBadge({ count, background = "#FF3B3B", color = "#fff" }) {
+  if (!count) return null;
+  return (
+    <span
+      style={{
+        // À cheval sur la bordure du bouton, comme le badge "EN COURS" d'un BibaLive.
+        position: "absolute",
+        top: "-8px",
+        right: "6px",
+        minWidth: "17px",
+        height: "17px",
+        borderRadius: "999px",
+        background,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0 4px",
+        boxSizing: "border-box",
+        fontSize: "9.5px",
+        fontWeight: 700,
+        color,
+        lineHeight: 1,
+      }}
+    >
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}

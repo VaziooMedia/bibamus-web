@@ -12,6 +12,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, BibaxName, BlockTitle, GoButton } from "./ui.jsx";
 import { loadBibroCodes } from "../data/profiles.js";
 import { useListReturn } from "../hooks/useListReturn.js";
+import { formatCount } from "../utils.js";
 
 // Les lignes de la liste : avatar, nom (avec surnom) suivi de la flèche d'accès au profil, et à droite le nombre de checks.
 // `rows` : { userId, name, lastName, nickname, avatarUrl, checkCount }. `onOpen(userId)` ouvre le profil.
@@ -27,7 +28,7 @@ export function BibaxCheckRows({ rows, onOpen }) {
             <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} style={{ fontSize: "14px" }} />
             <GoButton label={`Voir le profil de ${[b.name, b.lastName].filter(Boolean).join(" ") || b.nickname || "ce Bibax"}`} onClick={() => onOpen(b.userId)} />
           </div>
-          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{b.checkCount}</span>
+          <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{formatCount(b.checkCount)}</span>
         </div>
       ))}
     </div>

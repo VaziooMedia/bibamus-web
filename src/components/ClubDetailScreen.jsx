@@ -33,6 +33,7 @@ import {
   uploadClubPhoto,
   updateClubPhoto,
 } from "../data/sharedDirectories.js";
+import { formatCount } from "../utils.js";
 
 function timeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -483,7 +484,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
                             <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, width: "20px" }}>{i + 1}.</span>
                             <span style={{ flex: 1, fontSize: "13.5px", fontWeight: 600 }}>{m.name}</span>
                             <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber }}>
-                              {m.roundsCount} tournée{m.roundsCount > 1 ? "s" : ""}
+                              {formatCount(m.roundsCount)} tournée{m.roundsCount > 1 ? "s" : ""}
                             </span>
                           </div>
                         ))}

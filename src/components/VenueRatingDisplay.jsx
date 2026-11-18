@@ -8,6 +8,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { loadVenueRatingSummary } from "../data/sharedDirectories.js";
+import { formatCount } from "../utils.js";
 
 // Le texte de l'appréciation d'un lieu (« Excellent », « Premières appréciations »), partagé par la bannière de la fiche et le bloc du
 // lieu des cartes PlaceCheck de BibaPulse. null quand le lieu n'a aucun avis.
@@ -57,7 +58,7 @@ export function VenueRatingDisplay({ venueId }) {
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {text}
       </span>
-      <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {summary.rating_count} avis</span>
+      <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {formatCount(summary.rating_count)} avis</span>
     </div>
   );
 }

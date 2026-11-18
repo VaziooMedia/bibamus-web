@@ -38,7 +38,7 @@ import {
   TwitchIcon,
   CountryFlagImg,
 } from "./icons.jsx";
-import { normalizeUrl, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate } from "../utils.js";
+import { normalizeUrl, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, formatCount } from "../utils.js";
 import { loadPublicProfile, loadBibaxRelationStatus } from "../data/profiles.js";
 import { loadBibaxCount, loadMyProfileStats, sendBibaxRequest, cancelBibaxRequest, respondBibaxRequest } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
@@ -126,7 +126,7 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack, myUserId, myBibro
     >
       <span style={{ fontSize: "9.5px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
       <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.amber, lineHeight: 1 }}>
-        {value != null ? value : "…"}
+        {value != null ? formatCount(value) : "…"}
       </span>
     </div>
   );

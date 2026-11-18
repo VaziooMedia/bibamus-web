@@ -10,7 +10,7 @@ import { COLORS, DRINK_TYPES } from "../constants.js";
 import { NavIcon, CountryFlagImg, CertificationIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./ui.jsx";
 import { DrinkBadges, getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
-import { drinkTypeLabel, drinkSummaryParts } from "../utils.js";
+import { drinkTypeLabel, drinkSummaryParts, formatCount } from "../utils.js";
 import { styleTagLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { loadDrinkCategoryCounts, loadDrinkLetterCounts, loadDrinksDirectoryPage, loadDrinksDirectoryCount, loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
@@ -432,7 +432,7 @@ export function DrinksDirectoryScreen({
   const countLine =
     totalCount > 0 ? (
       <p style={{ margin: "0 0 2px", fontSize: "12.5px", color: COLORS.inkSoft, fontFamily: "'Urbanist', sans-serif" }}>
-        {totalCount} {totalCount > 1 ? "produits" : "produit"}
+        {formatCount(totalCount)} {totalCount > 1 ? "produits" : "produit"}
       </p>
     ) : null;
 

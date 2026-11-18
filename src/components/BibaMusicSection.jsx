@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { normalizeUrl } from "../utils.js";
+import { normalizeUrl, formatCount } from "../utils.js";
 import {
   getMySpotifyStatus,
   ensureFreshSpotifyToken,
@@ -279,7 +279,7 @@ export function BibaMusicSection({ event, updateEvent, myBibroCode, myName, myUs
                         flexShrink: 0,
                       }}
                     >
-                      ♥ {bixCount}
+                      ♥ {formatCount(bixCount)}
                     </button>
                     {isMine && (
                       <button onClick={() => removeSong(s.id)} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "16px", cursor: "pointer", padding: "0 2px", flexShrink: 0 }}>

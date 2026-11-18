@@ -1017,3 +1017,10 @@ export const usernameFromQuery = (text) => {
   if (!t.startsWith("@")) return null;
   return t.slice(1).trim() || null;
 };
+
+// Un compteur à l'écran (nombre de Bibax, de checks, de produits, d'avis, de réactions…) : un entier de 1 000 ou plus prend le point comme séparateur
+// de milliers (9.999 ; décision de Mehdi, 2026-11-18). Tout autre texte ou nombre (« … », une quantité à virgule) est rendu tel quel.
+export function formatCount(n) {
+  if (typeof n !== "number" || !Number.isInteger(n)) return n;
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}

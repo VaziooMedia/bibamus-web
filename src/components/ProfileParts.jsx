@@ -11,7 +11,7 @@ import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
 import cupIconUrl from "../assets/brand/cup.svg";
 import beerIconUrl from "../assets/brand/beer.svg";
-import { formatMemberSince, normalizeUrl, formatDDMMYYYY, formatSharedBirthDate, computeAgeFromBirthDate, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate } from "../utils.js";
+import { formatMemberSince, normalizeUrl, formatDDMMYYYY, formatSharedBirthDate, computeAgeFromBirthDate, computeCurrentStreak, computeLongestAlcoholFreeStreak, formatDate, formatCount } from "../utils.js";
 import { loadMyProfileStats, loadMyStories } from "../data/sharedDirectories.js";
 
 // Bloc du rond de profil (photo, prénom, nom, surnom). Le rond s'entoure de rose quand la personne a une Story active.
@@ -208,7 +208,7 @@ function StatCard({ label, value, onClick }) {
     >
       <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
       <span data-stat-bar style={{ width: STAT_BAR_WIDTH, height: "2px", borderRadius: "1px", background: COLORS.paperAlt, flexShrink: 0 }} />
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{value}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: COLORS.amber, lineHeight: 1 }}>{formatCount(value)}</span>
     </button>
   );
 }

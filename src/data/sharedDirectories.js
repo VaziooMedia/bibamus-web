@@ -5163,3 +5163,10 @@ export async function loadBibaxSuggestions(limit = 10) {
   }
   return data.map((r) => ({ userId: r.user_id, name: r.name, lastName: r.last_name, nickname: r.nickname, avatarUrl: r.avatar_url, bibroCode: r.bibro_code, city: r.city, locality: r.locality, country: prettifyCountry(r.country), mutualCount: r.mutual_count, distanceKm: r.distance_km }));
 }
+
+// « Supprimer » une suggestion : la personne n'est plus jamais proposée à celui qui l'écarte (elle n'en est pas prévenue et reste trouvable par la recherche ou son code Bibax).
+// L'écran retire la carte tout de suite ; si l'enregistrement échoue, la suggestion revient simplement à la prochaine lecture.
+export async function dismissBibaxSuggestion(userId) {
+  const { error } = await supabase.rpc("dismiss_bibax_suggestion", { p_user_id: userId });
+  if (error) console.error("dismissBibaxSuggestion:", error);
+}

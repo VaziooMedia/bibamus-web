@@ -38,7 +38,7 @@ import {
   archiveMyJetonMovements,
   loadMyJetonSpentSince,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, displayedAbv, displayedAlcoholTier, volumeUnit, kcalOfPortion, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, displayedAbv, displayedAlcoholTier, volumeUnit, kcalOfPortion, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames, formatCount } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
@@ -2193,7 +2193,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
         <div style={{ flex: 1, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", textAlign: "center" }}>
-          <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>{totals.count}</div>
+          <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>{formatCount(totals.count)}</div>
           <div style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" }}>{totals.count <= 1 ? "Verre" : "Verres"}</div>
         </div>
         {/* Un appui sur le bloc ouvre / ferme une bulle (même style que la bulle des périodes) qui détaille le Dépensé. */}

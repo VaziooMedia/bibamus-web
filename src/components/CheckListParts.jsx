@@ -6,6 +6,7 @@ import { EntityAvatar } from "./ui.jsx";
 import { DotLine, ROW_AVATAR, ROW_AVATAR_BASE, ROW_PAD_Y as ROW_PAD_Y_SHARED } from "./MyFavoritesScreen.jsx";
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
 import { FINE_PILL } from "./PillTabs.jsx";
+import { formatCount } from "../utils.js";
 
 // Éléments de la ligne de détails d'un produit (DrinkChecks, Mes Produits, Mes Favoris > Produits) : définis dans DrinkRowParts.jsx, repris ici pour les écrans qui les importaient d'ici.
 export { hasFlag, flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
@@ -128,7 +129,7 @@ export function CheckTotals({ checks, unique, brand, uniqueLabel }) {
           whiteSpace: "nowrap",
         }}
       >
-        {value}
+        {formatCount(value)}
       </span>
     </div>
   );
@@ -247,7 +248,7 @@ export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, part
             ...countStyle,
           }}
         >
-          {count}
+          {formatCount(count)}
         </span>
       )}
     </button>

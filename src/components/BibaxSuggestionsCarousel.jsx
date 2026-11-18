@@ -1,0 +1,97 @@
+// ============================================================
+// Carrousel des « Suggestions rapides » de l'accueil (décision de Mehdi, 2026-11-18) : une rangée de cartes verticales qu'on fait défiler vers la gauche.
+// Chaque carte : un grand rond de profil cerclé de vert fluo, avec un petit « + » vert pour ajouter en un tap, un « × » rose fluo dans le coin pour supprimer la suggestion
+// (la suivante prend sa place), le nom, la ville avec son drapeau et une pastille de raison (« 4 Bibax en commun » ou « à 12 km »). Une carte « Voir tout » ferme la rangée.
+// La page Mes Bibax, elle, garde des listes (onglet « Suggestions »).
+//
+// `suggestions` : les suggestions à afficher (voir `loadBibaxSuggestions`) ; `onOpen(bibroCode)` ouvre le profil ; `onAdd(bibroCode)` envoie la demande ;
+// `onDismiss(suggestion)` supprime la suggestion ; `busyCode` : le code en cours d'ajout ; `onSeeAll` : la carte « Voir tout » (absente si non fourni).
+// ============================================================
+import React from "react";
+import { COLORS } from "../constants.js";
+import { NavIcon, CountryFlagImg } from "./icons.jsx";
+import { EntityAvatar } from "./ui.jsx";
+
+const CARD_WIDTH = 150;
+
+// Raison de la suggestion : les Bibax en commun d'abord, sinon la distance.
+function reasonOf(s) {
+  if (s.mutualCount > 0) return { icon: "users", text: `${s.mutualCount} Bibax en commun` };
+  if (s.distanceKm != null) return { icon: "map-pin", text: `à ${s.distanceKm} km` };
+  return null;
+}
+
+export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss, busyCode, onSeeAll }) {
+  const card = { background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", cursor: "pointer", boxSizing: "border-box" };
+  return (
+    <div style={{ display: "flex", gap: "10px", overflowX: "auto", scrollSnapType: "x mandatory", scrollPaddingLeft: "20px", margin: "0 -20px", padding: "4px 20px 10px", scrollbarWidth: "none" }}>
+      {suggestions.map((s) => {
+        const reason = reasonOf(s);
+        const fullName = [s.name, s.lastName].filter(Boolean).join(" ") || "Bibax";
+        return (
+          <div
+            key={s.userId}
+            onClick={() => onOpen(s.bibroCode)}
+            style={{ ...card, position: "relative", flex: `0 0 ${CARD_WIDTH}px`, scrollSnapAlign: "start", padding: "16px 10px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}
+          >
+            <span
+              role="button"
+              aria-label="Supprimer cette suggestion"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDismiss(s);
+              }}
+              style={{ position: "absolute", top: "6px", right: "6px", width: "26px", height: "26px", borderRadius: "50%", background: COLORS.surface, border: `1.5px solid ${COLORS.pinkFluo}`, boxSizing: "border-box", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              <NavIcon name="x" size={13} color={COLORS.pinkFluo} />
+            </span>
+
+            <span style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
+              <span style={{ display: "inline-flex", padding: "3px", borderRadius: "50%", border: `2px solid ${COLORS.amber}` }}>
+                <EntityAvatar photoUrl={s.avatarUrl} size={72} />
+              </span>
+              <span
+                role="button"
+                aria-label="Ajouter"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAdd(s.bibroCode);
+                }}
+                style={{ position: "absolute", right: "-4px", bottom: "-2px", width: "28px", height: "28px", borderRadius: "50%", background: COLORS.amber, border: `3px solid ${COLORS.surface}`, display: "inline-flex", alignItems: "center", justifyContent: "center", opacity: busyCode === s.bibroCode ? 0.5 : 1, cursor: "pointer", boxSizing: "content-box" }}
+              >
+                <NavIcon name="plus" size={16} color={COLORS.paper} />
+              </span>
+            </span>
+
+            <span style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", minWidth: 0, width: "100%" }}>
+              <span style={{ fontWeight: 700, fontSize: "13.5px", color: COLORS.ink, lineHeight: 1.2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", wordBreak: "break-word" }}>{fullName}</span>
+              {s.city && (
+                <span style={{ fontSize: "11px", color: COLORS.inkSoft, display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "2px", maxWidth: "100%" }}>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.city}</span>
+                  {s.country && <CountryFlagImg country={s.country} size={13} />}
+                </span>
+              )}
+            </span>
+
+            {reason && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: COLORS.paperAlt, borderRadius: "999px", padding: "3px 9px", fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>
+                <NavIcon name={reason.icon} size={11} color={COLORS.amber} />
+                {reason.text}
+              </span>
+            )}
+          </div>
+        );
+      })}
+
+      {onSeeAll && (
+        <div
+          onClick={onSeeAll}
+          style={{ ...card, flex: "0 0 110px", scrollSnapAlign: "start", border: `2px dashed ${COLORS.paperAlt}`, background: "none", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", color: COLORS.amber, fontSize: "12.5px", fontWeight: 700 }}
+        >
+          <NavIcon name="chevron-right" size={22} color={COLORS.amber} />
+          Voir tout
+        </div>
+      )}
+    </div>
+  );
+}

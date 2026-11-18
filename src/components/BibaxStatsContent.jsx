@@ -20,6 +20,7 @@ import {
   loadDrinksByIds,
 } from "../data/sharedDirectories.js";
 import { PERIODS, MONTH_NAMES } from "./MyStatsScreen.jsx";
+import { formatCount } from "../utils.js";
 
 export function BibaxStatsContent({ userId, displayName }) {
   const [statsPeriodKey, setStatsPeriodKey] = useState("all");
@@ -151,7 +152,7 @@ export function BibaxStatsContent({ userId, displayName }) {
           {sharedSocial.distinctBibaxCount > 0 && (
             <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
               <span>👥 Bibax différents rencontrés</span>
-              <strong>{sharedSocial.distinctBibaxCount}</strong>
+              <strong>{formatCount(sharedSocial.distinctBibaxCount)}</strong>
             </div>
           )}
           {sharedSocial.avgPeoplePerOuting != null && (

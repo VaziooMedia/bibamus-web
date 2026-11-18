@@ -20,7 +20,7 @@ import { BibaxCheckRows } from "./DrinkBibaxChecksScreen.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
-import { displayedAbv, formatWeekdayDDMMYYYY, isAtpDrink } from "../utils.js";
+import { displayedAbv, formatWeekdayDDMMYYYY, isAtpDrink, formatCount } from "../utils.js";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -59,7 +59,7 @@ function SectionDivider() {
 function TimesValue({ count }) {
   return (
     <>
-      {count}
+      {formatCount(count)}
       <span style={{ color: COLORS.ink }}> x</span>
     </>
   );
@@ -591,7 +591,7 @@ export function DrinkDetailScreen({
                 <NavIcon name="star" size={17} color={COLORS.amber} filled />
               </span>
               <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}><RatingFraction value={ratingAverage} /></span>
-              <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {ratingValues.length} avis</span>
+              <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {formatCount(ratingValues.length)} avis</span>
             </div>
           </div>
         )}

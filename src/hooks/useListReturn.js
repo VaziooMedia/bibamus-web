@@ -38,7 +38,6 @@ export const FICHE_SCREENS = new Set([
   "venueMenuCategories",
   "venueCategoryDrinks",
   "bibaxPhotos",
-  "bibaxAllSuggestions",
 ]);
 
 export const hasListMemory = (key) => memories.has(key);
