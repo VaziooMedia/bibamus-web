@@ -17,6 +17,7 @@ import {
   loadPendingBibaxRequests,
   loadSentBibaxRequests,
   loadBibaxSuggestions,
+  loadMyBibaxUsernames,
   dismissBibaxSuggestion,
   respondBibaxRequest,
   sendBibaxRequest,
@@ -34,6 +35,8 @@ import { openDirectConversation } from "../data/messaging.js";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import { PillTabs, TabBadge } from "./PillTabs.jsx";
+import { CheckGroup, CheckRow, letterOf } from "./CheckListParts.jsx";
+import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
 import { BibaxStatsContent } from "./BibaxStatsContent.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
@@ -256,8 +259,16 @@ function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, on
   );
 }
 
+// Les trois classements de la liste de Mes Bibax (Mehdi, 2026-11-18) : par prénom (au départ), par nom de famille, par nom d'utilisateur (@nom).
+const BIBAX_SORTS = [
+  { key: "first", label: "Prénom" },
+  { key: "last", label: "Nom" },
+  { key: "username", label: { accent: "@", suffix: "Username" } },
+];
+const bibaxCollator = new Intl.Collator("fr", { sensitivity: "base" });
+
 // Retour d'une fiche (norme de l'app, voir `useListReturn`) : la liste se remet à la hauteur où on l'avait laissée, avec la recherche tapée ; une entrée depuis Mon Profil repart de zéro.
-export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack, onBibaxAdded, onOpenBibaxProfile, initialTab, mainScrollRef }) {
+export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, goToAddBibro, onViewBibro, onBack, onBibaxAdded, onOpenBibaxProfile, onToggleFavorite, initialTab, mainScrollRef }) {
   const { restored, save, open } = useListReturn("bibrosList", mainScrollRef);
   const [query, setQuery] = useState(restored ? restored.query : "");
   // Trois pages à pastilles : « bibax » (ma liste), « suggestions », « requests » (demandes). Au retour d'une fiche, la page ouverte est celle qu'on avait laissée ; sinon `initialTab`
@@ -265,9 +276,12 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   const [tab, setTab] = useState(restored?.tab || initialTab || "bibax");
   const [suggestions, setSuggestions] = useState(restored ? restored.suggestions ?? null : null);
   const [suggestionBusyCode, setSuggestionBusyCode] = useState(null);
+  // Classement de la liste de Mes Bibax : « first » (prénom), « last » (nom de famille) ou « username » (@nom). `usernames` : { userId: nom d'utilisateur }, lus seulement quand on choisit ce classement.
+  const [sort, setSort] = useState(restored?.sort || "first");
+  const [usernames, setUsernames] = useState(restored ? restored.usernames ?? null : null);
   useEffect(() => {
-    save({ query, tab, suggestions });
-  }, [query, tab, suggestions]);
+    save({ query, tab, suggestions, sort, usernames });
+  }, [query, tab, suggestions, sort, usernames]);
   const viewBibro = onViewBibro ? open(onViewBibro) : onViewBibro;
   const openBibaxProfile = onOpenBibaxProfile ? open(onOpenBibaxProfile) : onOpenBibaxProfile;
   const requests = useBibaxRequests(onBibaxAdded || (() => {}));
@@ -283,6 +297,19 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
       alive = false;
     };
   }, [tab]);
+
+  // Les noms d'utilisateur sont relus à chaque fois qu'on choisit le classement « @nom » (comme les suggestions : ce qu'on a en mémoire sert tout de suite, puis la lecture le remplace en silence).
+  // Si la lecture échoue, on garde ce qu'on avait et la liste se classe sur le code Bibax.
+  useEffect(() => {
+    if (tab !== "bibax" || sort !== "username") return undefined;
+    let alive = true;
+    loadMyBibaxUsernames().then((list) => {
+      if (alive && list) setUsernames((prev) => (prev && JSON.stringify(prev) === JSON.stringify(list) ? prev : list));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [tab, sort]);
 
   const addSuggestion = async (bibroCode) => {
     setSuggestionBusyCode(bibroCode);
@@ -300,10 +327,52 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   const matchesText = makeSearchMatcher(query);
   const matchesQuery = (b) => matchesText(b.firstName, b.lastName, b.nickname, b.alias, b.city, b.country);
 
-  const sortedBibros = [...bibros].filter(matchesQuery).sort((a, b) => {
-    if (!!a.isFavorite !== !!b.isFavorite) return a.isFavorite ? -1 : 1;
-    return (a.alias || a.name).localeCompare(b.alias || b.name);
-  });
+  // Liste de A à Z (décidé par Mehdi, 2026-11-18), classée par prénom, par nom de famille ou par nom d'utilisateur. Les favoris sont en tête sous un titre « Favoris » ET gardent leur place alphabétique dans « Tous mes Bibax ».
+  // Pendant une recherche : une seule liste de A à Z (les favoris ne sont pas répétés, le compteur compte chaque Bibax une fois).
+  // Sans nom de famille, un Bibax est classé sur son prénom ; sans nom d'utilisateur connu (lecture pas encore faite ou en échec), sur son code Bibax (la valeur de départ du @nom).
+  const firstNameOf = (b) => b.alias || b.name || "";
+  const sortKeyOf = (b) => (sort === "last" ? b.lastName || firstNameOf(b) : sort === "username" ? (usernames && usernames[b.userId]) || b.code || "" : firstNameOf(b));
+  const tieKeyOf = (b) => (sort === "first" ? b.lastName || "" : firstNameOf(b));
+  const searching = query.trim() !== "";
+  const alphaBibros = [...bibros].filter(matchesQuery).sort((a, b) => bibaxCollator.compare(sortKeyOf(a), sortKeyOf(b)) || bibaxCollator.compare(tieKeyOf(a), tieKeyOf(b)) || bibaxCollator.compare(a.code || "", b.code || ""));
+  const favBibros = searching ? [] : alphaBibros.filter((b) => b.isFavorite);
+  const listRef = useRef(null);
+  const searchRef = useRef(null);
+  // Index des lettres sur le bord droit (norme des listes classées de A à Z, à partir de 30 Bibax) : il saute au premier Bibax de la lettre dans « Tous mes Bibax » (la lettre est celle du classement choisi).
+  const alphaOn = showAlphaIndex("alpha", alphaBibros.length);
+  const alphaLetters = alphaOn ? [...new Set(alphaBibros.map((b) => letterOf(sortKeyOf(b))))] : [];
+  const alphaTarget = (letter) => {
+    const at = alphaBibros.findIndex((b) => letterOf(sortKeyOf(b)) === letter);
+    return at < 0 ? null : listRef.current?.querySelectorAll("[data-bibax-az-row]")[at] || null;
+  };
+  // Une ligne de la liste (même squelette que DrinkChecks / PlaceChecks) : rond de profil, nom, puis surnom et ville + drapeau. Un favori a, dans la colonne de droite, un cœur plein
+  // qu'on touche pour le retirer des favoris (Mehdi, 2026-11-18) ; un Bibax qui n'est pas favori n'a pas de colonne.
+  // Classé par nom de famille, le nom s'écrit « Nom Prénom » (la lettre de l'index est la première du nom) ; classé par nom d'utilisateur, le « @nom » (« @ » en rose fluo) ouvre la ligne du surnom.
+  const bibaxRow = (b, isLast, inAlphaList) => {
+    const location = b.city ? (b.locality ? `${b.city} (${b.locality})` : b.city) : null;
+    const parts = [
+      sort === "username" ? { node: <><span style={{ color: COLORS.pinkFluo }}>@</span>{sortKeyOf(b)}</> } : null,
+      b.nickname ? { node: <span style={{ fontStyle: "italic", color: COLORS.amber }}>{b.nickname}</span> } : null,
+      location ? { node: <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>{location}{b.country && <CountryFlagImg country={b.country} size={14} />}</span> } : null,
+    ].filter(Boolean);
+    const first = b.firstName || b.name;
+    const fullName = (sort === "last" ? [b.lastName, first] : [first, b.lastName]).filter(Boolean).join(" ") || "Bibax";
+    return (
+      <div key={b.code} {...(inAlphaList ? { "data-bibax-az-row": "" } : {})}>
+        <CheckRow
+          avatarPhotoUrl={b.avatarUrl}
+          fallbackIcon="default-avatar"
+          name={fullName}
+          parts={parts}
+          count={b.isFavorite && onToggleFavorite ? <NavIcon name="heart" size={20} color={COLORS.amber} filled /> : null}
+          onCountClick={b.isFavorite && onToggleFavorite ? () => onToggleFavorite(b.code) : null}
+          countLabel={`${fullName} : retirer des favoris`}
+          isLast={isLast}
+          onOpen={() => viewBibro(b.code)}
+        />
+      </div>
+    );
+  };
 
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
@@ -368,71 +437,51 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
 
       {tab === "bibax" && (
         <>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher : prénom, nom, surnom, ville..."
-            style={{ padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "16px" }}
-          />
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-            {bibros.length === 0 && (
-              <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Pas encore de Bibax — ajoutez-en un avec son code.</p>
-            )}
-            {bibros.length > 0 && sortedBibros.length === 0 && (
-              <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun Bibax ne correspond à cette recherche.</p>
-            )}
-            {sortedBibros.map((b) => {
-              const status = bibroStatuses[b.code];
-              return (
-                <div
-                  key={b.code}
-                  onClick={() => viewBibro(b.code)}
-                  style={{ background: COLORS.surface, border: `2px solid ${status ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", cursor: "pointer" }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <div
-                        style={{
-                          width: `${CARD_AVATAR}px`,
-                          height: `${CARD_AVATAR}px`,
-                          borderRadius: "50%",
-                          background: COLORS.surfaceAlt,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "19px",
-                          flexShrink: 0,
-                          // le rond est centré sur le texte (2 lignes comme 3) ; la place prise dans la ligne reste celle d'un rond de 38 px : le texte ne bouge pas (voir `CARD_AVATAR`)
-                          margin: avatarOverhang(38, 38),
-                          overflow: "hidden",
-                        }}
-                      >
-                        {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={Math.round(CARD_AVATAR / 2)} color={COLORS.amber} />}
-                      </div>
-                      <div>
-                        <BibaxName name={b.firstName || b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ fontSize: "15px" }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {status && (
-                    <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, display: "flex", justifyContent: "space-between", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
-                      <span style={{ fontSize: "13px" }}>
-                        🎉 En soirée : <strong>{status.activeSalonName}</strong>
-                      </span>
-                      <button
-                        onClick={() => onJoinSalon(status.activeSalonCode)}
-                        style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "7px 12px", fontWeight: 700, fontSize: "12.5px", cursor: "pointer", color: COLORS.paper }}
-                      >
-                        Rejoindre
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          {/* Champ de recherche avec une croix au bout (visible dès qu'il y a du texte) pour l'effacer d'un geste (Mehdi, 2026-11-18). */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, marginBottom: "16px", boxSizing: "border-box" }}>
+            <input
+              ref={searchRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher : prénom, nom, surnom, ville..."
+              style={{ flex: 1, minWidth: 0, border: "none", background: "none", fontSize: "14px", outline: "none", padding: 0 }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                searchRef.current?.focus();
+              }}
+              aria-label="Effacer la recherche"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px", flexShrink: 0, display: query.length > 0 ? "flex" : "none" }}
+            >
+              <NavIcon name="x" size={15} color={COLORS.inkSoft} />
+            </button>
           </div>
+
+          {/* Classement de la liste : prénom (au départ), nom de famille, nom d'utilisateur (Mehdi, 2026-11-18). Inutile avec un seul Bibax. */}
+          {bibros.length > 1 && <PillTabs tabs={BIBAX_SORTS} active={sort} onChange={setSort} fine marginBottom="14px" />}
+
+          {bibros.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "16px" }}>Pas encore de Bibax — ajoutez-en un avec son code.</p>}
+          {bibros.length > 0 && alphaBibros.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "16px" }}>Aucun Bibax ne correspond à cette recherche.</p>}
+          {searching && alphaBibros.length > 0 && (
+            <p data-bibax-result-count style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 12px" }}>
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber }}>{formatCount(alphaBibros.length)}</span> Bibax
+            </p>
+          )}
+          {alphaBibros.length > 0 && (
+            <div ref={listRef} style={{ position: "relative", marginBottom: "16px" }}>
+              {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
+              {favBibros.length > 0 && (
+                <CheckGroup label="Favoris" isFirst>
+                  {favBibros.map((b, i) => bibaxRow(b, i === favBibros.length - 1, false))}
+                </CheckGroup>
+              )}
+              <CheckGroup label={favBibros.length > 0 ? "Tous mes Bibax" : ""} isFirst={favBibros.length === 0}>
+                {alphaBibros.map((b, i) => bibaxRow(b, i === alphaBibros.length - 1, true))}
+              </CheckGroup>
+            </div>
+          )}
         </>
       )}
 

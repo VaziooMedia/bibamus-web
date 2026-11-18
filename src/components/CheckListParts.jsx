@@ -180,7 +180,7 @@ const AVATAR_SIZE = ROW_AVATAR;
 const ROW_PAD_Y = ROW_PAD_Y_SHARED;
 
 // Une ligne : rond de profil, nom en gras, ligne de détails à points vert fluo, et à droite le nombre de checks.
-export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, count, countStyle = null, onCountClick = null, isLast, onOpen }) {
+export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, count, countStyle = null, onCountClick = null, countLabel = null, isLast, onOpen }) {
   return (
     <button
       type="button"
@@ -225,7 +225,7 @@ export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, part
               : undefined
           }
           role={onCountClick ? "button" : undefined}
-          aria-label={onCountClick ? `${name} : noter ce produit` : undefined}
+          aria-label={onCountClick ? countLabel || `${name} : noter ce produit` : undefined}
           style={{
             cursor: onCountClick ? "pointer" : undefined,
             flexShrink: 0,

@@ -10,7 +10,8 @@
 //   `label` : un texte (« Infos »), ou { prefix: "Biba", accent: "Pulse" } pour
 //             un nom de marque en deux temps : l'accent est vert sur une pastille
 //             inactive et prend la couleur du texte (sombre) sur la pastille
-//             active, qui est déjà verte.
+//             active, qui est déjà verte. Un `suffix` facultatif s'écrit après
+//             l'accent, en couleur normale : { accent: "@", suffix: "Username" }.
 //   `badge` : élément facultatif posé à cheval sur la bordure (pastille rouge
 //             de messages non lus).
 // `active` / `onChange(key)` : l'onglet choisi et le rappel au clic.
@@ -64,6 +65,7 @@ export function PillTabs({ tabs, active, onChange, marginBottom = "16px", fine =
                 <>
                   {label.prefix}
                   <span style={{ color: isActive ? undefined : COLORS.amber }}>{label.accent}</span>
+                  {label.suffix}
                 </>
               )}
               {t.badge}
