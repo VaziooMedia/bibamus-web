@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, EntityAvatar, SalonAvatar } from "./ui.jsx";
+import { PageHeader, PageFooterNav, ScrollToTopButton, EntityAvatar, SalonAvatar } from "./ui.jsx";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { HistoryCalendar, dayKeyOf } from "./HistoryCalendar.jsx";
 import { loadMyHistory, loadMyHistoryDays, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
@@ -535,6 +535,7 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
       </div>
 
       <PageFooterNav onBack={onBack} />
+      {rows !== null && groups.length > 0 && <ScrollToTopButton hideNearBottom={false} />}
     </div>
   );
 }

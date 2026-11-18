@@ -51,7 +51,9 @@ function findScrollParent(node) {
   return null;
 }
 
-export function ScrollToTopButton() {
+// `hideNearBottom` (vrai par défaut) cache le bouton quand on arrive tout en bas de la page ; Mon Historique le laisse affiché (`false`) : on y arrive précisément
+// en bas, après avoir défilé loin dans le temps, et c'est là qu'il sert.
+export function ScrollToTopButton({ hideNearBottom = true }) {
   const [visible, setVisible] = useState(false);
   const anchorRef = React.useRef(null);
   const scrollerRef = React.useRef(null);
@@ -65,7 +67,7 @@ export function ScrollToTopButton() {
       const viewport = scroller ? scroller.clientHeight : window.innerHeight;
       const total = scroller ? scroller.scrollHeight : document.body.scrollHeight;
       const nearBottom = viewport + top >= total - 140;
-      setVisible(top > 400 && !nearBottom);
+      setVisible(top > 400 && !(hideNearBottom && nearBottom));
     };
     target.addEventListener("scroll", handler);
     window.addEventListener("resize", handler);
@@ -74,7 +76,7 @@ export function ScrollToTopButton() {
       target.removeEventListener("scroll", handler);
       window.removeEventListener("resize", handler);
     };
-  }, []);
+  }, [hideNearBottom]);
 
   return (
     <>

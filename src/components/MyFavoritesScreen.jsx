@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from "react";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS, SUBTYPE_LABELS } from "../constants.js";
-import { PageHeader, PageFooterNav, EntityAvatar, HubCard } from "./ui.jsx";
+import { PageHeader, PageFooterNav, ScrollToTopButton, EntityAvatar, HubCard } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
 import { venueStreetLine, venuePostalCityLine } from "../utils.js";
 import { flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
@@ -428,6 +428,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
       </div>
 
       <PageFooterNav onBack={onBack} />
+      <ScrollToTopButton hideNearBottom={false} />
     </div>
   );
 }

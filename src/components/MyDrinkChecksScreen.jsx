@@ -12,7 +12,7 @@
 // Les identifiants viennent de la fonction `get_my_drink_checks` (script bibamus-sql-mes-drinkchecks-1-liste), puis les produits par `loadDrinksByIds`.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
-import { PageHeader, PageFooterNav } from "./ui.jsx";
+import { PageHeader, PageFooterNav, ScrollToTopButton } from "./ui.jsx";
 import { loadMyDrinkChecks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
@@ -144,6 +144,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
       </div>
 
       <PageFooterNav onBack={onBack} />
+      <ScrollToTopButton hideNearBottom={false} />
     </div>
   );
 }

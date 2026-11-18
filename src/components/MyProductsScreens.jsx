@@ -7,7 +7,7 @@
 // Les listes viennent de la base (get_my_wishlist, get_my_checked_drinks, get_my_rated_drinks) : des identifiants, puis les produits par loadDrinksByIds.
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
-import { PageHeader, PageFooterNav, HubCard } from "./ui.jsx";
+import { PageHeader, PageFooterNav, ScrollToTopButton, HubCard } from "./ui.jsx";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { loadMyWishlist, loadMyRatedDrinks, loadMyCheckedDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
@@ -247,6 +247,7 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
       </div>
 
       <PageFooterNav onBack={onBack} />
+      <ScrollToTopButton hideNearBottom={false} />
     </div>
   );
 }
