@@ -473,11 +473,11 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
             <div ref={listRef} style={{ position: "relative", marginBottom: "16px" }}>
               {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
               {favBibros.length > 0 && (
-                <CheckGroup label="Favoris" isFirst>
+                <CheckGroup label="Favoris" mark isFirst>
                   {favBibros.map((b, i) => bibaxRow(b, i === favBibros.length - 1, false))}
                 </CheckGroup>
               )}
-              <CheckGroup label={favBibros.length > 0 ? "Tous mes Bibax" : ""} isFirst={favBibros.length === 0}>
+              <CheckGroup label={favBibros.length > 0 ? "Tous mes Bibax" : ""} labelNode={<>Tous mes Biba<span style={{ color: COLORS.amber }}>x</span></>} mark isFirst={favBibros.length === 0}>
                 {alphaBibros.map((b, i) => bibaxRow(b, i === alphaBibros.length - 1, true))}
               </CheckGroup>
             </div>

@@ -6,6 +6,7 @@ import { EntityAvatar } from "./ui.jsx";
 import { DotLine, ROW_AVATAR, ROW_AVATAR_BASE, ROW_PAD_Y as ROW_PAD_Y_SHARED } from "./MyFavoritesScreen.jsx";
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
 import { FINE_PILL } from "./PillTabs.jsx";
+import { PeriodBarMark } from "./PeriodBar.jsx";
 import { formatCount } from "../utils.js";
 
 // Éléments de la ligne de détails d'un produit (DrinkChecks, Mes Produits, Mes Favoris > Produits) : définis dans DrinkRowParts.jsx, repris ici pour les écrans qui les importaient d'ici.
@@ -150,14 +151,17 @@ export function CheckTotals({ checks, unique, brand, uniqueLabel }) {
 
 // Un groupe : sa barre (drapeau éventuel + nom en vert fluo + trait + totaux éventuels en bout de ligne), puis la carte de ses lignes. Sans nom, la carte seule.
 // `counts` : { checks, unique } — les totaux du groupe, au bout de la barre, sous la forme « (12 / 3) » : parenthèses et barre en blanc, chiffres en vert fluo.
-export function CheckGroup({ label, flag = null, counts = null, isFirst, children }) {
+// `mark` (Mes Bibax, Mehdi 2026-11-18) : le nom en blanc (`ink`) précédé du petit trait vertical vert fluo des barres de période (`PeriodBarMark`) ; `labelNode` remplace le texte du nom
+// (pour une lettre en vert fluo, « Tous mes Biba<x> ») — `label` reste le texte du groupe (attribut `data-check-group`).
+export function CheckGroup({ label, labelNode = null, mark = false, flag = null, counts = null, isFirst, children }) {
   return (
     <section data-check-group={label || ""}>
       {label && (
         <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: isFirst ? "0 0 18px" : "20px 0 18px" }}>
-          <span style={{ ...SOLO_BAR_LABEL_STYLE, display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          {mark && <PeriodBarMark />}
+          <span style={{ ...SOLO_BAR_LABEL_STYLE, ...(mark ? { color: COLORS.ink } : null), display: "inline-flex", alignItems: "center", gap: "8px" }}>
             {flag}
-            {label}
+            <span>{labelNode || label}</span>
           </span>
           <div style={SOLO_BAR_LINE_STYLE} />
           {counts && (
