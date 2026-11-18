@@ -103,7 +103,8 @@ function useBibaxRequests(onBibaxAdded) {
   return { pending, sent, busyId, refresh, respond, cancelRequest };
 }
 
-// Page « Demandes » : les demandes reçues (à confirmer ou refuser), puis les demandes envoyées (à annuler).
+// Page « Demandes » : les demandes reçues (à confirmer ou refuser), puis les demandes envoyées (à annuler). Mêmes boutons ronds que la page Suggestions (décidé par Mehdi, 2026-11-18) :
+// la coche ronde verte à la place du « + » pour confirmer, le « × » rond rose fluo pour refuser.
 function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onOpenProfile }) {
   const [pendingExpanded, setPendingExpanded] = useState(true);
   const [sentExpanded, setSentExpanded] = useState(true);
@@ -141,9 +142,10 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                     respond(r.relationshipId, true);
                   }}
                   disabled={busyId === r.relationshipId}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "8px", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
+                  aria-label="Accepter"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
                 >
-                  <NavIcon name="check" size={17} color={COLORS.paper} />
+                  <NavIcon name="check" size={18} color={COLORS.paper} />
                 </button>
                 <button
                   onClick={(e) => {
@@ -151,9 +153,10 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                     respond(r.relationshipId, false);
                   }}
                   disabled={busyId === r.relationshipId}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
+                  aria-label="Refuser"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
                 >
-                  <NavIcon name="x" size={17} color={COLORS.inkSoft} />
+                  <NavIcon name="x" size={17} color={COLORS.pinkFluo} />
                 </button>
               </div>
             ))}
