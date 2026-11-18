@@ -64,7 +64,7 @@ export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss
             </span>
 
             {/* Raison de la suggestion : toujours le nombre de Bibax en commun, « 0 Bibax en commun » compris (Mehdi, 2026-11-18 ; la distance n'est plus affichée, trop intrusive). */}
-            <MutualPill n={s.mutualCount || 0} icon="users" />
+            <MutualPill n={s.mutualCount || 0} />
           </div>
         );
       })}

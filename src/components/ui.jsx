@@ -184,12 +184,11 @@ export function BibaxName({ name, lastName, nickname, city, locality, country, s
 // image, occupant `fallbackImageScale` du rond), puis l'icône `fallbackIcon` (le « B » Bibamus
 // par défaut).
 // La pastille grise « N Bibax en commun » (Mehdi, 2026-11-18 : la pastille des Suggestions de l'accueil lui plaît, reprise partout ailleurs, sans icône Bibax).
-// `n` : le nombre (0 compris) ; `icon` : une petite icône verte avant le texte (seul le carrousel de l'accueil en garde une) ; `style` : retouches de l'appelant ; le reste (data-…) est passé tel quel.
+// `n` : le nombre (0 compris) ; `style` : retouches de l'appelant ; le reste (data-…) est passé tel quel. Pas d'icône (Mehdi, 2026-11-18, y compris sur le carrousel de l'accueil, qui en avait une au début).
 // Dans une colonne flex, l'appelant l'enveloppe dans un <div> pour qu'elle garde sa largeur de texte.
-export function MutualPill({ n, icon = null, style = null, ...rest }) {
+export function MutualPill({ n, style = null, ...rest }) {
   return (
-    <span {...rest} style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: COLORS.paperAlt, borderRadius: "999px", padding: "3px 9px", fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap", flexShrink: 0, ...style }}>
-      {icon && <NavIcon name={icon} size={11} color={COLORS.amber} />}
+    <span {...rest} style={{ display: "inline-flex", alignItems: "center", background: COLORS.paperAlt, borderRadius: "999px", padding: "3px 9px", fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap", flexShrink: 0, ...style }}>
       {mutualLabel(n)}
     </span>
   );
