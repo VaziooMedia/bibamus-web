@@ -18,6 +18,7 @@ import {
   loadSentBibaxRequests,
   loadBibaxSuggestions,
   loadMyBibaxUsernames,
+  loadMyBibaxMutualCounts,
   attachUsernames,
   dismissBibaxSuggestion,
   respondBibaxRequest,
@@ -282,9 +283,11 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   // Classement de la liste de Mes Bibax : « first » (prénom), « last » (nom de famille) ou « username » (@nom). `usernames` : { userId: nom d'utilisateur }, lus à l'ouverture de la page « Bibax ».
   const [sort, setSort] = useState(restored?.sort || "first");
   const [usernames, setUsernames] = useState(restored ? restored.usernames ?? null : null);
+  // `mutuals` : { userId: nombre de Bibax en commun } (ligne 4 de chaque Bibax ; absent = 0, la ligne n'est pas affichée), lus eux aussi à l'ouverture de la page « Bibax ».
+  const [mutuals, setMutuals] = useState(restored ? restored.mutuals ?? null : null);
   useEffect(() => {
-    save({ query, tab, suggestions, sort, usernames });
-  }, [query, tab, suggestions, sort, usernames]);
+    save({ query, tab, suggestions, sort, usernames, mutuals });
+  }, [query, tab, suggestions, sort, usernames, mutuals]);
   const viewBibro = onViewBibro ? open(onViewBibro) : onViewBibro;
   const openBibaxProfile = onOpenBibaxProfile ? open(onOpenBibaxProfile) : onOpenBibaxProfile;
   const requests = useBibaxRequests(onBibaxAdded || (() => {}));
@@ -308,6 +311,10 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
     let alive = true;
     loadMyBibaxUsernames().then((list) => {
       if (alive && list) setUsernames((prev) => (prev && JSON.stringify(prev) === JSON.stringify(list) ? prev : list));
+    });
+    // Le nombre de Bibax en commun (ligne 4) : même règle, si la lecture échoue on garde ce qu'on avait (ou rien : pas de 4ᵉ ligne).
+    loadMyBibaxMutualCounts().then((list) => {
+      if (alive && list) setMutuals((prev) => (prev && JSON.stringify(prev) === JSON.stringify(list) ? prev : list));
     });
     return () => {
       alive = false;
@@ -353,7 +360,9 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   // Classé par nom de famille, le nom s'écrit « Nom Prénom » (la lettre de l'index est la première du nom).
   const bibaxRow = (b, isLast, inAlphaList) => {
     // Trois lignes (Mehdi, 2026-11-18, même modèle que Mes Favoris > Bibax, voir `BibaxLines.jsx`) : 1. nom ; 2. @nom (« @ » vert fluo) puis surnom en italique ; 3. commune (village) puis drapeau du pays.
-    const lines = bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country });
+    // Ligne 4 (Mehdi, 2026-11-18, comme dans Mes Favoris > Bibax) : « N Bibax en commun », rien à 0.
+    const common = (mutuals && mutuals[b.userId]) || 0;
+    const lines = [...bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country }), common > 0 ? [`${common} Bibax en commun`] : []];
     const first = b.firstName || b.name;
     const fullName = (sort === "last" ? [b.lastName, first] : [first, b.lastName]).filter(Boolean).join(" ") || "Bibax";
     return (

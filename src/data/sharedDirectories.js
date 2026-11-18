@@ -2706,6 +2706,17 @@ export async function loadMyFavoriteBibaxDetails() {
   return Object.fromEntries((data || []).map((r) => [r.user_id, { username: r.username || "", mutual: r.mutual_bibax_count || 0 }]));
 }
 
+// « Mes Bibax » : le nombre de Bibax en commun de CHACUN de mes Bibax confirmés, en UNE lecture (`get_my_bibax_mutual_counts`, script `bibamus-sql-mes-bibax-en-commun.sql`).
+// Rend `{ [userId]: nombre }` pour les seuls Bibax qui en ont au moins un (absent = 0), ou `null` si la lecture échoue (la liste n'affiche alors pas la ligne).
+export async function loadMyBibaxMutualCounts() {
+  const { data, error } = await supabase.rpc("get_my_bibax_mutual_counts");
+  if (error) {
+    console.error("loadMyBibaxMutualCounts:", error);
+    return null;
+  }
+  return Object.fromEntries((data || []).map((r) => [r.user_id, r.mutual_bibax_count || 0]));
+}
+
 export async function loadBibaxMediaAssets(otherUserId) {
   const { data, error } = await supabase.rpc("get_bibax_media_assets", { p_other_user_id: otherUserId });
   if (error) {
