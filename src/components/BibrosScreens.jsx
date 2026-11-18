@@ -51,8 +51,8 @@ import residenceIconUrl from "../assets/brand/residence-icon.png";
 
 // Mes Bibax : trois pages à pastilles — « Bibax » (la liste de mes Bibax), « Suggestions » (la liste des suggestions) et « Demandes » (reçues et envoyées), décision de Mehdi du 2026-11-18.
 // Les demandes sont lues au niveau de la page : la pastille « Demandes » affiche ainsi le nombre de demandes reçues quel que soit l'onglet ouvert.
-// Taille des boutons ronds des Demandes (reçues : coche et croix l'une sous l'autre ; envoyées : croix grise), plus petits que ceux des Suggestions (34 px) — Mehdi, 2026-11-18.
-const REQUEST_BTN = "28px";
+// Taille des boutons ronds des Demandes (reçues : coche et croix l'une sous l'autre ; envoyées : croix grise), plus petits que ceux des Suggestions (34 px) — Mehdi, 2026-11-18 (28 px d'abord, puis 24 px : « plus petit »).
+const REQUEST_BTN = "24px";
 
 function useBibaxRequests(onBibaxAdded) {
   const [pending, setPending] = useState(null);
@@ -159,7 +159,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                     aria-label="Accepter"
                     style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
                   >
-                    <NavIcon name="check" size={15} color={COLORS.paper} />
+                    <NavIcon name="check" size={13} color={COLORS.paper} />
                   </button>
                   <button
                     onClick={(e) => {
@@ -170,7 +170,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                     aria-label="Refuser"
                     style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", boxSizing: "border-box", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
                   >
-                    <NavIcon name="x" size={14} color={COLORS.pinkFluo} />
+                    <NavIcon name="x" size={12} color={COLORS.pinkFluo} />
                   </button>
                 </div>
               </div>
@@ -203,9 +203,9 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} style={{ fontSize: "13.5px", color: COLORS.ink }} />
-                  <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>En attente de confirmation</p>
+                  <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.pinkFluo }}>En attente de confirmation</p>
                 </div>
-                {/* Annuler la demande : rond avec une croix, tout en gris, de la même taille que les boutons des demandes reçues (Mehdi, 2026-11-18). */}
+                {/* Annuler la demande : rond avec une croix grise, contour gris foncé (discret), de la même taille que les boutons des demandes reçues (Mehdi, 2026-11-18). */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -213,9 +213,9 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                   }}
                   disabled={busyId === r.relationshipId}
                   aria-label="Annuler la demande"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.inkSoft}`, borderRadius: "50%", boxSizing: "border-box", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "50%", boxSizing: "border-box", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
                 >
-                  <NavIcon name="x" size={14} color={COLORS.inkSoft} />
+                  <NavIcon name="x" size={12} color={COLORS.inkSoft} />
                 </button>
               </div>
             ))}
