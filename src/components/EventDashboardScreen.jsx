@@ -19,7 +19,7 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import { SalonAvatar, PageHeader, BackFooterLink, PrimaryButton, MoneyAmount } from "./ui.jsx";
 import { ParticipantsEditor } from "./Pickers.jsx";
 import { PotCard, SalonSection, FinalTotalCard, SplitBillCard, BibaBobModal, WaterAlertModal, usePersistedToggle } from "./DashboardParts.jsx";
-import { formatDate, formatTime, nextId, makeSearchMatcher, entityNames, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson, myDrinksList, volumeUnit } from "../utils.js";
+import { formatDate, formatTime, nextId, makeSearchMatcher, entityNames, kcalForDrink, computeMissingVenueItems, capitalizeFirst, genderAgree, findMenuEntryById, findEntryForEvent, flattenMenu, homeDrinksByPerson, myDrinksList, volumeUnit, formatCount, formatQuantity, formatDecimal } from "../utils.js";
 import { HomeServeSheet } from "./HomeServeSheet.jsx";
 import { ServiceTag } from "./ServiceTag.jsx";
 import { loadSalon } from "../data/salons.js";
@@ -182,7 +182,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
   // in this card for the smaller, secondary money figures.
   const formatEuroTrim = (value) => {
     const n = Math.round(value * 100) / 100;
-    return n % 1 === 0 ? `${n} €` : `${n.toFixed(2).replace(".", ",")} €`;
+    return n % 1 === 0 ? `${formatCount(n)} €` : `${formatDecimal(n, 2)} €`;
   };
 
   const ticketsPurchased = (event.ticketPurchases || []).reduce((sum, p) => sum + p.quantity, 0);
@@ -1157,7 +1157,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
               <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px" }}>
                 {caloriesInfo.total > 0 ? (
                   <>
-                    <span style={{ color: COLORS.ink }}>≈</span> <span style={{ color: COLORS.amber }}>{caloriesInfo.total}</span>
+                    <span style={{ color: COLORS.ink }}>≈</span> <span style={{ color: COLORS.amber }}>{formatCount(caloriesInfo.total)}</span>
                   </>
                 ) : (
                   <span style={{ color: COLORS.amber }}>—</span>
@@ -1201,7 +1201,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                       <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{`- ${glass.name}`}</span>
                       {/* Le volume en vert fluo, sans gras. */}
                       {glass.volumeCl != null && (
-                        <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400, flexShrink: 0, whiteSpace: "pre" }}>{` ${String(glass.volumeCl).replace(".", ",")}\u00a0${volumeUnit(glass.type)}`}</span>
+                        <span data-testid="my-drink-volume" style={{ color: COLORS.amber, fontWeight: 400, flexShrink: 0, whiteSpace: "pre" }}>{` ${formatQuantity(glass.volumeCl)}\u00a0${volumeUnit(glass.type)}`}</span>
                       )}
                     </span>
                     {/* Le type de service, en petite pastille sur la ligne du dessous ; « Shot » en plus pour un shot dans un salon @Home. */}
@@ -1209,7 +1209,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                   </span>
                   {/* Les kcal dans une colonne à droite, précédée d'une barre verticale (d'une ligne à l'autre, la barre se prolonge) ; masquées avec l'œil de la case KCAL. */}
                   <span data-testid="my-drink-kcal" style={{ flexShrink: 0, width: "84px", boxSizing: "border-box", borderLeft: `1px solid ${COLORS.paperAlt}`, padding: "1px 0 1px 10px" }}>
-                    {caloriesHidden ? "—" : glass.kcal != null ? `${glass.kcal} kcal` : "kcal s.i."}
+                    {caloriesHidden ? "—" : glass.kcal != null ? `${formatCount(glass.kcal)} kcal` : "kcal s.i."}
                   </span>
                 </div>
               ))}
@@ -1618,7 +1618,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                             {/* Nom + volume sur une seule ligne : si c'est trop long, le nom se coupe par \u00ab \u2026 \u00bb ; le volume reste entier. */}
                             <span style={{ display: "flex", minWidth: 0 }}>
                               <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{`- ${it.name}`}</span>
-                              {it.volumeCl != null && <span style={{ flexShrink: 0, whiteSpace: "pre" }}>{` ${String(it.volumeCl).replace(".", ",")}\u00a0${volumeUnit(it.type)}`}</span>}
+                              {it.volumeCl != null && <span style={{ flexShrink: 0, whiteSpace: "pre" }}>{` ${formatQuantity(it.volumeCl)}\u00a0${volumeUnit(it.type)}`}</span>}
                             </span>
                             {/* Le type de service (et « Shot » pour un shot), en petites pastilles sur la ligne du dessous. */}
                             <ServiceTag mode={it.servingMode} shot={it.shot} />

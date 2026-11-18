@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { COLORS, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PrimaryButton, MoneyAmount } from "./ui.jsx";
-import { formatMoney, findMenuEntryById } from "../utils.js";
+import { formatMoney, findMenuEntryById, formatCount } from "../utils.js";
 import { loadSalon } from "../data/salons.js";
 import { drinkLabel } from "../beerDerivatives.js";
 import { useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
@@ -200,7 +200,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                   <div key={id} style={{ display: "flex", alignItems: "baseline", gap: "8px", fontSize: "15px", fontWeight: 700 }}>
                     <span style={{ flex: 1 }}>
                       {drinkName(id)}
-                      {drinkVolume(id) && <span style={{ fontWeight: 800, color: COLORS.amber, fontSize: "13px" }}> {drinkVolume(id)}cl.</span>}
+                      {drinkVolume(id) && <span style={{ fontWeight: 800, color: COLORS.amber, fontSize: "13px" }}> {formatCount(drinkVolume(id))}cl.</span>}
                       {undefinedPrice && (
                         <span style={{ color: COLORS.alert, fontWeight: 700, fontSize: "11px", marginLeft: "8px", fontFamily: "'Work Sans', sans-serif" }}>
                           prix non défini
@@ -325,7 +325,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                         <div key={id} style={{ display: "flex", alignItems: "baseline", gap: "8px", fontSize: "14px", opacity: 0.9 }}>
                           <span style={{ flex: 1 }}>
                             {drinkName(id)}
-                            {drinkVolume(id) && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {drinkVolume(id)}cl.</span>}
+                            {drinkVolume(id) && <span style={{ color: COLORS.amber, fontWeight: 700 }}> {formatCount(drinkVolume(id))}cl.</span>}
                           </span>
                           <span style={{ width: "28px", textAlign: "center", fontFamily: "'Urbanist', sans-serif", opacity: 0.7, flexShrink: 0 }}>×{n}</span>
                           <span style={{ width: "58px", textAlign: "right", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber, flexShrink: 0 }}>

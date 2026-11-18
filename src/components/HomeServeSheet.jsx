@@ -19,10 +19,10 @@ import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
 import { drinkLabel, volumeAfterVariantChange } from "../beerDerivatives.js";
-import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent, canBeShot, startsAsShot, volumeUnit } from "../utils.js";
+import { drinkTypeLabel, isAlcoholicDrink, findEntryForEvent, canBeShot, startsAsShot, volumeUnit, formatQuantity } from "../utils.js";
 import { searchDrinks, loadDrinksByIds } from "../data/sharedDirectories.js";
 
-const volumeLabel = (cl, type) => (cl != null ? ` ${String(cl).replace(".", ",")} ${volumeUnit(type)}` : "");
+const volumeLabel = (cl, type) => (cl != null ? ` ${formatQuantity(cl)} ${volumeUnit(type)}` : "");
 
 // Type de service : même ordre et mêmes libellés que le « Type de service par défaut » de la fiche produit côté Gestion.
 const SERVING_MODE_OPTIONS = [

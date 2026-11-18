@@ -400,7 +400,7 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
           typeIcon={beerCheckIconUrl}
           typePrefix="Drink"
           typeSuffix="Check"
-          details={it.volumeCl ? [<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{it.volumeCl}cl</span>] : []}
+          details={it.volumeCl ? [<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{formatCount(it.volumeCl)}cl</span>] : []}
           venueName={shownVenueName(it.venueId)}
           dateParts={dateParts(it.at)}
           isLast={isLast}

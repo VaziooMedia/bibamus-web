@@ -11,7 +11,7 @@ import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { loadMyStatsOverview, loadMyVenueRanking, loadMyDrinkRanking, loadMyMonthlyDrinks, loadVenuesByIds, loadDrinksByIds } from "../data/sharedDirectories.js";
-import { formatMoney } from "../utils.js";
+import { formatMoney, formatCount } from "../utils.js";
 
 const MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
@@ -80,11 +80,11 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
   const cards = data
     ? [
         { key: "intro", bg: COLORS.surfaceAlt, accent: COLORS.amber, icon: "star", title: `Ton année Bibamus`, big: String(year), sub: null },
-        data.bestMonth && { key: "month", bg: COLORS.surfaceAlt, accent: COLORS.bobYellow, icon: "calendar", title: "Ton mois de folie", big: `${MONTH_NAMES[data.bestMonth.month - 1]}`, sub: `${data.bestMonth.quantity} boisson${data.bestMonth.quantity > 1 ? "s" : ""}` },
-        data.topVenue && { key: "venue", bg: COLORS.surfaceAlt, accent: COLORS.amber, icon: "home", title: "Ton QG", big: data.topVenue.name, sub: `${data.topVenue.value} visite${data.topVenue.value > 1 ? "s" : ""}`, onClick: () => openVenue(data.topVenue.venueId) },
-        data.topDrink && { key: "drink", bg: COLORS.surfaceAlt, accent: COLORS.jetonFluo, icon: "glass", title: "Ta boisson de l'année", big: data.topDrink.name, sub: `${data.topDrink.value} verre${data.topDrink.value > 1 ? "s" : ""}`, onClick: () => openDrink(data.topDrink.drinkId) },
-        data.topBibro && { key: "bibro", bg: COLORS.surfaceAlt, accent: COLORS.wine, icon: "users", title: "Ton Bibax de l'année", big: data.topBibro.bibro.alias || data.topBibro.bibro.name, sub: `${data.topBibro.count} sortie${data.topBibro.count > 1 ? "s" : ""} ensemble`, onClick: () => openBibro && openBibro(data.topBibro.bibro.code) },
-        data.overview.distinctVenues > 0 && { key: "explorer", bg: COLORS.surfaceAlt, accent: COLORS.pinkFluo, icon: "map", title: "Explorateur", big: String(data.overview.distinctVenues), sub: `établissement${data.overview.distinctVenues > 1 ? "s" : ""} différent${data.overview.distinctVenues > 1 ? "s" : ""} visité${data.overview.distinctVenues > 1 ? "s" : ""}` },
+        data.bestMonth && { key: "month", bg: COLORS.surfaceAlt, accent: COLORS.bobYellow, icon: "calendar", title: "Ton mois de folie", big: `${MONTH_NAMES[data.bestMonth.month - 1]}`, sub: `${formatCount(data.bestMonth.quantity)} boisson${data.bestMonth.quantity > 1 ? "s" : ""}` },
+        data.topVenue && { key: "venue", bg: COLORS.surfaceAlt, accent: COLORS.amber, icon: "home", title: "Ton QG", big: data.topVenue.name, sub: `${formatCount(data.topVenue.value)} visite${data.topVenue.value > 1 ? "s" : ""}`, onClick: () => openVenue(data.topVenue.venueId) },
+        data.topDrink && { key: "drink", bg: COLORS.surfaceAlt, accent: COLORS.jetonFluo, icon: "glass", title: "Ta boisson de l'année", big: data.topDrink.name, sub: `${formatCount(data.topDrink.value)} verre${data.topDrink.value > 1 ? "s" : ""}`, onClick: () => openDrink(data.topDrink.drinkId) },
+        data.topBibro && { key: "bibro", bg: COLORS.surfaceAlt, accent: COLORS.wine, icon: "users", title: "Ton Bibax de l'année", big: data.topBibro.bibro.alias || data.topBibro.bibro.name, sub: `${formatCount(data.topBibro.count)} sortie${data.topBibro.count > 1 ? "s" : ""} ensemble`, onClick: () => openBibro && openBibro(data.topBibro.bibro.code) },
+        data.overview.distinctVenues > 0 && { key: "explorer", bg: COLORS.surfaceAlt, accent: COLORS.pinkFluo, icon: "map", title: "Explorateur", big: formatCount(data.overview.distinctVenues), sub: `établissement${data.overview.distinctVenues > 1 ? "s" : ""} différent${data.overview.distinctVenues > 1 ? "s" : ""} visité${data.overview.distinctVenues > 1 ? "s" : ""}` },
         {
           key: "recap",
           bg: COLORS.surfaceAlt,
@@ -93,8 +93,8 @@ export function WrappedScreen({ onBack, openVenue, openDrink, openBibro, bibros,
           title: "En résumé",
           big: null,
           recap: [
-            { label: "Boissons commandées", value: data.overview.drinksOrdered },
-            { label: "Visites", value: data.overview.visits },
+            { label: "Boissons commandées", value: formatCount(data.overview.drinksOrdered) },
+            { label: "Visites", value: formatCount(data.overview.visits) },
             data.overview.moneyEuro > 0 && { label: "Dépensé", value: formatMoney(data.overview.moneyEuro, "euro"), isMoney: true },
           ].filter(Boolean),
         },

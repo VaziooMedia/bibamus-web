@@ -38,7 +38,7 @@ import {
   archiveMyJetonMovements,
   loadMyJetonSpentSince,
 } from "../data/sharedDirectories.js";
-import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, displayedAbv, displayedAlcoholTier, volumeUnit, kcalOfPortion, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames, formatCount } from "../utils.js";
+import { drinkTypeLabel, resolveMenuItem, formatMoney, isAlcoholicDrink, flattenMenu, displayedAbv, displayedAlcoholTier, volumeUnit, kcalOfPortion, SERVING_MODE_OPTIONS, safeServingMode, defaultServingModeText, canBeShot, startsAsShot, makeSearchMatcher, entityNames, formatCount, formatDecimal } from "../utils.js";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import carteIconUrl from "../assets/brand/carte.svg";
 import genericIconUrl from "../assets/brand/generic-icon-green.svg";
@@ -263,7 +263,7 @@ function MenuItemBlock({ item, onClick }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
           <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>{item.name}</span>
-          {item.volumeCl && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{item.volumeCl}{volumeUnit(item.type)}</span>}
+          {item.volumeCl && <span style={{ fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{formatCount(item.volumeCl)}{volumeUnit(item.type)}</span>}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "5px", flexWrap: "wrap" }}>
@@ -1068,7 +1068,7 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, checkinCount, onSave
 // Nombre de jetons affiché comme partout ailleurs dans l'app (MoneyAmount) : au dixième près, sans « .0 » (les demi-jetons existent : 1.5).
 const formatJetonCount = (value) => {
   const n = Math.round(value * 10) / 10;
-  return n % 1 === 0 ? n : n.toFixed(1);
+  return n % 1 === 0 ? formatCount(n) : n.toFixed(1);
 };
 
 // Une ligne du journal (produit, volume, prix, lieu, date, croix de suppression) — la même dans la liste de BibaSolo (période en
@@ -1122,7 +1122,7 @@ export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete,
                 "Free"
               ) : (
                 <>
-                  {c.price.toFixed(2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
+                  {formatDecimal(c.price, 2)} <span style={{ fontSize: "11px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
                 </>
               )}
             </span>
@@ -1136,7 +1136,7 @@ export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete,
             service ; sinon le type de service s'il est défini. */}
         {(() => {
           const detailParts = [];
-          if (c.volumeCl) detailParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{c.volumeCl}{volumeUnit(drink?.type)}</span>);
+          if (c.volumeCl) detailParts.push(<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{formatCount(c.volumeCl)}{volumeUnit(drink?.type)}</span>);
           if (showMentions && displayedAbv(drink) != null) detailParts.push(<span key="abv">{String(drink.abv).replace(".", ",")}% ABV</span>);
           const alcoholTier = showMentions ? displayedAlcoholTier(drink) : null;
           if (alcoholTier) detailParts.push(<span key="tier" title={alcoholTier.title} style={{ whiteSpace: "nowrap" }}>{alcoholTier.label}</span>);
@@ -1173,7 +1173,7 @@ export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete,
         {c.offeredPrice > 0 && (
           <div data-journal-line="offered" style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", color: COLORS.inkSoft }}>
             <span style={{ fontWeight: 700, color: COLORS.amber, display: "inline-flex", alignItems: "center", gap: "3px" }}>
-              + {c.currency === "jeton" ? <MoneyAmount value={c.offeredPrice} currency="jeton" jetonIcon="pink" jetonIconSize={12} /> : <>{c.offeredPrice.toFixed(2)} €</>}
+              + {c.currency === "jeton" ? <MoneyAmount value={c.offeredPrice} currency="jeton" jetonIcon="pink" jetonIconSize={12} /> : <>{formatDecimal(c.offeredPrice, 2)} €</>}
             </span>
             offerts
           </div>
@@ -2218,7 +2218,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
             <div>
               {/* Le nombre est centré dans le bloc ; le sigle € est posé juste à sa droite sans entrer dans le centrage. */}
               <span data-spent-amount="1" style={{ position: "relative", display: "inline-block" }}>
-                {(totals.price + jetonPurchasesEuro).toFixed(2)}
+                {formatDecimal(totals.price + jetonPurchasesEuro, 2)}
                 <span data-spent-symbol="1" style={{ position: "absolute", left: "100%", top: 0, marginLeft: "4px" }}>
                   <span style={{ fontSize: "13px", color: COLORS.inkSoft, fontWeight: 600 }}>€</span>
                 </span>
@@ -2240,12 +2240,12 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
               ].map(([key, label, value]) => (
                 <div key={key} data-spent-line={key} style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
                   <span>{label}</span>
-                  <span style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{value.toFixed(2)} €</span>
+                  <span style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{formatDecimal(value, 2)} €</span>
                 </div>
               ))}
               <div data-spent-line="total" style={{ display: "flex", justifyContent: "space-between", gap: "10px", marginTop: "6px", paddingTop: "6px", borderTop: `1px solid ${COLORS.paperAlt}`, fontWeight: 700 }}>
                 <span>Total</span>
-                <span style={{ color: COLORS.amber, whiteSpace: "nowrap" }}>{(totals.price + jetonPurchasesEuro).toFixed(2)} €</span>
+                <span style={{ color: COLORS.amber, whiteSpace: "nowrap" }}>{formatDecimal(totals.price + jetonPurchasesEuro, 2)} €</span>
               </div>
             </div>
           )}
@@ -2254,7 +2254,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           {caloriesHidden ? (
             <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.inkSoft }}>—</div>
           ) : (
-            <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>{totals.kcal}</div>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: COLORS.amber }}>{formatCount(totals.kcal)}</div>
           )}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginTop: "2px" }}>
             <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>Kcal</span>

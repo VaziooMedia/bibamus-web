@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { COLORS, MENU_CATEGORIES, VOLUME_DISPLAY_TYPES } from "../constants.js";
 import { PrimaryButton } from "./ui.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
-import { drinkTypeLabel, isAlcoholicDrink } from "../utils.js";
+import { drinkTypeLabel, isAlcoholicDrink, formatCount } from "../utils.js";
 import { CountryFlagImg } from "./icons.jsx";
 
 export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
@@ -189,7 +189,7 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
               <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: phase === "result" ? "19px" : "15px", color: COLORS.chalkWhite, lineHeight: 1.2 }}>
                 {displayName}
                 {phase === "result" && resultDrink && resultDrink.volumeCl && VOLUME_DISPLAY_TYPES.includes(resultDrink.type) && (
-                  <span style={{ color: COLORS.amber }}> {resultDrink.volumeCl}cl.</span>
+                  <span style={{ color: COLORS.amber }}> {formatCount(resultDrink.volumeCl)}cl.</span>
                 )}
               </span>
               {phase === "result" && resultDrink && (
