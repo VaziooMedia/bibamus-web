@@ -64,6 +64,31 @@ const typePart = (icon, prefix, suffix) => (
 
 // Ligne d'un DrinkCheck, d'un PlaceCheck ou d'une soirée BibaRoom — même squelette que SoloCheckinRow : rond de 40 px à gauche, à droite le
 // titre (gras), la ligne « type » (icône + nom du type, puis les détails), le lieu (icône vert fluo) et la date + l'heure.
+// Le « / » des dates (« Lundi 16/11 », « 16/11/2026 ») s'écrit en blanc (`ink`), le reste du texte garde sa couleur (Mehdi, 2026-11-18).
+function slashWhite(text) {
+  return String(text)
+    .split("/")
+    .map((chunk, i) => (
+      <React.Fragment key={i}>
+        {i > 0 && <span style={{ color: COLORS.ink }}>/</span>}
+        {chunk}
+      </React.Fragment>
+    ));
+}
+
+// Le texte d'une barre de période : le nom du jour en blanc (`ink`), la date (« 17/11 », avec l'année si ce n'est pas l'année en cours) en `amber` avec ses « / » en blanc ;
+// « Aujourd'hui » est tout en blanc (Mehdi, 2026-11-18, variante B).
+function periodLabel(text) {
+  const white = { color: COLORS.ink };
+  const m = /^(\S+) (\d{2}\/\d{2}(?:\/\d{4})?)$/.exec(text);
+  if (!m) return <span style={white}>{text}</span>;
+  return (
+    <>
+      <span style={white}>{m[1]}</span> {slashWhite(m[2])}
+    </>
+  );
+}
+
 function HistoryRow({ avatar, title, typeIcon, typePrefix, typeSuffix, details = [], venueName, dateParts, isLast, onOpen, kind }) {
   return (
     <button
@@ -98,7 +123,7 @@ function HistoryRow({ avatar, title, typeIcon, typePrefix, typeSuffix, details =
             <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venueName}</span>
           </div>
         )}
-        <DotLine line="date" parts={dateParts.map((p, i) => <span key={i}>{p}</span>)} />
+        <DotLine line="date" parts={dateParts.map((p, i) => <span key={i}>{slashWhite(p)}</span>)} />
       </div>
     </button>
   );
@@ -504,7 +529,8 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
           groups.map((g, gi) => (
             <React.Fragment key={g.key}>
               <div data-history-bar={g.key} style={{ display: "flex", alignItems: "center", gap: "10px", margin: gi === 0 ? "0 0 18px" : "20px 0 18px" }}>
-                <span data-history-label="1" style={SOLO_BAR_LABEL_STYLE}>{groupLabel(g)}</span>
+                <span aria-hidden="true" style={{ width: "3px", height: "14px", borderRadius: "2px", background: COLORS.amber, flexShrink: 0, marginRight: "-2px" }} />
+                <span data-history-label="1" style={SOLO_BAR_LABEL_STYLE}>{periodLabel(groupLabel(g))}</span>
                 <div style={SOLO_BAR_LINE_STYLE} />
               </div>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
