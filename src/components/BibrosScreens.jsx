@@ -27,6 +27,7 @@ import {
   sendBibaxRequest,
   cancelBibaxRequest,
   loadMutualBibaxCount,
+  loadBibroBibaxList,
   loadBibaxCount,
   loadMyProfileStats,
   searchBibaxByName,
@@ -44,6 +45,7 @@ import { CheckGroup, CheckRow, letterOf } from "./CheckListParts.jsx";
 import { BibaxIdentity, bibaxDetailParts } from "./BibaxLines.jsx";
 import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
 import { BibaxStatsContent } from "./BibaxStatsContent.jsx";
+import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -525,6 +527,41 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
 }
 
 // Retour d'une fiche (norme de l'app, voir `useListReturn`) : la liste se remet à la hauteur où on l'avait laissée ; la flèche retour vers la fiche du Bibax efface la mémoire.
+// Une ligne de la liste des Bibax d'un autre Bibax (en commun, ou tous) : le rond (anneau rose s'il a une story active, qui s'ouvre au toucher) puis son identité.
+function BibaxLinkRow({ b, stories, onOpen, onOpenStoryAuthor }) {
+  const hasStory = stories.length > 0;
+  return (
+    <div
+      onClick={() => onOpen(b.code)}
+      style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", cursor: "pointer" }}
+    >
+      <div
+        onClick={hasStory ? (e) => { e.stopPropagation(); onOpenStoryAuthor?.({ authorId: b.userId, authorName: b.name, authorAvatarUrl: b.avatarUrl, stories }); } : undefined}
+        style={{
+          // Même rond que dans « Mes Bibax » (voir `CARD_AVATAR`) : 48 px en tout ; avec une story, l'anneau rose (2 px + 2 px d'écart) est pris DANS les 48 px, sans story le rond est plein.
+          width: `${CARD_AVATAR}px`,
+          height: `${CARD_AVATAR}px`,
+          borderRadius: "50%",
+          border: hasStory ? "2px solid #FF2C8F" : "none",
+          padding: hasStory ? "2px" : 0,
+          boxSizing: "border-box",
+          margin: avatarOverhang(38, 38),
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: hasStory ? "pointer" : "default",
+        }}
+      >
+        <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+          {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={Math.round((CARD_AVATAR - (hasStory ? 8 : 0)) / 2)} color={COLORS.amber} />}
+        </div>
+      </div>
+      <BibaxIdentity name={b.name} lastName={b.lastName} username={b.username} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ flex: 1, fontSize: "15px" }} />
+    </div>
+  );
+}
+
 export function MutualBibaxScreen({ bibros, bibroName, onBack: onBackProp, onViewBibro: onViewBibroProp, onOpenStoryAuthor, mainScrollRef }) {
   const { save, open, leave } = useListReturn("mutualBibax", mainScrollRef, { valid: (m) => m.ctx === `${bibroName}|${bibros.length}` });
   const onBack = leave(onBackProp);
@@ -549,42 +586,146 @@ export function MutualBibaxScreen({ bibros, bibroName, onBack: onBackProp, onVie
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {bibros.map((b) => {
-          const stories = pulseStories.filter((s) => s.authorId === b.userId);
-          const hasStory = stories.length > 0;
-          return (
-            <div
-              key={b.code}
-              onClick={() => onViewBibro(b.code)}
-              style={{ display: "flex", alignItems: "center", gap: "10px", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", cursor: "pointer" }}
-            >
-              <div
-                onClick={hasStory ? (e) => { e.stopPropagation(); onOpenStoryAuthor?.({ authorId: b.userId, authorName: b.name, authorAvatarUrl: b.avatarUrl, stories }); } : undefined}
-                style={{
-                  // Même rond que dans « Mes Bibax » (voir `CARD_AVATAR`) : 48 px en tout ; avec une story, l'anneau rose (2 px + 2 px d'écart) est pris DANS les 48 px, sans story le rond est plein.
-                  width: `${CARD_AVATAR}px`,
-                  height: `${CARD_AVATAR}px`,
-                  borderRadius: "50%",
-                  border: hasStory ? "2px solid #FF2C8F" : "none",
-                  padding: hasStory ? "2px" : 0,
-                  boxSizing: "border-box",
-                  margin: avatarOverhang(38, 38),
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: hasStory ? "pointer" : "default",
-                }}
-              >
-                <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                  {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={Math.round((CARD_AVATAR - (hasStory ? 8 : 0)) / 2)} color={COLORS.amber} />}
-                </div>
-              </div>
-              <BibaxIdentity name={b.name} lastName={b.lastName} username={b.username} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ flex: 1, fontSize: "15px" }} />
-            </div>
-          );
-        })}
+        {bibros.map((b) => (
+          <BibaxLinkRow key={b.code} b={b} stories={pulseStories.filter((s) => s.authorId === b.userId)} onOpen={onViewBibro} onOpenStoryAuthor={onOpenStoryAuthor} />
+        ))}
       </div>
+
+      <BackFooterLink onClick={onBack} />
+    </div>
+  );
+}
+
+// Le bloc « Bibax » de la fiche d'un Bibax (Mehdi, 2026-11-19) : la liste de SES Bibax, avec les mêmes lignes que « Bibax en commun » (rond, nom, @nom, ville · pays). Elle est lue par
+// `get_bibax_of` (script bibamus-sql-bibax-listes-3-bibax), qui respecte son partage « Liste de Bibax » et ne dit jamais qui l'on est soi-même dans la liste ; une personne qui ne la partage
+// pas laisse un message à la place de la liste. Une ligne ouvre la fiche de la personne (`onViewBibro` : à Mes Bibax si c'est l'un des miens, sinon son profil public), dont le retour ramène ici.
+// Comme dans « Mes Bibax » (Mehdi, 2026-11-19) : un champ de recherche (prénom, nom, surnom, ville, pays ; croix pour l'effacer, nombre de résultats pendant une recherche) et, à partir de 30 Bibax,
+// l'index des lettres sur le bord droit (première lettre du prénom). Le classement reste celui du prénom ; la recherche est gardée au retour d'une fiche.
+export function BibroBibaxListScreen({ other, onBack: onBackProp, onViewBibro: onViewBibroProp, onOpenStoryAuthor, mainScrollRef }) {
+  const { restored, save, open, leave } = useListReturn("bibroBibaxList", mainScrollRef, { valid: (m) => m.ctx === other.userId });
+  const onBack = leave(onBackProp);
+  const onViewBibro = open(onViewBibroProp);
+  const [list, setList] = useState(restored ? restored.list : null); // null = chargement
+  const [query, setQuery] = useState(restored ? restored.query || "" : "");
+  const searchRef = useRef(null);
+  const listRef = useRef(null);
+  const [hidden, setHidden] = useState(false);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [pulseStories, setPulseStories] = useState([]);
+
+  useEffect(() => {
+    loadPulseStories().then(setPulseStories);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setError(false);
+    loadBibroBibaxList(other.userId).then(async (result) => {
+      if (cancelled) return;
+      if (result?.hidden) {
+        setHidden(true);
+        setList([]);
+        return;
+      }
+      if (!result) {
+        // Si la base n'a pas répondu, on ne prétend pas que la liste est vide ; au retour d'une fiche, on garde en silence ce qu'on avait.
+        if (!restored) {
+          setError(true);
+          setList((prev) => prev || []);
+        }
+        return;
+      }
+      const withNames = await attachUsernames(result.list);
+      if (cancelled) return;
+      setList((prev) => (prev && JSON.stringify(prev) === JSON.stringify(withNames) ? prev : withNames));
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attempt]);
+
+  useEffect(() => {
+    if (list === null || error) return;
+    save({ list, ctx: other.userId, query });
+  }, [list, error, query]);
+
+  // Même règle de recherche que partout dans l'app (voir makeSearchMatcher), même classement que « Mes Bibax » classé par prénom.
+  const matchesText = makeSearchMatcher(query);
+  const shown = (list || [])
+    .filter((b) => matchesText(b.name, b.lastName, b.nickname, b.city, b.country))
+    .sort((a, b) => bibaxCollator.compare(a.name || "", b.name || "") || bibaxCollator.compare(a.lastName || "", b.lastName || "") || bibaxCollator.compare(a.code || "", b.code || ""));
+  const searching = query.trim() !== "";
+  const alphaOn = showAlphaIndex("alpha", shown.length);
+  const alphaLetters = alphaOn ? [...new Set(shown.map((b) => letterOf(b.name || "")))] : [];
+  const alphaTarget = (letter) => {
+    const at = shown.findIndex((b) => letterOf(b.name || "") === letter);
+    return at < 0 ? null : listRef.current?.querySelectorAll("[data-bibax-az-row]")[at] || null;
+  };
+
+  const note = { fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" };
+  return (
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <ScreenTitle iconUrl={bibaxIconUrl} subtitle={<>de <strong style={{ color: COLORS.ink, fontWeight: 700 }}>{other.name}</strong></>}>
+        Biba<span style={{ color: COLORS.amber }}>x</span>
+      </ScreenTitle>
+
+      {list === null ? (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Chargement...</p>
+      ) : error ? (
+        <p style={{ fontSize: "12.5px", color: "#FF3B3B", textAlign: "center", margin: "0 0 16px" }}>
+          Impossible de charger les Bibax de {other.name}.{" "}
+          <button type="button" onClick={() => setAttempt((n) => n + 1)} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, cursor: "pointer", padding: 0, fontSize: "12.5px" }}>
+            Réessayer
+          </button>
+        </p>
+      ) : hidden ? (
+        <p data-check-empty style={note}>{other.name} ne partage pas sa liste de Bibax.</p>
+      ) : list.length === 0 ? (
+        <p data-check-empty style={note}>{other.name} n'a pas d'autre Bibax que toi pour l'instant.</p>
+      ) : (
+        <>
+          {/* Champ de recherche avec une croix au bout (visible dès qu'il y a du texte), comme dans « Mes Bibax ». */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, marginBottom: "16px", boxSizing: "border-box" }}>
+            <input
+              ref={searchRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher : prénom, nom, surnom, ville..."
+              style={{ flex: 1, minWidth: 0, border: "none", background: "none", fontSize: "14px", outline: "none", padding: 0 }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                searchRef.current?.focus();
+              }}
+              aria-label="Effacer la recherche"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px", flexShrink: 0, display: query.length > 0 ? "flex" : "none" }}
+            >
+              <NavIcon name="x" size={15} color={COLORS.inkSoft} />
+            </button>
+          </div>
+          {shown.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "16px" }}>Aucun Bibax ne correspond à cette recherche.</p>}
+          {searching && shown.length > 0 && (
+            <p data-bibax-result-count style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 12px" }}>
+              <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, color: COLORS.amber }}>{formatCount(shown.length)}</span> Bibax
+            </p>
+          )}
+          {shown.length > 0 && (
+            <div ref={listRef} style={{ position: "relative", display: "flex", flexDirection: "column", gap: "10px" }}>
+              {alphaOn && <AlphaIndex available={alphaLetters} scrollRef={mainScrollRef} targetFor={alphaTarget} />}
+              {shown.map((b) => (
+                <div key={b.code} data-bibax-az-row="">
+                  <BibaxLinkRow b={b} stories={pulseStories.filter((s) => s.authorId === b.userId)} onOpen={onViewBibro} onOpenStoryAuthor={onOpenStoryAuthor} />
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       <BackFooterLink onClick={onBack} />
     </div>
@@ -598,7 +739,7 @@ export function MutualBibaxScreen({ bibros, bibroName, onBack: onBackProp, onVie
 //   - BibaPulse : ses publications dans BibaPulse, en vraies cartes (ex-extrait de trois lignes + écran « Activité de … »).
 // Retour sur l'onglet BibaPulse : quand on ouvre un lieu, un produit, une marque ou un producteur depuis une carte puis qu'on revient,
 // la fiche se rouvre sur cet onglet, calée sur la carte (pulseReturnEntryId / onRememberPulseEntry, comme sur Mon Profil).
-export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previewNotice, onToggleFavorite, onRemove, goToBibaxPhotos, onBlock, onOpenStoryAuthor, onViewMutualBibax, goToBibroMedia, goToBibroClub, goToBibroHistory, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry }) {
+export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previewNotice, onToggleFavorite, onRemove, goToBibaxPhotos, onBlock, onOpenStoryAuthor, onViewMutualBibax, goToBibroBibaxList, goToBibroDrinkChecks, goToBibroPlaceChecks, goToBibroMedia, goToBibroClub, goToBibroHistory, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry }) {
   const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
   const [mutualCount, setMutualCount] = useState(null);
   const [bibaxCount, setBibaxCount] = useState(null);
@@ -1062,9 +1203,10 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px" }} />
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <StatCard label={<>Biba<span style={{ color: COLORS.amber }}>x</span></>} value={bibaxCount} />
-        <StatCard label={<>Drink<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.tastedDrinksCount : null} />
-        <StatCard label={<>Place<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.venueCheckinsCount : null} />
+        {/* Les trois blocs ouvrent, en lecture seule, les listes de cette personne — mêmes pages que sur Mon Profil (Mehdi, 2026-11-19). */}
+        <StatCard label={<>Biba<span style={{ color: COLORS.amber }}>x</span></>} value={bibaxCount} onClick={goToBibroBibaxList ? () => goToBibroBibaxList(bibro.userId, bibro.name) : undefined} />
+        <StatCard label={<>Drink<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.tastedDrinksCount : null} onClick={goToBibroDrinkChecks ? () => goToBibroDrinkChecks(bibro.userId, bibro.name) : undefined} />
+        <StatCard label={<>Place<span style={{ color: COLORS.amber }}>Checks</span></>} value={stats ? stats.venueCheckinsCount : null} onClick={goToBibroPlaceChecks ? () => goToBibroPlaceChecks(bibro.userId, bibro.name) : undefined} />
       </div>
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px" }} />

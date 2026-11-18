@@ -1197,6 +1197,7 @@ export async function loadMyProfile(userId) {
     shareStatsDrinks: data.share_stats_drinks,
     shareStatsVenues: data.share_stats_venues,
     shareStatsSocial: data.share_stats_social,
+    shareBibaxList: data.share_bibax_list,
     avatarUrl: data.avatar_url || null,
     // isAdmin vient désormais du vrai rôle vérifié côté base de données, plus d'une passphrase
     // locale — cohérent avec les règles RLS qui vérifient ce même rôle.
@@ -1301,6 +1302,7 @@ export async function updateMyProfile(
     shareStatsDrinks,
     shareStatsVenues,
     shareStatsSocial,
+    shareBibaxList,
     avatarUrl,
   }
 ) {
@@ -1396,6 +1398,7 @@ export async function updateMyProfile(
     share_stats_drinks: shareStatsDrinks,
     share_stats_venues: shareStatsVenues,
     share_stats_social: shareStatsSocial,
+    share_bibax_list: shareBibaxList,
     avatar_url: avatarUrl,
   };
   // Ne transmet que les champs réellement fournis — un appel partiel (ex. juste avatarUrl
@@ -5027,6 +5030,50 @@ export async function loadMyCheckedVenues() {
     .filter((r) => r.venue_id)
     .map((r) => ({ venueId: String(r.venue_id), visits: Number.isFinite(Number(r.visits)) ? Number(r.visits) : 1, lastAt: r.last_at || null }));
 }
+
+// Les listes d'UN DE MES BIBAX (sa fiche : blocs Bibax, DrinkChecks, PlaceChecks — Mehdi, 2026-11-19). Trois fonctions de la base (scripts `bibamus-sql-bibax-listes-*`), qui ne
+// répondent qu'à un Bibax confirmé de la personne dont on demande la liste, jamais en cas de blocage, et qui respectent les réglages de partage de cette personne :
+//   - get_bibax_drink_checks(p_user_id)   -> (drink_id, checks, last_at)  — partage « Boissons » (`share_stats_drinks`)
+//   - get_bibax_checked_venues(p_user_id) -> (venue_id, visits, last_at)  — partage « Lieux » (`share_stats_venues`)
+//   - get_bibax_of(p_user_id)             -> les Bibax de cette personne — partage « Liste de Bibax » (`share_bibax_list`)
+// Rend `{ list }`, ou `{ hidden: true }` quand la personne ne partage pas cette liste (la base répond « not_shared »), ou `null` si la lecture échoue
+// (y compris tant que la fonction n'existe pas dans la base) : la page n'affiche alors qu'un message d'erreur avec « Réessayer ».
+async function loadBibaxList(label, rpcName, userId, mapRows) {
+  const { data, error } = await supabase.rpc(rpcName, { p_user_id: userId });
+  if (error) {
+    if (typeof error.message === "string" && error.message.includes("not_shared")) return { hidden: true };
+    console.error(`${label}:`, error);
+    return null;
+  }
+  if (!Array.isArray(data)) return null;
+  return { list: mapRows(data) };
+}
+
+export const loadBibroDrinkChecks = (userId) =>
+  loadBibaxList("loadBibroDrinkChecks", "get_bibax_drink_checks", userId, (rows) =>
+    rows.filter((r) => r.drink_id).map((r) => ({ drinkId: String(r.drink_id), checks: Number(r.checks) || 0, lastAt: r.last_at || null }))
+  );
+
+export const loadBibroCheckedVenues = (userId) =>
+  loadBibaxList("loadBibroCheckedVenues", "get_bibax_checked_venues", userId, (rows) =>
+    rows.filter((r) => r.venue_id).map((r) => ({ venueId: String(r.venue_id), visits: Number.isFinite(Number(r.visits)) ? Number(r.visits) : 1, lastAt: r.last_at || null }))
+  );
+
+// Mêmes champs que `loadMutualBibaxList` (le @nom s'ajoute ensuite par `attachUsernames`).
+export const loadBibroBibaxList = (userId) =>
+  loadBibaxList("loadBibroBibaxList", "get_bibax_of", userId, (rows) =>
+    rows.map((b) => ({
+      userId: b.user_id,
+      name: b.name,
+      lastName: b.last_name,
+      nickname: b.nickname,
+      avatarUrl: b.avatar_url,
+      code: b.bibro_code,
+      city: b.city,
+      locality: b.locality,
+      country: prettifyCountry(b.country),
+    }))
+  );
 
 export async function togglePulseIncoming(pulseEventId, alreadyIncoming) {
   const {

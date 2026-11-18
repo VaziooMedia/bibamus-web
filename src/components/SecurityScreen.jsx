@@ -186,10 +186,11 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
       <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
         <CategoryRow title="Aperçu" description="Visites, boissons commandées, produits et lieux différents." field="shareStatsOverview" />
         <CategoryRow title="Records" description="Ton lieu le plus visité, tes plus grosses sorties, ta plus longue série." field="shareStatsRecords" />
-        <CategoryRow title="Boissons" description="Ta boisson préférée et ta catégorie la plus consommée." field="shareStatsDrinks" />
-        <CategoryRow title="Lieux" description="Ton QG, tes villes visitées, ton type de lieu préféré." field="shareStatsVenues" />
+        <CategoryRow title="Boissons" description="Ta boisson préférée, ta catégorie la plus consommée et la liste de tes DrinkChecks." field="shareStatsDrinks" />
+        <CategoryRow title="Lieux" description="Ton QG, tes villes visitées, ton type de lieu préféré et la liste de tes PlaceChecks." field="shareStatsVenues" />
+        <CategoryRow title="Social" description="Nombre de Bibax rencontrés et taille moyenne de tes sorties — jamais de nom." field="shareStatsSocial" />
         <div style={{ borderBottom: "none" }}>
-          <CategoryRow title="Social" description="Nombre de Bibax rencontrés et taille moyenne de tes sorties — jamais de nom." field="shareStatsSocial" />
+          <CategoryRow title="Liste de Bibax" description="La liste de tes Bibax (noms, villes), que tes Bibax ouvrent depuis le bloc « Bibax » de ton profil." field="shareBibaxList" />
         </div>
       </div>
 

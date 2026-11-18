@@ -10,10 +10,13 @@
 // Retour d'une fiche : la page se remet comme on l'avait laissée (catégorie, classement et hauteur de défilement, voir `useListReturn`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
 // en silence et remplacée seulement si elle a changé (un DrinkCheck fait sur la fiche). Une entrée depuis Mon Profil repart de zéro.
 // Les identifiants viennent de la fonction `get_my_drink_checks` (script bibamus-sql-mes-drinkchecks-1-liste), puis les produits par `loadDrinksByIds`.
+// La MÊME page sert, en lecture seule, aux DrinkChecks d'UN DE MES BIBAX (bloc « DrinkChecks » de sa fiche — Mehdi, 2026-11-19) : avec `other = { userId, name }`, la liste vient de
+// `get_bibax_drink_checks` (qui respecte le partage « Boissons » de cette personne), un sous-titre « de <nom> » suit le titre, les messages parlent d'elle, et la flèche retour ramène à sa fiche
+// (la mémoire de la liste est alors effacée, comme pour les autres sous-listes d'une fiche).
 import React, { useState, useEffect } from "react";
 import { COLORS, DRINK_TYPES, SUBTYPE_LABELS } from "../constants.js";
 import { PageHeader, PageFooterNav, ScrollToTopButton } from "./ui.jsx";
-import { loadMyDrinkChecks, loadDrinksByIds } from "../data/sharedDirectories.js";
+import { loadMyDrinkChecks, loadBibroDrinkChecks, loadDrinksByIds } from "../data/sharedDirectories.js";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { CountryFlagImg } from "./icons.jsx";
@@ -29,8 +32,10 @@ const categoryOf = (x) => x.drink.type || "Autres";
 
 const signatureOf = (list) => list.map((x) => `${x.drinkId}:${x.checks}`).join(",");
 
-export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
-  const { restored, save, open } = useListReturn("myDrinkChecks", mainScrollRef);
+export function MyDrinkChecksScreen({ onBack: onBackProp, onOpenDrink, mainScrollRef, other = null }) {
+  const { restored, save, open, leave } = useListReturn(other ? "bibroDrinkChecks" : "myDrinkChecks", mainScrollRef, other ? { valid: (m) => m.ctx === other.userId } : undefined);
+  const onBack = other ? leave(onBackProp) : onBackProp;
+  const who = other?.name || "";
   const [items, setItems] = useState(restored ? restored.items : null); // null = chargement ; [{ drinkId, checks, lastAt }]
   const [drinksById, setDrinksById] = useState(restored ? restored.drinksById : {});
   const [error, setError] = useState(false);
@@ -38,12 +43,19 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
   const [sort, setSort] = useState(restored ? restored.sort : "recent");
   const [category, setCategory] = useState(restored ? restored.category : "all");
   const [country, setCountry] = useState(restored ? restored.country ?? null : null); // classé « Pays » : le pays choisi dans la liste déroulante (null = tous)
+  const [hidden, setHidden] = useState(false); // la personne ne partage pas ses DrinkChecks (seulement pour la liste d'un autre Bibax)
 
   useEffect(() => {
     let cancelled = false;
     setError(false);
-    loadMyDrinkChecks().then(async (list) => {
+    (other ? loadBibroDrinkChecks(other.userId) : loadMyDrinkChecks().then((l) => (l ? { list: l } : null))).then(async (result) => {
       if (cancelled) return;
+      if (result?.hidden) {
+        setHidden(true);
+        setItems([]);
+        return;
+      }
+      const list = result?.list;
       if (!list) {
         // Si la base n'a pas répondu, on ne prétend pas que la liste est vide : on n'affiche que le message d'erreur.
         // Au retour d'une fiche, on garde en silence ce qu'on avait.
@@ -69,7 +81,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
     if (items === null || error) return;
-    save({ items, drinksById, sort, category, country });
+    save({ items, drinksById, sort, category, country, ctx: other ? other.userId : undefined });
   }, [items, drinksById, sort, category, country, error]);
   const openDrink = onOpenDrink ? open(onOpenDrink) : null;
 
@@ -95,7 +107,7 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <ScreenTitle iconUrl={drinkCheckIconUrl}>
+      <ScreenTitle iconUrl={drinkCheckIconUrl} subtitle={other ? <>de <strong style={{ color: COLORS.ink, fontWeight: 700 }}>{who}</strong></> : null}>
         Drink<span style={{ color: COLORS.amber }}>Checks</span>
       </ScreenTitle>
 
@@ -104,14 +116,18 @@ export function MyDrinkChecksScreen({ onBack, onOpenDrink, mainScrollRef }) {
           <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Chargement...</p>
         ) : error ? (
           <p style={{ fontSize: "12.5px", color: "#FF3B3B", textAlign: "center", margin: "0 0 16px" }}>
-            Impossible de charger tes produits.{" "}
+            {other ? `Impossible de charger les produits de ${who}.` : "Impossible de charger tes produits."}{" "}
             <button type="button" onClick={() => setAttempt((n) => n + 1)} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, cursor: "pointer", padding: 0, fontSize: "12.5px" }}>
               Réessayer
             </button>
           </p>
+        ) : hidden ? (
+          <p data-check-empty style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" }}>
+            {who} ne partage pas ses DrinkChecks.
+          </p>
         ) : allEntries.length === 0 ? (
           <p data-check-empty style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" }}>
-            Aucun produit checké pour l'instant. Fais un DrinkCheck depuis la fiche d'un produit.
+            {other ? `${who} n'a pas encore checké de produit.` : "Aucun produit checké pour l'instant. Fais un DrinkCheck depuis la fiche d'un produit."}
           </p>
         ) : (
           <>
