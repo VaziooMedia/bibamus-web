@@ -948,22 +948,20 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
           style={{
             flex: 2,
             display: "flex",
-            alignItems: "center",
             background: COLORS.surface,
             border: `2px solid ${COLORS.paperAlt}`,
             borderRadius: "14px",
-            padding: "6px",
             fontSize: "12.5px",
             color: COLORS.inkSoft,
             textAlign: "center",
             cursor: mutualCount > 0 ? "pointer" : "default",
           }}
         >
-          {/* L'icône Bibax dans son propre sous-bloc, à gauche (essai, Mehdi, 2026-11-18) ; le texte se centre dans la place qui reste. */}
-          <div data-mutual-icon-block style={{ width: "32px", height: "32px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.paperAlt, borderRadius: "10px" }}>
+          {/* L'icône Bibax à gauche, séparée du texte par une barre verticale de la couleur du contour (2 px, de haut en bas du bloc) — Mehdi, 2026-11-18 ; la barre ne prend presque pas de place. Le texte se centre dans la place qui reste. */}
+          <div data-mutual-icon-block style={{ width: "34px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRight: `2px solid ${COLORS.paperAlt}` }}>
             <img src={bibaxIconUrl} alt="" style={{ width: "18px", height: "18px" }} />
           </div>
-          <span style={{ flex: 1, padding: "0 2px" }}>{mutualCount != null ? mutualCount : "…"} Bibax en commun</span>
+          <span style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 3px" }}>{mutualCount != null ? mutualCount : "…"} Bibax en commun</span>
         </div>
       </div>
 
