@@ -28,8 +28,8 @@ export function BibaxDetailLines({ username, nickname, city, locality, country, 
   return bibaxDetailParts({ username, nickname, city, locality, country }).map((parts, i) => (parts.length > 0 ? <DotLine key={i} parts={parts} noWrap center={center} /> : null));
 }
 
-// Un bloc complet (nom + lignes de détails) pour les cartes : à la place de `BibaxName`. `style` : mise en page de l'appelant (flex, taille et couleur du nom). `wrapName` : le nom passe à la ligne au lieu d'être coupé par « … » (carte du Bibax trouvé). `nameAfter` : un élément placé juste après le nom, sur la ligne 1 (la flèche d'accès au profil de « Tes Bibax qui ont checké ce produit »).
-export function BibaxIdentity({ name, lastName, username, nickname, city, locality, country, style, wrapName = false, nameAfter = null }) {
+// Un bloc complet (nom + lignes de détails) pour les cartes : à la place de `BibaxName`. `style` : mise en page de l'appelant (flex, taille et couleur du nom). `wrapName` : le nom passe à la ligne au lieu d'être coupé par « … » (carte du Bibax trouvé). `mutual` : le nombre de Bibax en commun, en 4ᵉ ligne (rien à 0). `nameAfter` : un élément placé juste après le nom, sur la ligne 1 (la flèche d'accès au profil de « Tes Bibax qui ont checké ce produit »).
+export function BibaxIdentity({ name, lastName, username, nickname, city, locality, country, style, wrapName = false, nameAfter = null, mutual = 0 }) {
   const fullName = [name, lastName].filter(Boolean).join(" ") || "Bibax";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: 0, ...style }}>
@@ -42,6 +42,7 @@ export function BibaxIdentity({ name, lastName, username, nickname, city, locali
         <span style={{ fontWeight: 700, ...(wrapName ? { overflowWrap: "anywhere" } : { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{fullName}</span>
       )}
       <BibaxDetailLines username={username} nickname={nickname} city={city} locality={locality} country={country} />
+      {mutual > 0 && <DotLine parts={[`${mutual} Bibax en commun`]} noWrap />}
     </div>
   );
 }

@@ -20,6 +20,8 @@ import {
   loadMyBibaxUsernames,
   loadMyBibaxMutualCounts,
   attachUsernames,
+  attachMutualCounts,
+  loadMutualCountsByBibroCodes,
   dismissBibaxSuggestion,
   respondBibaxRequest,
   sendBibaxRequest,
@@ -56,8 +58,8 @@ function useBibaxRequests(onBibaxAdded) {
   const prevSentIds = useRef(null);
 
   const refresh = () => {
-    loadPendingBibaxRequests().then(attachUsernames).then(setPending);
-    loadSentBibaxRequests().then(attachUsernames).then((data) => {
+    loadPendingBibaxRequests().then(attachUsernames).then(attachMutualCounts).then(setPending);
+    loadSentBibaxRequests().then(attachUsernames).then(attachMutualCounts).then((data) => {
       // Une demande envoyée qui disparaît (sans qu'on l'ait nous-même annulée) veut dire que
       // l'autre vient de la confirmer — il faut alors synchroniser ce nouveau Bibax localement,
       // pas seulement rafraîchir l'affichage des demandes.
@@ -142,7 +144,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                 style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
               >
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
-                <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
+                <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -194,7 +196,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
               >
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                  <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>En attente de confirmation</p>
                 </div>
                 <button
@@ -1150,6 +1152,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                 nickname: identity.nickname,
                 city: identity.city,
                 country: identity.country,
+                mutual: identity.mutualBibaxCount || 0,
               },
             ];
           }
@@ -1172,9 +1175,10 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
     const timer = setTimeout(async () => {
       const results = await searchBibaxByName(nameQuery.trim());
       // Le @nom de chaque résultat (ligne 2) : la recherche par nom ne le rend pas, on le lit à part à partir des codes Bibax.
-      const names = await loadUsernamesByBibroCodes(results.map((r) => r.bibroCode));
+      // Et le nombre de Bibax en commun (ligne 4), lu en même temps.
+      const [names, mutuals] = await Promise.all([loadUsernamesByBibroCodes(results.map((r) => r.bibroCode)), loadMutualCountsByBibroCodes(results.map((r) => r.bibroCode))]);
       if (cancelled) return;
-      setNameResults(results.map((r) => ({ ...r, username: names[(r.bibroCode || "").toUpperCase()] || "" })));
+      setNameResults(results.map((r) => ({ ...r, username: names[(r.bibroCode || "").toUpperCase()] || "", mutual: mutuals[(r.bibroCode || "").toUpperCase()] || 0 })));
       setNameSearching(false);
     }, 350);
     return () => {
@@ -1316,6 +1320,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                     nickname={r.nickname}
                     city={r.city}
                     country={r.country}
+                    mutual={r.mutual}
                     style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }}
                   />
                 </button>
