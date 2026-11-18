@@ -5131,6 +5131,20 @@ export async function loadMyBibax() {
   }));
 }
 
+// Noms d'utilisateur (@nom) de mes Bibax confirmés : { [userId]: "nom" }. `get_my_bibax` ne les donne pas ; cette fonction (script « bibamus-sql-bibax-noms-d-utilisateur.sql ») ne rend que ceux
+// de mes Bibax. Sert au tri « @nom » de la liste de Mes Bibax. Renvoie null si la lecture échoue (par exemple tant que le script n'a pas été lancé dans Supabase) : la liste se classe alors sur
+// le code Bibax, qui est la valeur de départ du nom d'utilisateur.
+export async function loadMyBibaxUsernames() {
+  const { data, error } = await supabase.rpc("get_my_bibax_usernames");
+  if (error) {
+    console.error("loadMyBibaxUsernames:", error);
+    return null;
+  }
+  const byUser = {};
+  for (const r of data || []) if (r.username) byUser[r.user_id] = r.username;
+  return byUser;
+}
+
 export async function loadPendingBibaxRequests() {
   const { data, error } = await supabase.rpc("get_pending_bibax_requests");
   if (error) {
