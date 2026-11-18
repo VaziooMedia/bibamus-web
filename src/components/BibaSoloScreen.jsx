@@ -52,6 +52,7 @@ import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { useBeerDerivatives, useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
 import { derivativeName, kcalPer100mlWithVariant, volumeAfterVariantChange } from "../beerDerivatives.js";
 import { ServicePill, DerivativePill, serviceLabelOf } from "./ServiceTag.jsx";
+import { slashWhite, periodLabel, PeriodBarMark } from "./PeriodBar.jsx";
 
 // La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
 // seule soirée. `current` = début de la période en cours (le dernier 6 h passé), `previous` = début de la période d'avant.
@@ -1193,7 +1194,7 @@ export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete,
             {[formatDateOnly(c.createdAt), formatTimeOnly(c.createdAt)].filter(Boolean).map((part, idx) => (
               <React.Fragment key={idx}>
                 {idx > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />}
-                <span>{part}</span>
+                <span>{slashWhite(part)}</span>
               </React.Fragment>
             ))}
           </div>
@@ -1299,7 +1300,8 @@ function SoloHistoryScreen({ onBack, onOpenDrink }) {
           groups.map((g, gi) => (
             <React.Fragment key={g.key}>
               <div data-solo-history-bar="1" style={{ display: "flex", alignItems: "center", gap: "10px", margin: gi === 0 ? "0 0 18px" : "20px 0 18px" }}>
-                <span data-solo-history-label="1" style={SOLO_BAR_LABEL_STYLE}>{groupLabel(g)}</span>
+                <PeriodBarMark />
+                <span data-solo-history-label="1" style={SOLO_BAR_LABEL_STYLE}>{periodLabel(groupLabel(g))}</span>
                 <div style={SOLO_BAR_LINE_STYLE} />
               </div>
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
@@ -2278,7 +2280,8 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
       )}
       {/* Barre de séparation au-dessus de la liste en cours : « Aujourd'hui », la barre, puis l'icône « info » (bulle d'explication des périodes). */}
       <div data-solo-today-bar="1" ref={todayBarRef} style={{ position: "relative", display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-        <span data-solo-today-label="1" style={SOLO_BAR_LABEL_STYLE}>Aujourd'hui</span>
+        <PeriodBarMark />
+        <span data-solo-today-label="1" style={SOLO_BAR_LABEL_STYLE}>{periodLabel("Aujourd'hui")}</span>
         <div style={SOLO_BAR_LINE_STYLE} />
         {renderPeriodInfo("today")}
       </div>
@@ -2299,7 +2302,8 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
             {previousCheckins && previousCheckins.length > 0 && (
               <>
                 <div data-solo-separator="1" ref={previousBarRef} style={{ position: "relative", display: "flex", alignItems: "center", gap: "10px", margin: "20px 0" }}>
-                  <span data-solo-period-date="1" style={SOLO_BAR_LABEL_STYLE}>{formatPeriodDay(previousPeriodStart)}</span>
+                  <PeriodBarMark />
+                  <span data-solo-period-date="1" style={SOLO_BAR_LABEL_STYLE}>{periodLabel(formatPeriodDay(previousPeriodStart))}</span>
                   <div style={SOLO_BAR_LINE_STYLE} />
                   {renderPeriodInfo("previous")}
                 </div>
