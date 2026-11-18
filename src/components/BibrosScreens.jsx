@@ -378,7 +378,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
 
-      {/* Titre, bouton « + » (ajouter un Bibax) et nombre de Bibax : toujours sur une seule ligne, même avec 9.999 Bibax (Mehdi, 2026-11-18). Le « + » est entre le titre et le nombre ; le nombre est en 23 px ; le titre rétrécit un peu sur un écran étroit (26 px jusqu'à 390 px de large, puis 6,7 % de la largeur). */}
+      {/* Titre, bouton « + » (ajouter un Bibax) et nombre de Bibax : toujours sur une seule ligne, même avec 9.999 Bibax (Mehdi, 2026-11-18). Le « + » est entre le titre et le nombre, rond de 32 px avec 18 px d'écart avec lui (Mehdi, 2026-11-18 : plus petit — essai à 36 puis 32 px — et un peu décalé vers la gauche ; avant : 44 px et 10 px) ; le nombre est en 23 px ; le titre rétrécit un peu sur un écran étroit (26 px jusqu'à 390 px de large, puis 6,7 % de la largeur). */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "min(26px, 6.7vw)", margin: "4px 0 0 0", lineHeight: 1.2, display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0, whiteSpace: "nowrap" }}>
           <img src={bibaxIconUrl} alt="" style={{ width: "24px", height: "24px", flexShrink: 0 }} />
@@ -391,19 +391,20 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
           onClick={goToAddBibro}
           title="Ajouter un Bibax"
           style={{
-            width: "44px",
-            height: "44px",
+            width: "32px",
+            height: "32px",
             borderRadius: "50%",
             background: COLORS.amber,
             border: "none",
             color: COLORS.paper,
-            fontSize: "24px",
+            fontSize: "18px",
             fontWeight: 700,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
+            marginRight: "8px",
           }}
         >
           +
