@@ -263,7 +263,7 @@ function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, on
 const BIBAX_SORTS = [
   { key: "first", label: "Prénom" },
   { key: "last", label: "Nom" },
-  { key: "username", label: "@nom" },
+  { key: "username", label: { accent: "@", suffix: "Username" } },
 ];
 const bibaxCollator = new Intl.Collator("fr", { sensitivity: "base" });
 
