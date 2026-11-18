@@ -8,9 +8,9 @@
 import React, { useState, useEffect } from "react";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS, SUBTYPE_LABELS } from "../constants.js";
-import { PageHeader, PageFooterNav, ScrollToTopButton, EntityAvatar, HubCard } from "./ui.jsx";
+import { PageHeader, PageFooterNav, ScrollToTopButton, EntityAvatar, HubCard, MutualPill } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
-import { venueStreetLine, venuePostalCityLine, formatCount, mutualLabel } from "../utils.js";
+import { venueStreetLine, venuePostalCityLine, formatCount } from "../utils.js";
 import { flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
 import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds, loadMyFavoriteBibaxDetails, toggleFavoriteBrand, toggleFavoriteProducer } from "../data/sharedDirectories.js";
 
@@ -389,7 +389,11 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
             <>
               {line2.length > 0 && <DotLine parts={line2} noWrap />}
               {line3.length > 0 && <DotLine parts={line3} noWrap />}
-              {mutualKnown !== null && <div data-favorite-mutual style={{ fontSize: "12px", color: COLORS.inkSoft }}>{mutualLabel(mutualKnown)}</div>}
+              {mutualKnown !== null && (
+                <div style={{ marginTop: "1px" }}>
+                  <MutualPill data-favorite-mutual n={mutualKnown} />
+                </div>
+              )}
             </>
           }
           heart={onToggleBibaxFavorite ? { on: (favoriteBibaxIds || []).includes(b.userId), onToggle: () => onToggleBibaxFavorite(b.code) } : null}

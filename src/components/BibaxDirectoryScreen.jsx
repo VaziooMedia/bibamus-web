@@ -13,11 +13,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
-import { EntityAvatar, PageHeader } from "./ui.jsx";
+import { EntityAvatar, PageHeader, MutualPill } from "./ui.jsx";
 import { ResultRow } from "./SearchScreen.jsx";
 import { searchBibax } from "../data/sharedDirectories.js";
 import { useListReturn } from "../hooks/useListReturn.js";
-import { mutualLabel } from "../utils.js";
 
 const fullNameOf = (b) => [b.firstName || b.name, b.lastName].filter(Boolean).join(" ") || "Bibax";
 
@@ -161,13 +160,14 @@ export function BibaxDirectoryScreen({ bibros = [], onOpenBibaxProfile: openProf
               key={b.id}
               title={[b.displayName, b.lastName].filter(Boolean).join(" ")}
               subtitle={
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                  {b.city}
-                  {b.country && <CountryFlagImg country={b.country} size={13} />}
-                  {(b.city || b.country) && (
-                    <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block" }} />
+                <span style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
+                  {b.city && <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.city}</span>}
+                  {b.country && (
+                    <span style={{ display: "inline-flex", flexShrink: 0 }}>
+                      <CountryFlagImg country={b.country} size={13} />
+                    </span>
                   )}
-                  {mutualLabel(b.mutualBibaxCount || 0)}
+                  <MutualPill n={b.mutualBibaxCount || 0} style={{ padding: "2px 9px", lineHeight: 1.2 }} />
                 </span>
               }
               avatar={<EntityAvatar photoUrl={b.avatarUrl} size={52} />}
