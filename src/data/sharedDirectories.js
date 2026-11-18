@@ -2706,6 +2706,17 @@ export async function loadMyFavoriteBibaxDetails() {
   return Object.fromEntries((data || []).map((r) => [r.user_id, { username: r.username || "", mutual: r.mutual_bibax_count || 0 }]));
 }
 
+// « Mes Bibax » : le nombre de Bibax en commun de CHACUN de mes Bibax confirmés, en UNE lecture (`get_my_bibax_mutual_counts`, script `bibamus-sql-mes-bibax-en-commun.sql`).
+// Rend `{ [userId]: nombre }` pour les seuls Bibax qui en ont au moins un (absent = 0), ou `null` si la lecture échoue (la liste n'affiche alors pas la ligne).
+export async function loadMyBibaxMutualCounts() {
+  const { data, error } = await supabase.rpc("get_my_bibax_mutual_counts");
+  if (error) {
+    console.error("loadMyBibaxMutualCounts:", error);
+    return null;
+  }
+  return Object.fromEntries((data || []).map((r) => [r.user_id, r.mutual_bibax_count || 0]));
+}
+
 export async function loadBibaxMediaAssets(otherUserId) {
   const { data, error } = await supabase.rpc("get_bibax_media_assets", { p_other_user_id: otherUserId });
   if (error) {
@@ -5194,6 +5205,41 @@ export async function loadUsernamesByBibroCodes(codes) {
   const byCode = {};
   for (const c of wanted) if (usernameByCodeCache.get(c)) byCode[c] = usernameByCodeCache.get(c);
   return byCode;
+}
+
+// Le nombre de Bibax en commun de personnes repérées par leur CODE Bibax (Demandes reçues et envoyées, résultats de la recherche par nom dans « Ajouter un Bibax »).
+// Une lecture groupée par la fonction `get_mutual_bibax_counts_by_bibro_codes` (script « bibamus-sql-bibax-en-commun-par-codes.sql »), 200 codes à la fois. Le nombre change quand on ajoute des Bibax : il est gardé
+// 5 minutes seulement (les Demandes se relisent toutes les 15 s sans rappeler le serveur). En cas d'échec (par exemple tant que le script n'est pas lancé) : pas de nombre, et on ne réessaie qu'après 60 s.
+// Rend un objet { CODE: nombre } (les codes en majuscules) ; une personne sans Bibax en commun n'y figure pas (= 0, rien n'est affiché).
+const mutualByCodeCache = new Map();
+let mutualsByCodeRetryAt = 0;
+export async function loadMutualCountsByBibroCodes(codes) {
+  const wanted = [...new Set((codes || []).map((c) => (c || "").trim().toUpperCase()).filter(Boolean))];
+  const now = Date.now();
+  const missing = wanted.filter((c) => !mutualByCodeCache.has(c) || now - mutualByCodeCache.get(c).at > 5 * 60 * 1000);
+  if (missing.length > 0 && now >= mutualsByCodeRetryAt) {
+    for (let i = 0; i < missing.length; i += 200) {
+      const chunk = missing.slice(i, i + 200);
+      const { data, error } = await supabase.rpc("get_mutual_bibax_counts_by_bibro_codes", { p_codes: chunk });
+      if (error) {
+        console.error("loadMutualCountsByBibroCodes:", error);
+        mutualsByCodeRetryAt = Date.now() + 60000;
+        break;
+      }
+      const found = new Map((data || []).map((r) => [String(r.bibro_code || "").toUpperCase(), r.mutual_bibax_count || 0]));
+      for (const c of chunk) mutualByCodeCache.set(c, { n: found.get(c) || 0, at: Date.now() });
+    }
+  }
+  const byCode = {};
+  for (const c of wanted) if (mutualByCodeCache.has(c) && mutualByCodeCache.get(c).n > 0) byCode[c] = mutualByCodeCache.get(c).n;
+  return byCode;
+}
+
+// Ajoute `mutual` (nombre de Bibax en commun, 0 si inconnu) à des lignes qui ont un `bibroCode` (les Demandes). Null reste null.
+export async function attachMutualCounts(rows) {
+  if (!rows) return rows;
+  const byCode = await loadMutualCountsByBibroCodes(rows.map((r) => r.bibroCode));
+  return rows.map((r) => ({ ...r, mutual: byCode[(r.bibroCode || "").toUpperCase()] || 0 }));
 }
 
 export async function loadPendingBibaxRequests() {

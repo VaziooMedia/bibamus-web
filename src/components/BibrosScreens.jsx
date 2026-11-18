@@ -18,7 +18,10 @@ import {
   loadSentBibaxRequests,
   loadBibaxSuggestions,
   loadMyBibaxUsernames,
+  loadMyBibaxMutualCounts,
   attachUsernames,
+  attachMutualCounts,
+  loadMutualCountsByBibroCodes,
   dismissBibaxSuggestion,
   respondBibaxRequest,
   sendBibaxRequest,
@@ -48,6 +51,10 @@ import residenceIconUrl from "../assets/brand/residence-icon.png";
 
 // Mes Bibax : trois pages à pastilles — « Bibax » (la liste de mes Bibax), « Suggestions » (la liste des suggestions) et « Demandes » (reçues et envoyées), décision de Mehdi du 2026-11-18.
 // Les demandes sont lues au niveau de la page : la pastille « Demandes » affiche ainsi le nombre de demandes reçues quel que soit l'onglet ouvert.
+// Taille des boutons ronds des Demandes (reçues : coche et croix l'une sous l'autre ; envoyées : croix grise), plus petits que ceux des Suggestions (34 px) — Mehdi, 2026-11-18 (28 px d'abord, puis 24 px : « plus petit »).
+// Zone tactile élargie sans changer l'apparence (comme la flèche du profil : `GoButton`) : 10 px de chaque côté (12 sur les ronds à contour de 2 px, dont la zone se compte depuis l'intérieur du contour) ; entre la coche et la croix empilées, 3 px au-dessus et au-dessous pour ne pas se chevaucher.
+const REQUEST_BTN = "24px";
+
 function useBibaxRequests(onBibaxAdded) {
   const [pending, setPending] = useState(null);
   const [sent, setSent] = useState(null);
@@ -55,8 +62,8 @@ function useBibaxRequests(onBibaxAdded) {
   const prevSentIds = useRef(null);
 
   const refresh = () => {
-    loadPendingBibaxRequests().then(attachUsernames).then(setPending);
-    loadSentBibaxRequests().then(attachUsernames).then((data) => {
+    loadPendingBibaxRequests().then(attachUsernames).then(attachMutualCounts).then(setPending);
+    loadSentBibaxRequests().then(attachUsernames).then(attachMutualCounts).then((data) => {
       // Une demande envoyée qui disparaît (sans qu'on l'ait nous-même annulée) veut dire que
       // l'autre vient de la confirmer — il faut alors synchroniser ce nouveau Bibax localement,
       // pas seulement rafraîchir l'affichage des demandes.
@@ -141,29 +148,34 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                 style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
               >
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
-                <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    respond(r.relationshipId, true);
-                  }}
-                  disabled={busyId === r.relationshipId}
-                  aria-label="Accepter"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
-                >
-                  <NavIcon name="check" size={18} color={COLORS.paper} />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    respond(r.relationshipId, false);
-                  }}
-                  disabled={busyId === r.relationshipId}
-                  aria-label="Refuser"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
-                >
-                  <NavIcon name="x" size={17} color={COLORS.pinkFluo} />
-                </button>
+                <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
+                {/* Les deux boutons l'un sous l'autre, plus petits (Mehdi, 2026-11-18 : pour laisser de la place au texte, surtout en 320 px). */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      respond(r.relationshipId, true);
+                    }}
+                    disabled={busyId === r.relationshipId}
+                    aria-label="Accepter"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", position: "relative", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
+                  >
+                    <span aria-hidden="true" style={{ position: "absolute", top: "-3px", right: "-10px", bottom: "-3px", left: "-10px" }} />
+                    <NavIcon name="check" size={13} color={COLORS.paper} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      respond(r.relationshipId, false);
+                    }}
+                    disabled={busyId === r.relationshipId}
+                    aria-label="Refuser"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", boxSizing: "border-box", position: "relative", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
+                  >
+                    <span aria-hidden="true" style={{ position: "absolute", top: "-5px", right: "-12px", bottom: "-5px", left: "-12px" }} />
+                    <NavIcon name="x" size={12} color={COLORS.pinkFluo} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -193,18 +205,21 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
               >
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
-                  <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>En attente de confirmation</p>
+                  <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                  <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.pinkFluo }}>En attente de confirmation</p>
                 </div>
+                {/* Annuler la demande : rond avec une croix grise, contour gris foncé (discret), de la même taille que les boutons des demandes reçues (Mehdi, 2026-11-18). */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     cancelRequest(r.relationshipId);
                   }}
                   disabled={busyId === r.relationshipId}
-                  style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
+                  aria-label="Annuler la demande"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "50%", boxSizing: "border-box", position: "relative", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
                 >
-                  Annuler
+                  <span aria-hidden="true" style={{ position: "absolute", top: "-12px", right: "-12px", bottom: "-12px", left: "-12px" }} />
+                  <NavIcon name="x" size={12} color={COLORS.inkSoft} />
                 </button>
               </div>
             ))}
@@ -282,9 +297,11 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   // Classement de la liste de Mes Bibax : « first » (prénom), « last » (nom de famille) ou « username » (@nom). `usernames` : { userId: nom d'utilisateur }, lus à l'ouverture de la page « Bibax ».
   const [sort, setSort] = useState(restored?.sort || "first");
   const [usernames, setUsernames] = useState(restored ? restored.usernames ?? null : null);
+  // `mutuals` : { userId: nombre de Bibax en commun } (ligne 4 de chaque Bibax ; absent = 0, la ligne n'est pas affichée), lus eux aussi à l'ouverture de la page « Bibax ».
+  const [mutuals, setMutuals] = useState(restored ? restored.mutuals ?? null : null);
   useEffect(() => {
-    save({ query, tab, suggestions, sort, usernames });
-  }, [query, tab, suggestions, sort, usernames]);
+    save({ query, tab, suggestions, sort, usernames, mutuals });
+  }, [query, tab, suggestions, sort, usernames, mutuals]);
   const viewBibro = onViewBibro ? open(onViewBibro) : onViewBibro;
   const openBibaxProfile = onOpenBibaxProfile ? open(onOpenBibaxProfile) : onOpenBibaxProfile;
   const requests = useBibaxRequests(onBibaxAdded || (() => {}));
@@ -308,6 +325,10 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
     let alive = true;
     loadMyBibaxUsernames().then((list) => {
       if (alive && list) setUsernames((prev) => (prev && JSON.stringify(prev) === JSON.stringify(list) ? prev : list));
+    });
+    // Le nombre de Bibax en commun (ligne 4) : même règle, si la lecture échoue on garde ce qu'on avait (ou rien : pas de 4ᵉ ligne).
+    loadMyBibaxMutualCounts().then((list) => {
+      if (alive && list) setMutuals((prev) => (prev && JSON.stringify(prev) === JSON.stringify(list) ? prev : list));
     });
     return () => {
       alive = false;
@@ -353,7 +374,9 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   // Classé par nom de famille, le nom s'écrit « Nom Prénom » (la lettre de l'index est la première du nom).
   const bibaxRow = (b, isLast, inAlphaList) => {
     // Trois lignes (Mehdi, 2026-11-18, même modèle que Mes Favoris > Bibax, voir `BibaxLines.jsx`) : 1. nom ; 2. @nom (« @ » vert fluo) puis surnom en italique ; 3. commune (village) puis drapeau du pays.
-    const lines = bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country });
+    // Ligne 4 (Mehdi, 2026-11-18, comme dans Mes Favoris > Bibax) : « N Bibax en commun », rien à 0.
+    const common = (mutuals && mutuals[b.userId]) || 0;
+    const lines = [...bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country }), common > 0 ? [`${common} Bibax en commun`] : []];
     const first = b.firstName || b.name;
     const fullName = (sort === "last" ? [b.lastName, first] : [first, b.lastName]).filter(Boolean).join(" ") || "Bibax";
     return (
@@ -1141,6 +1164,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                 nickname: identity.nickname,
                 city: identity.city,
                 country: identity.country,
+                mutual: identity.mutualBibaxCount || 0,
               },
             ];
           }
@@ -1163,9 +1187,10 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
     const timer = setTimeout(async () => {
       const results = await searchBibaxByName(nameQuery.trim());
       // Le @nom de chaque résultat (ligne 2) : la recherche par nom ne le rend pas, on le lit à part à partir des codes Bibax.
-      const names = await loadUsernamesByBibroCodes(results.map((r) => r.bibroCode));
+      // Et le nombre de Bibax en commun (ligne 4), lu en même temps.
+      const [names, mutuals] = await Promise.all([loadUsernamesByBibroCodes(results.map((r) => r.bibroCode)), loadMutualCountsByBibroCodes(results.map((r) => r.bibroCode))]);
       if (cancelled) return;
-      setNameResults(results.map((r) => ({ ...r, username: names[(r.bibroCode || "").toUpperCase()] || "" })));
+      setNameResults(results.map((r) => ({ ...r, username: names[(r.bibroCode || "").toUpperCase()] || "", mutual: mutuals[(r.bibroCode || "").toUpperCase()] || 0 })));
       setNameSearching(false);
     }, 350);
     return () => {
@@ -1307,6 +1332,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                     nickname={r.nickname}
                     city={r.city}
                     country={r.country}
+                    mutual={r.mutual}
                     style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }}
                   />
                 </button>
