@@ -374,7 +374,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
       // Le @nom d'abord, avec son « @ » en vert fluo, puis le surnom en italique (Mehdi, 2026-11-18 ; avant : surnom puis @nom, « @ » en rose fluo).
       const line2 = [
         usernameChanged ? { node: <><span style={{ color: COLORS.amber }}>@</span>{username}</> } : null,
-        b.nickname ? { node: <span style={{ fontStyle: "italic" }}>{b.nickname}</span> } : null,
+        b.nickname ? { node: <span style={{ fontStyle: "italic", paddingRight: "2px" }}>{b.nickname}</span> } : null,
       ].filter(Boolean);
       const commune = b.city ? (b.locality ? `${b.city} (${b.locality})` : b.city) : ""; // comme `BibaxName` : sans commune, le village n'est pas affiché
       const line3 = [commune || null, flagPart({ nationality: b.country })].filter(Boolean);
