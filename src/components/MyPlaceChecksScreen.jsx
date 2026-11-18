@@ -10,7 +10,7 @@
 // Les identifiants viennent de la fonction `get_my_checked_venues` (script bibamus-sql-mes-lieux-1-liste), puis les lieux par `loadVenuesByIds`.
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { PageHeader, PageFooterNav } from "./ui.jsx";
+import { PageHeader, PageFooterNav, ScrollToTopButton } from "./ui.jsx";
 import { loadMyCheckedVenues, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { ScreenTitle, countryFlagPart } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
@@ -132,6 +132,7 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
       </div>
 
       <PageFooterNav onBack={onBack} />
+      <ScrollToTopButton hideNearBottom={false} />
     </div>
   );
 }
