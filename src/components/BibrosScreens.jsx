@@ -51,6 +51,9 @@ import residenceIconUrl from "../assets/brand/residence-icon.png";
 
 // Mes Bibax : trois pages à pastilles — « Bibax » (la liste de mes Bibax), « Suggestions » (la liste des suggestions) et « Demandes » (reçues et envoyées), décision de Mehdi du 2026-11-18.
 // Les demandes sont lues au niveau de la page : la pastille « Demandes » affiche ainsi le nombre de demandes reçues quel que soit l'onglet ouvert.
+// Taille des boutons ronds des Demandes (reçues : coche et croix l'une sous l'autre ; envoyées : croix grise), plus petits que ceux des Suggestions (34 px) — Mehdi, 2026-11-18.
+const REQUEST_BTN = "28px";
+
 function useBibaxRequests(onBibaxAdded) {
   const [pending, setPending] = useState(null);
   const [sent, setSent] = useState(null);
@@ -145,28 +148,31 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
               >
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
                 <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    respond(r.relationshipId, true);
-                  }}
-                  disabled={busyId === r.relationshipId}
-                  aria-label="Accepter"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
-                >
-                  <NavIcon name="check" size={18} color={COLORS.paper} />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    respond(r.relationshipId, false);
-                  }}
-                  disabled={busyId === r.relationshipId}
-                  aria-label="Refuser"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
-                >
-                  <NavIcon name="x" size={17} color={COLORS.pinkFluo} />
-                </button>
+                {/* Les deux boutons l'un sous l'autre, plus petits (Mehdi, 2026-11-18 : pour laisser de la place au texte, surtout en 320 px). */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      respond(r.relationshipId, true);
+                    }}
+                    disabled={busyId === r.relationshipId}
+                    aria-label="Accepter"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
+                  >
+                    <NavIcon name="check" size={15} color={COLORS.paper} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      respond(r.relationshipId, false);
+                    }}
+                    disabled={busyId === r.relationshipId}
+                    aria-label="Refuser"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", boxSizing: "border-box", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
+                  >
+                    <NavIcon name="x" size={14} color={COLORS.pinkFluo} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -199,15 +205,17 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                   <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>En attente de confirmation</p>
                 </div>
+                {/* Annuler la demande : rond avec une croix, tout en gris, de la même taille que les boutons des demandes reçues (Mehdi, 2026-11-18). */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     cancelRequest(r.relationshipId);
                   }}
                   disabled={busyId === r.relationshipId}
-                  style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "7px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.inkSoft, cursor: "pointer" }}
+                  aria-label="Annuler la demande"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.inkSoft}`, borderRadius: "50%", boxSizing: "border-box", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
                 >
-                  Annuler
+                  <NavIcon name="x" size={14} color={COLORS.inkSoft} />
                 </button>
               </div>
             ))}
