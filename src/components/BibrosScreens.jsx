@@ -247,7 +247,7 @@ function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, on
           <div style={{ flex: 1, minWidth: 0 }}>
             <BibaxIdentity name={s.name} lastName={s.lastName} username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
             <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
-              {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}
+              {mutualLabel(s.mutualCount || 0)}
             </p>
           </div>
           <button
@@ -374,7 +374,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   // Classé par nom de famille, le nom s'écrit « Nom Prénom » (la lettre de l'index est la première du nom).
   const bibaxRow = (b, isLast, inAlphaList) => {
     // Trois lignes (Mehdi, 2026-11-18, même modèle que Mes Favoris > Bibax, voir `BibaxLines.jsx`) : 1. nom ; 2. @nom (« @ » vert fluo) puis surnom en italique ; 3. commune (village) puis drapeau du pays.
-    // Ligne 4 (Mehdi, 2026-11-18, comme dans Mes Favoris > Bibax) : « N Bibax en commun », ou « Aucun Bibax en commun » à 0. La lecture ne rend que ceux qui en ont : une fois lue, un Bibax absent en a 0 ; tant qu'elle n'a pas répondu (ou si elle a échoué : `mutuals` est null), pas de 4ᵉ ligne.
+    // Ligne 4 (Mehdi, 2026-11-18, comme dans Mes Favoris > Bibax) : « N Bibax en commun », « 0 Bibax en commun » compris. La lecture ne rend que ceux qui en ont : une fois lue, un Bibax absent en a 0 ; tant qu'elle n'a pas répondu (ou si elle a échoué : `mutuals` est null), pas de 4ᵉ ligne.
     const lines = [...bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country }), mutuals ? [mutualLabel(mutuals[b.userId] || 0)] : []];
     const first = b.firstName || b.name;
     const fullName = (sort === "last" ? [b.lastName, first] : [first, b.lastName]).filter(Boolean).join(" ") || "Bibax";

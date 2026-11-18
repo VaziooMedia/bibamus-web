@@ -1040,4 +1040,4 @@ export function formatDecimal(n, decimals = 2) {
 }
 
 // Le texte du nombre de Bibax en commun, le même partout (Mehdi, 2026-11-18 : à 0, on l'écrit au lieu de ne rien afficher).
-export const mutualLabel = (n) => (n > 0 ? `${n} Bibax en commun` : "Aucun Bibax en commun");
+export const mutualLabel = (n) => `${n} Bibax en commun`;

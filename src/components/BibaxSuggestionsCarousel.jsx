@@ -12,14 +12,13 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { BibaxDetailLines } from "./BibaxLines.jsx";
+import { mutualLabel } from "../utils.js";
 
 const CARD_WIDTH = 150;
 
-// Raison de la suggestion : les Bibax en commun d'abord, sinon la distance.
+// Raison de la suggestion : toujours le nombre de Bibax en commun, « 0 Bibax en commun » compris (Mehdi, 2026-11-18 ; la distance n'est plus affichée, trop intrusive).
 function reasonOf(s) {
-  if (s.mutualCount > 0) return { icon: "users", text: `${s.mutualCount} Bibax en commun` };
-  if (s.distanceKm != null) return { icon: "map-pin", text: `à ${s.distanceKm} km` };
-  return null;
+  return { icon: "users", text: mutualLabel(s.mutualCount || 0) };
 }
 
 export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss, busyCode, onSeeAll }) {

@@ -368,7 +368,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
     const people = (ids || []).map((userId) => bibros.find((b) => b.userId === userId)).filter(Boolean);
     rows = people.map((b, i) => {
       // Ligne 2 : le @nom seulement s'il a été changé (au départ, le nom d'utilisateur est une copie du code Bibax), puis le surnom. Ligne 3 : commune (village), puis le pays en drapeau.
-      // Ligne 4 : « N Bibax en commun », ou « Aucun Bibax en commun » à 0 (Mehdi, 2026-11-18 ; avant : rien à 0). Une ligne sans contenu n'est pas affichée. Mehdi, 2026-11-17 ; avant : surnom · ville sur une seule ligne.
+      // Ligne 4 : « N Bibax en commun », « 0 Bibax en commun » compris (Mehdi, 2026-11-18 ; avant : rien à 0 ; « Aucun » refusé : trop long). Une ligne sans contenu n'est pas affichée. Mehdi, 2026-11-17 ; avant : surnom · ville sur une seule ligne.
       const username = details?.[b.userId]?.username || "";
       const usernameChanged = !!username && username.toLowerCase() !== String(b.code || "").toLowerCase();
       // Le @nom d'abord, avec son « @ » en vert fluo, puis le surnom en italique (Mehdi, 2026-11-18 ; avant : surnom puis @nom, « @ » en rose fluo).

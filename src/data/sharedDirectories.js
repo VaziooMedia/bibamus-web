@@ -5210,7 +5210,7 @@ export async function loadUsernamesByBibroCodes(codes) {
 // Le nombre de Bibax en commun de personnes repérées par leur CODE Bibax (Demandes reçues et envoyées, résultats de la recherche par nom dans « Ajouter un Bibax »).
 // Une lecture groupée par la fonction `get_mutual_bibax_counts_by_bibro_codes` (script « bibamus-sql-bibax-en-commun-par-codes.sql »), 200 codes à la fois. Le nombre change quand on ajoute des Bibax : il est gardé
 // 5 minutes seulement (les Demandes se relisent toutes les 15 s sans rappeler le serveur). En cas d'échec (par exemple tant que le script n'est pas lancé) : pas de nombre, et on ne réessaie qu'après 60 s.
-// Rend un objet { CODE: nombre } (les codes en majuscules), 0 compris : une personne sans Bibax en commun a bien 0 (les écrans écrivent « Aucun Bibax en commun »). Un code absent de l'objet = inconnu (lecture échouée) : les écrans n'affichent rien.
+// Rend un objet { CODE: nombre } (les codes en majuscules), 0 compris : une personne sans Bibax en commun a bien 0 (les écrans écrivent « 0 Bibax en commun »). Un code absent de l'objet = inconnu (lecture échouée) : les écrans n'affichent rien.
 const mutualByCodeCache = new Map();
 let mutualsByCodeRetryAt = 0;
 export async function loadMutualCountsByBibroCodes(codes) {
