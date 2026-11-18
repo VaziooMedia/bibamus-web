@@ -127,6 +127,7 @@ import {
   loadClubMembers,
   linkSalonToClub,
   loadMutualBibaxList,
+  attachUsernames,
   recordVenueCheckIn,
   publishVenueCheckInToPulse,
   submitVenueRating,
@@ -3690,7 +3691,7 @@ export default function App() {
                 }}
                 onOpenStoryAuthor={setViewedStoryAuthor}
                 onViewMutualBibax={async (userId, name) => {
-                  const list = await loadMutualBibaxList(userId);
+                  const list = await attachUsernames(await loadMutualBibaxList(userId));
                   setMutualBibaxData({ list, name, fromCode: viewedBibroId, fromBack: screenBeforeBibroDetail });
                   setScreen("mutualBibax");
                 }}

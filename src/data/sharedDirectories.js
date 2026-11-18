@@ -2682,7 +2682,7 @@ export async function loadMutualBibaxList(otherUserId) {
     code: b.bibro_code,
     city: b.city,
     locality: b.locality,
-    country: b.country,
+    country: prettifyCountry(b.country),
   }));
 }
 
@@ -5143,6 +5143,57 @@ export async function loadMyBibaxUsernames() {
   const byUser = {};
   for (const r of data || []) if (r.username) byUser[r.user_id] = r.username;
   return byUser;
+}
+
+// Ajoute le @nom (`username`) à des lignes de Bibax qui ont un `userId` (Suggestions, Demandes, Bibax en commun, accueil) : `get_my_bibax` & co. ne le donnent pas. Le @nom d'un compte est public.
+// Une lecture groupée par la fonction `get_usernames_by_ids` (script « bibamus-sql-bibax-noms-d-utilisateur-blocs.sql »), 500 comptes à la fois ; ceux déjà lus pendant la session viennent de la mémoire
+// (les Demandes se relisent toutes les 15 s sans rappeler le serveur). Si la lecture échoue (par exemple tant que le script n'est pas lancé), les lignes reviennent sans @nom et on ne réessaie qu'après 60 s.
+const usernameCache = new Map();
+let usernamesRetryAt = 0;
+export async function attachUsernames(rows) {
+  if (!rows) return rows; // null (erreur de chargement) reste null : l'appelant sait la différence avec « aucun Bibax »
+  const list = rows;
+  const missing = [...new Set(list.map((r) => r.userId).filter((id) => id && !usernameCache.has(id)))];
+  if (missing.length > 0 && Date.now() >= usernamesRetryAt) {
+    for (let i = 0; i < missing.length; i += 500) {
+      const chunk = missing.slice(i, i + 500);
+      const { data, error } = await supabase.rpc("get_usernames_by_ids", { p_user_ids: chunk });
+      if (error) {
+        console.error("attachUsernames:", error);
+        usernamesRetryAt = Date.now() + 60000;
+        break;
+      }
+      const found = new Map((data || []).map((r) => [r.user_id, r.username]));
+      for (const id of chunk) usernameCache.set(id, found.get(id) || "");
+    }
+  }
+  return list.map((r) => ({ ...r, username: usernameCache.get(r.userId) || "" }));
+}
+
+// Même chose pour des Bibax repérés par leur CODE (écran « Ajouter un Bibax » : résultats de la recherche par nom, carte du Bibax trouvé), où l'on n'a pas leur compte (`userId`).
+// Une lecture groupée par la fonction `get_usernames_by_bibro_codes` (script « bibamus-sql-bibax-noms-d-utilisateur-codes.sql »), 200 codes à la fois, avec la même mémoire de session et la même pause de 60 s en cas d'échec.
+// Rend un objet { CODE: "@nom sans le @" } (les codes en majuscules) ; un Bibax sans @nom, ou bloqué, n'y figure pas.
+const usernameByCodeCache = new Map();
+let usernamesByCodeRetryAt = 0;
+export async function loadUsernamesByBibroCodes(codes) {
+  const wanted = [...new Set((codes || []).map((c) => (c || "").trim().toUpperCase()).filter(Boolean))];
+  const missing = wanted.filter((c) => !usernameByCodeCache.has(c));
+  if (missing.length > 0 && Date.now() >= usernamesByCodeRetryAt) {
+    for (let i = 0; i < missing.length; i += 200) {
+      const chunk = missing.slice(i, i + 200);
+      const { data, error } = await supabase.rpc("get_usernames_by_bibro_codes", { p_codes: chunk });
+      if (error) {
+        console.error("loadUsernamesByBibroCodes:", error);
+        usernamesByCodeRetryAt = Date.now() + 60000;
+        break;
+      }
+      const found = new Map((data || []).map((r) => [String(r.bibro_code || "").toUpperCase(), r.username]));
+      for (const c of chunk) usernameByCodeCache.set(c, found.get(c) || "");
+    }
+  }
+  const byCode = {};
+  for (const c of wanted) if (usernameByCodeCache.get(c)) byCode[c] = usernameByCodeCache.get(c);
+  return byCode;
 }
 
 export async function loadPendingBibaxRequests() {

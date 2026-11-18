@@ -17,12 +17,12 @@ import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
 
 // Éléments séparés par des points vert fluo (même rendu que les lignes de « Mon Historique »).
-// `noWrap` : tout sur une seule ligne — les textes se coupent par « … » au lieu de passer à la ligne, et les éléments qui ne sont pas du texte (drapeau, icône) gardent leur taille.
+// `center` : éléments centrés (cartes de l'accueil). `noWrap` : tout sur une seule ligne — les textes se coupent par « … » au lieu de passer à la ligne, et les éléments qui ne sont pas du texte (drapeau, icône) gardent leur taille.
 // Un élément `{ node }` est un texte mis en forme (italique, couleur…) : il se coupe par « … » comme une simple chaîne.
-export function DotLine({ parts, noWrap = false }) {
+export function DotLine({ parts, noWrap = false, center = false }) {
   if (parts.length === 0) return null;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: noWrap ? "nowrap" : "wrap", minWidth: 0 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: center ? "center" : undefined, gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: noWrap ? "nowrap" : "wrap", minWidth: 0 }}>
       {parts.map((part, idx) => {
         const styledText = !!part && typeof part === "object" && !React.isValidElement(part) && "node" in part;
         return (
@@ -367,14 +367,14 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
   } else {
     const people = (ids || []).map((userId) => bibros.find((b) => b.userId === userId)).filter(Boolean);
     rows = people.map((b, i) => {
-      // Ligne 2 : le surnom, puis le @nom seulement s'il a été changé (au départ, le nom d'utilisateur est une copie du code Bibax). Ligne 3 : commune (village), puis le pays en drapeau.
+      // Ligne 2 : le @nom seulement s'il a été changé (au départ, le nom d'utilisateur est une copie du code Bibax), puis le surnom. Ligne 3 : commune (village), puis le pays en drapeau.
       // Ligne 4 : « N Bibax en commun » (rien à 0). Une ligne sans contenu n'est pas affichée. Mehdi, 2026-11-17 ; avant : surnom · ville sur une seule ligne.
       const username = details?.[b.userId]?.username || "";
       const usernameChanged = !!username && username.toLowerCase() !== String(b.code || "").toLowerCase();
-      // Surnom en italique, « @ » du nom d'utilisateur en rose fluo (Mehdi, 2026-11-17).
+      // Le @nom d'abord, avec son « @ » en vert fluo, puis le surnom en italique (Mehdi, 2026-11-18 ; avant : surnom puis @nom, « @ » en rose fluo).
       const line2 = [
-        b.nickname ? { node: <span style={{ fontStyle: "italic" }}>{b.nickname}</span> } : null,
-        usernameChanged ? { node: <><span style={{ color: COLORS.pinkFluo }}>@</span>{username}</> } : null,
+        usernameChanged ? { node: <><span style={{ color: COLORS.amber }}>@</span>{username}</> } : null,
+        b.nickname ? { node: <span style={{ fontStyle: "italic", paddingRight: "2px" }}>{b.nickname}</span> } : null,
       ].filter(Boolean);
       const commune = b.city ? (b.locality ? `${b.city} (${b.locality})` : b.city) : ""; // comme `BibaxName` : sans commune, le village n'est pas affiché
       const line3 = [commune || null, flagPart({ nationality: b.country })].filter(Boolean);

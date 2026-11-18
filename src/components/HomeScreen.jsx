@@ -12,7 +12,7 @@ import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { EntityAvatar, SalonAvatar, CategoryTile } from "./ui.jsx";
 import { BibaxSuggestionsCarousel } from "./BibaxSuggestionsCarousel.jsx";
 import { loadSalon } from "../data/salons.js";
-import { loadPulseFeed, loadBibaxSuggestions, dismissBibaxSuggestion, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds, pulseClubName } from "../data/sharedDirectories.js";
+import { loadPulseFeed, loadBibaxSuggestions, attachUsernames, dismissBibaxSuggestion, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds, pulseClubName } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
@@ -139,7 +139,7 @@ export function HomeScreen({
   useEffect(() => {
     // Charge plus que ce qui est affiché (8 cartes dans le carrousel) — dès qu'on en ajoute une ou qu'on en supprime une,
     // la suivante du lot prend directement sa place, sans nouvel aller-retour serveur.
-    loadBibaxSuggestions(20).then(setBibaxSuggestionsPool);
+    loadBibaxSuggestions(20).then(attachUsernames).then(setBibaxSuggestionsPool);
   }, []);
   const bibaxSuggestions = (bibaxSuggestionsPool || []).slice(0, 8);
   const addSuggestedBibax = async (bibroCode) => {

@@ -28,7 +28,7 @@ import { EvolutionCard } from "./EvolutionCard.jsx";
 import { NotesCard, RatingFraction } from "./NotesCard.jsx";
 import { styleTagLabel, hasStyleLabel, registerCustomStyleLabels } from "../data/styleTagLabels.js";
 import { OTHER_STYLE_TYPES } from "../data/otherStyleLabels.js";
-import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
+import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDrinkCheckinCount, loadDrinkTotalChecks, loadDrinkUniqueCheckers, loadMyDrinkHistory, loadVenuesByIds, loadMyBibaxDrinkChecks, attachUsernames, loadDrinkTopVenues, loadMyBibaxDrinkVenues, loadMyBibaxDrinkRating, loadDrinkEvolution, loadBrandById, loadBreweriesByIds, toggleFollowDrink, loadDrinkFollowStatus, loadNearestVenuesServingDrink } from "../data/sharedDirectories.js";
 import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import atpIconUrl from "../assets/brand/atp.svg";
@@ -421,9 +421,12 @@ export function DrinkDetailScreen({
   useEffect(() => {
     let cancelled = false;
     setBibaxChecks(null);
-    loadMyBibaxDrinkChecks(drink.id).then((list) => {
-      if (!cancelled) setBibaxChecks(list);
-    });
+    // Le @nom de chaque Bibax s'ajoute à la liste (ligne 2 des rangées) ; `attachUsernames` laisse null tel quel (lecture échouée).
+    loadMyBibaxDrinkChecks(drink.id)
+      .then(attachUsernames)
+      .then((list) => {
+        if (!cancelled) setBibaxChecks(list);
+      });
     return () => {
       cancelled = true;
     };
