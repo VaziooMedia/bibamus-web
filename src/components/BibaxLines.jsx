@@ -10,7 +10,7 @@ import React from "react";
 import { COLORS } from "../constants.js";
 import { DotLine } from "./MyFavoritesScreen.jsx";
 import { flagPart } from "./DrinkRowParts.jsx";
-import { mutualLabel } from "../utils.js";
+import { MutualPill } from "./ui.jsx";
 
 // Le « @nom » : « @ » en vert fluo, le reste dans la couleur de la ligne.
 export const usernamePart = (username) => (username ? { node: <><span style={{ color: COLORS.amber }}>@</span>{username}</> } : null);
@@ -43,7 +43,11 @@ export function BibaxIdentity({ name, lastName, username, nickname, city, locali
         <span style={{ fontWeight: 700, ...(wrapName ? { overflowWrap: "anywhere" } : { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{fullName}</span>
       )}
       <BibaxDetailLines username={username} nickname={nickname} city={city} locality={locality} country={country} />
-      {mutual != null && <DotLine parts={[mutualLabel(mutual)]} noWrap />}
+      {mutual != null && (
+        <div>
+          <MutualPill n={mutual} />
+        </div>
+      )}
     </div>
   );
 }

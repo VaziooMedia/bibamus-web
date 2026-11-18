@@ -6,13 +6,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, ActionCard, CARD_AVATAR, avatarOverhang, RequestCardAvatar } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, ActionCard, CARD_AVATAR, avatarOverhang, RequestCardAvatar, MutualPill } from "./ui.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
 import { MyPhotosScreen } from "./MyPhotosScreen.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
-import { makeSearchMatcher, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery, formatCount, mutualLabel } from "../utils.js";
+import { makeSearchMatcher, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery, formatCount } from "../utils.js";
 import {
   loadPendingBibaxRequests,
   loadSentBibaxRequests,
@@ -246,9 +246,9 @@ function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, on
           <RequestCardAvatar photoUrl={s.avatarUrl} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <BibaxIdentity name={s.name} lastName={s.lastName} username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
-            <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
-              {mutualLabel(s.mutualCount || 0)}
-            </p>
+            <div style={{ marginTop: "3px" }}>
+              <MutualPill n={s.mutualCount || 0} />
+            </div>
           </div>
           <button
             onClick={(e) => {
@@ -375,7 +375,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   const bibaxRow = (b, isLast, inAlphaList) => {
     // Trois lignes (Mehdi, 2026-11-18, même modèle que Mes Favoris > Bibax, voir `BibaxLines.jsx`) : 1. nom ; 2. @nom (« @ » vert fluo) puis surnom en italique ; 3. commune (village) puis drapeau du pays.
     // Ligne 4 (Mehdi, 2026-11-18, comme dans Mes Favoris > Bibax) : « N Bibax en commun », « 0 Bibax en commun » compris. La lecture ne rend que ceux qui en ont : une fois lue, un Bibax absent en a 0 ; tant qu'elle n'a pas répondu (ou si elle a échoué : `mutuals` est null), pas de 4ᵉ ligne.
-    const lines = [...bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country }), mutuals ? [mutualLabel(mutuals[b.userId] || 0)] : []];
+    const lines = [...bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country }), mutuals ? <MutualPill n={mutuals[b.userId] || 0} /> : null];
     const first = b.firstName || b.name;
     const fullName = (sort === "last" ? [b.lastName, first] : [first, b.lastName]).filter(Boolean).join(" ") || "Bibax";
     return (
@@ -1502,7 +1502,9 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                 country={foundSocials.country}
                 style={{ fontSize: "17px" }}
               />
-              <div style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "4px" }}>{mutualLabel(mutualBibaxCount)}</div>
+              <div style={{ marginTop: "6px" }}>
+                <MutualPill n={mutualBibaxCount} />
+              </div>
             </div>
           </div>
         </div>

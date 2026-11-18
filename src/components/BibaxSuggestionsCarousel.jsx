@@ -1,7 +1,7 @@
 // ============================================================
 // Carrousel des « Suggestions rapides » de l'accueil (décision de Mehdi, 2026-11-18) : une rangée de cartes verticales qu'on fait défiler vers la gauche.
 // Chaque carte : un grand rond de profil cerclé de vert fluo, avec un petit « + » vert pour ajouter en un tap, un « × » rose fluo dans le coin pour supprimer la suggestion
-// (la suivante prend sa place), le nom, deux lignes de détails (@nom + surnom ; commune + drapeau — `BibaxDetailLines`) et une pastille de raison (« 4 Bibax en commun » ou « à 12 km »). Une carte « Voir tout » ferme la rangée.
+// (la suivante prend sa place), le nom, deux lignes de détails (@nom + surnom ; commune + drapeau — `BibaxDetailLines`) et une pastille de raison (« 4 Bibax en commun », « 0 » compris). Une carte « Voir tout » ferme la rangée.
 // La page Mes Bibax, elle, garde des listes (onglet « Suggestions »).
 //
 // `suggestions` : les suggestions à afficher (voir `loadBibaxSuggestions`) ; `onOpen(bibroCode)` ouvre le profil ; `onAdd(bibroCode)` envoie la demande ;
@@ -10,23 +10,16 @@
 import React from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
-import { EntityAvatar } from "./ui.jsx";
+import { EntityAvatar, MutualPill } from "./ui.jsx";
 import { BibaxDetailLines } from "./BibaxLines.jsx";
-import { mutualLabel } from "../utils.js";
 
 const CARD_WIDTH = 150;
-
-// Raison de la suggestion : toujours le nombre de Bibax en commun, « 0 Bibax en commun » compris (Mehdi, 2026-11-18 ; la distance n'est plus affichée, trop intrusive).
-function reasonOf(s) {
-  return { icon: "users", text: mutualLabel(s.mutualCount || 0) };
-}
 
 export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss, busyCode, onSeeAll }) {
   const card = { background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", cursor: "pointer", boxSizing: "border-box" };
   return (
     <div style={{ display: "flex", gap: "10px", overflowX: "auto", scrollSnapType: "x mandatory", scrollPaddingLeft: "20px", margin: "0 -20px", padding: "4px 20px 10px", scrollbarWidth: "none" }}>
       {suggestions.map((s) => {
-        const reason = reasonOf(s);
         const fullName = [s.name, s.lastName].filter(Boolean).join(" ") || "Bibax";
         return (
           <div
@@ -70,12 +63,8 @@ export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss
               </div>
             </span>
 
-            {reason && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: COLORS.paperAlt, borderRadius: "999px", padding: "3px 9px", fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>
-                <NavIcon name={reason.icon} size={11} color={COLORS.amber} />
-                {reason.text}
-              </span>
-            )}
+            {/* Raison de la suggestion : toujours le nombre de Bibax en commun, « 0 Bibax en commun » compris (Mehdi, 2026-11-18 ; la distance n'est plus affichée, trop intrusive). */}
+            <MutualPill n={s.mutualCount || 0} />
           </div>
         );
       })}

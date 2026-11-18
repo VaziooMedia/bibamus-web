@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, TokenPinkIcon, TokenCyanIcon, CountryFlagImg } from "./icons.jsx";
 import { NavigationContext, ProfileNavContext } from "../contexts.js";
-import { formatMoney, salonSpecialPlace, formatCount } from "../utils.js";
+import { formatMoney, salonSpecialPlace, formatCount, mutualLabel } from "../utils.js";
 import homeSalonIconUrl from "../assets/brand/home-icon.svg";
 import eventSalonIconUrl from "../assets/brand/event-icon.svg";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
@@ -183,6 +183,17 @@ export function BibaxName({ name, lastName, nickname, city, locality, country, s
 // Ordre de priorité du contenu du rond : photo, puis emoji, puis `fallbackImageUrl` (un picto
 // image, occupant `fallbackImageScale` du rond), puis l'icône `fallbackIcon` (le « B » Bibamus
 // par défaut).
+// La pastille grise « N Bibax en commun » (Mehdi, 2026-11-18 : la pastille des Suggestions de l'accueil lui plaît, reprise partout ailleurs, sans icône Bibax).
+// `n` : le nombre (0 compris) ; `style` : retouches de l'appelant ; le reste (data-…) est passé tel quel. Pas d'icône (Mehdi, 2026-11-18, y compris sur le carrousel de l'accueil, qui en avait une au début).
+// Dans une colonne flex, l'appelant l'enveloppe dans un <div> pour qu'elle garde sa largeur de texte.
+export function MutualPill({ n, style = null, ...rest }) {
+  return (
+    <span {...rest} style={{ display: "inline-flex", alignItems: "center", background: COLORS.paperAlt, borderRadius: "999px", padding: "3px 9px", fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap", flexShrink: 0, ...style }}>
+      {mutualLabel(n)}
+    </span>
+  );
+}
+
 export function EntityAvatar({ photoUrl, photoEmoji, size = 40, onClick, fallbackIcon = "bibamus-monogram", fallbackColor = COLORS.amber, fallbackImageUrl, fallbackImageScale = 0.62 }) {
   const fallbackImageSize = Math.round(size * fallbackImageScale);
   const content = photoUrl ? null : photoEmoji ? photoEmoji : fallbackImageUrl ? (
