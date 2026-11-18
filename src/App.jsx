@@ -3620,7 +3620,6 @@ export default function App() {
                 checkIns={checkIns}
                 myBibroCode={profile.myBibroCode}
                 bibros={bibros}
-                bibroStatuses={{}}
                 goToAddBibro={() => setScreen("addBibro")}
                 onBibaxAdded={() => {
                   loadMyBibax().then((confirmed) => {
@@ -3652,7 +3651,6 @@ export default function App() {
                 onRemoveBibro={removeBibro}
                 onSetAlias={setBibroAlias}
                 onToggleFavorite={toggleBibroFavorite}
-                onJoinSalon={joinSalon}
                 onViewBibro={(code) => {
                   setViewedBibroId(code);
                   setScreenBeforeBibroDetail("bibrosList");
