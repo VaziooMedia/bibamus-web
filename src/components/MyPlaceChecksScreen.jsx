@@ -8,10 +8,13 @@
 // Retour d'une fiche : la page se remet comme on l'avait laissée (classement et hauteur de défilement, voir `useListReturn`) ; ce qu'elle affichait revient aussitôt, puis la liste est relue
 // en silence et remplacée seulement si elle a changé (un PlaceCheck fait sur la fiche). Une entrée depuis Mon Profil repart de zéro.
 // Les identifiants viennent de la fonction `get_my_checked_venues` (script bibamus-sql-mes-lieux-1-liste), puis les lieux par `loadVenuesByIds`.
+// La MÊME page sert, en lecture seule, aux PlaceChecks d'UN DE MES BIBAX (bloc « PlaceChecks » de sa fiche — Mehdi, 2026-11-19) : avec `other = { userId, name }`, la liste vient de
+// `get_bibax_checked_venues` (qui respecte le partage « Lieux » de cette personne), un sous-titre « de <nom> » suit le titre, les messages parlent d'elle, et la flèche retour ramène à sa fiche
+// (la mémoire de la liste est alors effacée, comme pour les autres sous-listes d'une fiche).
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, PageFooterNav, ScrollToTopButton } from "./ui.jsx";
-import { loadMyCheckedVenues, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { loadMyCheckedVenues, loadBibroCheckedVenues, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { ScreenTitle, countryFlagPart } from "./MyFavoritesScreen.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
@@ -25,20 +28,29 @@ const SORT_FIELDS = { nameOf: (x) => x.venue.name, countOf: (x) => x.visits, cou
 
 const signatureOf = (list) => list.map((x) => `${x.venueId}:${x.visits}`).join(",");
 
-export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
-  const { restored, save, open } = useListReturn("myPlaceChecks", mainScrollRef);
+export function MyPlaceChecksScreen({ onBack: onBackProp, onOpenVenue, mainScrollRef, other = null }) {
+  const { restored, save, open, leave } = useListReturn(other ? "bibroPlaceChecks" : "myPlaceChecks", mainScrollRef, other ? { valid: (m) => m.ctx === other.userId } : undefined);
+  const onBack = other ? leave(onBackProp) : onBackProp;
+  const who = other?.name || "";
   const [items, setItems] = useState(restored ? restored.items : null); // null = chargement ; [{ venueId, visits, lastAt }]
   const [venuesById, setVenuesById] = useState(restored ? restored.venuesById : {});
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [sort, setSort] = useState(restored ? restored.sort : "recent");
   const [country, setCountry] = useState(restored ? restored.country ?? null : null); // classé « Pays » : le pays choisi dans la liste déroulante (null = tous)
+  const [hidden, setHidden] = useState(false); // la personne ne partage pas ses PlaceChecks (seulement pour la liste d'un autre Bibax)
 
   useEffect(() => {
     let cancelled = false;
     setError(false);
-    loadMyCheckedVenues().then(async (list) => {
+    (other ? loadBibroCheckedVenues(other.userId) : loadMyCheckedVenues().then((l) => (l ? { list: l } : null))).then(async (result) => {
       if (cancelled) return;
+      if (result?.hidden) {
+        setHidden(true);
+        setItems([]);
+        return;
+      }
+      const list = result?.list;
       if (!list) {
         // Si la base n'a pas répondu, on ne prétend pas que la liste est vide : on n'affiche que le message d'erreur.
         // Au retour d'une fiche, on garde en silence ce qu'on avait.
@@ -64,7 +76,7 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
     if (items === null || error) return;
-    save({ items, venuesById, sort, country });
+    save({ items, venuesById, sort, country, ctx: other ? other.userId : undefined });
   }, [items, venuesById, sort, country, error]);
   const openVenue = onOpenVenue ? open(onOpenVenue) : null;
 
@@ -84,7 +96,7 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
-      <ScreenTitle iconUrl={placeCheckIconUrl}>
+      <ScreenTitle iconUrl={placeCheckIconUrl} subtitle={other ? <>de <strong style={{ color: COLORS.ink, fontWeight: 700 }}>{who}</strong></> : null}>
         Place<span style={{ color: COLORS.amber }}>Checks</span>
       </ScreenTitle>
 
@@ -93,14 +105,18 @@ export function MyPlaceChecksScreen({ onBack, onOpenVenue, mainScrollRef }) {
           <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Chargement...</p>
         ) : error ? (
           <p style={{ fontSize: "12.5px", color: "#FF3B3B", textAlign: "center", margin: "0 0 16px" }}>
-            Impossible de charger tes lieux.{" "}
+            {other ? `Impossible de charger les lieux de ${who}.` : "Impossible de charger tes lieux."}{" "}
             <button type="button" onClick={() => setAttempt((n) => n + 1)} style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, cursor: "pointer", padding: 0, fontSize: "12.5px" }}>
               Réessayer
             </button>
           </p>
+        ) : hidden ? (
+          <p data-check-empty style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" }}>
+            {who} ne partage pas ses PlaceChecks.
+          </p>
         ) : entries.length === 0 ? (
           <p data-check-empty style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" }}>
-            Aucun lieu checké pour l'instant. Fais un PlaceCheck depuis la fiche d'un lieu.
+            {other ? `${who} n'a pas encore checké de lieu.` : "Aucun lieu checké pour l'instant. Fais un PlaceCheck depuis la fiche d'un lieu."}
           </p>
         ) : (
           <>
