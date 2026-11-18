@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { loadPublicVenues, loadDrinksDirectory, loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
+import { formatCount } from "../utils.js";
 
 function breakdown(items) {
   return {
@@ -16,20 +17,20 @@ function StatCard({ label, data }) {
   return (
     <div style={{ background: "#16273D", borderRadius: "12px", padding: "20px", flex: 1, textAlign: "center" }}>
       <div style={{ fontSize: "13px", color: "#8792A6", marginBottom: "6px" }}>{label}</div>
-      <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "36px", color: "#39FF66" }}>{data.total}</div>
+      <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "36px", color: "#39FF66" }}>{formatCount(data.total)}</div>
       <div style={{ borderBottom: "1px solid #F2F2E8", opacity: 0.25, margin: "12px 0" }} />
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", textAlign: "left" }}>
         <div>
-          Certifié : <span style={{ color: "#39FF66", fontWeight: 700 }}>{data.certified}</span>
+          Certifié : <span style={{ color: "#39FF66", fontWeight: 700 }}>{formatCount(data.certified)}</span>
         </div>
         <div>
-          Non certifié : <span style={{ color: "#FF3B4E", fontWeight: 700 }}>{data.reviewed}</span>
+          Non certifié : <span style={{ color: "#FF3B4E", fontWeight: 700 }}>{formatCount(data.reviewed)}</span>
         </div>
         <div>
-          À vérifier : <span style={{ color: "#00C8FF", fontWeight: 700 }}>{data.pending}</span>
+          À vérifier : <span style={{ color: "#00C8FF", fontWeight: 700 }}>{formatCount(data.pending)}</span>
         </div>
         <div>
-          Business : <span style={{ color: "#F2F2E8", fontWeight: 700 }}>{data.ownerManaged}</span>
+          Business : <span style={{ color: "#F2F2E8", fontWeight: 700 }}>{formatCount(data.ownerManaged)}</span>
         </div>
       </div>
     </div>

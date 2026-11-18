@@ -10,7 +10,7 @@ import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { PageHeader, PageFooterNav, ScrollToTopButton, EntityAvatar, HubCard } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
-import { venueStreetLine, venuePostalCityLine } from "../utils.js";
+import { venueStreetLine, venuePostalCityLine, formatCount } from "../utils.js";
 import { flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
 import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds, loadMyFavoriteBibaxDetails, toggleFavoriteBrand, toggleFavoriteProducer } from "../data/sharedDirectories.js";
 
@@ -148,11 +148,11 @@ function FavoriteRow({ kind, avatar, title, details = [], detailsNode = null, he
 
 // Les cinq listes, dans l'ordre voulu : titre de la page, nombre au singulier / au pluriel (sur la carte) et phrase d'une liste vide.
 const KINDS = [
-  { kind: "venues", title: "Lieux", count: (n) => `${n} lieu${n > 1 ? "x" : ""}`, empty: "Aucun lieu favori. Touche le cœur sur la fiche d'un lieu." },
-  { kind: "drinks", title: "Produits", count: (n) => `${n} produit${n > 1 ? "s" : ""}`, empty: "Aucun produit favori. Touche le cœur sur la fiche d'un produit." },
-  { kind: "brands", title: "Marques", count: (n) => `${n} marque${n > 1 ? "s" : ""}`, empty: "Aucune marque favorite. Touche le cœur sur la fiche d'une marque." },
-  { kind: "producers", title: "Producteurs", count: (n) => `${n} producteur${n > 1 ? "s" : ""}`, empty: "Aucun producteur favori. Touche le cœur sur la fiche d'un producteur." },
-  { kind: "bibax", title: "Bibax", count: (n) => `${n} Bibax`, empty: "Aucun Bibax favori. Touche le cœur sur la fiche d'un Bibax." },
+  { kind: "venues", title: "Lieux", count: (n) => `${formatCount(n)} lieu${n > 1 ? "x" : ""}`, empty: "Aucun lieu favori. Touche le cœur sur la fiche d'un lieu." },
+  { kind: "drinks", title: "Produits", count: (n) => `${formatCount(n)} produit${n > 1 ? "s" : ""}`, empty: "Aucun produit favori. Touche le cœur sur la fiche d'un produit." },
+  { kind: "brands", title: "Marques", count: (n) => `${formatCount(n)} marque${n > 1 ? "s" : ""}`, empty: "Aucune marque favorite. Touche le cœur sur la fiche d'une marque." },
+  { kind: "producers", title: "Producteurs", count: (n) => `${formatCount(n)} producteur${n > 1 ? "s" : ""}`, empty: "Aucun producteur favori. Touche le cœur sur la fiche d'un producteur." },
+  { kind: "bibax", title: "Bibax", count: (n) => `${formatCount(n)} Bibax`, empty: "Aucun Bibax favori. Touche le cœur sur la fiche d'un Bibax." },
 ];
 
 // Le rond d'icône de chaque carte de l'écran d'entrée (Mehdi, 2026-11-17) : celle que les lignes de la liste utilisent déjà quand l'élément n'a pas de photo (épingle, bouteille, étiquette,

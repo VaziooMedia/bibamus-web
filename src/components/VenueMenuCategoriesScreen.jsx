@@ -5,7 +5,7 @@ import React from "react";
 import { COLORS, MENU_CATEGORIES } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav } from "./ui.jsx";
-import { resolveMenuItem, venueMenuWithFiches } from "../utils.js";
+import { resolveMenuItem, venueMenuWithFiches, formatCount } from "../utils.js";
 import { useTargetedDrinks } from "../hooks/useTargetedDrinks.js";
 import carteIconUrl from "../assets/brand/carte.svg";
 import pdfIconUrl from "../assets/brand/pdf-icone.svg";
@@ -89,7 +89,7 @@ export function VenueMenuCategoriesScreen({ venue, onBack, onOpenCategory }) {
               <span style={{ fontSize: "15px", fontWeight: 700, color: COLORS.ink }}>{cat}</span>
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>{count}</span>
+              <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>{formatCount(count)}</span>
               <NavIcon name="chevron-right" size={16} color={COLORS.inkSoft} />
             </span>
           </button>

@@ -22,7 +22,7 @@ import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandList
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
-import { normalizeUrl, buildWhatsAppLink } from "../utils.js";
+import { normalizeUrl, buildWhatsAppLink, formatCount } from "../utils.js";
 import snapchatIconUrl from "../assets/brand/snapchat.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 import youtubeIconUrl from "../assets/brand/youtube.svg";
@@ -233,7 +233,7 @@ function CoverRating({ summary, buttonRef, onClick, buttonLabel }) {
               <NavIcon name="star" size={17} color={COLORS.amber} filled />
             </span>
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: COLORS.chalkWhite, whiteSpace: "nowrap" }}><RatingFraction value={summary.average} /></span>
-            <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {summary.count} avis</span>
+            <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {formatCount(summary.count)} avis</span>
           </div>
         </div>
       )}

@@ -8,7 +8,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader, BackFooterLink, MoneyAmount } from "./ui.jsx";
 import { NavIcon } from "./icons.jsx";
-import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent, realMoneySpentFor } from "../utils.js";
+import { formatDate, formatTime, formatDuration, formatMoney, kcalForDrink, findMenuEntryById, findEntryForEvent, realMoneySpentFor, formatCount } from "../utils.js";
 import { loadVenuesByIds } from "../data/sharedDirectories.js";
 import { drinkLabel } from "../beerDerivatives.js";
 import { useBeerDerivatives } from "../hooks/useBeerDerivatives.js";
@@ -143,7 +143,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
           <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px" }}>{myOrderEntries.length}</div>
           {caloriesInfo.total > 0 && (
             <div style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-              ≈ {caloriesInfo.total} kcal{caloriesInfo.missing > 0 && ` (${caloriesInfo.missing} sans info)`}
+              ≈ {formatCount(caloriesInfo.total)} kcal{caloriesInfo.missing > 0 && ` (${caloriesInfo.missing} sans info)`}
             </div>
           )}
         </div>

@@ -510,9 +510,9 @@ export const computeMissingVenueItems = (event, venue, drinksDirectory) => {
 export const formatMoney = (value, currency) => {
   if (currency === "jeton") {
     const n = Math.round(value * 10) / 10;
-    return `${n % 1 === 0 ? n : n.toFixed(1)} jeton${n !== 1 ? "s" : ""}`;
+    return `${n % 1 === 0 ? formatCount(n) : n.toFixed(1)} jeton${n !== 1 ? "s" : ""}`;
   }
-  return `${value.toFixed(2).replace(".", ",")} €`;
+  return `${formatDecimal(value, 2)} €`;
 };
 
 // Accord grammatical basé sur le genre déclaré — "male"/"female" donnent l'accord classique,
@@ -619,7 +619,7 @@ export function drinkSummaryParts(d, includeType = true) {
         parts = d.abv != null && d.abv > 0 ? [abvText] : [];
         break;
       case "Snacks":
-        parts = [d.snackType || null, d.weightG != null ? `${d.weightG} g.` : null];
+        parts = [d.snackType || null, d.weightG != null ? `${formatQuantity(d.weightG)} g.` : null];
         break;
       default:
         parts = [abvText, d.brand || d.brewery || null];
@@ -681,8 +681,8 @@ export const formatDrinkFieldValue = (field, value) => {
   if (value === null || value === undefined || value === "") return "—";
   if (field === "kcalPer100ml") return `${value} kcal`;
   if (field === "abv") return `${value.toFixed(1)}%`;
-  if (field === "volumeCl") return `${String(value).replace(".", ",")} cl.`;
-  if (field === "weightG") return `${value} g.`;
+  if (field === "volumeCl") return `${formatQuantity(value)} cl.`;
+  if (field === "weightG") return `${formatQuantity(value)} g.`;
   if (field === "averagePrice") return `${String(value).replace(".", ",")} €`;
   if (field === "servingMode") return SERVING_MODE_LABELS[value] || value;
   if (field === "beerTags") return Array.isArray(value) && value.length ? value.join(", ") : "—";
@@ -1017,3 +1017,24 @@ export const usernameFromQuery = (text) => {
   if (!t.startsWith("@")) return null;
   return t.slice(1).trim() || null;
 };
+
+// Un compteur à l'écran (nombre de Bibax, de checks, de produits, d'avis, de réactions…) : un entier de 1 000 ou plus prend le point comme séparateur
+// de milliers (9.999 ; décision de Mehdi, 2026-11-18). Tout autre texte ou nombre (« … », une quantité à virgule) est rendu tel quel.
+export function formatCount(n) {
+  if (typeof n !== "number" || !Number.isInteger(n)) return n;
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Une quantité à l'écran (kcal, volume en cl, poids en g.) : même règle que formatCount (décision de Mehdi, 2026-11-18 : « aussi sur les quantités ») — un entier de 1 000 ou plus prend le point
+// de milliers (1.250 kcal) ; un décimal prend la virgule (37,5), comme les écrans qui l'écrivaient déjà avec `String(x).replace(".", ",")`.
+export function formatQuantity(n) {
+  if (typeof n === "number" && Number.isInteger(n)) return formatCount(n);
+  return String(n).replace(".", ",");
+}
+
+// Un montant en euros avec ses centimes : le point sépare les milliers et la virgule les centimes (1.234,50), comme formatMoney.
+export function formatDecimal(n, decimals = 2) {
+  const [int, dec] = n.toFixed(decimals).split(".");
+  const withThousands = int.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return dec ? `${withThousands},${dec}` : withThousands;
+}

@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, TokenPinkIcon, TokenCyanIcon, CountryFlagImg } from "./icons.jsx";
 import { NavigationContext, ProfileNavContext } from "../contexts.js";
-import { formatMoney, salonSpecialPlace } from "../utils.js";
+import { formatMoney, salonSpecialPlace, formatCount } from "../utils.js";
 import homeSalonIconUrl from "../assets/brand/home-icon.svg";
 import eventSalonIconUrl from "../assets/brand/event-icon.svg";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
@@ -361,7 +361,7 @@ export function HubCard({ title, count, countText = null, icon, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      aria-label={count === null ? title : `${title}, ${countText ?? count}`}
+      aria-label={count === null ? title : `${title}, ${countText ?? formatCount(count)}`}
       style={{ width: "100%", textAlign: "left", background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", color: COLORS.ink, font: "inherit", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", padding: "14px 0 14px 14px", overflow: "hidden" }}
     >
       <span style={{ width: "48px", height: "48px", borderRadius: "50%", background: COLORS.paperAlt, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</span>
@@ -384,7 +384,7 @@ export function HubCard({ title, count, countText = null, icon, onClick }) {
           color: COLORS.amber,
         }}
       >
-        {count === null ? "\u00A0" : count}
+        {count === null ? "\u00A0" : formatCount(count)}
       </span>
     </button>
   );
@@ -532,7 +532,7 @@ export function CategoryTile({ iconElement, title, subtitle, onClick, badge, cou
 export function MoneyAmount({ value, currency, centered = false, jetonIconSize = 14, jetonIcon = "blue" }) {
   if (currency === "jeton") {
     const n = Math.round(value * 10) / 10;
-    const numPart = n % 1 === 0 ? n : n.toFixed(1);
+    const numPart = n % 1 === 0 ? formatCount(n) : n.toFixed(1);
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}>
         {numPart} {jetonIcon === "pink" ? <TokenPinkIcon size={jetonIconSize} /> : jetonIcon === "cyan" ? <TokenCyanIcon size={jetonIconSize} /> : <NavIcon name="jeton-token" size={jetonIconSize} color="#0040ef" />}

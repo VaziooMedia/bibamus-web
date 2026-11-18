@@ -12,6 +12,7 @@ import React from "react";
 import { COLORS } from "../constants.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { BlockTitle } from "./ui.jsx";
+import { formatCount } from "../utils.js";
 
 // « 3,25 / 5 » : deux décimales, virgule, une espace de chaque côté du « / ». Les notes se donnent au quart d'étoile (0,25 ; 3,25…) : avec une seule décimale,
 // 3,25 s'afficherait « 3,3 » et 0,25 « 0,3 ». C'est aussi le format de la bannière de la fiche (elle l'utilise), pour que les
@@ -51,7 +52,7 @@ function NoteRow({ label, value, count = null, first = false }) {
           </span>
           {count != null && (
             <span data-note-count style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-              {count} avis
+              {formatCount(count)} avis
             </span>
           )}
         </span>

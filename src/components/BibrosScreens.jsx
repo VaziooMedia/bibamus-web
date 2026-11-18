@@ -12,11 +12,12 @@ import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
 import { MyPhotosScreen } from "./MyPhotosScreen.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
-import { makeSearchMatcher, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery } from "../utils.js";
+import { makeSearchMatcher, normalizeUrl, drinkTypeLabel, formatMemberSince, formatSharedBirthDate, computeAgeFromBirthDate, usernameFromQuery, formatCount } from "../utils.js";
 import {
   loadPendingBibaxRequests,
   loadSentBibaxRequests,
   loadBibaxSuggestions,
+  dismissBibaxSuggestion,
   respondBibaxRequest,
   sendBibaxRequest,
   cancelBibaxRequest,
@@ -32,23 +33,19 @@ import {
 import { openDirectConversation } from "../data/messaging.js";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
-import { PillTabs } from "./PillTabs.jsx";
+import { PillTabs, TabBadge } from "./PillTabs.jsx";
 import { BibaxStatsContent } from "./BibaxStatsContent.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
 
-// Demandes reçues (à confirmer/refuser) et suggestions (Bibax en commun, localisation
-// partagée) — façon Facebook : un simple "Confirmer" ou "Ajouter" suffit.
-function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSuggestions }) {
+// Mes Bibax : trois pages à pastilles — « Bibax » (la liste de mes Bibax), « Suggestions » (la liste des suggestions) et « Demandes » (reçues et envoyées), décision de Mehdi du 2026-11-18.
+// Les demandes sont lues au niveau de la page : la pastille « Demandes » affiche ainsi le nombre de demandes reçues quel que soit l'onglet ouvert.
+function useBibaxRequests(onBibaxAdded) {
   const [pending, setPending] = useState(null);
   const [sent, setSent] = useState(null);
-  const [suggestions, setSuggestions] = useState(null);
   const [busyId, setBusyId] = useState(null);
-  const [suggestionsExpanded, setSuggestionsExpanded] = useState(true);
-  const [pendingExpanded, setPendingExpanded] = useState(true);
-  const [sentExpanded, setSentExpanded] = useState(false);
   const prevSentIds = useRef(null);
 
   const refresh = () => {
@@ -65,7 +62,6 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
       prevSentIds.current = data.map((r) => r.relationshipId);
       setSent(data);
     });
-    loadBibaxSuggestions(3).then(setSuggestions);
   };
 
   useEffect(() => {
@@ -89,13 +85,6 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
     refresh();
   };
 
-  const addSuggestion = async (bibroCode) => {
-    setBusyId(bibroCode);
-    await sendBibaxRequest(bibroCode);
-    setBusyId(null);
-    refresh();
-  };
-
   const cancelRequest = async (relationshipId) => {
     setBusyId(relationshipId);
     const result = await cancelBibaxRequest(relationshipId);
@@ -111,11 +100,17 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
     refresh();
   };
 
+  return { pending, sent, busyId, refresh, respond, cancelRequest };
+}
+
+// Page « Demandes » : les demandes reçues (à confirmer ou refuser), puis les demandes envoyées (à annuler).
+function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onOpenProfile }) {
+  const [pendingExpanded, setPendingExpanded] = useState(true);
+  const [sentExpanded, setSentExpanded] = useState(true);
   const hasPending = pending && pending.length > 0;
   const hasSent = sent && sent.length > 0;
-  const hasSuggestions = suggestions && suggestions.length > 0;
-  if (!hasPending && !hasSent && !hasSuggestions) return null;
-
+  if (pending === null && sent === null) return <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>;
+  if (!hasPending && !hasSent) return <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucune demande pour l'instant.</p>;
   return (
     <>
       {hasPending && (
@@ -208,75 +203,95 @@ function BibaxRequestsAndSuggestions({ onBibaxAdded, onOpenProfile, onSeeAllSugg
         )}
         </div>
       )}
-
-      {hasSuggestions && (
-        <div style={{ marginBottom: "16px" }}>
-          <button
-            onClick={() => setSuggestionsExpanded((e) => !e)}
-            style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: suggestionsExpanded ? "8px" : 0, background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer" }}
-          >
-            <span style={{ width: "4px", height: "16px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-            <span style={{ fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Suggestions rapides</span>
-            {onSeeAllSuggestions && (
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSeeAllSuggestions();
-                }}
-                style={{ marginLeft: "auto", marginRight: "8px", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber }}
-              >
-                Voir tout
-              </span>
-            )}
-            <span style={{ display: "inline-flex", transform: `rotate(${suggestionsExpanded ? 90 : 0}deg)`, transition: "transform 0.15s ease" }}>
-              <NavIcon name="chevron-right" size={14} color={COLORS.amber} />
-            </span>
-          </button>
-          {suggestionsExpanded && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {suggestions.map((s) => (
-                <div
-                  key={s.userId}
-                  onClick={() => onOpenProfile(s.bibroCode)}
-                  style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
-                >
-                  <RequestCardAvatar photoUrl={s.avatarUrl} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
-                    <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
-                      {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}
-                    </p>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addSuggestion(s.bibroCode);
-                    }}
-                    disabled={busyId === s.bibroCode}
-                    style={{ background: "none", border: `2px solid ${COLORS.amber}`, borderRadius: "8px", padding: "7px 12px", fontSize: "12.5px", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}
-                  >
-                    Ajouter
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </>
   );
 }
 
+// Page « Suggestions » : toutes les suggestions (50 au plus), en liste. Le « + » rond vert envoie la demande ; le « × » rond rose fluo supprime la suggestion (la personne n'est plus proposée pendant 3 mois).
+function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, onDismiss }) {
+  if (suggestions === null) return <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>;
+  if (suggestions.length === 0) return <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucune suggestion pour l'instant.</p>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      {suggestions.map((s) => (
+        <div
+          key={s.userId}
+          onClick={() => onOpenProfile(s.bibroCode)}
+          style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+        >
+          <RequestCardAvatar photoUrl={s.avatarUrl} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+            <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
+              {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}
+            </p>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd(s.bibroCode);
+            }}
+            disabled={busyCode === s.bibroCode}
+            aria-label="Ajouter"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0, opacity: busyCode === s.bibroCode ? 0.5 : 1 }}
+          >
+            <NavIcon name="plus" size={18} color={COLORS.paper} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDismiss(s);
+            }}
+            aria-label="Supprimer cette suggestion"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
+          >
+            <NavIcon name="x" size={17} color={COLORS.pinkFluo} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Retour d'une fiche (norme de l'app, voir `useListReturn`) : la liste se remet à la hauteur où on l'avait laissée, avec la recherche tapée ; une entrée depuis Mon Profil repart de zéro.
-export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack, onBibaxAdded, onOpenBibaxProfile, onSeeAllSuggestions, mainScrollRef }) {
+export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibros, bibroStatuses, goToAddBibro, onJoinSalon, onViewBibro, onBack, onBibaxAdded, onOpenBibaxProfile, initialTab, mainScrollRef }) {
   const { restored, save, open } = useListReturn("bibrosList", mainScrollRef);
   const [query, setQuery] = useState(restored ? restored.query : "");
+  // Trois pages à pastilles : « bibax » (ma liste), « suggestions », « requests » (demandes). Au retour d'une fiche, la page ouverte est celle qu'on avait laissée ; sinon `initialTab`
+  // (l'accueil ouvre directement les suggestions), sinon la liste de mes Bibax.
+  const [tab, setTab] = useState(restored?.tab || initialTab || "bibax");
+  const [suggestions, setSuggestions] = useState(restored ? restored.suggestions ?? null : null);
+  const [suggestionBusyCode, setSuggestionBusyCode] = useState(null);
   useEffect(() => {
-    save({ query });
-  }, [query]);
+    save({ query, tab, suggestions });
+  }, [query, tab, suggestions]);
   const viewBibro = onViewBibro ? open(onViewBibro) : onViewBibro;
   const openBibaxProfile = onOpenBibaxProfile ? open(onOpenBibaxProfile) : onOpenBibaxProfile;
-  const seeAllSuggestions = onSeeAllSuggestions ? open(onSeeAllSuggestions) : onSeeAllSuggestions;
+  const requests = useBibaxRequests(onBibaxAdded || (() => {}));
+
+  // Les suggestions sont lues à chaque ouverture de la page « Suggestions » (celle qu'on garde en mémoire sert à se replacer au retour d'une fiche, puis elle est relue en silence).
+  useEffect(() => {
+    if (tab !== "suggestions") return undefined;
+    let alive = true;
+    loadBibaxSuggestions(50).then((list) => {
+      if (alive) setSuggestions((prev) => (prev && JSON.stringify(prev) === JSON.stringify(list) ? prev : list));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [tab]);
+
+  const addSuggestion = async (bibroCode) => {
+    setSuggestionBusyCode(bibroCode);
+    await sendBibaxRequest(bibroCode);
+    setSuggestionBusyCode(null);
+    setSuggestions((prev) => (prev || []).filter((s) => s.bibroCode !== bibroCode));
+    requests.refresh();
+  };
+  const dismissSuggestion = (s) => {
+    setSuggestions((prev) => (prev || []).filter((x) => x.userId !== s.userId));
+    dismissBibaxSuggestion(s.userId);
+  };
 
   // Même règle de recherche que partout dans l'app (voir makeSearchMatcher) : prénom, nom, surnom, alias, ville et pays, dans n'importe quel ordre.
   const matchesText = makeSearchMatcher(query);
@@ -291,31 +306,15 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
 
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "14px" }}>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: "4px 0 0 0", lineHeight: 1.2, display: "flex", alignItems: "center", gap: "10px" }}>
-          <img src={bibaxIconUrl} alt="" style={{ width: "24px", height: "24px" }} />
+      {/* Titre, bouton « + » (ajouter un Bibax) et nombre de Bibax : toujours sur une seule ligne, même avec 9.999 Bibax (Mehdi, 2026-11-18). Le « + » est entre le titre et le nombre ; le nombre est en 23 px ; le titre rétrécit un peu sur un écran étroit (26 px jusqu'à 390 px de large, puis 6,7 % de la largeur). */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "min(26px, 6.7vw)", margin: "4px 0 0 0", lineHeight: 1.2, display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0, whiteSpace: "nowrap" }}>
+          <img src={bibaxIconUrl} alt="" style={{ width: "24px", height: "24px", flexShrink: 0 }} />
           <span>
             <span style={{ color: COLORS.ink }}>Mes Biba</span>
             <span style={{ color: COLORS.amber }}>x</span>
           </span>
         </h1>
-        <span
-          style={{
-            fontFamily: "'Urbanist', sans-serif",
-            fontSize: "28px",
-            color: COLORS.amberDark,
-            fontWeight: 700,
-            background: COLORS.paperAlt,
-            border: `2px solid ${COLORS.amberDark}`,
-            borderRadius: "10px",
-            padding: "2px 14px",
-          }}
-        >
-          {bibros.length}
-        </span>
-      </div>
-
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
         <button
           onClick={goToAddBibro}
           title="Ajouter un Bibax"
@@ -332,79 +331,119 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            flexShrink: 0,
           }}
         >
           +
         </button>
+        <span
+          style={{
+            fontFamily: "'Urbanist', sans-serif",
+            fontSize: "23px",
+            color: COLORS.amberDark,
+            fontWeight: 700,
+            background: COLORS.paperAlt,
+            border: `2px solid ${COLORS.amberDark}`,
+            borderRadius: "10px",
+            padding: "2px 10px",
+            flexShrink: 0,
+          }}
+        >
+          {formatCount(bibros.length)}
+        </span>
       </div>
 
-      <BibaxRequestsAndSuggestions onBibaxAdded={onBibaxAdded || (() => {})} onOpenProfile={openBibaxProfile || (() => {})} onSeeAllSuggestions={seeAllSuggestions} />
-
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Rechercher : prénom, nom, surnom, ville..."
-        style={{ padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "16px" }}
+      <PillTabs
+        tabs={[
+          { key: "bibax", label: { prefix: "Biba", accent: "x" } },
+          { key: "suggestions", label: "Suggestions" },
+          { key: "requests", label: "Demandes", badge: <TabBadge count={requests.pending ? requests.pending.length : 0} background={COLORS.pinkFluo} color="#fff" /> },
+        ]}
+        active={tab}
+        onChange={setTab}
       />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-        {bibros.length === 0 && (
-          <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Pas encore de Bibax — ajoutez-en un avec son code.</p>
-        )}
-        {bibros.length > 0 && sortedBibros.length === 0 && (
-          <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun Bibax ne correspond à cette recherche.</p>
-        )}
-        {sortedBibros.map((b) => {
-          const status = bibroStatuses[b.code];
-          return (
-            <div
-              key={b.code}
-              onClick={() => viewBibro(b.code)}
-              style={{ background: COLORS.surface, border: `2px solid ${status ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", cursor: "pointer" }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div
-                    style={{
-                      width: `${CARD_AVATAR}px`,
-                      height: `${CARD_AVATAR}px`,
-                      borderRadius: "50%",
-                      background: COLORS.surfaceAlt,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "19px",
-                      flexShrink: 0,
-                      // le rond est centré sur le texte (2 lignes comme 3) ; la place prise dans la ligne reste celle d'un rond de 38 px : le texte ne bouge pas (voir `CARD_AVATAR`)
-                      margin: avatarOverhang(38, 38),
-                      overflow: "hidden",
-                    }}
-                  >
-                    {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={Math.round(CARD_AVATAR / 2)} color={COLORS.amber} />}
-                  </div>
-                  <div>
-                    <BibaxName name={b.firstName || b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ fontSize: "15px" }} />
-                  </div>
-                </div>
-              </div>
+      {tab === "bibax" && (
+        <>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher : prénom, nom, surnom, ville..."
+            style={{ padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "16px" }}
+          />
 
-              {status && (
-                <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, display: "flex", justifyContent: "space-between", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
-                  <span style={{ fontSize: "13px" }}>
-                    🎉 En soirée : <strong>{status.activeSalonName}</strong>
-                  </span>
-                  <button
-                    onClick={() => onJoinSalon(status.activeSalonCode)}
-                    style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "7px 12px", fontWeight: 700, fontSize: "12.5px", cursor: "pointer", color: COLORS.paper }}
-                  >
-                    Rejoindre
-                  </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+            {bibros.length === 0 && (
+              <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Pas encore de Bibax — ajoutez-en un avec son code.</p>
+            )}
+            {bibros.length > 0 && sortedBibros.length === 0 && (
+              <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun Bibax ne correspond à cette recherche.</p>
+            )}
+            {sortedBibros.map((b) => {
+              const status = bibroStatuses[b.code];
+              return (
+                <div
+                  key={b.code}
+                  onClick={() => viewBibro(b.code)}
+                  style={{ background: COLORS.surface, border: `2px solid ${status ? COLORS.amber : COLORS.paperAlt}`, borderRadius: "12px", padding: "12px 14px", cursor: "pointer" }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div
+                        style={{
+                          width: `${CARD_AVATAR}px`,
+                          height: `${CARD_AVATAR}px`,
+                          borderRadius: "50%",
+                          background: COLORS.surfaceAlt,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "19px",
+                          flexShrink: 0,
+                          // le rond est centré sur le texte (2 lignes comme 3) ; la place prise dans la ligne reste celle d'un rond de 38 px : le texte ne bouge pas (voir `CARD_AVATAR`)
+                          margin: avatarOverhang(38, 38),
+                          overflow: "hidden",
+                        }}
+                      >
+                        {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={Math.round(CARD_AVATAR / 2)} color={COLORS.amber} />}
+                      </div>
+                      <div>
+                        <BibaxName name={b.firstName || b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ fontSize: "15px" }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {status && (
+                    <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: `1px dashed ${COLORS.paperAlt}`, display: "flex", justifyContent: "space-between", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
+                      <span style={{ fontSize: "13px" }}>
+                        🎉 En soirée : <strong>{status.activeSalonName}</strong>
+                      </span>
+                      <button
+                        onClick={() => onJoinSalon(status.activeSalonCode)}
+                        style={{ background: COLORS.amber, border: "none", borderRadius: "8px", padding: "7px 12px", fontWeight: 700, fontSize: "12.5px", cursor: "pointer", color: COLORS.paper }}
+                      >
+                        Rejoindre
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {tab === "suggestions" && (
+        <div style={{ marginBottom: "16px" }}>
+          <BibaxSuggestionsPanel suggestions={suggestions} busyCode={suggestionBusyCode} onOpenProfile={openBibaxProfile || (() => {})} onAdd={addSuggestion} onDismiss={dismissSuggestion} />
+        </div>
+      )}
+
+      {tab === "requests" && (
+        <div style={{ marginBottom: "16px" }}>
+          <BibaxRequestsPanel {...requests} onOpenProfile={openBibaxProfile || (() => {})} />
+        </div>
+      )}
 
       <BackFooterLink onClick={onBack} />
     </div>
@@ -576,7 +615,7 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
       }}
     >
       <span style={{ fontSize: "9.5px", color: COLORS.ink, lineHeight: 1.2 }}>{label}</span>
-      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.amber, lineHeight: 1 }}>{value != null ? value : "…"}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.amber, lineHeight: 1 }}>{value != null ? formatCount(value) : "…"}</span>
     </button>
   );
 

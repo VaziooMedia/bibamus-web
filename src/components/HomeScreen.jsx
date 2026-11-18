@@ -9,9 +9,10 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import loupeIconUrl from "../assets/brand/loupe.svg";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
-import { EntityAvatar, SalonAvatar, CategoryTile, BibaxName } from "./ui.jsx";
+import { EntityAvatar, SalonAvatar, CategoryTile } from "./ui.jsx";
+import { BibaxSuggestionsCarousel } from "./BibaxSuggestionsCarousel.jsx";
 import { loadSalon } from "../data/salons.js";
-import { loadPulseFeed, loadBibaxSuggestions, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds, pulseClubName } from "../data/sharedDirectories.js";
+import { loadPulseFeed, loadBibaxSuggestions, dismissBibaxSuggestion, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds, pulseClubName } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
 
@@ -54,10 +55,6 @@ const formatTime = (timestamp) => {
 
 // Diamètre du rond de profil d'un bloc BibaLive (px) : il grandit vers la gauche à partir d'un rond de 56 px (voir le bloc BibaLive plus bas).
 const BIBALIVE_ROUND = 68;
-// Même principe pour une ligne de « Suggestions rapides Bibax » : rond de profil de 42 px qui grandit vers la gauche (et un peu en haut et en bas)
-// à partir d'un rond de 32 px, donc sans décaler le texte ni changer la hauteur de la ligne (il reste à 4 px du bord intérieur à gauche).
-const SUGGESTION_ROUND = 42;
-const SUGGESTION_BASE = 32;
 // Rond de profil d'un extrait BibaPulse de l'accueil (px), Mehdi 2026-11-12 : il s'étend sur les deux premières lignes du bloc (nom + début de l'action).
 // Même principe que BibaLive : il occupe 40 px dans la mise en page (donc le texte et la hauteur du bloc ne bougent pas) et déborde vers la gauche, le haut
 // et le bas pour atteindre 48 px, dans la marge qui l'entoure (6 px du bord de l'écran).
@@ -69,7 +66,7 @@ export function HomeScreen({
   events,
   openEvent,
   updateEvent,
-  goToBibaxAllSuggestions,
+  goToBibaxSuggestions,
   onOpenBibaxProfile,
   onOpenVenue,
   onOpenDrink,
@@ -140,16 +137,20 @@ export function HomeScreen({
   const [addingBibaxCode, setAddingBibaxCode] = useState(null);
   const [suggestionsExpanded, setSuggestionsExpanded] = useState(true);
   useEffect(() => {
-    // Charge un peu plus que nécessaire (5 affichées) — dès qu'on en ajoute une, la suivante
-    // du lot prend directement sa place, sans nouvel aller-retour serveur.
+    // Charge plus que ce qui est affiché (8 cartes dans le carrousel) — dès qu'on en ajoute une ou qu'on en supprime une,
+    // la suivante du lot prend directement sa place, sans nouvel aller-retour serveur.
     loadBibaxSuggestions(20).then(setBibaxSuggestionsPool);
   }, []);
-  const bibaxSuggestions = (bibaxSuggestionsPool || []).slice(0, 3);
+  const bibaxSuggestions = (bibaxSuggestionsPool || []).slice(0, 8);
   const addSuggestedBibax = async (bibroCode) => {
     setAddingBibaxCode(bibroCode);
     await sendBibaxRequest(bibroCode);
     setAddingBibaxCode(null);
     setBibaxSuggestionsPool((prev) => (prev || []).filter((s) => s.bibroCode !== bibroCode));
+  };
+  const dismissSuggestedBibax = (s) => {
+    setBibaxSuggestionsPool((prev) => (prev || []).filter((x) => x.userId !== s.userId));
+    dismissBibaxSuggestion(s.userId);
   };
 
   // Filet de sécurité supplémentaire — vérifie, au retour sur l'accueil, si un événement
@@ -636,7 +637,7 @@ export function HomeScreen({
             <span
               onClick={(e) => {
                 e.stopPropagation();
-                goToBibaxAllSuggestions();
+                goToBibaxSuggestions();
               }}
               style={{ marginLeft: "auto", marginRight: "8px", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber }}
             >
@@ -647,55 +648,14 @@ export function HomeScreen({
             </span>
           </button>
           {suggestionsExpanded && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {bibaxSuggestions.map((s) => (
-                <button
-                  key={s.userId}
-                  onClick={() => onOpenBibaxProfile(s.bibroCode)}
-                  style={{
-                    // Fond bleuté (surface), comme le bloc BibaLive (décision de Mehdi, 2026-11-12).
-                    background: COLORS.surface,
-                    border: `2px solid ${COLORS.paperAlt}`,
-                    borderRadius: "12px",
-                    padding: "10px 14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    width: "100%",
-                  }}
-                >
-                  <span style={{ display: "flex", flexShrink: 0, margin: `${-(SUGGESTION_ROUND - SUGGESTION_BASE) / 2}px 0 ${-(SUGGESTION_ROUND - SUGGESTION_BASE) / 2}px ${-(SUGGESTION_ROUND - SUGGESTION_BASE)}px` }}>
-                    <EntityAvatar photoUrl={s.avatarUrl} size={SUGGESTION_ROUND} />
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} style={{ fontSize: "13px", color: COLORS.ink }} />
-                    <p style={{ margin: "1px 0 0", fontSize: "10.5px", color: COLORS.inkSoft }}>{s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}</p>
-                  </div>
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addSuggestedBibax(s.bibroCode);
-                    }}
-                    style={{
-                      background: "none",
-                      border: `2px solid ${COLORS.amber}`,
-                      borderRadius: "8px",
-                      padding: "6px 11px",
-                      fontSize: "11.5px",
-                      fontWeight: 700,
-                      color: COLORS.amber,
-                      cursor: "pointer",
-                      opacity: addingBibaxCode === s.bibroCode ? 0.5 : 1,
-                      flexShrink: 0,
-                    }}
-                  >
-                    Ajouter
-                  </span>
-                </button>
-              ))}
-            </div>
+            <BibaxSuggestionsCarousel
+              suggestions={bibaxSuggestions}
+              onOpen={onOpenBibaxProfile}
+              onAdd={addSuggestedBibax}
+              onDismiss={dismissSuggestedBibax}
+              busyCode={addingBibaxCode}
+              onSeeAll={goToBibaxSuggestions}
+            />
           )}
         </div>
       )}

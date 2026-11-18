@@ -9,6 +9,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { FINE_PILL } from "./PillTabs.jsx";
 import { hasFlag } from "./DrinkRowParts.jsx";
+import { formatCount } from "../utils.js";
 
 // Le champ est court (il ne prend pas toute la largeur : décidé par Mehdi, 2026-11-17, « inutilement longue ») et garde la même largeur quel que soit le pays choisi ; la carte de la liste est un peu plus large que lui.
 const TRIGGER_WIDTH = "190px";
@@ -40,7 +41,7 @@ export function CountryPicker({ options, value, total, onChange }) {
     >
       <span style={{ width: "16px", display: "inline-flex", justifyContent: "center" }}>{flag}</span>
       <span style={{ flex: 1, minWidth: 0, fontSize: "13px", fontWeight: 700, color: selected ? COLORS.amber : COLORS.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
-      <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber }}>{count}</span>
+      <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.amber }}>{formatCount(count)}</span>
     </button>
   );
 

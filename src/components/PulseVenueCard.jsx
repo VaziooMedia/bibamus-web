@@ -3,7 +3,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { venueRatingText } from "./VenueRatingDisplay.jsx";
-import { formatAddress } from "../utils.js";
+import { formatAddress, formatCount } from "../utils.js";
 import { loadVenueListsOnce, loadVenueRatingSummary } from "../data/sharedDirectories.js";
 import { VENUE_TYPE_LIST_KEY, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 
@@ -114,7 +114,7 @@ export function PulseVenueCard({ venue, rating = null, onOpen }) {
           >
             <NavIcon name="flame" size={13} color={COLORS.amber} filled />
             <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "12px", color: COLORS.chalkWhite, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ratingText}</span>
-            <span style={{ fontSize: "10px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {rating.rating_count} avis</span>
+            <span style={{ fontSize: "10px", color: COLORS.inkSoft, whiteSpace: "nowrap" }}>- {formatCount(rating.rating_count)} avis</span>
           </span>
         </span>
       )}

@@ -15,7 +15,7 @@
 // ============================================================
 import React, { useState, useRef, useLayoutEffect } from "react";
 import { COLORS } from "../constants.js";
-import { formatWeekdayDDMMYYYY } from "../utils.js";
+import { formatWeekdayDDMMYYYY, formatCount } from "../utils.js";
 import { BlockTitle } from "./ui.jsx";
 
 const PERIODS = [
@@ -230,7 +230,7 @@ export function EvolutionCard({ evolution }) {
               style={{ position: "absolute", top: 0, left: `${tipX}px`, pointerEvents: "none", background: COLORS.surfaceAlt, border: `1px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "4px 8px", textAlign: "center", whiteSpace: "nowrap" }}
             >
               <span style={{ fontSize: "14px", fontWeight: 700, color: COLORS.ink }}>
-                {tip.count} {tip.count > 1 ? "checks" : "check"}
+                {formatCount(tip.count)} {tip.count > 1 ? "checks" : "check"}
               </span>
               <span style={{ fontSize: "11.5px", color: COLORS.inkSoft }}> · {fullLabel(period, tip.date)}</span>
             </div>
@@ -249,7 +249,7 @@ export function EvolutionCard({ evolution }) {
                 {points.map((p) => (
                   <tr key={p.date}>
                     <td>{fullLabel(period, p.date)}</td>
-                    <td>{p.count}</td>
+                    <td>{formatCount(p.count)}</td>
                   </tr>
                 ))}
               </tbody>

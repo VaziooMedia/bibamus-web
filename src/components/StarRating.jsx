@@ -3,7 +3,7 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS, BEER_RATING_MODES, SERVING_MODE_LABELS } from "../constants.js";
-import { formatDDMMYYYY } from "../utils.js";
+import { formatDDMMYYYY, formatCount } from "../utils.js";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 import { NavIcon } from "./icons.jsx";
@@ -45,7 +45,7 @@ export function StarRating({ ratings, ratingDates, ratedServingModes, myBibroCod
           <div>
             <StarsDisplay value={average} size={18} />
             <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>
-              sur 5 · {values.length} avis
+              sur 5 · {formatCount(values.length)} avis
             </div>
           </div>
         </div>

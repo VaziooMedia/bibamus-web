@@ -36,7 +36,7 @@ import {
   loadMyMonthlySpending,
   loadMyExtraRecords,
 } from "../data/sharedDirectories.js";
-import { formatMoney, buildAlcoholDaysMap } from "../utils.js";
+import { formatMoney, buildAlcoholDaysMap, formatCount } from "../utils.js";
 
 export const PERIODS = [
   { key: "all", label: "Toujours", since: null, prevSince: null },
@@ -509,7 +509,7 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
     maxBibaxInOneOuting > 1 && { icon: "👥", label: "Le plus de monde réuni en une sortie", value: maxBibaxInOneOuting, sub: "personnes" },
     extraRecords?.bestMonthYear && { icon: "📅", label: "Ton mois le plus actif", value: `${MONTH_NAMES[extraRecords.bestMonthMonth - 1]} ${extraRecords.bestMonthYear}`, sub: `${extraRecords.bestMonthDrinks} verres` },
     extraRecords?.longestStreakDays > 1 && { icon: "🔥", label: "Ta plus longue série", value: `${extraRecords.longestStreakDays} jours`, sub: "d'affilée" },
-    calorieStatsAllTime?.maxCalories > 0 && maxCaloriesDrinkName && { icon: "🍔", label: "Boisson la plus calorique", value: maxCaloriesDrinkName, sub: `≈ ${Math.round(calorieStatsAllTime.maxCalories)} kcal` },
+    calorieStatsAllTime?.maxCalories > 0 && maxCaloriesDrinkName && { icon: "🍔", label: "Boisson la plus calorique", value: maxCaloriesDrinkName, sub: `≈ ${formatCount(Math.round(calorieStatsAllTime.maxCalories))} kcal` },
   ].filter(Boolean);
 
   const hasAnyData = overview && (overview.visits > 0 || overview.drinksOrdered > 0);
@@ -647,7 +647,7 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "11px", opacity: 0.6 }}>CALORIES TOTALES</div>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: COLORS.amber }}>
                     <span style={{ fontSize: "16px", color: COLORS.inkSoft, fontWeight: 600 }}>≈ </span>
-                    {Math.round(overview.calories)}
+                    {formatCount(Math.round(overview.calories))}
                     <span style={{ fontSize: "16px", color: COLORS.inkSoft, fontWeight: 600 }}> kcal</span>
                   </div>
                 </div>
@@ -1118,7 +1118,7 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
                     }}
                   >
                     <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{drinkNames[r.drinkId] || "…"}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", textAlign: "right", flex: 1 }}><span style={{ color: COLORS.inkSoft }}>≈ </span><span style={{ color: COLORS.amber }}>{Math.round(r.value)}</span><span style={{ color: COLORS.inkSoft }}> kcal</span></span></span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", textAlign: "right", flex: 1 }}><span style={{ color: COLORS.inkSoft }}>≈ </span><span style={{ color: COLORS.amber }}>{formatCount(Math.round(r.value))}</span><span style={{ color: COLORS.inkSoft }}> kcal</span></span></span>
                   </button>
                 ))}
               </div>
@@ -1319,7 +1319,7 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                   <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber }}>{rankedBibrosBySharedRounds[0].bibro.alias || rankedBibrosBySharedRounds[0].bibro.name}</div>
                   <span style={{ fontSize: "12.5px" }}>
-                    <span style={{ color: COLORS.amber, fontWeight: 700 }}>{rankedBibrosBySharedRounds[0].count}</span> <span style={{ color: COLORS.inkSoft }}>tournée{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""} commune{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""}</span>
+                    <span style={{ color: COLORS.amber, fontWeight: 700 }}>{formatCount(rankedBibrosBySharedRounds[0].count)}</span> <span style={{ color: COLORS.inkSoft }}>tournée{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""} commune{rankedBibrosBySharedRounds[0].count > 1 ? "s" : ""}</span>
                   </span>
                 </div>
               </div>
@@ -1365,7 +1365,7 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
                     }}
                   >
                     <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{r.bibro.alias || r.bibro.name}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", textAlign: "right", flex: 1 }}><span style={{ color: COLORS.amber }}>{r.count}</span> <span style={{ color: COLORS.inkSoft }}>lieu{r.count > 1 ? "x" : ""}</span></span></span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", textAlign: "right", flex: 1 }}><span style={{ color: COLORS.amber }}>{formatCount(r.count)}</span> <span style={{ color: COLORS.inkSoft }}>lieu{r.count > 1 ? "x" : ""}</span></span></span>
                   </button>
                 ))}
               </div>
@@ -1397,7 +1397,7 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
                     }}
                   >
                     <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><strong style={{ display: "inline-block", width: "16px", textAlign: "right" }}>{i + 1}</strong><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} />{r.bibro.alias || r.bibro.name}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", textAlign: "right", flex: 1 }}><span style={{ color: COLORS.amber }}>{r.count}</span> <span style={{ color: COLORS.inkSoft }}>tournée{r.count > 1 ? "s" : ""}</span></span></span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", width: "100px", flexShrink: 0 }}><span style={{ width: "1px", height: "14px", background: COLORS.paperAlt }} /><span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: "13px", textAlign: "right", flex: 1 }}><span style={{ color: COLORS.amber }}>{formatCount(r.count)}</span> <span style={{ color: COLORS.inkSoft }}>tournée{r.count > 1 ? "s" : ""}</span></span></span>
                   </button>
                 ))}
               </div>

@@ -20,6 +20,7 @@ import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import bibaGoIconUrl from "../assets/brand/bibago-carte.svg";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
+import { formatCount } from "../utils.js";
 
 // Mémoire de l'écran entre une visite et le retour d'une fiche : { rows, received, hasMore, drinksById, venuesById, scrollTop }.
 let historyMemory = null;
@@ -399,7 +400,7 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
           typeIcon={beerCheckIconUrl}
           typePrefix="Drink"
           typeSuffix="Check"
-          details={it.volumeCl ? [<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{it.volumeCl}cl</span>] : []}
+          details={it.volumeCl ? [<span key="vol" style={{ fontWeight: 700, color: COLORS.amber, whiteSpace: "nowrap" }}>{formatCount(it.volumeCl)}cl</span>] : []}
           venueName={shownVenueName(it.venueId)}
           dateParts={dateParts(it.at)}
           isLast={isLast}
@@ -427,7 +428,7 @@ export function MyHistoryScreen({ events = [], mainScrollRef, onBack, onOpenDrin
     // Soirée BibaRoom : s'ouvre sur sa fiche (EventHistoryDetailScreen), où se trouve la suppression.
     const ev = it.ev;
     const roundCount = (ev.rounds || []).length;
-    const details = [<span key="rounds">{roundCount} tournée{roundCount > 1 ? "s" : ""}</span>];
+    const details = [<span key="rounds">{formatCount(roundCount)} tournée{roundCount > 1 ? "s" : ""}</span>];
     if (!ev.closed) details.push(<span key="live" style={{ fontSize: "10px", fontWeight: 700, color: COLORS.sage }}>EN COURS</span>);
     return (
       <HistoryRow

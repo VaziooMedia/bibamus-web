@@ -20,7 +20,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, ActionCard } from "./ui.jsx";
-import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames } from "../utils.js";
+import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames, formatCount } from "../utils.js";
 import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
@@ -46,7 +46,7 @@ function TagButton({ label, count, filled, onClick }) {
       }}
     >
       {label}
-      <span style={{ color: filled ? COLORS.paper : COLORS.inkSoft, fontWeight: 700 }}>({count})</span>
+      <span style={{ color: filled ? COLORS.paper : COLORS.inkSoft, fontWeight: 700 }}>({formatCount(count)})</span>
     </button>
   );
 }

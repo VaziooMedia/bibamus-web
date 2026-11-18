@@ -18,8 +18,9 @@ import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
 import { CountryPicker } from "./CountryPicker.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
+import { formatCount } from "../utils.js";
 
-const countLabel = (n) => `${n} produit${n > 1 ? "s" : ""}`;
+const countLabel = (n) => `${formatCount(n)} produit${n > 1 ? "s" : ""}`;
 
 const HUB_ITEMS = [
   { key: "toTry", title: "À goûter" },

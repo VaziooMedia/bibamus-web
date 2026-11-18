@@ -20,6 +20,7 @@ import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import bibAtlasIconUrl from "../assets/brand/bibatlas-carte.svg";
 import bibaGoIconUrl from "../assets/brand/bibago-carte.svg";
 import { PulseRoomCard } from "./PulseRoomCard.jsx";
+import { formatCount } from "../utils.js";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -358,7 +359,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
         <CheersIcon size={16} active={entry.santeCount > 0} />
       </span>
-      {entry.santeCount > 0 && <span style={{ color: "#fff" }}>{entry.santeCount}</span>}
+      {entry.santeCount > 0 && <span style={{ color: "#fff" }}>{formatCount(entry.santeCount)}</span>}
     </button>
   );
   // Ligne-résumé « N Cheers » : sur un DrinkCheck elle passe avant « Bixé par » (comme les boutons), sur les autres cartes elle reste après.
@@ -369,7 +370,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         style={{ display: "block", background: "none", border: "none", padding: isDrinkCheck ? "6px 0 0" : "4px 0 0", textAlign: "left", cursor: "pointer" }}
       >
         <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-          <strong style={{ color: COLORS.ink }}>{entry.santeCount}</strong> Cheers
+          <strong style={{ color: COLORS.ink }}>{formatCount(entry.santeCount)}</strong> Cheers
         </span>
       </button>
     ) : null;
@@ -394,7 +395,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         opacity: entry.actorId === myUserId ? 0.45 : 1,
       }}
     >
-      J'arrive !{entry.incomingCount > 0 && <span style={{ color: "#fff" }}>{` ${entry.incomingCount}`}</span>}
+      J'arrive !{entry.incomingCount > 0 && <span style={{ color: "#fff" }}>{` ${formatCount(entry.incomingCount)}`}</span>}
     </button>
   );
   // Ligne-résumé « N Bibax arrivent » : sur un PlaceCheck elle passe avant « Bixé par » (comme les boutons).
@@ -405,7 +406,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         style={{ display: "block", background: "none", border: "none", padding: isPlaceCheck ? "6px 0 0" : "4px 0 0", textAlign: "left", cursor: "pointer" }}
       >
         <span style={{ fontSize: "12px", color: COLORS.inkSoft }}>
-          <strong style={{ color: COLORS.ink }}>{entry.incomingCount}</strong> Bibax {entry.incomingCount > 1 ? "arrivent" : "arrive"}
+          <strong style={{ color: COLORS.ink }}>{formatCount(entry.incomingCount)}</strong> Bibax {entry.incomingCount > 1 ? "arrivent" : "arrive"}
         </span>
       </button>
     ) : null;
@@ -628,7 +629,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
               <NavIcon name="heart" size={15} color={entry.bixCount > 0 ? COLORS.amber : COLORS.inkSoft} filled={entry.bixCount > 0} />
             </span>
-            {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{entry.bixCount}</span>}
+            {entry.bixCount > 0 && <span style={{ color: "#fff" }}>{formatCount(entry.bixCount)}</span>}
           </button>
 
           <button
@@ -649,7 +650,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
               <NavIcon name="comment" size={14} color={entry.commentsCount > 0 ? COLORS.amber : COLORS.inkSoft} />
             </span>
-            {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{entry.commentsCount}</span>}
+            {entry.commentsCount > 0 && <span style={{ color: "#fff" }}>{formatCount(entry.commentsCount)}</span>}
           </button>
         </div>
 
@@ -768,14 +769,14 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                 onClick={() => setReactorsTab("bix")}
                 style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "bix" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "bix" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
               >
-                Bix ({entry.bixCount})
+                Bix ({formatCount(entry.bixCount)})
               </button>
               {entry.eventType === "venue_visit" && (
                 <button
                   onClick={() => setReactorsTab("incoming")}
                   style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "incoming" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "incoming" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
                 >
-                  J'arrive ! ({entry.incomingCount})
+                  J'arrive ! ({formatCount(entry.incomingCount)})
                 </button>
               )}
               {isDrinkCheck && (
@@ -783,7 +784,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   onClick={() => setReactorsTab("sante")}
                   style={{ background: "none", border: "none", padding: "8px 0", fontSize: "13px", fontWeight: 700, color: reactorsTab === "sante" ? COLORS.amber : COLORS.inkSoft, borderBottom: reactorsTab === "sante" ? `2px solid ${COLORS.amber}` : "none", cursor: "pointer" }}
                 >
-                  Cheers ! ({entry.santeCount})
+                  Cheers ! ({formatCount(entry.santeCount)})
                 </button>
               )}
             </div>

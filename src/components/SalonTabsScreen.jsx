@@ -25,7 +25,7 @@ import { StarsDisplay } from "./StarsDisplay.jsx";
 import { EventDashboardScreen } from "./EventDashboardScreen.jsx";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import { PageHeader, SalonAvatar } from "./ui.jsx";
-import { PillTabs } from "./PillTabs.jsx";
+import { PillTabs, TabBadge } from "./PillTabs.jsx";
 import { ensureSalonConversation, loadConversationUnreadCount, subscribeToMyMessages, onConversationRead } from "../data/messaging.js";
 import { loadRoomStories } from "../data/sharedDirectories.js";
 import { loadUserIdsByBibroCodes } from "../data/profiles.js";
@@ -180,35 +180,6 @@ export function SalonPulse({ feed }) {
 }
 
 // Pastille rouge d'un onglet.
-function TabBadge({ count }) {
-  if (!count) return null;
-  return (
-    <span
-      style={{
-        // À cheval sur la bordure du bouton, comme le badge "EN COURS" d'un BibaLive.
-        position: "absolute",
-        top: "-8px",
-        right: "6px",
-        minWidth: "17px",
-        height: "17px",
-        borderRadius: "999px",
-        background: "#FF3B3B",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 4px",
-        boxSizing: "border-box",
-        fontSize: "9.5px",
-        fontWeight: 700,
-        color: "#fff",
-        lineHeight: 1,
-      }}
-    >
-      {count > 9 ? "9+" : count}
-    </span>
-  );
-}
-
 export function SalonTabsScreen(props) {
   const { event, myUserId, venue, onBack, onOpenSettings, onOpenVenue, onAddStory, onOpenStoryAuthor } = props;
   const [tab, setTab] = useState("salon");

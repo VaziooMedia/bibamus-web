@@ -3,6 +3,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { setStoryPulseSharing, deleteStory, toggleStoryBix } from "../data/sharedDirectories.js";
+import { formatCount } from "../utils.js";
 
 const STORY_DURATION_MS = 5000;
 
@@ -226,7 +227,7 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag, 
             }}
           >
             <NavIcon name="heart" size={17} color={iBixed ? "#fff" : "#FF2C8F"} filled={iBixed} />
-            {bixCount > 0 && <span style={{ fontSize: "13px", fontWeight: 700, color: iBixed ? "#fff" : "#FF2C8F" }}>{bixCount}</span>}
+            {bixCount > 0 && <span style={{ fontSize: "13px", fontWeight: 700, color: iBixed ? "#fff" : "#FF2C8F" }}>{formatCount(bixCount)}</span>}
           </button>
         </div>
       </div>
