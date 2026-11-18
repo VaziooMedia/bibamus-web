@@ -10,7 +10,7 @@ import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { PageHeader, PageFooterNav, ScrollToTopButton, EntityAvatar, HubCard } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
-import { venueStreetLine, venuePostalCityLine, formatCount } from "../utils.js";
+import { venueStreetLine, venuePostalCityLine, formatCount, mutualLabel } from "../utils.js";
 import { flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
 import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds, loadMyFavoriteBibaxDetails, toggleFavoriteBrand, toggleFavoriteProducer } from "../data/sharedDirectories.js";
 
@@ -368,7 +368,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
     const people = (ids || []).map((userId) => bibros.find((b) => b.userId === userId)).filter(Boolean);
     rows = people.map((b, i) => {
       // Ligne 2 : le @nom seulement s'il a été changé (au départ, le nom d'utilisateur est une copie du code Bibax), puis le surnom. Ligne 3 : commune (village), puis le pays en drapeau.
-      // Ligne 4 : « N Bibax en commun » (rien à 0). Une ligne sans contenu n'est pas affichée. Mehdi, 2026-11-17 ; avant : surnom · ville sur une seule ligne.
+      // Ligne 4 : « N Bibax en commun », « 0 Bibax en commun » compris (Mehdi, 2026-11-18 ; avant : rien à 0 ; « Aucun » refusé : trop long). Une ligne sans contenu n'est pas affichée. Mehdi, 2026-11-17 ; avant : surnom · ville sur une seule ligne.
       const username = details?.[b.userId]?.username || "";
       const usernameChanged = !!username && username.toLowerCase() !== String(b.code || "").toLowerCase();
       // Le @nom d'abord, avec son « @ » en vert fluo, puis le surnom en italique (Mehdi, 2026-11-18 ; avant : surnom puis @nom, « @ » en rose fluo).
@@ -378,7 +378,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
       ].filter(Boolean);
       const commune = b.city ? (b.locality ? `${b.city} (${b.locality})` : b.city) : ""; // comme `BibaxName` : sans commune, le village n'est pas affiché
       const line3 = [commune || null, flagPart({ nationality: b.country })].filter(Boolean);
-      const common = details?.[b.userId]?.mutual || 0;
+      const mutualKnown = details?.[b.userId] ? details[b.userId].mutual || 0 : null; // null : pas encore lu (ou lecture échouée) : pas de 4ᵉ ligne
       return (
         <FavoriteRow
           key={b.userId}
@@ -389,7 +389,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
             <>
               {line2.length > 0 && <DotLine parts={line2} noWrap />}
               {line3.length > 0 && <DotLine parts={line3} noWrap />}
-              {common > 0 && <div data-favorite-mutual style={{ fontSize: "12px", color: COLORS.inkSoft }}>{common} Bibax en commun</div>}
+              {mutualKnown !== null && <div data-favorite-mutual style={{ fontSize: "12px", color: COLORS.inkSoft }}>{mutualLabel(mutualKnown)}</div>}
             </>
           }
           heart={onToggleBibaxFavorite ? { on: (favoriteBibaxIds || []).includes(b.userId), onToggle: () => onToggleBibaxFavorite(b.code) } : null}

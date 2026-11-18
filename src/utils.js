@@ -1038,3 +1038,6 @@ export function formatDecimal(n, decimals = 2) {
   const withThousands = int.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   return dec ? `${withThousands},${dec}` : withThousands;
 }
+
+// Le texte du nombre de Bibax en commun, le même partout (Mehdi, 2026-11-18 : à 0, on l'écrit au lieu de ne rien afficher).
+export const mutualLabel = (n) => `${n} Bibax en commun`;
