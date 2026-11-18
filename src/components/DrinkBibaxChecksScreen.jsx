@@ -25,9 +25,15 @@ export function BibaxCheckRows({ rows, onOpen }) {
           <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
             {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={16} color={COLORS.amber} />}
           </div>
-          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-            <BibaxIdentity name={b.name} lastName={b.lastName} username={b.username} nickname={b.nickname} style={{ fontSize: "14px" }} />
-            <GoButton label={`Voir le profil de ${[b.name, b.lastName].filter(Boolean).join(" ") || b.nickname || "ce Bibax"}`} onClick={() => onOpen(b.userId)} />
+          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center" }}>
+            <BibaxIdentity
+              name={b.name}
+              lastName={b.lastName}
+              username={b.username}
+              nickname={b.nickname}
+              style={{ fontSize: "14px" }}
+              nameAfter={<GoButton label={`Voir le profil de ${[b.name, b.lastName].filter(Boolean).join(" ") || b.nickname || "ce Bibax"}`} onClick={() => onOpen(b.userId)} />}
+            />
           </div>
           <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, flexShrink: 0 }}>{formatCount(b.checkCount)}</span>
         </div>

@@ -28,12 +28,19 @@ export function BibaxDetailLines({ username, nickname, city, locality, country, 
   return bibaxDetailParts({ username, nickname, city, locality, country }).map((parts, i) => (parts.length > 0 ? <DotLine key={i} parts={parts} noWrap center={center} /> : null));
 }
 
-// Un bloc complet (nom + lignes de détails) pour les cartes : à la place de `BibaxName`. `style` : mise en page de l'appelant (flex, taille et couleur du nom). `wrapName` : le nom passe à la ligne au lieu d'être coupé par « … » (carte du Bibax trouvé).
-export function BibaxIdentity({ name, lastName, username, nickname, city, locality, country, style, wrapName = false }) {
+// Un bloc complet (nom + lignes de détails) pour les cartes : à la place de `BibaxName`. `style` : mise en page de l'appelant (flex, taille et couleur du nom). `wrapName` : le nom passe à la ligne au lieu d'être coupé par « … » (carte du Bibax trouvé). `nameAfter` : un élément placé juste après le nom, sur la ligne 1 (la flèche d'accès au profil de « Tes Bibax qui ont checké ce produit »).
+export function BibaxIdentity({ name, lastName, username, nickname, city, locality, country, style, wrapName = false, nameAfter = null }) {
   const fullName = [name, lastName].filter(Boolean).join(" ") || "Bibax";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: 0, ...style }}>
-      <span style={{ fontWeight: 700, ...(wrapName ? { overflowWrap: "anywhere" } : { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{fullName}</span>
+      {nameAfter ? (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", minWidth: 0 }}>
+          <span style={{ fontWeight: 700, minWidth: 0, ...(wrapName ? { overflowWrap: "anywhere" } : { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{fullName}</span>
+          {nameAfter}
+        </div>
+      ) : (
+        <span style={{ fontWeight: 700, ...(wrapName ? { overflowWrap: "anywhere" } : { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{fullName}</span>
+      )}
       <BibaxDetailLines username={username} nickname={nickname} city={city} locality={locality} country={country} />
     </div>
   );
