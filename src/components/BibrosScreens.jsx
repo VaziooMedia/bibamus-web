@@ -896,11 +896,12 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
         </div>
       )}
 
+      {/* Ligne des trois blocs (Mehdi, 2026-11-18) : « Bibax ✓ » et BibaPing sont étroits (80 et 48 px, ce dernier carré) pour laisser le plus de largeur au bloc « N Bibax en commun », qui doit tenir sur une ligne même avec deux ou trois chiffres sur un iPhone. */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
         <button
           onClick={() => setShowRemoveSheet(true)}
           style={{
-            width: "90px",
+            width: "80px",
             flexShrink: 0,
             display: "flex",
             alignItems: "center",
@@ -909,7 +910,7 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
             background: COLORS.surface,
             border: `2px solid ${COLORS.amber}`,
             borderRadius: "14px",
-            padding: "12px 8px",
+            padding: "12px 6px",
             fontSize: "12.5px",
             fontWeight: 700,
             color: COLORS.amber,
@@ -929,7 +930,7 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "68px",
+            width: "48px",
             flexShrink: 0,
             background: COLORS.surface,
             border: `2px solid ${COLORS.amber}`,
