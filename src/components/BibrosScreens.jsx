@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, BibaxName, ActionCard, CARD_AVATAR, avatarOverhang, RequestCardAvatar } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, EntityAvatar, ActionCard, CARD_AVATAR, avatarOverhang, RequestCardAvatar } from "./ui.jsx";
 import { StarsDisplay } from "./StarsDisplay.jsx";
 import { QRCodeSVG } from "./QRCodeSVG.jsx";
 import { SalonQrScannerModal } from "./SalonQrScannerModal.jsx";
@@ -18,6 +18,7 @@ import {
   loadSentBibaxRequests,
   loadBibaxSuggestions,
   loadMyBibaxUsernames,
+  attachUsernames,
   dismissBibaxSuggestion,
   respondBibaxRequest,
   sendBibaxRequest,
@@ -35,7 +36,8 @@ import { openDirectConversation } from "../data/messaging.js";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import { PillTabs, TabBadge } from "./PillTabs.jsx";
-import { CheckGroup, CheckRow, letterOf, flagPart } from "./CheckListParts.jsx";
+import { CheckGroup, CheckRow, letterOf } from "./CheckListParts.jsx";
+import { BibaxIdentity, bibaxDetailParts } from "./BibaxLines.jsx";
 import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
 import { BibaxStatsContent } from "./BibaxStatsContent.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -52,8 +54,8 @@ function useBibaxRequests(onBibaxAdded) {
   const prevSentIds = useRef(null);
 
   const refresh = () => {
-    loadPendingBibaxRequests().then(setPending);
-    loadSentBibaxRequests().then((data) => {
+    loadPendingBibaxRequests().then(attachUsernames).then(setPending);
+    loadSentBibaxRequests().then(attachUsernames).then((data) => {
       // Une demande envoyée qui disparaît (sans qu'on l'ait nous-même annulée) veut dire que
       // l'autre vient de la confirmer — il faut alors synchroniser ce nouveau Bibax localement,
       // pas seulement rafraîchir l'affichage des demandes.
@@ -138,7 +140,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                 style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
               >
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
-                <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
+                <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -190,7 +192,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
               >
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxName name={r.name} lastName={r.lastName} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                  <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>En attente de confirmation</p>
                 </div>
                 <button
@@ -227,7 +229,7 @@ function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, on
         >
           <RequestCardAvatar photoUrl={s.avatarUrl} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <BibaxName name={s.name} lastName={s.lastName} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+            <BibaxIdentity name={s.name} lastName={s.lastName} username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
             <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.inkSoft }}>
               {s.mutualCount > 0 ? `${s.mutualCount} Bibax en commun` : s.distanceKm != null ? `à ${s.distanceKm} km` : ""}
             </p>
@@ -290,7 +292,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   useEffect(() => {
     if (tab !== "suggestions") return undefined;
     let alive = true;
-    loadBibaxSuggestions(50).then((list) => {
+    loadBibaxSuggestions(50).then(attachUsernames).then((list) => {
       if (alive) setSuggestions((prev) => (prev && JSON.stringify(prev) === JSON.stringify(list) ? prev : list));
     });
     return () => {
@@ -349,13 +351,8 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   // qu'on touche pour le retirer des favoris (Mehdi, 2026-11-18) ; un Bibax qui n'est pas favori n'a pas de colonne.
   // Classé par nom de famille, le nom s'écrit « Nom Prénom » (la lettre de l'index est la première du nom).
   const bibaxRow = (b, isLast, inAlphaList) => {
-    // Trois lignes (Mehdi, 2026-11-18, même modèle que Mes Favoris > Bibax) : 1. nom ; 2. @nom (« @ » vert fluo) puis surnom en italique ; 3. commune (village) puis drapeau du pays.
-    const username = (usernames && usernames[b.userId]) || "";
-    const commune = b.city ? (b.locality ? `${b.city} (${b.locality})` : b.city) : "";
-    const lines = [
-      [username ? { node: <><span style={{ color: COLORS.amber }}>@</span>{username}</> } : null, b.nickname ? { node: <span style={{ fontStyle: "italic", color: COLORS.amber }}>{b.nickname}</span> } : null].filter(Boolean),
-      [commune || null, flagPart({ nationality: b.country })].filter(Boolean),
-    ];
+    // Trois lignes (Mehdi, 2026-11-18, même modèle que Mes Favoris > Bibax, voir `BibaxLines.jsx`) : 1. nom ; 2. @nom (« @ » vert fluo) puis surnom en italique ; 3. commune (village) puis drapeau du pays.
+    const lines = bibaxDetailParts({ username: usernames && usernames[b.userId], nickname: b.nickname, city: b.city, locality: b.locality, country: b.country });
     const first = b.firstName || b.name;
     const fullName = (sort === "last" ? [b.lastName, first] : [first, b.lastName]).filter(Boolean).join(" ") || "Bibax";
     return (
@@ -560,7 +557,7 @@ export function MutualBibaxScreen({ bibros, bibroName, onBack: onBackProp, onVie
                   {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={Math.round((CARD_AVATAR - (hasStory ? 8 : 0)) / 2)} color={COLORS.amber} />}
                 </div>
               </div>
-              <BibaxName name={b.name} lastName={b.lastName} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ fontSize: "15px" }} />
+              <BibaxIdentity name={b.name} lastName={b.lastName} username={b.username} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ flex: 1, fontSize: "15px" }} />
             </div>
           );
         })}

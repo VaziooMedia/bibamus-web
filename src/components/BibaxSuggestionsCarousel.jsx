@@ -1,7 +1,7 @@
 // ============================================================
 // Carrousel des « Suggestions rapides » de l'accueil (décision de Mehdi, 2026-11-18) : une rangée de cartes verticales qu'on fait défiler vers la gauche.
 // Chaque carte : un grand rond de profil cerclé de vert fluo, avec un petit « + » vert pour ajouter en un tap, un « × » rose fluo dans le coin pour supprimer la suggestion
-// (la suivante prend sa place), le nom, la ville avec son drapeau et une pastille de raison (« 4 Bibax en commun » ou « à 12 km »). Une carte « Voir tout » ferme la rangée.
+// (la suivante prend sa place), le nom, deux lignes de détails (@nom + surnom ; commune + drapeau — `BibaxDetailLines`) et une pastille de raison (« 4 Bibax en commun » ou « à 12 km »). Une carte « Voir tout » ferme la rangée.
 // La page Mes Bibax, elle, garde des listes (onglet « Suggestions »).
 //
 // `suggestions` : les suggestions à afficher (voir `loadBibaxSuggestions`) ; `onOpen(bibroCode)` ouvre le profil ; `onAdd(bibroCode)` envoie la demande ;
@@ -9,8 +9,9 @@
 // ============================================================
 import React from "react";
 import { COLORS } from "../constants.js";
-import { NavIcon, CountryFlagImg } from "./icons.jsx";
+import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
+import { BibaxDetailLines } from "./BibaxLines.jsx";
 
 const CARD_WIDTH = 150;
 
@@ -65,12 +66,9 @@ export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss
 
             <span style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", minWidth: 0, width: "100%" }}>
               <span style={{ fontWeight: 700, fontSize: "13.5px", color: COLORS.ink, lineHeight: 1.2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", wordBreak: "break-word" }}>{fullName}</span>
-              {s.city && (
-                <span style={{ fontSize: "11px", color: COLORS.inkSoft, display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "2px", maxWidth: "100%" }}>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.city}</span>
-                  {s.country && <CountryFlagImg country={s.country} size={13} />}
-                </span>
-              )}
+              <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "2px", marginTop: "3px" }}>
+                <BibaxDetailLines username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} center />
+              </div>
             </span>
 
             {reason && (

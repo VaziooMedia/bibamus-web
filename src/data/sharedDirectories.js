@@ -2682,7 +2682,7 @@ export async function loadMutualBibaxList(otherUserId) {
     code: b.bibro_code,
     city: b.city,
     locality: b.locality,
-    country: b.country,
+    country: prettifyCountry(b.country),
   }));
 }
 
@@ -5143,6 +5143,30 @@ export async function loadMyBibaxUsernames() {
   const byUser = {};
   for (const r of data || []) if (r.username) byUser[r.user_id] = r.username;
   return byUser;
+}
+
+// Ajoute le @nom (`username`) à des lignes de Bibax qui ont un `userId` (Suggestions, Demandes, Bibax en commun, accueil) : `get_my_bibax` & co. ne le donnent pas. Le @nom d'un compte est public.
+// Une lecture groupée par la fonction `get_usernames_by_ids` (script « bibamus-sql-bibax-noms-d-utilisateur-blocs.sql »), 500 comptes à la fois ; ceux déjà lus pendant la session viennent de la mémoire
+// (les Demandes se relisent toutes les 15 s sans rappeler le serveur). Si la lecture échoue (par exemple tant que le script n'est pas lancé), les lignes reviennent sans @nom et on ne réessaie qu'après 60 s.
+const usernameCache = new Map();
+let usernamesRetryAt = 0;
+export async function attachUsernames(rows) {
+  const list = rows || [];
+  const missing = [...new Set(list.map((r) => r.userId).filter((id) => id && !usernameCache.has(id)))];
+  if (missing.length > 0 && Date.now() >= usernamesRetryAt) {
+    for (let i = 0; i < missing.length; i += 500) {
+      const chunk = missing.slice(i, i + 500);
+      const { data, error } = await supabase.rpc("get_usernames_by_ids", { p_user_ids: chunk });
+      if (error) {
+        console.error("attachUsernames:", error);
+        usernamesRetryAt = Date.now() + 60000;
+        break;
+      }
+      const found = new Map((data || []).map((r) => [r.user_id, r.username]));
+      for (const id of chunk) usernameCache.set(id, found.get(id) || "");
+    }
+  }
+  return list.map((r) => ({ ...r, username: usernameCache.get(r.userId) || "" }));
 }
 
 export async function loadPendingBibaxRequests() {
