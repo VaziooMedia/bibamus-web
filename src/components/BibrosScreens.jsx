@@ -52,6 +52,7 @@ import residenceIconUrl from "../assets/brand/residence-icon.png";
 // Mes Bibax : trois pages à pastilles — « Bibax » (la liste de mes Bibax), « Suggestions » (la liste des suggestions) et « Demandes » (reçues et envoyées), décision de Mehdi du 2026-11-18.
 // Les demandes sont lues au niveau de la page : la pastille « Demandes » affiche ainsi le nombre de demandes reçues quel que soit l'onglet ouvert.
 // Taille des boutons ronds des Demandes (reçues : coche et croix l'une sous l'autre ; envoyées : croix grise), plus petits que ceux des Suggestions (34 px) — Mehdi, 2026-11-18 (28 px d'abord, puis 24 px : « plus petit »).
+// Zone tactile élargie sans changer l'apparence (comme la flèche du profil : `GoButton`) : 10 px de chaque côté (12 sur les ronds à contour de 2 px, dont la zone se compte depuis l'intérieur du contour) ; entre la coche et la croix empilées, 3 px au-dessus et au-dessous pour ne pas se chevaucher.
 const REQUEST_BTN = "24px";
 
 function useBibaxRequests(onBibaxAdded) {
@@ -157,8 +158,9 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                     }}
                     disabled={busyId === r.relationshipId}
                     aria-label="Accepter"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", position: "relative", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
                   >
+                    <span aria-hidden="true" style={{ position: "absolute", top: "-3px", right: "-10px", bottom: "-3px", left: "-10px" }} />
                     <NavIcon name="check" size={13} color={COLORS.paper} />
                   </button>
                   <button
@@ -168,8 +170,9 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                     }}
                     disabled={busyId === r.relationshipId}
                     aria-label="Refuser"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", boxSizing: "border-box", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", boxSizing: "border-box", position: "relative", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
                   >
+                    <span aria-hidden="true" style={{ position: "absolute", top: "-5px", right: "-12px", bottom: "-5px", left: "-12px" }} />
                     <NavIcon name="x" size={12} color={COLORS.pinkFluo} />
                   </button>
                 </div>
@@ -213,8 +216,9 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                   }}
                   disabled={busyId === r.relationshipId}
                   aria-label="Annuler la demande"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "50%", boxSizing: "border-box", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "50%", boxSizing: "border-box", position: "relative", width: REQUEST_BTN, height: REQUEST_BTN, cursor: "pointer", flexShrink: 0, padding: 0 }}
                 >
+                  <span aria-hidden="true" style={{ position: "absolute", top: "-12px", right: "-12px", bottom: "-12px", left: "-12px" }} />
                   <NavIcon name="x" size={12} color={COLORS.inkSoft} />
                 </button>
               </div>
