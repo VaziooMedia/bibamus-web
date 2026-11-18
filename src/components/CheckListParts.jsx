@@ -183,8 +183,8 @@ const AVATAR_BASE = ROW_AVATAR_BASE;
 const AVATAR_SIZE = ROW_AVATAR;
 const ROW_PAD_Y = ROW_PAD_Y_SHARED;
 
-// Une ligne : rond de profil, nom en gras, ligne de détails à points vert fluo, et à droite le nombre de checks.
-export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, count, countStyle = null, onCountClick = null, countLabel = null, isLast, onOpen }) {
+// Une ligne : rond de profil, nom en gras, ligne(s) de détails à points vert fluo, et à droite le nombre de checks.
+export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, lines = null, count, countStyle = null, onCountClick = null, countLabel = null, isLast, onOpen }) {
   return (
     <button
       type="button"
@@ -211,7 +211,8 @@ export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, part
       </span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
         <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{name}</span>
-        <DotLine parts={parts} />
+        {/* `lines` (Mes Bibax) : plusieurs lignes de détails, chacune avec ses points vert fluo et sans retour à la ligne (une ligne sans contenu n'est pas affichée) ; sinon `parts`, une seule ligne qui passe à la ligne si besoin. */}
+        {lines ? lines.map((l, i) => <DotLine key={i} parts={l} noWrap />) : <DotLine parts={parts} />}
       </div>
       {/* `count` : le contenu de la colonne (un nombre de checks, ou ma note dans Mes Produits) ; absent (null) = pas de colonne. `countStyle` : retouches de la colonne (taille, couleur, largeur).
           Colonne du chiffre : sur toute la hauteur de la ligne et jusqu'au bord de la carte, plus sombre que la carte, avec un trait fin à gauche ; le trait de séparation

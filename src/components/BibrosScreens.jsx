@@ -35,7 +35,7 @@ import { openDirectConversation } from "../data/messaging.js";
 import { ConversationScreen } from "./ConversationScreen.jsx";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
 import { PillTabs, TabBadge } from "./PillTabs.jsx";
-import { CheckGroup, CheckRow, letterOf } from "./CheckListParts.jsx";
+import { CheckGroup, CheckRow, letterOf, flagPart } from "./CheckListParts.jsx";
 import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
 import { BibaxStatsContent } from "./BibaxStatsContent.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -276,7 +276,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
   const [tab, setTab] = useState(restored?.tab || initialTab || "bibax");
   const [suggestions, setSuggestions] = useState(restored ? restored.suggestions ?? null : null);
   const [suggestionBusyCode, setSuggestionBusyCode] = useState(null);
-  // Classement de la liste de Mes Bibax : « first » (prénom), « last » (nom de famille) ou « username » (@nom). `usernames` : { userId: nom d'utilisateur }, lus seulement quand on choisit ce classement.
+  // Classement de la liste de Mes Bibax : « first » (prénom), « last » (nom de famille) ou « username » (@nom). `usernames` : { userId: nom d'utilisateur }, lus à l'ouverture de la page « Bibax ».
   const [sort, setSort] = useState(restored?.sort || "first");
   const [usernames, setUsernames] = useState(restored ? restored.usernames ?? null : null);
   useEffect(() => {
@@ -298,10 +298,10 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
     };
   }, [tab]);
 
-  // Les noms d'utilisateur sont relus à chaque fois qu'on choisit le classement « @nom » (comme les suggestions : ce qu'on a en mémoire sert tout de suite, puis la lecture le remplace en silence).
-  // Si la lecture échoue, on garde ce qu'on avait et la liste se classe sur le code Bibax.
+  // Les noms d'utilisateur (ligne 2 de chaque Bibax et classement « @Username ») sont relus à chaque ouverture de la page « Bibax » (comme les suggestions : ce qu'on a en mémoire sert tout de suite, puis la lecture le remplace en silence).
+  // Si la lecture échoue, on garde ce qu'on avait : la ligne 2 n'affiche pas de @nom et le classement « @Username » se fait sur le code Bibax.
   useEffect(() => {
-    if (tab !== "bibax" || sort !== "username") return undefined;
+    if (tab !== "bibax") return undefined;
     let alive = true;
     loadMyBibaxUsernames().then((list) => {
       if (alive && list) setUsernames((prev) => (prev && JSON.stringify(prev) === JSON.stringify(list) ? prev : list));
@@ -309,7 +309,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
     return () => {
       alive = false;
     };
-  }, [tab, sort]);
+  }, [tab]);
 
   const addSuggestion = async (bibroCode) => {
     setSuggestionBusyCode(bibroCode);
@@ -345,16 +345,17 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
     const at = alphaBibros.findIndex((b) => letterOf(sortKeyOf(b)) === letter);
     return at < 0 ? null : listRef.current?.querySelectorAll("[data-bibax-az-row]")[at] || null;
   };
-  // Une ligne de la liste (même squelette que DrinkChecks / PlaceChecks) : rond de profil, nom, puis surnom et ville + drapeau. Un favori a, dans la colonne de droite, un cœur plein
+  // Une ligne de la liste (même squelette que DrinkChecks / PlaceChecks) : rond de profil, puis trois lignes (nom ; @nom + surnom ; commune + drapeau). Un favori a, dans la colonne de droite, un cœur plein
   // qu'on touche pour le retirer des favoris (Mehdi, 2026-11-18) ; un Bibax qui n'est pas favori n'a pas de colonne.
-  // Classé par nom de famille, le nom s'écrit « Nom Prénom » (la lettre de l'index est la première du nom) ; classé par nom d'utilisateur, le « @nom » (« @ » en rose fluo) ouvre la ligne du surnom.
+  // Classé par nom de famille, le nom s'écrit « Nom Prénom » (la lettre de l'index est la première du nom).
   const bibaxRow = (b, isLast, inAlphaList) => {
-    const location = b.city ? (b.locality ? `${b.city} (${b.locality})` : b.city) : null;
-    const parts = [
-      sort === "username" ? { node: <><span style={{ color: COLORS.pinkFluo }}>@</span>{sortKeyOf(b)}</> } : null,
-      b.nickname ? { node: <span style={{ fontStyle: "italic", color: COLORS.amber }}>{b.nickname}</span> } : null,
-      location ? { node: <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>{location}{b.country && <CountryFlagImg country={b.country} size={14} />}</span> } : null,
-    ].filter(Boolean);
+    // Trois lignes (Mehdi, 2026-11-18, même modèle que Mes Favoris > Bibax) : 1. nom ; 2. @nom (« @ » vert fluo) puis surnom en italique ; 3. commune (village) puis drapeau du pays.
+    const username = (usernames && usernames[b.userId]) || "";
+    const commune = b.city ? (b.locality ? `${b.city} (${b.locality})` : b.city) : "";
+    const lines = [
+      [username ? { node: <><span style={{ color: COLORS.amber }}>@</span>{username}</> } : null, b.nickname ? { node: <span style={{ fontStyle: "italic", color: COLORS.amber }}>{b.nickname}</span> } : null].filter(Boolean),
+      [commune || null, flagPart({ nationality: b.country })].filter(Boolean),
+    ];
     const first = b.firstName || b.name;
     const fullName = (sort === "last" ? [b.lastName, first] : [first, b.lastName]).filter(Boolean).join(" ") || "Bibax";
     return (
@@ -363,7 +364,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
           avatarPhotoUrl={b.avatarUrl}
           fallbackIcon="default-avatar"
           name={fullName}
-          parts={parts}
+          lines={lines}
           count={b.isFavorite && onToggleFavorite ? <NavIcon name="heart" size={20} color={COLORS.amber} filled /> : null}
           onCountClick={b.isFavorite && onToggleFavorite ? () => onToggleFavorite(b.code) : null}
           countLabel={`${fullName} : retirer des favoris`}
