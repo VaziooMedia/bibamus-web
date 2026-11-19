@@ -961,6 +961,18 @@ export function normalizeSearchText(str) {
     .trim();
 }
 
+// Distance à vol d'oiseau, en mètres, entre deux points (latitude / longitude en degrés) : formule de haversine. Rend null si une coordonnée manque.
+export function distanceMeters(lat1, lng1, lat2, lng2) {
+  const nums = [lat1, lng1, lat2, lng2].map((v) => (v === null || v === undefined || v === "" ? NaN : Number(v)));
+  if (nums.some((v) => !Number.isFinite(v))) return null;
+  const [a1, o1, a2, o2] = nums;
+  const rad = Math.PI / 180;
+  const dLat = (a2 - a1) * rad;
+  const dLng = (o2 - o1) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a1 * rad) * Math.cos(a2 * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
 // Forme longue d'un texte déjà passé dans normalizeSearchText : les mots entiers « st » et « ste » redeviennent « saint » et « sainte » (même règle que la
 // fonction `bibamus_normalize_search_text_long` de la base).
 export const expandSaintAbbreviations = (normalized) => (normalized || "").replace(/\bste\b/g, "sainte").replace(/\bst\b/g, "saint");

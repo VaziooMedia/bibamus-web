@@ -12,6 +12,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { searchPulseTags, loadPulseTagEntities } from "../data/sharedDirectories.js";
+import { useGeolocation } from "../hooks/useGeolocation.js";
 import { SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
 
 // Nombre maximum de tags de fiche dans une publication (le serveur applique la même limite).
@@ -124,6 +125,12 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
   const [status, setStatus] = useState("idle");
   const term = query.trim();
   const full = tags.length >= MAX_POST_TAGS;
+  // Position de la personne, demandée UNE fois, au moment où elle touche le champ (jamais en silence à l'ouverture de l'écran) : les lieux et les
+  // producteurs sont classés du plus proche au plus loin (décidé par Mehdi, 2026-11-19). Sans autorisation ou sans position, l'ordre habituel.
+  const { status: geoStatus, position, requestPosition } = useGeolocation();
+  const askPosition = () => {
+    if (geoStatus === "idle") requestPosition();
+  };
 
   useEffect(() => {
     if (term.length < 2 || full) {
@@ -134,7 +141,7 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
     let cancelled = false;
     setStatus("loading");
     const timer = setTimeout(() => {
-      searchPulseTags(term).then((found) => {
+      searchPulseTags(term, 10, position).then((found) => {
         if (cancelled) return;
         setResults(found);
         setStatus("done");
@@ -144,7 +151,7 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [term, full]);
+  }, [term, full, position]);
 
   const chosen = new Set(tags.map(tagKey));
   const proposals = results.filter((r) => !chosen.has(tagKey(r)));
@@ -189,13 +196,15 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onFocus={askPosition}
             placeholder="Rechercher une fiche à taguer"
             style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontSize: "14px" }}
           />
           {status === "loading" && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic" }}>Recherche...</p>}
           {status === "done" && proposals.length === 0 && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft }}>Aucune fiche pour « {term} ».</p>}
           {status === "done" && proposals.length > 0 && (
-            <div style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflow: "hidden" }}>
+            // Jusqu'à 10 fiches par sorte : la liste défile (hauteur limitée) au lieu d'allonger la page.
+            <div style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflowX: "hidden", overflowY: "auto", maxHeight: "min(50vh, 340px)", overscrollBehavior: "contain" }}>
               {proposals.map((r) => (
                 <button
                   key={tagKey(r)}

@@ -13,7 +13,7 @@
 
 import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
-import { searchTokens, searchRank } from "../utils.js";
+import { searchTokens, searchRank, distanceMeters } from "../utils.js";
 import { DERIVATIVE_LIST_KEYS, buildCombinedDerivativeList, cleanDerivativeKcal, cleanDerivativeVolumes, rememberDerivativeKcal, rememberDerivativeList, rememberDerivativeVolumes, rememberedDerivativeList } from "../beerDerivatives.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
@@ -919,27 +919,41 @@ export async function pickStoryBibax(people) {
 }
 
 // Recherche unifiée pour taguer une publication : produits, marques, producteurs et lieux d'un coup.
-// Renvoie [{ type, id, name, detail }] — au plus `perType` fiches de chaque sorte, dans cet ordre.
+// Renvoie [{ type, id, name, detail }] — au plus `perType` fiches de chaque sorte (10, décidé par Mehdi le 2026-11-19), dans cet ordre.
 // Seules les fiches visibles dans l'app sont proposées (même règle que le serveur à la publication).
+// `position` ({ lat, lng }, la position de la personne au moment où elle tague ; null sans autorisation) : les LIEUX et les PRODUCTEURS, seuls à avoir des
+// coordonnées, sont alors classés du plus proche au plus loin (ceux sans coordonnées viennent après, dans leur ordre habituel) ; les produits et les marques
+// gardent leur ordre. Pour que les plus proches ne soient pas écartés avant le tri, on lit alors jusqu'à NEAR_CANDIDATES lieux et producteurs.
 const isAppVisible = (row) => row.status == null || APP_VISIBLE_STATUSES.includes(row.status);
+const NEAR_CANDIDATES = 60;
 
-export async function searchPulseTags(query, perType = 4) {
+function sortByDistance(rows, position) {
+  const withDistance = rows.map((row, index) => ({ row, index, d: distanceMeters(position.lat, position.lng, row.lat, row.lng) }));
+  return withDistance
+    .sort((a, b) => (a.d === null) - (b.d === null) || (a.d !== null && b.d !== null ? a.d - b.d : 0) || a.index - b.index)
+    .map((x) => x.row);
+}
+
+export async function searchPulseTags(query, perType = 10, position = null) {
   const q = (query || "").trim();
   if (!q) return [];
+  const near = !!position && Number.isFinite(position.lat) && Number.isFinite(position.lng);
   // On demande un peu plus que nécessaire : le filtre de statut peut en écarter quelques-unes.
   const fetchCount = perType + 3;
+  const geoCount = Math.max(fetchCount, NEAR_CANDIDATES);
   const [drinks, brands, producers, venues] = await Promise.all([
     searchDrinks(q, fetchCount),
     searchBrands(q, fetchCount),
-    searchBreweries(q, fetchCount),
-    searchVenues(q, fetchCount),
+    searchBreweries(q, near ? geoCount : fetchCount),
+    searchVenues(q, near ? geoCount : fetchCount),
   ]);
   const take = (rows) => rows.filter(isAppVisible).slice(0, perType);
+  const takeNearest = (rows) => (near ? sortByDistance(rows.filter(isAppVisible), position).slice(0, perType) : take(rows));
   return [
     ...take(drinks).map((d) => ({ type: "drink", id: d.id, name: d.name, detail: d.brand || d.brewery || d.type || "" })),
     ...take(brands).map((b) => ({ type: "brand", id: b.id, name: b.name, detail: b.originCountry || "" })),
-    ...take(producers).map((b) => ({ type: "producer", id: b.id, name: b.name, detail: b.country || "" })),
-    ...take(venues).map((v) => ({ type: "venue", id: v.id, name: v.name, detail: v.city || "" })),
+    ...takeNearest(producers).map((b) => ({ type: "producer", id: b.id, name: b.name, detail: b.country || "" })),
+    ...takeNearest(venues).map((v) => ({ type: "venue", id: v.id, name: v.name, detail: v.city || "" })),
   ];
 }
 
