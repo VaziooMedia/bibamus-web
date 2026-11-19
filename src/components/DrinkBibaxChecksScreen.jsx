@@ -31,6 +31,7 @@ export function BibaxCheckRows({ rows, onOpen }) {
               lastName={b.lastName}
               username={b.username}
               nickname={b.nickname}
+              scroll
               style={{ fontSize: "14px" }}
               nameAfter={<GoButton label={`Voir le profil de ${[b.name, b.lastName].filter(Boolean).join(" ") || b.nickname || "ce Bibax"}`} onClick={() => onOpen(b.userId)} />}
             />

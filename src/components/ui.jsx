@@ -2,7 +2,7 @@
 // Composants d'interface partagés — copiés tels quels depuis
 // le prototype Claude (boutons, cartes, barre d'accès rapide...).
 // ============================================================
-import React, { useState } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, TokenPinkIcon, TokenCyanIcon, CountryFlagImg } from "./icons.jsx";
 import { NavigationContext, ProfileNavContext } from "../contexts.js";
@@ -183,6 +183,58 @@ export function BibaxName({ name, lastName, nickname, city, locality, country, s
 // Ordre de priorité du contenu du rond : photo, puis emoji, puis `fallbackImageUrl` (un picto
 // image, occupant `fallbackImageScale` du rond), puis l'icône `fallbackIcon` (le « B » Bibamus
 // par défaut).
+// Texte sur une seule ligne qui, s'il est trop long pour sa place, défile doucement (pause, aller jusqu'au bout, pause, retour) au lieu d'être coupé par « … ».
+// Si le texte tient, il reste fixe. Si la personne a demandé moins d'animations (réglage du téléphone), on garde le « … ». `style` : mise en forme de l'appelant (graisse, minWidth…).
+// Seules les lignes visibles à l'écran sont mesurées et animées (une longue liste de Bibax ne ralentit pas le téléphone) : au repos, le texte est simplement coupé au bord.
+let scrollTextObserver = null;
+const scrollTextCallbacks = new WeakMap();
+function watchVisibility(el, callback) {
+  if (typeof IntersectionObserver === "undefined") {
+    callback(true);
+    return () => {};
+  }
+  if (!scrollTextObserver) {
+    scrollTextObserver = new IntersectionObserver((entries) => entries.forEach((e) => { const f = scrollTextCallbacks.get(e.target); if (f) f(e.isIntersecting); }), { rootMargin: "60px" });
+  }
+  scrollTextCallbacks.set(el, callback);
+  scrollTextObserver.observe(el);
+  return () => {
+    scrollTextObserver.unobserve(el);
+    scrollTextCallbacks.delete(el);
+  };
+}
+
+export function ScrollText({ children, style }) {
+  const outerRef = useRef(null);
+  const innerRef = useRef(null);
+  const [dist, setDist] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const still = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  useEffect(() => {
+    if (still || !outerRef.current) return undefined;
+    return watchVisibility(outerRef.current, setVisible);
+  }, [still]);
+  useLayoutEffect(() => {
+    if (still || !visible || !outerRef.current || !innerRef.current) return undefined;
+    const measure = () => {
+      const d = innerRef.current.offsetWidth - outerRef.current.clientWidth;
+      setDist(d > 1 ? Math.ceil(d) : 0);
+    };
+    measure();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    if (ro) ro.observe(outerRef.current);
+    return () => {
+      if (ro) ro.disconnect();
+    };
+  }, [children, still, visible]);
+  if (still) return <span style={{ display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", ...style }}>{children}</span>;
+  return (
+    <span ref={outerRef} style={{ display: "block", whiteSpace: "nowrap", overflow: "hidden", ...style }}>
+      <span ref={innerRef} style={{ display: "inline-block", ...(visible && dist ? { animation: `bibaScrollText ${Math.max(5, 3 + dist / 20)}s ease-in-out infinite`, "--scroll-dist": `-${dist}px` } : null) }}>{children}</span>
+    </span>
+  );
+}
+
 // La pastille grise « N Bibax en commun » (Mehdi, 2026-11-18 : la pastille des Suggestions de l'accueil lui plaît, reprise partout ailleurs, sans icône Bibax).
 // `n` : le nombre (0 compris) ; `style` : retouches de l'appelant ; le reste (data-…) est passé tel quel. Pas d'icône (Mehdi, 2026-11-18, y compris sur le carrousel de l'accueil, qui en avait une au début).
 // Dans une colonne flex, l'appelant l'enveloppe dans un <div> pour qu'elle garde sa largeur de texte.

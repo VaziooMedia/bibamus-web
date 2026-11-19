@@ -152,7 +152,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
                 style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
               >
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
-                <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
+                <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} scroll style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }} />
                 {/* Les deux boutons l'un sous l'autre, plus petits (Mehdi, 2026-11-18 : pour laisser de la place au texte, surtout en 320 px). */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
                   <button
@@ -209,7 +209,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
               >
                 <RequestCardAvatar photoUrl={r.avatarUrl} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+                  <BibaxIdentity name={r.name} lastName={r.lastName} username={r.username} nickname={r.nickname} city={r.city} locality={r.locality} country={r.country} mutual={r.mutual} scroll style={{ fontSize: "13.5px", color: COLORS.ink }} />
                   <p style={{ margin: "1px 0 0", fontSize: "11px", color: COLORS.pinkFluo }}>En attente de confirmation</p>
                 </div>
                 {/* Annuler la demande : rond avec une croix grise, contour gris foncé (discret), de la même taille que les boutons des demandes reçues (Mehdi, 2026-11-18). */}
@@ -235,7 +235,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
   );
 }
 
-// Page « Suggestions » : toutes les suggestions (50 au plus), en liste. Le « + » rond vert envoie la demande ; le « × » rond rose fluo supprime la suggestion (la personne n'est plus proposée pendant 3 mois).
+// Page « Suggestions » : toutes les suggestions (50 au plus), en liste. Le « + » rond vert envoie la demande ; le « × » rond gris (`inkSoft`) supprime la suggestion (la personne n'est plus proposée pendant 3 mois).
 function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, onDismiss }) {
   if (suggestions === null) return <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>;
   if (suggestions.length === 0) return <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucune suggestion pour l'instant.</p>;
@@ -249,32 +249,34 @@ function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, on
         >
           <RequestCardAvatar photoUrl={s.avatarUrl} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <BibaxIdentity name={s.name} lastName={s.lastName} username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+            <BibaxIdentity name={s.name} lastName={s.lastName} username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} scroll style={{ fontSize: "13.5px", color: COLORS.ink }} />
             <div style={{ marginTop: "3px" }}>
               <MutualPill n={s.mutualCount || 0} />
             </div>
           </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAdd(s.bibroCode);
-            }}
-            disabled={busyCode === s.bibroCode}
-            aria-label="Ajouter"
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0, opacity: busyCode === s.bibroCode ? 0.5 : 1 }}
-          >
-            <NavIcon name="plus" size={18} color={COLORS.paper} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDismiss(s);
-            }}
-            aria-label="Supprimer cette suggestion"
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
-          >
-            <NavIcon name="x" size={17} color={COLORS.pinkFluo} />
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", flexShrink: 0 }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd(s.bibroCode);
+              }}
+              disabled={busyCode === s.bibroCode}
+              aria-label="Ajouter"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0, opacity: busyCode === s.bibroCode ? 0.5 : 1 }}
+            >
+              <NavIcon name="plus" size={18} color={COLORS.paper} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDismiss(s);
+              }}
+              aria-label="Supprimer cette suggestion"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.inkSoft}`, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
+            >
+              <NavIcon name="x" size={17} color={COLORS.inkSoft} />
+            </button>
+          </div>
         </div>
       ))}
     </div>
@@ -394,6 +396,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
           countLabel={`${fullName} : retirer des favoris`}
           isLast={isLast}
           onOpen={() => viewBibro(b.code)}
+          scroll
         />
       </div>
     );
@@ -559,7 +562,7 @@ function BibaxLinkRow({ b, stories, onOpen, onOpenStoryAuthor }) {
           {b.avatarUrl ? <img src={b.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <NavIcon name="default-avatar" size={Math.round((CARD_AVATAR - (hasStory ? 8 : 0)) / 2)} color={COLORS.amber} />}
         </div>
       </div>
-      <BibaxIdentity name={b.name} lastName={b.lastName} username={b.username} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} style={{ flex: 1, fontSize: "15px" }} />
+      <BibaxIdentity name={b.name} lastName={b.lastName} username={b.username} nickname={b.nickname} city={b.city} locality={b.locality} country={b.country} scroll style={{ flex: 1, fontSize: "15px" }} />
     </div>
   );
 }
@@ -1577,6 +1580,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                     city={r.city}
                     country={r.country}
                     mutual={r.mutual}
+                    scroll
                     style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }}
                   />
                 </button>
@@ -1592,6 +1596,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
         <div
           style={{
             flex: 1,
+            minWidth: 0,
             display: "flex",
             alignItems: "center",
             gap: "10px",
@@ -1739,6 +1744,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
             <div style={{ paddingRight: "36px", flex: 1, minWidth: 0 }}>
               <BibaxIdentity
                 wrapName
+                scroll
                 name={foundSocials.firstName || foundSocials.lastName ? foundSocials.firstName : foundName}
                 lastName={foundSocials.firstName || foundSocials.lastName ? foundSocials.lastName : ""}
                 username={foundUsername}
