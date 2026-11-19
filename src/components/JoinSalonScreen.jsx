@@ -13,6 +13,8 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [scanning, setScanning] = useState(false);
+  // Carte « Arrivée dans un BibaRoom » dans BibaPulse (visible par les relations seulement) : cochée par défaut, comme la case du formulaire de création.
+  const [publishToPulse, setPublishToPulse] = useState(true);
 
   const handleSubmit = async (codeToJoin) => {
     const finalCode = (codeToJoin || code).trim();
@@ -20,7 +22,7 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
     setLoading(true);
     setError("");
     try {
-      await onJoin(finalCode.toUpperCase());
+      await onJoin(finalCode.toUpperCase(), { publishToPulse });
     } catch (e) {
       setError(e.message || "Code introuvable. Vérifie auprès de tes amis.");
       setLoading(false);
@@ -90,7 +92,39 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
         </button>
       </div>
       {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "12px" }}>{error}</p>}
-      <PrimaryButton onClick={() => handleSubmit()} disabled={!code.trim() || loading} badgeIcon={loading ? undefined : "door-enter"} style={{ width: "100%", marginTop: "auto" }}>
+      <div style={{ marginTop: "auto" }}>
+        <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
+        <button
+          type="button"
+          onClick={() => setPublishToPulse((v) => !v)}
+          aria-pressed={publishToPulse}
+          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13.5px", color: COLORS.ink, cursor: "pointer", background: "none", border: "none", padding: 0, textAlign: "left" }}
+        >
+          <span
+            style={{
+              width: "18px",
+              height: "18px",
+              flexShrink: 0,
+              borderRadius: "4px",
+              background: publishToPulse ? COLORS.amber : "none",
+              border: `2px solid ${publishToPulse ? COLORS.amber : COLORS.paperAlt}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {publishToPulse && <NavIcon name="check" size={13} color="#000" />}
+          </span>
+          <span>
+            Publier dans{" "}
+            <strong style={{ fontWeight: 800 }}>
+              Biba<span style={{ color: COLORS.amber }}>Pulse</span>
+            </strong>
+          </span>
+        </button>
+        <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 0" }} />
+      </div>
+      <PrimaryButton onClick={() => handleSubmit()} disabled={!code.trim() || loading} badgeIcon={loading ? undefined : "door-enter"} style={{ width: "100%", marginTop: "24px" }}>
         {loading ? "..." : "Rejoindre"}
       </PrimaryButton>
       <PageFooterNav onBack={onCancel} />
