@@ -5,7 +5,8 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, WaterAlertIcon, TokenPinkIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, SectionTitle } from "./ui.jsx";
+import { PageHeader, PageFooterNav, BackFooterLink, PrimaryButton, SectionTitle, EntityAvatar } from "./ui.jsx";
+import { venuePillStyle, VENUE_PILL_AVATAR } from "./PillTabs.jsx";
 import settingsIconUrl from "../assets/brand/settings-icon.png";
 import tokIconUrl from "../assets/brand/tok.svg";
 import { PublicVenueSearchPicker } from "./Pickers.jsx";
@@ -182,51 +183,15 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
       <div style={{ marginBottom: "16px", marginTop: "8px" }}>
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          <button
-            onClick={() => pickPlace("@home")}
-            style={{
-              background: selectedVenueId === "@home" ? COLORS.amber : COLORS.surface,
-              color: selectedVenueId === "@home" ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${selectedVenueId === "@home" ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontSize: "13.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={() => pickPlace("@home")} style={venuePillStyle(selectedVenueId === "@home")}>
             @Home
           </button>
-          <button
-            onClick={() => pickPlace("@event")}
-            style={{
-              background: selectedVenueId === "@event" ? COLORS.amber : COLORS.surface,
-              color: selectedVenueId === "@event" ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${selectedVenueId === "@event" ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontSize: "13.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={() => pickPlace("@event")} style={venuePillStyle(selectedVenueId === "@event")}>
             @Event
           </button>
           {venues.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => pickPlace(v.id)}
-              style={{
-                background: selectedVenueId === v.id ? COLORS.amber : COLORS.surface,
-                color: selectedVenueId === v.id ? COLORS.paper : COLORS.ink,
-                border: `2px solid ${selectedVenueId === v.id ? COLORS.amber : COLORS.paperAlt}`,
-                borderRadius: "999px",
-                padding: "8px 14px",
-                fontSize: "13.5px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
+            <button key={v.id} onClick={() => pickPlace(v.id)} style={venuePillStyle(selectedVenueId === v.id, true)}>
+              <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={VENUE_PILL_AVATAR} />
               {v.name}
             </button>
           ))}
