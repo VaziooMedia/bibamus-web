@@ -214,6 +214,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
       )}
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "8px 0 16px" }} />
+      {/* Les 4 blocs du mode et les 2 du type de paiement : mêmes dimensions fines que dans « Nouveau BibaRoom » (contour de 1,5 px, rayon de 10 px, marges et textes réduits) — Mehdi, 2026-11-19. */}
       <SectionTitle>Choix du mode</SectionTitle>
       <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "16px" }}>
         Changer de mode ne modifie que ce qui se passe à partir de maintenant.
@@ -230,13 +231,13 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
               textAlign: "left",
               background: eventMode === m.key ? COLORS.amber : COLORS.surface,
               color: eventMode === m.key ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${eventMode === m.key ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "12px",
-              padding: "12px 14px",
+              border: `1.5px solid ${eventMode === m.key ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "10px",
+              padding: "8px 12px",
               cursor: "pointer",
             }}
           >
-            <div style={{ fontWeight: 700, fontSize: "14.5px" }}>
+            <div style={{ fontWeight: 700, fontSize: "13.5px" }}>
               {eventMode === m.key ? (
                 m.label
               ) : (
@@ -245,7 +246,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
                 </>
               )}
             </div>
-            <div style={{ fontSize: "12px", marginTop: "2px", opacity: eventMode === m.key ? 0.85 : 0.65 }}>{m.desc}</div>
+            <div style={{ fontSize: "11.5px", marginTop: "1px", opacity: eventMode === m.key ? 0.85 : 0.65 }}>{m.desc}</div>
           </button>
         ))}
       </div>
@@ -264,13 +265,13 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
               onClick={() => setCurrency("euro")}
               style={{
                 flex: 1,
-                padding: "18px 10px",
-                borderRadius: "12px",
-                border: `2px solid ${currency === "euro" ? COLORS.amber : COLORS.paperAlt}`,
+                padding: "10px",
+                borderRadius: "10px",
+                border: `1.5px solid ${currency === "euro" ? COLORS.amber : COLORS.paperAlt}`,
                 background: currency === "euro" ? COLORS.amber : COLORS.surface,
                 color: currency === "euro" ? COLORS.paper : COLORS.ink,
                 fontWeight: 700,
-                fontSize: "16px",
+                fontSize: "14px",
                 cursor: "pointer",
               }}
             >
@@ -280,18 +281,18 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
               onClick={() => setCurrency("jeton")}
               style={{
                 flex: 1,
-                padding: "18px 10px",
-                borderRadius: "12px",
-                border: `2px solid ${currency === "jeton" ? COLORS.amber : COLORS.paperAlt}`,
+                padding: "10px",
+                borderRadius: "10px",
+                border: `1.5px solid ${currency === "jeton" ? COLORS.amber : COLORS.paperAlt}`,
                 background: currency === "jeton" ? COLORS.amber : COLORS.surface,
                 color: currency === "jeton" ? COLORS.paper : COLORS.ink,
                 fontWeight: 700,
-                fontSize: "16px",
+                fontSize: "14px",
                 cursor: "pointer",
               }}
             >
               <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                <TokenPinkIcon size={20} />
+                <TokenPinkIcon size={17} />
                 Jetons
               </span>
             </button>
