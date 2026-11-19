@@ -1189,17 +1189,18 @@ export function BibaPulseScreen({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "32px",
-            height: "32px",
+            width: "38px",
+            height: "38px",
             borderRadius: "50%",
-            background: "none",
-            border: `2px solid ${COLORS.amber}`,
+            background: COLORS.amber,
+            border: "none",
             cursor: "pointer",
             padding: 0,
             flexShrink: 0,
           }}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={COLORS.amber} strokeWidth="3" strokeLinecap="round">
+          {/* Bouton « + » (publication libre) : rempli en vert fluo (`COLORS.amber`), « + » sombre (`COLORS.paper`), un peu plus gros (32 → 38 px) — Mehdi, 2026-11-19. */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COLORS.paper} strokeWidth="3" strokeLinecap="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
         </button>
