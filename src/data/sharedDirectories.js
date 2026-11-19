@@ -372,15 +372,19 @@ export async function searchBibaxForTagging(query, surface = "pulse") {
   const myBibaxIds = new Set(myBibax.map((b) => b.userId));
   const friendResults = results.filter((r) => myBibaxIds.has(r.id));
   if (friendResults.length === 0) return friendResults;
+  // `firstName` : le PRÉNOM du Bibax, tel que la liste de Mes Bibax le donne (`get_my_bibax`). `search_bibax` ne rend qu'un `display_name` (le surnom quand il y en a un), qui reste dans `name`
+  // pour les Stories ; le sélecteur de BibaPulse affiche « prénom + nom » (Mehdi, 2026-11-19) et lit donc `firstName`, avec `name` en repli si le prénom manque.
+  const firstNameById = new Map(myBibax.map((b) => [b.userId, b.name || null]));
+  const withFirstName = (r) => ({ ...r, firstName: firstNameById.get(r.id) || null });
   const { data, error } = await supabase.rpc("get_taggable_bibax", { p_ids: friendResults.map((r) => r.id), p_surface: surface });
   if (error) {
     console.error("searchBibaxForTagging:", error);
     // Par prudence, sans information on laisse choisir : le serveur écarte de toute façon, sans bruit,
     // les personnes qui ne peuvent pas être taguées.
-    return friendResults.map((r) => ({ ...r, name: r.displayName, allowStoryTags: true }));
+    return friendResults.map((r) => ({ ...withFirstName(r), name: r.displayName, allowStoryTags: true }));
   }
   const canTagById = new Map((data || []).map((r) => [r.id, r.can_tag]));
-  return friendResults.map((r) => ({ ...r, name: r.displayName, allowStoryTags: canTagById.get(r.id) !== false }));
+  return friendResults.map((r) => ({ ...withFirstName(r), name: r.displayName, allowStoryTags: canTagById.get(r.id) !== false }));
 }
 
 // Fil de notifications — chargement, marquer comme lu(es), compteur non-lus.

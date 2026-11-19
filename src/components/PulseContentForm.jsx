@@ -28,8 +28,9 @@ export const MAX_TAGS = 5;
 export const isOnRatingScale = (v) => Number.isFinite(v) && v >= 0.25 && v <= 5 && Math.abs(v * 4 - Math.round(v * 4)) < 1e-9;
 
 // Nom affiché d'un Bibax dans le sélecteur : prénom + nom quand le nom est visible — pour ne pas
-// confondre deux Bibax qui ont le même prénom.
-const fullNameOf = (person) => [person.name, person.lastName].filter(Boolean).join(" ");
+// confondre deux Bibax qui ont le même prénom. Le prénom vient de la liste de Mes Bibax (`firstName`) ; le `name` de la recherche est le
+// surnom quand il y en a un (« surnom + nom » n'est pas voulu, Mehdi, 2026-11-19), et ne sert qu'en repli.
+const fullNameOf = (person) => [person.firstName || person.name, person.lastName].filter(Boolean).join(" ");
 
 export function usePulseContentForm(defaultVisibility = "public") {
   const [visibility, setVisibility] = useState(defaultVisibility);
