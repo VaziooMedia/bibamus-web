@@ -734,10 +734,11 @@ export function BibroBibaxListScreen({ other, onBack: onBackProp, onViewBibro: o
   );
 }
 
-const CLUB_ROLE_LABEL = { admin: "Admin", moderator: "Modérateur", member: "Membre" };
+// Seuls les rôles d'administrateur et de modérateur s'affichent : un simple membre n'a rien à ajouter au nombre de membres (Mehdi, 2026-11-19, question 6).
+const CLUB_ROLE_LABEL = { admin: "Admin", moderator: "Modérateur" };
 
 // Le bloc « BibaClub » de la fiche d'un Bibax (Mehdi, 2026-11-19) : les BibaClub PUBLICS dont cette personne est membre, avec les mêmes lignes que « Mes BibaClub » (rond du club, nom en gras,
-// catégorie · mode d'adhésion) et, dessous, le nombre de membres actifs du club et le rôle de la personne (Admin / Modérateur / Membre ; Mehdi, 2026-11-19 : « oui, les deux »). Un club privé n'apparaît jamais ; une demande d'entrée encore en attente ne compte pas. La liste vient de `get_bibax_public_clubs` (script
+// catégorie · mode d'adhésion) et, dessous, le nombre de membres actifs du club et, seulement pour un administrateur ou un modérateur, le rôle de la personne (Mehdi, 2026-11-19 : « oui, les deux », puis « n'afficher que le rôle d'admin et modérateur »). Un club privé n'apparaît jamais ; une demande d'entrée encore en attente ne compte pas. La liste vient de `get_bibax_public_clubs` (script
 // bibamus-sql-bibax-clubs-publics), qui exige d'être Bibax confirmé de la personne. Une ligne ouvre la page du club (aperçu « Rejoindre » si l'on n'en fait pas partie), dont le retour ramène ici ;
 // la flèche retour de cette page ramène à la fiche (la mémoire de la liste est alors effacée, comme pour les autres sous-listes d'une fiche).
 export function BibroClubsScreen({ other, onBack: onBackProp, onOpenClub: onOpenClubProp, mainScrollRef }) {
@@ -817,7 +818,7 @@ export function BibroClubsScreen({ other, onBack: onBackProp, onOpenClub: onOpen
                 <ClubRow
                   club={c}
                   subtitle={[c.category, JOIN_MODE_LABEL[c.joinMode]].filter(Boolean).join(" · ")}
-                  detail={`${formatCount(c.memberCount)} ${c.memberCount > 1 ? "membres" : "membre"} · ${CLUB_ROLE_LABEL[c.memberRole] || CLUB_ROLE_LABEL.member}`}
+                  detail={[`${formatCount(c.memberCount)} ${c.memberCount > 1 ? "membres" : "membre"}`, CLUB_ROLE_LABEL[c.memberRole]].filter(Boolean).join(" · ")}
                   onClick={() => onOpenClub(c.id)}
                 />
               </div>
