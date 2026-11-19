@@ -9,6 +9,7 @@ import { NavIcon } from "./icons.jsx";
 import { makeSearchMatcher, capitalizeFirst, sameVenueByNameCity } from "../utils.js";
 import { searchVenues } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
+import { EntityAvatar } from "./ui.jsx";
 
 export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placeholder = "Rechercher un Bibax..." }) {
   const [open, setOpen] = useState(false);
@@ -441,14 +442,18 @@ export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
                   <button
                     key={v.id}
                     onClick={() => pick(v)}
-                    style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "transparent", border: "none", cursor: "pointer" }}
+                    style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "transparent", border: "none", cursor: "pointer" }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
-                      {v.name}
-                    </div>
-                    <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>
-                      {[v.city, alreadyTracked(v) ? "✓ déjà utilisé" : null].filter(Boolean).join(" · ")}
-                    </div>
+                    {/* Rond de profil du lieu (photo, à défaut émoji, à défaut « B » Bibamus), comme dans « Voir les lieux près de chez vous » — Mehdi, 2026-11-19. */}
+                    <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} />
+                    <span style={{ minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
+                        {v.name}
+                      </div>
+                      <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>
+                        {[v.city, alreadyTracked(v) ? "✓ déjà utilisé" : null].filter(Boolean).join(" · ")}
+                      </div>
+                    </span>
                   </button>
                 ))}
               </div>

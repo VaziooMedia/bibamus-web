@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, TokenPinkIcon } from "./icons.jsx";
-import { PageHeader, PageFooterNav, PrimaryButton, SectionTitle } from "./ui.jsx";
+import { PageHeader, PageFooterNav, PrimaryButton, SectionTitle, EntityAvatar } from "./ui.jsx";
 import { ParticipantsEditor, PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { capitalizeFirst, todayISO } from "../utils.js";
@@ -14,15 +14,24 @@ import { MEDIUM_PILL } from "./PillTabs.jsx";
 
 // Pastilles de la section « Lieu > Favoris » (@Home, @Event, lieux favoris) : taille intermédiaire des pastilles de l'app (`MEDIUM_PILL`, la même que « Public » / « Mes Bibax »),
 // au lieu de la grande pastille d'avant (Mehdi, 2026-11-19 : « affiner les pastilles Lieu / Favoris »). Couleurs et graisse inchangées.
-const venuePillStyle = (selected) => ({
+// Un lieu favori porte son rond de profil (`EntityAvatar` de 20 px) à gauche du nom — Mehdi, 2026-11-19 : « mettre les ronds dans les pastilles, même si c'est petit ». @Home et @Event n'ont pas de fiche, donc pas de rond.
+// Toutes les pastilles ont la même hauteur (`PILL_MIN_HEIGHT`), avec ou sans rond.
+const VENUE_PILL_AVATAR = 20;
+const PILL_MIN_HEIGHT = "28px";
+const venuePillStyle = (selected, withAvatar = false) => ({
   background: selected ? COLORS.amber : COLORS.surface,
   color: selected ? COLORS.paper : COLORS.ink,
   border: `${MEDIUM_PILL.borderWidth} solid ${selected ? COLORS.amber : COLORS.paperAlt}`,
   borderRadius: "999px",
-  padding: MEDIUM_PILL.padding,
+  padding: withAvatar ? "2px 11px 2px 3px" : MEDIUM_PILL.padding,
   fontSize: MEDIUM_PILL.fontSize,
   fontWeight: 600,
   cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  minHeight: PILL_MIN_HEIGHT,
+  textAlign: "left",
 });
 
 export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, venues = [], onResolvePublicVenue, bibros = [], myUserId }) {
@@ -148,7 +157,8 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
             @Event
           </button>
           {venues.map((v) => (
-            <button key={v.id} onClick={() => pickVenue(v)} style={venuePillStyle(selectedVenueId === v.id)}>
+            <button key={v.id} onClick={() => pickVenue(v)} style={venuePillStyle(selectedVenueId === v.id, true)}>
+              <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={VENUE_PILL_AVATAR} />
               {v.name}
             </button>
           ))}

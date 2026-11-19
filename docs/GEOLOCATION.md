@@ -55,7 +55,7 @@ Hook `useGeolocation` (`getCurrentPosition`, précision normale, délai 8 s, cac
 
 | Écran | Déclenchement | Pour quoi |
 |---|---|---|
-| `NearbyVenueSuggestions` | bouton « Suggérer des lieux autour de moi » | choix du lieu d'un salon ; chaque ligne porte le rond de profil du lieu (`EntityAvatar` 36 px, depuis le 2026-11-19) |
+| `NearbyVenueSuggestions` | bouton « Suggérer des lieux autour de moi » | choix du lieu d'un salon ; chaque ligne porte le rond de profil du lieu (`EntityAvatar` 36 px, depuis le 2026-11-19), comme les résultats de la recherche BibAtlas (`PublicVenueSearchPicker`) |
 | `VenueDirectoryScreen` | bouton « Lieux proches de moi » | annuaire |
 | `VenueMapScreen` | bouton « Ma position » | recentre la carte, rien n'est envoyé |
 | Sécurité > Permissions | bascule « Localisation » | enregistre `consent_location` |
