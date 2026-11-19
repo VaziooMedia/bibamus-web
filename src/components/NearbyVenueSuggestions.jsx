@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
+import { EntityAvatar } from "./ui.jsx";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { loadNearbyVenues } from "../data/sharedDirectories.js";
 
@@ -104,12 +105,14 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseK
               background: COLORS.surface,
               border: `2px solid ${COLORS.amber}`,
               borderRadius: "10px",
-              padding: "10px 12px",
+              padding: "8px 12px",
+              gap: "8px",
             }}
           >
-            <span style={{ display: "flex", alignItems: "center", gap: "8px", color: COLORS.ink, fontSize: "13.5px", fontWeight: 700 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, color: COLORS.ink, fontSize: "13.5px", fontWeight: 700 }}>
+              <EntityAvatar photoUrl={picked.profilePhotoUrl} photoEmoji={picked.avatarEmoji} size={36} />
               <NavIcon name="check" size={14} color={COLORS.amber} />
-              {picked.name}
+              <span style={{ minWidth: 0 }}>{picked.name}</span>
             </span>
             <button
               onClick={() => setCollapsed(false)}
@@ -136,19 +139,22 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseK
                   background: COLORS.surface,
                   border: `2px solid ${isSelected ? COLORS.amber : COLORS.paperAlt}`,
                   borderRadius: "10px",
-                  padding: "10px 12px",
+                  padding: "8px 12px",
                   cursor: "pointer",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  gap: "8px",
                 }}
               >
-                <span style={{ display: "flex", alignItems: "center", gap: "8px", color: COLORS.ink, fontSize: "13.5px", fontWeight: 600 }}>
+                {/* Rond de profil du lieu (sa photo, à défaut son emoji, à défaut le « B » Bibamus) à gauche du nom — Mehdi, 2026-11-19. */}
+                <span style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, color: COLORS.ink, fontSize: "13.5px", fontWeight: 600 }}>
+                  <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} />
                   {isSelected && <NavIcon name="check" size={14} color={COLORS.amber} />}
-                  {v.name}
+                  <span style={{ minWidth: 0 }}>{v.name}</span>
                 </span>
                 {v.distanceMeters != null && (
-                  <span style={{ color: COLORS.inkSoft, fontSize: "11.5px" }}>
+                  <span style={{ color: COLORS.inkSoft, fontSize: "11.5px", flexShrink: 0, whiteSpace: "nowrap" }}>
                     {v.distanceMeters < 1000 ? `${Math.round(v.distanceMeters)} m` : `${(v.distanceMeters / 1000).toFixed(1)} km`}
                   </span>
                 )}

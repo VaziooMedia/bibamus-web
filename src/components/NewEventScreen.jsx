@@ -10,6 +10,20 @@ import { ParticipantsEditor, PublicVenueSearchPicker } from "./Pickers.jsx";
 import { NearbyVenueSuggestions } from "./NearbyVenueSuggestions.jsx";
 import { capitalizeFirst, todayISO } from "../utils.js";
 import { loadMyClubs } from "../data/sharedDirectories.js";
+import { MEDIUM_PILL } from "./PillTabs.jsx";
+
+// Pastilles de la section « Lieu > Favoris » (@Home, @Event, lieux favoris) : taille intermédiaire des pastilles de l'app (`MEDIUM_PILL`, la même que « Public » / « Mes Bibax »),
+// au lieu de la grande pastille d'avant (Mehdi, 2026-11-19 : « affiner les pastilles Lieu / Favoris »). Couleurs et graisse inchangées.
+const venuePillStyle = (selected) => ({
+  background: selected ? COLORS.amber : COLORS.surface,
+  color: selected ? COLORS.paper : COLORS.ink,
+  border: `${MEDIUM_PILL.borderWidth} solid ${selected ? COLORS.amber : COLORS.paperAlt}`,
+  borderRadius: "999px",
+  padding: MEDIUM_PILL.padding,
+  fontSize: MEDIUM_PILL.fontSize,
+  fontWeight: 600,
+  cursor: "pointer",
+});
 
 export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, venues = [], onResolvePublicVenue, bibros = [], myUserId }) {
   const [name, setName] = useState("");
@@ -127,51 +141,14 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
       <div style={{ marginBottom: "16px" }}>
         <label style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" }}>Favoris</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          <button
-            onClick={pickHome}
-            style={{
-              background: selectedVenueId === "@home" ? COLORS.amber : COLORS.surface,
-              color: selectedVenueId === "@home" ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${selectedVenueId === "@home" ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontSize: "13.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={pickHome} style={venuePillStyle(selectedVenueId === "@home")}>
             @Home
           </button>
-          <button
-            onClick={pickEventPlace}
-            style={{
-              background: selectedVenueId === "@event" ? COLORS.amber : COLORS.surface,
-              color: selectedVenueId === "@event" ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${selectedVenueId === "@event" ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "999px",
-              padding: "8px 14px",
-              fontSize: "13.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={pickEventPlace} style={venuePillStyle(selectedVenueId === "@event")}>
             @Event
           </button>
           {venues.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => pickVenue(v)}
-              style={{
-                background: selectedVenueId === v.id ? COLORS.amber : COLORS.surface,
-                color: selectedVenueId === v.id ? COLORS.paper : COLORS.ink,
-                border: `2px solid ${selectedVenueId === v.id ? COLORS.amber : COLORS.paperAlt}`,
-                borderRadius: "999px",
-                padding: "8px 14px",
-                fontSize: "13.5px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
+            <button key={v.id} onClick={() => pickVenue(v)} style={venuePillStyle(selectedVenueId === v.id)}>
               {v.name}
             </button>
           ))}
@@ -283,6 +260,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
       )}
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
+      {/* Les 4 blocs du mode (ORBIS, ARCA, PARTES, LIBER) et les 2 du type de paiement : plus fins (contour de 1,5 px, rayon de 10 px, marges et textes réduits) — Mehdi, 2026-11-19. */}
       <SectionTitle>Choix du mode</SectionTitle>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "20px" }}>
         {[
@@ -301,14 +279,14 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
               textAlign: "left",
               background: eventMode === m.key ? COLORS.amber : COLORS.surface,
               color: eventMode === m.key ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${eventMode === m.key ? COLORS.amber : COLORS.paperAlt}`,
-              borderRadius: "12px",
-              padding: "12px 14px",
+              border: `1.5px solid ${eventMode === m.key ? COLORS.amber : COLORS.paperAlt}`,
+              borderRadius: "10px",
+              padding: "8px 12px",
               cursor: "pointer",
             }}
           >
-            <div style={{ fontWeight: 700, fontSize: "14.5px" }}>{m.label}</div>
-            <div style={{ fontSize: "12px", marginTop: "2px", opacity: eventMode === m.key ? 0.85 : 0.65 }}>{m.desc}</div>
+            <div style={{ fontWeight: 700, fontSize: "13.5px" }}>{m.label}</div>
+            <div style={{ fontSize: "11.5px", marginTop: "1px", opacity: eventMode === m.key ? 0.85 : 0.65 }}>{m.desc}</div>
           </button>
         ))}
       </div>
@@ -324,13 +302,13 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
                   onClick={() => setCurrency("euro")}
                   style={{
                     flex: 1,
-                    padding: "18px 10px",
-                    borderRadius: "12px",
-                    border: `2px solid ${currency === "euro" ? COLORS.amber : COLORS.paperAlt}`,
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: `1.5px solid ${currency === "euro" ? COLORS.amber : COLORS.paperAlt}`,
                     background: currency === "euro" ? COLORS.amber : COLORS.surface,
                     color: currency === "euro" ? COLORS.paper : COLORS.ink,
                     fontWeight: 700,
-                    fontSize: "16px",
+                    fontSize: "14px",
                     cursor: "pointer",
                   }}
                 >
@@ -340,18 +318,18 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
                   onClick={() => setCurrency("jeton")}
                   style={{
                     flex: 1,
-                    padding: "18px 10px",
-                    borderRadius: "12px",
-                    border: `2px solid ${currency === "jeton" ? COLORS.amber : COLORS.paperAlt}`,
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: `1.5px solid ${currency === "jeton" ? COLORS.amber : COLORS.paperAlt}`,
                     background: currency === "jeton" ? COLORS.amber : COLORS.surface,
                     color: currency === "jeton" ? COLORS.paper : COLORS.ink,
                     fontWeight: 700,
-                    fontSize: "16px",
+                    fontSize: "14px",
                     cursor: "pointer",
                   }}
                 >
                   <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                    <TokenPinkIcon size={20} />
+                    <TokenPinkIcon size={17} />
                     Jetons
                   </span>
                 </button>

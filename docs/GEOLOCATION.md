@@ -1,7 +1,7 @@
 # GÉOLOCALISATION — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. Consolide ce qui était auparavant réparti entre BIBAX.md et DATABASE.md. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de PostGIS, de `get_nearby_venues` et des fonctions Edge de géocodage), donc non revérifié.
+> Dernière mise à jour : 2026-11-19 (rond de profil du lieu dans `NearbyVenueSuggestions`) ; 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de PostGIS, de `get_nearby_venues` et des fonctions Edge de géocodage), donc non revérifié.
 
 ---
 
@@ -55,7 +55,7 @@ Hook `useGeolocation` (`getCurrentPosition`, précision normale, délai 8 s, cac
 
 | Écran | Déclenchement | Pour quoi |
 |---|---|---|
-| `NearbyVenueSuggestions` | bouton « Suggérer des lieux autour de moi » | choix du lieu d'un salon |
+| `NearbyVenueSuggestions` | bouton « Suggérer des lieux autour de moi » | choix du lieu d'un salon ; chaque ligne porte le rond de profil du lieu (`EntityAvatar` 36 px, depuis le 2026-11-19) |
 | `VenueDirectoryScreen` | bouton « Lieux proches de moi » | annuaire |
 | `VenueMapScreen` | bouton « Ma position » | recentre la carte, rien n'est envoyé |
 | Sécurité > Permissions | bascule « Localisation » | enregistre `consent_location` |
