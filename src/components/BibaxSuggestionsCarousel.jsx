@@ -1,5 +1,5 @@
 // ============================================================
-// Carrousel des « Suggestions rapides » de l'accueil (décision de Mehdi, 2026-11-18) : une rangée de cartes verticales qu'on fait défiler vers la gauche.
+// Carrousel des « Suggestions rapides » de l'accueil (décision de Mehdi, 2026-11-18) : une rangée de cartes verticales (230 px de large) qu'on fait défiler vers la gauche.
 // Chaque carte : un grand rond de profil cerclé de vert fluo, avec un petit « + » vert pour ajouter en un tap, un « × » rose fluo dans le coin pour supprimer la suggestion
 // (la suivante prend sa place), le nom, deux lignes de détails (@nom + surnom ; commune + drapeau — `BibaxDetailLines`) et une pastille de raison (« 4 Bibax en commun », « 0 » compris). Une carte « Voir tout » ferme la rangée.
 // La page Mes Bibax, elle, garde des listes (onglet « Suggestions »).
@@ -13,7 +13,9 @@ import { NavIcon } from "./icons.jsx";
 import { EntityAvatar, MutualPill } from "./ui.jsx";
 import { BibaxDetailLines } from "./BibaxLines.jsx";
 
-const CARD_WIDTH = 150;
+// Largeur d'une carte (Mehdi, 2026-11-19) : 230 px, pour qu'un nom long (2 lignes) et la plus longue commune (« Ottignies-Louvain-la-Neuve » + drapeau) tiennent en entier, même à 320 px d'écran ;
+// à 390 px on voit une carte entière et un bout de la suivante, ce qui indique qu'on peut faire défiler.
+const CARD_WIDTH = 230;
 
 export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss, busyCode, onSeeAll }) {
   const card = { background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "16px", cursor: "pointer", boxSizing: "border-box" };

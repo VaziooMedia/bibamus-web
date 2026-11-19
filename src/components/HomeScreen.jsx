@@ -629,7 +629,7 @@ export function HomeScreen({
             style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: suggestionsExpanded ? "8px" : 0, background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer" }}
           >
             <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-            <span style={{ fontSize: "13px", fontWeight: 700 }}>
+            <span style={{ fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap" }}>
               <span style={{ color: COLORS.ink }}>Biba</span>
               <span style={{ color: COLORS.amber }}>x</span>
               <span style={{ color: COLORS.inkSoft }}> - Suggestions rapides</span>
@@ -639,7 +639,7 @@ export function HomeScreen({
                 e.stopPropagation();
                 goToBibaxSuggestions();
               }}
-              style={{ marginLeft: "auto", marginRight: "8px", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber }}
+              style={{ marginLeft: "auto", marginRight: "4px", fontSize: "12.5px", fontWeight: 400, color: COLORS.amber, whiteSpace: "nowrap" }}
             >
               Voir tout
             </span>
