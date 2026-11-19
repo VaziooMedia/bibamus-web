@@ -21,6 +21,7 @@ import { NavIcon } from "./icons.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import { searchBibaxForTagging, uploadPulsePhoto } from "../data/sharedDirectories.js";
 import { fileToResizedJpegBlob } from "../imageUtils.js";
+import { useKeyboardFit, revealField } from "../hooks/useKeyboardInset.js";
 
 // Nombre maximum de Bibax tagués dans une publication (le serveur en accepte jusqu'à 10).
 export const MAX_TAGS = 5;
@@ -140,6 +141,10 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
   const { visibility, setVisibility, comment, setComment, photo, setPhoto, tagQuery, setTagQuery, tagResults, setTagResults, taggedPeople, setTaggedPeople, fileInputRef, handlePhotoPick } = form;
   // Avec barres, c'est la barre qui porte l'espace entre deux sections : la section qui la précède n'a plus de marge basse.
   const end = (px) => (dividers ? "0" : px);
+  // Clavier à l'écran (Mehdi, 2026-11-19) : le champ « Taguer un Bibax » remonte en haut de la zone visible et sa liste tient au-dessus du clavier (voir `useKeyboardInset.js`).
+  const bibaxInputRef = useRef(null);
+  const bibaxListRef = useRef(null);
+  const bibaxListHeight = useKeyboardFit(bibaxInputRef, bibaxListRef, tagResults.length > 0, tagResults);
   return (
     <div style={{ marginBottom: endDivider ? "0" : "20px" }}>
       <SectionLabel icon="lock" style={{ marginBottom: "8px" }}>Confidentialité</SectionLabel>
@@ -227,13 +232,15 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
       {showBibax && taggedPeople.length < MAX_TAGS && (
         <div style={{ position: "relative" }}>
           <input
+            ref={bibaxInputRef}
             value={tagQuery}
             onChange={(e) => setTagQuery(e.target.value)}
+            onFocus={() => setTimeout(() => revealField(bibaxInputRef.current), 350)}
             placeholder="Taguer un Bibax"
             style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontSize: "14px" }}
           />
           {tagResults.length > 0 && (
-            <div style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflow: "hidden" }}>
+            <div ref={bibaxListRef} style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflowX: "hidden", overflowY: bibaxListHeight != null ? "auto" : "hidden", ...(bibaxListHeight != null ? { maxHeight: `${bibaxListHeight}px`, overscrollBehavior: "contain" } : {}) }}>
               {tagResults.map((person) => {
                 // Un Bibax qui a restreint ses tags apparaît grisé, non sélectionnable — même rendu que dans les Stories.
                 const restricted = person.allowStoryTags === false;

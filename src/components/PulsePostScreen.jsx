@@ -17,9 +17,12 @@ import { PageHeader } from "./ui.jsx";
 import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
 import { PulseTagsPicker, PulseVenuePicker, MAX_POST_TAGS } from "./PulseTags.jsx";
 import { publishPostToPulse, storyTagsFromPost, pickStoryBibax } from "../data/sharedDirectories.js";
+import { useKeyboardInset } from "../hooks/useKeyboardInset.js";
 
 export function PulsePostScreen({ onBack, onPublished, canShareStory = false }) {
   const form = usePulseContentForm("public");
+  // Clavier à l'écran : sa hauteur est ajoutée en bas de l'écran pour que tout le contenu puisse défiler au-dessus de lui (listes de propositions du lieu, des Bibax et des tags).
+  const keyboardInset = useKeyboardInset();
   const [tags, setTags] = useState([]); // [{ type, id, name }] — produits, marques, producteurs
   // Le lieu de la publication (section « Lieu », Mehdi, 2026-11-19) : { id, name } ou null. Côté serveur c'est un tag de fiche de sorte « venue » (même règles : fiche
   // visible dans l'app, 5 fiches au plus au total) ; il passe donc en tête de la liste des tags envoyés.
@@ -129,6 +132,7 @@ export function PulsePostScreen({ onBack, onPublished, canShareStory = false }) 
       >
         {publishing ? "Publication..." : "Publier"}
       </button>
+      {keyboardInset > 0 && <div aria-hidden="true" style={{ height: `${keyboardInset}px`, flexShrink: 0 }} />}
     </div>
   );
 }
