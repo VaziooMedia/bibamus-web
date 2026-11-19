@@ -1,6 +1,6 @@
 // ============================================================
 // Carrousel des « Suggestions rapides » de l'accueil (décision de Mehdi, 2026-11-18) : une rangée de cartes verticales (230 px de large) qu'on fait défiler vers la gauche.
-// Chaque carte : un grand rond de profil cerclé de vert fluo, avec un petit « + » vert pour ajouter en un tap, un « × » rose fluo dans le coin pour supprimer la suggestion
+// Chaque carte : un grand rond de profil cerclé de vert fluo, avec un petit « + » vert pour ajouter en un tap, un « × » gris (`inkSoft`) dans le coin pour supprimer la suggestion
 // (la suivante prend sa place), le nom, deux lignes de détails (@nom + surnom ; commune + drapeau — `BibaxDetailLines`) et une pastille de raison (« 4 Bibax en commun », « 0 » compris). Une carte « Voir tout » ferme la rangée.
 // La page Mes Bibax, elle, garde des listes (onglet « Suggestions »).
 //
@@ -36,9 +36,9 @@ export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss
                 e.stopPropagation();
                 onDismiss(s);
               }}
-              style={{ position: "absolute", top: "6px", right: "6px", width: "26px", height: "26px", borderRadius: "50%", background: COLORS.surface, border: `1.5px solid ${COLORS.pinkFluo}`, boxSizing: "border-box", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              style={{ position: "absolute", top: "6px", right: "6px", width: "26px", height: "26px", borderRadius: "50%", background: COLORS.surface, border: `1.5px solid ${COLORS.inkSoft}`, boxSizing: "border-box", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
             >
-              <NavIcon name="x" size={13} color={COLORS.pinkFluo} />
+              <NavIcon name="x" size={13} color={COLORS.inkSoft} />
             </span>
 
             <span style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
