@@ -38,6 +38,12 @@
       a {
         color: inherit;
       }
+      /* Texte trop long pour sa place : il défile (pause, aller jusqu'au bout, pause, retour). `--scroll-dist` : la distance à parcourir (négative), posée par ScrollText. */
+      @keyframes bibaScrollText {
+        0%, 25% { transform: translateX(0); }
+        70%, 85% { transform: translateX(var(--scroll-dist)); }
+        100% { transform: translateX(0); }
+      }
       @keyframes bibaBobBlink {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.25; }

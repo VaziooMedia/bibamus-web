@@ -249,7 +249,7 @@ function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, on
         >
           <RequestCardAvatar photoUrl={s.avatarUrl} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <BibaxIdentity name={s.name} lastName={s.lastName} username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} style={{ fontSize: "13.5px", color: COLORS.ink }} />
+            <BibaxIdentity name={s.name} lastName={s.lastName} username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} scrollName style={{ fontSize: "13.5px", color: COLORS.ink }} />
             <div style={{ marginTop: "3px" }}>
               <MutualPill n={s.mutualCount || 0} />
             </div>
