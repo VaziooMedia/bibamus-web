@@ -88,6 +88,64 @@ function pulseNoteOf(entry) {
   };
 }
 
+// Sous-bloc « photo et commentaire de l'auteur » des cartes : même cadre que la fiche du produit ou du lieu (fond `surfaceAlt`, bord `paperAlt` de 2 px). La photo y est
+// entière (jamais recadrée), en petit (112 × 160 px au plus) et collée à gauche, le commentaire à sa droite ; la photo seule : le cadre épouse la photo au lieu de
+// s'étendre sur toute la largeur. `interaction` : la pastille d'interaction d'un PlaceCheck, au-dessus du commentaire. Partagé par les cartes de check (sous la fiche,
+// `marginTop` 8) et par la publication libre (Mehdi, 2026-11-19 : « la photo en plus petit à gauche avec le texte à droite, on l'a déjà fait »).
+function PulseNoteBlock({ photoUrl, comment, interaction = null, marginTop = 0 }) {
+  return (
+    <div
+      style={{
+        margin: marginTop ? `${marginTop}px 0 0` : 0,
+        background: COLORS.surfaceAlt,
+        border: `2px solid ${COLORS.paperAlt}`,
+        borderRadius: "10px",
+        padding: "8px",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "10px",
+        // Photo seule : le cadre épouse la photo au lieu de s'étendre sur toute la largeur.
+        width: comment ? undefined : "fit-content",
+        maxWidth: "100%",
+      }}
+    >
+      {photoUrl && (
+        <img
+          src={photoUrl}
+          alt="Photo de la publication"
+          loading="lazy"
+          style={{ flexShrink: 0, maxWidth: "112px", maxHeight: "160px", width: "auto", height: "auto", borderRadius: "8px", display: "block" }}
+        />
+      )}
+      {(comment || interaction) && (
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
+          {interaction}
+          {comment && <p style={{ alignSelf: "stretch", margin: 0, padding: "2px 4px", fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{comment}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Ligne « lieu » d'une carte : la pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ », puis le nom en gras — un bouton qui ouvre la fiche
+// quand `onOpen` est donné. Partagée par les cartes de check (lieu du check) et par la publication libre (son lieu).
+function PulseVenueLine({ name, onOpen, marginTop = 0 }) {
+  return (
+    <p style={{ margin: marginTop ? `${marginTop}px 0 0` : 0, display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
+      <span style={{ display: "flex", flexShrink: 0, marginTop: "1px" }}>
+        <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+      </span>
+      {onOpen ? (
+        <button onClick={onOpen} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}>
+          {name}
+        </button>
+      ) : (
+        <span style={{ fontWeight: 700 }}>{name}</span>
+      )}
+    </p>
+  );
+}
+
 function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {}, hideRating = false, hideNote = false }) {
   const meta = entry.metadata || {};
   const note = pulseNoteOf(entry);
@@ -102,11 +160,15 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {},
   // (Mehdi, 2026-11-19) ; les autres tags (produits, marques, producteurs) restent au-dessus, avant les Bibax.
   const otherTags = postTags.filter((t) => t.type !== "venue");
   const venueTags = postTags.filter((t) => t.type === "venue");
+  // Publication libre (Mehdi, 2026-11-19) : photo et texte dans le même sous-bloc que les cartes de check (photo entière en petit à gauche, texte à sa droite) et lieu sur la
+  // même ligne que le lieu d'un check (pastille de lieu verte, sans « @ »). Les autres cartes gardent leur mise en page.
+  const isPost = entry.eventType === "post";
   if (!comment && !photoUrl && rating === null && tagged.length === 0 && postTags.length === 0) return null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
-      {photoUrl && (
+      {isPost && (photoUrl || comment) && <PulseNoteBlock photoUrl={photoUrl} comment={comment} />}
+      {!isPost && photoUrl && (
         <img src={photoUrl} alt="Photo de la publication" loading="lazy" style={{ width: "100%", maxHeight: "220px", objectFit: "cover", borderRadius: "10px", display: "block" }} />
       )}
       {rating !== null && (
@@ -115,7 +177,7 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {},
           <span style={{ fontSize: "12.5px", fontWeight: 700, color: COLORS.ink }}>{String(rating).replace(".", ",")}/5</span>
         </div>
       )}
-      {comment && <p style={{ margin: 0, fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{comment}</p>}
+      {!isPost && comment && <p style={{ margin: 0, fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{comment}</p>}
       {otherTags.length > 0 && <PulseTagPills tags={otherTags} entities={tagEntities} handlers={tagHandlers} />}
       {tagged.length > 0 && (
         <p style={{ margin: 0, fontSize: "12.5px", color: COLORS.inkSoft }}>
@@ -139,7 +201,9 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {},
           ))}
         </p>
       )}
-      {venueTags.length > 0 && <PulseTagPills tags={venueTags} entities={tagEntities} handlers={tagHandlers} />}
+      {venueTags.map((t) => (
+        <PulseVenueLine key={t.id} name={tagEntities[`venue:${t.id}`].name} onOpen={tagHandlers.venue ? () => tagHandlers.venue(t.id) : null} marginTop={6} />
+      ))}
     </div>
   );
 }
@@ -553,57 +617,23 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           {showProductBlock && isDrinkCheck && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
           {showProductBlock && (isPlaceCheck || (isContribution && entry.objectType === "venue")) && <PulseVenueCard venue={obj} rating={directories.venueRatingsById?.[obj.id] || null} onOpen={openObject || undefined} />}
           {showProductBlock && isContribution && entry.objectType === "drink" && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
-          {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui. La photo y est entière (jamais recadrée),
-              en petit et collée à gauche, le commentaire à sa droite. */}
+          {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui (voir PulseNoteBlock). */}
           {(checkNote.photoUrl || checkNote.comment || placeInteraction) && (
-            <div
-              style={{
-                margin: showProductBlock ? "8px 0 0" : 0,
-                background: COLORS.surfaceAlt,
-                border: `2px solid ${COLORS.paperAlt}`,
-                borderRadius: "10px",
-                padding: "8px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "10px",
-                // Photo seule : le cadre épouse la photo au lieu de s'étendre sur toute la largeur.
-                width: checkNote.comment ? undefined : "fit-content",
-                maxWidth: "100%",
-              }}
-            >
-              {checkNote.photoUrl && (
-                <img
-                  src={checkNote.photoUrl}
-                  alt="Photo de la publication"
-                  loading="lazy"
-                  style={{ flexShrink: 0, maxWidth: "112px", maxHeight: "160px", width: "auto", height: "auto", borderRadius: "8px", display: "block" }}
-                />
-              )}
-              {(checkNote.comment || placeInteraction) && (
-                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
-                  {placeInteraction && <PulseInteractionPill label={placeInteraction.label} active={showComments} onClick={toggleComments} />}
-                  {checkNote.comment && (
-                    <p style={{ alignSelf: "stretch", margin: 0, padding: "2px 4px", fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{checkNote.comment}</p>
-                  )}
-                </div>
-              )}
-            </div>
+            <PulseNoteBlock
+              photoUrl={checkNote.photoUrl}
+              comment={checkNote.comment}
+              interaction={placeInteraction ? <PulseInteractionPill label={placeInteraction.label} active={showComments} onClick={toggleComments} /> : null}
+              marginTop={showProductBlock ? 8 : 0}
+            />
           )}
           {placeDrink && <PulseDrinkLine drink={placeDrink} onOpen={openPlaceDrink || undefined} gapAbove={showProductBlock || !!checkNote.photoUrl || !!checkNote.comment || !!placeInteraction} />}
           {checkVenueName && !isRoomLaunch && (
-            <p style={{ margin: showProductBlock || checkNote.photoUrl || checkNote.comment || placeDrink ? "14px 0 0" : 0, display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
-              {/* Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ». */}
-              <span style={{ display: "flex", flexShrink: 0, marginTop: "1px" }}>
-                <NavIcon name="map-pin" size={16} color={COLORS.amber} />
-              </span>
-              {openCheckVenue ? (
-                <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}>
-                  {checkVenueName.replace(/^@/, "")}
-                </button>
-              ) : (
-                <span style={{ fontWeight: 700 }}>{checkVenueName.replace(/^@/, "")}</span>
-              )}
-            </p>
+            // Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ».
+            <PulseVenueLine
+              name={checkVenueName.replace(/^@/, "")}
+              onOpen={openCheckVenue || null}
+              marginTop={showProductBlock || checkNote.photoUrl || checkNote.comment || placeDrink ? 14 : 0}
+            />
           )}
         </div>
       )}
