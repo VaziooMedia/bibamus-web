@@ -92,8 +92,10 @@ function pulseNoteOf(entry) {
 // Sous-bloc « photo et commentaire de l'auteur » des cartes : même cadre que la fiche du produit ou du lieu (fond `surfaceAlt`, bord `paperAlt` de 2 px). La photo y est
 // entière (jamais recadrée), en petit (112 × 160 px au plus) et collée à gauche, le commentaire à sa droite ; la photo seule : le cadre épouse la photo au lieu de
 // s'étendre sur toute la largeur. `interaction` : la pastille d'interaction d'un PlaceCheck, au-dessus du commentaire. Partagé par les cartes de check (sous la fiche,
-// `marginTop` 8) et par la publication libre (Mehdi, 2026-11-19 : « la photo en plus petit à gauche avec le texte à droite, on l'a déjà fait »).
-function PulseNoteBlock({ photoUrl, comment, interaction = null, marginTop = 0 }) {
+// `marginTop` 8) et par la publication libre (Mehdi, 2026-11-19 : « la photo en plus petit à gauche avec le texte à droite, on l'a déjà fait »). `half` (publication libre
+// seulement, Mehdi, 2026-11-19 : « on peut agrandir la photo sur la publication, moitié moitié avec le texte ») : la photo occupe la MOITIÉ de la largeur du bloc et le texte
+// l'autre moitié, au lieu de 112 × 160 px ; toujours entière (jamais recadrée), 280 px de haut au plus.
+function PulseNoteBlock({ photoUrl, comment, interaction = null, marginTop = 0, half = false }) {
   // La photo s'agrandit en plein écran quand on la touche (Mehdi, 2026-11-19) : visionneuse PhotoLightbox, variante « full » ; l'état d'ouverture est porté ici.
   const [zoomed, setZoomed] = useState(false);
   return (
@@ -107,18 +109,24 @@ function PulseNoteBlock({ photoUrl, comment, interaction = null, marginTop = 0 }
         display: "flex",
         alignItems: "flex-start",
         gap: "10px",
-        // Photo seule : le cadre épouse la photo au lieu de s'étendre sur toute la largeur.
-        width: comment ? undefined : "fit-content",
+        // Photo seule : le cadre épouse la photo au lieu de s'étendre sur toute la largeur. En mode `half`, la photo seule garde la moitié de la largeur (le cadre = la moitié du
+        // contenu + les 20 px de bord et de marge intérieure, moins la moitié de l'écart de 10 px).
+        ...(half && !comment && !interaction ? { width: "calc(50% + 5px)", boxSizing: "border-box" } : { width: comment || interaction ? undefined : "fit-content" }),
         maxWidth: "100%",
       }}
     >
       {photoUrl && (
-        <button type="button" onClick={() => setZoomed(true)} aria-label="Agrandir la photo" style={{ flexShrink: 0, background: "none", border: "none", padding: 0, cursor: "zoom-in", display: "block" }}>
+        <button
+          type="button"
+          onClick={() => setZoomed(true)}
+          aria-label="Agrandir la photo"
+          style={{ flex: half ? (comment || interaction ? "0 0 calc((100% - 10px) / 2)" : "1 1 0") : "0 0 auto", minWidth: 0, background: "none", border: "none", padding: 0, cursor: "zoom-in", display: "block", textAlign: "left" }}
+        >
           <img
             src={photoUrl}
             alt="Photo de la publication"
             loading="lazy"
-            style={{ maxWidth: "112px", maxHeight: "160px", width: "auto", height: "auto", borderRadius: "8px", display: "block" }}
+            style={{ maxWidth: half ? "100%" : "112px", maxHeight: half ? "280px" : "160px", width: "auto", height: "auto", borderRadius: "8px", display: "block" }}
           />
         </button>
       )}
@@ -173,7 +181,7 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {},
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
-      {isPost && (photoUrl || comment) && <PulseNoteBlock photoUrl={photoUrl} comment={comment} />}
+      {isPost && (photoUrl || comment) && <PulseNoteBlock photoUrl={photoUrl} comment={comment} half />}
       {!isPost && photoUrl && (
         <img src={photoUrl} alt="Photo de la publication" loading="lazy" style={{ width: "100%", maxHeight: "220px", objectFit: "cover", borderRadius: "10px", display: "block" }} />
       )}
