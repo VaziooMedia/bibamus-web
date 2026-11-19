@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { COLORS, RATING_LABELS } from "../constants.js";
 import { PLACE_INTERACTIONS } from "../placeInteractions.js";
+import { PhotoLightbox } from "./PhotoLightbox.jsx";
 import { PulseInteractionPill } from "./PulseInteractionPill.jsx";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
@@ -93,6 +94,8 @@ function pulseNoteOf(entry) {
 // s'étendre sur toute la largeur. `interaction` : la pastille d'interaction d'un PlaceCheck, au-dessus du commentaire. Partagé par les cartes de check (sous la fiche,
 // `marginTop` 8) et par la publication libre (Mehdi, 2026-11-19 : « la photo en plus petit à gauche avec le texte à droite, on l'a déjà fait »).
 function PulseNoteBlock({ photoUrl, comment, interaction = null, marginTop = 0 }) {
+  // La photo s'agrandit en plein écran quand on la touche (Mehdi, 2026-11-19) : visionneuse PhotoLightbox, variante « full » ; l'état d'ouverture est porté ici.
+  const [zoomed, setZoomed] = useState(false);
   return (
     <div
       style={{
@@ -110,13 +113,16 @@ function PulseNoteBlock({ photoUrl, comment, interaction = null, marginTop = 0 }
       }}
     >
       {photoUrl && (
-        <img
-          src={photoUrl}
-          alt="Photo de la publication"
-          loading="lazy"
-          style={{ flexShrink: 0, maxWidth: "112px", maxHeight: "160px", width: "auto", height: "auto", borderRadius: "8px", display: "block" }}
-        />
+        <button type="button" onClick={() => setZoomed(true)} aria-label="Agrandir la photo" style={{ flexShrink: 0, background: "none", border: "none", padding: 0, cursor: "zoom-in", display: "block" }}>
+          <img
+            src={photoUrl}
+            alt="Photo de la publication"
+            loading="lazy"
+            style={{ maxWidth: "112px", maxHeight: "160px", width: "auto", height: "auto", borderRadius: "8px", display: "block" }}
+          />
+        </button>
       )}
+      {zoomed && photoUrl && <PhotoLightbox url={photoUrl} alt="Photo de la publication" fit="full" onClose={() => setZoomed(false)} />}
       {(comment || interaction) && (
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
           {interaction}
