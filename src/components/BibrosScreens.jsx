@@ -941,6 +941,7 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
         ]}
         active={activeTab}
         onChange={setActiveTab}
+        medium
       />
 
       {activeTab === "infos" && (

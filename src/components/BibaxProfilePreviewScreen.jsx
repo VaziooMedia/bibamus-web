@@ -166,6 +166,7 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack, myUserId, myBibro
             ]}
             active={activeTab}
             onChange={setActiveTab}
+            medium
           />
 
           {activeTab === "infos" && (
