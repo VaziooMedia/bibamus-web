@@ -1596,6 +1596,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
         <div
           style={{
             flex: 1,
+            minWidth: 0,
             display: "flex",
             alignItems: "center",
             gap: "10px",
