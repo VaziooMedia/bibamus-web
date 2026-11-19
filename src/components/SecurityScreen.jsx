@@ -17,7 +17,7 @@ import { supabase } from "../supabaseClient.js";
 
 const FLUO_RED = "#FF3B3B";
 
-function SecurityRow({ icon, title, subtitle, onClick, titleColor, disabled, badge, trailing, trailingColor }) {
+export function SecurityRow({ icon, title, subtitle, onClick, titleColor, disabled, badge, trailing, trailingColor }) {
   return (
     <button
       onClick={disabled ? undefined : onClick}

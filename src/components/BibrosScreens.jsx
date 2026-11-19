@@ -734,8 +734,10 @@ export function BibroBibaxListScreen({ other, onBack: onBackProp, onViewBibro: o
   );
 }
 
+const CLUB_ROLE_LABEL = { admin: "Admin", moderator: "Modérateur", member: "Membre" };
+
 // Le bloc « BibaClub » de la fiche d'un Bibax (Mehdi, 2026-11-19) : les BibaClub PUBLICS dont cette personne est membre, avec les mêmes lignes que « Mes BibaClub » (rond du club, nom en gras,
-// catégorie · mode d'adhésion). Un club privé n'apparaît jamais ; une demande d'entrée encore en attente ne compte pas. La liste vient de `get_bibax_public_clubs` (script
+// catégorie · mode d'adhésion) et, dessous, le nombre de membres actifs du club et le rôle de la personne (Admin / Modérateur / Membre ; Mehdi, 2026-11-19 : « oui, les deux »). Un club privé n'apparaît jamais ; une demande d'entrée encore en attente ne compte pas. La liste vient de `get_bibax_public_clubs` (script
 // bibamus-sql-bibax-clubs-publics), qui exige d'être Bibax confirmé de la personne. Une ligne ouvre la page du club (aperçu « Rejoindre » si l'on n'en fait pas partie), dont le retour ramène ici ;
 // la flèche retour de cette page ramène à la fiche (la mémoire de la liste est alors effacée, comme pour les autres sous-listes d'une fiche).
 export function BibroClubsScreen({ other, onBack: onBackProp, onOpenClub: onOpenClubProp, mainScrollRef }) {
@@ -744,6 +746,7 @@ export function BibroClubsScreen({ other, onBack: onBackProp, onOpenClub: onOpen
   const onOpenClub = open(onOpenClubProp);
   const [list, setList] = useState(restored ? restored.list : null); // null = chargement
   const [error, setError] = useState(false);
+  const [hidden, setHidden] = useState(false); // la personne ne partage pas ses BibaClub (Paramètres > Fonctionnalités > BibaClubs)
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -751,6 +754,11 @@ export function BibroClubsScreen({ other, onBack: onBackProp, onOpenClub: onOpen
     setError(false);
     loadBibroPublicClubs(other.userId).then((result) => {
       if (cancelled) return;
+      if (result?.hidden) {
+        setHidden(true);
+        setList([]);
+        return;
+      }
       if (!result) {
         // Si la base n'a pas répondu, on ne prétend pas que la liste est vide ; au retour d'une fiche, on garde en silence ce qu'on avait.
         if (!restored) {
@@ -797,6 +805,8 @@ export function BibroClubsScreen({ other, onBack: onBackProp, onOpenClub: onOpen
             Réessayer
           </button>
         </p>
+      ) : hidden ? (
+        <p data-check-empty style={note}>{other.name} ne partage pas ses BibaClub.</p>
       ) : list.length === 0 ? (
         <p data-check-empty style={note}>{other.name} n'est membre d'aucun BibaClub public pour l'instant.</p>
       ) : (
@@ -804,7 +814,12 @@ export function BibroClubsScreen({ other, onBack: onBackProp, onOpenClub: onOpen
           <div data-bibro-clubs style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px", marginBottom: "10px" }}>
             {list.map((c, i) => (
               <div key={c.id} style={{ borderBottom: i === list.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}` }}>
-                <ClubRow club={c} subtitle={[c.category, JOIN_MODE_LABEL[c.joinMode]].filter(Boolean).join(" · ")} onClick={() => onOpenClub(c.id)} />
+                <ClubRow
+                  club={c}
+                  subtitle={[c.category, JOIN_MODE_LABEL[c.joinMode]].filter(Boolean).join(" · ")}
+                  detail={`${formatCount(c.memberCount)} ${c.memberCount > 1 ? "membres" : "membre"} · ${CLUB_ROLE_LABEL[c.memberRole] || CLUB_ROLE_LABEL.member}`}
+                  onClick={() => onOpenClub(c.id)}
+                />
               </div>
             ))}
           </div>
