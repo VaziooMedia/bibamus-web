@@ -10,7 +10,7 @@ import { loadMyClubs, loadMyClubInvitations, searchPublicClubs } from "../data/s
 import { ClubInvitationCard } from "./ClubInvitationCard.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 
-function ClubRow({ club, subtitle, onClick }) {
+export function ClubRow({ club, subtitle, detail = null, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -31,13 +31,14 @@ function ClubRow({ club, subtitle, onClick }) {
       <span style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: "14.5px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{club.name}</div>
         <div style={{ fontSize: "12px", color: COLORS.inkSoft }}>{subtitle}</div>
+        {detail && <div data-club-detail style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "1px" }}>{detail}</div>}
       </span>
       <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
     </button>
   );
 }
 
-const JOIN_MODE_LABEL = { request: "Sur demande", open: "Ouvert" };
+export const JOIN_MODE_LABEL = { request: "Sur demande", open: "Ouvert" };
 const STATUS_LABEL = { active: "Membre", pending: "Demande en attente" };
 
 const inputStyle = {

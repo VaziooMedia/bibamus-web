@@ -1198,6 +1198,7 @@ export async function loadMyProfile(userId) {
     shareStatsVenues: data.share_stats_venues,
     shareStatsSocial: data.share_stats_social,
     shareBibaxList: data.share_bibax_list,
+    shareClubs: data.share_clubs,
     avatarUrl: data.avatar_url || null,
     // isAdmin vient désormais du vrai rôle vérifié côté base de données, plus d'une passphrase
     // locale — cohérent avec les règles RLS qui vérifient ce même rôle.
@@ -1303,6 +1304,7 @@ export async function updateMyProfile(
     shareStatsVenues,
     shareStatsSocial,
     shareBibaxList,
+    shareClubs,
     avatarUrl,
   }
 ) {
@@ -1399,6 +1401,7 @@ export async function updateMyProfile(
     share_stats_venues: shareStatsVenues,
     share_stats_social: shareStatsSocial,
     share_bibax_list: shareBibaxList,
+    share_clubs: shareClubs,
     avatar_url: avatarUrl,
   };
   // Ne transmet que les champs réellement fournis — un appel partiel (ex. juste avatarUrl
@@ -5057,6 +5060,17 @@ export const loadBibroDrinkChecks = (userId) =>
 export const loadBibroCheckedVenues = (userId) =>
   loadBibaxList("loadBibroCheckedVenues", "get_bibax_checked_venues", userId, (rows) =>
     rows.filter((r) => r.venue_id).map((r) => ({ venueId: String(r.venue_id), visits: Number.isFinite(Number(r.visits)) ? Number(r.visits) : 1, lastAt: r.last_at || null }))
+  );
+
+// Les BibaClub PUBLICS dont un de mes Bibax est membre actif (bloc « BibaClub » de sa fiche ; fonction `get_bibax_public_clubs`, script bibamus-sql-bibax-clubs-publics) : de quoi
+// afficher une ligne (identifiant, nom, photo, catégorie, mode d'adhésion, nombre de membres actifs, rôle de la personne dans le club). Rend `{ list }`, `{ hidden: true }` quand la personne
+// ne partage pas ses BibaClub (réglage « BibaClub publics », Paramètres > Fonctionnalités > BibaClubs : la base répond « clubs_not_shared »), ou `null` si la lecture échoue (y compris
+// tant que la fonction n'existe pas dans la base).
+export const loadBibroPublicClubs = (userId) =>
+  loadBibaxList("loadBibroPublicClubs", "get_bibax_public_clubs", userId, (rows) =>
+    rows
+      .filter((r) => r.club_id)
+      .map((r) => ({ id: r.club_id, name: r.name, photoUrl: r.photo_url || null, category: r.category || null, joinMode: r.join_mode, memberCount: Number(r.member_count) || 0, memberRole: r.member_role || "member" }))
   );
 
 // Mêmes champs que `loadMutualBibaxList` (le @nom s'ajoute ensuite par `attachUsernames`).
