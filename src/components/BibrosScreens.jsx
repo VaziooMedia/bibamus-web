@@ -235,7 +235,7 @@ function BibaxRequestsPanel({ pending, sent, busyId, respond, cancelRequest, onO
   );
 }
 
-// Page « Suggestions » : toutes les suggestions (50 au plus), en liste. Le « + » rond vert envoie la demande ; le « × » rond rose fluo supprime la suggestion (la personne n'est plus proposée pendant 3 mois).
+// Page « Suggestions » : toutes les suggestions (50 au plus), en liste. Le « + » rond vert envoie la demande ; le « × » rond gris (`inkSoft`) supprime la suggestion (la personne n'est plus proposée pendant 3 mois).
 function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, onDismiss }) {
   if (suggestions === null) return <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>;
   if (suggestions.length === 0) return <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucune suggestion pour l'instant.</p>;
@@ -254,27 +254,29 @@ function BibaxSuggestionsPanel({ suggestions, busyCode, onOpenProfile, onAdd, on
               <MutualPill n={s.mutualCount || 0} />
             </div>
           </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAdd(s.bibroCode);
-            }}
-            disabled={busyCode === s.bibroCode}
-            aria-label="Ajouter"
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0, opacity: busyCode === s.bibroCode ? 0.5 : 1 }}
-          >
-            <NavIcon name="plus" size={18} color={COLORS.paper} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDismiss(s);
-            }}
-            aria-label="Supprimer cette suggestion"
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
-          >
-            <NavIcon name="x" size={17} color={COLORS.pinkFluo} />
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", flexShrink: 0 }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd(s.bibroCode);
+              }}
+              disabled={busyCode === s.bibroCode}
+              aria-label="Ajouter"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.amber, border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0, opacity: busyCode === s.bibroCode ? 0.5 : 1 }}
+            >
+              <NavIcon name="plus" size={18} color={COLORS.paper} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDismiss(s);
+              }}
+              aria-label="Supprimer cette suggestion"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: `2px solid ${COLORS.inkSoft}`, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", flexShrink: 0 }}
+            >
+              <NavIcon name="x" size={17} color={COLORS.inkSoft} />
+            </button>
+          </div>
         </div>
       ))}
     </div>
