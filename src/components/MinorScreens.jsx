@@ -214,7 +214,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
       )}
 
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "8px 0 16px" }} />
-      {/* Les 4 blocs du mode et les 2 du type de paiement : mêmes dimensions fines que dans « Nouveau BibaRoom » (contour de 1,5 px, rayon de 10 px, marges et textes réduits) — Mehdi, 2026-11-19. */}
+      {/* Les 4 blocs du mode, les 2 du type de paiement et le bloc Tok : mêmes dimensions fines que dans « Nouveau BibaRoom » (contour de 1,5 px, rayon de 10 px, marges et textes réduits) — Mehdi, 2026-11-19. */}
       <SectionTitle>Choix du mode</SectionTitle>
       <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "16px" }}>
         Changer de mode ne modifie que ce qui se passe à partir de maintenant.
@@ -309,9 +309,9 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
           <div
             style={{
               background: COLORS.surface,
-              border: `2px solid ${COLORS.paperAlt}`,
-              borderRadius: "12px",
-              padding: "12px 14px",
+              border: `1.5px solid ${COLORS.paperAlt}`,
+              borderRadius: "10px",
+              padding: "10px 12px",
               marginBottom: "20px",
               display: "flex",
               alignItems: "center",
@@ -320,8 +320,8 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
           >
             <img src={tokIconUrl} alt="" style={{ height: "22px", flexShrink: 0 }} />
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: "block", fontWeight: 700, fontSize: "14px", color: COLORS.ink }}>Recevoir des Tok</span>
-              <span style={{ display: "block", fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>
+              <span style={{ display: "block", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>Recevoir des Tok</span>
+              <span style={{ display: "block", fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>
                 Ne concerne que toi.
                 <br />
                 Les autres réglages de cette page valent pour tout le salon.
