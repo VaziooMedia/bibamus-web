@@ -1,6 +1,6 @@
 // ============================================================
 // BibaPulse — publier librement : un texte et/ou une photo, avec jusqu'à 5 tags de fiche (produits,
-// marques, producteurs, lieux) et jusqu'à 5 Bibax tagués. Mêmes règles que les checks : 280 caractères,
+// marques, producteurs), un lieu (section « Lieu », sous « Photo ») et jusqu'à 5 Bibax tagués. Mêmes règles que les checks : 280 caractères,
 // photo vérifiée par le serveur (SafeSearch), « Public » ou « Mes Bibax ». Une publication doit contenir
 // au moins un texte ou une photo ; les tags (fiches et Bibax) sont facultatifs.
 //
@@ -15,12 +15,16 @@ import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { PageHeader } from "./ui.jsx";
 import { usePulseContentForm, buildPulseContent, PulseContentFields } from "./PulseContentForm.jsx";
-import { PulseTagsPicker } from "./PulseTags.jsx";
+import { PulseTagsPicker, PulseVenuePicker, MAX_POST_TAGS } from "./PulseTags.jsx";
 import { publishPostToPulse, storyTagsFromPost, pickStoryBibax } from "../data/sharedDirectories.js";
 
 export function PulsePostScreen({ onBack, onPublished, canShareStory = false }) {
   const form = usePulseContentForm("public");
-  const [tags, setTags] = useState([]); // [{ type, id, name }]
+  const [tags, setTags] = useState([]); // [{ type, id, name }] — produits, marques, producteurs
+  // Le lieu de la publication (section « Lieu », Mehdi, 2026-11-19) : { id, name } ou null. Côté serveur c'est un tag de fiche de sorte « venue » (même règles : fiche
+  // visible dans l'app, 5 fiches au plus au total) ; il passe donc en tête de la liste des tags envoyés.
+  const [venue, setVenue] = useState(null);
+  const allTags = venue ? [{ type: "venue", id: venue.id, name: venue.name }, ...tags] : tags;
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
   const [shareStory, setShareStory] = useState(false);
@@ -43,7 +47,7 @@ export function PulsePostScreen({ onBack, onPublished, canShareStory = false }) 
     form.setError(null);
     setPublishing(true);
     // La photo part d'abord (vérifiée par le serveur) : si elle est refusée, rien n'est publié.
-    const built = await buildPulseContent(form, { tags });
+    const built = await buildPulseContent(form, { tags: allTags });
     if (built.error) {
       sending.current = false;
       setPublishing(false);
@@ -65,7 +69,7 @@ export function PulsePostScreen({ onBack, onPublished, canShareStory = false }) 
         const bibax = await pickStoryBibax(form.taggedPeople);
         storyDraft = {
           file: new File([form.photo.blob], "publication.jpg", { type: "image/jpeg" }),
-          tags: { ...storyTagsFromPost(tags), ...(bibax ? { bibax } : {}) },
+          tags: { ...storyTagsFromPost(allTags), ...(bibax ? { bibax } : {}) },
         };
       } catch (e) {
         console.error("story draft:", e);
@@ -85,8 +89,15 @@ export function PulsePostScreen({ onBack, onPublished, canShareStory = false }) 
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", margin: 0, lineHeight: 1, color: COLORS.ink }}>Nouvelle publication</h1>
       </div>
 
-      <PulseContentFields form={form} commentLabel="Texte" commentPlaceholder="Qu'as-tu envie de partager ?" dividers endDivider />
-      <PulseTagsPicker tags={tags} onChange={setTags} endDivider={showStoryOption} />
+      <PulseContentFields
+        form={form}
+        commentLabel="Texte"
+        commentPlaceholder="Qu'as-tu envie de partager ?"
+        dividers
+        endDivider
+        afterPhoto={<PulseVenuePicker venue={venue} onChange={setVenue} blocked={!venue && tags.length >= MAX_POST_TAGS} />}
+      />
+      <PulseTagsPicker tags={tags} onChange={setTags} endDivider={showStoryOption} max={MAX_POST_TAGS - (venue ? 1 : 0)} />
 
       {showStoryOption && (
         <div style={{ marginBottom: "20px" }}>
