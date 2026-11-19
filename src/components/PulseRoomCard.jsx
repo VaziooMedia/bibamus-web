@@ -4,7 +4,7 @@
 // maison (salon @Home) ou le feu d'artifice (salon @Event), à défaut la pastille de lieu. Lignes : le nom du salon ; le lieu (pastille
 // verte + nom) quand le titre du salon n'est pas déjà le nom du lieu, sinon la ville, grisée ; la date et l'heure du lancement, grisées.
 // Salon @Home ou @Event (2026-11-19, demandé par Mehdi : « tu peux mettre @Home et @Event lorsque c'est le cas ») : la ligne de lieu affiche « @Home » ou « @Event »
-// avec la même pastille verte, sauf si le titre du salon est déjà ce mot (le titre par défaut d'un salon @Home est « @Home » : pas de doublon).
+// en vert fluo, SANS pastille de lieu (Mehdi : « Mot sans épingle »), sauf si le titre du salon est déjà ce mot (le titre par défaut d'un salon @Home est « @Home » : pas de doublon).
 // Pas de pastille du mode (ORBIS, ARCA…) : décision de Mehdi, elle n'apporte rien sur la carte.
 // Les données du salon viennent de la carte (jamais le code du salon, qui est la clé d'accès) ; le lieu est lu sur sa fiche.
 // ============================================================
@@ -28,7 +28,7 @@ export function PulseRoomCard({ name, special = null, venue = null, launchedAt =
   const showVenue = venue && venue.name !== name;
   const specialLabel = special === "home" ? "@Home" : special === "event" ? "@Event" : null;
   const showSpecial = !!specialLabel && specialLabel.toLowerCase() !== String(name).trim().toLowerCase();
-  const placeLine = showVenue ? venue.name : showSpecial ? specialLabel : null;
+  const placeLine = showVenue ? venue.name : null;
   const launch = launchLabel(launchedAt);
   return (
     <div
@@ -55,6 +55,8 @@ export function PulseRoomCard({ name, special = null, venue = null, launchedAt =
               </span>
               <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{placeLine}</span>
             </span>
+          ) : showSpecial ? (
+            <span style={{ display: "block", marginTop: "3px", fontSize: "11.5px", color: COLORS.amber, fontWeight: 600, overflowWrap: "anywhere" }}>{specialLabel}</span>
           ) : venue && venue.city ? (
             <span style={{ display: "block", marginTop: "3px", fontSize: "11.5px", color: COLORS.inkSoft, overflowWrap: "anywhere" }}>{venue.city}</span>
           ) : null}
