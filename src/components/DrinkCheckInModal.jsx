@@ -12,7 +12,7 @@
 // au moment d'ouvrir une fiche produit) — presetVenue est déjà
 // prévu en prop pour le jour où cette info existera.
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { CheckButtonIcon } from "./CheckButtonIcon.jsx";
@@ -21,6 +21,7 @@ import { RatingSlider } from "./RatingSlider.jsx";
 import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
 import { makeSearchMatcher } from "../utils.js";
 import { usePulseContentForm, buildPulseContent, PulseContentFields, SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
+import { useKeyboardSheet, useKeyboardFit, revealField } from "../hooks/useKeyboardInset.js";
 
 const SPECIAL_VENUES = [
   { id: "@home", name: "@Home" },
@@ -46,6 +47,10 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
   const [query, setQuery] = useState("");
   const [selectedVenue, setSelectedVenue] = useState(presetVenue);
   const [pickerOpen, setPickerOpen] = useState(false);
+  // Clavier à l'écran (Mehdi, 2026-11-19) : la feuille se pose au-dessus du clavier, le champ « Lieu » remonte et sa liste tient au-dessus du clavier.
+  const keyboard = useKeyboardSheet();
+  const venueInputRef = useRef(null);
+  const venueListRef = useRef(null);
   const [nearbyVenues, setNearbyVenues] = useState([]);
   const [searchedVenues, setSearchedVenues] = useState([]);
   const form = usePulseContentForm("public");
@@ -79,6 +84,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
   const filteredVenues = q ? searchedVenues : nearbyVenues;
   const matchesSpecial = makeSearchMatcher(q);
   const filteredSpecials = q ? SPECIAL_VENUES.filter((v) => matchesSpecial(v.name)) : SPECIAL_VENUES;
+  const venueListHeight = useKeyboardFit(venueInputRef, venueListRef, pickerOpen && !selectedVenue, filteredVenues);
 
 
   const finalizeCheck = async () => {
@@ -110,7 +116,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
       onClick={() => {
         if (!sending) onClose(null);
       }}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 110 }}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 110, paddingBottom: keyboard.overlayPaddingBottom }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -120,7 +126,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
           padding: "24px 20px calc(32px + env(safe-area-inset-bottom, 0px)) 20px",
           width: "100%",
           maxWidth: "480px",
-          maxHeight: "92vh",
+          maxHeight: keyboard.sheetMaxHeight,
           overflowY: "auto",
           boxSizing: "border-box",
           position: "relative",
@@ -220,13 +226,17 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
         <SectionLabel icon="map-pin">Lieu</SectionLabel>
         <div style={{ position: "relative" }}>
           <input
+            ref={venueInputRef}
             value={selectedVenue ? selectedVenue.name : query}
             onChange={(e) => {
               setSelectedVenue(null);
               setQuery(e.target.value);
               setPickerOpen(true);
             }}
-            onFocus={() => setPickerOpen(true)}
+            onFocus={() => {
+              setPickerOpen(true);
+              setTimeout(() => revealField(venueInputRef.current), 350);
+            }}
             style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${selectedVenue ? COLORS.amber : COLORS.paperAlt}`, fontSize: "14px", color: COLORS.ink, background: COLORS.paper }}
           />
           {selectedVenue && (
@@ -243,6 +253,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
           )}
           {pickerOpen && !selectedVenue && (
             <div
+              ref={venueListRef}
               style={{
                 position: "absolute",
                 top: "calc(100% + 4px)",
@@ -251,7 +262,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
                 background: COLORS.paper,
                 border: `2px solid ${COLORS.paperAlt}`,
                 borderRadius: "10px",
-                maxHeight: "240px",
+                maxHeight: venueListHeight != null ? `${Math.min(240, venueListHeight)}px` : "240px",
                 overflowY: "auto",
                 zIndex: 20,
               }}

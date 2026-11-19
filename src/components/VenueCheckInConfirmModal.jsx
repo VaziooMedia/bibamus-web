@@ -21,7 +21,7 @@
 // canDiscover : c'est le premier passage de la personne dans ce lieu ; la case est alors proposée sous « Publier dans BibaPulse »,
 // décochée par défaut, comme « Je goûte ce produit pour la première fois » du DrinkCheck.
 // ============================================================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { COLORS, RATING_LABELS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
@@ -29,6 +29,7 @@ import { CheckButtonIcon } from "./CheckButtonIcon.jsx";
 import { searchDrinks } from "../data/sharedDirectories.js";
 import { usePulseContentForm, buildPulseContent, PulseContentFields, SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
 import { PLACE_INTERACTIONS } from "../placeInteractions.js";
+import { useKeyboardSheet, useKeyboardFit, revealField } from "../hooks/useKeyboardInset.js";
 
 
 export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji, myRating, canDiscover = false, onClose }) {
@@ -41,6 +42,11 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
   const [drink, setDrink] = useState(null); // { id, name }
   const [drinkQuery, setDrinkQuery] = useState("");
   const [drinkResults, setDrinkResults] = useState([]);
+  // Clavier à l'écran (Mehdi, 2026-11-19) : la feuille se pose au-dessus du clavier, le champ « Ajouter un produit » remonte et sa liste tient au-dessus du clavier.
+  const keyboard = useKeyboardSheet();
+  const drinkInputRef = useRef(null);
+  const drinkListRef = useRef(null);
+  const drinkListHeight = useKeyboardFit(drinkInputRef, drinkListRef, drinkResults.length > 0, drinkResults);
   // Interaction prédéfinie (une seule, ou aucune) : une pastille qui apparaît sur la carte et ouvre les commentaires pour y répondre.
   const [interaction, setInteraction] = useState(null);
   // Avis sur le lieu : « Pas encore d'avis de ta part » (null) par défaut, ou l'avis déjà donné.
@@ -97,7 +103,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
       onClick={() => {
         if (!sending) onClose(null);
       }}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 110 }}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 110, paddingBottom: keyboard.overlayPaddingBottom }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -107,7 +113,7 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
           padding: "24px 20px calc(32px + env(safe-area-inset-bottom, 0px)) 20px",
           width: "100%",
           maxWidth: "480px",
-          maxHeight: "92vh",
+          maxHeight: keyboard.sheetMaxHeight,
           overflowY: "auto",
           boxSizing: "border-box",
           position: "relative",
@@ -200,13 +206,15 @@ export function VenueCheckInConfirmModal({ venueName, venuePhotoUrl, venueEmoji,
         ) : (
           <div>
             <input
+              ref={drinkInputRef}
               value={drinkQuery}
               onChange={(e) => setDrinkQuery(e.target.value)}
+              onFocus={() => setTimeout(() => revealField(drinkInputRef.current), 350)}
               placeholder="Ajouter un produit"
               style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontSize: "14px" }}
             />
             {drinkResults.length > 0 && (
-              <div style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflow: "hidden" }}>
+              <div ref={drinkListRef} style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflowX: "hidden", overflowY: drinkListHeight != null ? "auto" : "hidden", ...(drinkListHeight != null ? { maxHeight: `${drinkListHeight}px`, overscrollBehavior: "contain" } : {}) }}>
                 {drinkResults.map((d) => (
                   <button
                     key={d.id}

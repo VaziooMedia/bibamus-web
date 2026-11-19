@@ -14,6 +14,7 @@ import { COLORS, SUBTYPE_LABELS, NATIONALITY_ELIGIBLE_TYPES } from "../constants
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 import { searchPulseTags, searchPulseVenues, loadPulseTagEntities } from "../data/sharedDirectories.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
+import { useKeyboardFit, revealField } from "../hooks/useKeyboardInset.js";
 import { SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
 
 // Nombre maximum de tags de fiche dans une publication (le serveur applique la même limite).
@@ -173,9 +174,11 @@ export function PulseTagPills({ tags, entities, handlers = {} }) {
 
 // Liste des propositions d'une recherche (sélecteur de tags et sélecteur de lieu) : jusqu'à 10 fiches par sorte, la liste défile (hauteur limitée) au lieu
 // d'allonger la page. Chaque ligne : le nom, sa ligne de détail (drapeau…) et, avec `showType`, la sorte de fiche à droite.
-function TagResultsList({ results, onPick, showType = true }) {
+// Clavier à l'écran (Mehdi, 2026-11-19 : « les listes de propositions sont cachées et gênées par le clavier ») : `listRef` et `maxHeight` viennent de `useKeyboardFit` —
+// le champ est remonté en haut de la zone visible et la liste prend, au plus, la place qui reste au-dessus du clavier (sans clavier : `min(50vh, 340px)`, comme avant).
+function TagResultsList({ results, onPick, showType = true, listRef = null, maxHeight = null }) {
   return (
-    <div style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflowX: "hidden", overflowY: "auto", maxHeight: "min(50vh, 340px)", overscrollBehavior: "contain" }}>
+    <div ref={listRef} style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflowX: "hidden", overflowY: "auto", maxHeight: maxHeight != null ? `${maxHeight}px` : "min(50vh, 340px)", overscrollBehavior: "contain" }}>
       {results.map((r) => (
         <button
           key={tagKey(r)}
@@ -203,8 +206,13 @@ export function PulseVenuePicker({ venue, onChange, blocked = false }) {
   const [status, setStatus] = useState("idle");
   const term = query.trim();
   const { status: geoStatus, position, requestPosition } = useGeolocation();
+  const inputRef = useRef(null);
+  const listRef = useRef(null);
+  const listHeight = useKeyboardFit(inputRef, listRef, status === "done" && results.length > 0, results);
+  // Au toucher du champ : une fois le clavier monté, le champ remonte en haut de la zone visible, la liste s'ouvrira dessous (sans clavier : rien).
   const askPosition = () => {
     if (geoStatus === "idle") requestPosition();
+    setTimeout(() => revealField(inputRef.current), 350);
   };
 
   useEffect(() => {
@@ -251,6 +259,7 @@ export function PulseVenuePicker({ venue, onChange, blocked = false }) {
       {!venue && !blocked && (
         <>
           <input
+            ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={askPosition}
@@ -259,7 +268,7 @@ export function PulseVenuePicker({ venue, onChange, blocked = false }) {
           />
           {status === "loading" && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic" }}>Recherche...</p>}
           {status === "done" && results.length === 0 && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft }}>Aucun lieu pour « {term} ».</p>}
-          {status === "done" && results.length > 0 && <TagResultsList results={results} onPick={pick} showType={false} />}
+          {status === "done" && results.length > 0 && <TagResultsList results={results} onPick={pick} showType={false} listRef={listRef} maxHeight={listHeight} />}
         </>
       )}
     </div>
@@ -278,8 +287,14 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false, max = MAX_
   // Position de la personne, demandée UNE fois, au moment où elle touche le champ (jamais en silence à l'ouverture de l'écran) : les lieux et les
   // producteurs sont classés du plus proche au plus loin (décidé par Mehdi, 2026-11-19). Sans autorisation ou sans position, l'ordre habituel.
   const { status: geoStatus, position, requestPosition } = useGeolocation();
+  const inputRef = useRef(null);
+  const listRef = useRef(null);
+  const chosen = new Set(tags.map(tagKey));
+  const proposals = results.filter((r) => !chosen.has(tagKey(r)));
+  const listHeight = useKeyboardFit(inputRef, listRef, status === "done" && proposals.length > 0, results);
   const askPosition = () => {
     if (geoStatus === "idle") requestPosition();
+    setTimeout(() => revealField(inputRef.current), 350);
   };
 
   useEffect(() => {
@@ -302,9 +317,6 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false, max = MAX_
       clearTimeout(timer);
     };
   }, [term, full, position]);
-
-  const chosen = new Set(tags.map(tagKey));
-  const proposals = results.filter((r) => !chosen.has(tagKey(r)));
 
   const add = (r) => {
     if (tags.length >= max || chosen.has(tagKey(r))) return;
@@ -344,6 +356,7 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false, max = MAX_
       {!full && (
         <>
           <input
+            ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={askPosition}
@@ -352,7 +365,7 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false, max = MAX_
           />
           {status === "loading" && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic" }}>Recherche...</p>}
           {status === "done" && proposals.length === 0 && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft }}>Aucune fiche pour « {term} ».</p>}
-          {status === "done" && proposals.length > 0 && <TagResultsList results={proposals} onPick={add} />}
+          {status === "done" && proposals.length > 0 && <TagResultsList results={proposals} onPick={add} listRef={listRef} maxHeight={listHeight} />}
         </>
       )}
       {full && <p style={{ margin: 0, fontSize: "12px", color: COLORS.inkSoft }}>{MAX_POST_TAGS} tags{max < MAX_POST_TAGS ? " (lieu compris)" : ""} : retire-en un pour en ajouter un autre.</p>}
