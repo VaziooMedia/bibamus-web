@@ -10,7 +10,8 @@
 // renommages de fiche.
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, SUBTYPE_LABELS, NATIONALITY_ELIGIBLE_TYPES } from "../constants.js";
+import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
 import { searchPulseTags, loadPulseTagEntities } from "../data/sharedDirectories.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
@@ -24,6 +25,59 @@ export const TAG_TYPE_LABELS = { drink: "Produit", brand: "Marque", producer: "P
 export const tagSymbol = (type) => (type === "venue" ? "@" : "#");
 
 const tagKey = (t) => `${t.type}:${t.id}`;
+
+// Ligne de détail d'une fiche proposée dans le sélecteur, sous son nom (Mehdi, 2026-11-19) — petits éléments séparés par le petit point vert fluo des
+// listes du BibAtlas :
+//   - produit : sous-catégorie · drapeau du pays · degré (« 6.2% ABV »), comme la fiche produit d'une carte DrinkCheck (le drapeau seulement pour les
+//     catégories où le pays est affiché dans l'app) ;
+//   - marque, producteur : drapeau du pays ;
+//   - lieu : commune · drapeau du pays.
+// Le drapeau du pays : « International » / « Autre » ont le globe ; un pays sans drapeau connu garde son nom écrit ; pays non renseigné : rien.
+// Un élément sans donnée n'est pas affiché, et la ligne entière disparaît quand il n'en reste aucun.
+function tagDetailParts(r) {
+  const info = r.info || {};
+  const parts = [];
+  const flag = (country) => {
+    if (!country || country === "Non renseigné") return;
+    const known = !!COUNTRY_ISO_CODES[country] || country === "International" || country === "Autre";
+    parts.push(
+      known ? (
+        <span key="flag" title={country} style={{ display: "inline-flex", flexShrink: 0 }}>
+          <CountryFlagImg country={country} size={16} />
+        </span>
+      ) : (
+        <span key="flag" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{country}</span>
+      )
+    );
+  };
+  if (r.type === "drink") {
+    const subtypeLabel = SUBTYPE_LABELS[info.subtype] || info.drinkType || "";
+    if (subtypeLabel) parts.push(<span key="sub" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtypeLabel}</span>);
+    if (NATIONALITY_ELIGIBLE_TYPES.includes(info.drinkType)) flag(info.country);
+    if (info.abv != null) parts.push(<span key="abv" style={{ whiteSpace: "nowrap" }}>{`${Number(info.abv).toFixed(1)}% ABV`}</span>);
+  } else if (r.type === "venue") {
+    if (info.city) parts.push(<span key="city" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{info.city}</span>);
+    flag(info.country);
+  } else {
+    flag(info.country);
+  }
+  return parts;
+}
+
+function TagDetailLine({ result }) {
+  const parts = tagDetailParts(result);
+  if (parts.length === 0) return null;
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "1px", fontSize: "11.5px", color: COLORS.inkSoft, minWidth: 0 }}>
+      {parts.map((part, i) => (
+        <React.Fragment key={part.key}>
+          {i > 0 && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, flexShrink: 0 }} />}
+          {part}
+        </React.Fragment>
+      ))}
+    </span>
+  );
+}
 
 // Tags valides d'une publication, tels que le serveur les a enregistrés — tout le reste est ignoré.
 export function postTagsOf(entry) {
@@ -213,7 +267,7 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
                 >
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
-                    {r.detail && <span style={{ display: "block", fontSize: "11.5px", color: COLORS.inkSoft, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.detail}</span>}
+                    <TagDetailLine result={r} />
                   </span>
                   <span style={{ flexShrink: 0, fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{TAG_TYPE_LABELS[r.type]}</span>
                 </button>
