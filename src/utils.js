@@ -961,6 +961,10 @@ export function normalizeSearchText(str) {
     .trim();
 }
 
+// Forme longue d'un texte déjà passé dans normalizeSearchText : les mots entiers « st » et « ste » redeviennent « saint » et « sainte » (même règle que la
+// fonction `bibamus_normalize_search_text_long` de la base).
+export const expandSaintAbbreviations = (normalized) => (normalized || "").replace(/\bste\b/g, "sainte").replace(/\bst\b/g, "saint");
+
 // Version « compacte » d'un texte déjà passé dans normalizeSearchText : sans espaces ni ponctuation, pour retrouver « Hendrick's » en tapant « Hendricks »
 // ou « Belle-Vue » en tapant « Bellevue ». Même ensemble de caractères que la colonne `search_compact` de `drinks_directory` (`regexp_replace` sur
 // `search_text`, voir docs/DATABASE.md), plus « » “ ” „ que `unaccent` ramène à << >> ou " côté base. Les lettres, les chiffres et toutes les écritures non
@@ -992,7 +996,12 @@ export function makeSearchMatcher(query) {
   const tokens = searchTokens(typed);
   if (tokens.length === 0) return () => false;
   return (...texts) => {
-    const haystack = compactSearchText(normalizeSearchText(texts.flat(Infinity).filter(Boolean).join(" ")));
+    const normalized = normalizeSearchText(texts.flat(Infinity).filter(Boolean).join(" "));
+    // Deux formes du texte, comme les colonnes `search_text` / `search_compact` de la base (Mehdi, 2026-11-19) : la courte (« taverne st pierre »),
+    // puis la longue (« taverne saint pierre ») quand elle diffère. Un mot tapé se retrouve dans l'une ou l'autre : « sain », encore incomplet,
+    // trouve « Saint-Pierre », et « sain » trouve aussi « St-Pierre ». Les mots tapés, eux, restent en forme courte (« saint » → « st »).
+    const longForm = expandSaintAbbreviations(normalized);
+    const haystack = compactSearchText(normalized) + (longForm === normalized ? "" : compactSearchText(longForm));
     return tokens.every((token) => haystack.includes(token));
   };
 }
