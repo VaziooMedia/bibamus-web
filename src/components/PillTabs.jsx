@@ -32,6 +32,28 @@ export const MEDIUM_PILL = { borderWidth: "1.5px", padding: "4px 11px", fontSize
 // Taille des pastilles de l'onglet Biba360 de Mon Profil (périodes, catégories, modes du suivi hebdo), un peu plus fine que la taille intermédiaire : 22 px de haut (Mehdi 2026-11-17).
 export const STATS_PILL = { borderWidth: "1.5px", padding: "3px 10px", fontSize: "12px" };
 
+// Pastilles de lieu (« Lieu > Favoris » : @Home, @Event, lieux favoris) du formulaire « Nouveau BibaRoom » et de l'écran des réglages d'un événement.
+// Taille intermédiaire `MEDIUM_PILL` (la même que « Public » / « Mes Bibax »), couleurs et graisse 600 inchangées (Mehdi, 2026-11-19 : « affiner les pastilles Lieu / Favoris »).
+// Un lieu favori porte son rond de profil (`EntityAvatar` de `VENUE_PILL_AVATAR` px) à gauche du nom — « mettre les ronds dans les pastilles, même si c'est petit ».
+// @Home et @Event n'ont pas de fiche, donc pas de rond. Toutes les pastilles ont la même hauteur (`PILL_MIN_HEIGHT`), avec ou sans rond.
+export const VENUE_PILL_AVATAR = 20;
+const PILL_MIN_HEIGHT = "28px";
+export const venuePillStyle = (selected, withAvatar = false) => ({
+  background: selected ? COLORS.amber : COLORS.surface,
+  color: selected ? COLORS.paper : COLORS.ink,
+  border: `${MEDIUM_PILL.borderWidth} solid ${selected ? COLORS.amber : COLORS.paperAlt}`,
+  borderRadius: "999px",
+  padding: withAvatar ? "2px 11px 2px 3px" : MEDIUM_PILL.padding,
+  fontSize: MEDIUM_PILL.fontSize,
+  fontWeight: 600,
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  minHeight: PILL_MIN_HEIGHT,
+  textAlign: "left",
+});
+
 export function PillTabs({ tabs, active, onChange, marginBottom = "16px", fine = false, medium = false }) {
   const size = fine ? FINE_PILL : medium ? MEDIUM_PILL : NORMAL_PILL;
   return (
