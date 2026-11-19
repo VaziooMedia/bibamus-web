@@ -1,5 +1,6 @@
 // ============================================================
-// Fiche d'un BibaRoom en petit, dans une carte « Lancement d'un BibaRoom » du fil BibaPulse (même cadre que la fiche d'un produit ou d'un
+// Fiche d'un BibaRoom en petit, dans une carte « Lancement d'un BibaRoom » ou « Rejoindre un BibaRoom » (2026-11-19 : même fiche, la date et l'heure sont alors
+// celles de l'arrivée) du fil BibaPulse (même cadre que la fiche d'un produit ou d'un
 // lieu : fond surfaceAlt, bordure paperAlt, rond de 56 px). Rond-profil : la photo du lieu du salon, à défaut son emoji, à défaut la
 // maison (salon @Home) ou le feu d'artifice (salon @Event), à défaut la pastille de lieu. Lignes : le nom du salon ; le lieu (pastille
 // verte + nom) quand le titre du salon n'est pas déjà le nom du lieu, sinon la ville, grisée ; la date et l'heure du lancement, grisées.

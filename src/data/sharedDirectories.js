@@ -877,6 +877,14 @@ export async function publishRoomLaunchToPulse(salonCode) {
   return createPulseEvent("room_launched", null, null, { visibility: "relations", salonCode });
 }
 
+// Carte « Rejoindre un BibaRoom » (room_joined, fonction Edge create-pulse-event version 12) : publiée une seule fois par personne et par salon,
+// juste après l'arrivée dans le salon, visible par les relations de la personne seulement. Même principe que le lancement : le client n'envoie que
+// le code du salon ; le serveur vérifie que l'appelant figure bien parmi les participants (sans en être l'organisateur) et vient d'arriver, relit le
+// nom et le lieu dans le salon, et n'enregistre jamais le code. Renvoie { ok } ou { error }.
+export async function publishRoomJoinToPulse(salonCode) {
+  return createPulseEvent("room_joined", null, null, { visibility: "relations", salonCode });
+}
+
 // Publication libre sur BibaPulse : un texte et/ou une photo, avec jusqu'à 5 tags de fiche (produits,
 // marques, producteurs, lieux). Elle n'a pas d'objet propre : tout est dans `content`
 // ({ comment, photoUrl, tags: [{ type, id }] }), vérifié par le serveur (create-pulse-event).

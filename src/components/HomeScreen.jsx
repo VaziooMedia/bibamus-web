@@ -558,7 +558,9 @@ export function HomeScreen({
                     const postText = isPost && typeof entry.metadata?.comment === "string" ? entry.metadata.comment.replace(/\s+/g, " ").trim() : "";
                     // Lancement d'un BibaRoom : le nom du salon est dans la carte elle-même (le salon ne s'ouvre pas d'ici : sans le code, personne ne peut y entrer).
                     const isRoomLaunch = entry.eventType === "room_launched";
-                    const roomName = isRoomLaunch && typeof entry.metadata?.room_name === "string" ? entry.metadata.room_name : "";
+                    // Arrivée dans un BibaRoom (`room_joined`) : même nom de salon, une autre phrase.
+                    const isRoomJoin = entry.eventType === "room_joined";
+                    const roomName = (isRoomLaunch || isRoomJoin) && typeof entry.metadata?.room_name === "string" ? entry.metadata.room_name : "";
                     return (
                       <div
                         key={entry.id}
@@ -586,6 +588,10 @@ export function HomeScreen({
                             ) : isRoomLaunch ? (
                               <>
                                 Lancement du BibaRoom <strong style={{ color: COLORS.amber }}>{roomName || "sans titre"}</strong>
+                              </>
+                            ) : isRoomJoin ? (
+                              <>
+                                A rejoint le BibaRoom <strong style={{ color: COLORS.amber }}>{roomName || "sans titre"}</strong>
                               </>
                             ) : isPost ? (
                               postText
