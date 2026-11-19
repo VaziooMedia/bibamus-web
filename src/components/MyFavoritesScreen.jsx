@@ -24,7 +24,7 @@ export function DotLine({ parts, noWrap = false, center = false, scroll = false 
   // `scroll` (Mehdi, 2026-11-19) : une ligne trop longue défile (voir `ScrollText`) au lieu d'être coupée par « … ».
   if (scroll) {
     return (
-      <ScrollText style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+      <ScrollText style={{ fontSize: "12px", color: COLORS.inkSoft, ...(center ? { textAlign: "center" } : null) }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
           {parts.map((part, idx) => {
             const styledText = !!part && typeof part === "object" && !React.isValidElement(part) && "node" in part;

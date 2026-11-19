@@ -50,7 +50,7 @@ export function BibaxIdentity({ name, lastName, username, nickname, city, locali
           <span style={{ fontWeight: 700, ...(wrapName ? { overflowWrap: "anywhere" } : { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{fullName}</span>
         )
       )}
-      <BibaxDetailLines username={username} nickname={nickname} city={city} locality={locality} country={country} scroll={scroll && !wrapName} />
+      <BibaxDetailLines username={username} nickname={nickname} city={city} locality={locality} country={country} scroll={scroll} />
       {mutual != null && (
         <div>
           <MutualPill n={mutual} />

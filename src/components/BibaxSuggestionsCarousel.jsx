@@ -27,7 +27,7 @@ export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss
           <div
             key={s.userId}
             onClick={() => onOpen(s.bibroCode)}
-            style={{ ...card, position: "relative", flex: `0 0 ${CARD_WIDTH}px`, scrollSnapAlign: "start", padding: "16px 10px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}
+            style={{ ...card, position: "relative", flex: `0 0 ${CARD_WIDTH}px`, minWidth: 0, scrollSnapAlign: "start", padding: "16px 10px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}
           >
             <span
               role="button"
@@ -61,7 +61,7 @@ export function BibaxSuggestionsCarousel({ suggestions, onOpen, onAdd, onDismiss
             <span style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", minWidth: 0, width: "100%" }}>
               <span style={{ fontWeight: 700, fontSize: "13.5px", color: COLORS.ink, lineHeight: 1.2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", wordBreak: "break-word" }}>{fullName}</span>
               <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "2px", marginTop: "3px" }}>
-                <BibaxDetailLines username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} center />
+                <BibaxDetailLines username={s.username} nickname={s.nickname} city={s.city} locality={s.locality} country={s.country} center scroll />
               </div>
             </span>
 

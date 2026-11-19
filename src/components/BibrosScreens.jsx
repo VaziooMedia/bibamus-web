@@ -1580,6 +1580,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                     city={r.city}
                     country={r.country}
                     mutual={r.mutual}
+                    scroll
                     style={{ flex: 1, fontSize: "13.5px", color: COLORS.ink }}
                   />
                 </button>
@@ -1742,6 +1743,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
             <div style={{ paddingRight: "36px", flex: 1, minWidth: 0 }}>
               <BibaxIdentity
                 wrapName
+                scroll
                 name={foundSocials.firstName || foundSocials.lastName ? foundSocials.firstName : foundName}
                 lastName={foundSocials.firstName || foundSocials.lastName ? foundSocials.lastName : ""}
                 username={foundUsername}
