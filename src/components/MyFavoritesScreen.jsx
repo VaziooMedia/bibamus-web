@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from "react";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { COLORS, SUBTYPE_LABELS } from "../constants.js";
-import { PageHeader, PageFooterNav, ScrollToTopButton, EntityAvatar, HubCard, MutualPill } from "./ui.jsx";
+import { PageHeader, PageFooterNav, ScrollToTopButton, EntityAvatar, HubCard, MutualPill, ScrollText } from "./ui.jsx";
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
 import { venueStreetLine, venuePostalCityLine, formatCount } from "../utils.js";
 import { flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
@@ -19,8 +19,26 @@ const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%
 // Éléments séparés par des points vert fluo (même rendu que les lignes de « Mon Historique »).
 // `center` : éléments centrés (cartes de l'accueil). `noWrap` : tout sur une seule ligne — les textes se coupent par « … » au lieu de passer à la ligne, et les éléments qui ne sont pas du texte (drapeau, icône) gardent leur taille.
 // Un élément `{ node }` est un texte mis en forme (italique, couleur…) : il se coupe par « … » comme une simple chaîne.
-export function DotLine({ parts, noWrap = false, center = false }) {
+export function DotLine({ parts, noWrap = false, center = false, scroll = false }) {
   if (parts.length === 0) return null;
+  // `scroll` (Mehdi, 2026-11-19) : une ligne trop longue défile (voir `ScrollText`) au lieu d'être coupée par « … ».
+  if (scroll) {
+    return (
+      <ScrollText style={{ fontSize: "12px", color: COLORS.inkSoft }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
+          {parts.map((part, idx) => {
+            const styledText = !!part && typeof part === "object" && !React.isValidElement(part) && "node" in part;
+            return (
+              <React.Fragment key={idx}>
+                {idx > 0 && AMBER_DOT}
+                <span style={{ whiteSpace: "nowrap" }}>{styledText ? part.node : part}</span>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </ScrollText>
+    );
+  }
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: center ? "center" : undefined, gap: "6px", fontSize: "12px", color: COLORS.inkSoft, flexWrap: noWrap ? "nowrap" : "wrap", minWidth: 0 }}>
       {parts.map((part, idx) => {

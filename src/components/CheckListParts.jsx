@@ -2,7 +2,7 @@
 // quatre classements au choix (Récents, Checks, Pays, A–Z ; trois dans « Mes Produits », sans « Checks ») et, pour « Pays », un groupe par pays sous une barre drapeau + nom + trait.
 import React from "react";
 import { COLORS } from "../constants.js";
-import { EntityAvatar } from "./ui.jsx";
+import { EntityAvatar, ScrollText } from "./ui.jsx";
 import { DotLine, ROW_AVATAR, ROW_AVATAR_BASE, ROW_PAD_Y as ROW_PAD_Y_SHARED } from "./MyFavoritesScreen.jsx";
 import { SOLO_BAR_LABEL_STYLE, SOLO_BAR_LINE_STYLE } from "./BibaSoloScreen.jsx";
 import { FINE_PILL } from "./PillTabs.jsx";
@@ -184,7 +184,8 @@ const AVATAR_SIZE = ROW_AVATAR;
 const ROW_PAD_Y = ROW_PAD_Y_SHARED;
 
 // Une ligne : rond de profil, nom en gras, ligne(s) de détails à points vert fluo, et à droite le nombre de checks.
-export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, lines = null, count, countStyle = null, onCountClick = null, countLabel = null, isLast, onOpen }) {
+// `scroll` (Mehdi, 2026-11-19, Mes Bibax) : un nom ou une ligne trop long(ue) défile (voir `ScrollText`) au lieu d'être coupé(e) par « … ».
+export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, parts, lines = null, count, countStyle = null, onCountClick = null, countLabel = null, isLast, onOpen, scroll = false }) {
   return (
     <button
       type="button"
@@ -210,9 +211,13 @@ export function CheckRow({ avatarPhotoUrl, avatarEmoji, fallbackIcon, name, part
         <EntityAvatar photoUrl={avatarPhotoUrl} photoEmoji={avatarEmoji} size={AVATAR_SIZE} fallbackIcon={fallbackIcon} />
       </span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" }}>
-        <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{name}</span>
+        {scroll ? (
+          <ScrollText style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, color: COLORS.ink }}>{name}</ScrollText>
+        ) : (
+          <span style={{ fontSize: "14px", fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: COLORS.ink }}>{name}</span>
+        )}
         {/* `lines` (Mes Bibax) : plusieurs lignes de détails, chacune avec ses points vert fluo et sans retour à la ligne (une ligne sans contenu n'est pas affichée ; une ligne peut aussi être un élément, comme la pastille « N Bibax en commun ») ; sinon `parts`, une seule ligne qui passe à la ligne si besoin. */}
-        {lines ? lines.map((l, i) => (Array.isArray(l) ? <DotLine key={i} parts={l} noWrap /> : l ? <div key={i}>{l}</div> : null)) : <DotLine parts={parts} />}
+        {lines ? lines.map((l, i) => (Array.isArray(l) ? <DotLine key={i} parts={l} noWrap scroll={scroll} /> : l ? <div key={i}>{l}</div> : null)) : <DotLine parts={parts} />}
       </div>
       {/* `count` : le contenu de la colonne (un nombre de checks, ou ma note dans Mes Produits) ; absent (null) = pas de colonne. `countStyle` : retouches de la colonne (taille, couleur, largeur).
           Colonne du chiffre : sur toute la hauteur de la ligne et jusqu'au bord de la carte, plus sombre que la carte, avec un trait fin à gauche ; le trait de séparation
