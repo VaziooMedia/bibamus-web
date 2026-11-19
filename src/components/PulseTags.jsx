@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS, SUBTYPE_LABELS, NATIONALITY_ELIGIBLE_TYPES } from "../constants.js";
 import { CountryFlagImg, COUNTRY_ISO_CODES } from "./icons.jsx";
-import { searchPulseTags, loadPulseTagEntities } from "../data/sharedDirectories.js";
+import { searchPulseTags, searchPulseVenues, loadPulseTagEntities } from "../data/sharedDirectories.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
 
@@ -171,14 +171,110 @@ export function PulseTagPills({ tags, entities, handlers = {} }) {
 }
 
 
-// Sélecteur de l'écran de rédaction : une seule recherche pour les quatre sortes de fiche, jusqu'à 5 tags.
-export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
+// Liste des propositions d'une recherche (sélecteur de tags et sélecteur de lieu) : jusqu'à 10 fiches par sorte, la liste défile (hauteur limitée) au lieu
+// d'allonger la page. Chaque ligne : le nom, sa ligne de détail (drapeau…) et, avec `showType`, la sorte de fiche à droite.
+function TagResultsList({ results, onPick, showType = true }) {
+  return (
+    <div style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflowX: "hidden", overflowY: "auto", maxHeight: "min(50vh, 340px)", overscrollBehavior: "contain" }}>
+      {results.map((r) => (
+        <button
+          key={tagKey(r)}
+          onClick={() => onPick(r)}
+          style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
+        >
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+            <TagDetailLine result={r} />
+          </span>
+          {showType && <span style={{ flexShrink: 0, fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{TAG_TYPE_LABELS[r.type]}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Section « Lieu » de l'écran de rédaction d'une publication libre (Mehdi, 2026-11-19 : « à la place de mettre le lieu dans les tags », sous « Photo ») : UN seul lieu,
+// choisi dans une recherche (2 lettres au moins) qui propose jusqu'à 10 lieux, du plus proche au plus loin quand la position est connue (demandée une seule fois, quand
+// on touche le champ). Le lieu choisi s'affiche en pastille « @ Nom » avec une croix. `venue` : { id, name } ou null. `blocked` : les 5 tags du serveur sont déjà pris
+// par d'autres fiches (le lieu en compte un) — la recherche est alors remplacée par un message.
+export function PulseVenuePicker({ venue, onChange, blocked = false }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [status, setStatus] = useState("idle");
+  const term = query.trim();
+  const { status: geoStatus, position, requestPosition } = useGeolocation();
+  const askPosition = () => {
+    if (geoStatus === "idle") requestPosition();
+  };
+
+  useEffect(() => {
+    if (term.length < 2 || venue || blocked) {
+      setResults([]);
+      setStatus("idle");
+      return undefined;
+    }
+    let cancelled = false;
+    setStatus("loading");
+    const timer = setTimeout(() => {
+      searchPulseVenues(term, 10, position).then((found) => {
+        if (cancelled) return;
+        setResults(found);
+        setStatus("done");
+      });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [term, venue, blocked, position]);
+
+  const pick = (r) => {
+    onChange({ id: r.id, name: r.name });
+    setQuery("");
+    setResults([]);
+    setStatus("idle");
+  };
+
+  return (
+    <div>
+      <SectionLabel icon="map-pin">Lieu</SectionLabel>
+      {venue && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", maxWidth: "100%", background: COLORS.paperAlt, borderRadius: "999px", padding: "4px 6px 4px 11px", fontSize: "12.5px", fontWeight: 700, color: COLORS.ink }}>
+          <span style={{ color: COLORS.amber, flexShrink: 0 }}>{tagSymbol("venue")}</span>
+          <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
+          <button onClick={() => onChange(null)} aria-label={"Retirer " + venue.name} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "16px", lineHeight: 1, cursor: "pointer", padding: "0 6px", flexShrink: 0 }}>
+            ×
+          </button>
+        </span>
+      )}
+      {!venue && blocked && <p style={{ margin: 0, fontSize: "12px", color: COLORS.inkSoft }}>{MAX_POST_TAGS} tags déjà choisis : retire-en un pour ajouter un lieu.</p>}
+      {!venue && !blocked && (
+        <>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={askPosition}
+            placeholder="Rechercher un lieu"
+            style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: "none", color: COLORS.ink, fontSize: "14px" }}
+          />
+          {status === "loading" && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic" }}>Recherche...</p>}
+          {status === "done" && results.length === 0 && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft }}>Aucun lieu pour « {term} ».</p>}
+          {status === "done" && results.length > 0 && <TagResultsList results={results} onPick={pick} showType={false} />}
+        </>
+      )}
+    </div>
+  );
+}
+
+// Sélecteur de l'écran de rédaction : une seule recherche pour les produits, les marques et les producteurs (les lieux ont leur section « Lieu », voir
+// PulseVenuePicker), jusqu'à `max` tags (5 au plus : le serveur applique la même limite à l'ensemble des fiches de la publication, lieu compris).
+export function PulseTagsPicker({ tags, onChange, endDivider = false, max = MAX_POST_TAGS }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   // "idle" : pas de recherche en cours · "loading" · "done" (résultats, éventuellement vides, affichés)
   const [status, setStatus] = useState("idle");
   const term = query.trim();
-  const full = tags.length >= MAX_POST_TAGS;
+  const full = tags.length >= max;
   // Position de la personne, demandée UNE fois, au moment où elle touche le champ (jamais en silence à l'ouverture de l'écran) : les lieux et les
   // producteurs sont classés du plus proche au plus loin (décidé par Mehdi, 2026-11-19). Sans autorisation ou sans position, l'ordre habituel.
   const { status: geoStatus, position, requestPosition } = useGeolocation();
@@ -211,7 +307,7 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
   const proposals = results.filter((r) => !chosen.has(tagKey(r)));
 
   const add = (r) => {
-    if (tags.length >= MAX_POST_TAGS || chosen.has(tagKey(r))) return;
+    if (tags.length >= max || chosen.has(tagKey(r))) return;
     onChange([...tags, { type: r.type, id: r.id, name: r.name }]);
     setQuery("");
     setResults([]);
@@ -221,7 +317,7 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
   return (
     <div style={{ marginBottom: endDivider ? "0" : "20px" }}>
       <SectionLabel icon="tag">
-        Tags <span style={{ fontWeight: 400 }}>— produits, marques, producteurs, lieux</span>
+        Tags <span style={{ fontWeight: 400 }}>— produits, marques, producteurs</span>
       </SectionLabel>
 
       {tags.length > 0 && (
@@ -256,27 +352,10 @@ export function PulseTagsPicker({ tags, onChange, endDivider = false }) {
           />
           {status === "loading" && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic" }}>Recherche...</p>}
           {status === "done" && proposals.length === 0 && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft }}>Aucune fiche pour « {term} ».</p>}
-          {status === "done" && proposals.length > 0 && (
-            // Jusqu'à 10 fiches par sorte : la liste défile (hauteur limitée) au lieu d'allonger la page.
-            <div style={{ marginTop: "4px", background: COLORS.paper, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", overflowX: "hidden", overflowY: "auto", maxHeight: "min(50vh, 340px)", overscrollBehavior: "contain" }}>
-              {proposals.map((r) => (
-                <button
-                  key={tagKey(r)}
-                  onClick={() => add(r)}
-                  style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: COLORS.ink }}
-                >
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
-                    <TagDetailLine result={r} />
-                  </span>
-                  <span style={{ flexShrink: 0, fontSize: "11px", fontWeight: 700, color: COLORS.amber }}>{TAG_TYPE_LABELS[r.type]}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          {status === "done" && proposals.length > 0 && <TagResultsList results={proposals} onPick={add} />}
         </>
       )}
-      {full && <p style={{ margin: 0, fontSize: "12px", color: COLORS.inkSoft }}>{MAX_POST_TAGS} tags : retire-en un pour en ajouter un autre.</p>}
+      {full && <p style={{ margin: 0, fontSize: "12px", color: COLORS.inkSoft }}>{MAX_POST_TAGS} tags{max < MAX_POST_TAGS ? " (lieu compris)" : ""} : retire-en un pour en ajouter un autre.</p>}
       {endDivider && <SectionDivider />}
     </div>
   );

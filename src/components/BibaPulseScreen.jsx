@@ -98,6 +98,10 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {},
   const rating = !hideRating && typeof meta.rating === "number" ? meta.rating : null;
   const tagged = Array.isArray(meta.tagged) ? meta.tagged : [];
   const postTags = postTagsOf(entry).filter((t) => tagEntities[`${t.type}:${t.id}`]);
+  // Le lieu d'une publication libre (section « Lieu » de l'écran de rédaction, un tag de sorte « venue » côté serveur) s'affiche SOUS la ligne des Bibax tagués
+  // (Mehdi, 2026-11-19) ; les autres tags (produits, marques, producteurs) restent au-dessus, avant les Bibax.
+  const otherTags = postTags.filter((t) => t.type !== "venue");
+  const venueTags = postTags.filter((t) => t.type === "venue");
   if (!comment && !photoUrl && rating === null && tagged.length === 0 && postTags.length === 0) return null;
 
   return (
@@ -112,7 +116,7 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {},
         </div>
       )}
       {comment && <p style={{ margin: 0, fontSize: "13px", color: COLORS.ink, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{comment}</p>}
-      {postTags.length > 0 && <PulseTagPills tags={postTags} entities={tagEntities} handlers={tagHandlers} />}
+      {otherTags.length > 0 && <PulseTagPills tags={otherTags} entities={tagEntities} handlers={tagHandlers} />}
       {tagged.length > 0 && (
         <p style={{ margin: 0, fontSize: "12.5px", color: COLORS.inkSoft }}>
           avec{" "}
@@ -135,6 +139,7 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {},
           ))}
         </p>
       )}
+      {venueTags.length > 0 && <PulseTagPills tags={venueTags} entities={tagEntities} handlers={tagHandlers} />}
     </div>
   );
 }

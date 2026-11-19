@@ -918,13 +918,14 @@ export async function pickStoryBibax(people) {
   return found ? { id: found.id, name: found.name, bibroCode: found.bibroCode } : null;
 }
 
-// Recherche unifiée pour taguer une publication : produits, marques, producteurs et lieux d'un coup.
+// Recherche unifiée pour taguer une publication : produits, marques et producteurs d'un coup. Les LIEUX n'y sont plus (Mehdi, 2026-11-19) : une publication
+// libre a sa propre section « Lieu » (voir searchPulseVenues).
 // Renvoie [{ type, id, name, info }] — au plus `perType` fiches de chaque sorte (10, décidé par Mehdi le 2026-11-19), dans cet ordre. `info` porte les données
-// brutes de la ligne de détail (mise en forme par PulseTagsPicker) : produit { drinkType, subtype, country, abv } ; marque et producteur { country } ; lieu { city, country }.
+// brutes de la ligne de détail (mise en forme par PulseTagsPicker) : produit { drinkType, subtype, country, abv } ; marque et producteur { country }.
 // Seules les fiches visibles dans l'app sont proposées (même règle que le serveur à la publication).
-// `position` ({ lat, lng }, la position de la personne au moment où elle tague ; null sans autorisation) : les LIEUX et les PRODUCTEURS, seuls à avoir des
-// coordonnées, sont alors classés du plus proche au plus loin (ceux sans coordonnées viennent après, dans leur ordre habituel) ; les produits et les marques
-// gardent leur ordre. Pour que les plus proches ne soient pas écartés avant le tri, on lit alors jusqu'à NEAR_CANDIDATES lieux et producteurs.
+// `position` ({ lat, lng }, la position de la personne au moment où elle tague ; null sans autorisation) : les PRODUCTEURS, qui ont des coordonnées, sont alors
+// classés du plus proche au plus loin (ceux sans coordonnées viennent après, dans leur ordre habituel) ; les produits et les marques gardent leur ordre. Pour que
+// les plus proches ne soient pas écartés avant le tri, on lit alors jusqu'à NEAR_CANDIDATES producteurs.
 const isAppVisible = (row) => row.status == null || APP_VISIBLE_STATUSES.includes(row.status);
 const NEAR_CANDIDATES = 60;
 
@@ -935,18 +936,19 @@ function sortByDistance(rows, position) {
     .map((x) => x.row);
 }
 
+const hasPosition = (position) => !!position && Number.isFinite(position.lat) && Number.isFinite(position.lng);
+
 export async function searchPulseTags(query, perType = 10, position = null) {
   const q = (query || "").trim();
   if (!q) return [];
-  const near = !!position && Number.isFinite(position.lat) && Number.isFinite(position.lng);
+  const near = hasPosition(position);
   // On demande un peu plus que nécessaire : le filtre de statut peut en écarter quelques-unes.
   const fetchCount = perType + 3;
   const geoCount = Math.max(fetchCount, NEAR_CANDIDATES);
-  const [drinks, brands, producers, venues] = await Promise.all([
+  const [drinks, brands, producers] = await Promise.all([
     searchDrinks(q, fetchCount),
     searchBrands(q, fetchCount),
     searchBreweries(q, near ? geoCount : fetchCount),
-    searchVenues(q, near ? geoCount : fetchCount),
   ]);
   const take = (rows) => rows.filter(isAppVisible).slice(0, perType);
   const takeNearest = (rows) => (near ? sortByDistance(rows.filter(isAppVisible), position).slice(0, perType) : take(rows));
@@ -954,8 +956,18 @@ export async function searchPulseTags(query, perType = 10, position = null) {
     ...take(drinks).map((d) => ({ type: "drink", id: d.id, name: d.name, info: { drinkType: d.type, subtype: d.beverageSubtype, country: d.nationality, abv: displayedAbv(d) } })),
     ...take(brands).map((b) => ({ type: "brand", id: b.id, name: b.name, info: { country: b.originCountry } })),
     ...takeNearest(producers).map((b) => ({ type: "producer", id: b.id, name: b.name, info: { country: b.country } })),
-    ...takeNearest(venues).map((v) => ({ type: "venue", id: v.id, name: v.name, info: { city: v.city, country: v.country } })),
   ];
+}
+
+// Recherche du lieu d'une publication libre (section « Lieu », Mehdi, 2026-11-19) : jusqu'à `limit` lieux (10) visibles dans l'app, même règle que le serveur à la
+// publication, classés du plus proche au plus loin quand la position de la personne est connue (ceux sans coordonnées viennent après, dans leur ordre habituel).
+// Renvoie [{ type: "venue", id, name, info: { city, country } }].
+export async function searchPulseVenues(query, limit = 10, position = null) {
+  const q = (query || "").trim();
+  if (!q) return [];
+  const near = hasPosition(position);
+  const venues = (await searchVenues(q, near ? Math.max(limit + 3, NEAR_CANDIDATES) : limit + 3)).filter(isAppVisible);
+  return (near ? sortByDistance(venues, position) : venues).slice(0, limit).map((v) => ({ type: "venue", id: v.id, name: v.name, info: { city: v.city, country: v.country } }));
 }
 
 // Noms des fiches taguées dans des publications : refs = [{ type, id }]. Renvoie { "type:id": { id, name } }.
