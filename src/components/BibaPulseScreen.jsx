@@ -300,8 +300,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // Lancement d'un BibaRoom (`room_launched`, nouvelle carte) : même présentation que les autres cartes refaites — ligne « Lancement d'un BibaRoom »
   // avec l'icône BibaGo, puis la fiche du salon en petit (nom, lieu, date et heure ; jamais le code du salon, qui est la clé d'accès).
   const isRoomLaunch = entry.eventType === "room_launched";
-  // Rejoindre un BibaRoom (`room_joined`, 2026-11-19) : même carte que le lancement (même fiche de salon en petit, même suppression), seule la ligne change :
-  // « Rejoindre un BibaRoom ». La date et l'heure affichées sont celles de l'arrivée dans le salon, c'est-à-dire de la carte.
+  // Arrivée dans un BibaRoom (`room_joined`, 2026-11-19 ; Mehdi trouvait « Rejoindre un BibaRoom » inapproprié : on dirait que l'action n'est pas encore faite) :
+  // même carte que le lancement (même fiche de salon en petit, même suppression), seule la ligne change : « Arrivée dans un BibaRoom ». La date et l'heure
+  // affichées sont celles de l'arrivée dans le salon, c'est-à-dire de la carte.
   const isRoomJoin = entry.eventType === "room_joined";
   const isRoomCard = isRoomLaunch || isRoomJoin;
   // Le lancement d'un BibaRoom se supprime avec la même fonction Edge que les checks (delete-pulse-check, version 3), sans statistiques à retirer.
@@ -593,7 +594,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
               </span>
             ) : isRoomCard ? (
               <span>
-                {isRoomJoin ? "Rejoindre un Biba" : "Lancement d'un Biba"}
+                {isRoomJoin ? "Arrivée dans un Biba" : "Lancement d'un Biba"}
                 <span style={{ color: COLORS.amber }}>Room</span>
               </span>
             ) : isDiscovery ? (

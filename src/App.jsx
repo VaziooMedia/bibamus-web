@@ -159,6 +159,7 @@ import {
   loadDrinkLinkedEntities,
   sendNotification,
   publishRoomLaunchToPulse,
+  publishRoomJoinToPulse,
 } from "./data/sharedDirectories.js";
 import { loadSalon, createSalon, saveSalon, subscribeToSalon, loadMyActiveSalons, declineSalonInvite } from "./data/salons.js";
 import { loadPredictGame, createPredictGame, savePredictGame, subscribeToPredictGame, generatePredictGameCode } from "./data/predictGames.js";
@@ -1042,7 +1043,9 @@ export default function App() {
     setScreen("eventDashboard");
   };
 
-  const joinSalon = async (code) => {
+  // `publishToPulse` : carte « Arrivée dans un BibaRoom » dans BibaPulse (visible par les relations de la personne seulement). Vrai par défaut : c'est le cas
+  // d'une invitation acceptée depuis les notifications ; l'écran « Rejoindre un BibaRoom » (code ou QR code) le passe selon sa case, cochée par défaut.
+  const joinSalon = async (code, { publishToPulse = true } = {}) => {
     const salonData = await loadSalon(code);
     if (!salonData) {
       throw new Error("Salon introuvable — vérifie le code.");
@@ -1063,6 +1066,9 @@ export default function App() {
     if (!alreadyIn) {
       await saveSalon(code, withMe);
       emitEvent(EVENT_TYPES.BIBAROOM_JOINED, { actorBibroCode: profile.myBibroCode, entityType: "salon", entityId: withMe.id, payload: { salonCode: code } });
+      // Carte « Arrivée dans un BibaRoom » : une seule fois, à l'arrivée (jamais si l'on était déjà dans le salon). Le salon est déjà enregistré avec moi
+      // dedans (le serveur le relit pour vérifier que j'en suis bien participant) ; un échec de publication ne gêne en rien l'arrivée dans le salon.
+      if (publishToPulse) publishRoomJoinToPulse(code);
     }
     setEvents((prev) => (prev.some((e) => e.salonCode === code) ? prev : [...prev, withMe]));
     setActiveEventId(withMe.id);
