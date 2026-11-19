@@ -32,7 +32,7 @@
 | **BibaPing** | Messagerie : tête-à-tête, groupes, chat de salon |
 | **BibaPlay** | Plateforme de jeux avec un seul jeu, **Predict** (pronostics sportifs entre amis) ; carte « D'autres jeux : Bientôt » |
 | **BibaMe** | Hub profil en trois onglets **Infos** (infos de la personne, Bibax / Drink Checks / Place Checks, accès : Mes Produits, Mes Favoris, Mon Historique, Mes Médias, réglages), **Biba360** (les statistiques, dont **Wrapped**, « Ton année Bibamus ») et **BibaPulse** (ses propres publications) — voir `PROFILE.md` |
-| **BibaClub** | Clubs ; un salon peut être rattaché à un club |
+| **BibaClub** | Clubs ; un salon peut être rattaché à un club ; la fiche d'un Bibax affiche ses BibaClub publics (2026-11-19, `BibroClubsScreen`) |
 | **BibaZERO / WaterAlert / BibAzard** | BibaZERO : statut par participant pour qui ne boit pas, avec PIN et joker, **hors modes de salon** et aussi en BibaSolo ; WaterAlert : rappels d'eau ; BibAzard : roulette de boisson au hasard |
 | **DrinkCheck / PlaceCheck** | Accès rapides de l'accueil vers le répertoire de produits ou de lieux avec un flux de check |
 | **Transverses** | Notifications, recherche globale, paramètres (compte, sécurité, notifications, préférences, apparence, connexions, aide) |

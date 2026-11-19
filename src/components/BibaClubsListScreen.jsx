@@ -10,7 +10,7 @@ import { loadMyClubs, loadMyClubInvitations, searchPublicClubs } from "../data/s
 import { ClubInvitationCard } from "./ClubInvitationCard.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 
-function ClubRow({ club, subtitle, onClick }) {
+export function ClubRow({ club, subtitle, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -37,7 +37,7 @@ function ClubRow({ club, subtitle, onClick }) {
   );
 }
 
-const JOIN_MODE_LABEL = { request: "Sur demande", open: "Ouvert" };
+export const JOIN_MODE_LABEL = { request: "Sur demande", open: "Ouvert" };
 const STATUS_LABEL = { active: "Membre", pending: "Demande en attente" };
 
 const inputStyle = {

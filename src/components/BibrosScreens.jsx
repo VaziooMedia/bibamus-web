@@ -28,6 +28,7 @@ import {
   cancelBibaxRequest,
   loadMutualBibaxCount,
   loadBibroBibaxList,
+  loadBibroPublicClubs,
   loadBibaxCount,
   loadMyProfileStats,
   searchBibaxByName,
@@ -46,6 +47,7 @@ import { BibaxIdentity, bibaxDetailParts } from "./BibaxLines.jsx";
 import { AlphaIndex, showAlphaIndex } from "./AlphaIndex.jsx";
 import { BibaxStatsContent } from "./BibaxStatsContent.jsx";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
+import { ClubRow, JOIN_MODE_LABEL } from "./BibaClubsListScreen.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
@@ -732,14 +734,97 @@ export function BibroBibaxListScreen({ other, onBack: onBackProp, onViewBibro: o
   );
 }
 
+// Le bloc « BibaClub » de la fiche d'un Bibax (Mehdi, 2026-11-19) : les BibaClub PUBLICS dont cette personne est membre, avec les mêmes lignes que « Mes BibaClub » (rond du club, nom en gras,
+// catégorie · mode d'adhésion). Un club privé n'apparaît jamais ; une demande d'entrée encore en attente ne compte pas. La liste vient de `get_bibax_public_clubs` (script
+// bibamus-sql-bibax-clubs-publics), qui exige d'être Bibax confirmé de la personne. Une ligne ouvre la page du club (aperçu « Rejoindre » si l'on n'en fait pas partie), dont le retour ramène ici ;
+// la flèche retour de cette page ramène à la fiche (la mémoire de la liste est alors effacée, comme pour les autres sous-listes d'une fiche).
+export function BibroClubsScreen({ other, onBack: onBackProp, onOpenClub: onOpenClubProp, mainScrollRef }) {
+  const { restored, save, open, leave } = useListReturn("bibroClub", mainScrollRef, { valid: (m) => m.ctx === other.userId });
+  const onBack = leave(onBackProp);
+  const onOpenClub = open(onOpenClubProp);
+  const [list, setList] = useState(restored ? restored.list : null); // null = chargement
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setError(false);
+    loadBibroPublicClubs(other.userId).then((result) => {
+      if (cancelled) return;
+      if (!result) {
+        // Si la base n'a pas répondu, on ne prétend pas que la liste est vide ; au retour d'une fiche, on garde en silence ce qu'on avait.
+        if (!restored) {
+          setError(true);
+          setList((prev) => prev || []);
+        }
+        return;
+      }
+      setList((prev) => (prev && JSON.stringify(prev) === JSON.stringify(result.list) ? prev : result.list));
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attempt]);
+
+  useEffect(() => {
+    if (list === null || error) return;
+    save({ list, ctx: other.userId });
+  }, [list, error]);
+
+  const note = { fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" };
+  return (
+    <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageHeader onBack={onBack} />
+      <ScreenTitle icon={<NavIcon name="crown" size={24} color={COLORS.amber} />} subtitle={<>de <strong style={{ color: COLORS.ink, fontWeight: 700 }}>{other.name}</strong></>}>
+        <span style={{ color: COLORS.ink }}>Biba</span>
+        <span style={{ color: COLORS.amber }}>Club</span>
+      </ScreenTitle>
+
+      {list === null ? (
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "20px" }}>Chargement...</p>
+      ) : error ? (
+        <p style={{ fontSize: "12.5px", color: "#FF3B3B", textAlign: "center", margin: "0 0 16px" }}>
+          Impossible de charger les BibaClub de {other.name}.{" "}
+          <button
+            type="button"
+            onClick={() => {
+              setList(null);
+              setAttempt((n) => n + 1);
+            }}
+            style={{ background: "none", border: "none", color: COLORS.amber, fontWeight: 700, cursor: "pointer", padding: 0, fontSize: "12.5px" }}
+          >
+            Réessayer
+          </button>
+        </p>
+      ) : list.length === 0 ? (
+        <p data-check-empty style={note}>{other.name} n'est membre d'aucun BibaClub public pour l'instant.</p>
+      ) : (
+        <>
+          <div data-bibro-clubs style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px", marginBottom: "10px" }}>
+            {list.map((c, i) => (
+              <div key={c.id} style={{ borderBottom: i === list.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}` }}>
+                <ClubRow club={c} subtitle={[c.category, JOIN_MODE_LABEL[c.joinMode]].filter(Boolean).join(" · ")} onClick={() => onOpenClub(c.id)} />
+              </div>
+            ))}
+          </div>
+          <p style={note}>Seuls les BibaClub publics sont affichés : un club privé ne l'est jamais.</p>
+        </>
+      )}
+
+      <BackFooterLink onClick={onBack} />
+    </div>
+  );
+}
+
 // Fiche d'un Bibax confirmé (« Mes Bibax »). Sous le bloc du rond de profil, trois onglets (mêmes pastilles que Mon Profil) :
 //   - Infos     : le bloc des infos de la personne, la relation (Bibax / BibaPing / Bibax en commun), les trois blocs
-//                 Bibax / Drink Checks / Place Checks et les petits blocs d'accès (Médias, BibaClub, Historique) ;
+//                 Bibax / Drink Checks / Place Checks et les deux petits blocs d'accès (BibaClub, Médias grisé « Soon ») ;
 //   - Biba360   : ses statistiques partagées (ex-écran « Statistiques de … », devenu l'onglet : plus de petit bloc d'accès) ;
 //   - BibaPulse : ses publications dans BibaPulse, en vraies cartes (ex-extrait de trois lignes + écran « Activité de … »).
 // Retour sur l'onglet BibaPulse : quand on ouvre un lieu, un produit, une marque ou un producteur depuis une carte puis qu'on revient,
 // la fiche se rouvre sur cet onglet, calée sur la carte (pulseReturnEntryId / onRememberPulseEntry, comme sur Mon Profil).
-export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previewNotice, onToggleFavorite, onRemove, goToBibaxPhotos, onBlock, onOpenStoryAuthor, onViewMutualBibax, goToBibroBibaxList, goToBibroDrinkChecks, goToBibroPlaceChecks, goToBibroMedia, goToBibroClub, goToBibroHistory, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry }) {
+export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previewNotice, onToggleFavorite, onRemove, goToBibaxPhotos, onBlock, onOpenStoryAuthor, onViewMutualBibax, goToBibroBibaxList, goToBibroDrinkChecks, goToBibroPlaceChecks, goToBibroClub, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry }) {
   const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
   const [mutualCount, setMutualCount] = useState(null);
   const [bibaxCount, setBibaxCount] = useState(null);
@@ -1213,9 +1298,10 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
       <div style={{ height: "1px", background: COLORS.paperAlt, margin: "0 0 14px" }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
-        <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title="Médias" onClick={goToBibroMedia} />
-        <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title="BibaClub" onClick={goToBibroClub} />
-        <ActionCard icon={<NavIcon name="calendar" size={20} color={COLORS.amber} />} title="Historique" onClick={goToBibroHistory} />
+        {/* Deux blocs, au format de ceux de Mon Profil (Mehdi, 2026-11-19) : « BibaClub » en premier (les BibaClub publics de cette personne), « Médias » à sa droite, grisé avec « Soon »
+            (pas encore conçu : plus d'ouverture de ses photos). Plus de bloc « Historique » : l'historique n'a d'intérêt que pour soi. */}
+        <ActionCard icon={<NavIcon name="crown" size={20} color={COLORS.amber} />} title="BibaClub" onClick={goToBibroClub ? () => goToBibroClub(bibro.userId, bibro.name) : undefined} singleLine />
+        <ActionCard icon={<NavIcon name="camera" size={20} color={COLORS.amber} />} title="Médias" disabled badge="Soon" singleLine />
       </div>
 
       {onBlock && confirmingBlock && (

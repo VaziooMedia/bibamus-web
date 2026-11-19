@@ -5059,6 +5059,13 @@ export const loadBibroCheckedVenues = (userId) =>
     rows.filter((r) => r.venue_id).map((r) => ({ venueId: String(r.venue_id), visits: Number.isFinite(Number(r.visits)) ? Number(r.visits) : 1, lastAt: r.last_at || null }))
   );
 
+// Les BibaClub PUBLICS dont un de mes Bibax est membre actif (bloc « BibaClub » de sa fiche ; fonction `get_bibax_public_clubs`, script bibamus-sql-bibax-clubs-publics) : de quoi
+// afficher une ligne (identifiant, nom, photo, catégorie, mode d'adhésion). Rend `{ list }`, ou `null` si la lecture échoue (y compris tant que la fonction n'existe pas dans la base).
+export const loadBibroPublicClubs = (userId) =>
+  loadBibaxList("loadBibroPublicClubs", "get_bibax_public_clubs", userId, (rows) =>
+    rows.filter((r) => r.club_id).map((r) => ({ id: r.club_id, name: r.name, photoUrl: r.photo_url || null, category: r.category || null, joinMode: r.join_mode }))
+  );
+
 // Mêmes champs que `loadMutualBibaxList` (le @nom s'ajoute ensuite par `attachUsernames`).
 export const loadBibroBibaxList = (userId) =>
   loadBibaxList("loadBibroBibaxList", "get_bibax_of", userId, (rows) =>
