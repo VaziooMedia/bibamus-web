@@ -961,6 +961,22 @@ export function normalizeSearchText(str) {
     .trim();
 }
 
+// Distance à vol d'oiseau, en mètres, entre deux points (latitude / longitude en degrés) : formule de haversine. Rend null si une coordonnée manque.
+export function distanceMeters(lat1, lng1, lat2, lng2) {
+  const nums = [lat1, lng1, lat2, lng2].map((v) => (v === null || v === undefined || v === "" ? NaN : Number(v)));
+  if (nums.some((v) => !Number.isFinite(v))) return null;
+  const [a1, o1, a2, o2] = nums;
+  const rad = Math.PI / 180;
+  const dLat = (a2 - a1) * rad;
+  const dLng = (o2 - o1) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a1 * rad) * Math.cos(a2 * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+// Forme longue d'un texte déjà passé dans normalizeSearchText : les mots entiers « st » et « ste » redeviennent « saint » et « sainte » (même règle que la
+// fonction `bibamus_normalize_search_text_long` de la base).
+export const expandSaintAbbreviations = (normalized) => (normalized || "").replace(/\bste\b/g, "sainte").replace(/\bst\b/g, "saint");
+
 // Version « compacte » d'un texte déjà passé dans normalizeSearchText : sans espaces ni ponctuation, pour retrouver « Hendrick's » en tapant « Hendricks »
 // ou « Belle-Vue » en tapant « Bellevue ». Même ensemble de caractères que la colonne `search_compact` de `drinks_directory` (`regexp_replace` sur
 // `search_text`, voir docs/DATABASE.md), plus « » “ ” „ que `unaccent` ramène à << >> ou " côté base. Les lettres, les chiffres et toutes les écritures non
@@ -992,7 +1008,12 @@ export function makeSearchMatcher(query) {
   const tokens = searchTokens(typed);
   if (tokens.length === 0) return () => false;
   return (...texts) => {
-    const haystack = compactSearchText(normalizeSearchText(texts.flat(Infinity).filter(Boolean).join(" ")));
+    const normalized = normalizeSearchText(texts.flat(Infinity).filter(Boolean).join(" "));
+    // Deux formes du texte, comme les colonnes `search_text` / `search_compact` de la base (Mehdi, 2026-11-19) : la courte (« taverne st pierre »),
+    // puis la longue (« taverne saint pierre ») quand elle diffère. Un mot tapé se retrouve dans l'une ou l'autre : « sain », encore incomplet,
+    // trouve « Saint-Pierre », et « sain » trouve aussi « St-Pierre ». Les mots tapés, eux, restent en forme courte (« saint » → « st »).
+    const longForm = expandSaintAbbreviations(normalized);
+    const haystack = compactSearchText(normalized) + (longForm === normalized ? "" : compactSearchText(longForm));
     return tokens.every((token) => haystack.includes(token));
   };
 }
