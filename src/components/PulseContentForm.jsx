@@ -15,6 +15,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 import { EntityAvatar } from "./ui.jsx";
+import { MEDIUM_PILL } from "./PillTabs.jsx";
 import { TagRestrictedBadge } from "./TagRestrictedBadge.jsx";
 import { NavIcon } from "./icons.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
@@ -142,6 +143,7 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
   return (
     <div style={{ marginBottom: endDivider ? "0" : "20px" }}>
       <SectionLabel icon="lock" style={{ marginBottom: "8px" }}>Confidentialité</SectionLabel>
+      {/* Les deux pastilles « Public » / « Mes Bibax » : taille intermédiaire des pastilles de l'app (`MEDIUM_PILL`, comme les onglets de Mon Profil), 25 px de haut au lieu de 37 px (Mehdi, 2026-11-19) — la même dans DrinkCheck, PlaceCheck et Nouvelle publication. */}
       <div style={{ display: "flex", gap: "8px", marginBottom: end("16px") }}>
         {[
           { key: "public", label: "Public" },
@@ -154,10 +156,10 @@ export function PulseContentFields({ form, showBibax = true, commentLabel = "Com
               flex: 1,
               background: visibility === opt.key ? COLORS.amber : "none",
               color: visibility === opt.key ? COLORS.paper : COLORS.ink,
-              border: `2px solid ${visibility === opt.key ? COLORS.amber : COLORS.paperAlt}`,
+              border: `${MEDIUM_PILL.borderWidth} solid ${visibility === opt.key ? COLORS.amber : COLORS.paperAlt}`,
               borderRadius: "999px",
-              padding: "9px 12px",
-              fontSize: "13px",
+              padding: MEDIUM_PILL.padding,
+              fontSize: MEDIUM_PILL.fontSize,
               fontWeight: 700,
               cursor: "pointer",
             }}
