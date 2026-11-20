@@ -22,6 +22,7 @@ import bibAtlasIconUrl from "../assets/brand/bibatlas-carte.svg";
 import bibaGoIconUrl from "../assets/brand/bibago-carte.svg";
 import { PulseRoomCard } from "./PulseRoomCard.jsx";
 import { formatCount } from "../utils.js";
+import { FINE_PILL } from "./PillTabs.jsx";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -233,6 +234,18 @@ function PulseRoundIcon({ name }) {
 // Intensité du voile (0 à 1) : 0,10 = voile discret (version du 2026-11-20) ; 1 = vert fluo plein, avec textes sombres (essai du 2026-11-20 : « essaye en vert fluo »).
 const PULSE_BAND_STRENGTH = 1;
 const PULSE_BAND_SOLID = PULSE_BAND_STRENGTH >= 1;
+// @nom et surnom de l'auteur en pastilles sur le bandeau (Mehdi, 2026-11-20 : « ça ne donne pas bien en texte, essayons plutôt de mettre ça sous forme de pastille »), à la taille des pastilles fines (`FINE_PILL`).
+// A : fond sombre (comme la pastille de l'heure), « @ » et surnom en vert fluo ; B : contour sombre sans fond ; C : fond sombre léger.
+const PULSE_AUTHOR_PILL = "A";
+const authorPillStyle = {
+  borderRadius: "999px",
+  ...{
+    A: { background: COLORS.paper, border: `${FINE_PILL.borderWidth} solid ${COLORS.paper}`, color: COLORS.ink },
+    B: { background: "transparent", border: `${FINE_PILL.borderWidth} solid ${COLORS.paper}`, color: COLORS.paper },
+    C: { background: "rgba(8, 19, 31, 0.14)", border: `${FINE_PILL.borderWidth} solid transparent`, color: COLORS.paper },
+  }[PULSE_AUTHOR_PILL],
+};
+const authorPillAccent = PULSE_AUTHOR_PILL === "A" ? COLORS.amber : COLORS.paper;
 const PULSE_BAND_AVATAR = 48; // rond de profil de l'auteur sur le bandeau (px)
 const PULSE_HEADER_BAND = PULSE_BAND_SOLID ? COLORS.amber : `rgba(57, 255, 102, ${PULSE_BAND_STRENGTH})`;
 
@@ -505,7 +518,6 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // Bandeau en vert fluo plein : les textes de la ligne de l'auteur (nom, @nom, surnom) passent en sombre (`COLORS.paper`).
   const bandSolid = bandOn && PULSE_BAND_SOLID;
   const bandText = bandSolid ? COLORS.paper : COLORS.ink;
-  const bandSoftText = bandSolid ? "rgba(8, 19, 31, 0.7)" : COLORS.inkSoft;
   // @nom et surnom de l'auteur (2e ligne du bandeau) ; le surnom n'est pas répété s'il est déjà affiché comme nom.
   const authorUsername = (entry.actorUsername || "").trim();
   const authorNicknameRaw = (entry.actorNickname || "").trim();
@@ -579,11 +591,17 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           </p>
           {/* 2e ligne du bandeau : le @nom puis le surnom de l'auteur, juste sous son nom (Mehdi, 2026-11-20). Un surnom déjà affiché comme nom (réglage « nom affiché » de l'auteur) n'est pas répété. Rien si la personne n'a ni l'un ni l'autre. */}
           {bandOn && (authorUsername || authorNickname) && (
-            <p style={{ margin: "1px 0 0", fontSize: "12px", lineHeight: 1.3, color: bandSoftText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {authorUsername && <span>@{authorUsername}</span>}
-              {authorUsername && authorNickname && <span style={{ padding: "0 5px" }}>·</span>}
-              {authorNickname && <span style={{ fontStyle: "italic", color: bandText, fontWeight: 600 }}>{authorNickname}</span>}
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", minWidth: 0 }}>
+              {authorUsername && (
+                <span style={{ ...authorPillStyle, padding: FINE_PILL.padding, fontSize: FINE_PILL.fontSize, fontWeight: 600, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0, flexShrink: 0, maxWidth: "100%" }}>
+                  <span style={{ color: authorPillAccent }}>@</span>
+                  {authorUsername}
+                </span>
+              )}
+              {authorNickname && (
+                <span style={{ ...authorPillStyle, padding: FINE_PILL.padding, fontSize: FINE_PILL.fontSize, fontWeight: 600, fontStyle: "italic", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0, color: authorPillAccent }}>{authorNickname}</span>
+              )}
+            </div>
           )}
           {!bandOn && clubJoinLine("1px 0 0")}
         </div>
