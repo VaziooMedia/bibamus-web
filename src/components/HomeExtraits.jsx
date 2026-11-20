@@ -4,15 +4,16 @@
 // Une bande pleine largeur par extrait (fond `surface`, 2 px `paperAlt` en haut et en bas, comme avant) :
 //   - à gauche, le rond de profil de l'auteur (48 px, il déborde de la bande : place prise 40 px, le texte démarre à 64 px) ;
 //   - au centre, 3 lignes : ① le nom de l'auteur puis l'heure (« · 2 h ») ; ② une phrase (« a checké Orval », « a découvert … », « a rejoint le BibaClub … ») avec
-//     l'objet en vert fluo ; ③ le lieu (pastille de lieu verte + nom) ou, pour un PlaceCheck, l'avis de l'auteur sur le lieu (flamme + libellé), et à droite les compteurs
-//     ♥ (Bix) et commentaires, en simple lecture, seulement s'ils sont supérieurs à 0 ;
+//     l'objet en vert fluo ; ③ le lieu (pastille de lieu verte + nom) ou, pour un PlaceCheck, l'avis de l'auteur sur le lieu (flamme + libellé). Pas de compteurs ♥ ni
+//     commentaires sur l'accueil (Mehdi, 2026-11-20 : « pas nécessaires », leur absence incite à ouvrir la page Pulse) ;
+//     PlaceCheck avec une phrase prédéfinie (la pastille rose de la carte, `metadata.interaction`) : l'avis reste en ③ et la pastille vient EN DERNIER, sur une 4ᵉ ligne (bande plus haute) ;
 //   - à droite, une miniature : le rond du produit (photo, emoji ou bouteille) avec la note de l'auteur en pastille (★ 4,5) pour un DrinkCheck ; le rond du lieu pour un
 //     PlaceCheck ; le rond du salon pour un BibaRoom ; la photo (carré arrondi) d'une publication libre. Pas de miniature pour une arrivée dans un BibaClub.
-// Tout le bloc reste cliquable (il ouvre la fiche sur la page BibaPulse) ; rien d'autre n'y est cliquable (décision du 2026-11-12), les compteurs sont donc de la lecture seule.
+// Tout le bloc reste cliquable (il ouvre la fiche sur la page BibaPulse) ; rien d'autre n'y est cliquable (décision du 2026-11-12).
 //
 // Défilement (Mehdi, 2026-11-20) : 12 extraits au plus, en pages de 3 (4 pages) qu'on fait glisser SUR LE CÔTÉ (comme le carrousel des suggestions Bibax) ; chaque page s'arrête au bord (`scroll-snap`
 // horizontal). Un balayage vertical posé sur les extraits fait défiler l'accueil : le défilement vertical dans une fenêtre fixe, essayé le même jour, captait le doigt et gênait (Mehdi). Chaque page garde la
-// hauteur de 3 bandes, donc la hauteur de l'accueil ne change pas avec le nombre d'extraits. Les points de page, l'un à côté de l'autre (4 avec 12 extraits), sont dans la ligne de titre, à gauche de la
+// hauteur de la plus haute page (3 bandes de 3 lignes = 207 px ; une bande à 4 lignes est plus haute), donc la hauteur de l'accueil ne change pas en balayant ni avec le nombre d'extraits. Les points de page, l'un à côté de l'autre (4 avec 12 extraits), sont dans la ligne de titre, à gauche de la
 // flèche, sans en changer la hauteur. Ordre chronologique du fil. Avec 3 extraits ou moins : pas de défilement ni de points.
 //
 // Repère « nouveau » : un petit point vert sur le coin du rond de profil. Un extrait est nouveau s'il est arrivé après la première ouverture de l'accueil sur cet appareil, qu'il
@@ -27,7 +28,8 @@ import { COLORS, RATING_LABELS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar, SalonAvatar } from "./ui.jsx";
 import { pulseClubName } from "../data/sharedDirectories.js";
-import { formatCount } from "../utils.js";
+import { PLACE_INTERACTIONS } from "../placeInteractions.js";
+import { PulseInteractionPill } from "./PulseInteractionPill.jsx";
 
 // Rond de profil de l'auteur : 40 px dans la mise en page, 48 px à l'écran (il déborde vers la gauche, le haut et le bas — voir l'ancienne règle du 2026-11-12).
 const EXTRAIT_BASE = 40;
@@ -37,6 +39,8 @@ export const EXTRAITS_PER_PAGE = 3;
 export const EXTRAITS_PAGES = 4;
 // Hauteur d'une bande (px, bordures comprises) : celle d'une bande de 3 lignes, la même pour toutes (une page = 3 × 65 + 2 × 6 = 207 px, contre 204 px pour les 3 bandes de 2 lignes d'avant), et espace entre deux bandes.
 const EXTRAIT_BAND_H = 65;
+// Bande de 4 lignes (PlaceCheck avec avis ET phrase prédéfinie : nom, phrase, avis, pastille rose) : 15 px de plus.
+const EXTRAIT_BAND_H_TALL = 80;
 const EXTRAIT_GAP = 6;
 // Points de page : diamètre et écart (px).
 const DOT_SIZE = 6;
@@ -86,15 +90,6 @@ function readSeen(userId) {
   return fresh;
 }
 
-function Counter({ icon, count, size }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", flexShrink: 0 }}>
-      <NavIcon name={icon} size={size} color={COLORS.inkSoft} />
-      <span style={{ color: COLORS.ink, fontWeight: 700 }}>{formatCount(count)}</span>
-    </span>
-  );
-}
-
 function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
   const meta = entry.metadata || {};
   const type = entry.eventType;
@@ -117,10 +112,16 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
   // Ligne ③ gauche : le lieu du check / de la publication / du salon (pastille de lieu verte + nom) ; pour un PlaceCheck, l'avis de l'auteur sur le lieu (flamme + libellé).
   const venueLabel = entry.objectType !== "venue" && entry.venueId ? SPECIAL_VENUE_LABELS[entry.venueId] || venue?.name || null : null;
   const placeRating = isPlaceCheck ? RATING_LABELS.find((l) => l.value === meta.venue_rating) || null : null;
+  const placeInteraction = isPlaceCheck ? PLACE_INTERACTIONS.find((i) => i.code === meta.interaction) || null : null;
   const showVenue = !!venueLabel && !(isRoom && venueLabel === roomName);
-  const line3Left = showVenue ? { icon: "map-pin", text: venueLabel, size: 13 } : placeRating ? { icon: "flame", text: placeRating.fr, size: 13, filled: true } : null;
-  const hasCounters = entry.bixCount > 0 || entry.commentsCount > 0;
-  const hasLine3 = !!line3Left || hasCounters;
+  // PlaceCheck avec une phrase prédéfinie : l'avis (flamme + libellé) reste sur la ligne ③ et la pastille rose de la phrase vient EN DERNIER, sur une ligne ④, dans une bande plus haute
+  // (Mehdi, 2026-11-20 : « la phrase pastille rose en dernier, après l'appréciation »). Sans avis, la pastille prend la ligne ③ et la bande garde 3 lignes.
+  const avisLine = placeRating ? { icon: "flame", text: placeRating.fr, size: 13, filled: true } : null;
+  const phraseLine = placeInteraction ? { phrase: placeInteraction.label } : null;
+  const line3Left = showVenue ? { icon: "map-pin", text: venueLabel, size: 13 } : avisLine || phraseLine;
+  const line4 = avisLine && phraseLine ? phraseLine : null;
+  const hasLine3 = !!line3Left;
+  const bandH = line4 ? EXTRAIT_BAND_H_TALL : EXTRAIT_BAND_H;
 
   // Miniature de droite.
   const photoUrl = isPost && typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null;
@@ -149,7 +150,7 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
           onOpen(entry);
         }
       }}
-      style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "7px 14px", height: `${EXTRAIT_BAND_H}px`, flexShrink: 0, display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", boxSizing: "border-box" }}
+      style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "7px 14px", height: `${bandH}px`, flexShrink: 0, display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", boxSizing: "border-box" }}
     >
       <span style={{ position: "relative", display: "flex", flexShrink: 0, margin: `${-(EXTRAIT_ROUND - EXTRAIT_BASE) / 2}px 0 ${-(EXTRAIT_ROUND - EXTRAIT_BASE) / 2}px ${-(EXTRAIT_ROUND - EXTRAIT_BASE)}px` }}>
         <EntityAvatar photoUrl={entry.actorAvatarUrl} size={EXTRAIT_ROUND} />
@@ -189,7 +190,11 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
         </p>
         {hasLine3 && (
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "1px", fontSize: "11.5px", lineHeight: 1.2, color: COLORS.inkSoft, minWidth: 0 }}>
-            {line3Left && (
+            {line3Left.phrase ? (
+              <span style={{ display: "flex", minWidth: 0 }}>
+                <PulseInteractionPill label={line3Left.phrase} compact />
+              </span>
+            ) : (
               <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", minWidth: 0 }}>
                 <span style={{ display: "flex", flexShrink: 0 }}>
                   <NavIcon name={line3Left.icon} size={line3Left.size} color={COLORS.amber} filled={!!line3Left.filled} />
@@ -197,12 +202,13 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
                 <span style={ellipsis}>{line3Left.text}</span>
               </span>
             )}
-            {hasCounters && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginLeft: "auto", flexShrink: 0 }}>
-                {entry.bixCount > 0 && <Counter icon="heart" count={entry.bixCount} size={12} />}
-                {entry.commentsCount > 0 && <Counter icon="comment" count={entry.commentsCount} size={12} />}
-              </span>
-            )}
+          </div>
+        )}
+        {line4 && (
+          <div style={{ display: "flex", alignItems: "center", marginTop: "1px", minWidth: 0 }}>
+            <span style={{ display: "flex", minWidth: 0 }}>
+              <PulseInteractionPill label={line4.phrase} compact />
+            </span>
           </div>
         )}
       </div>
