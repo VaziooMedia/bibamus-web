@@ -11,6 +11,8 @@ import { COLORS } from "../constants.js";
 // Le texte et le « + » sont toujours dans un cadre rose (même boîte rose que les avertissements de doublon : COLORS.surface, bordure pinkFluo de 2 px,
 // 12 px de rayon) — sur tous les écrans qui proposent d'ajouter un produit ou un lieu (décidé par Mehdi, 2026-11-20) : listes Produits et Lieux de BibAtlas,
 // recherche BibAtlas, BibaSolo, DrinkCheck, publication BibaPulse, BibaRoom.
+// Trois lignes : la question, « Aucun problème. », « Tu peux l'ajouter rapidement. » (Mehdi, 2026-11-20) ; le cadre est large (marges réduites autour et dedans)
+// pour que chaque phrase tienne sur une seule ligne, même « Ce produit n'est pas encore présent sur BibAtlas ? » (14 px sur grand écran, jusqu'à 12 px sur petit écran : `clamp`).
 export function AddAfterSearch({ query, onAdd, noun, label }) {
   return (
     <div
@@ -24,14 +26,16 @@ export function AddAfterSearch({ query, onAdd, noun, label }) {
         background: COLORS.surface,
         border: `2px solid ${COLORS.pinkFluo}`,
         borderRadius: "12px",
-        padding: "16px 14px",
+        padding: "16px 8px",
         boxSizing: "border-box",
       }}
     >
-      <p style={{ margin: 0, fontSize: "14px", color: COLORS.inkSoft }}>
+      <p style={{ margin: 0, fontSize: "clamp(12px, 3.4vw, 14px)", color: COLORS.inkSoft }}>
         Ce {noun} n'est pas encore présent sur BibAtlas ?
         <br />
-        Aucun problème. Tu peux l'ajouter rapidement.
+        Aucun problème.
+        <br />
+        Tu peux l'ajouter rapidement.
       </p>
       <button
         onClick={() => onAdd(query)}
