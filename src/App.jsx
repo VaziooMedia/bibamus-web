@@ -333,6 +333,10 @@ export default function App() {
   const [viewedBibaxProfileCode, setViewedBibaxProfileCode] = useState(null);
   // Nom tapé dans la recherche de BibAtlas, repris dans le formulaire d'ajout d'un Produit ou d'un Lieu ; vide pour les autres entrées.
   const [submitInitialName, setSubmitInitialName] = useState("");
+  // D'où l'on a ouvert « Ajouter un lieu » : la liste des lieux de BibAtlas (par défaut) ou BibaSolo (recherche de lieu sans résultat). Décide où l'on revient.
+  const [submitVenueFrom, setSubmitVenueFrom] = useState("venueDirectory");
+  // Le lieu qu'on vient de créer depuis BibaSolo : BibaSolo le prend comme lieu actuel à son retour, puis l'efface.
+  const [soloNewVenueId, setSoloNewVenueId] = useState(null);
   // Écran où ramène la flèche retour de la fiche d'un Bibax ; « home » partout sauf depuis la page Bibax de BibAtlas.
   const [screenBeforeBibaxProfile, setScreenBeforeBibaxProfile] = useState("home");
   const openBibaxProfile = (code, backTo = "home") => {
@@ -2463,6 +2467,7 @@ export default function App() {
                 }}
                 goToSubmit={(name) => {
                   setSubmitInitialName(typeof name === "string" ? name : "");
+                  setSubmitVenueFrom("venueDirectory");
                   setScreen("submitVenue");
                 }}
                 goToMap={() => {
@@ -2636,16 +2641,21 @@ export default function App() {
               <SubmitVenueWizardScreen
                 initialName={submitInitialName}
                 onOpenExisting={(id) => {
-                  setScreenBeforeVenueDetail("venueDirectory");
+                  setScreenBeforeVenueDetail(submitVenueFrom === "bibaSolo" ? "bibaSolo" : "venueDirectory");
                   setViewedVenueId(id);
                   setScreen("venueDetail");
                 }}
                 onDone={(createdId) => {
                   emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: createdId });
                   trackEvent("venue_added", "venue", profile.myBibroCode);
-                  setScreen("venueDirectory");
+                  if (submitVenueFrom === "bibaSolo") {
+                    setSoloNewVenueId(createdId);
+                    setScreen("bibaSolo");
+                  } else {
+                    setScreen("venueDirectory");
+                  }
                 }}
-                onCancel={() => setScreen("venueDirectory")}
+                onCancel={() => setScreen(submitVenueFrom === "bibaSolo" ? "bibaSolo" : "venueDirectory")}
               />
             )}
             {screen === "submitDrink" && (
@@ -3966,6 +3976,13 @@ export default function App() {
                   setSubmitInitialName("");
                   setScreen("submitDrink");
                 }}
+                onAddVenue={(name) => {
+                  setSubmitInitialName(typeof name === "string" ? name : "");
+                  setSubmitVenueFrom("bibaSolo");
+                  setScreen("submitVenue");
+                }}
+                newVenueId={soloNewVenueId}
+                onNewVenueConsumed={() => setSoloNewVenueId(null)}
                 onRateDrink={rateDrinkStandalone}
                 onUnrateDrink={unrateDrinkStandalone}
                 onCheckDrink={publishDrinkCheckFromList}
