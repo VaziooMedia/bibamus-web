@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle } from "./ui.jsx";
 import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
@@ -612,10 +612,8 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
           <VenueNotesSection venueId={venue.id} />
       {topDrinks.length > 0 && (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-            <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Produits les plus populaires ici</span>
-          </div>
+          {/* Même titre que les autres blocs de Biba360 (« Notes ») : blanc, en gras, barre verte et trait fin dessous (Mehdi, 2026-11-21). */}
+          <BlockTitle>Produits les plus populaires ici</BlockTitle>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             {topDrinks.map((r, i) => (
               <div key={r.drinkId} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
