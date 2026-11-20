@@ -3,6 +3,7 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
 import { getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { associateBarcode } from "../data/sharedDirectories.js";
 import { prepareLabelPhoto } from "../labelScanPhoto.js";
@@ -431,21 +432,11 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               </div>
               {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber, margin: "0 0 30px" }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
               {candidates.length === 0 && moreCandidates.length === 0 ? (
-                // Rien ne correspond vraiment au texte lu (la recherche ne renvoie plus de produits sans rapport) : « Aucun résultat », et le
-                // bouton « + » (le même rond vert fluo que dans BibAtlas / Produits) propose d'ajouter le produit.
+                // Rien ne correspond vraiment au texte lu (la recherche ne renvoie plus de produits sans rapport) : « Aucun résultat », puis le
+                // même cadre rose « Ce produit n'est pas encore présent sur BibAtlas ? » que partout ailleurs dans l'app (AddAfterSearch).
                 <div data-empty="1" style={{ textAlign: "center", padding: "10px 0 4px" }}>
                   <p style={{ ...sectionTitle, margin: "0 0 16px" }}>Aucun résultat</p>
-                  {onAddDrink && (
-                    <button
-                      data-add-plus="1"
-                      onClick={addProduct}
-                      aria-label="Ajouter le produit"
-                      title="Ajouter le produit"
-                      style={{ width: "56px", height: "56px", borderRadius: "50%", background: COLORS.amber, border: "none", color: COLORS.paper, fontSize: "32px", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1, boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}
-                    >
-                      +
-                    </button>
-                  )}
+                  {onAddDrink && <AddAfterSearch query="" onAdd={addProduct} noun="produit" label="Ajouter le produit" />}
                 </div>
               ) : (
                 <>
@@ -503,7 +494,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               )}
               {(candidates.length > 0 || moreCandidates.length > 0) && <div data-separator="1" style={separator} />}
               <div style={{ marginTop: candidates.length > 0 || moreCandidates.length > 0 ? 0 : "18px", display: "flex", gap: "10px" }}>
-                {/* Avec des résultats, « Ajouter » reste en bas ; sans résultat, c'est le « + » ci-dessus qui propose l'ajout. */}
+                {/* Avec des résultats, « Ajouter » reste en bas ; sans résultat, c'est le cadre rose ci-dessus qui propose l'ajout. */}
                 {onAddDrink && (candidates.length > 0 || moreCandidates.length > 0) && (
                   <button onClick={addProduct} style={bottomBtn}>
                     Ajouter
