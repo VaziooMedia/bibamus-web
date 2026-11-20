@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
-import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
+import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle } from "./ui.jsx";
 import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
@@ -17,6 +17,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import { VenueRatingDisplay } from "./VenueRatingDisplay.jsx";
+import { VenueNotesSection } from "./VenueNotesSection.jsx";
 import { loadVenueTopDrinks, loadDrinksByIds, loadMyStatsForVenue, toggleFollowVenue, loadVenueFollowStatus, loadBreweryLinkedToVenue } from "../data/sharedDirectories.js";
 import { VenueCheckInConfirmModal } from "./VenueCheckInConfirmModal.jsx";
 import { loadMyVenueRating, loadVenueListsOnce } from "../data/sharedDirectories.js";
@@ -283,6 +284,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
       <PillTabs
         tabs={[
           { key: "infos", label: "Infos" },
+          { key: "biba360", label: { prefix: "Biba", accent: "360" } },
           { key: "bibapulse", label: { prefix: "Biba", accent: "Pulse" } },
         ]}
         active={activeTab}
@@ -550,23 +552,6 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
       </div>
 
 
-      {topDrinks.length > 0 && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-            <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Produits les plus populaires ici</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {topDrinks.map((r, i) => (
-              <div key={r.drinkId} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span><strong>{i + 1}.</strong> {topDrinkNames[r.drinkId] || "…"}</span>
-                <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
           <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
@@ -587,41 +572,6 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
           <NavIcon name="camera" size={26} color={COLORS.paperAlt} />
           <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
         </div>
-      </div>
-
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Produits populaires ici</span>
-        </div>
-        <div style={{ textAlign: "center", padding: "16px 0" }}>
-          <NavIcon name="star" size={26} color={COLORS.paperAlt} />
-          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
-        </div>
-      </div>
-
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px", display: "flex", alignItems: "stretch" }}>
-        <button
-          onClick={onOpenCheckInsHistory}
-          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "center" }}
-        >
-          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Tes check-ins ici</span>
-          <span style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
-            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{stats.visits || 0}</span>
-            <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
-          </span>
-        </button>
-        <div style={{ width: "1px", background: COLORS.paperAlt, margin: "0 14px" }} />
-        <button
-          onClick={onOpenDrinksHistory}
-          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "center" }}
-        >
-          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Tes boissons bues ici</span>
-          <span style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
-            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{stats.drinksOrdered || 0}</span>
-            <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
-          </span>
-        </button>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
@@ -652,6 +602,53 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
           <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
         </button>
       </div>
+        </>
+      )}
+
+      {/* Onglet Biba360 d'une fiche Lieu (Mehdi, 2026-11-21) : d'abord la carte « Notes » (You / Bibax / Bibamus), puis les deux blocs qui étaient dans Infos : « Produits les plus populaires ici »
+          et « Tes check-ins ici / Tes boissons bues ici ». Les autres blocs viendront, un à la fois. */}
+      {activeTab === "biba360" && (
+        <>
+          <VenueNotesSection venueId={venue.id} />
+      {topDrinks.length > 0 && (
+        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+          {/* Même titre que les autres blocs de Biba360 (« Notes ») : blanc, en gras, barre verte et trait fin dessous (Mehdi, 2026-11-21). */}
+          <BlockTitle>Produits les plus populaires ici</BlockTitle>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {topDrinks.map((r, i) => (
+              <div key={r.drinkId} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                <span><strong>{i + 1}.</strong> {topDrinkNames[r.drinkId] || "…"}</span>
+                <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px", display: "flex", alignItems: "stretch" }}>
+        <button
+          onClick={onOpenCheckInsHistory}
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "center" }}
+        >
+          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Tes check-ins ici</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{stats.visits || 0}</span>
+            <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
+          </span>
+        </button>
+        <div style={{ width: "1px", background: COLORS.paperAlt, margin: "0 14px" }} />
+        <button
+          onClick={onOpenDrinksHistory}
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "center" }}
+        >
+          <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>Tes boissons bues ici</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+            <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "24px", color: COLORS.amber }}>{stats.drinksOrdered || 0}</span>
+            <span style={{ color: COLORS.inkSoft, fontSize: "13px" }}>→</span>
+          </span>
+        </button>
+      </div>
+
         </>
       )}
 
