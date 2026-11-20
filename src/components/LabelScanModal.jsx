@@ -4,6 +4,7 @@ import { NavIcon } from "./icons.jsx";
 import { EntityAvatar } from "./ui.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { AiIcon } from "./AiIcon.jsx";
 import { getDrinkBadgeItems, renderDrinkBadgeItem } from "./DrinkDisplay.jsx";
 import { associateBarcode } from "../data/sharedDirectories.js";
 import { prepareLabelPhoto } from "../labelScanPhoto.js";
@@ -494,11 +495,12 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
               )}
               {(candidates.length > 0 || moreCandidates.length > 0) && <div data-separator="1" style={separator} />}
               {/* Avec des résultats, l'ajout se propose sous eux, dans le même cadre rose que partout ailleurs (comme sans résultat, où il est
-                  dans le bloc « Aucun résultat » ci-dessus) ; « Reprendre » reste seul en bas. */}
+                  dans le bloc « Aucun résultat » ci-dessus) ; « Reprendre le scan » (avec l'icône IA) reste seul en bas. */}
               {onAddDrink && (candidates.length > 0 || moreCandidates.length > 0) && <AddAfterSearch query="" onAdd={addProduct} noun="produit" label="Ajouter le produit" />}
               <div style={{ marginTop: "18px", display: "flex", gap: "10px" }}>
-                <button onClick={retake} style={bottomBtn}>
-                  Reprendre
+                <button onClick={retake} style={{ ...bottomBtn, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                  Reprendre le scan
+                  <AiIcon size={28} bleed />
                 </button>
               </div>
             </div>
