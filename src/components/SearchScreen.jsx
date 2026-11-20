@@ -343,19 +343,29 @@ export function SearchScreen({
 
   const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
-  // Onglet Lieux : le lieu cherché n'existe pas (encore) sur BibAtlas → proposition d'ajout, sous les résultats ou le message « Aucun résultat ».
-  const addVenueBlock =
-    activeTab === "lieux" && hasPlain && venuesSearchedFor === plain ? (
-      <div style={{ padding: "16px 20px 8px" }} data-add-venue="1">
-        <AddAfterSearch query={plain} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
-      </div>
-    ) : null;
-  // Onglet Produits : même principe — le produit cherché n'existe pas (encore) sur BibAtlas. Marques et Producteurs : jamais d'ajout par un utilisateur (ils se créent côté Gestion) ; Bibax : sans objet.
-  const addDrinkBlock =
-    activeTab === "produits" && hasPlain && drinksSearchedFor === plain && !drinksLoading ? (
-      <div style={{ padding: "16px 20px 8px" }} data-add-drink="1">
-        <AddAfterSearch query={plain} onAdd={setAddDrinkName} noun="produit" label="Proposer une boisson" />
-      </div>
+  // Propositions d'ajout. Le lieu ou le produit cherché n'existe pas (encore) sur BibAtlas : le bloc rose d'ajout n'apparaît que lorsque la recherche correspondante a répondu pour le texte exact du champ.
+  // Onglet Lieux → bloc Lieu ; onglet Produits → bloc Produit ; sous les résultats ou le message « Aucun résultat dans cette catégorie ». Quand rien n'est trouvé nulle part (« Aucun résultat pour … »),
+  // les deux blocs s'affichent ensemble, quel que soit l'onglet (décidé par Mehdi, 2026-11-20). Marques et Producteurs : jamais d'ajout par un utilisateur (ils se créent côté Gestion) ; Bibax : sans objet.
+  const venueAnswered = hasPlain && venuesSearchedFor === plain;
+  const drinkAnswered = hasPlain && drinksSearchedFor === plain && !drinksLoading;
+  const venueBlockEl = (
+    <div style={{ padding: "16px 20px 8px" }} data-add-venue="1">
+      <AddAfterSearch query={plain} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
+    </div>
+  );
+  const drinkBlockEl = (
+    <div style={{ padding: "16px 20px 8px" }} data-add-drink="1">
+      <AddAfterSearch query={plain} onAdd={setAddDrinkName} noun="produit" label="Proposer une boisson" />
+    </div>
+  );
+  const addVenueBlock = activeTab === "lieux" && venueAnswered ? venueBlockEl : null;
+  const addDrinkBlock = activeTab === "produits" && drinkAnswered ? drinkBlockEl : null;
+  const addBothBlocks =
+    venueAnswered && drinkAnswered ? (
+      <>
+        {venueBlockEl}
+        {drinkBlockEl}
+      </>
     ) : null;
   const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;
   // Mode atlas : tant qu'aucune recherche n'est lancée, les blocs du répertoire prennent la place des résultats.
@@ -515,8 +525,7 @@ export function SearchScreen({
             {totalResults === 0 && !bibaxLoading && !drinksLoading && !atLoading ? (
               <>
                 <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
-                {addVenueBlock}
-                {addDrinkBlock}
+                {addBothBlocks}
               </>
             ) : counts[activeTab] === 0 ? (
               <>
