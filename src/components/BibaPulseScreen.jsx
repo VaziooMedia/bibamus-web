@@ -234,18 +234,11 @@ function PulseRoundIcon({ name }) {
 // Intensité du voile (0 à 1) : 0,10 = voile discret (version du 2026-11-20) ; 1 = vert fluo plein, avec textes sombres (essai du 2026-11-20 : « essaye en vert fluo »).
 const PULSE_BAND_STRENGTH = 1;
 const PULSE_BAND_SOLID = PULSE_BAND_STRENGTH >= 1;
-// @nom et surnom de l'auteur en pastilles sur le bandeau (Mehdi, 2026-11-20 : « ça ne donne pas bien en texte, essayons plutôt de mettre ça sous forme de pastille »), à la taille des pastilles fines (`FINE_PILL`).
-// A : fond sombre (comme la pastille de l'heure), « @ » et surnom en vert fluo ; B : contour sombre sans fond ; C : fond sombre léger.
-const PULSE_AUTHOR_PILL = "A";
-const authorPillStyle = {
-  borderRadius: "999px",
-  ...{
-    A: { background: COLORS.paper, border: `${FINE_PILL.borderWidth} solid ${COLORS.paper}`, color: COLORS.ink },
-    B: { background: "transparent", border: `${FINE_PILL.borderWidth} solid ${COLORS.paper}`, color: COLORS.paper },
-    C: { background: "rgba(8, 19, 31, 0.14)", border: `${FINE_PILL.borderWidth} solid transparent`, color: COLORS.paper },
-  }[PULSE_AUTHOR_PILL],
-};
-const authorPillAccent = PULSE_AUTHOR_PILL === "A" ? COLORS.amber : COLORS.paper;
+// @nom et surnom de l'auteur en pastilles sur le bandeau (Mehdi, 2026-11-20 : « ça ne donne pas bien en texte, essayons plutôt de mettre ça sous forme de pastille »), à la taille des pastilles fines (`FINE_PILL`) :
+// fond sombre (`COLORS.paper`, comme la pastille de l'heure), texte clair, « @ » et surnom (italique) en vert fluo. Aspect A retenu par Mehdi parmi trois essais (B : contour sombre sans fond ; C : fond sombre léger).
+const authorPillStyle = { borderRadius: "999px", background: COLORS.paper, border: `${FINE_PILL.borderWidth} solid ${COLORS.paper}`, color: COLORS.ink };
+const authorPillAccent = COLORS.amber;
+const PULSE_BAND_NAME_SIZE = "15px"; // taille du prénom + nom sur le bandeau (13,5 px avant le 2026-11-20)
 const PULSE_BAND_AVATAR = 48; // rond de profil de l'auteur sur le bandeau (px)
 const PULSE_HEADER_BAND = PULSE_BAND_SOLID ? COLORS.amber : `rgba(57, 255, 102, ${PULSE_BAND_STRENGTH})`;
 
@@ -586,7 +579,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           onClick={entry.actorBibroCode && onOpenProfile ? () => onOpenProfile(entry.actorBibroCode) : undefined}
         />
         <div style={{ flex: 1, minWidth: 0, paddingRight: bandOn ? "112px" : "60px" }}>
-          <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: bandText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <p style={{ margin: 0, fontSize: bandOn ? PULSE_BAND_NAME_SIZE : "13.5px", fontWeight: 700, color: bandText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
           </p>
           {/* 2e ligne du bandeau : le @nom puis le surnom de l'auteur, juste sous son nom (Mehdi, 2026-11-20). Un surnom déjà affiché comme nom (réglage « nom affiché » de l'auteur) n'est pas répété. Rien si la personne n'a ni l'un ni l'autre. */}
