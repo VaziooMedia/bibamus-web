@@ -10,7 +10,7 @@ import { COLORS } from "../constants.js";
 
 // Le texte et le « + » sont toujours dans un cadre rose (même boîte rose que les avertissements de doublon : COLORS.surface, bordure pinkFluo de 2 px,
 // 12 px de rayon) — sur tous les écrans qui proposent d'ajouter un produit ou un lieu (décidé par Mehdi, 2026-11-20) : listes Produits et Lieux de BibAtlas,
-// recherche BibAtlas, BibaSolo, DrinkCheck, publication BibaPulse, BibaRoom.
+// recherche BibAtlas, BibaSolo, DrinkCheck, publication BibaPulse, BibaRoom, scan d'étiquette (« Aucun résultat »).
 // Trois lignes : la question, « Aucun problème. », « Tu peux l'ajouter rapidement. » (Mehdi, 2026-11-20) ; le cadre est large (marges réduites autour et dedans)
 // pour que chaque phrase tienne sur une seule ligne, même « Ce produit n'est pas encore présent sur BibAtlas ? » (14 px sur grand écran, jusqu'à 12 px sur petit écran : `clamp`).
 export function AddAfterSearch({ query, onAdd, noun, label }) {
