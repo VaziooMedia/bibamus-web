@@ -12,7 +12,7 @@
 //
 // Défilement (Mehdi, 2026-11-20) : 12 extraits au plus, en pages de 3 (4 pages) qu'on fait glisser SUR LE CÔTÉ (comme le carrousel des suggestions Bibax) ; chaque page s'arrête au bord (`scroll-snap`
 // horizontal). Un balayage vertical posé sur les extraits fait défiler l'accueil : le défilement vertical dans une fenêtre fixe, essayé le même jour, captait le doigt et gênait (Mehdi). Chaque page garde la
-// hauteur de 3 bandes, donc la hauteur de l'accueil ne change pas avec le nombre d'extraits. Les points de page, l'un en dessous de l'autre (4 avec 12 extraits), sont dans la ligne de titre, à gauche de la
+// hauteur de 3 bandes, donc la hauteur de l'accueil ne change pas avec le nombre d'extraits. Les points de page, l'un à côté de l'autre (4 avec 12 extraits), sont dans la ligne de titre, à gauche de la
 // flèche, sans en changer la hauteur. Ordre chronologique du fil. Avec 3 extraits ou moins : pas de défilement ni de points.
 //
 // Repère « nouveau » : un petit point vert sur le coin du rond de profil. Un extrait est nouveau s'il est arrivé après la première ouverture de l'accueil sur cet appareil, qu'il
@@ -39,8 +39,8 @@ export const EXTRAITS_PAGES = 4;
 const EXTRAIT_BAND_H = 65;
 const EXTRAIT_GAP = 6;
 // Points de page : diamètre et écart (px).
-const DOT_SIZE = 5;
-const DOT_GAP = 3;
+const DOT_SIZE = 6;
+const DOT_GAP = 5;
 // Bouton-flèche de la ligne de titre (px) : il ouvre la page BibaPulse. Mehdi, 2026-11-20 : « plus visible » → rond vert fluo plein, flèche sombre (comme les boutons « + »), 30 px au lieu de 22 px cerclé.
 const ARROW_SIZE = 30;
 // Miniature de droite (px).
@@ -222,13 +222,11 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
   );
 }
 
-// Points de page, l'un en dessous de l'autre : celui de la page affichée est vert fluo. La colonne (4 points = 29 px) peut dépasser la ligne de titre (22 px) : des marges négatives la laissent déborder
-// dans les espaces au-dessus et en dessous, sans changer la hauteur de la ligne. À 36 px de la flèche (Mehdi, 2026-11-20 : « encore un peu plus » à gauche).
+// Points de page, l'un à côté de l'autre (Mehdi, 2026-11-20 : horizontaux, pour indiquer qu'on balaie de gauche à droite et non de haut en bas) : celui de la page affichée est vert fluo, les autres `paperAlt`.
+// À 36 px de la flèche (« encore un peu plus » à gauche) ; ils tiennent dans la hauteur de la ligne de titre (22 px).
 function PageDots({ count, page }) {
-  const h = count * DOT_SIZE + (count - 1) * DOT_GAP;
-  const over = Math.max(0, (h - 22) / 2);
   return (
-    <span data-extraits-dots aria-hidden="true" style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: `${DOT_GAP}px`, margin: `${-over}px 28px ${-over}px auto`, pointerEvents: "none" }}>
+    <span data-extraits-dots aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", gap: `${DOT_GAP}px`, marginLeft: "auto", marginRight: "28px", pointerEvents: "none" }}>
       {Array.from({ length: count }, (_, i) => (
         <span key={i} style={{ width: `${DOT_SIZE}px`, height: `${DOT_SIZE}px`, borderRadius: "50%", background: i === page ? COLORS.amber : COLORS.paperAlt }} />
       ))}
