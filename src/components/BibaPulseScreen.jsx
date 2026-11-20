@@ -539,7 +539,30 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       }
     >
       {/* Heure de la publication (« il y a… ») : en haut à droite de la ligne de l'auteur. Sur la page BibaPulse, cette ligne est un bandeau coloré (voir plus bas) dont le haut est collé au haut de la carte. */}
-      <span style={{ position: "absolute", top: bandOn ? (isRedesigned ? "21px" : "12px") : isRedesigned ? "25px" : "12px", right: "14px", fontSize: "11px", color: bandSoftText }}>{timeAgo(entry.createdAt)}</span>
+      {bandOn ? (
+        // Sur le bandeau de la page BibaPulse, l'heure est dans une pastille sombre (fond `paper`, texte clair) pour mieux ressortir sur le vert fluo — Mehdi, 2026-11-20.
+        // Centrée verticalement sur le rond de profil (ou sur la ligne du nom pour les cartes sans en-tête refait).
+        <span
+          style={{
+            position: "absolute",
+            top: isRedesigned ? "28px" : "18px",
+            transform: "translateY(-50%)",
+            right: "14px",
+            background: COLORS.paper,
+            color: COLORS.ink,
+            borderRadius: "999px",
+            padding: "3px 10px",
+            fontSize: "11.5px",
+            fontWeight: 600,
+            lineHeight: 1.3,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {timeAgo(entry.createdAt)}
+        </span>
+      ) : (
+        <span style={{ position: "absolute", top: isRedesigned ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
+      )}
 
       {/* Ligne de l'auteur (rond de profil, nom, heure). Sur la page BibaPulse (propriété `headerBand`, publications « à plat »), c'est un bandeau pleine largeur d'une autre couleur que le reste de la carte (`PULSE_HEADER_BAND`),
           pour bien repérer le début de chaque publication — Mehdi, 2026-11-19 (il hésitait à garder la barre de séparation rose fluo). Le bandeau déborde du padding de la carte (-14 px) jusqu'aux bords de l'écran. */}
@@ -559,7 +582,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           size={36}
           onClick={entry.actorBibroCode && onOpenProfile ? () => onOpenProfile(entry.actorBibroCode) : undefined}
         />
-        <div style={{ flex: 1, minWidth: 0, paddingRight: "60px" }}>
+        <div style={{ flex: 1, minWidth: 0, paddingRight: bandOn ? "96px" : "60px" }}>
           <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: bandText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
           </p>
