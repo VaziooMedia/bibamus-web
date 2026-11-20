@@ -510,15 +510,58 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
 
   // Bandeau coloré sur la ligne de l'auteur : seulement dans le fil de la page BibaPulse (publication « à plat » + `headerBand`), pas dans les fils des fiches.
   const bandOn = !!flat && !!headerBand;
-  // Bandeau en vert fluo plein : les textes de la ligne de l'auteur passent en sombre (`COLORS.paper`), les liens sont soulignés.
+  // Bandeau en vert fluo plein : les textes de la ligne de l'auteur (nom, @nom, surnom) passent en sombre (`COLORS.paper`).
   const bandSolid = bandOn && PULSE_BAND_SOLID;
   const bandText = bandSolid ? COLORS.paper : COLORS.ink;
   const bandSoftText = bandSolid ? "rgba(8, 19, 31, 0.7)" : COLORS.inkSoft;
-  const bandLink = bandSolid ? { color: COLORS.paper, textDecoration: "underline" } : { color: COLORS.amber };
   // @nom et surnom de l'auteur (2e ligne du bandeau) ; le surnom n'est pas répété s'il est déjà affiché comme nom.
   const authorUsername = (entry.actorUsername || "").trim();
   const authorNicknameRaw = (entry.actorNickname || "").trim();
   const authorNickname = authorNicknameRaw && authorNicknameRaw.toLowerCase() !== (entry.actorName || "").trim().toLowerCase() ? authorNicknameRaw : "";
+
+  // Ligne d'action des cartes non refaites (« Ajout @ Orval » pour une marque ou un producteur, « A rejoint le BibaClub X ») : sous le nom dans les fils des fiches ; sur la page BibaPulse,
+  // elle n'est PAS dans le bandeau vert mais sur la carte, juste sous le bandeau (Mehdi, 2026-11-20) — donc toujours dans les couleurs normales de la carte.
+  const actionLink = { color: COLORS.amber };
+  const actionLine = (margin) =>
+    !isRedesigned ? (
+      <p style={{ margin, fontSize: "12.5px", color: COLORS.ink }}>
+        {isClubJoin ? (
+          <>
+            A rejoint le BibaClub{" "}
+            {clubName && openClub ? (
+              <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...actionLink, cursor: "pointer" }}>
+                {clubName}
+              </button>
+            ) : (
+              <strong style={actionLink}>{clubName || "un club"}</strong>
+            )}
+          </>
+        ) : isPost ? null : (
+          <>
+            {pulseActionFor(entry)} @{" "}
+            {obj && openObject ? (
+              <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...actionLink, cursor: "pointer" }}>
+                {obj.name}
+              </button>
+            ) : (
+              <strong style={actionLink}>{obj?.name || "une fiche"}</strong>
+            )}
+          </>
+        )}
+        {checkVenueName && (
+          <>
+            <span style={{ color: COLORS.inkSoft }}>{" — "}</span>
+            {openCheckVenue ? (
+              <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
+                {checkVenueName}
+              </button>
+            ) : (
+              <span style={{ fontWeight: 700 }}>{checkVenueName}</span>
+            )}
+          </>
+        )}
+      </p>
+    ) : null;
 
   return (
     <div
@@ -577,45 +620,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
               {authorNickname && <span style={{ fontStyle: "italic", color: bandText, fontWeight: 600 }}>{authorNickname}</span>}
             </p>
           )}
-          {!isRedesigned && (
-            <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: bandText }}>
-              {isClubJoin ? (
-                <>
-                  A rejoint le BibaClub{" "}
-                  {clubName && openClub ? (
-                    <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...bandLink, cursor: "pointer" }}>
-                      {clubName}
-                    </button>
-                  ) : (
-                    <strong style={bandLink}>{clubName || "un club"}</strong>
-                  )}
-                </>
-              ) : isPost ? null : (
-                <>
-                  {pulseActionFor(entry)} @{" "}
-                  {obj && openObject ? (
-                    <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...bandLink, cursor: "pointer" }}>
-                      {obj.name}
-                    </button>
-                  ) : (
-                    <strong style={bandLink}>{obj?.name || "une fiche"}</strong>
-                  )}
-                </>
-              )}
-              {checkVenueName && (
-                <>
-                  <span style={{ color: bandSoftText }}>{" — "}</span>
-                  {openCheckVenue ? (
-                    <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: bandText, cursor: "pointer" }}>
-                      {checkVenueName}
-                    </button>
-                  ) : (
-                    <span style={{ fontWeight: 700 }}>{checkVenueName}</span>
-                  )}
-                </>
-              )}
-            </p>
-          )}
+          {!bandOn && actionLine("1px 0 0")}
         </div>
         {bandOn && (
           // Sur le bandeau de la page BibaPulse, l'heure est dans une pastille sombre (fond `paper`, texte clair) pour mieux ressortir sur le vert fluo — Mehdi, 2026-11-20 ; centrée sur la hauteur du bandeau.
@@ -639,6 +644,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           </span>
         )}
       </div>
+
+      {bandOn && !isPost && actionLine("0 0 10px")}
 
       {/* DrinkCheck / PlaceCheck : une ligne à part sous l'en-tête — « DrinkCheck » ou « PlaceCheck » (icône du check de la fiche, « Check » en vert fluo) à gauche, la note de l'auteur à l'extrême droite. */}
       {isRedesigned && (
