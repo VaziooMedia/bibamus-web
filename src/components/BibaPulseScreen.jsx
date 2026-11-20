@@ -33,16 +33,8 @@ function resolveObject(entry, directories) {
   return (map[entry.objectType] || []).find((x) => x.id === entry.objectId) || null;
 }
 
-// Gabarit textuel par type d'événement — jamais de phrase figée stockée en base, uniquement
-// reconstruite ici à partir des données structurées (prêt pour une traduction future).
 // Cartes de check : celles que l'on peut supprimer soi-même, avec ou sans la consommation des statistiques.
 const CHECK_EVENT_TYPES = ["product_discovered", "drink_checked", "venue_visit"];
-
-// Format neutre "Nom - Action @ Objet" — évite les problèmes d'accord (masculin/féminin,
-// préposition selon le nom du lieu) qu'une vraie phrase française poserait.
-function pulseActionFor(entry) {
-  return { product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
-}
 
 function timeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -303,7 +295,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const isPlaceCheck = entry.eventType === "venue_visit";
   // Contribution à BibAtlas (ajout d'un PRODUIT ou d'un LIEU à la base, `database_contribution`) : même présentation que le DrinkCheck et le
   // PlaceCheck — ligne « Contribution à BibAtlas » avec l'icône de BibAtlas, puis la fiche ajoutée en petit. Les ajouts de marque et de
-  // producteur gardent pour l'instant l'ancienne carte (« Ajout @ nom »).
+  // producteur n'existent pas (un utilisateur ne peut pas en ajouter, voulu) : la ligne « Ajout @ nom » a été supprimée le 2026-11-20.
   const isContribution = entry.eventType === "database_contribution" && (entry.objectType === "drink" || entry.objectType === "venue");
   // Lancement d'un BibaRoom (`room_launched`, nouvelle carte) : même présentation que les autres cartes refaites — ligne « Lancement d'un BibaRoom »
   // avec l'icône BibaGo, puis la fiche du salon en petit (nom, lieu, date et heure ; jamais le code du salon, qui est la clé d'accès).
@@ -519,46 +511,19 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const authorNicknameRaw = (entry.actorNickname || "").trim();
   const authorNickname = authorNicknameRaw && authorNicknameRaw.toLowerCase() !== (entry.actorName || "").trim().toLowerCase() ? authorNicknameRaw : "";
 
-  // Ligne d'action des cartes non refaites (« Ajout @ Orval » pour une marque ou un producteur, « A rejoint le BibaClub X ») : sous le nom dans les fils des fiches ; sur la page BibaPulse,
-  // elle n'est PAS dans le bandeau vert mais sur la carte, juste sous le bandeau (Mehdi, 2026-11-20) — donc toujours dans les couleurs normales de la carte.
-  const actionLink = { color: COLORS.amber };
-  const actionLine = (margin) =>
-    !isRedesigned ? (
+  // Ligne « A rejoint le BibaClub X » (carte `club_joined`, la seule carte non refaite qui garde une ligne d'action) : sous le nom dans les fils des fiches ; sur la page BibaPulse, elle n'est PAS dans le bandeau vert
+  // mais sur la carte, juste sous le bandeau (Mehdi, 2026-11-20) — donc dans les couleurs normales de la carte. La ligne « Ajout @ marque / producteur » a été supprimée le 2026-11-20 : un utilisateur ne peut pas
+  // ajouter de marque ni de producteur (voulu).
+  const clubJoinLine = (margin) =>
+    isClubJoin ? (
       <p style={{ margin, fontSize: "12.5px", color: COLORS.ink }}>
-        {isClubJoin ? (
-          <>
-            A rejoint le BibaClub{" "}
-            {clubName && openClub ? (
-              <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...actionLink, cursor: "pointer" }}>
-                {clubName}
-              </button>
-            ) : (
-              <strong style={actionLink}>{clubName || "un club"}</strong>
-            )}
-          </>
-        ) : isPost ? null : (
-          <>
-            {pulseActionFor(entry)} @{" "}
-            {obj && openObject ? (
-              <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...actionLink, cursor: "pointer" }}>
-                {obj.name}
-              </button>
-            ) : (
-              <strong style={actionLink}>{obj?.name || "une fiche"}</strong>
-            )}
-          </>
-        )}
-        {checkVenueName && (
-          <>
-            <span style={{ color: COLORS.inkSoft }}>{" — "}</span>
-            {openCheckVenue ? (
-              <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
-                {checkVenueName}
-              </button>
-            ) : (
-              <span style={{ fontWeight: 700 }}>{checkVenueName}</span>
-            )}
-          </>
+        A rejoint le BibaClub{" "}
+        {clubName && openClub ? (
+          <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+            {clubName}
+          </button>
+        ) : (
+          <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
         )}
       </p>
     ) : null;
@@ -620,7 +585,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
               {authorNickname && <span style={{ fontStyle: "italic", color: bandText, fontWeight: 600 }}>{authorNickname}</span>}
             </p>
           )}
-          {!bandOn && actionLine("1px 0 0")}
+          {!bandOn && clubJoinLine("1px 0 0")}
         </div>
         {bandOn && (
           // Sur le bandeau de la page BibaPulse, l'heure est dans une pastille sombre (fond `paper`, texte clair) pour mieux ressortir sur le vert fluo — Mehdi, 2026-11-20 ; centrée sur la hauteur du bandeau.
@@ -645,7 +610,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         )}
       </div>
 
-      {bandOn && !isPost && actionLine("0 0 10px")}
+      {bandOn && clubJoinLine("0 0 10px")}
 
       {/* DrinkCheck / PlaceCheck : une ligne à part sous l'en-tête — « DrinkCheck » ou « PlaceCheck » (icône du check de la fiche, « Check » en vert fluo) à gauche, la note de l'auteur à l'extrême droite. */}
       {isRedesigned && (
