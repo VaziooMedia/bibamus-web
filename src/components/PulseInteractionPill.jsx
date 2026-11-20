@@ -5,7 +5,7 @@ import { NavIcon } from "./icons.jsx";
 // Pastille d'interaction d'un PlaceCheck (« Qui est chaud pour un verre ?! »…), sur la carte BibaPulse. Avec `onClick`, c'est un bouton : il
 // ouvre les commentaires de la carte pour y répondre (`active` = les commentaires sont ouverts : la pastille se remplit de rose fluo, texte blanc).
 // Sans `onClick`, c'est un simple rappel, affiché en tête des commentaires pour voir à quoi l'on répond. L'icône est celle du bouton de commentaire.
-export function PulseInteractionPill({ label, active = false, onClick, wrap = false }) {
+export function PulseInteractionPill({ label, active = false, onClick, wrap = false, compact = false }) {
   // Petite, bord en rose fluo. Par défaut le texte reste sur UNE ligne (si l'écran est vraiment trop étroit, il se termine par « … »).
   // Avec `wrap` (colonne de texte à côté d'une photo à moitié de la largeur), il peut passer sur deux lignes plutôt que d'être coupé.
   // L'icône a son propre sous-bloc (colonne de gauche, pleine hauteur de la pastille, fond rose fluo, icône blanche — il reste rose quand la pastille
@@ -23,8 +23,8 @@ export function PulseInteractionPill({ label, active = false, onClick, wrap = fa
     padding: 0,
     textAlign: "left",
     font: "inherit",
-    fontSize: "9.5px",
-    lineHeight: 1.3,
+    fontSize: compact ? "10px" : "9.5px",
+    lineHeight: compact ? 1.15 : 1.3,
     fontWeight: 800,
     whiteSpace: wrap ? "normal" : "nowrap",
     cursor: onClick ? "pointer" : "default",
@@ -33,7 +33,7 @@ export function PulseInteractionPill({ label, active = false, onClick, wrap = fa
     display: "flex",
     alignItems: "center",
     flexShrink: 0,
-    padding: "2px 5px 2px 6px",
+    padding: compact ? "1px 4px 1px 5px" : "2px 5px 2px 6px",
     background: COLORS.pinkFluo,
   };
   const content = (
@@ -41,7 +41,7 @@ export function PulseInteractionPill({ label, active = false, onClick, wrap = fa
       <span style={iconBlock}>
         <NavIcon name="comment" size={10} color="#FFFFFF" />
       </span>
-      <span style={{ display: "block", alignSelf: "center", minWidth: 0, padding: "2px 6px", ...(wrap ? {} : { overflow: "hidden", textOverflow: "ellipsis" }) }}>{label}</span>
+      <span style={{ display: "block", alignSelf: "center", minWidth: 0, padding: compact ? "0 6px" : "2px 6px", ...(wrap ? {} : { overflow: "hidden", textOverflow: "ellipsis" }) }}>{label}</span>
     </>
   );
   return onClick ? (
