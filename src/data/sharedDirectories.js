@@ -4732,6 +4732,48 @@ export async function loadPulseFeed(before = null, limit = 20) {
   return data.map(rowToPulseEntry);
 }
 
+// Ajoute à chaque carte du fil de la page BibaPulse le @nom (`actorUsername`) et le surnom (`actorNickname`) de son auteur : ils s'affichent sur une 2e ligne, sous le nom, dans le bandeau de l'auteur
+// (Mehdi, 2026-11-20). Les fonctions du fil ne les donnent pas ; une lecture groupée par la fonction `get_pulse_authors_lines` (script « bibamus-sql-pulse-auteur-lignes.sql ») rend le @nom (public) et le
+// surnom seulement si son auteur le partage (`share_surnom`), si c'est un de mes Bibax ou si c'est moi. Les auteurs déjà lus pendant la session viennent de la mémoire (le fil se relit toutes les 10 s).
+// Si la lecture échoue (par exemple tant que le script n'est pas lancé), on se replie sur le @nom seul (fonction `get_usernames_by_ids`, via `attachUsernames`), sans surnom, et on ne réessaie qu'après 60 s.
+const pulseAuthorLinesCache = new Map();
+let pulseAuthorLinesRetryAt = 0;
+export async function attachPulseAuthorLines(entries) {
+  if (!entries || entries.length === 0) return entries;
+  const missing = [...new Set(entries.map((e) => e.actorId).filter((id) => id && !pulseAuthorLinesCache.has(id)))];
+  let failed = false;
+  if (missing.length > 0 && Date.now() >= pulseAuthorLinesRetryAt) {
+    for (let i = 0; i < missing.length; i += 500) {
+      const chunk = missing.slice(i, i + 500);
+      const { data, error } = await supabase.rpc("get_pulse_authors_lines", { p_user_ids: chunk });
+      if (error) {
+        console.error("attachPulseAuthorLines:", error);
+        pulseAuthorLinesRetryAt = Date.now() + 60000;
+        failed = true;
+        break;
+      }
+      const found = new Map((data || []).map((r) => [r.user_id, r]));
+      for (const id of chunk) {
+        const r = found.get(id);
+        pulseAuthorLinesCache.set(id, { username: (r && r.username) || "", nickname: (r && r.nickname) || "" });
+      }
+    }
+  } else if (missing.length > 0) {
+    failed = true;
+  }
+  if (failed) {
+    const withNames = await attachUsernames(entries.map((e) => ({ userId: e.actorId })));
+    return entries.map((e, i) => {
+      const hit = pulseAuthorLinesCache.get(e.actorId);
+      return { ...e, actorUsername: hit ? hit.username : withNames[i].username || "", actorNickname: hit ? hit.nickname : "" };
+    });
+  }
+  return entries.map((e) => {
+    const hit = pulseAuthorLinesCache.get(e.actorId);
+    return { ...e, actorUsername: hit ? hit.username : "", actorNickname: hit ? hit.nickname : "" };
+  });
+}
+
 // Pulse d'une fiche (Produit, Lieu, Producteur, Marque) — mêmes cartes que le fil principal, filtrées à
 // cette fiche. entityType : "drink" | "venue" | "producer" | "brand" (les cartes d'une marque portent sur
 // les produits rattachés à cette marque, comme celles d'un producteur). scope : "all" (tout ce que je peux
