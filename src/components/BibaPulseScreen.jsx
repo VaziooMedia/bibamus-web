@@ -236,7 +236,11 @@ function PulseRoundIcon({ name }) {
   );
 }
 
-export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, separatorColor = COLORS.paperAlt, hideProduct }, ref) {
+// Couleur du bandeau de la ligne de l'auteur d'une publication du fil BibaPulse (rond de profil, nom, heure) : un voile de vert fluo à 10 % (`COLORS.amber`) sur le fond de la page.
+// Mehdi, 2026-11-20 : le bandeau « surface » ressemblait trop aux blocs de la publication (fond `surface` / `surfaceAlt`) ; la teinte verte s'en distingue (piste D, intensité « on va voir »).
+const PULSE_HEADER_BAND = "rgba(57, 255, 102, 0.10)";
+
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, separatorColor = COLORS.paperAlt, headerBand = false, hideProduct }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -500,6 +504,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       </button>
     ) : null;
 
+  // Bandeau coloré sur la ligne de l'auteur : seulement dans le fil de la page BibaPulse (publication « à plat » + `headerBand`), pas dans les fils des fiches.
+  const bandOn = !!flat && !!headerBand;
+
   return (
     <div
       ref={ref}
@@ -510,7 +517,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
               // Publication « à plat » (fil BibaPulse) : ni bloc, ni bordure, ni coins arrondis — seulement un trait de séparation en dessous. La publication ouverte depuis une notification garde une barre verte à gauche.
               position: "relative",
               padding: "14px",
-              borderBottom: `1px solid ${separatorColor}`, // couleur du trait sous la publication : rose fluo sur la page BibaPulse (Mehdi, 2026-11-13), gris ailleurs
+              borderBottom: separatorColor ? `1px solid ${separatorColor}` : "none", // trait sous la publication : gris par défaut ; `separatorColor={null}` = pas de trait (page BibaPulse depuis le 2026-11-20 : le bandeau de l'auteur marque le début, plus de barre rose — essai du 2026-11-13 abandonné)
               background: highlighted ? COLORS.surface : "none",
               boxShadow: highlighted ? `inset 3px 0 0 ${COLORS.amber}` : "none",
             }
@@ -523,9 +530,21 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             }
       }
     >
-      <span style={{ position: "absolute", top: isRedesigned ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
+      {/* Heure de la publication (« il y a… ») : en haut à droite de la ligne de l'auteur. Sur la page BibaPulse, cette ligne est un bandeau coloré (voir plus bas) dont le haut est collé au haut de la carte. */}
+      <span style={{ position: "absolute", top: bandOn ? (isRedesigned ? "21px" : "12px") : isRedesigned ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
 
-      <div style={{ display: "flex", alignItems: isRedesigned ? "center" : "flex-start", gap: "10px", marginBottom: "10px" }}>
+      {/* Ligne de l'auteur (rond de profil, nom, heure). Sur la page BibaPulse (propriété `headerBand`, publications « à plat »), c'est un bandeau pleine largeur d'une autre couleur que le reste de la carte (`PULSE_HEADER_BAND`),
+          pour bien repérer le début de chaque publication — Mehdi, 2026-11-19 (il hésitait à garder la barre de séparation rose fluo). Le bandeau déborde du padding de la carte (-14 px) jusqu'aux bords de l'écran. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: isRedesigned ? "center" : "flex-start",
+          gap: "10px",
+          ...(bandOn
+            ? { margin: "-14px -14px 12px", padding: "10px 14px", background: PULSE_HEADER_BAND }
+            : { marginBottom: "10px" }),
+        }}
+      >
         {/* Le rond de profil mène à la fiche de son auteur. */}
         <EntityAvatar
           photoUrl={entry.actorAvatarUrl}
@@ -1222,13 +1241,14 @@ export function BibaPulseScreen({
         </div>
       ) : (
         <>
-          {/* Pleine largeur : le fil sort de la marge de 20 px de la page, les traits de séparation vont d'un bord de l'écran à l'autre. */}
-          <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.pinkFluo}` }}>
+          {/* Pleine largeur : le fil sort de la marge de 20 px de la page, le bandeau de l'auteur va d'un bord de l'écran à l'autre. Plus de trait entre les publications (Mehdi, 2026-11-20). */}
+          <div style={{ margin: "0 -20px" }}>
           {entries.map((entry) => (
             <PulseCard
               key={entry.id}
               flat
-              separatorColor={COLORS.pinkFluo}
+              headerBand
+              separatorColor={null}
               ref={entry.id === targetId ? focusedCardRef : null}
               entry={entry}
               directories={directories}
