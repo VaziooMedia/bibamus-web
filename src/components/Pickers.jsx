@@ -411,7 +411,7 @@ export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
             ))}
             {/* Le lieu n'existe pas encore sur BibAtlas : proposition d'ajout, sous les résultats, une fois la recherche revenue pour le texte tapé. */}
             {query.trim().length >= 2 && searchedFor === query.trim() && (
-              <div style={{ padding: "10px 12px 12px" }} data-add-venue="1">
+              <div style={{ padding: "10px 6px 12px" }} data-add-venue="1">
                 <AddAfterSearch query={query.trim()} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
               </div>
             )}

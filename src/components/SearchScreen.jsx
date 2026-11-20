@@ -348,23 +348,25 @@ export function SearchScreen({
   // les deux blocs s'affichent ensemble, quel que soit l'onglet (décidé par Mehdi, 2026-11-20). Marques et Producteurs : jamais d'ajout par un utilisateur (ils se créent côté Gestion) ; Bibax : sans objet.
   const venueAnswered = hasPlain && venuesSearchedFor === plain;
   const drinkAnswered = hasPlain && drinksSearchedFor === plain && !drinksLoading;
-  const venueBlockEl = (
-    <div style={{ padding: "16px 20px 8px" }} data-add-venue="1">
+  // Le cadre est large (12 px de marge de chaque côté) : sous un message il faut compenser les 20 px de marge du conteneur défilant, dans la liste des résultats (pleine largeur) non.
+  const blockWrapStyle = (inList) => (inList ? { padding: "16px 12px 8px" } : { padding: "16px 0 8px", margin: "0 -8px" });
+  const venueBlockEl = (inList) => (
+    <div style={blockWrapStyle(inList)} data-add-venue="1">
       <AddAfterSearch query={plain} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
     </div>
   );
-  const drinkBlockEl = (
-    <div style={{ padding: "16px 20px 8px" }} data-add-drink="1">
+  const drinkBlockEl = (inList) => (
+    <div style={blockWrapStyle(inList)} data-add-drink="1">
       <AddAfterSearch query={plain} onAdd={setAddDrinkName} noun="produit" label="Proposer une boisson" />
     </div>
   );
-  const addVenueBlock = activeTab === "lieux" && venueAnswered ? venueBlockEl : null;
-  const addDrinkBlock = activeTab === "produits" && drinkAnswered ? drinkBlockEl : null;
+  const addVenueBlock = (inList) => (activeTab === "lieux" && venueAnswered ? venueBlockEl(inList) : null);
+  const addDrinkBlock = (inList) => (activeTab === "produits" && drinkAnswered ? drinkBlockEl(inList) : null);
   const addBothBlocks =
     venueAnswered && drinkAnswered ? (
       <>
-        {venueBlockEl}
-        {drinkBlockEl}
+        {venueBlockEl(false)}
+        {drinkBlockEl(false)}
       </>
     ) : null;
   const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;
@@ -538,8 +540,8 @@ export function SearchScreen({
                     ? "Recherche des produits..."
                     : "Aucun résultat dans cette catégorie."}
                 </p>
-                {addVenueBlock}
-                {addDrinkBlock}
+                {addVenueBlock(false)}
+                {addDrinkBlock(false)}
               </>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", margin: "0 -20px" }}>
@@ -623,8 +625,8 @@ export function SearchScreen({
                       last={i === bibaxResults.length - 1}
                     />
                   ))}
-                {addVenueBlock}
-                {addDrinkBlock}
+                {addVenueBlock(true)}
+                {addDrinkBlock(true)}
               </div>
             )}
           </div>
