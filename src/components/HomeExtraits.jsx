@@ -42,6 +42,8 @@ const EXTRAIT_PEEK = 20;
 const EXTRAIT_PAGE_H = EXTRAITS_PER_PAGE * EXTRAIT_BAND_H + (EXTRAITS_PER_PAGE - 1) * EXTRAIT_GAP;
 const EXTRAIT_WINDOW_H = EXTRAIT_PAGE_H + EXTRAIT_PEEK;
 const EXTRAIT_PAGE_STRIDE = EXTRAIT_PAGE_H + EXTRAIT_GAP;
+// Bouton-flèche de la ligne de titre (px) : il ouvre la page BibaPulse. Mehdi, 2026-11-20 : « plus visible » → rond vert fluo plein, flèche sombre (comme les boutons « + »), 30 px au lieu de 22 px cerclé.
+const ARROW_SIZE = 30;
 // Miniature de droite (px).
 const EXTRAIT_THUMB = 44;
 // Lieux « spéciaux » d'un check ou d'un salon : pas de vraie fiche de lieu (même libellés que le fil, sans le « @ »).
@@ -224,7 +226,7 @@ function ExtraitBand({ entry, obj, venue, isNew, snapStart, onOpen }) {
 // Points de page, l'un en dessous de l'autre (le défilement est vertical) : celui de la page affichée est vert fluo.
 function PageDots({ count, page }) {
   return (
-    <span data-extraits-dots aria-hidden="true" style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "5px", marginLeft: "auto", marginRight: "4px", pointerEvents: "none" }}>
+    <span data-extraits-dots aria-hidden="true" style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "5px", marginLeft: "auto", marginRight: "28px", pointerEvents: "none" }}>
       {Array.from({ length: count }, (_, i) => (
         <span key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", background: i === page ? COLORS.amber : COLORS.paperAlt }} />
       ))}
@@ -281,18 +283,23 @@ export function HomeExtraits({ entries, drinksDirectory = [], venuesById = {}, b
         </span>
         {scrolls && <PageDots count={pageCount} page={page} />}
         <span
+          data-extraits-arrow
           style={{
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
             marginLeft: scrolls ? 0 : "auto",
-            width: "22px",
-            height: "22px",
+            // Plus grand que l'ancien rond de 22 px (marges négatives : la ligne de titre garde sa hauteur).
+            width: `${ARROW_SIZE}px`,
+            height: `${ARROW_SIZE}px`,
+            margin: `${-(ARROW_SIZE - 22) / 2}px 0 ${-(ARROW_SIZE - 22) / 2}px ${scrolls ? 0 : "auto"}`,
             borderRadius: "50%",
-            border: `2px solid ${COLORS.amber}`,
+            flexShrink: 0,
+            boxSizing: "border-box",
+            background: COLORS.amber,
           }}
         >
-          <NavIcon name="chevron-right" size={12} color={COLORS.amber} />
+          <NavIcon name="chevron-right" size={15} color={COLORS.paper} />
         </span>
       </button>
 
