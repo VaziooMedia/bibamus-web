@@ -11,6 +11,7 @@ import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } fr
 import { NavIcon, CountryFlagImg, WaterAlertIcon, TokenPinkIcon, TokenGreenIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink, MoneyAmount } from "./ui.jsx";
+import { VENUE_PILL_AVATAR } from "./PillTabs.jsx";
 import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
 import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
@@ -128,10 +129,22 @@ const VENUE_PILL_STYLE = {
   color: COLORS.ink,
   cursor: "pointer",
 };
+// Rond de profil d'un lieu proche : la pastille fine (24 px de haut : bordure de 2 px + rond de 20 px, sans marge verticale) le porte collé à son bord gauche.
+const NEARBY_PILL_AVATAR = 20;
 const VENUE_PILL_ICON_STYLE = { display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", borderRadius: "50%", background: COLORS.paperAlt, flexShrink: 0 };
 
 // Lieux « rapides » : pas de vrai lieu en base, donc rien à afficher sur la ligne du lieu dans le journal.
 export const QUICK_VENUE_IDS = ["@home", "@event"];
+
+// Rond de profil du lieu dans une ligne du journal (texte de 12 px).
+const JOURNAL_VENUE_AVATAR = 18;
+
+// Marque d'un lieu devant son nom (Mehdi, 2026-11-20 : « le rond profil du lieu à la place de l'icône ») : son rond de profil (photo, sinon emoji, sinon le « B » Bibamus).
+// @Home et @Event n'ont pas de fiche : ils gardent l'icône de position.
+function VenueMark({ venue, size, iconSize = 14 }) {
+  if (!venue || QUICK_VENUE_IDS.includes(venue.id)) return <NavIcon name="map-pin" size={iconSize} color={COLORS.amber} />;
+  return <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={size} />;
+}
 
 // Icônes Bio / Gluten free de la ligne 2 du journal : les mêmes que sur les fiches, passées en gris
 // (même teinte que le texte voisin).
@@ -908,7 +921,7 @@ function AddSoloCheckinScreen({ myUserId, recentDrinks = [], venue, bibaZeroActi
 
           {venue && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-              <NavIcon name="map-pin" size={14} color={COLORS.amber} />
+              <VenueMark venue={venue} size={20} iconSize={14} />
               {venue.name}
             </div>
           )}
@@ -1187,12 +1200,12 @@ export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete,
             offerts
           </div>
         )}
-        {/* Ligne 4 — lieu, avec l'icône de lieu vert fluo devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
+        {/* Ligne 4 — lieu, avec son rond de profil devant. Rien pour @Home, @Event ou sans lieu : la ligne disparaît et la date prend sa place. */}
         {venue?.name && !QUICK_VENUE_IDS.includes(c.venueId) && (
           <div data-journal-line="venue" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: COLORS.inkSoft, minWidth: 0 }}>
-            {/* flexShrink 0 : sur un nom de lieu très long, l'icône garde sa taille (c'est le nom qui se coupe par « … »). */}
+            {/* flexShrink 0 : sur un nom de lieu très long, le rond garde sa taille (c'est le nom qui se coupe par « … »). */}
             <span style={{ display: "flex", flexShrink: 0 }}>
-              <NavIcon name="map-pin" size={12} color={COLORS.amber} />
+              <VenueMark venue={venue} size={JOURNAL_VENUE_AVATAR} iconSize={12} />
             </span>
             <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{venue.name}</span>
           </div>
@@ -2056,11 +2069,12 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
               background: COLORS.surface,
               border: `2px solid ${COLORS.amber}`,
               borderRadius: "12px",
-              padding: "8px 12px",
+              // Avec le rond de profil (20 px), moins de marge verticale : la pastille garde la hauteur de « Lieu » (36 px).
+              padding: QUICK_VENUE_IDS.includes(currentVenue.id) ? "8px 12px" : "6px 12px 6px 8px",
               cursor: "pointer",
             }}
           >
-            <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+            <VenueMark venue={currentVenue} size={VENUE_PILL_AVATAR} iconSize={16} />
             <span style={{ minWidth: 0, fontSize: "12px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentVenue.name}</span>
             <button
               onClick={(e) => {
@@ -2166,11 +2180,9 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                     key={v.id}
                     onClick={() => pickVenue(v)}
                     data-nearby-venue="1"
-                    style={VENUE_PILL_STYLE}
+                    style={{ ...VENUE_PILL_STYLE, padding: "0 10px 0 0" }}
                   >
-                    <span style={VENUE_PILL_ICON_STYLE}>
-                      <NavIcon name="map-pin" size={10} color={COLORS.amber} />
-                    </span>
+                    <VenueMark venue={v} size={NEARBY_PILL_AVATAR} />
                     {v.name}
                   </button>
                 ))}
@@ -2199,13 +2211,13 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
                     background: "none",
                     border: "none",
                     borderBottom: i === venueResults.length - 1 ? "none" : `1px solid ${COLORS.paperAlt}`,
-                    padding: "12px 4px",
+                    padding: "8px 4px",
                     textAlign: "left",
                     cursor: "pointer",
                     color: COLORS.ink,
                   }}
                 >
-                  <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+                  <VenueMark venue={v} size={28} iconSize={16} />
                   <span style={{ flex: 1, fontSize: "14px", fontWeight: 600 }}>{v.name}</span>
                 </button>
               ))}
