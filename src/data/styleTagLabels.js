@@ -1,12 +1,16 @@
 // ============================================================
 // Vrais libellés des tags de style — copiés fidèlement depuis
 // les vraies listes de référence côté plateforme de gestion
-// (src/data/beerCiderStyles.js et src/data/wineStyles.js).
+// (src/data/beerCiderStyles.js et src/data/wineStyles.js ; les Spiritueux, de src/data/spiritStyles.js, passent par le fichier généré spiritStyleLabels.js).
 // Utilisé uniquement pour afficher les tags déjà choisis sur
 // une fiche produit ; la vraie sélection se fait côté admin.
 // ============================================================
 
 import { OTHER_STYLE_LABELS } from "./otherStyleLabels.js";
+// Les styles des Spiritueux : fichier généré (node scripts/generate-spirit-style-labels.mjs), repris tel quel ici pour que le reste de l'app n'ait qu'un seul endroit où chercher.
+import { SPIRIT_STYLE_GROUPS_BY_SUBTYPE } from "./spiritStyleLabels.js";
+
+export { SPIRIT_STYLE_GROUPS_BY_SUBTYPE };
 
 export const BEER_CIDER_STYLE_GROUPS = [
   {
@@ -466,7 +470,7 @@ export const WINE_EFFERVESCENT_STYLE_GROUPS = [
 // Couleurs disponibles selon la sous-catégorie — même 4 choix, mais un ordre d'affichage
 // différent selon qu'il s'agit d'un vin tranquille ou d'un vin effervescent.
 
-const ALL_STYLE_GROUPS = [...BEER_CIDER_STYLE_GROUPS, ...WINE_STYLE_GROUPS, ...WINE_EFFERVESCENT_STYLE_GROUPS];
+const ALL_STYLE_GROUPS = [...BEER_CIDER_STYLE_GROUPS, ...WINE_STYLE_GROUPS, ...WINE_EFFERVESCENT_STYLE_GROUPS, ...Object.values(SPIRIT_STYLE_GROUPS_BY_SUBTYPE).flat()];
 
 // Styles des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails : une simple table code → nom (voir
 // otherStyleLabels.js, importé en tête de fichier), à part des groupes ci-dessus qui, eux, servent à ranger des listes de choix.
