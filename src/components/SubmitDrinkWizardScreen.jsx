@@ -135,6 +135,9 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
 
   // Page 2 — Degré d'alcool
   const [abv, setAbv] = useState("");
+  // La case « 0,0% (sans alcool) » a son propre état : avant, elle se déduisait de `abv === "0"`, donc dès qu'on tapait « 0 » (début de « 0,5 »)
+  // le champ se bloquait et la case se cochait toute seule — impossible d'encoder un degré entre 0,1 et 0,9 (Mehdi, 2026-11-20).
+  const [noAlcohol, setNoAlcohol] = useState(false);
   const step2Valid = abv.trim().length > 0 && !isNaN(parseFloat(abv));
 
   // Page 3 — Code-barre + contenant + volume (facultatif, un seul conditionnement)
@@ -405,15 +408,18 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
             value={abv}
             onChange={(e) => setAbv(e.target.value)}
             placeholder="Ex : 5"
-            disabled={abv === "0"}
+            disabled={noAlcohol}
             style={{ ...inputStyle, width: "100px", textAlign: "center" }}
             autoFocus
           />
           <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13.5px", fontWeight: 600, color: COLORS.ink }}>
             <input
               type="checkbox"
-              checked={abv === "0"}
-              onChange={(e) => setAbv(e.target.checked ? "0" : "")}
+              checked={noAlcohol}
+              onChange={(e) => {
+                setNoAlcohol(e.target.checked);
+                setAbv(e.target.checked ? "0" : "");
+              }}
               style={{ width: "18px", height: "18px", accentColor: COLORS.amber }}
             />
             0,0% (sans alcool)
