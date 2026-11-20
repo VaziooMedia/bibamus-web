@@ -2259,6 +2259,7 @@ export default function App() {
       <ProfileNavContext.Provider
         value={{
           avatarUrl: profile.avatarUrl,
+          myBibroCode: profile.myBibroCode,
           goToProfile: () => setScreen("profile"),
           goToSpotifyConnect: (returnScreen = "connectSpotify", returnEventId = null) => {
             setSpotifyReturnContext({ screen: returnScreen, eventId: returnEventId });

@@ -17,6 +17,8 @@ import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 import { CheckButtonIcon } from "./CheckButtonIcon.jsx";
 import { EntityAvatar } from "./ui.jsx";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
 import { RatingSlider } from "./RatingSlider.jsx";
 import { loadNearbyVenues, searchVenues } from "../data/sharedDirectories.js";
 import { makeSearchMatcher } from "../utils.js";
@@ -53,6 +55,10 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
   const venueListRef = useRef(null);
   const [nearbyVenues, setNearbyVenues] = useState([]);
   const [searchedVenues, setSearchedVenues] = useState([]);
+  // Le texte pour lequel la recherche de lieu a répondu (le bloc « Ce lieu n'est pas encore présent… » n'apparaît que s'il est celui du champ) ;
+  // addVenueName : « Ajouter un lieu » ouvert par-dessus (le texte tapé, ou null quand fermé).
+  const [venuesSearchedFor, setVenuesSearchedFor] = useState("");
+  const [addVenueName, setAddVenueName] = useState(null);
   const form = usePulseContentForm("public");
   const [sending, setSending] = useState(false);
   // Champs de publication affichés (visibilité, commentaire, photo, Bibax) : ils ouvrent un nouveau bloc de sections.
@@ -73,13 +79,23 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
   useEffect(() => {
     if (!q) {
       setSearchedVenues([]);
+      setVenuesSearchedFor("");
       return;
     }
+    let cancelled = false;
     const timer = setTimeout(() => {
-      searchVenues(q, 8).then(setSearchedVenues);
+      searchVenues(q, 8).then((found) => {
+        if (cancelled) return;
+        setSearchedVenues(found);
+        setVenuesSearchedFor(q);
+      });
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [q]);
+  const showAddVenue = q.length >= 2 && venuesSearchedFor === q;
 
   const filteredVenues = q ? searchedVenues : nearbyVenues;
   const matchesSpecial = makeSearchMatcher(q);
@@ -302,6 +318,12 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
                   </span>
                 </button>
               ))}
+              {/* Le lieu n'existe pas encore sur BibAtlas : proposition d'ajout (même bloc que BibaSolo), l'assistant s'ouvre par-dessus sans quitter ce popup. */}
+              {showAddVenue && (
+                <div style={{ padding: "10px 12px 12px" }} data-add-venue="1">
+                  <AddAfterSearch query={q} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -381,6 +403,16 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
           )}
         </button>
       </div>
+      {addVenueName !== null && (
+        <AddVenueOverlay
+          initialName={addVenueName}
+          onChosen={(v) => {
+            setSelectedVenue(v);
+            setPickerOpen(false);
+          }}
+          onClose={() => setAddVenueName(null)}
+        />
+      )}
     </div>
   );
 }

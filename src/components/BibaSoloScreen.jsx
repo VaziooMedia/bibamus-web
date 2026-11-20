@@ -47,6 +47,8 @@ import bioIconUrl from "../assets/brand/bio.svg";
 import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
 import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
 import { AiIcon } from "./AiIcon.jsx";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { useBeerDerivatives, useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
@@ -1564,6 +1566,10 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   const [nearbyVenues, setNearbyVenues] = useState([]);
   const [venueQuery, setVenueQuery] = useState("");
   const [venueResults, setVenueResults] = useState([]);
+  // Le texte pour lequel la recherche de lieu a répondu : tant qu'il n'est pas celui du champ, la réponse n'est pas à jour (on n'affiche rien de « pas trouvé »).
+  const [venueSearchedFor, setVenueSearchedFor] = useState("");
+  // « Ajouter un lieu » ouvert par-dessus BibaSolo (le texte tapé, ou null quand fermé) ; le lieu créé devient le lieu actuel.
+  const [addVenueName, setAddVenueName] = useState(null);
 
   // BibaZERO — même vrai concept qu'en salon (voir BibaBobModal), persisté sur le profil.
   const [bibaZero, setBibaZero] = useState(null);
@@ -1636,19 +1642,29 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   useEffect(() => {
     if (vq.length < 2) {
       setVenueResults([]);
+      setVenueSearchedFor("");
       return;
     }
+    let cancelled = false;
     const timer = setTimeout(() => {
-      searchVenues(venueQuery.trim(), 6).then(setVenueResults);
+      searchVenues(vq, 6).then((found) => {
+        if (cancelled) return;
+        setVenueResults(found);
+        setVenueSearchedFor(vq);
+      });
     }, 350);
-    return () => clearTimeout(timer);
-  }, [vq, venueQuery]);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [vq]);
 
   const pickVenue = (v) => {
     setCurrentVenue(v);
     setVenuePickerOpen(false);
     setVenueQuery("");
   };
+
 
   const refresh = () => {
     const { current, previous } = soloPeriodStarts();
@@ -2195,6 +2211,12 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
               ))}
             </div>
           )}
+          {/* Le lieu n'existe pas encore sur BibAtlas : même proposition que dans la liste des lieux, avec le nom tapé déjà dans l'assistant. */}
+          {venueSearchedFor === vq && vq.length >= 2 && (
+            <div style={{ marginTop: "16px" }} data-add-venue="1">
+              <AddAfterSearch query={vq} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
+            </div>
+          )}
         </div>
       )}
 
@@ -2363,6 +2385,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         />
       )}
       {waterAlertModalOpen && <WaterAlertModal onClose={() => setWaterAlertModalOpen(false)} />}
+      {addVenueName !== null && <AddVenueOverlay initialName={addVenueName} onChosen={pickVenue} onClose={() => setAddVenueName(null)} />}
 
       <PageFooterNav onBack={onBack} />
     </div>

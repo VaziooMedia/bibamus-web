@@ -8,9 +8,26 @@
 import React from "react";
 import { COLORS } from "../constants.js";
 
+// Le texte et le « + » sont toujours dans un cadre rose (même boîte rose que les avertissements de doublon : COLORS.surface, bordure pinkFluo de 2 px,
+// 12 px de rayon) — sur tous les écrans qui proposent d'ajouter un produit ou un lieu (décidé par Mehdi, 2026-11-20) : listes Produits et Lieux de BibAtlas,
+// recherche BibAtlas, BibaSolo, DrinkCheck, publication BibaPulse, BibaRoom.
 export function AddAfterSearch({ query, onAdd, noun, label }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", marginTop: "6px", textAlign: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "12px",
+        marginTop: "6px",
+        textAlign: "center",
+        background: COLORS.surface,
+        border: `2px solid ${COLORS.pinkFluo}`,
+        borderRadius: "12px",
+        padding: "16px 14px",
+        boxSizing: "border-box",
+      }}
+    >
       <p style={{ margin: 0, fontSize: "14px", color: COLORS.inkSoft }}>
         Ce {noun} n'est pas encore présent sur BibAtlas ?
         <br />

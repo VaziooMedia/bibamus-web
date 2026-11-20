@@ -16,6 +16,8 @@ import { searchPulseTags, searchPulseVenues, loadPulseTagEntities } from "../dat
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { useKeyboardFit, revealField } from "../hooks/useKeyboardInset.js";
 import { SectionLabel, SectionDivider } from "./PulseContentForm.jsx";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
 
 // Nombre maximum de tags de fiche dans une publication (le serveur applique la même limite).
 export const MAX_POST_TAGS = 5;
@@ -204,6 +206,10 @@ export function PulseVenuePicker({ venue, onChange, blocked = false }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState("idle");
+  // « Ajouter un lieu » ouvert par-dessus la rédaction (le texte tapé, ou null quand fermé) : le texte et la photo déjà saisis restent en place.
+  const [addVenueName, setAddVenueName] = useState(null);
+  // Le texte pour lequel la recherche a répondu : le bloc d'ajout n'apparaît que s'il est celui du champ (pas pendant la frappe suivante).
+  const [searchedTerm, setSearchedTerm] = useState("");
   const term = query.trim();
   const { status: geoStatus, position, requestPosition } = useGeolocation();
   const inputRef = useRef(null);
@@ -227,6 +233,7 @@ export function PulseVenuePicker({ venue, onChange, blocked = false }) {
       searchPulseVenues(term, 10, position).then((found) => {
         if (cancelled) return;
         setResults(found);
+        setSearchedTerm(term);
         setStatus("done");
       });
     }, 300);
@@ -269,8 +276,15 @@ export function PulseVenuePicker({ venue, onChange, blocked = false }) {
           {status === "loading" && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft, fontStyle: "italic" }}>Recherche...</p>}
           {status === "done" && results.length === 0 && <p style={{ margin: "6px 2px 0", fontSize: "12px", color: COLORS.inkSoft }}>Aucun lieu pour « {term} ».</p>}
           {status === "done" && results.length > 0 && <TagResultsList results={results} onPick={pick} showType={false} listRef={listRef} maxHeight={listHeight} />}
+          {/* Le lieu n'existe pas encore sur BibAtlas : proposition d'ajout (même bloc que BibaSolo), sous les résultats ou le message « Aucun lieu ». */}
+          {status === "done" && searchedTerm === term && (
+            <div style={{ marginTop: "12px" }} data-add-venue="1">
+              <AddAfterSearch query={term} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
+            </div>
+          )}
         </>
       )}
+      {addVenueName !== null && <AddVenueOverlay initialName={addVenueName} onChosen={(v) => pick({ id: v.id, name: v.name })} onClose={() => setAddVenueName(null)} />}
     </div>
   );
 }

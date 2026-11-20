@@ -24,6 +24,9 @@ import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames, forma
 import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
+import { AddDrinkOverlay } from "./AddDrinkOverlay.jsx";
 
 function TagButton({ label, count, filled, onClick }) {
   return (
@@ -149,8 +152,15 @@ export function SearchScreen({
   const matches = useMemo(() => makeSearchMatcher(plain), [plain]);
 
   const [venueSearchResults, setVenueResults] = useState(restored ? restored.venueSearchResults : []);
+  // Le texte pour lequel la recherche de lieux a répondu (au retour d'une fiche, celui des résultats mémorisés) : le bloc « Ce lieu n'est pas encore présent… »
+  // de l'onglet Lieux n'apparaît que s'il est celui du champ. addVenueName : « Ajouter un lieu » ouvert par-dessus (le texte tapé, ou null quand fermé).
+  const [venuesSearchedFor, setVenuesSearchedFor] = useState(restored && !(restored.query || "").trim().startsWith("@") ? (restored.query || "").trim() : "");
+  const [addVenueName, setAddVenueName] = useState(null);
   const [drinkResults, setDrinkResults] = useState(restored ? restored.drinkResults : []);
   const [drinksLoading, setDrinksLoading] = useState(false);
+  // Idem pour les produits : le texte pour lequel la recherche a répondu (bloc « Ce produit n'est pas encore présent… » de l'onglet Produits) et « Ajouter un produit » ouvert par-dessus.
+  const [drinksSearchedFor, setDrinksSearchedFor] = useState(restored && !(restored.query || "").trim().startsWith("@") ? (restored.query || "").trim() : "");
+  const [addDrinkName, setAddDrinkName] = useState(null);
   // Recherche « @nom » exacte : atState garde le nom pour lequel la réponse a été reçue, et son résultat
   // ({ kind: "venue", venue } | { kind: "brand" | "brewery", id } | { kind: "user", bibax } | null).
   // Une réponse qui ne correspond plus à la saisie n'est jamais affichée, et « en cours » se déduit
@@ -208,16 +218,24 @@ export function SearchScreen({
     }
     if (!hasPlain) {
       setDrinkResults([]);
+      setDrinksSearchedFor("");
+      setDrinksLoading(false);
       return;
     }
     setDrinksLoading(true);
+    let cancelled = false;
     const timer = setTimeout(() => {
       searchDrinksNoGeneric(plain).then((results) => {
+        if (cancelled) return;
         setDrinkResults(results);
+        setDrinksSearchedFor(plain);
         setDrinksLoading(false);
       });
     }, 350);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [plain]);
 
   // Même principe côté serveur pour les lieux.
@@ -228,12 +246,21 @@ export function SearchScreen({
     }
     if (!hasPlain) {
       setVenueResults([]);
+      setVenuesSearchedFor("");
       return;
     }
+    let cancelled = false;
     const timer = setTimeout(() => {
-      searchVenues(plain).then(setVenueResults);
+      searchVenues(plain).then((results) => {
+        if (cancelled) return;
+        setVenueResults(results);
+        setVenuesSearchedFor(plain);
+      });
     }, 350);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [plain]);
 
   // « @nom » exact : le serveur rend au plus une ligne ; on charge ensuite ce qu'il faut pour l'afficher
@@ -316,6 +343,30 @@ export function SearchScreen({
 
   const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
+  // Propositions d'ajout. Le lieu ou le produit cherché n'existe pas (encore) sur BibAtlas : le bloc rose d'ajout n'apparaît que lorsque la recherche correspondante a répondu pour le texte exact du champ.
+  // Onglet Lieux → bloc Lieu ; onglet Produits → bloc Produit ; sous les résultats ou le message « Aucun résultat dans cette catégorie ». Quand rien n'est trouvé nulle part (« Aucun résultat pour … »),
+  // les deux blocs s'affichent ensemble, quel que soit l'onglet (décidé par Mehdi, 2026-11-20). Marques et Producteurs : jamais d'ajout par un utilisateur (ils se créent côté Gestion) ; Bibax : sans objet.
+  const venueAnswered = hasPlain && venuesSearchedFor === plain;
+  const drinkAnswered = hasPlain && drinksSearchedFor === plain && !drinksLoading;
+  const venueBlockEl = (
+    <div style={{ padding: "16px 20px 8px" }} data-add-venue="1">
+      <AddAfterSearch query={plain} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
+    </div>
+  );
+  const drinkBlockEl = (
+    <div style={{ padding: "16px 20px 8px" }} data-add-drink="1">
+      <AddAfterSearch query={plain} onAdd={setAddDrinkName} noun="produit" label="Proposer une boisson" />
+    </div>
+  );
+  const addVenueBlock = activeTab === "lieux" && venueAnswered ? venueBlockEl : null;
+  const addDrinkBlock = activeTab === "produits" && drinkAnswered ? drinkBlockEl : null;
+  const addBothBlocks =
+    venueAnswered && drinkAnswered ? (
+      <>
+        {venueBlockEl}
+        {drinkBlockEl}
+      </>
+    ) : null;
   const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;
   // Mode atlas : tant qu'aucune recherche n'est lancée, les blocs du répertoire prennent la place des résultats.
   const showAtlasBlocks = atlas && !hasQuery;
@@ -472,17 +523,24 @@ export function SearchScreen({
 
           <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto", margin: "0 -20px", padding: "0 20px" }}>
             {totalResults === 0 && !bibaxLoading && !drinksLoading && !atLoading ? (
-              <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
+              <>
+                <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
+                {addBothBlocks}
+              </>
             ) : counts[activeTab] === 0 ? (
-              <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>
-                {atLoading
-                  ? "Recherche..."
-                  : activeTab === "bibax" && bibaxLoading
-                  ? "Recherche des Bibax..."
-                  : activeTab === "produits" && drinksLoading
-                  ? "Recherche des produits..."
-                  : "Aucun résultat dans cette catégorie."}
-              </p>
+              <>
+                <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>
+                  {atLoading
+                    ? "Recherche..."
+                    : activeTab === "bibax" && bibaxLoading
+                    ? "Recherche des Bibax..."
+                    : activeTab === "produits" && drinksLoading
+                    ? "Recherche des produits..."
+                    : "Aucun résultat dans cette catégorie."}
+                </p>
+                {addVenueBlock}
+                {addDrinkBlock}
+              </>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", margin: "0 -20px" }}>
                 {activeTab === "lieux" &&
@@ -565,11 +623,17 @@ export function SearchScreen({
                       last={i === bibaxResults.length - 1}
                     />
                   ))}
+                {addVenueBlock}
+                {addDrinkBlock}
               </div>
             )}
           </div>
         </>
       )}
+      {addDrinkName !== null && (
+        <AddDrinkOverlay initialName={addDrinkName} breweriesDirectory={breweriesDirectory} brandsDirectory={brandsDirectory} onChosen={(id) => openDrink(id)} onClose={() => setAddDrinkName(null)} />
+      )}
+      {addVenueName !== null && <AddVenueOverlay initialName={addVenueName} onChosen={(v) => openVenue(v.id)} onClose={() => setAddVenueName(null)} />}
     </div>
   );
 }
