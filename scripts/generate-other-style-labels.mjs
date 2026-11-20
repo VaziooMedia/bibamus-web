@@ -15,7 +15,7 @@
 //                 ou « Bibamus-Management ».
 //
 // Code de sortie 2 : le script s'arrête sans rien écrire (dépôt introuvable, liste de la gestion non reprise ici,
-// code en double, ou code qui existe déjà parmi les styles des bières et des vins).
+// code en double, ou code qui existe déjà parmi les styles des bières, des vins ou des spiritueux).
 // ============================================================
 
 import fs from "node:fs";
@@ -119,10 +119,11 @@ async function assertNoClashWithBeersAndWines(entries) {
     console.warn(`⚠ Contrôle des codes de bières et de vins ignoré (styleTagLabels.js illisible : ${e.message.split("\n")[0]}).`);
     return;
   }
-  const groups = [mod.BEER_CIDER_STYLE_GROUPS, mod.WINE_STYLE_GROUPS, mod.WINE_EFFERVESCENT_STYLE_GROUPS].flat().filter(Boolean);
+  const spirits = Object.values(mod.SPIRIT_STYLE_GROUPS_BY_SUBTYPE || {}).flat();
+  const groups = [mod.BEER_CIDER_STYLE_GROUPS, mod.WINE_STYLE_GROUPS, mod.WINE_EFFERVESCENT_STYLE_GROUPS].flat().filter(Boolean).concat(spirits);
   const taken = new Set(groups.flatMap((g) => g.tags.map((t) => t.code)));
   const clashes = entries.filter(([code]) => taken.has(code)).map(([code]) => code);
-  if (clashes.length > 0) stop(`Code(s) déjà utilisé(s) par des styles de bières, de cidres ou de vins : ${clashes.slice(0, 8).join(", ")}${clashes.length > 8 ? "…" : ""}.`);
+  if (clashes.length > 0) stop(`Code(s) déjà utilisé(s) par des styles de bières, de cidres, de vins ou de spiritueux : ${clashes.slice(0, 8).join(", ")}${clashes.length > 8 ? "…" : ""}.`);
 }
 
 // ---------- le fichier ----------
