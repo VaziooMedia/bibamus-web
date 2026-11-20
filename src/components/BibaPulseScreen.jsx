@@ -238,7 +238,10 @@ function PulseRoundIcon({ name }) {
 
 // Couleur du bandeau de la ligne de l'auteur d'une publication du fil BibaPulse (rond de profil, nom, heure) : un voile de vert fluo à 10 % (`COLORS.amber`) sur le fond de la page.
 // Mehdi, 2026-11-20 : le bandeau « surface » ressemblait trop aux blocs de la publication (fond `surface` / `surfaceAlt`) ; la teinte verte s'en distingue (piste D, intensité « on va voir »).
-const PULSE_HEADER_BAND = "rgba(57, 255, 102, 0.10)";
+// Intensité du voile (0 à 1) : 0,10 = voile discret (version du 2026-11-20) ; 1 = vert fluo plein, avec textes sombres (essai du 2026-11-20 : « essaye en vert fluo »).
+const PULSE_BAND_STRENGTH = 1;
+const PULSE_BAND_SOLID = PULSE_BAND_STRENGTH >= 1;
+const PULSE_HEADER_BAND = PULSE_BAND_SOLID ? COLORS.amber : `rgba(57, 255, 102, ${PULSE_BAND_STRENGTH})`;
 
 export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, separatorColor = COLORS.paperAlt, headerBand = false, hideProduct }, ref) {
   const [showReactors, setShowReactors] = useState(false);
@@ -506,6 +509,11 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
 
   // Bandeau coloré sur la ligne de l'auteur : seulement dans le fil de la page BibaPulse (publication « à plat » + `headerBand`), pas dans les fils des fiches.
   const bandOn = !!flat && !!headerBand;
+  // Bandeau en vert fluo plein : les textes de la ligne de l'auteur passent en sombre (`COLORS.paper`), les liens sont soulignés.
+  const bandSolid = bandOn && PULSE_BAND_SOLID;
+  const bandText = bandSolid ? COLORS.paper : COLORS.ink;
+  const bandSoftText = bandSolid ? "rgba(8, 19, 31, 0.7)" : COLORS.inkSoft;
+  const bandLink = bandSolid ? { color: COLORS.paper, textDecoration: "underline" } : { color: COLORS.amber };
 
   return (
     <div
@@ -531,7 +539,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       }
     >
       {/* Heure de la publication (« il y a… ») : en haut à droite de la ligne de l'auteur. Sur la page BibaPulse, cette ligne est un bandeau coloré (voir plus bas) dont le haut est collé au haut de la carte. */}
-      <span style={{ position: "absolute", top: bandOn ? (isRedesigned ? "21px" : "12px") : isRedesigned ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
+      <span style={{ position: "absolute", top: bandOn ? (isRedesigned ? "21px" : "12px") : isRedesigned ? "25px" : "12px", right: "14px", fontSize: "11px", color: bandSoftText }}>{timeAgo(entry.createdAt)}</span>
 
       {/* Ligne de l'auteur (rond de profil, nom, heure). Sur la page BibaPulse (propriété `headerBand`, publications « à plat »), c'est un bandeau pleine largeur d'une autre couleur que le reste de la carte (`PULSE_HEADER_BAND`),
           pour bien repérer le début de chaque publication — Mehdi, 2026-11-19 (il hésitait à garder la barre de séparation rose fluo). Le bandeau déborde du padding de la carte (-14 px) jusqu'aux bords de l'écran. */}
@@ -552,39 +560,39 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           onClick={entry.actorBibroCode && onOpenProfile ? () => onOpenProfile(entry.actorBibroCode) : undefined}
         />
         <div style={{ flex: 1, minWidth: 0, paddingRight: "60px" }}>
-          <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: bandText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
           </p>
           {!isRedesigned && (
-            <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink }}>
+            <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: bandText }}>
               {isClubJoin ? (
                 <>
                   A rejoint le BibaClub{" "}
                   {clubName && openClub ? (
-                    <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                    <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...bandLink, cursor: "pointer" }}>
                       {clubName}
                     </button>
                   ) : (
-                    <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
+                    <strong style={bandLink}>{clubName || "un club"}</strong>
                   )}
                 </>
               ) : isPost ? null : (
                 <>
                   {pulseActionFor(entry)} @{" "}
                   {obj && openObject ? (
-                    <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+                    <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...bandLink, cursor: "pointer" }}>
                       {obj.name}
                     </button>
                   ) : (
-                    <strong style={{ color: COLORS.amber }}>{obj?.name || "une fiche"}</strong>
+                    <strong style={bandLink}>{obj?.name || "une fiche"}</strong>
                   )}
                 </>
               )}
               {checkVenueName && (
                 <>
-                  <span style={{ color: COLORS.inkSoft }}>{" — "}</span>
+                  <span style={{ color: bandSoftText }}>{" — "}</span>
                   {openCheckVenue ? (
-                    <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer" }}>
+                    <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: bandText, cursor: "pointer" }}>
                       {checkVenueName}
                     </button>
                   ) : (
