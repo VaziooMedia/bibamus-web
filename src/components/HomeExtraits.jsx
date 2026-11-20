@@ -4,7 +4,7 @@
 // Une bande pleine largeur par extrait (fond `surface`, 2 px `paperAlt` en haut et en bas, comme avant) :
 //   - à gauche, le rond de profil de l'auteur (48 px, il déborde de la bande : place prise 40 px, le texte démarre à 64 px) ;
 //   - au centre, 3 lignes : ① le nom de l'auteur puis l'heure (« · 2 h ») ; ② une phrase (« a checké Orval », « a découvert … », « a rejoint le BibaClub … ») avec
-//     l'objet en vert fluo ; ③ le lieu (pastille de lieu verte + nom) ou, pour un PlaceCheck, l'avis de l'auteur sur le lieu (flamme + libellé). Pas de compteurs ♥ ni
+//     l'objet en vert fluo ; ③ le lieu (son rond de profil + nom ; l'épingle pour @Home / @Event) ou, pour un PlaceCheck, l'avis de l'auteur sur le lieu (flamme + libellé). Pas de compteurs ♥ ni
 //     commentaires sur l'accueil (Mehdi, 2026-11-20 : « pas nécessaires », leur absence incite à ouvrir la page Pulse) ;
 //     PlaceCheck avec une phrase prédéfinie (la pastille rose de la carte, `metadata.interaction`) : l'avis reste en ③ et la pastille vient EN DERNIER, sur une 4ᵉ ligne (bande plus haute) ;
 //   - à droite, une miniature : le rond du produit (photo, emoji ou bouteille) avec la note de l'auteur en pastille (★ 4,5) pour un DrinkCheck ; le rond du lieu pour un
@@ -42,6 +42,10 @@ const EXTRAIT_BAND_H = 65;
 // Bande de 4 lignes (PlaceCheck avec avis ET phrase prédéfinie : nom, phrase, avis, pastille rose) : 15 px de plus.
 const EXTRAIT_BAND_H_TALL = 80;
 const EXTRAIT_GAP = 6;
+// Rond de profil du lieu devant son nom (ligne ③) : 18 px, il déborde de la ligne (marges négatives) sans la grandir.
+const VENUE_ROUND = 18;
+// Séparation entre deux pages (Mehdi, 2026-11-20 : le décalage de lignes entre deux trios de bandes, en balayant, dérangeait ; style « A » choisi) : une colonne de 16 px portant une barre verticale vert fluo de 4 px, aux coins arrondis.
+const PAGE_SEP = 16;
 // Points de page : diamètre et écart (px).
 const DOT_SIZE = 6;
 const DOT_GAP = 5;
@@ -118,7 +122,8 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
   // (Mehdi, 2026-11-20 : « la phrase pastille rose en dernier, après l'appréciation »). Sans avis, la pastille prend la ligne ③ et la bande garde 3 lignes.
   const avisLine = placeRating ? { icon: "flame", text: placeRating.fr, size: 13, filled: true } : null;
   const phraseLine = placeInteraction ? { phrase: placeInteraction.label } : null;
-  const line3Left = showVenue ? { icon: "map-pin", text: venueLabel, size: 13 } : avisLine || phraseLine;
+  // Lieu : son rond de profil (photo, sinon emoji, sinon le « B » Bibamus) à la place de l'épingle (Mehdi, 2026-11-20, comme dans BibaSolo) ; @Home et @Event n'ont pas de fiche : ils gardent l'épingle.
+  const line3Left = showVenue ? { icon: "map-pin", text: venueLabel, size: 13, venueRound: venue && !SPECIAL_VENUE_LABELS[entry.venueId] ? venue : null } : avisLine || phraseLine;
   const line4 = avisLine && phraseLine ? phraseLine : null;
   const hasLine3 = !!line3Left;
   const bandH = line4 ? EXTRAIT_BAND_H_TALL : EXTRAIT_BAND_H;
@@ -197,7 +202,13 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
             ) : (
               <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", minWidth: 0 }}>
                 <span style={{ display: "flex", flexShrink: 0 }}>
-                  <NavIcon name={line3Left.icon} size={line3Left.size} color={COLORS.amber} filled={!!line3Left.filled} />
+                  {line3Left.venueRound ? (
+                    <span style={{ display: "flex", margin: `${-(VENUE_ROUND - 14) / 2}px 0` }}>
+                      <EntityAvatar photoUrl={line3Left.venueRound.profilePhotoUrl} photoEmoji={line3Left.venueRound.avatarEmoji} size={VENUE_ROUND} />
+                    </span>
+                  ) : (
+                    <NavIcon name={line3Left.icon} size={line3Left.size} color={COLORS.amber} filled={!!line3Left.filled} />
+                  )}
                 </span>
                 <span style={ellipsis}>{line3Left.text}</span>
               </span>
@@ -269,7 +280,7 @@ export function HomeExtraits({ entries, drinksDirectory = [], venuesById = {}, b
   const scrolls = pageCount > 1;
   const onScroll = (e) => {
     const el = e.currentTarget;
-    const i = Math.min(pageCount - 1, Math.round(el.scrollLeft / (el.clientWidth || 1)));
+    const i = Math.min(pageCount - 1, Math.round(el.scrollLeft / ((el.clientWidth || 1) + PAGE_SEP)));
     setPage((p) => (p === i ? p : i));
   };
 
@@ -324,7 +335,8 @@ export function HomeExtraits({ entries, drinksDirectory = [], venuesById = {}, b
           style={{ display: "flex", overflowX: scrolls ? "auto" : "visible", overflowY: scrolls ? "hidden" : "visible", scrollSnapType: scrolls ? "x mandatory" : undefined, margin: "0 -20px", scrollbarWidth: "none", overscrollBehaviorX: "contain" }}
         >
           {pages.map((pageEntries, pi) => (
-            <div key={pi} data-extraits-page style={{ flex: "0 0 100%", minWidth: 0, scrollSnapAlign: "start", scrollSnapStop: "always", display: "flex", flexDirection: "column", gap: `${EXTRAIT_GAP}px` }}>
+            <React.Fragment key={pi}>
+            <div data-extraits-page style={{ flex: "0 0 100%", minWidth: 0, scrollSnapAlign: "start", scrollSnapStop: "always", display: "flex", flexDirection: "column", gap: `${EXTRAIT_GAP}px` }}>
               {pageEntries.map((entry) => (
                 <ExtraitBand
                   key={entry.id}
@@ -339,6 +351,12 @@ export function HomeExtraits({ entries, drinksDirectory = [], venuesById = {}, b
                 />
               ))}
             </div>
+            {pi < pages.length - 1 && (
+              <div data-extraits-sep aria-hidden="true" style={{ flex: `0 0 ${PAGE_SEP}px`, display: "flex", justifyContent: "center" }}>
+                <span style={{ width: "4px", borderRadius: "2px", background: COLORS.amber }} />
+              </div>
+            )}
+            </React.Fragment>
           ))}
         </div>
       )}
