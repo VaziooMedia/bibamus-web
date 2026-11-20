@@ -6,7 +6,7 @@ import { PhotoLightbox } from "./PhotoLightbox.jsx";
 import { PulseInteractionPill } from "./PulseInteractionPill.jsx";
 import { NavIcon, CheersIcon } from "./icons.jsx";
 import { PageHeader, EntityAvatar } from "./ui.jsx";
-import { loadPulseFeed, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, deleteMyPulsePost, previewMyPulseCheckDeletion, deleteMyPulseCheck, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
+import { loadPulseFeed, attachPulseAuthorLines, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, deleteMyPulsePost, previewMyPulseCheckDeletion, deleteMyPulseCheck, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
 import { mergePulseFeedTop, appendOlderPulsePage } from "../pulseFeedMerge.js";
@@ -33,16 +33,8 @@ function resolveObject(entry, directories) {
   return (map[entry.objectType] || []).find((x) => x.id === entry.objectId) || null;
 }
 
-// Gabarit textuel par type d'événement — jamais de phrase figée stockée en base, uniquement
-// reconstruite ici à partir des données structurées (prêt pour une traduction future).
 // Cartes de check : celles que l'on peut supprimer soi-même, avec ou sans la consommation des statistiques.
 const CHECK_EVENT_TYPES = ["product_discovered", "drink_checked", "venue_visit"];
-
-// Format neutre "Nom - Action @ Objet" — évite les problèmes d'accord (masculin/féminin,
-// préposition selon le nom du lieu) qu'une vraie phrase française poserait.
-function pulseActionFor(entry) {
-  return { product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité";
-}
 
 function timeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -241,6 +233,7 @@ function PulseRoundIcon({ name }) {
 // Intensité du voile (0 à 1) : 0,10 = voile discret (version du 2026-11-20) ; 1 = vert fluo plein, avec textes sombres (essai du 2026-11-20 : « essaye en vert fluo »).
 const PULSE_BAND_STRENGTH = 1;
 const PULSE_BAND_SOLID = PULSE_BAND_STRENGTH >= 1;
+const PULSE_BAND_AVATAR = 48; // rond de profil de l'auteur sur le bandeau (px)
 const PULSE_HEADER_BAND = PULSE_BAND_SOLID ? COLORS.amber : `rgba(57, 255, 102, ${PULSE_BAND_STRENGTH})`;
 
 export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, separatorColor = COLORS.paperAlt, headerBand = false, hideProduct }, ref) {
@@ -302,7 +295,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const isPlaceCheck = entry.eventType === "venue_visit";
   // Contribution à BibAtlas (ajout d'un PRODUIT ou d'un LIEU à la base, `database_contribution`) : même présentation que le DrinkCheck et le
   // PlaceCheck — ligne « Contribution à BibAtlas » avec l'icône de BibAtlas, puis la fiche ajoutée en petit. Les ajouts de marque et de
-  // producteur gardent pour l'instant l'ancienne carte (« Ajout @ nom »).
+  // producteur n'existent pas (un utilisateur ne peut pas en ajouter, voulu) : la ligne « Ajout @ nom » a été supprimée le 2026-11-20.
   const isContribution = entry.eventType === "database_contribution" && (entry.objectType === "drink" || entry.objectType === "venue");
   // Lancement d'un BibaRoom (`room_launched`, nouvelle carte) : même présentation que les autres cartes refaites — ligne « Lancement d'un BibaRoom »
   // avec l'icône BibaGo, puis la fiche du salon en petit (nom, lieu, date et heure ; jamais le code du salon, qui est la clé d'accès).
@@ -509,11 +502,31 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
 
   // Bandeau coloré sur la ligne de l'auteur : seulement dans le fil de la page BibaPulse (publication « à plat » + `headerBand`), pas dans les fils des fiches.
   const bandOn = !!flat && !!headerBand;
-  // Bandeau en vert fluo plein : les textes de la ligne de l'auteur passent en sombre (`COLORS.paper`), les liens sont soulignés.
+  // Bandeau en vert fluo plein : les textes de la ligne de l'auteur (nom, @nom, surnom) passent en sombre (`COLORS.paper`).
   const bandSolid = bandOn && PULSE_BAND_SOLID;
   const bandText = bandSolid ? COLORS.paper : COLORS.ink;
   const bandSoftText = bandSolid ? "rgba(8, 19, 31, 0.7)" : COLORS.inkSoft;
-  const bandLink = bandSolid ? { color: COLORS.paper, textDecoration: "underline" } : { color: COLORS.amber };
+  // @nom et surnom de l'auteur (2e ligne du bandeau) ; le surnom n'est pas répété s'il est déjà affiché comme nom.
+  const authorUsername = (entry.actorUsername || "").trim();
+  const authorNicknameRaw = (entry.actorNickname || "").trim();
+  const authorNickname = authorNicknameRaw && authorNicknameRaw.toLowerCase() !== (entry.actorName || "").trim().toLowerCase() ? authorNicknameRaw : "";
+
+  // Ligne « A rejoint le BibaClub X » (carte `club_joined`, la seule carte non refaite qui garde une ligne d'action) : sous le nom dans les fils des fiches ; sur la page BibaPulse, elle n'est PAS dans le bandeau vert
+  // mais sur la carte, juste sous le bandeau (Mehdi, 2026-11-20) — donc dans les couleurs normales de la carte. La ligne « Ajout @ marque / producteur » a été supprimée le 2026-11-20 : un utilisateur ne peut pas
+  // ajouter de marque ni de producteur (voulu).
+  const clubJoinLine = (margin) =>
+    isClubJoin ? (
+      <p style={{ margin, fontSize: "12.5px", color: COLORS.ink }}>
+        A rejoint le BibaClub{" "}
+        {clubName && openClub ? (
+          <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.amber, cursor: "pointer" }}>
+            {clubName}
+          </button>
+        ) : (
+          <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
+        )}
+      </p>
+    ) : null;
 
   return (
     <div
@@ -538,95 +551,66 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             }
       }
     >
-      {/* Heure de la publication (« il y a… ») : en haut à droite de la ligne de l'auteur. Sur la page BibaPulse, cette ligne est un bandeau coloré (voir plus bas) dont le haut est collé au haut de la carte. */}
-      {bandOn ? (
-        // Sur le bandeau de la page BibaPulse, l'heure est dans une pastille sombre (fond `paper`, texte clair) pour mieux ressortir sur le vert fluo — Mehdi, 2026-11-20.
-        // Centrée verticalement sur le rond de profil (ou sur la ligne du nom pour les cartes sans en-tête refait).
-        <span
-          style={{
-            position: "absolute",
-            top: isRedesigned ? "28px" : "18px",
-            transform: "translateY(-50%)",
-            right: "14px",
-            background: COLORS.paper,
-            color: COLORS.ink,
-            borderRadius: "999px",
-            padding: "3px 10px",
-            fontSize: "11.5px",
-            fontWeight: 600,
-            lineHeight: 1.3,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {timeAgo(entry.createdAt)}
-        </span>
-      ) : (
-        <span style={{ position: "absolute", top: isRedesigned ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>
-      )}
+      {/* Heure de la publication (« il y a… ») : en haut à droite de la ligne de l'auteur. Sur la page BibaPulse, cette ligne est un bandeau coloré (voir plus bas) : l'heure y est dans une pastille sombre,
+          rangée DANS le bandeau (centrée sur sa hauteur, quelle que soit la taille du rond de profil et le nombre de lignes du nom). */}
+      {!bandOn && <span style={{ position: "absolute", top: isRedesigned ? "25px" : "12px", right: "14px", fontSize: "11px", color: COLORS.inkSoft }}>{timeAgo(entry.createdAt)}</span>}
 
       {/* Ligne de l'auteur (rond de profil, nom, heure). Sur la page BibaPulse (propriété `headerBand`, publications « à plat »), c'est un bandeau pleine largeur d'une autre couleur que le reste de la carte (`PULSE_HEADER_BAND`),
           pour bien repérer le début de chaque publication — Mehdi, 2026-11-19 (il hésitait à garder la barre de séparation rose fluo). Le bandeau déborde du padding de la carte (-14 px) jusqu'aux bords de l'écran. */}
       <div
         style={{
           display: "flex",
-          alignItems: isRedesigned ? "center" : "flex-start",
+          alignItems: isRedesigned || bandOn ? "center" : "flex-start",
           gap: "10px",
           ...(bandOn
-            ? { margin: "-14px -14px 12px", padding: "10px 14px", background: PULSE_HEADER_BAND }
+            ? { position: "relative", margin: "-14px -14px 12px", padding: "10px 14px", background: PULSE_HEADER_BAND }
             : { marginBottom: "10px" }),
         }}
       >
-        {/* Le rond de profil mène à la fiche de son auteur. */}
+        {/* Le rond de profil mène à la fiche de son auteur. Plus grand sur le bandeau de la page BibaPulse (48 px, comme les cartes de Bibax) — Mehdi, 2026-11-20. */}
         <EntityAvatar
           photoUrl={entry.actorAvatarUrl}
-          size={36}
+          size={bandOn ? PULSE_BAND_AVATAR : 36}
           onClick={entry.actorBibroCode && onOpenProfile ? () => onOpenProfile(entry.actorBibroCode) : undefined}
         />
-        <div style={{ flex: 1, minWidth: 0, paddingRight: bandOn ? "96px" : "60px" }}>
+        <div style={{ flex: 1, minWidth: 0, paddingRight: bandOn ? "112px" : "60px" }}>
           <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: bandText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
           </p>
-          {!isRedesigned && (
-            <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: bandText }}>
-              {isClubJoin ? (
-                <>
-                  A rejoint le BibaClub{" "}
-                  {clubName && openClub ? (
-                    <button onClick={openClub} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...bandLink, cursor: "pointer" }}>
-                      {clubName}
-                    </button>
-                  ) : (
-                    <strong style={bandLink}>{clubName || "un club"}</strong>
-                  )}
-                </>
-              ) : isPost ? null : (
-                <>
-                  {pulseActionFor(entry)} @{" "}
-                  {obj && openObject ? (
-                    <button onClick={openObject} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, ...bandLink, cursor: "pointer" }}>
-                      {obj.name}
-                    </button>
-                  ) : (
-                    <strong style={bandLink}>{obj?.name || "une fiche"}</strong>
-                  )}
-                </>
-              )}
-              {checkVenueName && (
-                <>
-                  <span style={{ color: bandSoftText }}>{" — "}</span>
-                  {openCheckVenue ? (
-                    <button onClick={openCheckVenue} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: bandText, cursor: "pointer" }}>
-                      {checkVenueName}
-                    </button>
-                  ) : (
-                    <span style={{ fontWeight: 700 }}>{checkVenueName}</span>
-                  )}
-                </>
-              )}
+          {/* 2e ligne du bandeau : le @nom puis le surnom de l'auteur, juste sous son nom (Mehdi, 2026-11-20). Un surnom déjà affiché comme nom (réglage « nom affiché » de l'auteur) n'est pas répété. Rien si la personne n'a ni l'un ni l'autre. */}
+          {bandOn && (authorUsername || authorNickname) && (
+            <p style={{ margin: "1px 0 0", fontSize: "12px", lineHeight: 1.3, color: bandSoftText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {authorUsername && <span>@{authorUsername}</span>}
+              {authorUsername && authorNickname && <span style={{ padding: "0 5px" }}>·</span>}
+              {authorNickname && <span style={{ fontStyle: "italic", color: bandText, fontWeight: 600 }}>{authorNickname}</span>}
             </p>
           )}
+          {!bandOn && clubJoinLine("1px 0 0")}
         </div>
+        {bandOn && (
+          // Sur le bandeau de la page BibaPulse, l'heure est dans une pastille sombre (fond `paper`, texte clair) pour mieux ressortir sur le vert fluo — Mehdi, 2026-11-20 ; centrée sur la hauteur du bandeau.
+          <span
+            style={{
+              position: "absolute",
+              top: "50%",
+              transform: "translateY(-50%)",
+              right: "14px",
+              background: COLORS.paper,
+              color: COLORS.ink,
+              borderRadius: "999px",
+              padding: "3px 10px",
+              fontSize: "11.5px",
+              fontWeight: 600,
+              lineHeight: 1.3,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {timeAgo(entry.createdAt)}
+          </span>
+        )}
       </div>
+
+      {bandOn && clubJoinLine("0 0 10px")}
 
       {/* DrinkCheck / PlaceCheck : une ligne à part sous l'en-tête — « DrinkCheck » ou « PlaceCheck » (icône du check de la fiche, « Check » en vert fluo) à gauche, la note de l'auteur à l'extrême droite. */}
       {isRedesigned && (
@@ -1069,7 +1053,7 @@ export function BibaPulseScreen({
   const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities, producersById, venueRatingsById };
 
   useEffect(() => {
-    loadPulseFeed().then((data) => {
+    loadPulseFeed().then(attachPulseAuthorLines).then((data) => {
       setEntries(data);
       setHasMore(data.length >= 20);
     });
@@ -1077,7 +1061,7 @@ export function BibaPulseScreen({
     // se refléterait jamais tant qu'on ne recharge pas la page à la main. Fusionne les
     // nouvelles données dans la liste déjà chargée, sans perdre les pages plus anciennes.
     const interval = setInterval(() => {
-      loadPulseFeed().then((freshTopAll) => {
+      loadPulseFeed().then(attachPulseAuthorLines).then((freshTopAll) => {
         // Une carte que je viens de supprimer ne revient pas, même si cette réponse a été demandée juste avant.
         const freshTop = freshTopAll.filter((e) => !deletedIds.current.has(e.id));
         // Garde en tête le bloc des marques et des producteurs en favori (voir pulseFeedMerge.js).
@@ -1091,7 +1075,7 @@ export function BibaPulseScreen({
     if (!entries || entries.length === 0) return;
     setLoadingMore(true);
     const oldest = entries[entries.length - 1].createdAt;
-    const more = await loadPulseFeed(oldest);
+    const more = await attachPulseAuthorLines(await loadPulseFeed(oldest));
     setEntries((prev) => appendOlderPulsePage(prev, more));
     setHasMore(more.length >= 20);
     setLoadingMore(false);
@@ -1162,7 +1146,7 @@ export function BibaPulseScreen({
       onShareStory(storyDraft);
       return;
     }
-    loadPulseFeed().then((data) => {
+    loadPulseFeed().then(attachPulseAuthorLines).then((data) => {
       setEntries(data);
       setHasMore(data.length >= 20);
     });
