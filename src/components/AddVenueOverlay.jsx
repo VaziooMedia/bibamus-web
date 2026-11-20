@@ -2,7 +2,7 @@
 // « Ajouter un lieu » par-dessus l'écran en cours — le même assistant que sur BibAtlas (SubmitVenueWizardScreen), mais ouvert en surcouche
 // plein écran au lieu de changer d'écran : ce qu'on avait déjà saisi dessous (la note et la photo d'un DrinkCheck, le texte d'une publication
 // BibaPulse, le titre d'un salon…) reste intact. Utilisé par les sélecteurs de lieu quand la recherche ne trouve pas le bon lieu
-// (voir AddAfterSearch, `framed`).
+// (voir AddAfterSearch).
 //
 // `onChosen(lieu)` : le lieu à prendre comme choix, relu en base comme un résultat de recherche. Appelé une fois la surcouche fermée :
 //   - quand le lieu vient d'être créé ;

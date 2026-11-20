@@ -335,7 +335,7 @@ export function SearchScreen({
   const addVenueBlock =
     activeTab === "lieux" && hasPlain && venuesSearchedFor === plain ? (
       <div style={{ padding: "16px 20px 8px" }} data-add-venue="1">
-        <AddAfterSearch query={plain} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" framed />
+        <AddAfterSearch query={plain} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
       </div>
     ) : null;
   const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;

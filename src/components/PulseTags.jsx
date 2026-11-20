@@ -279,7 +279,7 @@ export function PulseVenuePicker({ venue, onChange, blocked = false }) {
           {/* Le lieu n'existe pas encore sur BibAtlas : proposition d'ajout (même bloc que BibaSolo), sous les résultats ou le message « Aucun lieu ». */}
           {status === "done" && searchedTerm === term && (
             <div style={{ marginTop: "12px" }} data-add-venue="1">
-              <AddAfterSearch query={term} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" framed />
+              <AddAfterSearch query={term} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
             </div>
           )}
         </>

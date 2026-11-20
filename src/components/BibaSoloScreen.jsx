@@ -2214,7 +2214,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           {/* Le lieu n'existe pas encore sur BibAtlas : même proposition que dans la liste des lieux, avec le nom tapé déjà dans l'assistant. */}
           {venueSearchedFor === vq && vq.length >= 2 && (
             <div style={{ marginTop: "16px" }} data-add-venue="1">
-              <AddAfterSearch query={vq} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" framed />
+              <AddAfterSearch query={vq} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
             </div>
           )}
         </div>

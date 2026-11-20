@@ -8,9 +8,10 @@
 import React from "react";
 import { COLORS } from "../constants.js";
 
-// `framed` : le texte et le « + » sont dans un cadre rose (même boîte rose que les avertissements de doublon : COLORS.surface, bordure pinkFluo de 2 px,
-// 12 px de rayon) — utilisé dans les sélecteurs de lieu (BibaSolo, DrinkCheck, publication BibaPulse, recherche BibAtlas, BibaRoom), pas sur les listes de BibAtlas.
-export function AddAfterSearch({ query, onAdd, noun, label, framed = false }) {
+// Le texte et le « + » sont toujours dans un cadre rose (même boîte rose que les avertissements de doublon : COLORS.surface, bordure pinkFluo de 2 px,
+// 12 px de rayon) — sur tous les écrans qui proposent d'ajouter un produit ou un lieu (décidé par Mehdi, 2026-11-20) : listes Produits et Lieux de BibAtlas,
+// recherche BibAtlas, BibaSolo, DrinkCheck, publication BibaPulse, BibaRoom.
+export function AddAfterSearch({ query, onAdd, noun, label }) {
   return (
     <div
       style={{
@@ -20,7 +21,11 @@ export function AddAfterSearch({ query, onAdd, noun, label, framed = false }) {
         gap: "12px",
         marginTop: "6px",
         textAlign: "center",
-        ...(framed ? { background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "16px 14px", boxSizing: "border-box" } : {}),
+        background: COLORS.surface,
+        border: `2px solid ${COLORS.pinkFluo}`,
+        borderRadius: "12px",
+        padding: "16px 14px",
+        boxSizing: "border-box",
       }}
     >
       <p style={{ margin: 0, fontSize: "14px", color: COLORS.inkSoft }}>

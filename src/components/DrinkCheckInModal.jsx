@@ -321,7 +321,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
               {/* Le lieu n'existe pas encore sur BibAtlas : proposition d'ajout (même bloc que BibaSolo), l'assistant s'ouvre par-dessus sans quitter ce popup. */}
               {showAddVenue && (
                 <div style={{ padding: "10px 12px 12px" }} data-add-venue="1">
-                  <AddAfterSearch query={q} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" framed />
+                  <AddAfterSearch query={q} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" />
                 </div>
               )}
             </div>
