@@ -113,8 +113,8 @@ export function HomeScreen({
     loadOfficialStories().then(setOfficialStories);
   }, [pulseStoriesRefreshKey]);
   useEffect(() => {
-    // 6 extraits au plus : 2 pages de 3 qu'on fait glisser sur le côté (HomeExtraits).
-    loadPulseFeed(null, 6).then(setPulseEntries);
+    // 12 extraits au plus : 4 pages de 3 qu'on fait glisser sur le côté (HomeExtraits).
+    loadPulseFeed(null, 12).then(setPulseEntries);
   }, []);
 
 

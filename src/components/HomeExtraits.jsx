@@ -10,9 +10,10 @@
 //     PlaceCheck ; le rond du salon pour un BibaRoom ; la photo (carré arrondi) d'une publication libre. Pas de miniature pour une arrivée dans un BibaClub.
 // Tout le bloc reste cliquable (il ouvre la fiche sur la page BibaPulse) ; rien d'autre n'y est cliquable (décision du 2026-11-12), les compteurs sont donc de la lecture seule.
 //
-// Défilement (Mehdi, 2026-11-20) : 6 extraits au plus, en pages de 3 qu'on fait glisser VERS LE HAUT dans une fenêtre fixe (la hauteur de l'accueil ne change pas avec le nombre d'extraits) ; chaque page
-// s'arrête au bord haut de la fenêtre (`scroll-snap` vertical). Le début de la bande suivante dépasse sous la 3ᵉ bande (20 px de plus en hauteur) pour montrer qu'il y a une suite ; sous la dernière page,
-// cet espace reste vide. Les points de page, l'un en dessous de l'autre, sont dans la ligne de titre, à gauche de la flèche. Ordre chronologique du fil. Avec 3 extraits ou moins : pas de défilement ni de points.
+// Défilement (Mehdi, 2026-11-20) : 12 extraits au plus, en pages de 3 (4 pages) qu'on fait glisser SUR LE CÔTÉ (comme le carrousel des suggestions Bibax) ; chaque page s'arrête au bord (`scroll-snap`
+// horizontal). Un balayage vertical posé sur les extraits fait défiler l'accueil : le défilement vertical dans une fenêtre fixe, essayé le même jour, captait le doigt et gênait (Mehdi). Chaque page garde la
+// hauteur de 3 bandes, donc la hauteur de l'accueil ne change pas avec le nombre d'extraits. Les points de page, l'un à côté de l'autre (4 avec 12 extraits), sont dans la ligne de titre, à gauche de la
+// flèche, sans en changer la hauteur. Ordre chronologique du fil. Avec 3 extraits ou moins : pas de défilement ni de points.
 //
 // Repère « nouveau » : un petit point vert sur le coin du rond de profil. Un extrait est nouveau s'il est arrivé après la première ouverture de l'accueil sur cet appareil, qu'il
 // n'est pas de moi, et que je ne l'ai pas encore ouvert (appui sur la bande) ni ouvert la page BibaPulse par le titre ou la flèche (qui marque tous les extraits affichés comme vus).
@@ -31,17 +32,17 @@ import { formatCount } from "../utils.js";
 // Rond de profil de l'auteur : 40 px dans la mise en page, 48 px à l'écran (il déborde vers la gauche, le haut et le bas — voir l'ancienne règle du 2026-11-12).
 const EXTRAIT_BASE = 40;
 const EXTRAIT_ROUND = 48;
-// Extraits par page, et nombre de pages (6 extraits au plus).
+// Extraits par page, et nombre de pages (12 extraits au plus : 4 pages de 3).
 export const EXTRAITS_PER_PAGE = 3;
-export const EXTRAITS_PAGES = 2;
+export const EXTRAITS_PAGES = 4;
 // Hauteur d'une bande (px, bordures comprises) : celle d'une bande de 3 lignes, la même pour toutes (une page = 3 × 65 + 2 × 6 = 207 px, contre 204 px pour les 3 bandes de 2 lignes d'avant), et espace entre deux bandes.
 const EXTRAIT_BAND_H = 65;
 const EXTRAIT_GAP = 6;
-// Ce qui dépasse sous la 3ᵉ bande pour montrer le début de la suivante (px, espace de 6 px compris) ; hauteur de la fenêtre ; distance d'une page à la suivante.
-const EXTRAIT_PEEK = 20;
-const EXTRAIT_PAGE_H = EXTRAITS_PER_PAGE * EXTRAIT_BAND_H + (EXTRAITS_PER_PAGE - 1) * EXTRAIT_GAP;
-const EXTRAIT_WINDOW_H = EXTRAIT_PAGE_H + EXTRAIT_PEEK;
-const EXTRAIT_PAGE_STRIDE = EXTRAIT_PAGE_H + EXTRAIT_GAP;
+// Points de page : diamètre et écart (px).
+const DOT_SIZE = 6;
+const DOT_GAP = 5;
+// Bouton-flèche de la ligne de titre (px) : il ouvre la page BibaPulse. Mehdi, 2026-11-20 : « plus visible » → rond vert fluo plein, flèche sombre (comme les boutons « + »), 30 px au lieu de 22 px cerclé.
+const ARROW_SIZE = 30;
 // Miniature de droite (px).
 const EXTRAIT_THUMB = 44;
 // Lieux « spéciaux » d'un check ou d'un salon : pas de vraie fiche de lieu (même libellés que le fil, sans le « @ »).
@@ -94,7 +95,7 @@ function Counter({ icon, count, size }) {
   );
 }
 
-function ExtraitBand({ entry, obj, venue, isNew, snapStart, onOpen }) {
+function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
   const meta = entry.metadata || {};
   const type = entry.eventType;
   const isClubJoin = type === "club_joined";
@@ -148,7 +149,7 @@ function ExtraitBand({ entry, obj, venue, isNew, snapStart, onOpen }) {
           onOpen(entry);
         }
       }}
-      style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "7px 14px", height: `${EXTRAIT_BAND_H}px`, flexShrink: 0, display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", boxSizing: "border-box", ...(snapStart ? { scrollSnapAlign: "start", scrollSnapStop: "always" } : {}) }}
+      style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "7px 14px", height: `${EXTRAIT_BAND_H}px`, flexShrink: 0, display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", boxSizing: "border-box" }}
     >
       <span style={{ position: "relative", display: "flex", flexShrink: 0, margin: `${-(EXTRAIT_ROUND - EXTRAIT_BASE) / 2}px 0 ${-(EXTRAIT_ROUND - EXTRAIT_BASE) / 2}px ${-(EXTRAIT_ROUND - EXTRAIT_BASE)}px` }}>
         <EntityAvatar photoUrl={entry.actorAvatarUrl} size={EXTRAIT_ROUND} />
@@ -221,12 +222,13 @@ function ExtraitBand({ entry, obj, venue, isNew, snapStart, onOpen }) {
   );
 }
 
-// Points de page, l'un en dessous de l'autre (le défilement est vertical) : celui de la page affichée est vert fluo.
+// Points de page, l'un à côté de l'autre (Mehdi, 2026-11-20 : horizontaux, pour indiquer qu'on balaie de gauche à droite et non de haut en bas) : celui de la page affichée est vert fluo, les autres `paperAlt`.
+// À 36 px de la flèche (« encore un peu plus » à gauche) ; ils tiennent dans la hauteur de la ligne de titre (22 px).
 function PageDots({ count, page }) {
   return (
-    <span data-extraits-dots aria-hidden="true" style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "5px", marginLeft: "auto", marginRight: "4px", pointerEvents: "none" }}>
+    <span data-extraits-dots aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", gap: `${DOT_GAP}px`, marginLeft: "auto", marginRight: "28px", pointerEvents: "none" }}>
       {Array.from({ length: count }, (_, i) => (
-        <span key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", background: i === page ? COLORS.amber : COLORS.paperAlt }} />
+        <span key={i} style={{ width: `${DOT_SIZE}px`, height: `${DOT_SIZE}px`, borderRadius: "50%", background: i === page ? COLORS.amber : COLORS.paperAlt }} />
       ))}
     </span>
   );
@@ -254,13 +256,14 @@ export function HomeExtraits({ entries, drinksDirectory = [], venuesById = {}, b
     return (map[objType] || []).find((x) => x.id === id) || null;
   };
 
-  // Plusieurs pages : fenêtre fixe qui défile. Sous la dernière page, un espace vide assez haut pour qu'elle puisse s'arrêter au bord haut de la fenêtre (20 px avec 6 extraits).
-  const pageCount = Math.ceil(list.length / EXTRAITS_PER_PAGE);
+  // Pages de 3 bandes, côte à côte, qu'on fait glisser sur le côté.
+  const pages = [];
+  for (let i = 0; i < list.length; i += EXTRAITS_PER_PAGE) pages.push(list.slice(i, i + EXTRAITS_PER_PAGE));
+  const pageCount = pages.length;
   const scrolls = pageCount > 1;
-  const listH = list.length * EXTRAIT_BAND_H + (list.length - 1) * EXTRAIT_GAP;
-  const tailPad = scrolls ? Math.max(0, (pageCount - 1) * EXTRAIT_PAGE_STRIDE + EXTRAIT_WINDOW_H - listH) : 0;
   const onScroll = (e) => {
-    const i = Math.min(pageCount - 1, Math.round(e.currentTarget.scrollTop / EXTRAIT_PAGE_STRIDE));
+    const el = e.currentTarget;
+    const i = Math.min(pageCount - 1, Math.round(el.scrollLeft / (el.clientWidth || 1)));
     setPage((p) => (p === i ? p : i));
   };
 
@@ -281,18 +284,23 @@ export function HomeExtraits({ entries, drinksDirectory = [], venuesById = {}, b
         </span>
         {scrolls && <PageDots count={pageCount} page={page} />}
         <span
+          data-extraits-arrow
           style={{
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
             marginLeft: scrolls ? 0 : "auto",
-            width: "22px",
-            height: "22px",
+            // Plus grand que l'ancien rond de 22 px (marges négatives : la ligne de titre garde sa hauteur).
+            width: `${ARROW_SIZE}px`,
+            height: `${ARROW_SIZE}px`,
+            margin: `${-(ARROW_SIZE - 22) / 2}px 0 ${-(ARROW_SIZE - 22) / 2}px ${scrolls ? 0 : "auto"}`,
             borderRadius: "50%",
-            border: `2px solid ${COLORS.amber}`,
+            flexShrink: 0,
+            boxSizing: "border-box",
+            background: COLORS.amber,
           }}
         >
-          <NavIcon name="chevron-right" size={12} color={COLORS.amber} />
+          <NavIcon name="chevron-right" size={15} color={COLORS.paper} />
         </span>
       </button>
 
@@ -301,30 +309,31 @@ export function HomeExtraits({ entries, drinksDirectory = [], venuesById = {}, b
           <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>En attente des premières activités.</p>
         </div>
       ) : (
-        // Bandes en pleine largeur (sortent de la marge de 20 px), 6 px entre deux bandes ; une page = 3 bandes, chaque page s'arrête au bord haut de la fenêtre (Mehdi, 2026-11-20).
+        // Bandes en pleine largeur (sortent de la marge de 20 px), 6 px entre deux bandes d'une page ; les pages se font glisser sur le côté et s'arrêtent chacune au bord (Mehdi, 2026-11-20).
         <div
           data-extraits-scroller
           role="region"
           aria-label="Extraits BibaPulse"
           onScroll={scrolls ? onScroll : undefined}
-          style={{ margin: "0 -20px", ...(scrolls ? { height: `${EXTRAIT_WINDOW_H}px`, overflowY: "auto", overflowX: "hidden", scrollSnapType: "y mandatory", scrollbarWidth: "none" } : {}) }}
+          style={{ display: "flex", overflowX: scrolls ? "auto" : "visible", overflowY: scrolls ? "hidden" : "visible", scrollSnapType: scrolls ? "x mandatory" : undefined, margin: "0 -20px", scrollbarWidth: "none", overscrollBehaviorX: "contain" }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: `${EXTRAIT_GAP}px`, paddingBottom: tailPad ? `${tailPad}px` : undefined }}>
-            {list.map((entry, i) => (
-              <ExtraitBand
-                key={entry.id}
-                entry={entry}
-                obj={resolveObject(entry)}
-                venue={entry.venueId ? venuesById[entry.venueId] || null : null}
-                isNew={isNew(entry)}
-                snapStart={scrolls && i % EXTRAITS_PER_PAGE === 0}
-                onOpen={(e) => {
-                  markSeen([e.id]);
-                  onOpenEntry(e);
-                }}
-              />
-            ))}
-          </div>
+          {pages.map((pageEntries, pi) => (
+            <div key={pi} data-extraits-page style={{ flex: "0 0 100%", minWidth: 0, scrollSnapAlign: "start", scrollSnapStop: "always", display: "flex", flexDirection: "column", gap: `${EXTRAIT_GAP}px` }}>
+              {pageEntries.map((entry) => (
+                <ExtraitBand
+                  key={entry.id}
+                  entry={entry}
+                  obj={resolveObject(entry)}
+                  venue={entry.venueId ? venuesById[entry.venueId] || null : null}
+                  isNew={isNew(entry)}
+                  onOpen={(e) => {
+                    markSeen([e.id]);
+                    onOpenEntry(e);
+                  }}
+                />
+              ))}
+            </div>
+          ))}
         </div>
       )}
     </div>
