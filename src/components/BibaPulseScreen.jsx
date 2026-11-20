@@ -135,13 +135,19 @@ function PulseNoteBlock({ photoUrl, comment, interaction = null, marginTop = 0 }
   );
 }
 
-// Ligne « lieu » d'une carte : la pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ », puis le nom en gras — un bouton qui ouvre la fiche
-// quand `onOpen` est donné. Partagée par les cartes de check (lieu du check) et par la publication libre (son lieu).
-function PulseVenueLine({ name, onOpen, marginTop = 0 }) {
+// Ligne « lieu » d'une carte : le rond de profil du lieu (sa photo, ou son emoji, ou l'épingle dans le rond à défaut), à la place de l'ancienne icône « lieu » (Mehdi,
+// 2026-11-21), puis le nom en gras — un bouton qui ouvre la fiche quand `onOpen` est donné. `venue` : la fiche du lieu ({ profilePhotoUrl, avatarEmoji }) ; sans fiche (@Home,
+// @Event, ou lieu pas encore chargé), l'épingle seule reste. Partagée par les cartes de check (lieu du check) et par la publication libre (son lieu).
+const PULSE_VENUE_ROUND = 20;
+function PulseVenueLine({ name, venue = null, onOpen, marginTop = 0 }) {
   return (
-    <p style={{ margin: marginTop ? `${marginTop}px 0 0` : 0, display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "12.5px", color: COLORS.ink }}>
-      <span style={{ display: "flex", flexShrink: 0, marginTop: "1px" }}>
-        <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+    <p style={{ margin: marginTop ? `${marginTop}px 0 0` : 0, display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: COLORS.ink }}>
+      <span data-venue-mark={venue ? "round" : "pin"} style={{ display: "flex", justifyContent: "center", width: `${PULSE_VENUE_ROUND}px`, flexShrink: 0 }}>
+        {venue ? (
+          <EntityAvatar photoUrl={venue.profilePhotoUrl} photoEmoji={venue.avatarEmoji} size={PULSE_VENUE_ROUND} fallbackIcon="map-pin" />
+        ) : (
+          <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+        )}
       </span>
       {onOpen ? (
         <button onClick={onOpen} style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}>
@@ -210,7 +216,7 @@ function PulseContent({ entry, onOpenTagged, tagEntities = {}, tagHandlers = {},
         </p>
       )}
       {venueTags.map((t) => (
-        <PulseVenueLine key={t.id} name={tagEntities[`venue:${t.id}`].name} onOpen={tagHandlers.venue ? () => tagHandlers.venue(t.id) : null} marginTop={6} />
+        <PulseVenueLine key={t.id} name={tagEntities[`venue:${t.id}`].name} venue={tagEntities[`venue:${t.id}`]} onOpen={tagHandlers.venue ? () => tagHandlers.venue(t.id) : null} marginTop={6} />
       ))}
     </div>
   );
@@ -696,6 +702,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             // Lieu du check : pastille de lieu en vert fluo (la même que sur les fiches), à la place du « @ ». « @Home » / « @Event » : sans le « @ ».
             <PulseVenueLine
               name={checkVenueName.replace(/^@/, "")}
+              venue={SPECIAL_VENUE_LABELS[entry.venueId] ? null : checkVenue}
               onOpen={openCheckVenue || null}
               marginTop={showProductBlock || checkNote.photoUrl || checkNote.comment || placeDrink ? 14 : 0}
             />

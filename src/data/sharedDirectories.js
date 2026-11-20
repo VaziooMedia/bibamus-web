@@ -989,7 +989,9 @@ export async function loadPulseTagEntities(refs) {
     loadVenuesByIds(idsOf("venue")),
   ]);
   const out = {};
-  const add = (type, rows) => rows.filter(isAppVisible).forEach((r) => (out[`${type}:${r.id}`] = { id: r.id, name: r.name }));
+  // Un lieu garde aussi sa photo de profil et son emoji : la ligne « lieu » des cartes Pulse montre son rond de profil.
+  const add = (type, rows) =>
+    rows.filter(isAppVisible).forEach((r) => (out[`${type}:${r.id}`] = type === "venue" ? { id: r.id, name: r.name, profilePhotoUrl: r.profilePhotoUrl, avatarEmoji: r.avatarEmoji } : { id: r.id, name: r.name }));
   add("drink", drinks);
   add("brand", brands);
   add("producer", producers);
