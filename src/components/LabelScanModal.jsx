@@ -493,13 +493,10 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                 </>
               )}
               {(candidates.length > 0 || moreCandidates.length > 0) && <div data-separator="1" style={separator} />}
-              <div style={{ marginTop: candidates.length > 0 || moreCandidates.length > 0 ? 0 : "18px", display: "flex", gap: "10px" }}>
-                {/* Avec des résultats, « Ajouter » reste en bas ; sans résultat, c'est le cadre rose ci-dessus qui propose l'ajout. */}
-                {onAddDrink && (candidates.length > 0 || moreCandidates.length > 0) && (
-                  <button onClick={addProduct} style={bottomBtn}>
-                    Ajouter
-                  </button>
-                )}
+              {/* Avec des résultats, l'ajout se propose sous eux, dans le même cadre rose que partout ailleurs (comme sans résultat, où il est
+                  dans le bloc « Aucun résultat » ci-dessus) ; « Reprendre » reste seul en bas. */}
+              {onAddDrink && (candidates.length > 0 || moreCandidates.length > 0) && <AddAfterSearch query="" onAdd={addProduct} noun="produit" label="Ajouter le produit" />}
+              <div style={{ marginTop: "18px", display: "flex", gap: "10px" }}>
                 <button onClick={retake} style={bottomBtn}>
                   Reprendre
                 </button>
