@@ -11,6 +11,7 @@ import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } fr
 import { NavIcon, CountryFlagImg, WaterAlertIcon, TokenPinkIcon, TokenGreenIcon } from "./icons.jsx";
 import { GlutenFreeIcon } from "./DrinkDisplay.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar, BackFooterLink, MoneyAmount } from "./ui.jsx";
+import { VENUE_PILL_AVATAR } from "./PillTabs.jsx";
 import { BibaBobModal, WaterAlertModal } from "./DashboardParts.jsx";
 import { BarcodeScannerModal } from "./BarcodeScannerModal.jsx";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
@@ -2056,11 +2057,17 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
               background: COLORS.surface,
               border: `2px solid ${COLORS.amber}`,
               borderRadius: "12px",
-              padding: "8px 12px",
+              // Avec le rond de profil (20 px), moins de marge verticale : la pastille garde la hauteur de « Lieu » (36 px).
+              padding: QUICK_VENUE_IDS.includes(currentVenue.id) ? "8px 12px" : "6px 12px 6px 8px",
               cursor: "pointer",
             }}
           >
-            <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+            {/* Un lieu de BibAtlas porte son rond de profil à la place de l'icône (Mehdi, 2026-11-20) ; @Home et @Event n'ont pas de fiche : ils gardent l'icône. */}
+            {QUICK_VENUE_IDS.includes(currentVenue.id) ? (
+              <NavIcon name="map-pin" size={16} color={COLORS.amber} />
+            ) : (
+              <EntityAvatar photoUrl={currentVenue.profilePhotoUrl} photoEmoji={currentVenue.avatarEmoji} size={VENUE_PILL_AVATAR} />
+            )}
             <span style={{ minWidth: 0, fontSize: "12px", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentVenue.name}</span>
             <button
               onClick={(e) => {
