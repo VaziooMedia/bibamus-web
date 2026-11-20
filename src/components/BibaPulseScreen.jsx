@@ -517,7 +517,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
               // Publication « à plat » (fil BibaPulse) : ni bloc, ni bordure, ni coins arrondis — seulement un trait de séparation en dessous. La publication ouverte depuis une notification garde une barre verte à gauche.
               position: "relative",
               padding: "14px",
-              borderBottom: `1px solid ${separatorColor}`, // couleur du trait sous la publication : rose fluo sur la page BibaPulse (Mehdi, 2026-11-13), gris ailleurs
+              borderBottom: separatorColor ? `1px solid ${separatorColor}` : "none", // trait sous la publication : gris par défaut ; `separatorColor={null}` = pas de trait (page BibaPulse depuis le 2026-11-20 : le bandeau de l'auteur marque le début, plus de barre rose — essai du 2026-11-13 abandonné)
               background: highlighted ? COLORS.surface : "none",
               boxShadow: highlighted ? `inset 3px 0 0 ${COLORS.amber}` : "none",
             }
@@ -1241,14 +1241,14 @@ export function BibaPulseScreen({
         </div>
       ) : (
         <>
-          {/* Pleine largeur : le fil sort de la marge de 20 px de la page, les traits de séparation vont d'un bord de l'écran à l'autre. */}
-          <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.pinkFluo}` }}>
+          {/* Pleine largeur : le fil sort de la marge de 20 px de la page, le bandeau de l'auteur va d'un bord de l'écran à l'autre. Plus de trait entre les publications (Mehdi, 2026-11-20). */}
+          <div style={{ margin: "0 -20px" }}>
           {entries.map((entry) => (
             <PulseCard
               key={entry.id}
               flat
               headerBand
-              separatorColor={COLORS.pinkFluo}
+              separatorColor={null}
               ref={entry.id === targetId ? focusedCardRef : null}
               entry={entry}
               directories={directories}
