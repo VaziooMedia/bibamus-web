@@ -236,8 +236,9 @@ function PulseRoundIcon({ name }) {
   );
 }
 
-// Couleur du bandeau de la ligne de l'auteur d'une publication du fil BibaPulse (rond de profil, nom, heure) : un ton plus clair que le fond de la page.
-const PULSE_HEADER_BAND = COLORS.surface;
+// Couleur du bandeau de la ligne de l'auteur d'une publication du fil BibaPulse (rond de profil, nom, heure) : un voile de vert fluo à 10 % (`COLORS.amber`) sur le fond de la page.
+// Mehdi, 2026-11-20 : le bandeau « surface » ressemblait trop aux blocs de la publication (fond `surface` / `surfaceAlt`) ; la teinte verte s'en distingue (piste D, intensité « on va voir »).
+const PULSE_HEADER_BAND = "rgba(57, 255, 102, 0.10)";
 
 export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, separatorColor = COLORS.paperAlt, headerBand = false, hideProduct }, ref) {
   const [showReactors, setShowReactors] = useState(false);
@@ -540,7 +541,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           alignItems: isRedesigned ? "center" : "flex-start",
           gap: "10px",
           ...(bandOn
-            ? { margin: "-14px -14px 12px", padding: "10px 14px", background: highlighted ? COLORS.surfaceAlt : PULSE_HEADER_BAND }
+            ? { margin: "-14px -14px 12px", padding: "10px 14px", background: PULSE_HEADER_BAND }
             : { marginBottom: "10px" }),
         }}
       >
