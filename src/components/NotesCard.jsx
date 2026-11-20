@@ -46,18 +46,9 @@ function NoteRow({ label, value, count = null, first = false }) {
             <span aria-hidden="true" style={{ display: "flex" }}>
               <StarsDisplay value={value} size={14} />
             </span>
-            <span data-note-value style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.amber, minWidth: "72px", textAlign: "right" }}>
-              {/* Le « / » en blanc (`COLORS.ink`, comme le « /5 » des autres notes de l'app) — Mehdi, 2026-11-20. Même texte que formatRating (« 3,25 / 5 »), coupé au « / ». */}
-              {(() => {
-                const [number, max] = formatRating(value).split(" / ");
-                return (
-                  <>
-                    {number}
-                    <span style={{ color: COLORS.ink }}> / </span>
-                    {max}
-                  </>
-                );
-              })()}
+            {/* Les chiffres en blanc (`COLORS.ink`) et le « / » en vert fluo — Mehdi, 2026-11-20 (essai : d'abord le « / » blanc et les chiffres verts, puis l'inverse) ; comme la bannière de la couverture (`RatingFraction`). */}
+            <span data-note-value style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", color: COLORS.ink, minWidth: "72px", textAlign: "right" }}>
+              <RatingFraction value={value} />
             </span>
           </span>
           {count != null && (
