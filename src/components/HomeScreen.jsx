@@ -9,25 +9,13 @@ import drinkCheckIconUrl from "../assets/brand/drink-check.svg";
 import loupeIconUrl from "../assets/brand/loupe.svg";
 import bibaSoloIconUrl from "../assets/brand/bibasolo.svg";
 import { NavIcon, BibamusLogoFull } from "./icons.jsx";
-import { EntityAvatar, SalonAvatar, CategoryTile } from "./ui.jsx";
+import { SalonAvatar, CategoryTile } from "./ui.jsx";
+import { HomeExtraits } from "./HomeExtraits.jsx";
 import { BibaxSuggestionsCarousel } from "./BibaxSuggestionsCarousel.jsx";
 import { loadSalon } from "../data/salons.js";
-import { loadPulseFeed, loadBibaxSuggestions, attachUsernames, dismissBibaxSuggestion, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds, pulseClubName } from "../data/sharedDirectories.js";
+import { loadPulseFeed, loadBibaxSuggestions, attachUsernames, dismissBibaxSuggestion, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
 import { TravelAgeWarning } from "./TravelAgeWarning.jsx";
-
-function pulseTimeAgo(iso) {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const secs = Math.floor(diffMs / 1000);
-  if (secs < 5) return "À l'instant";
-  if (secs < 60) return `Il y a ${secs} sec.`;
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `Il y a ${mins} min.`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `Il y a ${hours} h`;
-  const days = Math.floor(hours / 24);
-  return `Il y a ${days} j`;
-}
 
 const CHECKIN_MAX_AGE_MS = 4 * 60 * 60 * 1000;
 
@@ -55,12 +43,6 @@ const formatTime = (timestamp) => {
 
 // Diamètre du rond de profil d'un bloc BibaLive (px) : il grandit vers la gauche à partir d'un rond de 56 px (voir le bloc BibaLive plus bas).
 const BIBALIVE_ROUND = 68;
-// Rond de profil d'un extrait BibaPulse de l'accueil (px), Mehdi 2026-11-12 : il s'étend sur les deux premières lignes du bloc (nom + début de l'action).
-// Même principe que BibaLive : il occupe 40 px dans la mise en page (donc le texte et la hauteur du bloc ne bougent pas) et déborde vers la gauche, le haut
-// et le bas pour atteindre 48 px, dans la marge qui l'entoure (6 px du bord de l'écran).
-const EXTRAIT_BASE = 40;
-const EXTRAIT_ROUND = 48;
-
 export function HomeScreen({
   profile,
   events,
@@ -117,6 +99,8 @@ export function HomeScreen({
     const ids = new Set();
     events.forEach((ev) => ev.venueId && ids.add(ev.venueId));
     (pulseEntries || []).forEach((e) => e.objectType === "venue" && e.objectId && ids.add(e.objectId));
+    // Le lieu d'un check, d'une publication ou d'un salon (ligne de lieu et rond de la miniature) ; « @home » et « @event » n'ont pas de fiche.
+    (pulseEntries || []).forEach((e) => e.venueId && !String(e.venueId).startsWith("@") && ids.add(e.venueId));
     if (ids.size === 0) return;
     loadVenuesByIds([...ids]).then((results) =>
       setVenuesById((prev) => ({ ...prev, ...Object.fromEntries(results.map((v) => [v.id, v])) }))
@@ -129,7 +113,8 @@ export function HomeScreen({
     loadOfficialStories().then(setOfficialStories);
   }, [pulseStoriesRefreshKey]);
   useEffect(() => {
-    loadPulseFeed(null, 3).then(setPulseEntries);
+    // 6 extraits au plus : 2 pages de 3 qu'on fait glisser sur le côté (HomeExtraits).
+    loadPulseFeed(null, 6).then(setPulseEntries);
   }, []);
 
 
@@ -496,122 +481,19 @@ export function HomeScreen({
         </>
       )}
 
-      {bibaPulseVisible &&
-        (() => {
-          const entries = pulseEntries || [];
-          const resolveObject = (entry) => {
-            const objType = entry.eventType === "venue_visit" ? "venue" : entry.objectType;
-            // Pour un lieu : son identifiant. Pour un produit ou une fiche : toujours l'objet lui-même,
-            // même quand la publication précise aussi le lieu où le check a été fait.
-            const id = objType === "venue" ? entry.venueId || entry.objectId : entry.objectId;
-            if (objType === "venue") return venuesById[id] || null;
-            const map = { drink: drinksDirectory, producer: breweriesDirectory, brand: brandsDirectory };
-            return (map[objType] || []).find((x) => x.id === id) || null;
-          };
+      {bibaPulseVisible && (
+        <HomeExtraits
+          entries={pulseEntries || []}
+          drinksDirectory={drinksDirectory}
+          venuesById={venuesById}
+          breweriesDirectory={breweriesDirectory}
+          brandsDirectory={brandsDirectory}
+          myUserId={myUserId}
           // Un appui sur un extrait ouvre sa fiche sur la page BibaPulse (la même ouverture qu'une notification : fiche mise en avant, barre verte à gauche).
-          const openExtrait = (entry) => (onOpenPulseEntry ? onOpenPulseEntry(entry.id) : goToBibaPulse());
-          const actionFor = (entry) => ({ product_discovered: "Découverte", drink_checked: "Check", venue_visit: "Check", database_contribution: "Ajout" }[entry.eventType] || "Activité");
-
-          return (
-            <div style={{ marginBottom: "18px" }}>
-              <button
-                onClick={goToBibaPulse}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", padding: 0, width: "100%", cursor: "pointer", marginBottom: "8px" }}
-              >
-                <span style={{ width: "4px", height: "14px", background: COLORS.amber, borderRadius: "2px", flexShrink: 0 }} />
-                <span style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>
-                  <span style={{ color: COLORS.ink }}>Biba</span>
-                  <span style={{ color: COLORS.amber }}>Pulse</span>
-                  <span style={{ color: COLORS.inkSoft }}> - Extraits</span>
-                </span>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginLeft: "auto",
-                    width: "22px",
-                    height: "22px",
-                    borderRadius: "50%",
-                    border: `2px solid ${COLORS.amber}`,
-                  }}
-                >
-                  <NavIcon name="chevron-right" size={12} color={COLORS.amber} />
-                </span>
-              </button>
-
-              {entries.length === 0 ? (
-                <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
-                  <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic", margin: 0 }}>En attente des premières activités.</p>
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", margin: "0 -20px" }}>
-                  {/* Extraits en bandes bleutées (surface), séparées par un petit espace de 6 px, toujours en pleine largeur (sortent de la marge de 20 px) — décision de Mehdi, 2026-11-12. */}
-                  {entries.map((entry) => {
-                    const obj = resolveObject(entry);
-                    const objName = obj?.name || (entry.eventType === "venue_visit" ? "un établissement" : entry.eventType === "database_contribution" ? "une fiche" : "un produit");
-                    // Carte « a rejoint le BibaClub Y » : le nom du club est dans la carte elle-même.
-                    const isClubJoin = entry.eventType === "club_joined";
-                    const clubName = isClubJoin ? pulseClubName(entry) : null;
-                    // Publication libre : pas d'objet, seulement son texte (une ligne, tronquée).
-                    const isPost = entry.eventType === "post";
-                    const postText = isPost && typeof entry.metadata?.comment === "string" ? entry.metadata.comment.replace(/\s+/g, " ").trim() : "";
-                    // Lancement d'un BibaRoom : le nom du salon est dans la carte elle-même (le salon ne s'ouvre pas d'ici : sans le code, personne ne peut y entrer).
-                    const isRoomLaunch = entry.eventType === "room_launched";
-                    // Arrivée dans un BibaRoom (`room_joined`) : même nom de salon, une autre phrase.
-                    const isRoomJoin = entry.eventType === "room_joined";
-                    const roomName = (isRoomLaunch || isRoomJoin) && typeof entry.metadata?.room_name === "string" ? entry.metadata.room_name : "";
-                    return (
-                      <div
-                        key={entry.id}
-                        data-home-extrait
-                        role="button"
-                        tabIndex={0}
-                        // Tout le bloc ouvre la fiche Pulse de cet extrait, sur la page BibaPulse (barre verte à gauche) — Mehdi, 2026-11-12. Rien d'autre n'est cliquable dans le bloc : on accède aux fiches (produit, lieu, profil, club) depuis la page BibaPulse.
-                        onClick={() => openExtrait(entry)}
-                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openExtrait(entry); } }}
-                        style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}
-                      >
-                        <span style={{ display: "flex", flexShrink: 0, margin: `${-(EXTRAIT_ROUND - EXTRAIT_BASE) / 2}px 0 ${-(EXTRAIT_ROUND - EXTRAIT_BASE) / 2}px ${-(EXTRAIT_ROUND - EXTRAIT_BASE)}px` }}>
-                          <EntityAvatar photoUrl={entry.actorAvatarUrl} size={EXTRAIT_ROUND} />
-                        </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ margin: 0, fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {[entry.actorName, entry.actorLastName].filter(Boolean).join(" ") || "Quelqu'un"}
-                          </p>
-                          <p style={{ margin: "1px 0 0", fontSize: "12.5px", color: COLORS.ink, ...(isPost ? { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } : {}) }}>
-                            {isClubJoin ? (
-                              <>
-                                A rejoint le BibaClub{" "}
-                                <strong style={{ color: COLORS.amber }}>{clubName || "un club"}</strong>
-                              </>
-                            ) : isRoomLaunch ? (
-                              <>
-                                Lancement du BibaRoom <strong style={{ color: COLORS.amber }}>{roomName || "sans titre"}</strong>
-                              </>
-                            ) : isRoomJoin ? (
-                              <>
-                                A rejoint le BibaRoom <strong style={{ color: COLORS.amber }}>{roomName || "sans titre"}</strong>
-                              </>
-                            ) : isPost ? (
-                              postText
-                            ) : (
-                              <>
-                                {actionFor(entry)} @{" "}
-                                <strong style={{ color: COLORS.amber }}>{objName}</strong>
-                              </>
-                            )}
-                          </p>
-                        </div>
-                        <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, flexShrink: 0 }}>{pulseTimeAgo(entry.createdAt)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })()}
+          onOpenEntry={(entry) => (onOpenPulseEntry ? onOpenPulseEntry(entry.id) : goToBibaPulse())}
+          onSeeAll={goToBibaPulse}
+        />
+      )}
 
       <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
 
