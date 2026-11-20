@@ -1008,7 +1008,6 @@ export function BibaPulseScreen({
   }, [myUserIdProp]);
   const myUserId = myUserIdProp || sessionUserId;
   const focusedCardRef = React.useRef(null);
-  const hasScrolledToFocus = React.useRef(false);
   // Retour d'une fiche (produit, lieu, marque, producteur, profil…) ouverte depuis une carte : le fil se rouvre sur cette carte, pas en
   // haut. L'identifiant vient de l'application (returnEntryId) ; on le lit une fois et on le remet à zéro. Toute arrivée sur le fil
   // efface aussi une mémoire laissée par une fiche (on n'y revient pas par ici).
@@ -1104,10 +1103,11 @@ export function BibaPulseScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetId, entries, hasMore]);
 
-  // Retour d'une fiche : la carte est remise en haut de l'écran, sans animation et avant l'affichage. Les produits, lieux et
-  // producteurs des cartes se chargent après le fil et changent leur hauteur : on réaligne à chaque chargement, jusqu'à ce que la
-  // personne touche l'écran ou, au plus, 4 secondes.
-  const keepAligning = React.useRef(!!returnTarget && !focusEntryId);
+  // Retour d'une fiche, ou ouverture d'une publication précise (extrait de l'accueil, notification) : la carte est mise en haut de
+  // l'écran, sans animation et avant l'affichage (Mehdi, 2026-11-20 : « l'extrait devrait être en haut de page », il arrivait en bas).
+  // Les produits, lieux et producteurs des cartes se chargent après le fil et changent leur hauteur : on réaligne à chaque
+  // chargement, jusqu'à ce que la personne touche l'écran ou, au plus, 4 secondes.
+  const keepAligning = React.useRef(!!targetId);
   React.useLayoutEffect(() => {
     if (!keepAligning.current || !focusedCardRef.current) return;
     focusedCardRef.current.scrollIntoView({ block: "start" });
@@ -1128,14 +1128,6 @@ export function BibaPulseScreen({
       window.removeEventListener("keydown", stop);
     };
   }, []);
-
-  useEffect(() => {
-    if (!focusEntryId || hasScrolledToFocus.current) return;
-    if (focusedCardRef.current) {
-      focusedCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-      hasScrolledToFocus.current = true;
-    }
-  }, [focusEntryId, entries]);
 
   const updateEntry = (id, patch) => {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
