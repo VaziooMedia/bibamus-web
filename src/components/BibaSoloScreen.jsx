@@ -48,6 +48,7 @@ import glutenFreeIconUrl from "../assets/brand/gluteen-free.svg";
 import { DrinkCheckScreen } from "./DrinkCheckScreen.jsx";
 import { AiIcon } from "./AiIcon.jsx";
 import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
 import { SpiritKindToggle } from "./SpiritKindToggle.jsx";
 import { BeerDerivativePills } from "./BeerDerivativePills.jsx";
 import { useBeerDerivatives, useBeerDerivativeList } from "../hooks/useBeerDerivatives.js";
@@ -1473,9 +1474,7 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
   );
 }
 
-// `onAddVenue(nom)` : ouvre l'assistant « Ajouter un lieu » avec le nom tapé (proposé quand la recherche de lieu ne trouve pas le bon).
-// `newVenueId` : le lieu qu'on vient de créer par cet assistant — il devient le lieu actuel dès le retour sur BibaSolo, puis `onNewVenueConsumed` l'efface côté App.
-export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onCheckConfirmed, onOpenDrink, onBack, onAddDrink, onAddVenue = null, newVenueId = null, onNewVenueConsumed = null, startInHistory = false, onHistoryOpenChange }) {
+export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDrink, onCheckDrink, onCheckConfirmed, onOpenDrink, onBack, onAddDrink, startInHistory = false, onHistoryOpenChange }) {
   const [checkins, setCheckins] = useState(null); // période en cours (de 6 h à 6 h) : c'est elle que comptent les compteurs
   const [previousCheckins, setPreviousCheckins] = useState(null); // période d'avant, affichée grisée sous la liste
   const [previousPeriodStart, setPreviousPeriodStart] = useState(null); // début (6 h) de la période d'avant : sa date s'affiche dans la barre de séparation
@@ -1569,6 +1568,8 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   const [venueResults, setVenueResults] = useState([]);
   // Le texte pour lequel la recherche de lieu a répondu : tant qu'il n'est pas celui du champ, la réponse n'est pas à jour (on n'affiche rien de « pas trouvé »).
   const [venueSearchedFor, setVenueSearchedFor] = useState("");
+  // « Ajouter un lieu » ouvert par-dessus BibaSolo (le texte tapé, ou null quand fermé) ; le lieu créé devient le lieu actuel.
+  const [addVenueName, setAddVenueName] = useState(null);
 
   // BibaZERO — même vrai concept qu'en salon (voir BibaBobModal), persisté sur le profil.
   const [bibaZero, setBibaZero] = useState(null);
@@ -1664,20 +1665,6 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     setVenueQuery("");
   };
 
-  // Retour de l'assistant « Ajouter un lieu » : le lieu qu'on vient de créer devient le lieu actuel (relu en base, comme un résultat de recherche).
-  useEffect(() => {
-    if (!newVenueId) return;
-    let cancelled = false;
-    loadVenuesByIds([newVenueId]).then(([v]) => {
-      if (cancelled) return;
-      if (v) pickVenue(v);
-      onNewVenueConsumed?.();
-    });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [newVenueId]);
 
   const refresh = () => {
     const { current, previous } = soloPeriodStarts();
@@ -2225,9 +2212,9 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
             </div>
           )}
           {/* Le lieu n'existe pas encore sur BibAtlas : même proposition que dans la liste des lieux, avec le nom tapé déjà dans l'assistant. */}
-          {onAddVenue && venueSearchedFor === vq && vq.length >= 2 && (
+          {venueSearchedFor === vq && vq.length >= 2 && (
             <div style={{ marginTop: "16px" }} data-add-venue="1">
-              <AddAfterSearch query={vq} onAdd={onAddVenue} noun="lieu" label="Proposer un établissement" />
+              <AddAfterSearch query={vq} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" framed />
             </div>
           )}
         </div>
@@ -2398,6 +2385,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
         />
       )}
       {waterAlertModalOpen && <WaterAlertModal onClose={() => setWaterAlertModalOpen(false)} />}
+      {addVenueName !== null && <AddVenueOverlay initialName={addVenueName} onChosen={pickVenue} onClose={() => setAddVenueName(null)} />}
 
       <PageFooterNav onBack={onBack} />
     </div>

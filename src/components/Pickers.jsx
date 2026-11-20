@@ -10,6 +10,8 @@ import { makeSearchMatcher, capitalizeFirst, sameVenueByNameCity } from "../util
 import { searchVenues } from "../data/sharedDirectories.js";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import { EntityAvatar } from "./ui.jsx";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
 
 export function BibaxSearchPicker({ bibros, excludeCodes = [], onPick, placeholder = "Rechercher un Bibax..." }) {
   const [open, setOpen] = useState(false);
@@ -270,26 +272,29 @@ export function ParticipantsEditor({ names, onChange, placeholder = "Participant
   );
 }
 
+// Le lieu d'un salon BibaRoom (création et réglages) : recherche dans BibAtlas. Un lieu introuvable se propose à l'ajout (décidé par Mehdi, 2026-11-20) : le bloc
+// « Ce lieu n'est pas encore présent sur BibAtlas ? » (cadre rose) ouvre l'assistant « Ajouter un lieu » PAR-DESSUS l'écran, sans perdre le titre ni les réglages déjà
+// saisis, et le lieu créé est aussitôt choisi. Il remplace l'ancien petit lien « + Ajouter un nouveau lieu », qui ne créait aucun vrai lieu (un nom et une ville, sans fiche).
 export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newCity, setNewCity] = useState("");
   const [filtered, setFiltered] = useState([]);
+  // Le texte pour lequel la recherche a répondu (le bloc d'ajout n'apparaît que s'il est celui du champ) ; addVenueName : « Ajouter un lieu » ouvert par-dessus.
+  const [searchedFor, setSearchedFor] = useState("");
+  const [addVenueName, setAddVenueName] = useState(null);
   const containerRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (!open) return;
+    // Pendant l'assistant « Ajouter un lieu » (affiché hors de ce bloc), un toucher n'est pas un toucher « à côté » : la liste reste ouverte.
+    if (!open || addVenueName !== null) return;
     const handler = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setOpen(false);
-        setCreating(false);
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
+  }, [open, addVenueName]);
 
   // Recherche côté serveur — contrairement à l'ancien comportement, la liste reste vide tant
   // qu'aucun terme n'est tapé (au lieu de montrer tout le répertoire par défaut).
@@ -297,12 +302,21 @@ export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
     const q = query.trim();
     if (!q) {
       setFiltered([]);
+      setSearchedFor("");
       return;
     }
+    let cancelled = false;
     const timer = setTimeout(() => {
-      searchVenues(q).then(setFiltered);
+      searchVenues(q).then((found) => {
+        if (cancelled) return;
+        setFiltered(found);
+        setSearchedFor(q);
+      });
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [query]);
 
   const alreadyTracked = (v) =>
@@ -313,22 +327,6 @@ export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
     onPick(v);
     setOpen(false);
     setQuery("");
-  };
-
-  const startCreating = () => {
-    setNewName(query.trim());
-    setNewCity("");
-    setCreating(true);
-  };
-
-  const confirmCreate = () => {
-    if (!newName.trim()) return;
-    onPick({ name: newName.trim(), city: newCity.trim() });
-    setOpen(false);
-    setCreating(false);
-    setQuery("");
-    setNewName("");
-    setNewCity("");
   };
 
   return (
@@ -382,102 +380,53 @@ export function PublicVenueSearchPicker({ myVenues, onPick, onOpen }) {
             maxHeight: "320px",
           }}
         >
-          {creating ? (
-            <div style={{ padding: "12px" }}>
-              <div style={{ fontSize: "13.5px", fontWeight: 700, marginBottom: "8px" }}>Nouvel établissement</div>
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Nom"
-                autoFocus
-                style={{ width: "100%", padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none", marginBottom: "8px" }}
-              />
-              <input
-                value={newCity}
-                onChange={(e) => setNewCity(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && newName.trim() && confirmCreate()}
-                placeholder="Ville (facultatif)"
-                style={{ width: "100%", padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none", marginBottom: "10px" }}
-              />
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  onClick={() => setCreating(false)}
-                  style={{ flex: 1, padding: "9px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, fontSize: "13px", cursor: "pointer" }}
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={confirmCreate}
-                  disabled={!newName.trim()}
-                  style={{
-                    flex: 1,
-                    padding: "9px",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: newName.trim() ? COLORS.amber : COLORS.paperAlt,
-                    color: COLORS.ink,
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    cursor: newName.trim() ? "pointer" : "not-allowed",
-                  }}
-                >
-                  Créer
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Nom, ville ou code postal..."
-                autoFocus
-                style={{ margin: "8px", padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
-              />
-              <div style={{ overflowY: "auto", flex: 1 }}>
-                {filtered.length === 0 && (
-                  <div style={{ padding: "10px 14px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucun résultat.</div>
-                )}
-                {filtered.map((v) => (
-                  <button
-                    key={v.id}
-                    onClick={() => pick(v)}
-                    style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "transparent", border: "none", cursor: "pointer" }}
-                  >
-                    {/* Rond de profil du lieu (photo, à défaut émoji, à défaut « B » Bibamus), comme dans « Voir les lieux près de chez vous » — Mehdi, 2026-11-19. */}
-                    <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} />
-                    <span style={{ minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
-                        {v.name}
-                      </div>
-                      <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>
-                        {[v.city, alreadyTracked(v) ? "✓ déjà utilisé" : null].filter(Boolean).join(" · ")}
-                      </div>
-                    </span>
-                  </button>
-                ))}
-              </div>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Nom, ville ou code postal..."
+            autoFocus
+            style={{ margin: "8px", padding: "9px 10px", borderRadius: "8px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "13.5px", outline: "none" }}
+          />
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {filtered.length === 0 && (
+              <div style={{ padding: "10px 14px", fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Aucun résultat.</div>
+            )}
+            {filtered.map((v) => (
               <button
-                onClick={startCreating}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  textAlign: "left",
-                  padding: "10px 14px",
-                  background: "transparent",
-                  border: "none",
-                  borderTop: filtered.length > 0 ? `1px dashed ${COLORS.paperAlt}` : "none",
-                  fontSize: "13.5px",
-                  fontWeight: 600,
-                  color: COLORS.pinkFluo,
-                  cursor: "pointer",
-                }}
+                key={v.id}
+                onClick={() => pick(v)}
+                style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", textAlign: "left", padding: "8px 14px", background: "transparent", border: "none", cursor: "pointer" }}
               >
-                + Ajouter un nouveau lieu{query.trim() ? ` "${query.trim()}"` : ""}
+                {/* Rond de profil du lieu (photo, à défaut émoji, à défaut « B » Bibamus), comme dans « Voir les lieux près de chez vous » — Mehdi, 2026-11-19. */}
+                <EntityAvatar photoUrl={v.profilePhotoUrl} photoEmoji={v.avatarEmoji} size={36} />
+                <span style={{ minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink }}>
+                    {v.name}
+                  </div>
+                  <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>
+                    {[v.city, alreadyTracked(v) ? "✓ déjà utilisé" : null].filter(Boolean).join(" · ")}
+                  </div>
+                </span>
               </button>
-            </>
-          )}
+            ))}
+            {/* Le lieu n'existe pas encore sur BibAtlas : proposition d'ajout, sous les résultats, une fois la recherche revenue pour le texte tapé. */}
+            {query.trim().length >= 2 && searchedFor === query.trim() && (
+              <div style={{ padding: "10px 12px 12px" }} data-add-venue="1">
+                <AddAfterSearch query={query.trim()} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" framed />
+              </div>
+            )}
+          </div>
         </div>
+      )}
+      {addVenueName !== null && (
+        <AddVenueOverlay
+          initialName={addVenueName}
+          onChosen={(v) => {
+            setAddVenueName(null);
+            pick(v);
+          }}
+          onClose={() => setAddVenueName(null)}
+        />
       )}
     </div>
   );

@@ -8,9 +8,21 @@
 import React from "react";
 import { COLORS } from "../constants.js";
 
-export function AddAfterSearch({ query, onAdd, noun, label }) {
+// `framed` : le texte et le « + » sont dans un cadre rose (même boîte rose que les avertissements de doublon : COLORS.surface, bordure pinkFluo de 2 px,
+// 12 px de rayon) — utilisé dans les sélecteurs de lieu (BibaSolo, DrinkCheck, publication BibaPulse, recherche BibAtlas, BibaRoom), pas sur les listes de BibAtlas.
+export function AddAfterSearch({ query, onAdd, noun, label, framed = false }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", marginTop: "6px", textAlign: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "12px",
+        marginTop: "6px",
+        textAlign: "center",
+        ...(framed ? { background: COLORS.surface, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "16px 14px", boxSizing: "border-box" } : {}),
+      }}
+    >
       <p style={{ margin: 0, fontSize: "14px", color: COLORS.inkSoft }}>
         Ce {noun} n'est pas encore présent sur BibAtlas ?
         <br />

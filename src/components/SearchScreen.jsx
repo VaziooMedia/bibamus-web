@@ -24,6 +24,8 @@ import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames, forma
 import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
 
 function TagButton({ label, count, filled, onClick }) {
   return (
@@ -149,6 +151,10 @@ export function SearchScreen({
   const matches = useMemo(() => makeSearchMatcher(plain), [plain]);
 
   const [venueSearchResults, setVenueResults] = useState(restored ? restored.venueSearchResults : []);
+  // Le texte pour lequel la recherche de lieux a répondu (au retour d'une fiche, celui des résultats mémorisés) : le bloc « Ce lieu n'est pas encore présent… »
+  // de l'onglet Lieux n'apparaît que s'il est celui du champ. addVenueName : « Ajouter un lieu » ouvert par-dessus (le texte tapé, ou null quand fermé).
+  const [venuesSearchedFor, setVenuesSearchedFor] = useState(restored && !(restored.query || "").trim().startsWith("@") ? (restored.query || "").trim() : "");
+  const [addVenueName, setAddVenueName] = useState(null);
   const [drinkResults, setDrinkResults] = useState(restored ? restored.drinkResults : []);
   const [drinksLoading, setDrinksLoading] = useState(false);
   // Recherche « @nom » exacte : atState garde le nom pour lequel la réponse a été reçue, et son résultat
@@ -228,12 +234,21 @@ export function SearchScreen({
     }
     if (!hasPlain) {
       setVenueResults([]);
+      setVenuesSearchedFor("");
       return;
     }
+    let cancelled = false;
     const timer = setTimeout(() => {
-      searchVenues(plain).then(setVenueResults);
+      searchVenues(plain).then((results) => {
+        if (cancelled) return;
+        setVenueResults(results);
+        setVenuesSearchedFor(plain);
+      });
     }, 350);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [plain]);
 
   // « @nom » exact : le serveur rend au plus une ligne ; on charge ensuite ce qu'il faut pour l'afficher
@@ -316,6 +331,13 @@ export function SearchScreen({
 
   const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
+  // Onglet Lieux : le lieu cherché n'existe pas (encore) sur BibAtlas → proposition d'ajout, sous les résultats ou le message « Aucun résultat ».
+  const addVenueBlock =
+    activeTab === "lieux" && hasPlain && venuesSearchedFor === plain ? (
+      <div style={{ padding: "16px 20px 8px" }} data-add-venue="1">
+        <AddAfterSearch query={plain} onAdd={setAddVenueName} noun="lieu" label="Proposer un établissement" framed />
+      </div>
+    ) : null;
   const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;
   // Mode atlas : tant qu'aucune recherche n'est lancée, les blocs du répertoire prennent la place des résultats.
   const showAtlasBlocks = atlas && !hasQuery;
@@ -472,17 +494,23 @@ export function SearchScreen({
 
           <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto", margin: "0 -20px", padding: "0 20px" }}>
             {totalResults === 0 && !bibaxLoading && !drinksLoading && !atLoading ? (
-              <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
+              <>
+                <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
+                {addVenueBlock}
+              </>
             ) : counts[activeTab] === 0 ? (
-              <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>
-                {atLoading
-                  ? "Recherche..."
-                  : activeTab === "bibax" && bibaxLoading
-                  ? "Recherche des Bibax..."
-                  : activeTab === "produits" && drinksLoading
-                  ? "Recherche des produits..."
-                  : "Aucun résultat dans cette catégorie."}
-              </p>
+              <>
+                <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>
+                  {atLoading
+                    ? "Recherche..."
+                    : activeTab === "bibax" && bibaxLoading
+                    ? "Recherche des Bibax..."
+                    : activeTab === "produits" && drinksLoading
+                    ? "Recherche des produits..."
+                    : "Aucun résultat dans cette catégorie."}
+                </p>
+                {addVenueBlock}
+              </>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", margin: "0 -20px" }}>
                 {activeTab === "lieux" &&
@@ -565,11 +593,13 @@ export function SearchScreen({
                       last={i === bibaxResults.length - 1}
                     />
                   ))}
+                {addVenueBlock}
               </div>
             )}
           </div>
         </>
       )}
+      {addVenueName !== null && <AddVenueOverlay initialName={addVenueName} onChosen={(v) => openVenue(v.id)} onClose={() => setAddVenueName(null)} />}
     </div>
   );
 }
