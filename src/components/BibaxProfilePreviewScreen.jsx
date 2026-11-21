@@ -19,7 +19,7 @@
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { PageHeader, PageFooterNav } from "./ui.jsx";
+import { PageHeader, PageFooterNav, ScrollToTopButton } from "./ui.jsx";
 import { PillTabs } from "./PillTabs.jsx";
 import { BibaxStatsContent } from "./BibaxStatsContent.jsx";
 import { EntityPulseSection } from "./EntityPulseSection.jsx";
@@ -45,7 +45,8 @@ import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
 
-export function BibaxProfilePreviewScreen({ bibroCode, onBack, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry }) {
+export function BibaxProfilePreviewScreen({ bibroCode, onBack, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry, withScrollToTop = false }) {
+  // `withScrollToTop` : la flèche « Remonter en haut » sur tous les onglets du profil (ouvert depuis le fil BibaPulse) ; sinon elle n'est que sur l'onglet BibaPulse (EntityPulseSection).
   const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
   // undefined = chargement, null = introuvable ou bloqué
   const [identity, setIdentity] = useState(undefined);
@@ -339,11 +340,13 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack, myUserId, myBibro
               onOpenProducer={onOpenProducer}
               returnEntryId={pulseReturnEntryId}
               onRememberEntry={onRememberPulseEntry}
+              scrollToTop={!withScrollToTop}
             />
           )}
         </>
       )}
 
+      {withScrollToTop && <ScrollToTopButton hideNearBottom={false} />}
       <PageFooterNav onBack={onBack} />
     </div>
   );

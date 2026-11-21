@@ -24,6 +24,10 @@
 // replace sur la carte d'où l'on est parti — comme le fil principal (BibaPulseScreen). L'écran hôte garde l'identifiant de la carte
 // (onRememberEntry l'écrit, returnEntryId le rend) le temps de l'aller-retour ; la section le lit une fois puis le remet à zéro.
 //
+// Flèche flottante « Remonter en haut » (`scrollToTop`, vrai par défaut ; Mehdi, 2026-11-21 : « une flèche sur tous les Pulse de l'app ») : le même
+// `ScrollToTopButton` que sur le fil principal, visible jusqu'en bas de la liste. Elle est donc sur l'onglet BibaPulse des fiches Produit, Marque, Lieu,
+// Producteur, Bibax (fiche et profil public) et de Mon Profil. Un écran hôte qui porte déjà sa propre flèche sur tous ses onglets la coupe (`scrollToTop={false}`).
+//
 // Les publications libres qui TAGUENT cette fiche s'y affichent aussi (le serveur les ajoute au fil de la fiche).
 // Leurs propres tags (autres produits, marques, producteurs, lieux) sont des pastilles, cliquables seulement
 // pour les sortes de fiche que l'écran hôte sait ouvrir (onOpenDrink, onOpenVenue, onOpenBrand, onOpenProducer).
@@ -37,6 +41,7 @@ import { usePulseProducersById, pulseDrinkIdsOf } from "./PulseProductCard.jsx";
 import { usePulseVenueRatingsById } from "./PulseVenueCard.jsx";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
+import { ScrollToTopButton } from "./ui.jsx";
 
 const SPECIAL_VENUE_LABELS = { "@home": "@Home", "@event": "@Event" };
 const SCOPES = [
@@ -44,7 +49,7 @@ const SCOPES = [
   { key: "bibax", label: "Mes Bibax" },
 ];
 
-export function EntityPulseSection({ entityType, entityId, myUserId: myUserIdProp, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, selfEntity, returnEntryId = null, onRememberEntry }) {
+export function EntityPulseSection({ entityType, entityId, myUserId: myUserIdProp, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, selfEntity, returnEntryId = null, onRememberEntry, scrollToTop = true }) {
   const [scope, setScope] = useState("all");
   // L'identifiant du compte vient de l'écran hôte ; à défaut (profil public ouvert depuis le fil, une discussion…), de la session.
   const [sessionUserId, setSessionUserId] = useState(null);
@@ -271,6 +276,7 @@ export function EntityPulseSection({ entityType, entityId, myUserId: myUserIdPro
           )}
         </>
       )}
+      {scrollToTop && <ScrollToTopButton hideNearBottom={false} />}
     </div>
   );
 }
