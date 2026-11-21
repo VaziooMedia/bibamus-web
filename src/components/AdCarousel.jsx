@@ -3,7 +3,8 @@
 // - Une seule annonce : la bannière seule, sans points ni défilement.
 // - Plusieurs : on les fait glisser sur le côté (chaque annonce s'arrête au bord, comme les extraits BibaPulse) et elles défilent d'elles-mêmes toutes les
 //   `seconds` secondes (durée réglée dans la plateforme de gestion, Business → Marketing → Réglages). Un balayage de la personne relance le décompte.
-//   Petits points sous la bannière : l'annonce affichée en amber, les autres en paperAlt (mêmes points que les extraits).
+//   Petits points DANS l'image, en bas au centre (décidé par Mehdi, 2026-11-21) : l'annonce affichée en amber, les autres en blanc translucide
+//   (lisibles sur n'importe quelle image), cerclés d'un fin trait sombre. Ils ne prennent aucune place sous la bannière.
 // - Le défilement automatique s'arrête pour qui a demandé moins d'animations (prefers-reduced-motion) : on balaie à la main.
 // - Une annonce dont l'image ne se charge pas est retirée du carrousel ; s'il n'en reste aucune, `onEmpty` est appelée (l'accueil retire alors son trait rose).
 // ============================================================
@@ -13,10 +14,13 @@ import { AdBanner } from "./AdBanner.jsx";
 
 const DOT_SIZE = 6;
 const DOT_GAP = 5;
+const DOT_IDLE = "rgba(255,255,255,0.6)";
+// Alignés sur le centre de la pastille « Annonce » (bas 8 px, haut d'environ 18 px) : les deux se lisent sur la même ligne.
+const DOTS_BOTTOM = 14;
 
 const prefersReducedMotion = () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export function AdCarousel({ ads, seconds, spaceBelow = 0, onEmpty }) {
+export function AdCarousel({ ads, seconds, spaceAbove = 0, spaceBelow = 0, onEmpty }) {
   const [failed, setFailed] = useState(() => new Set());
   const [index, setIndex] = useState(0);
   const scrollerRef = useRef(null);
@@ -47,7 +51,7 @@ export function AdCarousel({ ads, seconds, spaceBelow = 0, onEmpty }) {
   }, [index, count, seconds]);
 
   if (count === 0) return null;
-  if (count === 1) return <AdBanner ad={live[0]} spaceBelow={spaceBelow} onFail={() => markFailed(live[0].id)} />;
+  if (count === 1) return <AdBanner ad={live[0]} spaceAbove={spaceAbove} spaceBelow={spaceBelow} onFail={() => markFailed(live[0].id)} />;
 
   const onScroll = (e) => {
     const el = e.currentTarget;
@@ -56,7 +60,7 @@ export function AdCarousel({ ads, seconds, spaceBelow = 0, onEmpty }) {
   };
 
   return (
-    <div data-ad-carousel style={{ margin: `0 -20px ${spaceBelow}px` }}>
+    <div data-ad-carousel style={{ position: "relative", margin: `${spaceAbove}px -20px ${spaceBelow}px` }}>
       <div
         ref={scrollerRef}
         onScroll={onScroll}
@@ -71,9 +75,13 @@ export function AdCarousel({ ads, seconds, spaceBelow = 0, onEmpty }) {
           </div>
         ))}
       </div>
-      <div data-ad-dots aria-hidden="true" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: `${DOT_GAP}px`, paddingTop: "10px" }}>
+      <div
+        data-ad-dots
+        aria-hidden="true"
+        style={{ position: "absolute", left: 0, right: 0, bottom: `${DOTS_BOTTOM}px`, display: "flex", justifyContent: "center", alignItems: "center", gap: `${DOT_GAP}px`, pointerEvents: "none" }}
+      >
         {live.map((ad, i) => (
-          <span key={ad.id} style={{ width: `${DOT_SIZE}px`, height: `${DOT_SIZE}px`, borderRadius: "50%", background: i === index ? COLORS.amber : COLORS.paperAlt }} />
+          <span key={ad.id} style={{ width: `${DOT_SIZE}px`, height: `${DOT_SIZE}px`, borderRadius: "50%", background: i === index ? COLORS.amber : DOT_IDLE, boxShadow: "0 0 0 1px rgba(0,0,0,0.35)" }} />
         ))}
       </div>
     </div>

@@ -513,15 +513,10 @@ export function HomeScreen({
         />
       )}
 
-      <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
-
-      {/* Annonces (bannières 3:1, de bord à bord, cliquables ; plusieurs : carrousel), entre deux traits roses ; sans annonce active, ni bannière ni trait en plus. */}
-      {homeAds.length > 0 && (
-        <>
-          <AdCarousel ads={homeAds} seconds={homeAdSeconds} spaceBelow={18} onEmpty={dropHomeAds} />
-          <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
-        </>
-      )}
+      {/* Annonces (bannières 3:1, de bord à bord, cliquables ; plusieurs : carrousel avec ses points dans l'image) : la bannière fait office de séparation (décidé par Mehdi,
+          2026-11-21), donc plus aucun trait rose autour d'elle — celui qui suivait les extraits n'est posé que SANS annonce (une image qui ne se charge pas le ramène). */}
+      {homeAds.length === 0 && <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />}
+      {homeAds.length > 0 && <AdCarousel ads={homeAds} seconds={homeAdSeconds} spaceBelow={18} onEmpty={dropHomeAds} />}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
         <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Club</span></>} subtitle="Tes Clubs privés et publics" onClick={goToBibaClubs} />
