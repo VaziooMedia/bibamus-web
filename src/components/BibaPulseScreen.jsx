@@ -1312,7 +1312,7 @@ export function BibaPulseScreen({
               initialShowComments={entry.id === focusEntryId && openCommentsOnFocus}
             />
             {pulseAds.length > 0 && (index + 1) % pulseAdEvery === 0 && (index < entries.length - 1 || hasMore) && (
-              <AdBanner ad={pulseAds[(Math.floor((index + 1) / pulseAdEvery) - 1) % pulseAds.length]} bleed={false} spaceAbove={12} spaceBelow={12} />
+              <AdBanner ad={pulseAds[(Math.floor((index + 1) / pulseAdEvery) - 1) % pulseAds.length]} placement="pulse" bleed={false} spaceAbove={12} spaceBelow={12} />
             )}
             </React.Fragment>
           ))}
