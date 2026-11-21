@@ -12,8 +12,8 @@ import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { SalonAvatar, CategoryTile } from "./ui.jsx";
 import { HomeExtraits } from "./HomeExtraits.jsx";
 import { BibaxSuggestionsCarousel } from "./BibaxSuggestionsCarousel.jsx";
-import { AdBanner } from "./AdBanner.jsx";
-import { loadActiveAds } from "../data/ads.js";
+import { AdCarousel } from "./AdCarousel.jsx";
+import { loadActiveAds, AD_DEFAULT_CAROUSEL_SECONDS } from "../data/ads.js";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, attachUsernames, dismissBibaxSuggestion, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
@@ -85,17 +85,22 @@ export function HomeScreen({
   lastName,
 }) {
   const [pulseEntries, setPulseEntries] = useState(null);
-  // Bannière d'annonce de l'accueil : la première annonce active de l'emplacement « home » (le serveur décide de l'ordre). Aucune annonce → rien ne s'affiche.
-  const [homeAd, setHomeAd] = useState(null);
+  // Annonces de l'accueil : les annonces actives de l'emplacement « home » défilent en carrousel (une seule : bannière seule). Aucune annonce → rien ne s'affiche.
+  const [homeAds, setHomeAds] = useState([]);
+  const [homeAdSeconds, setHomeAdSeconds] = useState(AD_DEFAULT_CAROUSEL_SECONDS);
   useEffect(() => {
     let cancelled = false;
-    loadActiveAds("home").then((ads) => {
-      if (!cancelled) setHomeAd(ads[0] || null);
+    loadActiveAds("home").then((result) => {
+      if (cancelled) return;
+      setHomeAds(result.ads);
+      setHomeAdSeconds(result.carouselSeconds);
     });
     return () => {
       cancelled = true;
     };
   }, []);
+  // Toutes les images des annonces sont cassées : on retire la bannière et son trait rose.
+  const dropHomeAds = React.useCallback(() => setHomeAds([]), []);
   // Aperçu borné (dernières entrées Pulse sur l'accueil) — les produits qu'il référence forment
   // un ensemble tout aussi borné, jamais besoin du répertoire complet.
   const [drinksDirectory, setDrinksDirectory] = useState([]);
@@ -510,10 +515,10 @@ export function HomeScreen({
 
       <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
 
-      {/* Bannière d'annonce (3:1, de bord à bord, cliquable), entre deux traits roses ; sans annonce active, ni bannière ni trait en plus. */}
-      {homeAd && (
+      {/* Annonces (bannières 3:1, de bord à bord, cliquables ; plusieurs : carrousel), entre deux traits roses ; sans annonce active, ni bannière ni trait en plus. */}
+      {homeAds.length > 0 && (
         <>
-          <AdBanner ad={homeAd} spaceBelow={18} onFail={() => setHomeAd(null)} />
+          <AdCarousel ads={homeAds} seconds={homeAdSeconds} spaceBelow={18} onEmpty={dropHomeAds} />
           <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
         </>
       )}

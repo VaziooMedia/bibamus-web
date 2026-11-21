@@ -24,7 +24,7 @@ import { PulseRoomCard } from "./PulseRoomCard.jsx";
 import { formatCount } from "../utils.js";
 import { FINE_PILL } from "./PillTabs.jsx";
 import { AdBanner } from "./AdBanner.jsx";
-import { loadActiveAds } from "../data/ads.js";
+import { loadActiveAds, AD_DEFAULT_EVERY_N } from "../data/ads.js";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -975,9 +975,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   );
 });
 
-// Une bannière d'annonce s'intercale tous les PULSE_AD_EVERY publications du fil (10 pour le moment, décidé par Mehdi le 2026-11-21 ; à terme réglable depuis la plateforme de gestion) (entre deux publications, jamais en tête ni en fin de fil).
-export const PULSE_AD_EVERY = 10;
-
+// Une bannière d'annonce s'intercale toutes les N publications du fil : N vient de la plateforme de gestion (Business → Marketing → Réglages, table ad_settings, 10 au départ ; repli AD_DEFAULT_EVERY_N) (entre deux publications, jamais en tête ni en fin de fil).
 export function BibaPulseScreen({
   onBack,
   breweriesDirectory = [],
@@ -999,10 +997,13 @@ export function BibaPulseScreen({
   const [entries, setEntries] = useState(null);
   // Annonces actives de l'emplacement « pulse » : elles tournent d'une bannière à l'autre le long du fil. Aucune annonce → le fil reste tel quel.
   const [pulseAds, setPulseAds] = useState([]);
+  const [pulseAdEvery, setPulseAdEvery] = useState(AD_DEFAULT_EVERY_N);
   useEffect(() => {
     let cancelled = false;
-    loadActiveAds("pulse").then((ads) => {
-      if (!cancelled) setPulseAds(ads);
+    loadActiveAds("pulse").then((result) => {
+      if (cancelled) return;
+      setPulseAds(result.ads);
+      setPulseAdEvery(result.everyN);
     });
     return () => {
       cancelled = true;
@@ -1310,8 +1311,8 @@ export function BibaPulseScreen({
               highlighted={entry.id === focusEntryId}
               initialShowComments={entry.id === focusEntryId && openCommentsOnFocus}
             />
-            {pulseAds.length > 0 && (index + 1) % PULSE_AD_EVERY === 0 && (index < entries.length - 1 || hasMore) && (
-              <AdBanner ad={pulseAds[(Math.floor((index + 1) / PULSE_AD_EVERY) - 1) % pulseAds.length]} bleed={false} spaceAbove={12} spaceBelow={12} />
+            {pulseAds.length > 0 && (index + 1) % pulseAdEvery === 0 && (index < entries.length - 1 || hasMore) && (
+              <AdBanner ad={pulseAds[(Math.floor((index + 1) / pulseAdEvery) - 1) % pulseAds.length]} bleed={false} spaceAbove={12} spaceBelow={12} />
             )}
             </React.Fragment>
           ))}
