@@ -12,6 +12,8 @@ import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { SalonAvatar, CategoryTile } from "./ui.jsx";
 import { HomeExtraits } from "./HomeExtraits.jsx";
 import { BibaxSuggestionsCarousel } from "./BibaxSuggestionsCarousel.jsx";
+import { AdCarousel } from "./AdCarousel.jsx";
+import { loadActiveAds, AD_DEFAULT_CAROUSEL_SECONDS } from "../data/ads.js";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, attachUsernames, dismissBibaxSuggestion, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
@@ -83,6 +85,22 @@ export function HomeScreen({
   lastName,
 }) {
   const [pulseEntries, setPulseEntries] = useState(null);
+  // Annonces de l'accueil : les annonces actives de l'emplacement « home » défilent en carrousel (une seule : bannière seule). Aucune annonce → rien ne s'affiche.
+  const [homeAds, setHomeAds] = useState([]);
+  const [homeAdSeconds, setHomeAdSeconds] = useState(AD_DEFAULT_CAROUSEL_SECONDS);
+  useEffect(() => {
+    let cancelled = false;
+    loadActiveAds("home").then((result) => {
+      if (cancelled) return;
+      setHomeAds(result.ads);
+      setHomeAdSeconds(result.carouselSeconds);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  // Toutes les images des annonces sont cassées : on retire la bannière et son trait rose.
+  const dropHomeAds = React.useCallback(() => setHomeAds([]), []);
   // Aperçu borné (dernières entrées Pulse sur l'accueil) — les produits qu'il référence forment
   // un ensemble tout aussi borné, jamais besoin du répertoire complet.
   const [drinksDirectory, setDrinksDirectory] = useState([]);
@@ -495,7 +513,10 @@ export function HomeScreen({
         />
       )}
 
-      <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
+      {/* Annonces (bannières 3:1, de bord à bord, cliquables ; plusieurs : carrousel avec ses points dans l'image) : la bannière fait office de séparation (décidé par Mehdi,
+          2026-11-21), donc plus aucun trait rose autour d'elle — celui qui suivait les extraits n'est posé que SANS annonce (une image qui ne se charge pas le ramène). */}
+      {homeAds.length === 0 && <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />}
+      {homeAds.length > 0 && <AdCarousel ads={homeAds} seconds={homeAdSeconds} spaceBelow={18} onEmpty={dropHomeAds} />}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
         <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Club</span></>} subtitle="Tes Clubs privés et publics" onClick={goToBibaClubs} />
