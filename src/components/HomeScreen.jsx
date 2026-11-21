@@ -12,6 +12,8 @@ import { NavIcon, BibamusLogoFull } from "./icons.jsx";
 import { SalonAvatar, CategoryTile } from "./ui.jsx";
 import { HomeExtraits } from "./HomeExtraits.jsx";
 import { BibaxSuggestionsCarousel } from "./BibaxSuggestionsCarousel.jsx";
+import { AdBanner } from "./AdBanner.jsx";
+import { loadActiveAds } from "../data/ads.js";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, attachUsernames, dismissBibaxSuggestion, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
@@ -83,6 +85,17 @@ export function HomeScreen({
   lastName,
 }) {
   const [pulseEntries, setPulseEntries] = useState(null);
+  // Bannière d'annonce de l'accueil : la première annonce active de l'emplacement « home » (le serveur décide de l'ordre). Aucune annonce → rien ne s'affiche.
+  const [homeAd, setHomeAd] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadActiveAds("home").then((ads) => {
+      if (!cancelled) setHomeAd(ads[0] || null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // Aperçu borné (dernières entrées Pulse sur l'accueil) — les produits qu'il référence forment
   // un ensemble tout aussi borné, jamais besoin du répertoire complet.
   const [drinksDirectory, setDrinksDirectory] = useState([]);
@@ -496,6 +509,14 @@ export function HomeScreen({
       )}
 
       <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
+
+      {/* Bannière d'annonce (3:1, de bord à bord, cliquable), entre deux traits roses ; sans annonce active, ni bannière ni trait en plus. */}
+      {homeAd && (
+        <>
+          <AdBanner ad={homeAd} spaceBelow={18} onFail={() => setHomeAd(null)} />
+          <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
+        </>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
         <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Club</span></>} subtitle="Tes Clubs privés et publics" onClick={goToBibaClubs} />
