@@ -1205,20 +1205,18 @@ export function BibaPulseScreen({
     // retrouve la carte d'où l'on était parti (celle qui a ouvert ce profil).
     const fromProfile = (fn) => (fn ? (...args) => { if (onRememberEntry && profileFromEntry.current) onRememberEntry(profileFromEntry.current); return fn(...args); } : undefined);
     return (
-      <>
-        <BibaxProfilePreviewScreen
-          bibroCode={viewedProfileCode}
-          onBack={() => setViewedProfileCode(null)}
-          myUserId={myUserId}
-          myBibroCode={myBibroCode}
-          onOpenVenue={fromProfile(onOpenVenue)}
-          onOpenDrink={fromProfile(onOpenDrink)}
-          onOpenBrand={fromProfile(onOpenBrand)}
-          onOpenProducer={fromProfile(onOpenProducer)}
-        />
-        {/* Même flèche « Remonter en haut » que sur le fil, pour le profil ouvert depuis BibaPulse (Mehdi, 2026-11-21). */}
-        <ScrollToTopButton hideNearBottom={false} />
-      </>
+      // `withScrollToTop` : même flèche « Remonter en haut » que sur le fil, sur tous les onglets de ce profil (Mehdi, 2026-11-21).
+      <BibaxProfilePreviewScreen
+        bibroCode={viewedProfileCode}
+        onBack={() => setViewedProfileCode(null)}
+        myUserId={myUserId}
+        myBibroCode={myBibroCode}
+        onOpenVenue={fromProfile(onOpenVenue)}
+        onOpenDrink={fromProfile(onOpenDrink)}
+        onOpenBrand={fromProfile(onOpenBrand)}
+        onOpenProducer={fromProfile(onOpenProducer)}
+        withScrollToTop
+      />
     );
   }
 
