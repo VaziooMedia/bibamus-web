@@ -252,8 +252,9 @@ export default function App() {
   const bottomNavHidden = useHideOnScroll(mainScrollEl, screen, screen !== "home");
   // BibaPing : une discussion ouverte cache aussi la barre du bas, pour que le champ de message descende.
   const [bibaPingChatOpen, setBibaPingChatOpen] = useState(false);
-  // BibaPulse : la barre du bas est toujours cachée, pour laisser toute la place au fil et à la rédaction.
-  const bibaPulseOpen = screen === "bibaPulse";
+  // BibaPulse : le fil suit la règle du défilement (barre repliée en descendant, de retour dès qu'on remonte), mais la rédaction
+  // d'une publication cache la barre pour laisser la place au clavier : l'écran BibaPulse nous le signale (onComposingChange).
+  const [bibaPulseComposing, setBibaPulseComposing] = useState(false);
 
   // BibaMusic — retour de la connexion Spotify (OAuth PKCE). Le code d'autorisation arrive en
   // paramètre d'URL sur bibamus.app/spotify-callback ; on le conserve ici jusqu'à ce que la
@@ -3915,6 +3916,7 @@ export default function App() {
             )}
               {screen === "bibaPulse" && (
               <BibaPulseScreen
+                onComposingChange={setBibaPulseComposing}
                 onBack={() => {
                   setFocusPulseEntry(null);
                   setScreen("home");
@@ -4103,7 +4105,7 @@ export default function App() {
               onGoToSessionHub={() => setScreen("sessionHub")}
               unreadNotifications={unreadNotificationsCount}
               bibaPingVisible={featureFlags.nav_bibaping_visible !== false}
-              hidden={isBottomNavHidden({ hiddenByScroll: bottomNavHidden, bibaPingChatOpen, bibaPulseOpen, screen })}
+              hidden={isBottomNavHidden({ hiddenByScroll: bottomNavHidden, bibaPingChatOpen, bibaPulseComposing: screen === "bibaPulse" && bibaPulseComposing, screen })}
             />
           </div>
         </div>
