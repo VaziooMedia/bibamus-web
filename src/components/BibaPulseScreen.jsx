@@ -5,7 +5,7 @@ import { PLACE_INTERACTIONS } from "../placeInteractions.js";
 import { PhotoLightbox } from "./PhotoLightbox.jsx";
 import { PulseInteractionPill } from "./PulseInteractionPill.jsx";
 import { NavIcon, CheersIcon } from "./icons.jsx";
-import { PageHeader, EntityAvatar } from "./ui.jsx";
+import { PageHeader, EntityAvatar, ScrollToTopButton } from "./ui.jsx";
 import { loadPulseFeed, attachPulseAuthorLines, togglePulseBix, togglePulseIncoming, toggleSanteReaction, loadPulseReactors, loadPulseComments, postPulseComment, deleteMyPulsePost, previewMyPulseCheckDeletion, deleteMyPulseCheck, loadDrinksByIds, loadVenuesByIds, getSession, pulseClubName } from "../data/sharedDirectories.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
@@ -993,6 +993,7 @@ export function BibaPulseScreen({
   onRememberEntry,
   storiesEnabled = true,
   onShareStory,
+  onComposingChange,
 }) {
   const [entries, setEntries] = useState(null);
   // Annonces actives de l'emplacement « pulse » : elles tournent d'une bannière à l'autre le long du fil. Aucune annonce → le fil reste tel quel.
@@ -1012,6 +1013,12 @@ export function BibaPulseScreen({
   // Écran de rédaction d'une publication libre (bouton « + »). Affiché ici même, comme la fiche d'un Bibax :
   // la navigation reste interne à BibaPulse, et le fil continue de se rafraîchir en dessous.
   const [composing, setComposing] = useState(false);
+  // L'application cache la barre du bas pendant la rédaction (clavier) ; sur le fil, elle suit le défilement comme ailleurs.
+  useEffect(() => {
+    if (!onComposingChange) return undefined;
+    onComposingChange(composing);
+    return () => onComposingChange(false);
+  }, [composing, onComposingChange]);
   // Cartes supprimées pendant cette visite (pour qu'un rafraîchissement déjà parti ne les ramène pas).
   const deletedIds = useRef(new Set());
   const topRef = React.useRef(null);
@@ -1198,16 +1205,20 @@ export function BibaPulseScreen({
     // retrouve la carte d'où l'on était parti (celle qui a ouvert ce profil).
     const fromProfile = (fn) => (fn ? (...args) => { if (onRememberEntry && profileFromEntry.current) onRememberEntry(profileFromEntry.current); return fn(...args); } : undefined);
     return (
-      <BibaxProfilePreviewScreen
-        bibroCode={viewedProfileCode}
-        onBack={() => setViewedProfileCode(null)}
-        myUserId={myUserId}
-        myBibroCode={myBibroCode}
-        onOpenVenue={fromProfile(onOpenVenue)}
-        onOpenDrink={fromProfile(onOpenDrink)}
-        onOpenBrand={fromProfile(onOpenBrand)}
-        onOpenProducer={fromProfile(onOpenProducer)}
-      />
+      <>
+        <BibaxProfilePreviewScreen
+          bibroCode={viewedProfileCode}
+          onBack={() => setViewedProfileCode(null)}
+          myUserId={myUserId}
+          myBibroCode={myBibroCode}
+          onOpenVenue={fromProfile(onOpenVenue)}
+          onOpenDrink={fromProfile(onOpenDrink)}
+          onOpenBrand={fromProfile(onOpenBrand)}
+          onOpenProducer={fromProfile(onOpenProducer)}
+        />
+        {/* Même flèche « Remonter en haut » que sur le fil, pour le profil ouvert depuis BibaPulse (Mehdi, 2026-11-21). */}
+        <ScrollToTopButton hideNearBottom={false} />
+      </>
     );
   }
 
@@ -1329,6 +1340,8 @@ export function BibaPulseScreen({
           )}
         </>
       )}
+      {/* Flèche flottante « Remonter en haut » (la même que sur Mon Historique, Mes favoris…), gardée jusqu'en bas du fil : c'est là qu'on en a besoin. Sans elle, le seul retour était de remonter tout le fil à la main jusqu'au bouton Home (Mehdi, 2026-11-21). */}
+      <ScrollToTopButton hideNearBottom={false} />
     </div>
   );
 }
