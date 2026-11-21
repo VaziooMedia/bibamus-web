@@ -237,7 +237,7 @@ export function HomeScreen({
         </div>
       </div>
 
-      <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 14px" }} />
+      {/* Pas de trait rose entre l'en-tête et les quatre boutons ronds (retiré à la demande de Mehdi, 2026-11-21) : le premier trait est celui sous les boutons. */}
       <div style={{ display: "flex", justifyContent: "center", gap: "28px", marginBottom: "14px" }}>
         <div data-tour="atlas" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "68px" }}>
           <button
