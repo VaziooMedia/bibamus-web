@@ -975,8 +975,8 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   );
 });
 
-// Une bannière d'annonce s'intercale tous les PULSE_AD_EVERY publications du fil (entre deux publications, jamais en tête ni en fin de fil).
-export const PULSE_AD_EVERY = 6;
+// Une bannière d'annonce s'intercale tous les PULSE_AD_EVERY publications du fil (10 pour le moment, décidé par Mehdi le 2026-11-21 ; à terme réglable depuis la plateforme de gestion) (entre deux publications, jamais en tête ni en fin de fil).
+export const PULSE_AD_EVERY = 10;
 
 export function BibaPulseScreen({
   onBack,

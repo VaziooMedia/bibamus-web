@@ -3,13 +3,13 @@
 // Décidé par Mehdi (2026-11-21) : format bannière 3:1, de bord à bord, cliquable. Affichée sur l'accueil et tous les X publications du fil BibaPulse.
 // - La hauteur est fixée par le ratio (aspect-ratio 3 / 1) : la place est réservée avant le chargement de l'image, rien ne saute à l'écran.
 // - Si l'image ne se charge pas, la bannière disparaît entièrement (pas de cadre vide).
-// - La mention « Annonce » (petite pastille dans le coin) rend la publicité identifiable comme telle ; AD_SHOW_LABEL la retire en un seul endroit.
+// - La mention « Annonce » (petite pastille dans le coin) rend la publicité identifiable comme telle. Retirée pendant la phase de test (Mehdi, 2026-11-21) : AD_SHOW_LABEL = false ; à remettre à true le moment venu (à terme réglable depuis la plateforme de gestion).
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
 
 export const AD_ASPECT = "3 / 1";
-export const AD_SHOW_LABEL = true;
+export const AD_SHOW_LABEL = false;
 
 // `bleed` : la bannière sort de la marge de 20 px de la page (accueil). Dans le fil Pulse, le conteneur sort déjà de la marge : `bleed={false}`.
 // `spaceAbove` / `spaceBelow` : espace (px) laissé au-dessus / en dessous.
