@@ -328,7 +328,8 @@ export function HomeScreen({
           </span>
         </div>
       </div>
-      <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
+      {/* Trait sous les quatre boutons ronds : grisé (`paperAlt`) au lieu de rose fluo, à l'essai (Mehdi, 2026-11-21 : « je vois ce que ça donne au fur et à mesure »). */}
+      <div style={{ height: "2px", background: COLORS.paperAlt, margin: "0 -20px 18px" }} />
 
       <TravelAgeWarning profile={profile} />
       {(stories.length > 0 || officialStories.length > 0) && (
