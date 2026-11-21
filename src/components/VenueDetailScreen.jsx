@@ -552,28 +552,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
       </div>
 
 
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Prochains évènements</span>
-        </div>
-        <div style={{ textAlign: "center", padding: "16px 0" }}>
-          <NavIcon name="calendar" size={26} color={COLORS.paperAlt} />
-          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
-        </div>
-      </div>
-
-      <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-          <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: COLORS.inkSoft }}>Médias</span>
-        </div>
-        <div style={{ textAlign: "center", padding: "16px 0" }}>
-          <NavIcon name="camera" size={26} color={COLORS.paperAlt} />
-          <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "8px" }}>Bientôt disponible</p>
-        </div>
-      </div>
-
+      {/* Plus de blocs « Prochains évènements » ni « Médias » (Mehdi, 2026-11-21) : ils n'étaient que des cases « Bientôt disponible ». Quand ils reviendront, ils ne s'afficheront que s'il y a au moins un évènement / un média. */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "40px" }}>
         {claimsEnabled && (
         <button
