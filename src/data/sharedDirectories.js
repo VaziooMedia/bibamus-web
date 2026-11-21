@@ -4010,8 +4010,8 @@ export const unrateMyBrand = (brandId) => unrateMyEntity("unrateMyBrand", "unrat
 
 export const loadProducerRatingSummary = (producerId) => loadEntityRatingSummary("loadProducerRatingSummary", "get_producer_rating_summary", "p_producer_id", producerId);
 export const loadMyBibaxProducerRating = (producerId) => loadMyBibaxEntityRating("loadMyBibaxProducerRating", "get_my_bibax_producer_rating", "p_producer_id", producerId);
-// Lieux : la ligne « Bibax » de la carte « Notes » de l'onglet Biba360 d'une fiche Lieu — la moyenne des appréciations (paliers 1 à 5) de MES Bibax, et leur nombre. La fonction SQL est à créer
-// (même forme que les deux ci-dessus) ; tant qu'elle n'existe pas, la lecture échoue et la ligne montre un tiret.
+// Lieux : la ligne « Bibax » de la carte « Notes » de l'onglet Biba360 d'une fiche Lieu — la moyenne des appréciations (paliers 1 à 5) de MES Bibax, et leur nombre. La fonction SQL (créée le 2026-11-21, même forme que
+// celle des producteurs, réglage de partage « Lieux ») ; si la lecture échoue ou si aucun Bibax n'a apprécié, la ligne montre un tiret.
 export const loadMyBibaxVenueRating = (venueId) => loadMyBibaxEntityRating("loadMyBibaxVenueRating", "get_my_bibax_venue_rating", "p_venue_id", venueId);
 export const rateMyProducer = (producerId, rating) => rateMyEntity("rateMyProducer", "rate_my_producer", "p_producer_id", producerId, rating);
 export const unrateMyProducer = (producerId) => unrateMyEntity("unrateMyProducer", "unrate_my_producer", "p_producer_id", producerId);
