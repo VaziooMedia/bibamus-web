@@ -52,3 +52,33 @@ export async function loadActiveAds(placement) {
     carouselSeconds: intInRange(first.carousel_seconds, 2, 60, AD_DEFAULT_CAROUSEL_SECONDS),
   };
 }
+
+/* ---------------- COMPTAGE (affichages et clics) ----------------
+   Compteurs ANONYMES par annonce, emplacement et jour (décidé par Mehdi, 2026-11-21) : table `ad_stats_daily`, alimentée par la fonction serveur
+   `track_ad_event(p_ad_id, p_placement, p_event)` (voir docs/DATABASE.md, « Annonces »). Aucune donnée sur la personne n'est envoyée.
+   Règles : un affichage = la bannière est vue pour moitié au moins pendant 1 seconde (voir AdBanner), compté UNE seule fois par annonce et par emplacement
+   et par ouverture de l'app ; un clic = chaque appui sur la bannière. Un échec de comptage ne se voit jamais : la bannière s'affiche comme si de rien n'était. */
+
+const countedImpressions = new Set();
+
+async function sendAdEvent(adId, placement, event) {
+  try {
+    const { error } = await supabase.rpc("track_ad_event", { p_ad_id: adId, p_placement: placement, p_event: event });
+    if (error) console.debug("track_ad_event:", error.message);
+  } catch (e) {
+    console.debug("track_ad_event:", e);
+  }
+}
+
+export function trackAdImpression(adId, placement) {
+  if (!adId || !AD_PLACEMENTS.includes(placement)) return;
+  const key = `${placement}:${adId}`;
+  if (countedImpressions.has(key)) return;
+  countedImpressions.add(key);
+  sendAdEvent(adId, placement, "impression");
+}
+
+export function trackAdClick(adId, placement) {
+  if (!adId || !AD_PLACEMENTS.includes(placement)) return;
+  sendAdEvent(adId, placement, "click");
+}

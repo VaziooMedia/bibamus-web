@@ -20,7 +20,7 @@ const DOTS_BOTTOM = 14;
 
 const prefersReducedMotion = () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export function AdCarousel({ ads, seconds, spaceAbove = 0, spaceBelow = 0, onEmpty }) {
+export function AdCarousel({ ads, seconds, placement, spaceAbove = 0, spaceBelow = 0, onEmpty }) {
   const [failed, setFailed] = useState(() => new Set());
   const [index, setIndex] = useState(0);
   const scrollerRef = useRef(null);
@@ -51,7 +51,7 @@ export function AdCarousel({ ads, seconds, spaceAbove = 0, spaceBelow = 0, onEmp
   }, [index, count, seconds]);
 
   if (count === 0) return null;
-  if (count === 1) return <AdBanner ad={live[0]} spaceAbove={spaceAbove} spaceBelow={spaceBelow} onFail={() => markFailed(live[0].id)} />;
+  if (count === 1) return <AdBanner ad={live[0]} placement={placement} spaceAbove={spaceAbove} spaceBelow={spaceBelow} onFail={() => markFailed(live[0].id)} />;
 
   const onScroll = (e) => {
     const el = e.currentTarget;
@@ -71,7 +71,7 @@ export function AdCarousel({ ads, seconds, spaceAbove = 0, spaceBelow = 0, onEmp
       >
         {live.map((ad) => (
           <div key={ad.id} style={{ flex: "0 0 100%", minWidth: 0, scrollSnapAlign: "start", scrollSnapStop: "always" }}>
-            <AdBanner ad={ad} bleed={false} onFail={() => markFailed(ad.id)} />
+            <AdBanner ad={ad} placement={placement} bleed={false} onFail={() => markFailed(ad.id)} />
           </div>
         ))}
       </div>
