@@ -2354,9 +2354,7 @@ export default function App() {
                 }}
                 goToBibaMeet={() => setScreen("bibaMeet")}
                 goToBibaClubs={() => setScreen("bibaClubsList")}
-                bibaMeetVisible={featureFlags.nav_bibameet_visible !== false}
                 bibaPulseVisible={featureFlags.nav_bibapulse_visible !== false}
-                gamesVisible={featureFlags.nav_games_visible !== false}
                 storiesEnabled={featureFlags.stories_enabled !== false}
                 goToBibaPulse={() => setScreen("bibaPulse")}
                 onOpenPulseEntry={(entryId) => {
