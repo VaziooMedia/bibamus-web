@@ -14,6 +14,7 @@ import { HomeExtraits } from "./HomeExtraits.jsx";
 import { BibaxSuggestionsCarousel } from "./BibaxSuggestionsCarousel.jsx";
 import { AdCarousel } from "./AdCarousel.jsx";
 import { loadActiveAds, AD_DEFAULT_CAROUSEL_SECONDS } from "../data/ads.js";
+import { loadHomeTiles, getCachedHomeTiles, HOME_TILE_DEFAULTS } from "../data/homeTiles.js";
 import { loadSalon } from "../data/salons.js";
 import { loadPulseFeed, loadBibaxSuggestions, attachUsernames, dismissBibaxSuggestion, sendBibaxRequest, loadPulseStories, loadOfficialStories, loadDrinksByIds, loadVenuesByIds } from "../data/sharedDirectories.js";
 import { StoriesBar } from "./StoriesBar.jsx";
@@ -67,9 +68,7 @@ export function HomeScreen({
   goToBibaClubs,
   goToBibaPulse,
   onOpenPulseEntry,
-  bibaMeetVisible = true,
   bibaPulseVisible = true,
-  gamesVisible = true,
   storiesEnabled = true,
   goToSettings,
   goToSearch,
@@ -94,6 +93,18 @@ export function HomeScreen({
       if (cancelled) return;
       setHomeAds(result.ads);
       setHomeAdSeconds(result.carouselSeconds);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  // État des six boutons (Actif / Grisé / Masqué), réglé depuis la page « Home » de la plateforme de gestion pour tous les pays : le dernier état connu de cet appareil
+  // s'affiche tout de suite, puis la lecture le met à jour ; si elle échoue, rien ne change (et sans rien d'enregistré, c'est l'état d'origine).
+  const [homeTiles, setHomeTiles] = useState(() => getCachedHomeTiles() || HOME_TILE_DEFAULTS);
+  useEffect(() => {
+    let cancelled = false;
+    loadHomeTiles().then((tiles) => {
+      if (!cancelled && tiles) setHomeTiles(tiles);
     });
     return () => {
       cancelled = true;
@@ -519,18 +530,36 @@ export function HomeScreen({
       {homeAds.length === 0 && <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />}
       {homeAds.length > 0 && <AdCarousel ads={homeAds} seconds={homeAdSeconds} placement="home" spaceBelow={18} onEmpty={dropHomeAds} />}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
-        <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Club</span></>} subtitle="Tes Clubs privés et publics" onClick={goToBibaClubs} />
-        <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Cal</span></>} subtitle="Agenda des events autour de vous" badge="Soon" disabled />
-        {gamesVisible && (
-          <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Play</span></>} subtitle="Jeux et défis autour d'un verre" onClick={goToGames} badge="Soon" disabled />
-        )}
-        {bibaMeetVisible && (
-          <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Meet</span></>} subtitle="Découvrir et rencontrer des Bibax" onClick={goToBibaMeet} badge="Soon" disabled />
-        )}
-        <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Care</span></>} subtitle="Suivi santé" badge="Soon" disabled />
-        <CategoryTile title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>Flash</span></>} subtitle="Infos et anecdotes en bref" badge="Soon" disabled />
-      </div>
+      {/* Les six boutons : leur état (Actif / Grisé « Soon » / Masqué) vient de la plateforme de gestion (page « Home »). Un bouton sans écran dans l'app (Cal, Care, Flash)
+          reste grisé même s'il est réglé sur Actif. */}
+      {(() => {
+        const tiles = [
+          { key: "club", name: "Club", subtitle: "Tes Clubs privés et publics", onClick: goToBibaClubs },
+          { key: "cal", name: "Cal", subtitle: "Agenda des events autour de vous" },
+          { key: "play", name: "Play", subtitle: "Jeux et défis autour d'un verre", onClick: goToGames },
+          { key: "meet", name: "Meet", subtitle: "Découvrir et rencontrer des Bibax", onClick: goToBibaMeet },
+          { key: "care", name: "Care", subtitle: "Suivi santé" },
+          { key: "flash", name: "Flash", subtitle: "Infos et anecdotes en bref" },
+        ].filter((t) => homeTiles[t.key] !== "hidden");
+        if (tiles.length === 0) return null;
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
+            {tiles.map((t) => {
+              const live = homeTiles[t.key] === "active" && !!t.onClick;
+              return (
+                <CategoryTile
+                  key={t.key}
+                  title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>{t.name}</span></>}
+                  subtitle={t.subtitle}
+                  onClick={live ? t.onClick : undefined}
+                  badge={live ? undefined : "Soon"}
+                  disabled={!live}
+                />
+              );
+            })}
+          </div>
+        );
+      })()}
       {bibaxSuggestions && bibaxSuggestions.length > 0 && (
         <div style={{ marginBottom: "18px" }}>
           <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />
