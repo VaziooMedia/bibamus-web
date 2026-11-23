@@ -2425,10 +2425,6 @@ export default function App() {
                   setScreenBeforeBrandDirectory("repertoireHub");
                   setScreen("brandDirectory");
                 }}
-                goToManageShops={() => {
-                  setScreenBeforeShopDirectory("repertoireHub");
-                  setScreen("shopDirectory");
-                }}
                 goToSearch={() => {
                   setScreenBeforeSearch("repertoireHub");
                   setScreen("search");

@@ -477,7 +477,7 @@ export function SearchScreen({
             <ActionCard
               icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
               title="Shops"
-              subtitle="Où acheter vos boissons à emporter"
+              subtitle="Répertoire des shops référencés"
               onClick={goToShops}
             />
             <ActionCard

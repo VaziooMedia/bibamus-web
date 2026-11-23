@@ -12,7 +12,7 @@ import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./u
 import { loadShopsDirectory, loadShopListsOnce, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { resolveTagLabels } from "./BreweryBrandDetailScreens.jsx";
 import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
-import { normalizeSearchText, makeSearchMatcher, entityNames } from "../utils.js";
+import { normalizeSearchText, makeSearchMatcher, entityNames, formatAddress } from "../utils.js";
 import { useListReturn } from "../hooks/useListReturn.js";
 
 // Valeur de `activeCountry` pour la liste « En ligne » (aucun vrai pays ne porte ce nom).
@@ -20,13 +20,11 @@ export const ONLINE_KEY = "__online__";
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
-// Les deux lignes sous le nom : « Namur » / « Namur · aussi en ligne » / « En ligne », puis les catégories (« Supermarché · Cave à bières »).
+// Les deux lignes sous le nom : l'adresse complète, écrite comme dans la liste des Lieux (« Rue de Fer, 12 - B-5000 Namur »), ou « En ligne » pour une boutique
+// sans magasin ; puis les catégories (« Supermarché · Cave à bières »).
 const shopLines = (shop, categoryLabels) => {
-  const place = [];
-  if (shop.hasStore && shop.city) place.push(shop.city);
-  if (!shop.hasStore) place.push("En ligne");
-  else if (shop.hasOnline) place.push("aussi en ligne");
-  return { place: place.join(" · "), categories: categoryLabels.join(" · ") };
+  const place = shop.hasStore ? formatAddress(shop) : "En ligne";
+  return { place, categories: categoryLabels.join(" · ") };
 };
 
 // Retour d'une fiche (norme de l'app, voir `useListReturn`) : la page se remet à la hauteur où on l'avait laissée, avec la recherche tapée et le pays ouvert (gardé par App) ;
