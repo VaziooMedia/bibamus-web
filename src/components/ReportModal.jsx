@@ -41,7 +41,7 @@ function reasonsFor(entityType) {
   return base;
 }
 
-// entityType: "venue" | "drink" | "brand" | "producer". directory: liste des fiches du même
+// entityType: "venue" | "drink" | "brand" | "producer" | "shop". directory: liste des fiches du même
 // type ({id, name}[]), pour identifier précisément quelle fiche est dupliquée.
 export function ReportModal({ entityType, entityId, myBibroCode, directory = [], onClose, initialReason = null }) {
   const [reason, setReason] = useState(initialReason);

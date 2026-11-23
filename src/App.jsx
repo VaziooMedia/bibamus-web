@@ -3627,7 +3627,7 @@ export default function App() {
                 setActiveCountry={setActiveShopCountry}
               />
             )}
-            {screen === "shopDetail" && <ShopDetailScreen shopId={viewedShopId} onBack={() => setScreen(screenBeforeShopDetail)} />}
+            {screen === "shopDetail" && <ShopDetailScreen shopId={viewedShopId} myBibroCode={profile.myBibroCode} onBack={() => setScreen(screenBeforeShopDetail)} />}
             {screen === "brandDirectory" && (
               <BrandDirectoryScreen
                 mainScrollRef={mainScrollRef}

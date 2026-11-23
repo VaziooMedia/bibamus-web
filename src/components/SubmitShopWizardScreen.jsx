@@ -381,7 +381,9 @@ export function SubmitShopWizardScreen({ initialName = "", onDone, onCancel, onO
             <p style={duplicateNoteStyle}>
               S'il s'agit du même shop sous un autre nom,
               <br />
-              ouvre sa fiche plutôt que d'en créer une nouvelle.
+              ouvre sa fiche plutôt que d'en créer une nouvelle,
+              <br />
+              et suggère-y une modification.
             </p>
             <NotSameCheckbox checked={sameAddressNotSame} onChange={setSameAddressNotSame} label="Ce n'est pas le même shop" />
           </DuplicateBox>
