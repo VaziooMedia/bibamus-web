@@ -12,8 +12,10 @@ import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./u
 import { loadShopsDirectory, loadShopListsOnce, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { resolveTagLabels } from "./BreweryBrandDetailScreens.jsx";
 import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
-import { normalizeSearchText, makeSearchMatcher, entityNames, formatAddress } from "../utils.js";
+import { normalizeSearchText, makeSearchMatcher, shopSearchTexts, formatAddress, nearestShops } from "../utils.js";
+import { useGeolocation } from "../hooks/useGeolocation.js";
 import { useListReturn } from "../hooks/useListReturn.js";
+import { BibaMapButton } from "./BibaMapButton.jsx";
 
 // Valeur de `activeCountry` pour la liste « En ligne » (aucun vrai pays ne porte ce nom).
 export const ONLINE_KEY = "__online__";
@@ -39,6 +41,10 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMa
   const [failed, setFailed] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [lists, setLists] = useState(null);
+  // « Shops proches de moi » (comme « Lieux proches de moi ») : la position n'est demandée qu'au clic ; les shops à moins de 3 km (8 au plus) se calculent dans l'appareil.
+  const { status: geoStatus, position, requestPosition } = useGeolocation();
+  // La position pour laquelle la liste des shops proches est affichée (null : pas demandée ou masquée) ; gardée au retour d'une fiche.
+  const [nearbyPos, setNearbyPos] = useState(restored ? restored.nearbyPos || null : null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 150);
@@ -73,8 +79,25 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMa
 
   // La mémoire suit la page ; la hauteur de défilement s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
-    if (!loading) save({ query, all, activeCountry: activeCountry || null });
-  }, [query, all, loading, activeCountry]);
+    if (!loading) save({ query, all, nearbyPos, activeCountry: activeCountry || null });
+  }, [query, all, loading, activeCountry, nearbyPos]);
+
+  useEffect(() => {
+    if (geoStatus === "granted" && position && !nearbyPos) setNearbyPos(position);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoStatus, position]);
+
+  const handleNearbyClick = () => {
+    if (geoStatus === "granted" && position) {
+      setNearbyPos(position);
+      return;
+    }
+    requestPosition();
+  };
+
+  // null : pas demandé, ou la liste des shops est encore en lecture.
+  const nearbyShops = useMemo(() => (nearbyPos && !loading ? nearestShops(all, nearbyPos.lat, nearbyPos.lng, 3000, 8) : null), [nearbyPos, loading, all]);
+  const loadingNearby = !!nearbyPos && nearbyShops === null;
 
   const q = normalizeSearchText(debouncedQuery);
   const searching = q.length > 0;
@@ -94,8 +117,9 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMa
   const items = useMemo(() => {
     if (searching) {
       // Même règle de recherche que partout dans l'app (voir makeSearchMatcher) : chaque mot tapé se retrouve, dans n'importe quel ordre.
+      // On cherche dans le nom, la ville et le code postal (comme la barre des Lieux).
       const matches = makeSearchMatcher(debouncedQuery);
-      return all.filter((s) => matches(entityNames(s)));
+      return all.filter((s) => matches(shopSearchTexts(s)));
     }
     if (activeCountry === ONLINE_KEY) return all.filter((s) => s.hasOnline).sort((a, b) => a.name.localeCompare(b.name));
     if (activeCountry) return all.filter((s) => s.hasStore && s.country === activeCountry).sort((a, b) => a.name.localeCompare(b.name));
@@ -132,7 +156,12 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMa
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: "15px" }}>{s.name}</div>
-            {lines.place && <div style={{ fontSize: "9.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{lines.place}</div>}
+            {lines.place && (
+              <div style={{ fontSize: "9.5px", color: COLORS.inkSoft, marginTop: "2px", display: "flex", alignItems: "center", gap: "5px" }}>
+                {lines.place}
+                {s.hasStore && s.country && <CountryFlagImg country={s.country} size={14} />}
+              </div>
+            )}
             {lines.categories && <div style={{ fontSize: "9.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{lines.categories}</div>}
           </div>
         </div>
@@ -178,38 +207,67 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMa
       </div>
 
       {!activeCountry && !searching && goToMap && (
-        <button
-          onClick={goToMap}
-          style={{
-            background: COLORS.surfaceAlt,
-            border: "none",
-            borderRadius: "12px",
-            padding: "14px 16px",
-            cursor: "pointer",
-            display: "flex",
-            flexDirection: "column",
-            marginBottom: "16px",
-            width: "100%",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
-              <span style={{ width: "36px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <NavIcon name="map" size={24} color={COLORS.amber} />
-              </span>
-              Voir sur la carte
-            </span>
-            <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <NavIcon name="arrow-right-circle" size={20} color={COLORS.amber} />
-            </span>
-          </div>
-        </button>
+        <BibaMapButton onClick={goToMap} />
+      )}
+
+      {!activeCountry && !searching && (
+        <div style={{ marginBottom: "16px" }}>
+          {nearbyShops === null ? (
+            <button
+              onClick={handleNearbyClick}
+              disabled={geoStatus === "loading" || loadingNearby}
+              style={{ background: COLORS.surfaceAlt, border: "none", borderRadius: "12px", padding: "14px 16px", cursor: "pointer", display: "flex", flexDirection: "column", width: "100%" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
+                  <span style={{ width: "36px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <NavIcon name="map-pin" size={24} color={COLORS.amber} />
+                  </span>
+                  {geoStatus === "loading" || loadingNearby ? "Recherche..." : "Shops proches de moi"}
+                </span>
+                {geoStatus !== "loading" && !loadingNearby && (
+                  <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <NavIcon name="arrow-right-circle" size={20} color={COLORS.amber} />
+                  </span>
+                )}
+              </div>
+              {geoStatus === "denied" && (
+                <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
+                  Position refusée — activez-la dans les réglages de votre navigateur pour réessayer.
+                </span>
+              )}
+              {geoStatus === "unavailable" && (
+                <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
+                  Géolocalisation non disponible sur cet appareil.
+                </span>
+              )}
+            </button>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft }}>
+                  <NavIcon name="map-pin" size={15} color={COLORS.amber} />
+                  Shops proches de toi
+                </span>
+                <button onClick={() => setNearbyPos(null)} style={{ background: "none", border: "none", color: COLORS.inkSoft, fontSize: "12px", textDecoration: "underline", cursor: "pointer" }}>
+                  Masquer
+                </button>
+              </div>
+              {nearbyShops.length === 0 ? (
+                <p style={{ color: COLORS.inkSoft, fontSize: "13px", fontStyle: "italic" }}>Aucun shop répertorié à proximité pour l'instant.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{nearbyShops.map(renderShopRow)}</div>
+              )}
+              <div style={{ borderBottom: `1px solid ${COLORS.paperAlt}`, margin: "18px 0" }} />
+            </>
+          )}
+        </div>
       )}
 
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Nom"
+        placeholder="Nom, ville, code postal"
         style={{ padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "15px", outline: "none", marginBottom: "16px" }}
       />
 

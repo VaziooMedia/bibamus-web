@@ -3057,6 +3057,11 @@ export default function App() {
                   setScreenBeforeBrandDetail(screen);
                   setScreen("brandDetail");
                 }}
+                onOpenShop={(id) => {
+                  setScreenBeforeShopDetail(screen);
+                  setViewedShopId(id);
+                  setScreen("shopDetail");
+                }}
                 onOpenBibaxProfile={(code) => openBibaxProfile(code, screen)}
                 goToScan={() => setShowBarcodeScanner(true)}
                 goToAtlas={() => setScreen("repertoireHub")}
@@ -3081,6 +3086,13 @@ export default function App() {
                 goToShops={() => {
                   setScreenBeforeShopDirectory("atlasSearch");
                   setScreen("shopDirectory");
+                }}
+                goToMap={() => {
+                  // Depuis la page BibAtlas, aucune catégorie d'origine : les trois sont cochées.
+                  setBibaMapView(null);
+                  setBibaMapStart(null);
+                  setScreenBeforeBibaMap("atlasSearch");
+                  setScreen("bibaMap");
                 }}
                 goToBibax={() => setScreen("bibaxDirectory")}
                 initialTab={searchInitialTab}

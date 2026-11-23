@@ -38,6 +38,10 @@ export function searchEntities(entities, query, extraFields = []) {
 // Tous les noms sous lesquels une fiche (produit, marque, producteur, lieu) peut être cherchée : nom, nom alternatif, alias et traductions.
 export const entityNames = (e) => [e?.name, e?.alternateName, e?.aliases, (e?.translations || []).map((t) => t?.value)];
 
+// Les textes dans lesquels se cherche un shop (barre « Nom, ville, code postal » des Shops et recherche BibAtlas) : ses noms, sa ville et son code postal.
+// Une boutique en ligne seule n'a ni ville ni code postal : seul son nom compte.
+export const shopSearchTexts = (shop) => [entityNames(shop), shop?.hasStore ? [shop?.city, shop?.postalCode] : []];
+
 export const formatCompactCount = (n) => {
   if (n < 1000) return String(n);
   if (n < 1000000) return `${(n / 1000).toFixed(n % 1000 >= 100 ? 1 : 0).replace(".", ",")}k`;
@@ -971,6 +975,17 @@ export function distanceMeters(lat1, lng1, lat2, lng2) {
   const dLng = (o2 - o1) * rad;
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(a1 * rad) * Math.cos(a2 * rad) * Math.sin(dLng / 2) ** 2;
   return 2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+// Les shops les plus proches d'un point : seuls les magasins qui ont une position comptent (une boutique en ligne n'en a pas), dans le rayon donné (en mètres),
+// du plus proche au plus éloigné, `limit` au plus. Chaque shop rendu porte `distanceMeters`. Le calcul se fait dans l'appareil à partir de la liste déjà chargée.
+export function nearestShops(shops, lat, lng, radiusMeters = 3000, limit = 8) {
+  return (shops || [])
+    .filter((s) => s.hasStore)
+    .map((s) => ({ ...s, distanceMeters: distanceMeters(lat, lng, s.lat, s.lng) }))
+    .filter((s) => s.distanceMeters !== null && s.distanceMeters <= radiusMeters)
+    .sort((a, b) => a.distanceMeters - b.distanceMeters)
+    .slice(0, limit);
 }
 
 // Forme longue d'un texte déjà passé dans normalizeSearchText : les mots entiers « st » et « ste » redeviennent « saint » et « sainte » (même règle que la

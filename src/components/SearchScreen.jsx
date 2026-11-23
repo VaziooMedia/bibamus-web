@@ -2,7 +2,7 @@
 // Écran de recherche — accessible depuis la barre de recherche
 // sur Home. Une seule saisie, 5 onglets de résultats en haut
 // (avec le nombre de résultats chacun) : Lieux, Produits,
-// Marques, Producteurs, Bibax. Un seul onglet affiché à la fois,
+// Marques, Producteurs, Shops, Bibax. Un seul onglet affiché à la fois,
 // en liste complète — pensé pour rester utilisable même quand la
 // base grandit (pas de multiples listes tronquées empilées).
 //
@@ -13,20 +13,21 @@
 // Mode « atlas » (prop atlas) : l'écran BibAtlas fusionné. Même barre, mêmes
 // onglets (sans la pastille BibAtlas, puisqu'on y est déjà) ; tant qu'aucune
 // recherche n'est lancée, les blocs du répertoire s'affichent en dessous :
-// Lieux, Produits, Marques, Producteurs, Bibax. Le bloc Bibax ouvre sa propre
+// BibaMap (la carte commune), Lieux, Produits, Marques, Producteurs, Shops, Bibax. Le bloc Bibax ouvre sa propre
 // page (BibaxDirectoryScreen).
 // ============================================================
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, ActionCard, MutualPill } from "./ui.jsx";
-import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames, formatCount } from "../utils.js";
-import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds } from "../data/sharedDirectories.js";
+import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames, shopSearchTexts, formatCount } from "../utils.js";
+import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds, loadShopsDirectory } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { AddAfterSearch } from "./AddAfterSearch.jsx";
 import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
 import { AddDrinkOverlay } from "./AddDrinkOverlay.jsx";
+import { BibaMapName } from "./BibaMapButton.jsx";
 
 function TagButton({ label, count, filled, onClick }) {
   return (
@@ -97,6 +98,7 @@ const TABS = [
   { key: "produits", label: "Produits", icon: "bottle" },
   { key: "marques", label: "Marques", icon: "tag" },
   { key: "producteurs", label: "Producteurs", icon: "world" },
+  { key: "shops", label: "Shops", icon: "map-pin" },
   { key: "bibax", label: "Bibax", icon: "users" },
 ];
 
@@ -107,6 +109,7 @@ export function SearchScreen({
   onOpenDrink,
   onOpenBrewery,
   onOpenBrand,
+  onOpenShop,
   onOpenBibaxProfile,
   goToScan,
   goToAtlas,
@@ -117,6 +120,7 @@ export function SearchScreen({
   goToMarques,
   goToProducteurs,
   goToShops,
+  goToMap,
   goToBibax,
   initialTab = "lieux",
   onBack,
@@ -130,6 +134,7 @@ export function SearchScreen({
   const openDrink = wrap(onOpenDrink);
   const openBrewery = wrap(onOpenBrewery);
   const openBrand = wrap(onOpenBrand);
+  const openShop = wrap(onOpenShop);
   const openBibaxProfile = wrap(onOpenBibaxProfile);
   // Au retour d'une fiche, la première recherche de chaque sorte est sautée : les résultats mémorisés restent affichés.
   const skipFirst = useRef({ bibax: !!restored, drinks: !!restored, venues: !!restored, at: !!restored, picked: !!restored });
@@ -151,6 +156,18 @@ export function SearchScreen({
   // Même règle de recherche que partout dans l'app : chaque mot tapé doit se retrouver, dans n'importe quel ordre, sans tenir compte des accents,
   // des apostrophes, des tirets ni des espaces. Les marques et producteurs se cherchent dans leur nom, leur nom alternatif, leurs alias et leurs traductions.
   const matches = useMemo(() => makeSearchMatcher(plain), [plain]);
+
+  // Les shops se cherchent dans l'appareil, comme les marques et les producteurs (nom, ville, code postal) ; leur liste n'est lue qu'à la première recherche.
+  const [shopsAll, setShopsAll] = useState(restored ? restored.shopsAll || null : null);
+  const shopsRequestedRef = useRef(!!(restored && restored.shopsAll));
+  useEffect(() => {
+    if (!hasPlain || shopsRequestedRef.current) return;
+    shopsRequestedRef.current = true;
+    loadShopsDirectory().then((list) => {
+      if (list) setShopsAll(list);
+      else shopsRequestedRef.current = false;
+    });
+  }, [hasPlain]);
 
   const [venueSearchResults, setVenueResults] = useState(restored ? restored.venueSearchResults : []);
   // Le texte pour lequel la recherche de lieux a répondu (au retour d'une fiche, celui des résultats mémorisés) : le bloc « Ce lieu n'est pas encore présent… »
@@ -181,6 +198,7 @@ export function SearchScreen({
     const exact = atFound?.kind === "brewery" ? breweriesDirectory.find((b) => b.id === atFound.id) : null;
     return exact ? [exact, ...found.filter((b) => b.id !== exact.id)] : found;
   }, [breweriesDirectory, hasPlain, matches, atFound]);
+  const shopResults = useMemo(() => (!hasPlain || !shopsAll ? [] : shopsAll.filter((s) => matches(shopSearchTexts(s)))), [shopsAll, hasPlain, matches]);
   const venueResults = useMemo(
     () => (atFound?.kind === "venue" ? [atFound.venue, ...venueSearchResults.filter((v) => v.id !== atFound.venue.id)] : venueSearchResults),
     [venueSearchResults, atFound]
@@ -325,8 +343,8 @@ export function SearchScreen({
 
   // La mémoire suit la page ; la hauteur de la liste s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
-    save({ query, activeTab, userPicked: userPickedTabRef.current, bibaxSearchResults, venueSearchResults, drinkResults, atState });
-  }, [query, activeTab, bibaxSearchResults, venueSearchResults, drinkResults, atState]);
+    save({ query, activeTab, userPicked: userPickedTabRef.current, bibaxSearchResults, venueSearchResults, drinkResults, atState, shopsAll });
+  }, [query, activeTab, bibaxSearchResults, venueSearchResults, drinkResults, atState, shopsAll]);
 
   // Suit automatiquement l'onglet qui a le plus de résultats, tant que la personne n'a pas
   // choisi elle-même un onglet pour cette recherche — recalculé à chaque arrivée de résultats
@@ -335,15 +353,16 @@ export function SearchScreen({
   // le plus de résultats.
   useEffect(() => {
     if (!hasQuery || userPickedTabRef.current) return;
-    const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
+    const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, shops: shopResults.length, bibax: bibaxResults.length };
     const candidates = TABS.filter((t) => !hideBibaxAndAtlas || t.key !== "bibax");
     const leader = candidates.reduce((best, t) => (counts[t.key] > (counts[best] || 0) ? t.key : best), null);
     if (leader && counts[leader] > 0 && leader !== activeTab) setActiveTab(leader);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasQuery, trimmed, venueResults, drinkResults, brandResults, breweryResults, bibaxResults]);
+  }, [hasQuery, trimmed, venueResults, drinkResults, brandResults, breweryResults, shopResults, bibaxResults]);
 
-  const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, bibax: bibaxResults.length };
+  const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, shops: shopResults.length, bibax: bibaxResults.length };
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
+  const shopsLoading = hasPlain && shopsAll === null;
   // Propositions d'ajout. Le lieu ou le produit cherché n'existe pas (encore) sur BibAtlas : le bloc rose d'ajout n'apparaît que lorsque la recherche correspondante a répondu pour le texte exact du champ.
   // Onglet Lieux → bloc Lieu ; onglet Produits → bloc Produit ; sous les résultats ou le message « Aucun résultat dans cette catégorie ». Quand rien n'est trouvé nulle part (« Aucun résultat pour … »),
   // les deux blocs s'affichent ensemble, quel que soit l'onglet (décidé par Mehdi, 2026-11-20). Marques et Producteurs : jamais d'ajout par un utilisateur (ils se créent côté Gestion) ; Bibax : sans objet.
@@ -450,6 +469,14 @@ export function SearchScreen({
             </h1>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {goToMap && (
+              <ActionCard
+                icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+                title={<BibaMapName />}
+                subtitle="Lieux, shops et producteurs sur la carte"
+                onClick={goToMap}
+              />
+            )}
             <ActionCard
               icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
               title="Lieux"
@@ -531,7 +558,7 @@ export function SearchScreen({
           </div>
 
           <div onScroll={() => inputRef.current?.blur()} onTouchMove={() => inputRef.current?.blur()} style={{ flex: 1, overflowY: "auto", margin: "0 -20px", padding: "0 20px" }}>
-            {totalResults === 0 && !bibaxLoading && !drinksLoading && !atLoading ? (
+            {totalResults === 0 && !bibaxLoading && !drinksLoading && !atLoading && !shopsLoading ? (
               <>
                 <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Aucun résultat pour « {trimmed} ».</p>
                 {addBothBlocks}
@@ -545,6 +572,8 @@ export function SearchScreen({
                     ? "Recherche des Bibax..."
                     : activeTab === "produits" && drinksLoading
                     ? "Recherche des produits..."
+                    : activeTab === "shops" && shopsLoading
+                    ? "Recherche des shops..."
                     : "Aucun résultat dans cette catégorie."}
                 </p>
                 {addVenueBlock(false)}
@@ -607,6 +636,28 @@ export function SearchScreen({
                       band
                       onClick={() => openBrewery(b.id)}
                       last={i === breweryResults.length - 1}
+                    />
+                  ))}
+                {activeTab === "shops" &&
+                  shopResults.map((s, i) => (
+                    <ResultRow
+                      key={s.id}
+                      title={s.name}
+                      subtitle={
+                        s.hasStore ? (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                            {formatAddress(s)}
+                            {s.country && <CountryFlagImg country={s.country} size={13} />}
+                          </span>
+                        ) : (
+                          "En ligne"
+                        )
+                      }
+                      avatar={<EntityAvatar photoUrl={s.profilePhotoUrl} size={52} />}
+                      enlargeAvatar
+                      band
+                      onClick={() => openShop(s.id)}
+                      last={i === shopResults.length - 1}
                     />
                   ))}
                 {activeTab === "bibax" &&
