@@ -11,6 +11,7 @@ import { formatAddress } from "../utils.js";
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { loadNearbyVenues, loadVenueCountryCounts, loadVenueCityCounts, loadVenuesDirectoryPage, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { BibaMapButton } from "./BibaMapButton.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 
 const PAGE_SIZE = 40;
@@ -221,7 +222,10 @@ export function VenueDirectoryScreen({ myBibroCode, addIntent, onBack, onOpenVen
               {v.subtitle}
             </div>
           )}
-          <div style={{ fontSize: "9.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{formatAddress(v)}</div>
+          <div style={{ fontSize: "9.5px", color: COLORS.inkSoft, marginTop: "2px", display: "flex", alignItems: "center", gap: "5px" }}>
+            {formatAddress(v)}
+            {v.country && <CountryFlagImg country={v.country} size={14} />}
+          </div>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
@@ -270,32 +274,7 @@ export function VenueDirectoryScreen({ myBibroCode, addIntent, onBack, onOpenVen
       )}
 
       {!addIntent && !activeCity && !activeCountry && !searching && goToMap && (
-        <button
-          onClick={goToMap}
-          style={{
-            background: COLORS.surfaceAlt,
-            border: "none",
-            borderRadius: "12px",
-            padding: "14px 16px",
-            cursor: "pointer",
-            display: "flex",
-            flexDirection: "column",
-            marginBottom: "16px",
-            width: "100%",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
-              <span style={{ width: "36px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <NavIcon name="map" size={24} color={COLORS.amber} />
-              </span>
-              Voir sur la carte
-            </span>
-            <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <NavIcon name="arrow-right-circle" size={20} color={COLORS.amber} />
-            </span>
-          </div>
-        </button>
+        <BibaMapButton onClick={goToMap} />
       )}
 
       {!addIntent && !activeCity && !activeCountry && !searching && (

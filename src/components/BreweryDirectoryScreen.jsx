@@ -14,6 +14,7 @@ import { PageHeader, BackFooterLink, ScrollToTopButton, EntityAvatar } from "./u
 import { loadBreweriesDirectory, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { normalizeSearchText, makeSearchMatcher, entityNames } from "../utils.js";
 import { useListReturn } from "../hooks/useListReturn.js";
+import { BibaMapButton } from "./BibaMapButton.jsx";
 
 const countryLabel = (code) => COUNTRY_CODE_TO_LABEL[code] || code;
 
@@ -108,7 +109,9 @@ export function BreweryDirectoryScreen({ myBibroCode, onBack, onOpenBrewery: onO
           <div style={{ fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}>
             {b.name}
           </div>
-          <div style={{ fontSize: "9.5px", color: COLORS.inkSoft, marginTop: "2px" }}>{countryLabel(b.country)}</div>
+          <div style={{ marginTop: "2px", display: "flex", alignItems: "center", lineHeight: 0 }}>
+            <CountryFlagImg country={countryLabel(b.country)} size={14} />
+          </div>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
@@ -142,32 +145,7 @@ export function BreweryDirectoryScreen({ myBibroCode, onBack, onOpenBrewery: onO
       </div>
 
       {!activeCountry && !searching && goToMap && (
-        <button
-          onClick={goToMap}
-          style={{
-            background: COLORS.surfaceAlt,
-            border: "none",
-            borderRadius: "12px",
-            padding: "14px 16px",
-            cursor: "pointer",
-            display: "flex",
-            flexDirection: "column",
-            marginBottom: "16px",
-            width: "100%",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
-              <span style={{ width: "36px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <NavIcon name="map" size={24} color={COLORS.amber} />
-              </span>
-              Voir sur la carte
-            </span>
-            <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <NavIcon name="arrow-right-circle" size={20} color={COLORS.amber} />
-            </span>
-          </div>
-        </button>
+        <BibaMapButton onClick={goToMap} />
       )}
 
       <input
