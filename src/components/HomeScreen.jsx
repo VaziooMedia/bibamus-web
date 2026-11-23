@@ -530,7 +530,7 @@ export function HomeScreen({
       {homeAds.length === 0 && <div style={{ height: "2px", background: COLORS.pinkFluo, margin: "0 -20px 18px" }} />}
       {homeAds.length > 0 && <AdCarousel ads={homeAds} seconds={homeAdSeconds} placement="home" spaceBelow={18} onEmpty={dropHomeAds} />}
 
-      {/* Les six boutons : leur état (Actif / Grisé « Soon » / Masqué) vient de la plateforme de gestion (page « Home »). Un bouton sans écran dans l'app (Cal, Care, Flash)
+      {/* Les six boutons : leur état (Actif / Grisé « Soon » / Masqué) vient de la plateforme de gestion (Système → Affichage), de même que leur ordre et leur sous-titre. Un bouton sans écran dans l'app (Cal, Care, Flash)
           reste grisé même s'il est réglé sur Actif. */}
       {(() => {
         const tiles = [
@@ -540,17 +540,19 @@ export function HomeScreen({
           { key: "meet", name: "Meet", subtitle: "Découvrir et rencontrer des Bibax", onClick: goToBibaMeet },
           { key: "care", name: "Care", subtitle: "Suivi santé" },
           { key: "flash", name: "Flash", subtitle: "Infos et anecdotes en bref" },
-        ].filter((t) => homeTiles[t.key] !== "hidden");
+        ]
+          .filter((t) => homeTiles.status[t.key] !== "hidden")
+          .sort((a, b) => homeTiles.order.indexOf(a.key) - homeTiles.order.indexOf(b.key));
         if (tiles.length === 0) return null;
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
             {tiles.map((t) => {
-              const live = homeTiles[t.key] === "active" && !!t.onClick;
+              const live = homeTiles.status[t.key] === "active" && !!t.onClick;
               return (
                 <CategoryTile
                   key={t.key}
                   title={<><span style={{ color: COLORS.ink }}>Biba</span><span style={{ color: COLORS.amber }}>{t.name}</span></>}
-                  subtitle={t.subtitle}
+                  subtitle={homeTiles.subtitles[t.key] || t.subtitle}
                   onClick={live ? t.onClick : undefined}
                   badge={live ? undefined : "Soon"}
                   disabled={!live}
