@@ -24,7 +24,7 @@ const addressLine = (v) =>
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
-function StepShell({ step, totalSteps, title, onBack, onPrevious, children, footer }) {
+export function StepShell({ step, totalSteps, title, onBack, onPrevious, children, footer }) {
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -52,10 +52,10 @@ function StepShell({ step, totalSteps, title, onBack, onPrevious, children, foot
   );
 }
 
-const inputStyle = { width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" };
-const requiredStyle = (filled) => ({ ...inputStyle, border: `2px solid ${filled ? COLORS.amber : COLORS.pinkFluo}` });
-const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
-const capitalizeFirst = (s) => (s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+export const inputStyle = { width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" };
+export const requiredStyle = (filled) => ({ ...inputStyle, border: `2px solid ${filled ? COLORS.amber : COLORS.pinkFluo}` });
+export const labelStyle = { fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "8px", display: "block" };
+export const capitalizeFirst = (s) => (s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, onOpenExisting }) {
   const [step, setStep] = useState(1);
