@@ -26,6 +26,7 @@ import { AiIcon } from "./AiIcon.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { AddAfterSearch } from "./AddAfterSearch.jsx";
 import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
+import { AddShopOverlay } from "./AddShopOverlay.jsx";
 import { AddDrinkOverlay } from "./AddDrinkOverlay.jsx";
 import { BibaMapButton } from "./BibaMapButton.jsx";
 
@@ -179,6 +180,8 @@ export function SearchScreen({
   // Idem pour les produits : le texte pour lequel la recherche a répondu (bloc « Ce produit n'est pas encore présent… » de l'onglet Produits) et « Ajouter un produit » ouvert par-dessus.
   const [drinksSearchedFor, setDrinksSearchedFor] = useState(restored && !(restored.query || "").trim().startsWith("@") ? (restored.query || "").trim() : "");
   const [addDrinkName, setAddDrinkName] = useState(null);
+  // Idem pour les shops : bloc « Ce shop n'est pas encore présent… » de l'onglet Shops et « Ajouter un shop » ouvert par-dessus.
+  const [addShopName, setAddShopName] = useState(null);
   // Recherche « @nom » exacte : atState garde le nom pour lequel la réponse a été reçue, et son résultat
   // ({ kind: "venue", venue } | { kind: "brand" | "brewery", id } | { kind: "user", bibax } | null).
   // Une réponse qui ne correspond plus à la saisie n'est jamais affichée, et « en cours » se déduit
@@ -365,7 +368,8 @@ export function SearchScreen({
   const shopsLoading = hasPlain && shopsAll === null;
   // Propositions d'ajout. Le lieu ou le produit cherché n'existe pas (encore) sur BibAtlas : le bloc rose d'ajout n'apparaît que lorsque la recherche correspondante a répondu pour le texte exact du champ.
   // Onglet Lieux → bloc Lieu ; onglet Produits → bloc Produit ; sous les résultats ou le message « Aucun résultat dans cette catégorie ». Quand rien n'est trouvé nulle part (« Aucun résultat pour … »),
-  // les deux blocs s'affichent ensemble, quel que soit l'onglet (décidé par Mehdi, 2026-11-20). Marques et Producteurs : jamais d'ajout par un utilisateur (ils se créent côté Gestion) ; Bibax : sans objet.
+  // un seul bloc à onglets s'affiche (Lieu, Produit, Shop : le choix se fait dans le bloc), quel que soit l'onglet de résultats (Lieu et Produit ensemble : décidé par Mehdi, 2026-11-20 ; onglets et Shop : 2026-11-23).
+  // Onglet Shops → bloc Shop. Marques et Producteurs : jamais d'ajout par un utilisateur (ils se créent côté Gestion) ; Bibax : sans objet.
   const venueAnswered = hasPlain && venuesSearchedFor === plain;
   const drinkAnswered = hasPlain && drinksSearchedFor === plain && !drinksLoading;
   // Le cadre est large (12 px de marge de chaque côté) : sous un message il faut compenser les 20 px de marge du conteneur défilant, dans la liste des résultats (pleine largeur) non.
@@ -380,14 +384,27 @@ export function SearchScreen({
       <AddAfterSearch query={plain} onAdd={setAddDrinkName} noun="produit" label="Proposer une boisson" />
     </div>
   );
+  const shopBlockEl = (inList) => (
+    <div style={blockWrapStyle(inList)} data-add-shop="1">
+      <AddAfterSearch query={plain} onAdd={setAddShopName} noun="shop" label="Proposer un shop" />
+    </div>
+  );
+  // La lecture des shops a répondu (liste reçue) pour le texte du champ ; les shops se cherchent dans l'appareil, il n'y a pas d'autre attente.
+  const shopAnswered = hasPlain && shopsAll !== null;
   const addVenueBlock = (inList) => (activeTab === "lieux" && venueAnswered ? venueBlockEl(inList) : null);
   const addDrinkBlock = (inList) => (activeTab === "produits" && drinkAnswered ? drinkBlockEl(inList) : null);
+  const addShopBlock = (inList) => (activeTab === "shops" && shopAnswered ? shopBlockEl(inList) : null);
+  // Rien trouvé nulle part : un seul bloc à trois onglets (Lieu, Produit, Shop) au lieu de trois blocs à la suite ; l'onglet choisi au départ est celui des résultats actif, s'il en fait partie.
+  const addTabs = [
+    { key: "lieux", tabLabel: "Lieu", noun: "lieu", label: "Proposer un établissement", onAdd: setAddVenueName },
+    { key: "produits", tabLabel: "Produit", noun: "produit", label: "Proposer une boisson", onAdd: setAddDrinkName },
+    ...(shopAnswered ? [{ key: "shops", tabLabel: "Shop", noun: "shop", label: "Proposer un shop", onAdd: setAddShopName }] : []),
+  ];
   const addBothBlocks =
     venueAnswered && drinkAnswered ? (
-      <>
-        {venueBlockEl(false)}
-        {drinkBlockEl(false)}
-      </>
+      <div style={blockWrapStyle(false)} data-add-all="1">
+        <AddAfterSearch key={plain} query={plain} tabs={addTabs} defaultTab={activeTab} />
+      </div>
     ) : null;
   const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;
   // Mode atlas : tant qu'aucune recherche n'est lancée, les blocs du répertoire prennent la place des résultats.
@@ -571,6 +588,7 @@ export function SearchScreen({
                 </p>
                 {addVenueBlock(false)}
                 {addDrinkBlock(false)}
+                {addShopBlock(false)}
               </>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", margin: "0 -20px" }}>
@@ -678,6 +696,7 @@ export function SearchScreen({
                   ))}
                 {addVenueBlock(true)}
                 {addDrinkBlock(true)}
+                {addShopBlock(true)}
               </div>
             )}
           </div>
@@ -687,6 +706,15 @@ export function SearchScreen({
         <AddDrinkOverlay initialName={addDrinkName} breweriesDirectory={breweriesDirectory} brandsDirectory={brandsDirectory} onChosen={(id) => openDrink(id)} onClose={() => setAddDrinkName(null)} />
       )}
       {addVenueName !== null && <AddVenueOverlay initialName={addVenueName} onChosen={(v) => openVenue(v.id)} onClose={() => setAddVenueName(null)} />}
+      {addShopName !== null && <AddShopOverlay initialName={addShopName} onChosen={(id, created) => {
+        // Le shop tout juste créé rejoint la liste, et sa mémoire (l'écran est quitté avant que la mémoire suive d'elle-même) : on le retrouve en revenant de sa fiche.
+        if (created && shopsAll) {
+          const next = [...shopsAll, created].sort((a, b) => a.name.localeCompare(b.name));
+          setShopsAll(next);
+          save({ shopsAll: next });
+        }
+        openShop(id);
+      }} onClose={() => setAddShopName(null)} />}
     </div>
   );
 }

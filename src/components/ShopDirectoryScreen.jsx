@@ -16,6 +16,8 @@ import { normalizeSearchText, makeSearchMatcher, shopSearchTexts, formatAddress,
 import { useGeolocation } from "../hooks/useGeolocation.js";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { BibaMapButton } from "./BibaMapButton.jsx";
+import { AddAfterSearch } from "./AddAfterSearch.jsx";
+import { AddShopOverlay } from "./AddShopOverlay.jsx";
 
 // Valeur de `activeCountry` pour la liste « En ligne » (aucun vrai pays ne porte ce nom).
 export const ONLINE_KEY = "__online__";
@@ -45,6 +47,8 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMa
   const { status: geoStatus, position, requestPosition } = useGeolocation();
   // La position pour laquelle la liste des shops proches est affichée (null : pas demandée ou masquée) ; gardée au retour d'une fiche.
   const [nearbyPos, setNearbyPos] = useState(restored ? restored.nearbyPos || null : null);
+  // « Ajouter un shop » ouvert par-dessus (le texte tapé, ou null quand fermé) : le bloc rose apparaît sous les résultats d'une recherche.
+  const [addShopName, setAddShopName] = useState(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 150);
@@ -281,6 +285,7 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMa
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {items.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>Aucun shop trouvé.</p>}
           {items.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{items.map(renderShopRow)}</div>}
+          <AddAfterSearch query={debouncedQuery.trim()} onAdd={setAddShopName} noun="shop" label="Proposer un shop" />
         </div>
       ) : activeCountry ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
@@ -321,6 +326,15 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMa
 
       {(activeCountry || searching) && <ScrollToTopButton />}
       <BackFooterLink onClick={handleBack} />
+      {addShopName !== null && <AddShopOverlay initialName={addShopName} onChosen={(id, created) => {
+        // Le shop tout juste créé rejoint la liste affichée, et sa mémoire (l'écran est quitté avant que la mémoire suive d'elle-même) : on le retrouve en revenant de sa fiche.
+        if (created) {
+          const next = [...all, created].sort((a, b) => a.name.localeCompare(b.name));
+          setAll(next);
+          save({ query, all: next, nearbyPos, activeCountry: activeCountry || null });
+        }
+        onOpenShop(id);
+      }} onClose={() => setAddShopName(null)} />}
     </div>
   );
 }

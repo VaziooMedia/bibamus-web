@@ -4565,6 +4565,52 @@ function rowToShop(row) {
   };
 }
 
+// Un utilisateur de l'app propose un nouveau shop (règle `shops_user_insert` : created_via = 'app', status = 'to_process', submitted_by = lui-même,
+// pending_contributions_count = 0). Le shop est visible dans l'app tout de suite et compté dans les « Nouveaux ajouts » de la plateforme de gestion.
+// Contrairement à un lieu, la position est envoyée avec la création : un compte de l'app ne peut pas modifier une fiche de shop après coup.
+// Rend le shop créé (relu comme n'importe quelle fiche) ou null si l'enregistrement échoue.
+export async function createShopFromApp(shop) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const store = !!shop.hasStore;
+  const online = !!shop.hasOnline;
+  const located = store && shop.lat != null && shop.lng != null;
+  const row = {
+    id: shop.id,
+    name: shop.name,
+    has_store: store,
+    has_online: online,
+    shop_categories: shop.categories || [],
+    country: store ? COUNTRY_LABEL_TO_CODE[shop.country] || shop.country || null : null,
+    street_name: store ? shop.streetName || null : null,
+    street_number: store ? shop.streetNumber || null : null,
+    postal_code: store ? shop.postalCode || null : null,
+    city: store ? shop.city || null : null,
+    village: store ? shop.village || null : null,
+    lat: located ? shop.lat : null,
+    lng: located ? shop.lng : null,
+    geocode_status: located ? shop.geocodeStatus || null : null,
+    geocode_source: located ? shop.geocodeSource || null : null,
+    geocode_confidence: located ? shop.geocodeConfidence ?? null : null,
+    geocoded_at: located ? new Date().toISOString() : null,
+    delivery_countries: online ? (shop.deliveryCountries || []).map((c) => COUNTRY_LABEL_TO_CODE[c] || c) : [],
+    website: shop.website || null,
+    status: "to_process",
+    created_via: "app",
+    submitted_by: user.id,
+    submitted_at: new Date().toISOString(),
+    pending_contributions_count: 0,
+  };
+  const { data, error } = await supabase.from("shops_directory").insert(row).select().single();
+  if (error) {
+    console.error("createShopFromApp:", error);
+    return null;
+  }
+  return rowToShop(data);
+}
+
 export async function createBrewery(brewery) {
   const { data, error } = await supabase.from("breweries_directory").insert(breweryToRow(brewery)).select().single();
   if (error) {
