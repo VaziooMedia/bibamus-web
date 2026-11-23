@@ -4492,6 +4492,27 @@ export async function loadShopById(id) {
   return rowToShop(data);
 }
 
+// Les repères de la carte des Shops : seulement les shops visibles qui ont un magasin avec des coordonnées (une boutique en ligne n'a pas de repère).
+// Comme pour les Lieux, un repère ne porte que le nom et la position ; la fiche est lue à la demande. Une lecture qui échoue rend une liste vide.
+export async function loadShopMapPins() {
+  const { data, error } = await supabase
+    .from("shops_directory")
+    .select("id, name, lat, lng")
+    .in("status", APP_VISIBLE_STATUSES)
+    .eq("has_store", true)
+    .not("lat", "is", null)
+    .not("lng", "is", null);
+  if (error) {
+    console.error("loadShopMapPins:", error);
+    return [];
+  }
+  // Par sécurité, on écarte aussi ici une ligne sans coordonnées (Number(null) vaudrait 0 : un repère au large de l'Afrique).
+  return (data || [])
+    .filter((r) => r.lat != null && r.lng != null)
+    .map((r) => ({ id: r.id, name: r.name, lat: Number(r.lat), lng: Number(r.lng) }))
+    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+}
+
 function rowToShop(row) {
   return {
     id: row.id,

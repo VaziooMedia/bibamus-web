@@ -21,21 +21,21 @@ const pinIcon = L.divIcon({
 });
 
 // Centre par défaut si aucun lieu n'a encore de coordonnées (Belgique, cœur du réseau actuel).
-const DEFAULT_CENTER = [50.5039, 4.4699];
+export const DEFAULT_CENTER = [50.5039, 4.4699];
 // Niveau de zoom volontairement pas trop serré une fois centré sur la position — le but est de
 // voir les lieux alentour, pas seulement la rue où l'on se trouve.
-const MY_LOCATION_ZOOM = 13;
+export const MY_LOCATION_ZOOM = 13;
 
 // Quand on touche une épingle, la carte se décale juste assez pour que l'épingle reste visible : au-dessus du cadre (sa
 // hauteur réelle + sa marge) et à gauche des boutons de zoom (≈ 68 px) ; la pointe de l'épingle est à 26 px sous son sommet.
-const CARD_GAP_PX = 12;
+export const CARD_GAP_PX = 12;
 // Le cadre se pose au-dessus de la ligne de crédit d'OpenStreetMap (≈ 16 px), qui doit rester lisible.
-const CARD_BOTTOM_PX = 22;
-const PIN_SAFE_TOP_PX = 40;
-const PIN_SAFE_SIDE_PX = 24;
-const PIN_SAFE_RIGHT_PX = 80;
+export const CARD_BOTTOM_PX = 22;
+export const PIN_SAFE_TOP_PX = 40;
+export const PIN_SAFE_SIDE_PX = 24;
+export const PIN_SAFE_RIGHT_PX = 80;
 
-const floatingButtonStyle = {
+export const floatingButtonStyle = {
   width: "44px",
   height: "44px",
   borderRadius: "50%",
@@ -50,7 +50,7 @@ const floatingButtonStyle = {
 };
 
 // Un toucher sur la carte elle-même (pas sur une épingle) referme le cadre.
-function MapClickCloser({ onClick }) {
+export function MapClickCloser({ onClick }) {
   useMapEvents({ click: onClick });
   return null;
 }

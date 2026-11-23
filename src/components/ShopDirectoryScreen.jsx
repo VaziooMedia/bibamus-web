@@ -29,7 +29,7 @@ const shopLines = (shop, categoryLabels) => {
 
 // Retour d'une fiche (norme de l'app, voir `useListReturn`) : la page se remet à la hauteur où on l'avait laissée, avec la recherche tapée et le pays ouvert (gardé par App) ;
 // la liste est relue en silence. Une entrée depuis BibAtlas repart de zéro.
-export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, activeCountry, setActiveCountry, mainScrollRef }) {
+export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMap, activeCountry, setActiveCountry, mainScrollRef }) {
   const { restored, save, open } = useListReturn("shopDirectory", mainScrollRef, { valid: (m) => (m.activeCountry || null) === (activeCountry || null) });
   const onOpenShop = open(onOpenShopProp);
   const [query, setQuery] = useState(restored ? restored.query : "");
@@ -176,6 +176,35 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, active
           </button>
         </div>
       </div>
+
+      {!activeCountry && !searching && goToMap && (
+        <button
+          onClick={goToMap}
+          style={{
+            background: COLORS.surfaceAlt,
+            border: "none",
+            borderRadius: "12px",
+            padding: "14px 16px",
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            marginBottom: "16px",
+            width: "100%",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "14.5px", color: COLORS.chalkWhite }}>
+              <span style={{ width: "36px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <NavIcon name="map" size={24} color={COLORS.amber} />
+              </span>
+              Voir sur la carte
+            </span>
+            <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <NavIcon name="arrow-right-circle" size={20} color={COLORS.amber} />
+            </span>
+          </div>
+        </button>
+      )}
 
       <input
         value={query}

@@ -82,6 +82,7 @@ import { EventHistoryDetailScreen } from "./components/EventHistoryDetailScreen.
 import { BreweryDirectoryScreen } from "./components/BreweryDirectoryScreen.jsx";
 import { ShopDirectoryScreen } from "./components/ShopDirectoryScreen.jsx";
 import { ShopDetailScreen } from "./components/ShopDetailScreen.jsx";
+import { ShopMapScreen } from "./components/ShopMapScreen.jsx";
 import { BrandDirectoryScreen } from "./components/BrandDirectoryScreen.jsx";
 import { BreweryDetailScreen, BrandDetailScreen } from "./components/BreweryBrandDetailScreens.jsx";
 import { BibrosListScreen, BibroDetailScreen, AddBibroScreen, MutualBibaxScreen, BibroBibaxListScreen, BibroClubsScreen } from "./components/BibrosScreens.jsx";
@@ -1708,6 +1709,8 @@ export default function App() {
   const [viewedBreweryId, setViewedBreweryId] = useState(null);
   const [viewedBrandId, setViewedBrandId] = useState(null);
   const [viewedShopId, setViewedShopId] = useState(null);
+  // État de la carte des Shops quand on la quitte pour la fiche d'un shop (même principe que `venueMapView` pour les Lieux).
+  const [shopMapView, setShopMapView] = useState(null);
 
   // Lien bibamus.app/@nom : ouvre le compte, le lieu, la marque ou le producteur correspondant, une fois
   // connecté et les données chargées (un lien ouvert sans être connecté est gardé jusque-là, et
@@ -3581,8 +3584,27 @@ export default function App() {
                   setScreenBeforeShopDetail("shopDirectory");
                   setScreen("shopDetail");
                 }}
+                goToMap={() => {
+                  setShopMapView(null);
+                  setScreen("shopMap");
+                }}
                 activeCountry={activeShopCountry}
                 setActiveCountry={setActiveShopCountry}
+              />
+            )}
+            {screen === "shopMap" && (
+              <ShopMapScreen
+                initialView={shopMapView}
+                onBack={() => {
+                  setShopMapView(null);
+                  setScreen("shopDirectory");
+                }}
+                onOpenShop={(id, view) => {
+                  setShopMapView(view);
+                  setScreenBeforeShopDetail("shopMap");
+                  setViewedShopId(id);
+                  setScreen("shopDetail");
+                }}
               />
             )}
             {screen === "shopDetail" && <ShopDetailScreen shopId={viewedShopId} onBack={() => setScreen(screenBeforeShopDetail)} />}
@@ -4111,7 +4133,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "shopDirectory", "shopDetail", "bibaPulse", "bibaPing", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStatsWrapped", "settings", "settingsCategory", "features", "featuresClubs", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "eventHistoryDetail", "myProducts", "myFavorites", "myFavoritesVenues", "myFavoritesDrinks", "myFavoritesBrands", "myFavoritesProducers", "myFavoritesBibax", "myProductsToTry", "myProductsTasted", "myProductsRated", "myPlaceChecks", "myDrinkChecks", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroClub", "mutualBibax", "bibroBibaxList", "bibroDrinkChecks", "bibroPlaceChecks", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "venueMap", "breweryDirectory", "brandDirectory", "shopDirectory", "shopMap", "shopDetail", "bibaPulse", "bibaPing", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStatsWrapped", "settings", "settingsCategory", "features", "featuresClubs", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "eventHistoryDetail", "myProducts", "myFavorites", "myFavoritesVenues", "myFavoritesDrinks", "myFavoritesBrands", "myFavoritesProducers", "myFavoritesBibax", "myProductsToTry", "myProductsTasted", "myProductsRated", "myPlaceChecks", "myDrinkChecks", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroClub", "mutualBibax", "bibroBibaxList", "bibroDrinkChecks", "bibroPlaceChecks", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />
