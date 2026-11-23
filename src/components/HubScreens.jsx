@@ -125,7 +125,7 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibA
   );
 }
 
-export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToManageBreweries, goToManageBrands, goToSearch, goToScanLinked }) {
+export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToManageBreweries, goToManageBrands, goToManageShops, goToSearch, goToScanLinked }) {
   return (
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
@@ -203,6 +203,12 @@ export function RepertoireHubScreen({ onBack, goToDiscover, goToDrinks, goToMana
           title="Marques"
           subtitle="Répertoire des marques référencées"
           onClick={goToManageBrands}
+        />
+        <ActionCard
+          icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+          title="Shops"
+          subtitle="Où acheter vos boissons à emporter"
+          onClick={goToManageShops}
         />
       </div>
       <PageFooterNav onBack={onBack} />

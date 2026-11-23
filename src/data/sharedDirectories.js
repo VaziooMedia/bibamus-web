@@ -18,6 +18,7 @@ import { DERIVATIVE_LIST_KEYS, buildCombinedDerivativeList, cleanDerivativeKcal,
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
+import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
 import { OTHER_STYLE_LIST_KEYS } from "./otherStyleLabels.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
@@ -3156,6 +3157,9 @@ export const loadProducerListsOnce = onceLoader([PRODUCER_TYPE_LIST_KEY, PRODUCE
 // une marque », carte publique d'une marque).
 export const loadBrandListsOnce = onceLoader([BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY], "loadBrandLists");
 
+// Catégorie d'un shop : { shop_category: { rows, order } } (liste et fiche d'un shop).
+export const loadShopListsOnce = onceLoader([SHOP_CATEGORY_LIST_KEY], "loadShopLists");
+
 // Par le NOM du producteur (texte « brewery » du produit) : n'est plus utilisée par la fiche Producteur, voir loadDrinksByProducerId.
 export async function loadDrinksByBrewery(breweryName) {
   if (!breweryName) return [];
@@ -4463,6 +4467,67 @@ export async function loadBreweriesDirectory() {
     return [];
   }
   return data.map(rowToBrewery);
+}
+
+/* ---------------- SHOPS (points de vente de boissons à emporter) ---------------- */
+
+// Table `shops_directory` (voir docs/DATABASE.md, « Shops »). Un compte connecté ne lit que les fiches visibles (à traiter, à compléter, complète).
+// Deux pastilles, cumulables : « Magasin » (hasStore : adresse, point sur la carte) et « En ligne » (hasOnline : site, pays où le shop livre).
+export async function loadShopsDirectory() {
+  const { data, error } = await supabase.from("shops_directory").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
+  if (error) {
+    console.error("loadShopsDirectory:", error);
+    return null;
+  }
+  return data.map(rowToShop);
+}
+
+export async function loadShopById(id) {
+  if (!id) return null;
+  const { data, error } = await supabase.from("shops_directory").select("*").eq("id", id).maybeSingle();
+  if (error || !data) {
+    if (error) console.error("loadShopById:", error);
+    return null;
+  }
+  return rowToShop(data);
+}
+
+function rowToShop(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    subtitle: row.subtitle,
+    aliases: [],
+    hasStore: row.has_store ?? true,
+    hasOnline: !!row.has_online,
+    categories: row.shop_categories || [],
+    country: COUNTRY_CODE_TO_LABEL[row.country] || row.country,
+    streetName: row.street_name,
+    streetNumber: row.street_number,
+    postalCode: row.postal_code,
+    city: row.city,
+    village: row.village,
+    lat: row.lat,
+    lng: row.lng,
+    deliveryCountries: (row.delivery_countries || []).map((c) => COUNTRY_CODE_TO_LABEL[c] || c),
+    phone: row.phone,
+    email: row.email,
+    website: row.website,
+    googleUrl: row.google_url,
+    whatsappUrl: row.whatsapp_url,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+    linkedinUrl: row.linkedin_url,
+    youtubeUrl: row.youtube_url,
+    profilePhotoUrl: row.profile_photo_url,
+    coverPhotoUrl: row.cover_photo_url,
+    status: row.status,
+    createdVia: row.created_via,
+    submittedBy: row.submitted_by,
+    pendingContributionsCount: row.pending_contributions_count || 0,
+  };
 }
 
 export async function createBrewery(brewery) {

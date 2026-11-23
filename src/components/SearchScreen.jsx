@@ -116,6 +116,7 @@ export function SearchScreen({
   goToProduits,
   goToMarques,
   goToProducteurs,
+  goToShops,
   goToBibax,
   initialTab = "lieux",
   onBack,
@@ -472,6 +473,12 @@ export function SearchScreen({
               title="Producteurs"
               subtitle="Répertoire des producteurs référencés"
               onClick={goToProducteurs}
+            />
+            <ActionCard
+              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              title="Shops"
+              subtitle="Où acheter vos boissons à emporter"
+              onClick={goToShops}
             />
             <ActionCard
               icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}

@@ -546,6 +546,14 @@ export const BRAND_TYPES = [
   { code: "internationale", fr: "Internationale" },
 ];
 
+// Catégories d'un shop (liste de départ ; la plateforme de gestion la complète : élément ajouté, renommé ou masqué, voir shopLists.js).
+export const SHOP_CATEGORIES = [
+  { code: "supermarche", fr: "Supermarché" },
+  { code: "negociant_vin", fr: "Négociant en vin" },
+  { code: "drink_food_shop", fr: "Drink & Food Shop" },
+  { code: "cave_a_bieres", fr: "Cave à bières" },
+];
+
 export const PRODUCER_TYPES = [
   { code: "brasserie", fr: "Brasserie" },
   { code: "micro_brasserie", fr: "Micro-brasserie" },
