@@ -11,7 +11,8 @@ import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { resolveTagLabels, buildSocials, SocialIconsRow } from "./BreweryBrandDetailScreens.jsx";
-import { loadShopById, loadShopListsOnce } from "../data/sharedDirectories.js";
+import { ReportModal, ReportIcon } from "./ReportModal.jsx";
+import { loadShopById, loadShopListsOnce, loadShopsDirectory } from "../data/sharedDirectories.js";
 import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
 
@@ -131,9 +132,24 @@ function ShopInfosCard({ shop, tags }) {
   );
 }
 
-export function ShopDetailScreen({ shopId, onBack }) {
+export function ShopDetailScreen({ shopId, myBibroCode, onBack }) {
   const [shop, setShop] = useState(undefined); // undefined : lecture en cours ; null : fiche introuvable
   const [lists, setLists] = useState(null);
+  // « Signaler ou suggérer une modification » (menu « Plus d'options » en bas de la fiche, comme sur les fiches Producteur et Marque) : même fenêtre de signalement
+  // que les autres fiches (table entity_reports). Les shops servent à identifier la fiche en double : lus une fois, à l'ouverture de la fenêtre.
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [reportDirectory, setReportDirectory] = useState([]);
+  useEffect(() => {
+    if (!reporting) return undefined;
+    let cancelled = false;
+    loadShopsDirectory().then((list) => {
+      if (list && !cancelled) setReportDirectory(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [reporting]);
   // Nom sur plusieurs lignes : le contenu en dessous descend d'autant (voir useWrappedTitleExtra).
   const [titleRef, titleExtra] = useWrappedTitleExtra();
 
@@ -198,10 +214,43 @@ export function ShopDetailScreen({ shopId, onBack }) {
             <OpeningHoursDisplay googlePlaceId={shop.googlePlaceId} noGooglePresence={shop.noGooglePresence} noFixedHours={shop.noFixedHours} table="shops_directory" />
           </div>
         )}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: "40px" }}>
+          <button
+            data-shop-actions
+            onClick={() => setShowActionsMenu(true)}
+            title="Plus d'options"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center" }}
+          >
+            <NavIcon name="dots" size={26} color={COLORS.inkSoft} />
+          </button>
+        </div>
         <div style={{ marginTop: "-14px" }}>
           <BackFooterLink onClick={onBack} />
         </div>
       </div>
+      {showActionsMenu && (
+        <div
+          data-shop-actions-menu
+          onClick={() => setShowActionsMenu(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "10px 16px 28px", width: "100%", maxWidth: "480px" }}>
+            <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: COLORS.paperAlt, margin: "0 auto 16px" }} />
+            <button
+              data-shop-report
+              onClick={() => {
+                setShowActionsMenu(false);
+                setReporting(true);
+              }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.ink, cursor: "pointer", textAlign: "left" }}
+            >
+              <ReportIcon />
+              Signaler ou suggérer une modification
+            </button>
+          </div>
+        </div>
+      )}
+      {reporting && <ReportModal entityType="shop" entityId={shop.id} myBibroCode={myBibroCode} directory={reportDirectory} canBeClosed={!!shop.hasStore} onClose={() => setReporting(false)} />}
     </div>
   );
 }
