@@ -16,8 +16,9 @@ function ReportIcon({ size = 18 }) {
 }
 
 // Raisons disponibles selon le type de fiche — "Établissement fermé définitivement" n'a de
-// sens que pour un établissement.
-function reasonsFor(entityType) {
+// sens que pour un établissement, et "Shop fermé définitivement" que pour un shop avec Magasin
+// (`canBeClosed`) : une boutique en ligne seule n'a pas de local qui ferme.
+function reasonsFor(entityType, canBeClosed = false) {
   // Publications et commentaires du Pulse : d'autres raisons que pour une fiche (pas de "fiche en double").
   if (entityType === "pulse_event" || entityType === "pulse_comment") {
     return [
@@ -38,12 +39,16 @@ function reasonsFor(entityType) {
   if (entityType === "venue") {
     return [{ key: "closed_permanently", label: "Établissement fermé définitivement", commentRequired: false }, ...base];
   }
+  if (entityType === "shop" && canBeClosed) {
+    return [{ key: "closed_permanently", label: "Shop fermé définitivement", commentRequired: false }, ...base];
+  }
   return base;
 }
 
 // entityType: "venue" | "drink" | "brand" | "producer" | "shop". directory: liste des fiches du même
-// type ({id, name}[]), pour identifier précisément quelle fiche est dupliquée.
-export function ReportModal({ entityType, entityId, myBibroCode, directory = [], onClose, initialReason = null }) {
+// type ({id, name}[]), pour identifier précisément quelle fiche est dupliquée. canBeClosed : pour un
+// shop, vrai s'il a un Magasin (propose alors « Shop fermé définitivement »).
+export function ReportModal({ entityType, entityId, myBibroCode, directory = [], onClose, initialReason = null, canBeClosed = false }) {
   const [reason, setReason] = useState(initialReason);
   const [comment, setComment] = useState("");
   const [duplicateQuery, setDuplicateQuery] = useState("");
@@ -52,7 +57,7 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
   const [done, setDone] = useState(false);
   const [error, setError] = useState(null);
 
-  const REASONS = reasonsFor(entityType);
+  const REASONS = reasonsFor(entityType, canBeClosed);
   const selectedReason = REASONS.find((r) => r.key === reason);
   const commentRequired = selectedReason?.commentRequired;
   const isDuplicate = reason === "duplicate";

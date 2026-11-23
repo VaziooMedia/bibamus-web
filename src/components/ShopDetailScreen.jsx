@@ -250,7 +250,7 @@ export function ShopDetailScreen({ shopId, myBibroCode, onBack }) {
           </div>
         </div>
       )}
-      {reporting && <ReportModal entityType="shop" entityId={shop.id} myBibroCode={myBibroCode} directory={reportDirectory} onClose={() => setReporting(false)} />}
+      {reporting && <ReportModal entityType="shop" entityId={shop.id} myBibroCode={myBibroCode} directory={reportDirectory} canBeClosed={!!shop.hasStore} onClose={() => setReporting(false)} />}
     </div>
   );
 }

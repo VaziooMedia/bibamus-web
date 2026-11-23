@@ -370,7 +370,11 @@ export function SubmitShopWizardScreen({ initialName = "", onDone, onCancel, onO
         {exactDuplicate && (
           <DuplicateBox title="Ce shop existe déjà :" style={{ marginTop: "20px" }}>
             <ExistingEntityRow photoUrl={exactDuplicate.profilePhotoUrl} title={exactDuplicate.name} subtitle={shopPlace(exactDuplicate)} onClick={() => onOpenExisting(exactDuplicate.id)} />
-            <p style={duplicateNoteStyle}>Tu ne peux pas le rajouter : ouvre sa fiche.</p>
+            <p style={duplicateNoteStyle}>
+              Tu ne peux pas le rajouter :
+              <br />
+              ouvre sa fiche et suggère-y une modification.
+            </p>
           </DuplicateBox>
         )}
         {!exactDuplicate && otherAtSameAddress.length > 0 && (
