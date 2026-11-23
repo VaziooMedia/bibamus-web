@@ -13,7 +13,7 @@
 // Mode « atlas » (prop atlas) : l'écran BibAtlas fusionné. Même barre, mêmes
 // onglets (sans la pastille BibAtlas, puisqu'on y est déjà) ; tant qu'aucune
 // recherche n'est lancée, les blocs du répertoire s'affichent en dessous :
-// BibaMap (la carte commune), Lieux, Produits, Marques, Producteurs, Shops, Bibax. Le bloc Bibax ouvre sa propre
+// le bouton BibaMap (la carte commune), Lieux, Produits, Marques, Producteurs, Shops, Bibax. Le bloc Bibax ouvre sa propre
 // page (BibaxDirectoryScreen).
 // ============================================================
 import React, { useState, useEffect, useMemo, useRef } from "react";
@@ -21,13 +21,13 @@ import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, ActionCard, MutualPill } from "./ui.jsx";
 import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames, shopSearchTexts, formatCount } from "../utils.js";
-import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds, loadShopsDirectory } from "../data/sharedDirectories.js";
+import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds, loadShopsDirectory, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { AddAfterSearch } from "./AddAfterSearch.jsx";
 import { AddVenueOverlay } from "./AddVenueOverlay.jsx";
 import { AddDrinkOverlay } from "./AddDrinkOverlay.jsx";
-import { BibaMapName } from "./BibaMapButton.jsx";
+import { BibaMapButton } from "./BibaMapButton.jsx";
 
 function TagButton({ label, count, filled, onClick }) {
   return (
@@ -469,14 +469,7 @@ export function SearchScreen({
             </h1>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {goToMap && (
-              <ActionCard
-                icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
-                title={<BibaMapName />}
-                subtitle="Lieux, shops et producteurs sur la carte"
-                onClick={goToMap}
-              />
-            )}
+            {goToMap && <BibaMapButton onClick={goToMap} marginBottom={0} />}
             <ActionCard
               icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
               title="Lieux"
@@ -630,7 +623,7 @@ export function SearchScreen({
                     <ResultRow
                       key={b.id}
                       title={b.name}
-                      subtitle={b.country}
+                      subtitle={b.country ? <CountryFlagImg country={COUNTRY_CODE_TO_LABEL[b.country] || b.country} size={13} /> : ""}
                       avatar={<EntityAvatar photoUrl={b.profilePhotoUrl} photoEmoji={b.avatarEmoji} size={52} fallbackIcon="world" />}
                       enlargeAvatar
                       band

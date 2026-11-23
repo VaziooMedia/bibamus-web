@@ -1,22 +1,23 @@
 // ============================================================
-// Bouton « BibaMap » des annuaires Lieux, Shops et Producteurs (et libellé réutilisé par le bloc de la page BibAtlas) : l'icône de carte, puis « Biba » en blanc et
+// Bouton « BibaMap » des annuaires Lieux, Shops et Producteurs, et de la page BibAtlas (même bouton partout) : l'icône de carte, puis « Biba » en blanc et
 // « Map » en vert fluo (comme le titre de l'écran BibaMap), et la flèche ronde à droite. Même présentation que « Lieux proches de moi ».
 // ============================================================
 import React from "react";
 import { COLORS } from "../constants.js";
 import { NavIcon } from "./icons.jsx";
 
-// Le nom « BibaMap » écrit en deux couleurs : « Biba » dans la couleur du texte qui l'entoure (ou `bibaColor`), « Map » en vert fluo.
-export function BibaMapName({ bibaColor }) {
+// Le nom « BibaMap » écrit en deux couleurs : « Biba » dans la couleur du texte qui l'entoure, « Map » en vert fluo.
+function BibaMapName() {
   return (
     <>
-      <span style={bibaColor ? { color: bibaColor } : undefined}>Biba</span>
+      <span>Biba</span>
       <span style={{ color: COLORS.amber }}>Map</span>
     </>
   );
 }
 
-export function BibaMapButton({ onClick }) {
+// `marginBottom` : l'espace sous le bouton (16 px dans un annuaire ; 0 sur la page BibAtlas, où la liste des blocs gère déjà l'écart).
+export function BibaMapButton({ onClick, marginBottom = 16 }) {
   return (
     <button
       onClick={onClick}
@@ -29,7 +30,7 @@ export function BibaMapButton({ onClick }) {
         cursor: "pointer",
         display: "flex",
         flexDirection: "column",
-        marginBottom: "16px",
+        marginBottom: `${marginBottom}px`,
         width: "100%",
       }}
     >
