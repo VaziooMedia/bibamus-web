@@ -21,10 +21,10 @@ import { PrimaryButton } from "./ui.jsx";
 import { VenuePositionPicker } from "./MoreSearchPickers.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { StepShell, inputStyle, requiredStyle, labelStyle, capitalizeFirst } from "./SubmitVenueWizardScreen.jsx";
-import { createShopFromApp, geocodeAddress, loadShopsDirectory, loadShopListsOnce, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
+import { createShopFromApp, geocodeAddress, loadShopsDirectory, searchShops, loadShopListsOnce, COUNTRY_LABEL_TO_CODE } from "../data/sharedDirectories.js";
 import { orderedList } from "../venueLists.js";
 import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
-import { normalizeForDuplicateCheck, formatAddress, makeSearchMatcher } from "../utils.js";
+import { normalizeForDuplicateCheck, formatAddress } from "../utils.js";
 import { findSimilarNames } from "../similarNames.js";
 import { DuplicateBox, ExistingEntityRow, NotSameCheckbox, duplicateNoteStyle } from "./DuplicateWarning.jsx";
 
@@ -104,11 +104,9 @@ export function SubmitShopWizardScreen({ initialName = "", onDone, onCancel, onO
     }
     let cancelled = false;
     const timer = setTimeout(() => {
-      // Les noms proches comptent aussi (mots en plus ou en moins, petite faute de frappe) : voir similarNames.js ; la « recherche du serveur » est ici celle de l'appareil.
-      const fetcher = async (text, limit) => {
-        const matches = makeSearchMatcher(stripArticle(text));
-        return allShops.filter((s) => matches(s.name)).slice(0, limit);
-      };
+      // Les noms proches comptent aussi (mots en plus ou en moins, petite faute de frappe) : voir similarNames.js ; la recherche du serveur est `search_shops`
+      // (une lecture en échec ne propose rien : on continue sans avertissement de nom).
+      const fetcher = async (text, limit) => (await searchShops(stripArticle(text), limit)) || [];
       findSimilarNames(q, fetcher, 5).then((found) => {
         if (!cancelled) setNameMatches(found);
       });
@@ -117,7 +115,7 @@ export function SubmitShopWizardScreen({ initialName = "", onDone, onCancel, onO
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [name, allShops]);
+  }, [name]);
 
   // Type (cumulable : un shop peut avoir un magasin ET une boutique en ligne)
   const [hasStore, setHasStore] = useState(false);

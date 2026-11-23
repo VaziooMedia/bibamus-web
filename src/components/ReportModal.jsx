@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
-import { submitReport, trackEvent, searchDrinks, searchVenues } from "../data/sharedDirectories.js";
+import { submitReport, trackEvent, searchDrinks, searchVenues, searchShops } from "../data/sharedDirectories.js";
 import { makeSearchMatcher, entityNames } from "../utils.js";
 
 // Icône moderne (cercle + point d'exclamation), remplace l'ancien drapeau — cohérente avec le
@@ -88,6 +88,25 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityType, isDuplicate, duplicateQuery]);
 
+  const [shopDuplicateMatches, setShopDuplicateMatches] = useState([]);
+  useEffect(() => {
+    if (entityType !== "shop" || !isDuplicate || duplicateQuery.trim().length < 2) {
+      setShopDuplicateMatches([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      searchShops(duplicateQuery.trim(), 6).then((results) => {
+        if (!cancelled && results) setShopDuplicateMatches(results.filter((s) => s.id !== entityId).slice(0, 5));
+      });
+    }, 350);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entityType, isDuplicate, duplicateQuery]);
+
   // Pour "brand"/"producer" (pas encore migrés vers une recherche serveur), directory
   // reste la liste déjà chargée en mémoire par l'appelant.
   const matchesDuplicate = makeSearchMatcher(duplicateQuery);
@@ -96,6 +115,8 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
       ? drinkDuplicateMatches
       : entityType === "venue"
       ? venueDuplicateMatches
+      : entityType === "shop"
+      ? shopDuplicateMatches
       : isDuplicate && duplicateQuery.trim().length >= 2
       ? directory.filter((d) => d.id !== entityId && matchesDuplicate(entityNames(d))).slice(0, 5)
       : [];

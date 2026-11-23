@@ -21,7 +21,7 @@ import { COLORS, SUBTYPE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { EntityAvatar, ActionCard, MutualPill } from "./ui.jsx";
 import { formatAddress, usernameFromQuery, makeSearchMatcher, entityNames, shopSearchTexts, formatCount } from "../utils.js";
-import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds, loadShopsDirectory, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
+import { searchBibax, searchDrinksNoGeneric, searchVenues, lookupUsername, lookupBibroCode, loadVenuesByIds, searchShops, COUNTRY_CODE_TO_LABEL } from "../data/sharedDirectories.js";
 import { AiIcon } from "./AiIcon.jsx";
 import { useListReturn } from "../hooks/useListReturn.js";
 import { AddAfterSearch } from "./AddAfterSearch.jsx";
@@ -138,7 +138,7 @@ export function SearchScreen({
   const openShop = wrap(onOpenShop);
   const openBibaxProfile = wrap(onOpenBibaxProfile);
   // Au retour d'une fiche, la première recherche de chaque sorte est sautée : les résultats mémorisés restent affichés.
-  const skipFirst = useRef({ bibax: !!restored, drinks: !!restored, venues: !!restored, at: !!restored, picked: !!restored });
+  const skipFirst = useRef({ bibax: !!restored, drinks: !!restored, venues: !!restored, shops: !!restored, at: !!restored, picked: !!restored });
   const [query, setQuery] = useState(restored ? restored.query : "");
   const [activeTab, setActiveTab] = useState(restored ? restored.activeTab : initialTab);
   const [bibaxSearchResults, setBibaxResults] = useState(restored ? restored.bibaxSearchResults : []);
@@ -158,17 +158,40 @@ export function SearchScreen({
   // des apostrophes, des tirets ni des espaces. Les marques et producteurs se cherchent dans leur nom, leur nom alternatif, leurs alias et leurs traductions.
   const matches = useMemo(() => makeSearchMatcher(plain), [plain]);
 
-  // Les shops se cherchent dans l'appareil, comme les marques et les producteurs (nom, ville, code postal) ; leur liste n'est lue qu'à la première recherche.
-  const [shopsAll, setShopsAll] = useState(restored ? restored.shopsAll || null : null);
-  const shopsRequestedRef = useRef(!!(restored && restored.shopsAll));
+  // Les shops se cherchent côté serveur (`search_shops`), comme les lieux : seule la page de résultats est lue, plus toute la liste.
+  // shopsSearchedFor : le texte pour lequel la recherche a répondu (au retour d'une fiche, celui des résultats mémorisés) ; shopsFailedFor : celui pour lequel la lecture a échoué.
+  const [shopSearchResults, setShopSearchResults] = useState(restored ? restored.shopSearchResults || [] : []);
+  const [shopsSearchedFor, setShopsSearchedFor] = useState(restored && restored.shopSearchResults && !(restored.query || "").trim().startsWith("@") ? (restored.query || "").trim() : "");
+  const [shopsFailedFor, setShopsFailedFor] = useState("");
   useEffect(() => {
-    if (!hasPlain || shopsRequestedRef.current) return;
-    shopsRequestedRef.current = true;
-    loadShopsDirectory().then((list) => {
-      if (list) setShopsAll(list);
-      else shopsRequestedRef.current = false;
-    });
-  }, [hasPlain]);
+    if (skipFirst.current.shops) {
+      skipFirst.current.shops = false;
+      return undefined;
+    }
+    if (!hasPlain) {
+      setShopSearchResults([]);
+      setShopsSearchedFor("");
+      setShopsFailedFor("");
+      return undefined;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      searchShops(plain).then((results) => {
+        if (cancelled) return;
+        if (results === null) {
+          setShopsFailedFor(plain);
+          return;
+        }
+        setShopsFailedFor("");
+        setShopSearchResults(results);
+        setShopsSearchedFor(plain);
+      });
+    }, 350);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [plain]);
 
   const [venueSearchResults, setVenueResults] = useState(restored ? restored.venueSearchResults : []);
   // Le texte pour lequel la recherche de lieux a répondu (au retour d'une fiche, celui des résultats mémorisés) : le bloc « Ce lieu n'est pas encore présent… »
@@ -201,7 +224,7 @@ export function SearchScreen({
     const exact = atFound?.kind === "brewery" ? breweriesDirectory.find((b) => b.id === atFound.id) : null;
     return exact ? [exact, ...found.filter((b) => b.id !== exact.id)] : found;
   }, [breweriesDirectory, hasPlain, matches, atFound]);
-  const shopResults = useMemo(() => (!hasPlain || !shopsAll ? [] : shopsAll.filter((s) => matches(shopSearchTexts(s)))), [shopsAll, hasPlain, matches]);
+  const shopResults = hasPlain ? shopSearchResults : [];
   const venueResults = useMemo(
     () => (atFound?.kind === "venue" ? [atFound.venue, ...venueSearchResults.filter((v) => v.id !== atFound.venue.id)] : venueSearchResults),
     [venueSearchResults, atFound]
@@ -346,8 +369,8 @@ export function SearchScreen({
 
   // La mémoire suit la page ; la hauteur de la liste s'y ajoute au moment où l'on ouvre une fiche.
   useEffect(() => {
-    save({ query, activeTab, userPicked: userPickedTabRef.current, bibaxSearchResults, venueSearchResults, drinkResults, atState, shopsAll });
-  }, [query, activeTab, bibaxSearchResults, venueSearchResults, drinkResults, atState, shopsAll]);
+    save({ query, activeTab, userPicked: userPickedTabRef.current, bibaxSearchResults, venueSearchResults, drinkResults, atState, shopSearchResults });
+  }, [query, activeTab, bibaxSearchResults, venueSearchResults, drinkResults, atState, shopSearchResults]);
 
   // Suit automatiquement l'onglet qui a le plus de résultats, tant que la personne n'a pas
   // choisi elle-même un onglet pour cette recherche — recalculé à chaque arrivée de résultats
@@ -365,7 +388,7 @@ export function SearchScreen({
 
   const counts = { lieux: venueResults.length, produits: drinkResults.length, marques: brandResults.length, producteurs: breweryResults.length, shops: shopResults.length, bibax: bibaxResults.length };
   const totalResults = Object.values(counts).reduce((a, b) => a + b, 0);
-  const shopsLoading = hasPlain && shopsAll === null;
+  const shopsLoading = hasPlain && shopsSearchedFor !== plain && shopsFailedFor !== plain;
   // Propositions d'ajout. Le lieu ou le produit cherché n'existe pas (encore) sur BibAtlas : le bloc rose d'ajout n'apparaît que lorsque la recherche correspondante a répondu pour le texte exact du champ.
   // Onglet Lieux → bloc Lieu ; onglet Produits → bloc Produit ; sous les résultats ou le message « Aucun résultat dans cette catégorie ». Quand rien n'est trouvé nulle part (« Aucun résultat pour … »),
   // un seul bloc à onglets s'affiche (Lieu, Produit, Shop : le choix se fait dans le bloc), quel que soit l'onglet de résultats (Lieu et Produit ensemble : décidé par Mehdi, 2026-11-20 ; onglets et Shop : 2026-11-23).
@@ -389,8 +412,8 @@ export function SearchScreen({
       <AddAfterSearch query={plain} onAdd={setAddShopName} noun="shop" label="Proposer un shop" />
     </div>
   );
-  // La lecture des shops a répondu (liste reçue) pour le texte du champ ; les shops se cherchent dans l'appareil, il n'y a pas d'autre attente.
-  const shopAnswered = hasPlain && shopsAll !== null;
+  // La recherche des shops a répondu pour le texte exact du champ (une lecture en échec ne compte pas : on ne dit pas « pas encore présent »).
+  const shopAnswered = hasPlain && shopsSearchedFor === plain;
   const addVenueBlock = (inList) => (activeTab === "lieux" && venueAnswered ? venueBlockEl(inList) : null);
   const addDrinkBlock = (inList) => (activeTab === "produits" && drinkAnswered ? drinkBlockEl(inList) : null);
   const addShopBlock = (inList) => (activeTab === "shops" && shopAnswered ? shopBlockEl(inList) : null);
@@ -708,10 +731,10 @@ export function SearchScreen({
       {addVenueName !== null && <AddVenueOverlay initialName={addVenueName} onChosen={(v) => openVenue(v.id)} onClose={() => setAddVenueName(null)} />}
       {addShopName !== null && <AddShopOverlay initialName={addShopName} onChosen={(id, created) => {
         // Le shop tout juste créé rejoint la liste, et sa mémoire (l'écran est quitté avant que la mémoire suive d'elle-même) : on le retrouve en revenant de sa fiche.
-        if (created && shopsAll) {
-          const next = [...shopsAll, created].sort((a, b) => a.name.localeCompare(b.name));
-          setShopsAll(next);
-          save({ shopsAll: next });
+        if (created && matches(shopSearchTexts(created))) {
+          const next = [...shopSearchResults.filter((x) => x.id !== created.id), created].sort((a, b) => a.name.localeCompare(b.name));
+          setShopSearchResults(next);
+          save({ shopSearchResults: next });
         }
         openShop(id);
       }} onClose={() => setAddShopName(null)} />}

@@ -12,7 +12,7 @@ import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { resolveTagLabels, buildSocials, SocialIconsRow } from "./BreweryBrandDetailScreens.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
-import { loadShopById, loadShopListsOnce, loadShopsDirectory } from "../data/sharedDirectories.js";
+import { loadShopById, loadShopListsOnce } from "../data/sharedDirectories.js";
 import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
 
@@ -136,20 +136,9 @@ export function ShopDetailScreen({ shopId, myBibroCode, onBack }) {
   const [shop, setShop] = useState(undefined); // undefined : lecture en cours ; null : fiche introuvable
   const [lists, setLists] = useState(null);
   // « Signaler ou suggérer une modification » (menu « Plus d'options » en bas de la fiche, comme sur les fiches Producteur et Marque) : même fenêtre de signalement
-  // que les autres fiches (table entity_reports). Les shops servent à identifier la fiche en double : lus une fois, à l'ouverture de la fenêtre.
+  // que les autres fiches (table entity_reports). La fiche en double se cherche côté serveur (`search_shops`), dans la fenêtre elle-même.
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [reporting, setReporting] = useState(false);
-  const [reportDirectory, setReportDirectory] = useState([]);
-  useEffect(() => {
-    if (!reporting) return undefined;
-    let cancelled = false;
-    loadShopsDirectory().then((list) => {
-      if (list && !cancelled) setReportDirectory(list);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [reporting]);
   // Nom sur plusieurs lignes : le contenu en dessous descend d'autant (voir useWrappedTitleExtra).
   const [titleRef, titleExtra] = useWrappedTitleExtra();
 
@@ -250,7 +239,7 @@ export function ShopDetailScreen({ shopId, myBibroCode, onBack }) {
           </div>
         </div>
       )}
-      {reporting && <ReportModal entityType="shop" entityId={shop.id} myBibroCode={myBibroCode} directory={reportDirectory} canBeClosed={!!shop.hasStore} onClose={() => setReporting(false)} />}
+      {reporting && <ReportModal entityType="shop" entityId={shop.id} myBibroCode={myBibroCode} canBeClosed={!!shop.hasStore} onClose={() => setReporting(false)} />}
     </div>
   );
 }

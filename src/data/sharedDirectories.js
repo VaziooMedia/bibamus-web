@@ -4483,6 +4483,20 @@ export async function loadShopsDirectory() {
   return data.map(rowToShop);
 }
 
+// Recherche des shops côté serveur (fonction `search_shops`, comme `search_venues`) : chaque mot tapé doit se retrouver, dans n'importe quel ordre, sans tenir compte
+// des accents, tirets ni espaces, dans le nom (avec noms alternatifs, alias et traductions) ou, pour un magasin, dans la ville et le code postal. Seulement les
+// fiches visibles dans l'app ; classés par précision puis par nom. Rend `null` si la lecture échoue (l'appelant ne conclut alors pas « aucun shop »).
+export async function searchShops(query, limit = 30) {
+  const q = (query || "").trim();
+  if (!q) return [];
+  const { data, error } = await supabase.rpc("search_shops", { p_query: q, p_limit: limit });
+  if (error) {
+    console.error("searchShops:", error);
+    return null;
+  }
+  return data.map(rowToShop);
+}
+
 export async function loadShopById(id) {
   if (!id) return null;
   const { data, error } = await supabase.from("shops_directory").select("*").eq("id", id).maybeSingle();
