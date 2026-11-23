@@ -4492,7 +4492,7 @@ export async function loadShopById(id) {
   return rowToShop(data);
 }
 
-// Les repères de la carte commune (voir AtlasMapScreen) pour les répertoires lus dans une table : seulement les fiches visibles dans l'app qui ont des coordonnées.
+// Les repères de la carte commune (voir BibaMapScreen) pour les répertoires lus dans une table : seulement les fiches visibles dans l'app qui ont des coordonnées.
 // Comme pour les Lieux, un repère ne porte que le nom et la position ; la fiche est lue à la demande. Lecture par pages de 1000 (limite de Supabase par requête) ;
 // une lecture qui échoue rend une liste vide (la carte garde alors ce qu'elle avait).
 async function loadDirectoryMapPins(table, label, narrow) {

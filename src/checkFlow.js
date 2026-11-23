@@ -8,7 +8,7 @@
 // ============================================================
 const FLOW_SCREENS = {
   drink: ["drinksDirectory", "drinkDetail"],
-  venue: ["venueDirectory", "atlasMap", "venueDetail"],
+  venue: ["venueDirectory", "bibaMap", "venueDetail"],
   // « Pas noté » de la liste « Déjà goûtés » (Mes Produits) : la fiche du produit avec la fenêtre DrinkCheck déjà ouverte ; la confirmation ramène sur la liste.
   rate: ["drinkDetail"],
 };

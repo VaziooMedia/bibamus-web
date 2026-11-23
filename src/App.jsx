@@ -15,7 +15,7 @@ import { ErrorBoundary, installGlobalCrashReporting } from "./components/ErrorBo
 import { HomeScreen } from "./components/HomeScreen.jsx";
 import { BarcodeScannerModal } from "./components/BarcodeScannerModal.jsx";
 import { LinkedScanResultsModal } from "./components/LinkedScanResultsModal.jsx";
-import { AtlasMapScreen } from "./components/AtlasMapScreen.jsx";
+import { BibaMapScreen } from "./components/BibaMapScreen.jsx";
 import { isBottomNavHidden } from "./bottomNav.js";
 import { BibamusLogoFull, NavIcon } from "./components/icons.jsx";
 import { LoadingScreen } from "./components/LoadingScreen.jsx";
@@ -374,10 +374,12 @@ export default function App() {
   const [screenBeforeVenueDetail, setScreenBeforeVenueDetail] = useState("venueDirectory");
   // L'état de la carte des lieux quand on la quitte pour la fiche d'un lieu : au retour, la carte retombe dessus (zoom, centre,
   // cadre ouvert). Effacé quand on quitte la carte ou qu'on l'ouvre depuis l'annuaire : elle repart alors de zéro.
-  // Carte commune de BibAtlas (Lieux, Shops, Producteurs) : son état quand on la quitte pour une fiche (voir AtlasMapScreen, `initialView`) et la page d'où on l'a ouverte
+  // Carte commune de BibAtlas (Lieux, Shops, Producteurs) : son état quand on la quitte pour une fiche (voir BibaMapScreen, `initialView`) et la page d'où on l'a ouverte
   // (annuaire des Lieux ou des Shops), où ramène la flèche retour.
-  const [atlasMapView, setAtlasMapView] = useState(null);
-  const [screenBeforeAtlasMap, setScreenBeforeAtlasMap] = useState("venueDirectory");
+  const [bibaMapView, setBibaMapView] = useState(null);
+  const [screenBeforeBibaMap, setScreenBeforeBibaMap] = useState("venueDirectory");
+  // La catégorie d'où l'on ouvre la carte (« venue », « shop » ou « producer ») : c'est la seule cochée à l'ouverture.
+  const [bibaMapStart, setBibaMapStart] = useState("venue");
   const [screenBeforeBibaSolo, setScreenBeforeBibaSolo] = useState("sessionHub");
   // L'Historique de BibaSolo est-il ouvert ? Tenu ici car l'écran BibaSolo est démonté quand on ouvre une fiche produit : au retour de la fiche,
   // il se rouvre directement sur l'Historique (voir `startInHistory` plus bas).
@@ -2475,9 +2477,10 @@ export default function App() {
                   setScreen("submitVenue");
                 }}
                 goToMap={() => {
-                  setAtlasMapView(null);
-                  setScreenBeforeAtlasMap("venueDirectory");
-                  setScreen("atlasMap");
+                  setBibaMapView(null);
+                  setBibaMapStart("venue");
+                  setScreenBeforeBibaMap("venueDirectory");
+                  setScreen("bibaMap");
                 }}
                 activeCountry={activeCountry}
                 setActiveCountry={setActiveCountry}
@@ -2485,25 +2488,26 @@ export default function App() {
                 setActiveCity={setActiveCity}
               />
             )}
-            {screen === "atlasMap" && (
-              <AtlasMapScreen
-                initialView={atlasMapView}
+            {screen === "bibaMap" && (
+              <BibaMapScreen
+                initialView={bibaMapView}
+                startKind={bibaMapStart}
                 onBack={() => {
-                  setAtlasMapView(null);
-                  setScreen(screenBeforeAtlasMap);
+                  setBibaMapView(null);
+                  setScreen(screenBeforeBibaMap);
                 }}
                 onOpenItem={(kind, id, view) => {
-                  setAtlasMapView(view);
+                  setBibaMapView(view);
                   if (kind === "venue") {
-                    setScreenBeforeVenueDetail("atlasMap");
+                    setScreenBeforeVenueDetail("bibaMap");
                     setViewedVenueId(id);
                     setScreen("venueDetail");
                   } else if (kind === "shop") {
-                    setScreenBeforeShopDetail("atlasMap");
+                    setScreenBeforeShopDetail("bibaMap");
                     setViewedShopId(id);
                     setScreen("shopDetail");
                   } else {
-                    setScreenBeforeBreweryDetail("atlasMap");
+                    setScreenBeforeBreweryDetail("bibaMap");
                     setViewedBreweryId(id);
                     setScreen("breweryDetail");
                   }
@@ -3582,6 +3586,12 @@ export default function App() {
                   setScreenBeforeBreweryDetail("breweryDirectory");
                   setScreen("breweryDetail");
                 }}
+                goToMap={() => {
+                  setBibaMapView(null);
+                  setBibaMapStart("producer");
+                  setScreenBeforeBibaMap("breweryDirectory");
+                  setScreen("bibaMap");
+                }}
                 activeCountry={activeBreweryCountry}
                 setActiveCountry={setActiveBreweryCountry}
               />
@@ -3596,9 +3606,10 @@ export default function App() {
                   setScreen("shopDetail");
                 }}
                 goToMap={() => {
-                  setAtlasMapView(null);
-                  setScreenBeforeAtlasMap("shopDirectory");
-                  setScreen("atlasMap");
+                  setBibaMapView(null);
+                  setBibaMapStart("shop");
+                  setScreenBeforeBibaMap("shopDirectory");
+                  setScreen("bibaMap");
                 }}
                 activeCountry={activeShopCountry}
                 setActiveCountry={setActiveShopCountry}
@@ -4130,7 +4141,7 @@ export default function App() {
                 }}
               />
             )}
-            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "atlasMap", "breweryDirectory", "brandDirectory", "shopDirectory", "shopDetail", "bibaPulse", "bibaPing", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStatsWrapped", "settings", "settingsCategory", "features", "featuresClubs", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "eventHistoryDetail", "myProducts", "myFavorites", "myFavoritesVenues", "myFavoritesDrinks", "myFavoritesBrands", "myFavoritesProducers", "myFavoritesBibax", "myProductsToTry", "myProductsTasted", "myProductsRated", "myPlaceChecks", "myDrinkChecks", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroClub", "mutualBibax", "bibroBibaxList", "bibroDrinkChecks", "bibroPlaceChecks", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
+            {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaMap", "breweryDirectory", "brandDirectory", "shopDirectory", "shopDetail", "bibaPulse", "bibaPing", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myInfo", "myPhotos", "bibaxPhotos", "myStatsWrapped", "settings", "settingsCategory", "features", "featuresClubs", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "eventHistoryDetail", "myProducts", "myFavorites", "myFavoritesVenues", "myFavoritesDrinks", "myFavoritesBrands", "myFavoritesProducers", "myFavoritesBibax", "myProductsToTry", "myProductsTasted", "myProductsRated", "myPlaceChecks", "myDrinkChecks", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroClub", "mutualBibax", "bibroBibaxList", "bibroDrinkChecks", "bibroPlaceChecks", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
                 Écran "{screen}" — à venir dans un prochain bloc.
                 <br />

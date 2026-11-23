@@ -1,6 +1,7 @@
 // ============================================================
-// Carte commune de BibAtlas : les Lieux (vert fluo), les Shops (rose fluo) et les Producteurs (bleu fluo) sur une seule carte, avec une légende à cases à cocher
-// pour afficher ou masquer chaque catégorie. Accessible depuis « Voir sur la carte » des Lieux et des Shops.
+// BibaMap : les Lieux (vert fluo), les Shops (rose fluo) et les Producteurs (bleu fluo) sur une seule carte, avec une légende à cases à cocher
+// pour afficher ou masquer chaque catégorie. Accessible depuis « Voir sur la carte » des Lieux, des Shops et des Producteurs : seule la catégorie d'où l'on vient
+// est cochée à l'ouverture (`startKind`), les autres se cochent dans la légende.
 // `react-leaflet`, tuiles raster OpenStreetMap. Un repère ne porte que le nom et la position ; la fiche (et les horaires Google pour les lieux et les magasins)
 // n'est lue qu'au toucher du repère. Seuls les shops qui ont un magasin avec des coordonnées ont un repère (une boutique en ligne n'en a pas).
 // ============================================================
@@ -37,7 +38,8 @@ const LAYERS = [
   { key: "producer", label: "Producteurs", color: COLORS.jetonFluo, none: "Aucun producteur localisé pour l'instant." },
 ];
 const KINDS = LAYERS.map((l) => l.key);
-const ALL_ENABLED = { venue: true, shop: true, producer: true };
+// À l'ouverture, seule la catégorie d'où l'on vient est cochée (sans catégorie connue : tout est coché).
+const enabledFrom = (startKind) => (KINDS.includes(startKind) ? Object.fromEntries(KINDS.map((k) => [k, k === startKind])) : Object.fromEntries(KINDS.map((k) => [k, true])));
 const keyOf = (kind, id) => `${kind}:${id}`;
 
 // Repère en SVG inline (évite le souci classique des icônes par défaut de Leaflet, dont les chemins d'image ne se résolvent pas avec les bundlers
@@ -246,10 +248,10 @@ function MapLegend({ enabled, onToggle }) {
 }
 
 // `initialView` : l'état de la carte au moment où l'on a quitté l'écran pour une fiche (voir `onOpenItem`), pour retomber exactement dessus au retour : même zoom,
-// même centre, mêmes catégories cochées, même cadre ouvert. `null` = carte neuve (tout est coché).
-export function AtlasMapScreen({ onBack, onOpenItem, initialView = null }) {
+// même centre, mêmes catégories cochées, même cadre ouvert. `null` = carte neuve (seule la catégorie `startKind` est cochée).
+export function BibaMapScreen({ onBack, onOpenItem, initialView = null, startKind = null }) {
   const [pins, setPins] = useState(initialView?.pins ?? null); // { venue: [], shop: [], producer: [] } ; null = lecture en cours
-  const [enabled, setEnabled] = useState(initialView?.enabled ?? ALL_ENABLED);
+  const [enabled, setEnabled] = useState(initialView?.enabled ?? enabledFrom(startKind));
   const [locating, setLocating] = useState(false);
   const mapRef = useRef(null);
   const cardRef = useRef(null);
@@ -464,7 +466,10 @@ export function AtlasMapScreen({ onBack, onOpenItem, initialView = null }) {
       <PageHeader onBack={onBack} />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 18px 0" }}>
         <span style={{ width: "4px", height: "20px", background: COLORS.amber, borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Carte BibAtlas</h1>
+        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>
+          <span style={{ color: COLORS.ink }}>Biba</span>
+          <span style={{ color: COLORS.amber }}>Map</span>
+        </h1>
       </div>
 
       {pins === null ? (
