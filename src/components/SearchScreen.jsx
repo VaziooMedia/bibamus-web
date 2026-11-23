@@ -94,12 +94,21 @@ export function ResultRow({ title, subtitle, avatar, onClick, last, enlargeAvata
   );
 }
 
+// Les icônes des six cartes du répertoire BibAtlas (Mehdi, 2026-11-23 : « toutes les pages cohérentes les unes avec les autres ») : les mêmes que celles des cartes de « Mes Favoris »
+// (`KIND_ICON_NAMES` de MyFavoritesScreen.jsx) — épingle, bouteille, étiquette, monogramme Bibamus, caddie, Bibax — à la place de la barre verte. Une boîte de 24 px de large pour toutes :
+// le titre et le sous-titre restent alignés d'une carte à l'autre.
+const atlasCardIcon = (name, size = 22) => (
+  <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px" }}>
+    <NavIcon name={name} size={size} color={COLORS.amber} />
+  </span>
+);
+
 const TABS = [
   { key: "lieux", label: "Lieux", icon: "map-pin" },
   { key: "produits", label: "Produits", icon: "bottle" },
   { key: "marques", label: "Marques", icon: "tag" },
   { key: "producteurs", label: "Producteurs", icon: "world" },
-  { key: "shops", label: "Shops", icon: "map-pin" },
+  { key: "shops", label: "Shops", icon: "shopping-cart" },
   { key: "bibax", label: "Bibax", icon: "users" },
 ];
 
@@ -511,37 +520,37 @@ export function SearchScreen({
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {goToMap && <BibaMapButton onClick={goToMap} marginBottom={0} />}
             <ActionCard
-              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              icon={atlasCardIcon("map-pin")}
               title="Lieux"
               subtitle="Répertoire des lieux référencés"
               onClick={goToLieux}
             />
             <ActionCard
-              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              icon={atlasCardIcon("bottle")}
               title="Produits"
               subtitle="Répertoire des produits référencés"
               onClick={goToProduits}
             />
             <ActionCard
-              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              icon={atlasCardIcon("tag")}
               title="Marques"
               subtitle="Répertoire des marques référencées"
               onClick={goToMarques}
             />
             <ActionCard
-              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              icon={atlasCardIcon("bibamus-monogram")}
               title="Producteurs"
               subtitle="Répertoire des producteurs référencés"
               onClick={goToProducteurs}
             />
             <ActionCard
-              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              icon={atlasCardIcon("shopping-cart")}
               title="Shops"
               subtitle="Répertoire des shops référencés"
               onClick={goToShops}
             />
             <ActionCard
-              icon={<span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />}
+              icon={atlasCardIcon("bibax", 26)}
               title="Bibax"
               subtitle="Mes Bibax et recherche de Bibax"
               onClick={goToBibax}

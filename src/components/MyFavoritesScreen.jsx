@@ -1,6 +1,6 @@
-// « Mes Favoris » (Mon Profil) — tout ce que la personne a mis de côté, en cinq listes, chacune sur sa propre page (comme « Mes Produits ») :
-// Lieux (cœur de la fiche d'un lieu), Produits (cœur de la fiche d'un produit), Marques et Producteurs (cœur de leur fiche) et Bibax (cœur de la fiche d'un
-// Bibax confirmé). L'écran d'entrée ne montre que les cinq cartes (rond d'icône, titre, nombre dans la colonne sombre de droite — `HubCard`, comme « Mes Produits »), dans cet ordre ; chaque page range ses lignes du plus récent au plus ancien,
+// « Mes Favoris » (Mon Profil) — tout ce que la personne a mis de côté, en six listes, chacune sur sa propre page (comme « Mes Produits ») :
+// Lieux (cœur de la fiche d'un lieu), Produits (cœur de la fiche d'un produit), Marques, Producteurs et Shops (cœur de leur fiche) et Bibax (cœur de la fiche d'un
+// Bibax confirmé). L'écran d'entrée ne montre que les six cartes (rond d'icône, titre, nombre dans la colonne sombre de droite — `HubCard`, comme « Mes Produits »), dans cet ordre (celui des onglets de la recherche) ; chaque page range ses lignes du plus récent au plus ancien,
 // dans le style de « Mon Historique » : une carte, des lignes pleine largeur séparées par un trait fin. Une liste vide dit quel geste l'alimente.
 // Les identifiants viennent de la fonction `get_my_favorites` (puis les noms par les fonctions habituelles) ; les Bibax se lisent dans la liste `bibros` déjà en
 // mémoire (un Bibax dont la relation n'est plus confirmée n'est de toute façon plus rendu par le serveur).
@@ -12,7 +12,7 @@ import { PageHeader, PageFooterNav, ScrollToTopButton, EntityAvatar, HubCard, Mu
 import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
 import { venueStreetLine, venuePostalCityLine, formatCount } from "../utils.js";
 import { flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
-import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadDrinksByIds, loadMyFavoriteBibaxDetails, toggleFavoriteBrand, toggleFavoriteProducer } from "../data/sharedDirectories.js";
+import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadShopsByIds, loadDrinksByIds, loadMyFavoriteBibaxDetails, toggleFavoriteBrand, toggleFavoriteProducer, toggleFavoriteShop } from "../data/sharedDirectories.js";
 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
 
@@ -164,24 +164,26 @@ function FavoriteRow({ kind, avatar, title, details = [], detailsNode = null, he
   );
 }
 
-// Les cinq listes, dans l'ordre voulu : titre de la page, nombre au singulier / au pluriel (sur la carte) et phrase d'une liste vide.
+// Les six listes, dans l'ordre voulu : titre de la page, nombre au singulier / au pluriel (sur la carte) et phrase d'une liste vide.
 const KINDS = [
   { kind: "venues", title: "Lieux", count: (n) => `${formatCount(n)} lieu${n > 1 ? "x" : ""}`, empty: "Aucun lieu favori. Touche le cœur sur la fiche d'un lieu." },
   { kind: "drinks", title: "Produits", count: (n) => `${formatCount(n)} produit${n > 1 ? "s" : ""}`, empty: "Aucun produit favori. Touche le cœur sur la fiche d'un produit." },
   { kind: "brands", title: "Marques", count: (n) => `${formatCount(n)} marque${n > 1 ? "s" : ""}`, empty: "Aucune marque favorite. Touche le cœur sur la fiche d'une marque." },
   { kind: "producers", title: "Producteurs", count: (n) => `${formatCount(n)} producteur${n > 1 ? "s" : ""}`, empty: "Aucun producteur favori. Touche le cœur sur la fiche d'un producteur." },
+  { kind: "shops", title: "Shops", count: (n) => `${formatCount(n)} shop${n > 1 ? "s" : ""}`, empty: "Aucun shop favori. Touche le cœur sur la fiche d'un shop." },
   { kind: "bibax", title: "Bibax", count: (n) => `${formatCount(n)} Bibax`, empty: "Aucun Bibax favori. Touche le cœur sur la fiche d'un Bibax." },
 ];
 
 // Le rond d'icône de chaque carte de l'écran d'entrée (Mehdi, 2026-11-17) : celle que les lignes de la liste utilisent déjà quand l'élément n'a pas de photo (épingle, bouteille, étiquette,
-// monogramme Bibamus) et, pour les Bibax, l'icône Bibax de l'app (trois silhouettes, choisie par Mehdi) — rien d'inventé.
-const KIND_ICON_NAMES = { venues: "map-pin", drinks: "bottle", brands: "tag", producers: "bibamus-monogram", bibax: "bibax" };
+// monogramme Bibamus) et, pour les Bibax, l'icône Bibax de l'app (trois silhouettes, choisie par Mehdi) — rien d'inventé. Les shops : un caddie (`shopping-cart`, demandé par Mehdi le 2026-11-23 ; l'app n'en avait pas, il a été ajouté à `icons.jsx`).
+const KIND_ICON_NAMES = { venues: "map-pin", drinks: "bottle", brands: "tag", producers: "bibamus-monogram", shops: "shopping-cart", bibax: "bibax" };
 const kindIcon = (kind, size = 24) => <NavIcon name={KIND_ICON_NAMES[kind]} size={size} color={COLORS.amber} />;
 const KIND_ICONS = {
   venues: kindIcon("venues"),
   drinks: kindIcon("drinks"),
   brands: kindIcon("brands"),
   producers: kindIcon("producers"),
+  shops: kindIcon("shops"),
   bibax: kindIcon("bibax", 28),
 };
 
@@ -213,9 +215,9 @@ export function ScreenTitle({ children, iconUrl = null, icon = null, right = nul
   );
 }
 
-// Écran d'entrée : cinq cartes, chacune avec le nombre de ses favoris (espace insécable tant que la base n'a pas répondu : la carte garde sa hauteur).
+// Écran d'entrée : six cartes, chacune avec le nombre de ses favoris (espace insécable tant que la base n'a pas répondu : la carte garde sa hauteur).
 export function MyFavoritesScreen({ bibros = [], onBack, goTo }) {
-  const [counts, setCounts] = useState(null); // null = chargement ; { venues, drinks, brands, producers, bibax } ; { } si la lecture a échoué
+  const [counts, setCounts] = useState(null); // null = chargement ; { venues, drinks, brands, producers, shops, bibax } ; { } si la lecture a échoué
   useEffect(() => {
     let cancelled = false;
     loadMyFavorites().then((favs) => {
@@ -229,6 +231,7 @@ export function MyFavoritesScreen({ bibros = [], onBack, goTo }) {
         drinks: favs.drinks.length,
         brands: favs.brands.length,
         producers: favs.producers.length,
+        shops: favs.shops.length,
         bibax: favs.bibax.filter((userId) => bibros.some((b) => b.userId === userId)).length,
       });
     });
@@ -252,9 +255,9 @@ export function MyFavoritesScreen({ bibros = [], onBack, goTo }) {
   );
 }
 
-// Une page de liste (kind : "venues" | "drinks" | "brands" | "producers" | "bibax"). `screenId` : l'identifiant de l'écran dans App (la mémoire du retour d'une fiche
+// Une page de liste (kind : "venues" | "drinks" | "brands" | "producers" | "shops" | "bibax"). `screenId` : l'identifiant de l'écran dans App (la mémoire du retour d'une fiche
 // est rangée sous ce nom, voir `useListReturn`) : au retour d'une fiche, la liste se remet à la hauteur où l'on l'avait laissée ; une entrée depuis « Mes Favoris » repart de zéro.
-export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenBibax, onOpenDrink, favoriteVenueIds = null, onToggleVenueFavorite = null, favoriteDrinkIds = null, onToggleDrinkFavorite = null, favoriteBibaxIds = null, onToggleBibaxFavorite = null }) {
+export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = [], onBack, onOpenVenue, onOpenBrand, onOpenProducer, onOpenShop, onOpenBibax, onOpenDrink, favoriteVenueIds = null, onToggleVenueFavorite = null, favoriteDrinkIds = null, onToggleDrinkFavorite = null, favoriteBibaxIds = null, onToggleBibaxFavorite = null }) {
   const meta = KINDS.find((k) => k.kind === kind);
   const { restored, save, open } = useListReturn(screenId, mainScrollRef);
   const [ids, setIds] = useState(restored ? restored.ids : null); // null = chargement ; identifiants de cette sorte, du plus récent au plus ancien
@@ -281,7 +284,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
       const wanted = result[kind] || [];
       // Au retour d'une fiche, rien à remplacer si la liste n'a pas changé.
       if (restored && wanted.join(",") === restored.ids.join(",")) return;
-      const loader = { venues: loadVenuesByIds, drinks: loadDrinksByIds, brands: loadBrandsByIds, producers: loadBreweriesByIds }[kind];
+      const loader = { venues: loadVenuesByIds, drinks: loadDrinksByIds, brands: loadBrandsByIds, producers: loadBreweriesByIds, shops: loadShopsByIds }[kind];
       const items = loader ? await loader(wanted) : [];
       if (cancelled) return;
       setById(Object.fromEntries(items.map((x) => [String(x.id), x])));
@@ -312,7 +315,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
   }, [kind, attempt]);
   // Le cœur des lignes (Mehdi, 2026-11-17) : plein = favori ; un clic retire (ou remet) le favori sans ouvrir la fiche, et la ligne reste jusqu'à ce qu'on quitte la page (un second clic annule).
   // Lieux, produits et Bibax : l'état et la bascule de l'application (les mêmes que le cœur de leur fiche). Marques et producteurs : la bascule de la base, avec l'état gardé ici
-  // (leurs fiches relisent le leur à l'ouverture) ; `heartOff[id]` = true quand le cœur est vide.
+  // (leurs fiches relisent le leur à l'ouverture) ; `heartOff[id]` = true quand le cœur est vide. Les shops font comme les marques et les producteurs.
   const [heartOff, setHeartOff] = useState({});
   const toggleLocalHeart = async (apiToggle, id) => {
     const key = String(id);
@@ -330,6 +333,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
   const openDrink = onOpenDrink ? open(onOpenDrink) : null;
   const openBrand = onOpenBrand ? open(onOpenBrand) : null;
   const openProducer = onOpenProducer ? open(onOpenProducer) : null;
+  const openShop = onOpenShop ? open(onOpenShop) : null;
   const openBibax = onOpenBibax ? open(onOpenBibax) : null;
 
   const loading = ids === null;
@@ -390,6 +394,20 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
         heart={{ on: !heartOff[String(p.id)], onToggle: () => toggleLocalHeart(toggleFavoriteProducer, p.id) }}
         isLast={last(resolved, i)}
         onOpen={openProducer ? () => openProducer(p.id) : null}
+      />
+    ));
+  } else if (kind === "shops") {
+    rows = resolved.map((s, i) => (
+      <FavoriteRow
+        key={s.id}
+        kind="shop"
+        avatar={<EntityAvatar photoUrl={s.profilePhotoUrl} size={ROW_AVATAR} />}
+        title={s.name}
+        // Un magasin : son adresse sur deux lignes, comme celle d'un lieu (rue puis code postal, commune et drapeau) ; une boutique en ligne seule n'a pas d'adresse : « En ligne », comme dans le répertoire.
+        {...(s.hasStore ? { detailsNode: <VenueAddressLines venue={s} /> } : { details: ["En ligne"] })}
+        heart={{ on: !heartOff[String(s.id)], onToggle: () => toggleLocalHeart(toggleFavoriteShop, s.id) }}
+        isLast={last(resolved, i)}
+        onOpen={openShop ? () => openShop(s.id) : null}
       />
     ));
   } else {

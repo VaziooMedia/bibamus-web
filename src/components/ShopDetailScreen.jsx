@@ -2,7 +2,8 @@
 // Fiche d'un shop (point de vente de boissons à emporter) : couverture, image de profil, nom, puis une carte « Infos » copiée de celle d'un producteur
 // (pastilles, adresse qui ouvre Google Maps, téléphone et courriel, icônes de réseaux) avec en plus les pays où une boutique en ligne livre.
 // Un magasin affiche aussi ses horaires d'ouverture (Google, comme un lieu) sous la carte « Infos ».
-// Première version : lecture seule. Pas de note, de cloche, de cœur ni d'onglets Biba360 / BibaPulse (ils viendront avec les étapes suivantes).
+// Un cœur « Favoris » en dessous du nom, à droite (même place et même taille que sur la fiche d'un producteur) : un état par personne, enregistré dans le compte, lu à l'ouverture de la fiche ;
+// plein = favori, la bascule attend la réponse du serveur. Pas de note, de cloche ni d'onglets Biba360 / BibaPulse (ils viendront avec les étapes suivantes).
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { COLORS, SHOP_CATEGORIES } from "../constants.js";
@@ -12,7 +13,7 @@ import { ZoomableAvatar } from "./PhotoLightbox.jsx";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { resolveTagLabels, buildSocials, SocialIconsRow } from "./BreweryBrandDetailScreens.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
-import { loadShopById, loadShopListsOnce } from "../data/sharedDirectories.js";
+import { loadShopById, loadShopListsOnce, loadShopFavoriteStatus, toggleFavoriteShop } from "../data/sharedDirectories.js";
 import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
 
@@ -139,8 +140,11 @@ export function ShopDetailScreen({ shopId, myBibroCode, onBack }) {
   // que les autres fiches (table entity_reports). La fiche en double se cherche côté serveur (`search_shops`), dans la fenêtre elle-même.
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [reporting, setReporting] = useState(false);
+  // Cœur « Favoris » : lu à l'ouverture de la fiche (faux tant que la base n'a pas répondu, ou si la lecture échoue).
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
   // Nom sur plusieurs lignes : le contenu en dessous descend d'autant (voir useWrappedTitleExtra).
-  const [titleRef, titleExtra] = useWrappedTitleExtra();
+  const [titleRef, titleExtra] = useWrappedTitleExtra(!!shop);
 
   useEffect(() => {
     let cancelled = false;
@@ -152,6 +156,28 @@ export function ShopDetailScreen({ shopId, myBibroCode, onBack }) {
       cancelled = true;
     };
   }, [shopId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsFavorite(false);
+    loadShopFavoriteStatus(shopId).then((v) => {
+      if (!cancelled) setIsFavorite(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [shopId]);
+
+  const handleToggleFavorite = async () => {
+    setFavoriteBusy(true);
+    const result = await toggleFavoriteShop(shopId);
+    setFavoriteBusy(false);
+    if (!result || result.error) {
+      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      return;
+    }
+    setIsFavorite(!!result.favorite);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -191,8 +217,21 @@ export function ShopDetailScreen({ shopId, myBibroCode, onBack }) {
             <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "19px", margin: 0, lineHeight: 1.25, color: COLORS.chalkWhite }}>{shop.name}</h1>
           </div>
           {shop.subtitle && (
-            <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{shop.subtitle}</p>
+            <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "2px 0 0 0", paddingRight: "40px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{shop.subtitle}</p>
           )}
+          <div style={{ position: "absolute", top: `${32 + titleExtra}px`, right: "8px", display: "flex", alignItems: "center" }}>
+            <button
+              data-shop-favorite={isFavorite ? "on" : "off"}
+              onClick={handleToggleFavorite}
+              disabled={favoriteBusy}
+              title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+              aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+              aria-pressed={isFavorite}
+              style={{ background: "none", border: "none", padding: 0, display: "flex", cursor: favoriteBusy ? "default" : "pointer" }}
+            >
+              <NavIcon name="heart" size={24} color={COLORS.amber} filled={isFavorite} />
+            </button>
+          </div>
         </div>
       </div>
 

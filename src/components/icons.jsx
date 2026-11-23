@@ -397,6 +397,16 @@ export function NavIcon({ name, size = 20, color = "currentColor", filled = fals
           <circle cx="12" cy="9.5" r="2.5" />
         </svg>
       );
+    // Caddie (Mehdi, 2026-11-23 : « tu n'as pas une icône de Caddie ? ») : celui de la carte « Shops » de « Mes Favoris » et du titre de sa page. Tracé simple, même trait que les autres icônes de ce fichier.
+    case "shopping-cart":
+      return (
+        <svg {...common}>
+          <circle cx="6" cy="19" r="2" />
+          <circle cx="17" cy="19" r="2" />
+          <path d="M17 17H6V3H4" />
+          <path d="M6 5l14 1-1 7H6" />
+        </svg>
+      );
     case "glass":
       return (
         <svg {...common}>

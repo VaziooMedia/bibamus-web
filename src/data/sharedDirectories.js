@@ -4507,6 +4507,19 @@ export async function loadShopById(id) {
   return rowToShop(data);
 }
 
+// Plusieurs shops d'un coup (« Mes Favoris »), rendus dans l'ordre des identifiants demandés (la base ne garantit aucun ordre pour un « in »). Un shop que la base
+// ne montre plus (fiche retirée ou masquée) est simplement absent de la réponse. Une lecture qui échoue rend une liste vide.
+export async function loadShopsByIds(ids) {
+  if (!ids || ids.length === 0) return [];
+  const { data, error } = await supabase.from("shops_directory").select("*").in("id", ids.map(String));
+  if (error) {
+    console.error("loadShopsByIds:", error);
+    return [];
+  }
+  const rank = new Map(ids.map((id, i) => [String(id), i]));
+  return data.map(rowToShop).sort((a, b) => rank.get(String(a.id)) - rank.get(String(b.id)));
+}
+
 // Les repères de la carte commune (voir BibaMapScreen) pour les répertoires lus dans une table : seulement les fiches visibles dans l'app qui ont des coordonnées.
 // Comme pour les Lieux, un repère ne porte que le nom et la position ; la fiche est lue à la demande. Lecture par pages de 1000 (limite de Supabase par requête) ;
 // une lecture qui échoue rend une liste vide (la carte garde alors ce qu'elle avait).
@@ -5155,6 +5168,23 @@ export async function loadProducerFavoriteStatus(producerId) {
   return !!data;
 }
 
+// Cœur « Favoris » d'un SHOP (table fermée shop_favorites, voir docs/DATABASE.md) : mêmes formes que celui d'un producteur. La bascule rend
+// { ok, favorite } (ou { error } si la base refuse) ; l'état se lit à l'ouverture de la fiche. Pas de cloche pour l'instant : seulement le cœur.
+export async function toggleFavoriteShop(shopId) {
+  const { data, error } = await supabase.rpc("toggle_favorite_shop", { p_shop_id: String(shopId) });
+  if (error) return { error: error.message };
+  return data;
+}
+
+export async function loadShopFavoriteStatus(shopId) {
+  const { data, error } = await supabase.rpc("get_shop_favorite_status", { p_shop_id: String(shopId) });
+  if (error) {
+    console.error("loadShopFavoriteStatus:", error);
+    return false;
+  }
+  return !!data;
+}
+
 // « Mes Favoris » (2026-11-15) : les LIEUX et les BIBAX favoris vivent désormais dans le compte (tables fermées venue_favorites et bibax_favorites ;
 // scripts bibamus-sql-favoris-1-lieux et -2-bibax), comme les cœurs des marques et des producteurs. Auparavant : l'étoile d'un lieu et le drapeau d'un
 // Bibax n'étaient gardés que dans le navigateur. Les bascules rendent { ok, favorite } (ou { error } si la base refuse) ; add… reprend en bloc ce qui était
@@ -5191,7 +5221,7 @@ export async function addFavoriteBibax(bibaxUserIds) {
 }
 
 // Tous mes favoris en une lecture (fonction get_my_favorites, script bibamus-sql-favoris-3-liste) : des identifiants seulement, du plus récent au plus
-// ancien, rangés par sorte : { venues, brands, producers, bibax, drinks } (bibax = identifiants de personnes). null si la lecture échoue.
+// ancien, rangés par sorte : { venues, brands, producers, shops, bibax, drinks } (bibax = identifiants de personnes). null si la lecture échoue.
 export async function loadMyFavorites() {
   const { data, error } = await supabase.rpc("get_my_favorites");
   if (error || !Array.isArray(data)) {
@@ -5199,7 +5229,7 @@ export async function loadMyFavorites() {
     return null;
   }
   const idsOf = (kind) => data.filter((r) => r.kind === kind && r.item_id).map((r) => String(r.item_id));
-  return { venues: idsOf("venue"), brands: idsOf("brand"), producers: idsOf("producer"), bibax: idsOf("bibax"), drinks: idsOf("drink") };
+  return { venues: idsOf("venue"), brands: idsOf("brand"), producers: idsOf("producer"), shops: idsOf("shop"), bibax: idsOf("bibax"), drinks: idsOf("drink") };
 }
 
 // Ma liste « À goûter » dans le compte (table fermée drink_wishlist, script bibamus-sql-mes-produits-1-a-gouter). Bouton « liste à goûter » de la fiche d'un

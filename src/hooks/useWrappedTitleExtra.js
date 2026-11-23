@@ -8,24 +8,26 @@
 // Usage : const [titleRef, titleExtra] = useWrappedTitleExtra(); mettre titleRef sur la ligne du nom (le bloc qui contient le titre et
 // l'icône de certification) ; titleExtra vaut 0 pour un nom sur une seule ligne, 24 pour deux lignes, 48 pour trois...
 // La mesure se refait toute seule quand la taille du bloc change (autre fiche, police chargée plus tard, rotation de l'écran).
+// Une fiche qui n'affiche son nom qu'APRÈS lecture (écran « Chargement... » d'abord, comme la fiche d'un shop) passe en paramètre « le nom est affiché » (`useWrappedTitleExtra(!!shop)`) :
+// sans cela, la mesure se faisait à l'ouverture, quand le nom n'existait pas encore, et ne se refaisait jamais.
 // ============================================================
 import { useState, useRef, useLayoutEffect } from "react";
 
 // Une ligne du nom : 19 px × interligne 1,25 = 23,75 px.
 const ONE_LINE_PX = 24;
 
-export function useWrappedTitleExtra() {
+export function useWrappedTitleExtra(titleShown = true) {
   const ref = useRef(null);
   const [extra, setExtra] = useState(0);
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return undefined;
+    if (!titleShown || !el) return undefined;
     const measure = () => setExtra(Math.max(0, Math.ceil(el.getBoundingClientRect().height - ONE_LINE_PX)));
     measure();
     if (typeof ResizeObserver === "undefined") return undefined;
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [titleShown]);
   return [ref, extra];
 }
