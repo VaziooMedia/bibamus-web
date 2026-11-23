@@ -3,8 +3,8 @@
 // RIEN n'est écrit en base tant que l'utilisateur n'a pas validé la dernière page ET confirmé le popup qui suit.
 //
 // Les pages dépendent du type choisi (deux pastilles cumulables, comme dans la plateforme de gestion) :
-//   Dénomination → Type → [Magasin : Pays → Code postal & Commune → Adresse → Géocodage & Vérification] → [En ligne : Pays desservis] → Site web → Catégorie.
-// Magasin seul : 8 pages ; En ligne seul : 5 pages ; les deux : 9 pages.
+//   Type → Dénomination → [Magasin : Pays → Code postal & Commune → Adresse → Géocodage & Vérification] → [En ligne : Pays desservis] → Site web → Catégorie.
+// Magasin seul : 8 pages ; En ligne seul : 5 pages ; les deux : 9 pages. Le type vient en premier (décidé par Mehdi, 2026-11-23) : la barre de progression est juste dès la 2e page.
 //
 // Doublons (calculés dans l'appareil, sur la liste lue par loadShopsDirectory, sans appel de plus) :
 //   - le nom : les shops au nom proche s'affichent en direct dès la première page (toucher une ligne ouvre sa fiche) ;
@@ -173,7 +173,7 @@ export function SubmitShopWizardScreen({ initialName = "", onDone, onCancel, onO
 
   // Les pages, selon le type : les pages du magasin et celles de la boutique en ligne n'existent que si le type est coché.
   const steps = useMemo(
-    () => ["name", "type", ...(hasStore ? ["country", "postal", "address", "geocode"] : []), ...(hasOnline ? ["delivery"] : []), "website", "categories"],
+    () => ["type", "name", ...(hasStore ? ["country", "postal", "address", "geocode"] : []), ...(hasOnline ? ["delivery"] : []), "website", "categories"],
     [hasStore, hasOnline]
   );
   const [stepIdx, setStepIdx] = useState(0);

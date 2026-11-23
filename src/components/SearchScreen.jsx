@@ -368,7 +368,7 @@ export function SearchScreen({
   const shopsLoading = hasPlain && shopsAll === null;
   // Propositions d'ajout. Le lieu ou le produit cherché n'existe pas (encore) sur BibAtlas : le bloc rose d'ajout n'apparaît que lorsque la recherche correspondante a répondu pour le texte exact du champ.
   // Onglet Lieux → bloc Lieu ; onglet Produits → bloc Produit ; sous les résultats ou le message « Aucun résultat dans cette catégorie ». Quand rien n'est trouvé nulle part (« Aucun résultat pour … »),
-  // les blocs s'affichent ensemble (Lieu, Produit et Shop), quel que soit l'onglet (Lieu et Produit : décidé par Mehdi, 2026-11-20 ; Shop : ajouté avec l'ajout d'un shop par un utilisateur).
+  // un seul bloc à onglets s'affiche (Lieu, Produit, Shop : le choix se fait dans le bloc), quel que soit l'onglet de résultats (Lieu et Produit ensemble : décidé par Mehdi, 2026-11-20 ; onglets et Shop : 2026-11-23).
   // Onglet Shops → bloc Shop. Marques et Producteurs : jamais d'ajout par un utilisateur (ils se créent côté Gestion) ; Bibax : sans objet.
   const venueAnswered = hasPlain && venuesSearchedFor === plain;
   const drinkAnswered = hasPlain && drinksSearchedFor === plain && !drinksLoading;
@@ -394,13 +394,17 @@ export function SearchScreen({
   const addVenueBlock = (inList) => (activeTab === "lieux" && venueAnswered ? venueBlockEl(inList) : null);
   const addDrinkBlock = (inList) => (activeTab === "produits" && drinkAnswered ? drinkBlockEl(inList) : null);
   const addShopBlock = (inList) => (activeTab === "shops" && shopAnswered ? shopBlockEl(inList) : null);
+  // Rien trouvé nulle part : un seul bloc à trois onglets (Lieu, Produit, Shop) au lieu de trois blocs à la suite ; l'onglet choisi au départ est celui des résultats actif, s'il en fait partie.
+  const addTabs = [
+    { key: "lieux", tabLabel: "Lieu", noun: "lieu", label: "Proposer un établissement", onAdd: setAddVenueName },
+    { key: "produits", tabLabel: "Produit", noun: "produit", label: "Proposer une boisson", onAdd: setAddDrinkName },
+    ...(shopAnswered ? [{ key: "shops", tabLabel: "Shop", noun: "shop", label: "Proposer un shop", onAdd: setAddShopName }] : []),
+  ];
   const addBothBlocks =
     venueAnswered && drinkAnswered ? (
-      <>
-        {venueBlockEl(false)}
-        {drinkBlockEl(false)}
-        {shopAnswered && shopBlockEl(false)}
-      </>
+      <div style={blockWrapStyle(false)} data-add-all="1">
+        <AddAfterSearch key={plain} query={plain} tabs={addTabs} defaultTab={activeTab} />
+      </div>
     ) : null;
   const visibleTabs = hideBibaxAndAtlas ? TABS.filter((t) => t.key !== "bibax") : TABS;
   // Mode atlas : tant qu'aucune recherche n'est lancée, les blocs du répertoire prennent la place des résultats.
