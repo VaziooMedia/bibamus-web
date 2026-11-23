@@ -4492,26 +4492,35 @@ export async function loadShopById(id) {
   return rowToShop(data);
 }
 
-// Les repères de la carte des Shops : seulement les shops visibles qui ont un magasin avec des coordonnées (une boutique en ligne n'a pas de repère).
-// Comme pour les Lieux, un repère ne porte que le nom et la position ; la fiche est lue à la demande. Une lecture qui échoue rend une liste vide.
-export async function loadShopMapPins() {
-  const { data, error } = await supabase
-    .from("shops_directory")
-    .select("id, name, lat, lng")
-    .in("status", APP_VISIBLE_STATUSES)
-    .eq("has_store", true)
-    .not("lat", "is", null)
-    .not("lng", "is", null);
-  if (error) {
-    console.error("loadShopMapPins:", error);
-    return [];
+// Les repères de la carte commune (voir AtlasMapScreen) pour les répertoires lus dans une table : seulement les fiches visibles dans l'app qui ont des coordonnées.
+// Comme pour les Lieux, un repère ne porte que le nom et la position ; la fiche est lue à la demande. Lecture par pages de 1000 (limite de Supabase par requête) ;
+// une lecture qui échoue rend une liste vide (la carte garde alors ce qu'elle avait).
+async function loadDirectoryMapPins(table, label, narrow) {
+  const PAGE = 1000;
+  const rows = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await narrow(supabase.from(table).select("id, name, lat, lng").in("status", APP_VISIBLE_STATUSES).not("lat", "is", null).not("lng", "is", null))
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) {
+      console.error(`${label}:`, error);
+      return [];
+    }
+    rows.push(...(data || []));
+    if (!data || data.length < PAGE) break;
   }
   // Par sécurité, on écarte aussi ici une ligne sans coordonnées (Number(null) vaudrait 0 : un repère au large de l'Afrique).
-  return (data || [])
+  return rows
     .filter((r) => r.lat != null && r.lng != null)
     .map((r) => ({ id: r.id, name: r.name, lat: Number(r.lat), lng: Number(r.lng) }))
     .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
 }
+
+// Les shops : seulement ceux qui ont un magasin (une boutique en ligne n'a pas de repère).
+export const loadShopMapPins = () => loadDirectoryMapPins("shops_directory", "loadShopMapPins", (q) => q.eq("has_store", true));
+
+// Les producteurs.
+export const loadBreweryMapPins = () => loadDirectoryMapPins("breweries_directory", "loadBreweryMapPins", (q) => q);
 
 function rowToShop(row) {
   return {
@@ -4535,6 +4544,10 @@ function rowToShop(row) {
     email: row.email,
     website: row.website,
     googleUrl: row.google_url,
+    // Liaison à Google (comme un lieu) : l'identifiant de la fiche Google d'un magasin, d'où viennent ses horaires ; vide tant que le shop n'est pas lié.
+    googlePlaceId: row.google_place_id || null,
+    noGooglePresence: !!row.no_google_presence,
+    noFixedHours: !!row.no_fixed_hours,
     whatsappUrl: row.whatsapp_url,
     facebookUrl: row.facebook_url,
     instagramUrl: row.instagram_url,
