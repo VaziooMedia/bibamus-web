@@ -1,6 +1,7 @@
 // ============================================================
 // Fiche d'un shop (point de vente de boissons à emporter) : couverture, image de profil, nom, puis une carte « Infos » copiée de celle d'un producteur
 // (pastilles, adresse qui ouvre Google Maps, téléphone et courriel, icônes de réseaux) avec en plus les pays où une boutique en ligne livre.
+// Un magasin affiche aussi ses horaires d'ouverture (Google, comme un lieu) sous la carte « Infos ».
 // Première version : lecture seule. Pas de note, de cloche, de cœur ni d'onglets Biba360 / BibaPulse (ils viendront avec les étapes suivantes).
 // ============================================================
 import React, { useState, useEffect } from "react";
@@ -8,6 +9,7 @@ import { COLORS, SHOP_CATEGORIES } from "../constants.js";
 import { NavIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink } from "./ui.jsx";
 import { ZoomableAvatar } from "./PhotoLightbox.jsx";
+import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { resolveTagLabels, buildSocials, SocialIconsRow } from "./BreweryBrandDetailScreens.jsx";
 import { loadShopById, loadShopListsOnce } from "../data/sharedDirectories.js";
 import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
@@ -191,6 +193,11 @@ export function ShopDetailScreen({ shopId, onBack }) {
 
       <div style={{ marginTop: `${76 + titleExtra}px` }}>
         <ShopInfosCard shop={shop} tags={tags} />
+        {shop.hasStore && (
+          <div data-shop-hours style={{ marginBottom: "16px" }}>
+            <OpeningHoursDisplay googlePlaceId={shop.googlePlaceId} noGooglePresence={shop.noGooglePresence} noFixedHours={shop.noFixedHours} table="shops_directory" />
+          </div>
+        )}
         <div style={{ marginTop: "-14px" }}>
           <BackFooterLink onClick={onBack} />
         </div>

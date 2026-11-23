@@ -2440,14 +2440,15 @@ export async function geocodeCityForProfile(city, countryIsoCode) {
 // exposée ici.
 const GOOGLE_HOURS_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 heures — court, jamais traité comme un fait Bibamus.
 
-export async function loadEstablishmentOpeningHours(googlePlaceId) {
+// `table` : la table dont on lit le cache — « public_venues » pour un lieu, « shops_directory » pour un shop (les deux ont les mêmes colonnes Google).
+export async function loadEstablishmentOpeningHours(googlePlaceId, table = "public_venues") {
   if (!googlePlaceId) return { status: "LINK_REQUIRED" };
   try {
     // Vérifie d'abord si un résultat récent est déjà en cache — évite d'appeler Google à
     // chaque simple affichage de la fiche, réduit le coût et la dépendance à la disponibilité
     // de Google en temps réel.
     const { data: cached } = await supabase
-      .from("public_venues")
+      .from(table)
       .select("google_hours_cache, google_hours_last_fetch_at")
       .eq("google_place_id", googlePlaceId)
       .maybeSingle();

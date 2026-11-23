@@ -324,7 +324,7 @@ export function BibaMapScreen({ onBack, onOpenItem, initialView = null, startKin
       if (!item || kind === "producer" || !item.googlePlaceId) return;
       let hours = null;
       try {
-        hours = await loadEstablishmentOpeningHours(item.googlePlaceId);
+        hours = await loadEstablishmentOpeningHours(item.googlePlaceId, kind === "shop" ? "shops_directory" : "public_venues");
       } catch (e) {
         hours = null;
       }

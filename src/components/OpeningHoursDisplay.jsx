@@ -38,7 +38,8 @@ function regroupIntoBusinessDays(days) {
 
 // Les horaires ne sont jamais saisis dans Bibamus — uniquement affichés depuis Google, avec
 // l'attribution requise. Aucun formulaire, aucun bouton d'édition ici.
-export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHours }) {
+// `table` : « public_venues » (un lieu, par défaut) ou « shops_directory » (un shop) — la table où se lit le cache des horaires.
+export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHours, table = "public_venues" }) {
   const [hours, setHours] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -46,7 +47,7 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    loadEstablishmentOpeningHours(googlePlaceId).then((result) => {
+    loadEstablishmentOpeningHours(googlePlaceId, table).then((result) => {
       if (!cancelled) {
         setHours(result);
         setLoading(false);
@@ -55,7 +56,7 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
     return () => {
       cancelled = true;
     };
-  }, [googlePlaceId]);
+  }, [googlePlaceId, table]);
 
   if (loading) {
     return <p style={{ fontSize: "13px", color: COLORS.inkSoft }}>Chargement des horaires...</p>;
