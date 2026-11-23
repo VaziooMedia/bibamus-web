@@ -18,6 +18,7 @@ import { DERIVATIVE_LIST_KEYS, buildCombinedDerivativeList, cleanDerivativeKcal,
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
+import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
 import { OTHER_STYLE_LIST_KEYS } from "./otherStyleLabels.js";
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
@@ -2439,14 +2440,15 @@ export async function geocodeCityForProfile(city, countryIsoCode) {
 // exposée ici.
 const GOOGLE_HOURS_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 heures — court, jamais traité comme un fait Bibamus.
 
-export async function loadEstablishmentOpeningHours(googlePlaceId) {
+// `table` : la table dont on lit le cache — « public_venues » pour un lieu, « shops_directory » pour un shop (les deux ont les mêmes colonnes Google).
+export async function loadEstablishmentOpeningHours(googlePlaceId, table = "public_venues") {
   if (!googlePlaceId) return { status: "LINK_REQUIRED" };
   try {
     // Vérifie d'abord si un résultat récent est déjà en cache — évite d'appeler Google à
     // chaque simple affichage de la fiche, réduit le coût et la dépendance à la disponibilité
     // de Google en temps réel.
     const { data: cached } = await supabase
-      .from("public_venues")
+      .from(table)
       .select("google_hours_cache, google_hours_last_fetch_at")
       .eq("google_place_id", googlePlaceId)
       .maybeSingle();
@@ -3155,6 +3157,9 @@ export const loadProducerListsOnce = onceLoader([PRODUCER_TYPE_LIST_KEY, PRODUCE
 // Type et classification d'une marque : { brand_type: { rows, order }, brand_classification: { rows, order } } (assistant « Ajouter
 // une marque », carte publique d'une marque).
 export const loadBrandListsOnce = onceLoader([BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY], "loadBrandLists");
+
+// Catégorie d'un shop : { shop_category: { rows, order } } (liste et fiche d'un shop).
+export const loadShopListsOnce = onceLoader([SHOP_CATEGORY_LIST_KEY], "loadShopLists");
 
 // Par le NOM du producteur (texte « brewery » du produit) : n'est plus utilisée par la fiche Producteur, voir loadDrinksByProducerId.
 export async function loadDrinksByBrewery(breweryName) {
@@ -4463,6 +4468,101 @@ export async function loadBreweriesDirectory() {
     return [];
   }
   return data.map(rowToBrewery);
+}
+
+/* ---------------- SHOPS (points de vente de boissons à emporter) ---------------- */
+
+// Table `shops_directory` (voir docs/DATABASE.md, « Shops »). Un compte connecté ne lit que les fiches visibles (à traiter, à compléter, complète).
+// Deux pastilles, cumulables : « Magasin » (hasStore : adresse, point sur la carte) et « En ligne » (hasOnline : site, pays où le shop livre).
+export async function loadShopsDirectory() {
+  const { data, error } = await supabase.from("shops_directory").select("*").in("status", APP_VISIBLE_STATUSES).order("name");
+  if (error) {
+    console.error("loadShopsDirectory:", error);
+    return null;
+  }
+  return data.map(rowToShop);
+}
+
+export async function loadShopById(id) {
+  if (!id) return null;
+  const { data, error } = await supabase.from("shops_directory").select("*").eq("id", id).maybeSingle();
+  if (error || !data) {
+    if (error) console.error("loadShopById:", error);
+    return null;
+  }
+  return rowToShop(data);
+}
+
+// Les repères de la carte commune (voir BibaMapScreen) pour les répertoires lus dans une table : seulement les fiches visibles dans l'app qui ont des coordonnées.
+// Comme pour les Lieux, un repère ne porte que le nom et la position ; la fiche est lue à la demande. Lecture par pages de 1000 (limite de Supabase par requête) ;
+// une lecture qui échoue rend une liste vide (la carte garde alors ce qu'elle avait).
+async function loadDirectoryMapPins(table, label, narrow) {
+  const PAGE = 1000;
+  const rows = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await narrow(supabase.from(table).select("id, name, lat, lng").in("status", APP_VISIBLE_STATUSES).not("lat", "is", null).not("lng", "is", null))
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) {
+      console.error(`${label}:`, error);
+      return [];
+    }
+    rows.push(...(data || []));
+    if (!data || data.length < PAGE) break;
+  }
+  // Par sécurité, on écarte aussi ici une ligne sans coordonnées (Number(null) vaudrait 0 : un repère au large de l'Afrique).
+  return rows
+    .filter((r) => r.lat != null && r.lng != null)
+    .map((r) => ({ id: r.id, name: r.name, lat: Number(r.lat), lng: Number(r.lng) }))
+    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+}
+
+// Les shops : seulement ceux qui ont un magasin (une boutique en ligne n'a pas de repère).
+export const loadShopMapPins = () => loadDirectoryMapPins("shops_directory", "loadShopMapPins", (q) => q.eq("has_store", true));
+
+// Les producteurs.
+export const loadBreweryMapPins = () => loadDirectoryMapPins("breweries_directory", "loadBreweryMapPins", (q) => q);
+
+function rowToShop(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    subtitle: row.subtitle,
+    aliases: [],
+    hasStore: row.has_store ?? true,
+    hasOnline: !!row.has_online,
+    categories: row.shop_categories || [],
+    country: COUNTRY_CODE_TO_LABEL[row.country] || row.country,
+    streetName: row.street_name,
+    streetNumber: row.street_number,
+    postalCode: row.postal_code,
+    city: row.city,
+    village: row.village,
+    lat: row.lat,
+    lng: row.lng,
+    deliveryCountries: (row.delivery_countries || []).map((c) => COUNTRY_CODE_TO_LABEL[c] || c),
+    phone: row.phone,
+    email: row.email,
+    website: row.website,
+    googleUrl: row.google_url,
+    // Liaison à Google (comme un lieu) : l'identifiant de la fiche Google d'un magasin, d'où viennent ses horaires ; vide tant que le shop n'est pas lié.
+    googlePlaceId: row.google_place_id || null,
+    noGooglePresence: !!row.no_google_presence,
+    noFixedHours: !!row.no_fixed_hours,
+    whatsappUrl: row.whatsapp_url,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+    linkedinUrl: row.linkedin_url,
+    youtubeUrl: row.youtube_url,
+    profilePhotoUrl: row.profile_photo_url,
+    coverPhotoUrl: row.cover_photo_url,
+    status: row.status,
+    createdVia: row.created_via,
+    submittedBy: row.submitted_by,
+    pendingContributionsCount: row.pending_contributions_count || 0,
+  };
 }
 
 export async function createBrewery(brewery) {

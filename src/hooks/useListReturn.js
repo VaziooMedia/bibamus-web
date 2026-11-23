@@ -28,6 +28,7 @@ export const FICHE_SCREENS = new Set([
   "drinkDetail",
   "brandDetail",
   "breweryDetail",
+  "shopDetail",
   "bibroDetail",
   "bibroClub",
   "bibaxProfilePreview",

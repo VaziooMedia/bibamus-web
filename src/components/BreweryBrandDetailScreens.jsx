@@ -269,7 +269,7 @@ function CoverRating({ summary, buttonRef, onClick, buttonLabel }) {
 // Noms affichés des codes d'une fiche (types, profils, catégories) : ceux de la plateforme de gestion (élément ajouté, élément renommé)
 // l'emportent sur la liste de départ. Un code inconnu dont le nom n'est pas chargé n'est jamais montré tel quel. Entre parenthèses,
 // l'explication de la liste de départ (« Bulles (champagne, crémant...) ») est omise.
-const resolveTagLabels = (lists, codes, builtin, listKey) => {
+export const resolveTagLabels = (lists, codes, builtin, listKey) => {
   const names = lists ? customNames(lists[listKey].rows) : {};
   return (codes || [])
     .map((code) => {
@@ -306,7 +306,7 @@ const whatsappHref = (v) => (/^[+\d\s().-]+$/.test(v.trim()) ? buildWhatsAppLink
 // Les icônes de réseaux d'une fiche Marque ou Producteur, dans l'ordre de la fiche Lieu (site, Google, WhatsApp, Facebook, Instagram, TikTok,
 // Snapchat), puis LinkedIn et YouTube. On ne met que ceux que la fiche a : une marque a le site, Facebook, Instagram, TikTok, Snapchat et YouTube ;
 // un producteur a en plus Google, WhatsApp et LinkedIn. Les liens sont encodés côté plateforme de gestion.
-function buildSocials(entity) {
+export function buildSocials(entity) {
   return [
     entity.website && {
       key: "website",
@@ -344,7 +344,7 @@ function buildSocials(entity) {
 }
 
 // La rangée d'icônes de réseaux, alignée à droite (comme sur la fiche Lieu).
-function SocialIconsRow({ socials }) {
+export function SocialIconsRow({ socials }) {
   return (
     <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px" }}>
       {socials.map((x) => (
