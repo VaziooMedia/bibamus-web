@@ -352,8 +352,8 @@ export const SUBTYPE_LABELS = {
   biere: "Bière",
   cidre: "Cidre",
   poire: "Poiré",
-  vin: "Vin",
-  vin_effervescent: "Vin effervescent",
+  vin: "Wine",
+  vin_effervescent: "Sparkling Wine",
   // Spiritueux (mêmes noms que la plateforme de gestion ; noms anglais depuis le 2026-11-24, voir SPIRIT_SUBTYPES de la gestion)
   whisky: "Whisky",
   rhum: "Rum",
