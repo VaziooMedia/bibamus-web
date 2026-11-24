@@ -345,7 +345,7 @@ export const ADD_BLOCK_HEIGHT = 42;
 
 // Nom français de la sous-catégorie d'un produit (colonne beverage_subtype), pour l'afficher sous le nom, dans les résultats de
 // recherche, les tournées et le service à la maison. Mêmes noms que la plateforme de gestion. Une sous-catégorie absente d'ici
-// (Spiritueux, dont les sous-catégories ne sont pas encore reprises) n'affiche rien plutôt qu'un code brut ou la catégorie générale.
+// n'affiche rien plutôt qu'un code brut (ou, sur la carte produit du fil, la catégorie générale).
 // Les codes de deux familles ne se confondent jamais (vérifié à la reprise des listes).
 export const SUBTYPE_LABELS = {
   // Bières & Cidres, Vins & Bulles
@@ -354,20 +354,23 @@ export const SUBTYPE_LABELS = {
   poire: "Poiré",
   vin: "Vin",
   vin_effervescent: "Vin effervescent",
-  // Spiritueux (mêmes noms que la plateforme de gestion)
-  whisky: "Whisky / Whiskey",
-  rhum: "Rhum",
-  gin_genievre: "Gin & Genièvre",
+  // Spiritueux (mêmes noms que la plateforme de gestion ; noms anglais depuis le 2026-11-24, voir SPIRIT_SUBTYPES de la gestion)
+  whisky: "Whisky",
+  rhum: "Rum",
+  gin: "Gin",
+  genever: "Genever",
   vodka: "Vodka",
   agave: "Agave",
-  brandy_eaux_de_vie_de_vin: "Brandy & Eaux-de-vie de vin",
-  eaux_de_vie_de_fruits: "Eaux-de-vie de fruits",
-  eaux_de_vie_de_marc: "Eaux-de-vie de marc",
-  liqueurs_cremes: "Liqueurs & Crèmes",
-  anises: "Anisés",
-  amers_bitters_amaros: "Amers & spiritueux aux plantes",
-  spiritueux_de_canne: "Spiritueux de canne hors rhum",
-  autres_spiritueux: "Autres spiritueux",
+  brandy: "Brandy",
+  wine_spirits: "Wine Spirits",
+  eaux_de_vie_de_fruits: "Fruit Spirits",
+  eaux_de_vie_de_marc: "Grape Marc",
+  liqueurs_cremes: "Liqueurs & Cream",
+  anises: "Anise",
+  bitters: "Bitters",
+  herbal: "Herbal",
+  spiritueux_de_canne: "Cane",
+  autres_spiritueux: "Other",
   // Softs & Eaux
   soda: "Soda",
   eau: "Eau",

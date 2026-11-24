@@ -1,6 +1,6 @@
 // ============================================================
 // Noms des styles des Spiritueux — copiés fidèlement depuis la liste de départ de la plateforme de gestion (dépôt
-// Bibamus-Management, src/data/spiritStyles.js : SPIRIT_STYLE_GROUPS_BY_SUBTYPE, 13 sous-catégories, 128 styles).
+// Bibamus-Management, src/data/spiritStyles.js : SPIRIT_STYLE_GROUPS_BY_SUBTYPE, 16 sous-catégories, 128 styles).
 //
 // FICHIER GÉNÉRÉ — ne pas le modifier à la main : node scripts/generate-spirit-style-labels.mjs
 // (sans option pour le réécrire, avec --check pour vérifier qu'il est à jour).
@@ -53,9 +53,9 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
     },
   ],
 
-  gin_genievre: [
+  gin: [
     {
-      title: "Gin",
+      title: "Style",
       tags: [
         { code: "gin", fr: "Gin" },
         { code: "distilled_gin", fr: "Distilled Gin" },
@@ -67,8 +67,11 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
         { code: "sloe_gin", fr: "Sloe Gin" },
       ],
     },
+  ],
+
+  genever: [
     {
-      title: "Genever / Jenever",
+      title: "Style",
       tags: [
         { code: "genever_jenever", fr: "Genever / Jenever" },
         { code: "jonge_jenever", fr: "Jonge Jenever" },
@@ -104,7 +107,7 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
     },
   ],
 
-  brandy_eaux_de_vie_de_vin: [
+  brandy: [
     {
       title: "Style",
       tags: [
@@ -114,6 +117,14 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
         { code: "pisco", fr: "Pisco" },
         { code: "brandy_de_jerez", fr: "Brandy de Jerez" },
         { code: "weinbrand", fr: "Weinbrand" },
+      ],
+    },
+  ],
+
+  wine_spirits: [
+    {
+      title: "Style",
+      tags: [
         { code: "eau_de_vie_de_vin", fr: "Eau-de-vie de vin" },
         { code: "autre_eau_de_vie_de_vin", fr: "Autre eau-de-vie de vin" },
       ],
@@ -202,17 +213,25 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
     },
   ],
 
-  amers_bitters_amaros: [
+  bitters: [
     {
       title: "Style",
       tags: [
         { code: "amaro", fr: "Amaro" },
         { code: "fernet", fr: "Fernet" },
         { code: "bitter", fr: "Bitter" },
-        { code: "krauterlikor_liqueur_aux_herbes", fr: "Kräuterlikör / liqueur aux herbes" },
         { code: "amer_aperitif", fr: "Amer apéritif" },
         { code: "amer_digestif", fr: "Amer digestif" },
         { code: "autre_amer", fr: "Autre amer" },
+      ],
+    },
+  ],
+
+  herbal: [
+    {
+      title: "Style",
+      tags: [
+        { code: "krauterlikor_liqueur_aux_herbes", fr: "Kräuterlikör / liqueur aux herbes" },
       ],
     },
   ],
