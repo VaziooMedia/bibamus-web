@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ============================================================
-// Régénère src/data/spiritStyleLabels.js : les noms des styles des Spiritueux (13 sous-catégories), copiés depuis la liste de
+// Régénère src/data/spiritStyleLabels.js : les noms des styles des Spiritueux (16 sous-catégories), copiés depuis la liste de
 // départ de la plateforme de gestion (dépôt Bibamus-Management : src/data/spiritStyles.js, export SPIRIT_STYLE_GROUPS_BY_SUBTYPE).
 //
 // À lancer quand un style de spiritueux change dans le code de la gestion (ajouté, renommé, supprimé). Contrairement aux bières
