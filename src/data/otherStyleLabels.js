@@ -1,7 +1,7 @@
 // ============================================================
-// Noms des styles des Vins & Bulles, des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails — copiés
-// fidèlement depuis les listes de départ de la plateforme de gestion (src/data/wineStyles.js, softStyles.js,
-// hotStyles.js et cocktailStyles.js ; 1055 styles en 19 listes). Les Snacks n'ont pas de styles.
+// Noms des styles des Vins & Bulles, des Spiritueux, des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails — copiés
+// fidèlement depuis les listes de départ de la plateforme de gestion (src/data/wineStyles.js, spiritStyles.js, softStyles.js,
+// hotStyles.js et cocktailStyles.js ; 1183 styles en 35 listes). Les Snacks n'ont pas de styles.
 //
 // FICHIER GÉNÉRÉ — ne pas le modifier à la main : node scripts/generate-other-style-labels.mjs
 // (sans option pour le réécrire, avec --check pour vérifier qu'il est à jour).
@@ -16,6 +16,22 @@
 export const OTHER_STYLE_LIST_KEYS = [
   "wine_style",
   "sparkling_wine_style",
+  "whisky_style",
+  "rum_style",
+  "gin_style",
+  "genever_style",
+  "vodka_style",
+  "agave_style",
+  "brandy_style",
+  "wine_spirits_style",
+  "fruit_spirits_style",
+  "grape_marc_style",
+  "liqueur_style",
+  "anise_style",
+  "bitters_style",
+  "herbal_style",
+  "cane_style",
+  "other_spirits_style",
   "water_style",
   "soda_style",
   "juice_style",
@@ -36,7 +52,7 @@ export const OTHER_STYLE_LIST_KEYS = [
 ];
 
 // Types de produit (tels que l'app les nomme) dont les styles viennent de ces listes.
-export const OTHER_STYLE_TYPES = ["Vins & Bulles", "Softs & Eaux", "Boissons chaudes", "Cocktails / Mocktails"];
+export const OTHER_STYLE_TYPES = ["Vins & Bulles", "Spiritueux", "Softs & Eaux", "Boissons chaudes", "Cocktails / Mocktails"];
 
 // code → nom. Une Map : un code comme « constructor » ne doit jamais tomber sur une propriété d'objet.
 export const OTHER_STYLE_LABELS = new Map([
@@ -75,6 +91,166 @@ export const OTHER_STYLE_LABELS = new Map([
   ["sparkling_biodynamique", "Biodynamique"],
   ["sparkling_bio", "Bio"],
   ["sparkling_nature", "Nature"],
+
+  // Spiritueux · Whisky (13) — liste « whisky_style »
+  ["single_malt", "Single Malt"],
+  ["single_grain", "Single Grain"],
+  ["blended_malt", "Blended Malt"],
+  ["blended_grain", "Blended Grain"],
+  ["blended_whisky", "Blended Whisky"],
+  ["bourbon", "Bourbon"],
+  ["rye_whiskey", "Rye Whiskey"],
+  ["wheat_whiskey", "Wheat Whiskey"],
+  ["corn_whiskey", "Corn Whiskey"],
+  ["tennessee_whiskey", "Tennessee Whiskey"],
+  ["pot_still_whiskey", "Pot Still Whiskey"],
+  ["moonshine_new_make_white_whiskey", "Moonshine / New Make / White Whiskey"],
+  ["autre_whisky_whiskey", "Autre Whisky / Whiskey"],
+
+  // Spiritueux · Rum (12) — liste « rum_style »
+  ["rhum_agricole", "Rhum agricole"],
+  ["rhum_traditionnel_de_melasse", "Rhum traditionnel / de mélasse"],
+  ["rhum_de_pur_jus_de_canne", "Rhum de pur jus de canne"],
+  ["rhum_blanc", "Rhum blanc"],
+  ["rhum_ambre", "Rhum ambré"],
+  ["rhum_eleve_sous_bois", "Rhum élevé sous bois"],
+  ["rhum_vieux", "Rhum vieux"],
+  ["rhum_tres_vieux", "Rhum très vieux"],
+  ["rhum_overproof", "Rhum overproof"],
+  ["navy_rum", "Navy Rum"],
+  ["rhum_arrange", "Rhum arrangé"],
+  ["spiced", "Spiced"],
+
+  // Spiritueux · Gin (8) — liste « gin_style »
+  ["gin", "Gin"],
+  ["distilled_gin", "Distilled Gin"],
+  ["london_gin_london_dry_gin", "London Gin / London Dry Gin"],
+  ["old_tom_gin", "Old Tom Gin"],
+  ["navy_strength_gin", "Navy Strength Gin"],
+  ["contemporary_new_western_gin", "Contemporary / New Western Gin"],
+  ["compound_gin", "Compound Gin"],
+  ["sloe_gin", "Sloe Gin"],
+
+  // Spiritueux · Genever (6) — liste « genever_style »
+  ["genever_jenever", "Genever / Jenever"],
+  ["jonge_jenever", "Jonge Jenever"],
+  ["oude_jenever", "Oude Jenever"],
+  ["graanjenever", "Graanjenever"],
+  ["korenwijn", "Korenwijn"],
+  ["genievre_aromatise", "Genièvre aromatisé"],
+
+  // Spiritueux · Vodka (3) — liste « vodka_style »
+  ["vodka", "Vodka"],
+  ["vodka_aromatisee", "Vodka aromatisée"],
+  ["vodka_vieillie", "Vodka vieillie"],
+
+  // Spiritueux · Agave (5) — liste « agave_style »
+  ["tequila", "Tequila"],
+  ["mezcal", "Mezcal"],
+  ["raicilla", "Raicilla"],
+  ["bacanora", "Bacanora"],
+  ["autre_spiritueux_d_agave", "Autre spiritueux d'agave"],
+
+  // Spiritueux · Brandy (6) — liste « brandy_style »
+  ["brandy", "Brandy"],
+  ["cognac", "Cognac"],
+  ["armagnac", "Armagnac"],
+  ["pisco", "Pisco"],
+  ["brandy_de_jerez", "Brandy de Jerez"],
+  ["weinbrand", "Weinbrand"],
+
+  // Spiritueux · Wine Spirits (2) — liste « wine_spirits_style »
+  ["eau_de_vie_de_vin", "Eau-de-vie de vin"],
+  ["autre_eau_de_vie_de_vin", "Autre eau-de-vie de vin"],
+
+  // Spiritueux · Fruit Spirits (14) — liste « fruit_spirits_style »
+  ["eau_de_vie_de_pomme", "Eau-de-vie de pomme"],
+  ["eau_de_vie_de_poire", "Eau-de-vie de poire"],
+  ["eau_de_vie_de_cerise_kirsch", "Eau-de-vie de cerise / Kirsch"],
+  ["eau_de_vie_de_prune", "Eau-de-vie de prune"],
+  ["eau_de_vie_de_mirabelle", "Eau-de-vie de mirabelle"],
+  ["eau_de_vie_de_framboise", "Eau-de-vie de framboise"],
+  ["eau_de_vie_d_abricot", "Eau-de-vie d'abricot"],
+  ["eau_de_vie_de_peche", "Eau-de-vie de pêche"],
+  ["eau_de_vie_de_coing", "Eau-de-vie de coing"],
+  ["eau_de_vie_de_baies", "Eau-de-vie de baies"],
+  ["calvados", "Calvados"],
+  ["slivovitz_slivovica", "Slivovitz / Slivovica"],
+  ["obstler", "Obstler"],
+  ["autre_eau_de_vie_de_fruits", "Autre eau-de-vie de fruits"],
+
+  // Spiritueux · Grape Marc (7) — liste « grape_marc_style »
+  ["grappa", "Grappa"],
+  ["marc", "Marc"],
+  ["orujo", "Orujo"],
+  ["tsipouro", "Tsipouro"],
+  ["tsikoudia_raki_cretois", "Tsikoudia / Raki crétois"],
+  ["bagaceira", "Bagaceira"],
+  ["autre_eau_de_vie_de_marc", "Autre eau-de-vie de marc"],
+
+  // Spiritueux · Liqueurs & Cream (18) — liste « liqueur_style »
+  ["liqueur_de_fruits", "Liqueur de fruits"],
+  ["liqueur_d_agrumes", "Liqueur d'agrumes"],
+  ["liqueur_de_plantes_herbes", "Liqueur de plantes / herbes"],
+  ["liqueur_d_epices", "Liqueur d'épices"],
+  ["liqueur_de_fleurs", "Liqueur de fleurs"],
+  ["liqueur_de_noix_fruits_a_coque", "Liqueur de noix / fruits à coque"],
+  ["liqueur_de_cafe", "Liqueur de café"],
+  ["liqueur_de_cacao_chocolat", "Liqueur de cacao / chocolat"],
+  ["liqueur_de_miel", "Liqueur de miel"],
+  ["liqueur_de_whisky", "Liqueur de whisky"],
+  ["liqueur_de_rhum", "Liqueur de rhum"],
+  ["liqueur_de_brandy_cognac", "Liqueur de brandy / cognac"],
+  ["liqueur_de_creme", "Liqueur de crème"],
+  ["creme_de_fruits", "Crème de fruits"],
+  ["creme_de_plantes", "Crème de plantes"],
+  ["creme_de_noix_fruits_a_coque", "Crème de noix / fruits à coque"],
+  ["advocaat_liqueur_aux_oeufs", "Advocaat / liqueur aux œufs"],
+  ["autre_liqueur", "Autre liqueur"],
+
+  // Spiritueux · Anise (11) — liste « anise_style »
+  ["anis", "Anis"],
+  ["pastis", "Pastis"],
+  ["pastis_de_marseille", "Pastis de Marseille"],
+  ["absinthe", "Absinthe"],
+  ["ouzo", "Ouzo"],
+  ["sambuca", "Sambuca"],
+  ["raki", "Rakı"],
+  ["arak", "Arak"],
+  ["mastika", "Mastika"],
+  ["anis_anisette", "Anís / Anisette"],
+  ["autre_spiritueux_anise", "Autre spiritueux anisé"],
+
+  // Spiritueux · Bitters (6) — liste « bitters_style »
+  ["amaro", "Amaro"],
+  ["fernet", "Fernet"],
+  ["bitter", "Bitter"],
+  ["amer_aperitif", "Amer apéritif"],
+  ["amer_digestif", "Amer digestif"],
+  ["autre_amer", "Autre amer"],
+
+  // Spiritueux · Herbal (1) — liste « herbal_style »
+  ["krauterlikor_liqueur_aux_herbes", "Kräuterlikör / liqueur aux herbes"],
+
+  // Spiritueux · Cane (5) — liste « cane_style »
+  ["cachaca", "Cachaça"],
+  ["aguardiente_de_canne", "Aguardiente de canne"],
+  ["clairin", "Clairin"],
+  ["charanda", "Charanda"],
+  ["autre_spiritueux_de_canne", "Autre spiritueux de canne"],
+
+  // Spiritueux · Other (11) — liste « other_spirits_style »
+  ["aquavit_akvavit", "Aquavit / Akvavit"],
+  ["korn", "Korn"],
+  ["shochu", "Shochu"],
+  ["soju", "Soju"],
+  ["baijiu", "Baijiu"],
+  ["arrack", "Arrack"],
+  ["aguardiente", "Aguardiente"],
+  ["spiritueux_de_cereales", "Spiritueux de céréales"],
+  ["spiritueux_de_miel", "Spiritueux de miel"],
+  ["spiritueux_de_plantes", "Spiritueux de plantes"],
+  ["autre_spiritueux", "Autre spiritueux"],
 
   // Eau (5) — liste « water_style »
   ["eau_still", "Still"],

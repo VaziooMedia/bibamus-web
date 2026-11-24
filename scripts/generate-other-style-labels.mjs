@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // ============================================================
-// Régénère src/data/otherStyleLabels.js : les noms des styles des Vins & Bulles (Wine, Sparkling Wine), des Softs & Eaux, des
-// Boissons chaudes et des Cocktails / Mocktails, copiés depuis les listes de départ de la plateforme de gestion (dépôt
-// Bibamus-Management : src/data/wineStyles.js, softStyles.js, hotStyles.js et cocktailStyles.js).
+// Régénère src/data/otherStyleLabels.js : les noms des styles des Vins & Bulles (Wine, Sparkling Wine), des Spiritueux (16 sous-catégories),
+// des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails, copiés depuis les listes de départ de la plateforme de gestion (dépôt
+// Bibamus-Management : src/data/wineStyles.js, spiritStyles.js, softStyles.js, hotStyles.js et cocktailStyles.js).
 //
 // À lancer quand un style de DÉPART change dans le code de la gestion (ajouté, renommé, supprimé). Un style
 // ajouté ou renommé depuis la fiche produit de la gestion, lui, passe par la base (custom_list_items) : rien à faire ici.
@@ -15,7 +15,7 @@
 //                 ou « Bibamus-Management ».
 //
 // Code de sortie 2 : le script s'arrête sans rien écrire (dépôt introuvable, liste de la gestion non reprise ici,
-// code en double, ou code qui existe déjà parmi les styles des bières, des vins ou des spiritueux).
+// code en double, ou code qui existe déjà parmi les styles des bières et des cidres).
 // ============================================================
 
 import fs from "node:fs";
@@ -25,12 +25,29 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = path.join(ROOT, "src/data/otherStyleLabels.js");
 
-// Les listes reprises : [clé dans custom_list_items (list_key), titre, fichier de la gestion, nom de l'export].
+// Les listes reprises : [clé dans custom_list_items (list_key), titre, fichier de la gestion, nom de l'export, (sous-catégorie)].
+// Les Spiritueux ont un export unique rangé par sous-catégorie (SPIRIT_STYLE_GROUPS_BY_SUBTYPE) : le 5e élément dit laquelle.
 // Une liste de plus dans la gestion se déclare ici ; si sa catégorie est nouvelle, elle va aussi dans OTHER_STYLE_TYPES
 // (modèle ci-dessous) et dans le chargement de la fiche produit (DrinkDetailScreen.jsx).
 const LISTS = [
   ["wine_style", "Wine", "wineStyles.js", "WINE_STYLE_GROUPS"],
   ["sparkling_wine_style", "Sparkling Wine", "wineStyles.js", "WINE_EFFERVESCENT_STYLE_GROUPS"],
+  ["whisky_style", "Spiritueux · Whisky", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "whisky"],
+  ["rum_style", "Spiritueux · Rum", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "rhum"],
+  ["gin_style", "Spiritueux · Gin", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "gin"],
+  ["genever_style", "Spiritueux · Genever", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "genever"],
+  ["vodka_style", "Spiritueux · Vodka", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "vodka"],
+  ["agave_style", "Spiritueux · Agave", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "agave"],
+  ["brandy_style", "Spiritueux · Brandy", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "brandy"],
+  ["wine_spirits_style", "Spiritueux · Wine Spirits", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "wine_spirits"],
+  ["fruit_spirits_style", "Spiritueux · Fruit Spirits", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "eaux_de_vie_de_fruits"],
+  ["grape_marc_style", "Spiritueux · Grape Marc", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "eaux_de_vie_de_marc"],
+  ["liqueur_style", "Spiritueux · Liqueurs & Cream", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "liqueurs_cremes"],
+  ["anise_style", "Spiritueux · Anise", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "anises"],
+  ["bitters_style", "Spiritueux · Bitters", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "bitters"],
+  ["herbal_style", "Spiritueux · Herbal", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "herbal"],
+  ["cane_style", "Spiritueux · Cane", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "spiritueux_de_canne"],
+  ["other_spirits_style", "Spiritueux · Other", "spiritStyles.js", "SPIRIT_STYLE_GROUPS_BY_SUBTYPE", "autres_spiritueux"],
   ["water_style", "Eau", "softStyles.js", "WATER_STYLES"],
   ["soda_style", "Soda", "softStyles.js", "SODA_STYLE_GROUPS"],
   ["juice_style", "Jus", "softStyles.js", "JUICE_STYLE_GROUPS"],
@@ -50,7 +67,7 @@ const LISTS = [
   ["rtd_style", "Ready-to-Drink", "cocktailStyles.js", "RTD_STYLES"],
 ];
 const SOURCE_FILES = [...new Set(LISTS.map((l) => l[2]))];
-const OTHER_STYLE_TYPES = ["Vins & Bulles", "Softs & Eaux", "Boissons chaudes", "Cocktails / Mocktails"];
+const OTHER_STYLE_TYPES = ["Vins & Bulles", "Spiritueux", "Softs & Eaux", "Boissons chaudes", "Cocktails / Mocktails"];
 
 class Stop extends Error {}
 const stop = (message) => {
@@ -80,6 +97,14 @@ function findManagementDir() {
   );
 }
 
+// Les styles d'une liste reprise (liste en groupes ou liste plate ; export rangé par sous-catégorie si le 5e élément est donné).
+function listTags(modules, [, , file, exportName, sub]) {
+  const raw = modules[file][exportName];
+  const data = sub === undefined ? raw : raw && raw[sub];
+  if (!Array.isArray(data) || data.length === 0) return null;
+  return data[0] && Array.isArray(data[0].tags) ? data.flatMap((g) => g.tags) : data;
+}
+
 // ---------- lecture de la gestion ----------
 async function readManagement(dir) {
   const modules = {};
@@ -87,6 +112,7 @@ async function readManagement(dir) {
 
   // Une liste de la gestion que ce script ne connaît pas serait ignorée sans bruit : on s'arrête plutôt.
   const known = new Set(LISTS.map((l) => `${l[2]}:${l[3]}`));
+  known.add("spiritStyles.js:SPIRIT_STYLE_PREFIXES"); // pas une liste de styles : les préfixes de code, vérifiés ci-dessous
   const unknown = [];
   for (const f of SOURCE_FILES) {
     for (const name of Object.keys(modules[f])) {
@@ -97,12 +123,23 @@ async function readManagement(dir) {
     stop(`Liste(s) de styles de la gestion non reprise(s) : ${unknown.join(", ")}. Ajoute-les au tableau LISTS de ce script (clé de liste de customLists.js, titre), puis relance.`);
   }
 
+  // Les sous-catégories de spiritueux de la gestion et leurs clés de liste (« <préfixe>_style ») : aucune ne doit manquer ici, aucune ne doit différer.
+  const spiritSubs = modules["spiritStyles.js"].SPIRIT_STYLE_GROUPS_BY_SUBTYPE;
+  const spiritPrefixes = modules["spiritStyles.js"].SPIRIT_STYLE_PREFIXES;
+  if (!spiritSubs || !spiritPrefixes) stop("spiritStyles.js : SPIRIT_STYLE_GROUPS_BY_SUBTYPE ou SPIRIT_STYLE_PREFIXES est absent.");
+  for (const sub of Object.keys(spiritSubs)) {
+    const l = LISTS.find((x) => x[3] === "SPIRIT_STYLE_GROUPS_BY_SUBTYPE" && x[4] === sub);
+    if (!l) stop(`Sous-catégorie de spiritueux « ${sub} » de la gestion non reprise ici. Ajoute-la au tableau LISTS de ce script, puis relance.`);
+    if (l[0] !== `${spiritPrefixes[sub]}_style`) stop(`Sous-catégorie « ${sub} » : la gestion attend la clé de liste « ${spiritPrefixes[sub]}_style », ce script a « ${l[0]} ».`);
+  }
+  for (const l of LISTS) if (l[4] !== undefined && !(l[4] in spiritSubs)) stop(`Sous-catégorie de spiritueux « ${l[4]} » (${l[1]}) absente de la gestion : retire-la du tableau LISTS de ce script.`);
+
   const entries = []; // [code, nom, clé de liste]
   const seen = new Map();
-  for (const [key, title, file, exportName] of LISTS) {
-    const data = modules[file][exportName];
-    if (!Array.isArray(data) || data.length === 0) stop(`${file} : « ${exportName} » (${title}) est absent ou vide.`);
-    const tags = data[0] && Array.isArray(data[0].tags) ? data.flatMap((g) => g.tags) : data; // liste en groupes ou liste plate
+  for (const entry of LISTS) {
+    const [key, title, file, exportName] = entry;
+    const tags = listTags(modules, entry);
+    if (tags === null) stop(`${file} : « ${exportName} »${entry[4] !== undefined ? ` (sous-catégorie « ${entry[4]} »)` : ""} (${title}) est absent ou vide.`);
     for (const t of tags) {
       if (!t || typeof t.code !== "string" || !t.code || typeof t.fr !== "string" || !t.fr) stop(`${file} : « ${exportName} » (${title}) contient une entrée sans code ou sans nom : ${JSON.stringify(t)}.`);
       if (seen.has(t.code)) stop(`Code en double « ${t.code} » : ${seen.get(t.code)} et ${title}. Un code ne peut avoir qu'un nom.`);
@@ -110,23 +147,22 @@ async function readManagement(dir) {
       entries.push([t.code, t.fr, key]);
     }
   }
-  return { entries, lists: LISTS.map(([key, title, file, exportName]) => ({ key, title, count: (modules[file][exportName][0]?.tags ? modules[file][exportName].flatMap((g) => g.tags) : modules[file][exportName]).length })) };
+  return { entries, lists: LISTS.map((entry) => ({ key: entry[0], title: entry[1], count: listTags(modules, entry).length })) };
 }
 
-// Les codes des bières, cidres et spiritueux de l'app : un code repris ici ne doit pas en faire partie (l'app donnerait alors le nom de la bière).
-async function assertNoClashWithBeersAndWines(entries) {
+// Les codes des bières et des cidres de l'app : un code repris ici ne doit pas en faire partie (l'app donnerait alors le nom de la bière).
+async function assertNoClashWithBeers(entries) {
   let mod;
   try {
     mod = await import(pathToFileURL(path.join(ROOT, "src/data/styleTagLabels.js")).href + "?t=" + Date.now());
   } catch (e) {
-    console.warn(`⚠ Contrôle des codes de bières et de vins ignoré (styleTagLabels.js illisible : ${e.message.split("\n")[0]}).`);
+    console.warn(`⚠ Contrôle des codes des bières ignoré (styleTagLabels.js illisible : ${e.message.split("\n")[0]}).`);
     return;
   }
-  const spirits = Object.values(mod.SPIRIT_STYLE_GROUPS_BY_SUBTYPE || {}).flat();
-  const groups = [mod.BEER_CIDER_STYLE_GROUPS].flat().filter(Boolean).concat(spirits);
+  const groups = [mod.BEER_CIDER_STYLE_GROUPS].flat().filter(Boolean);
   const taken = new Set(groups.flatMap((g) => g.tags.map((t) => t.code)));
   const clashes = entries.filter(([code]) => taken.has(code)).map(([code]) => code);
-  if (clashes.length > 0) stop(`Code(s) déjà utilisé(s) par des styles de bières, de cidres ou de spiritueux : ${clashes.slice(0, 8).join(", ")}${clashes.length > 8 ? "…" : ""}.`);
+  if (clashes.length > 0) stop(`Code(s) déjà utilisé(s) par des styles de bières ou de cidres : ${clashes.slice(0, 8).join(", ")}${clashes.length > 8 ? "…" : ""}.`);
 }
 
 // ---------- le fichier ----------
@@ -144,8 +180,8 @@ function render(entries, lists) {
   }
   const keys = LISTS.map((l) => `  ${JSON.stringify(l[0])},`).join("\n");
   return `// ============================================================
-// Noms des styles des Vins & Bulles, des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails — copiés
-// fidèlement depuis les listes de départ de la plateforme de gestion (src/data/wineStyles.js, softStyles.js,
+// Noms des styles des Vins & Bulles, des Spiritueux, des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails — copiés
+// fidèlement depuis les listes de départ de la plateforme de gestion (src/data/wineStyles.js, spiritStyles.js, softStyles.js,
 // hotStyles.js et cocktailStyles.js ; ${total} styles en ${LISTS.length} listes). Les Snacks n'ont pas de styles.
 //
 // FICHIER GÉNÉRÉ — ne pas le modifier à la main : node scripts/generate-other-style-labels.mjs
@@ -202,7 +238,7 @@ function summarize(current, entries) {
 try {
   const dir = findManagementDir();
   const { entries, lists } = await readManagement(dir);
-  await assertNoClashWithBeersAndWines(entries);
+  await assertNoClashWithBeers(entries);
   const wanted = render(entries, lists);
   const current = readCurrent();
   const { lines, changed } = summarize(current.map, entries);
