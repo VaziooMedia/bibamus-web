@@ -12,7 +12,7 @@ import React, { useContext } from "react";
 import { createPortal } from "react-dom";
 import { COLORS } from "../constants.js";
 import { ProfileNavContext } from "../contexts.js";
-import { trackEvent } from "../data/sharedDirectories.js";
+import { trackEvent, createPulseEvent } from "../data/sharedDirectories.js";
 import { SubmitShopWizardScreen } from "./SubmitShopWizardScreen.jsx";
 
 export function AddShopOverlay({ initialName = "", onChosen, onClose }) {
@@ -37,8 +37,10 @@ export function AddShopOverlay({ initialName = "", onChosen, onClose }) {
           onCancel={onClose}
           onOpenExisting={(id) => finish(id)}
           onDone={(created) => {
-            // Pas de carte BibaPulse « contribution » pour un shop à ce stade (la fonction Edge create-pulse-event ne connaît pas ce type) : seulement la statistique.
             trackEvent("shop_added", "shop", myBibroCode);
+            // Carte BibaPulse « Contribution à BibAtlas » (même événement `database_contribution` que l'ajout d'un produit ou d'un lieu, public). Envoyée sans attendre la
+            // réponse : un échec n'empêche jamais l'ajout (createPulseEvent ne lève jamais d'erreur). Seulement pour un shop tout juste créé, jamais pour un shop déjà existant.
+            createPulseEvent("database_contribution", "shop", created.id);
             finish(created.id, created);
           }}
         />
