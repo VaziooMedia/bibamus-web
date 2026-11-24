@@ -3,7 +3,7 @@
 // depuis le prototype Claude.
 // ============================================================
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { COLORS } from "../constants.js";
+import { COLORS, SUBTYPE_LABELS, NATIONALITY_ELIGIBLE_TYPES } from "../constants.js";
 import { NavIcon, GoogleIcon, FacebookIcon, InstagramIcon, TiktokIcon, WhatsappIcon, CertificationIcon, CountryFlagImg } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar, BlockTitle } from "./ui.jsx";
 import { ZoomableAvatar } from "./PhotoLightbox.jsx";
@@ -11,7 +11,7 @@ import { PillTabs } from "./PillTabs.jsx";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
-import { formatAddress, venueStreetLine, venuePostalCityLine, mapsUrlFor, normalizeUrl, buildWhatsAppLink } from "../utils.js";
+import { formatAddress, venueStreetLine, venuePostalCityLine, mapsUrlFor, normalizeUrl, buildWhatsAppLink, displayedAbv } from "../utils.js";
 import { OpeningHoursDisplay } from "./OpeningHoursDisplay.jsx";
 import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { ClaimModal } from "./ClaimModal.jsx";
@@ -32,10 +32,92 @@ import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 
-export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onCheckConfirmed, onBack, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, pulseReturnEntryId = null, onRememberPulseEntry, claimsEnabled = true }) {
+// Liste « Produits les plus populaires ici » (onglet Biba360 d'un lieu). Chaque ligne est un bouton qui ouvre le produit (le retour ramène sur cet onglet : voir `returnTab`).
+// Mise en page décidée par Mehdi (2026-11-24, « style A ») : liste aérée, un trait fin entre les lignes ; à gauche le rond du produit (40 px : photo, sinon emoji, sinon la
+// bouteille ; un anneau vert fluo autour du n° 1 seulement) ; au milieu le nom puis un sous-texte (sous-catégorie, drapeau du pays — seulement pour les catégories où le pays est
+// affiché ailleurs dans l'app — et degré d'alcool « 6.2% ABV », même écriture et même règle que PulseProductCard et les listes du BibAtlas, séparés par un petit point vert fluo ;
+// une donnée absente n'est pas affichée) ; un trait vertical fin, puis le nombre en vert fluo et un chevron « › ». Le sous-texte remplace l'ancienne ligne « producteur ».
+function TopDrinksList({ rows, info, onOpen }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {rows.map((r, i) => {
+        const d = info[r.drinkId];
+        const subtypeLabel = d ? SUBTYPE_LABELS[d.beverageSubtype] || d.type || "" : "";
+        const showFlag = !!d && NATIONALITY_ELIGIBLE_TYPES.includes(d.type) && !!d.nationality;
+        const abvValue = d ? displayedAbv(d) : null;
+        const abvText = abvValue != null ? `${abvValue.toFixed(1)}% ABV` : null;
+        const subParts = [];
+        if (subtypeLabel) subParts.push(<span key="sub" style={{ overflowWrap: "anywhere" }}>{subtypeLabel}</span>);
+        if (showFlag)
+          subParts.push(
+            <span key="flag" title={d.nationality} style={{ display: "inline-flex", flexShrink: 0 }}>
+              <CountryFlagImg country={d.nationality} size={16} />
+            </span>
+          );
+        if (abvText) subParts.push(<span key="abv" style={{ whiteSpace: "nowrap" }}>{abvText}</span>);
+        return (
+          <button
+            key={r.drinkId}
+            type="button"
+            onClick={onOpen ? () => onOpen(r.drinkId) : undefined}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              width: "100%",
+              boxSizing: "border-box",
+              font: "inherit",
+              color: COLORS.ink,
+              cursor: onOpen ? "pointer" : "default",
+              background: "none",
+              border: "none",
+              borderTop: i === 0 ? "none" : `1px solid ${COLORS.paperAlt}`,
+              padding: "10px 0",
+            }}
+          >
+            <span style={{ display: "flex", flexShrink: 0, borderRadius: "50%", boxShadow: i === 0 ? `0 0 0 2px ${COLORS.amber}` : "none" }}>
+              <EntityAvatar photoUrl={d?.photoUrl} photoEmoji={d?.avatarEmoji} size={40} fallbackIcon="bottle" />
+            </span>
+            <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+              <span style={{ display: "block", fontWeight: 700, fontSize: "14px", overflowWrap: "anywhere", lineHeight: 1.25 }}>{d?.name || "…"}</span>
+              {subParts.length > 0 && (
+                // Le petit point vert fluo est collé au DÉBUT de chaque morceau et le bloc est décalé d'autant vers la gauche : le point du premier morceau de chaque ligne
+                // sort du cadre (coupé) — quand le sous-texte passe sur deux lignes (écran étroit), aucun point ne reste seul en bout ou en début de ligne.
+                <span style={{ display: "block", overflowX: "clip", marginTop: "3px" }}>
+                  <span style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: "2px", marginLeft: "-13px", fontSize: "11.5px", color: COLORS.inkSoft }}>
+                    {subParts.map((part) => (
+                      <span key={part.key} style={{ position: "relative", display: "inline-flex", alignItems: "center", paddingLeft: "13px" }}>
+                        <span aria-hidden="true" style={{ position: "absolute", left: "4px", top: "50%", marginTop: "-2px", width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber }} />
+                        {part}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+              )}
+            </span>
+            {/* Séparation verticale entre le produit et le nombre (même trait fin que dans « Tes check-ins ici | Tes boissons bues ici »). */}
+            <span aria-hidden="true" style={{ alignSelf: "stretch", width: "1px", background: COLORS.paperAlt, flexShrink: 0 }} />
+            <span style={{ flexShrink: 0, minWidth: "30px", textAlign: "center", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.amber }}>{r.quantity}</span>
+            <span aria-hidden="true" style={{ flexShrink: 0, color: COLORS.inkSoft, fontSize: "18px", lineHeight: 1, marginLeft: "-2px" }}>›</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, onCheckIn, autoOpenCheck = false, onCheckFlowFinished, onCheckConfirmed, onBack, onDelete, onManageMenu, onToggleFavorite, onCleanupDuplicates, onOpenCheckInsHistory, onOpenDrinksHistory, onOpenBrewery, onOpenDrink, pulseReturnEntryId = null, onRememberPulseEntry, returnTab = null, onRememberTab, claimsEnabled = true }) {
   const [claiming, setClaiming] = useState(false);
   // Retour d'une fiche ouverte depuis une carte de l'onglet BibaPulse : on rouvre cet onglet (voir EntityPulseSection).
-  const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : "infos");
+  // Retour d'un produit ouvert depuis « Produits les plus populaires ici » (onglet Biba360) : on rouvre cet onglet et on recentre le bloc (`returnTab`, gardé par App).
+  const [activeTab, setActiveTab] = useState(pulseReturnEntryId ? "bibapulse" : returnTab || "infos");
+  const restoredFromProduct = useRef(!!returnTab && !pulseReturnEntryId);
+  const topBlockRef = useRef(null);
+  useEffect(() => {
+    // La mémoire d'App est vidée dès que l'écran a lu son onglet : une visite ultérieure du lieu repart sur Infos.
+    if (returnTab && onRememberTab) onRememberTab(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
 
   const [linkedProducer, setLinkedProducer] = useState(null);
@@ -78,16 +160,22 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
   // Produits les plus populaires ici, tous utilisateurs confondus — jamais d'argent, juste des
   // quantités (voir bibamus-schema-public-stats.sql).
   const [topDrinks, setTopDrinks] = useState([]);
-  // Nom, photo et emoji de chaque produit de la liste (le rond de la ligne : photo, sinon emoji, sinon la bouteille).
+  // Nom, photo, emoji, catégorie, sous-catégorie, pays et degré de chaque produit de la liste (rond de la ligne et sous-texte).
   const [topDrinkInfo, setTopDrinkInfo] = useState({});
   useEffect(() => {
     loadVenueTopDrinks(venue.id, null, null, 5).then((results) => {
       setTopDrinks(results);
       if (results.length > 0) {
-        loadDrinksByIds(results.map((r) => r.drinkId)).then((drinks) => setTopDrinkInfo(Object.fromEntries(drinks.map((d) => [d.id, { name: d.name, photoUrl: d.photoUrl, avatarEmoji: d.avatarEmoji }]))));
+        loadDrinksByIds(results.map((r) => r.drinkId)).then((drinks) => setTopDrinkInfo(Object.fromEntries(drinks.map((d) => [d.id, { name: d.name, photoUrl: d.photoUrl, avatarEmoji: d.avatarEmoji, type: d.type, beverageSubtype: d.beverageSubtype, nationality: d.nationality, abv: d.abv }]))));
       }
     });
   }, [venue.id]);
+  // Au retour d'un produit : le bloc des produits populaires est recentré à l'écran, une seule fois, quand sa liste est arrivée.
+  useEffect(() => {
+    if (!restoredFromProduct.current || topDrinks.length === 0 || !topBlockRef.current) return;
+    restoredFromProduct.current = false;
+    topBlockRef.current.scrollIntoView({ block: "center" });
+  }, [topDrinks]);
   const address = formatAddress(venue);
   const addressLine1 = venueStreetLine(venue);
   const addressLine2 = venuePostalCityLine(venue);
@@ -591,26 +679,14 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
         <>
           <VenueNotesSection venueId={venue.id} />
       {topDrinks.length > 0 && (
-        <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+        <div ref={topBlockRef} style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
           {/* Même titre que les autres blocs de Biba360 (« Notes ») : blanc, en gras, barre verte et trait fin dessous (Mehdi, 2026-11-21). */}
           <BlockTitle>Produits les plus populaires ici</BlockTitle>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {/* Le rond du produit (photo, sinon emoji, sinon la bouteille) à la place du numéro de classement, et le nombre seul à droite, sans « verres » (Mehdi, 2026-11-24). L'ordre reste celui du classement. */}
-            {topDrinks.map((r) => {
-              const info = topDrinkInfo[r.drinkId];
-              return (
-                <div key={r.drinkId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", fontSize: "14px" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
-                    <span style={{ display: "flex", flexShrink: 0 }}>
-                      <EntityAvatar photoUrl={info?.photoUrl} photoEmoji={info?.avatarEmoji} size={40} fallbackIcon="bottle" />
-                    </span>
-                    <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{info?.name || "…"}</span>
-                  </span>
-                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px", flexShrink: 0 }}>{r.quantity}</span>
-                </div>
-              );
-            })}
-          </div>
+          <TopDrinksList
+            rows={topDrinks}
+            info={topDrinkInfo}
+            onOpen={onOpenDrink ? (id) => { if (onRememberTab) onRememberTab("biba360"); onOpenDrink(id); } : null}
+          />
         </div>
       )}
 

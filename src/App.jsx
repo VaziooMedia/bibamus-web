@@ -395,6 +395,12 @@ export default function App() {
   const [screenBeforeShopDirectory, setScreenBeforeShopDirectory] = useState("atlasSearch");
   const [screenBeforeDrinksDirectory, setScreenBeforeDrinksDirectory] = useState("atlasSearch");
   const [screenBeforeDrinkDetail, setScreenBeforeDrinkDetail] = useState("drinksDirectory");
+  // Onglet à rouvrir sur la fiche d'un lieu au retour d'un produit ouvert depuis son onglet Biba360 (« Produits les plus populaires ici ») : { venueId, tab } ; vidé par la fiche une fois lu,
+  // et dès qu'on quitte le parcours lieu / produit / marque / producteur sans revenir.
+  const [venueTabReturn, setVenueTabReturn] = useState(null);
+  useEffect(() => {
+    if (venueTabReturn && !["venueDetail", "drinkDetail", "breweryDetail", "brandDetail"].includes(screen)) setVenueTabReturn(null);
+  }, [screen, venueTabReturn]);
   // Corrige un défaut : la fiche Marque/Producteur revenait toujours à son propre annuaire, quel que
   // soit l'endroit d'où on l'avait ouverte (ex. depuis une fiche Produit).
   const [screenBeforeBrandDetail, setScreenBeforeBrandDetail] = useState("brandDirectory");
@@ -2740,6 +2746,8 @@ export default function App() {
                 }}
                 pulseReturnEntryId={pulseReturnFor("venueDetail", viewedVenueId)}
                 onRememberPulseEntry={rememberPulseEntry("venueDetail", viewedVenueId)}
+                returnTab={venueTabReturn && venueTabReturn.venueId === viewedVenueId ? venueTabReturn.tab : null}
+                onRememberTab={(tab) => setVenueTabReturn(tab ? { venueId: viewedVenueId, tab } : null)}
               />
             )}
             {screen === "venueMenuCategories" && viewedVenue && (
