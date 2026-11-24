@@ -1,17 +1,13 @@
 // ============================================================
 // Vrais libellés des tags de style — copiés fidèlement depuis
 // les vraies listes de référence côté plateforme de gestion
-// (src/data/beerCiderStyles.js ; les Spiritueux, de src/data/spiritStyles.js, passent par le fichier généré spiritStyleLabels.js, et les Vins & Bulles, de src/data/wineStyles.js, par le fichier généré otherStyleLabels.js).
+// (src/data/beerCiderStyles.js ; les styles de tous les autres types — Vins & Bulles, Spiritueux, Softs & Eaux, Boissons chaudes, Cocktails / Mocktails —
+// viennent des listes modifiables de la gestion et passent par le fichier généré otherStyleLabels.js).
 // Utilisé uniquement pour afficher les tags déjà choisis sur
 // une fiche produit ; la vraie sélection se fait côté admin.
 // ============================================================
 
 import { OTHER_STYLE_LABELS } from "./otherStyleLabels.js";
-// Les styles des Spiritueux : fichier généré (node scripts/generate-spirit-style-labels.mjs), repris tel quel ici pour que le reste de l'app n'ait qu'un seul endroit où chercher.
-import { SPIRIT_STYLE_GROUPS_BY_SUBTYPE } from "./spiritStyleLabels.js";
-
-export { SPIRIT_STYLE_GROUPS_BY_SUBTYPE };
-
 export const BEER_CIDER_STYLE_GROUPS = [
   {
     title: "Lagers, Pils & fermentation basse",
@@ -397,17 +393,18 @@ export const BEER_CIDER_STYLE_GROUPS = [
 ];
 
 
-// Les styles des Vins & Bulles (Wine, Sparkling Wine) ne sont plus recopiés ici : comme ceux des Softs & Eaux, des Boissons chaudes et des
-// Cocktails / Mocktails, ils sont dans le fichier généré otherStyleLabels.js (node scripts/generate-other-style-labels.mjs), car leur liste se
-// modifie depuis la gestion (clés « wine_style » et « sparkling_wine_style » de custom_list_items). Avant le 2026-11-24, leurs codes n'avaient pas
-// de préfixe (« sec », « brut »…) ; ils s'appellent maintenant « wine_… » et « sparkling_… ».
+// Les styles des Vins & Bulles (Wine, Sparkling Wine) et des Spiritueux (16 sous-catégories) ne sont plus recopiés ici : comme ceux des Softs & Eaux,
+// des Boissons chaudes et des Cocktails / Mocktails, ils sont dans le fichier généré otherStyleLabels.js (node scripts/generate-other-style-labels.mjs),
+// car leur liste se modifie depuis la gestion (clés « wine_style », « sparkling_wine_style », « whisky_style », « rum_style »… de custom_list_items).
+// Avant le 2026-11-24, les codes des vins n'avaient pas de préfixe (« sec », « brut »…) ; ils s'appellent maintenant « wine_… » et « sparkling_… ».
+// Les codes des spiritueux, eux, n'ont pas changé.
 
 // Couleurs disponibles selon la sous-catégorie — même 4 choix, mais un ordre d'affichage
 // différent selon qu'il s'agit d'un vin tranquille ou d'un vin effervescent.
 
-const ALL_STYLE_GROUPS = [...BEER_CIDER_STYLE_GROUPS, ...Object.values(SPIRIT_STYLE_GROUPS_BY_SUBTYPE).flat()];
+const ALL_STYLE_GROUPS = BEER_CIDER_STYLE_GROUPS;
 
-// Styles des Vins & Bulles, des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails : une simple table code → nom (voir
+// Styles des Vins & Bulles, des Spiritueux, des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails : une simple table code → nom (voir
 // otherStyleLabels.js, importé en tête de fichier), à part des groupes ci-dessus qui, eux, servent à ranger des listes de choix.
 
 // Libellés venus de la base (tables custom_beer_cider_styles et custom_list_items), modifiés depuis la plateforme de gestion :
