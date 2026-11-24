@@ -78,12 +78,13 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
   // Produits les plus populaires ici, tous utilisateurs confondus — jamais d'argent, juste des
   // quantités (voir bibamus-schema-public-stats.sql).
   const [topDrinks, setTopDrinks] = useState([]);
-  const [topDrinkNames, setTopDrinkNames] = useState({});
+  // Nom, photo et emoji de chaque produit de la liste (le rond de la ligne : photo, sinon emoji, sinon la bouteille).
+  const [topDrinkInfo, setTopDrinkInfo] = useState({});
   useEffect(() => {
     loadVenueTopDrinks(venue.id, null, null, 5).then((results) => {
       setTopDrinks(results);
       if (results.length > 0) {
-        loadDrinksByIds(results.map((r) => r.drinkId)).then((drinks) => setTopDrinkNames(Object.fromEntries(drinks.map((d) => [d.id, d.name]))));
+        loadDrinksByIds(results.map((r) => r.drinkId)).then((drinks) => setTopDrinkInfo(Object.fromEntries(drinks.map((d) => [d.id, { name: d.name, photoUrl: d.photoUrl, avatarEmoji: d.avatarEmoji }]))));
       }
     });
   }, [venue.id]);
@@ -594,12 +595,21 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
           {/* Même titre que les autres blocs de Biba360 (« Notes ») : blanc, en gras, barre verte et trait fin dessous (Mehdi, 2026-11-21). */}
           <BlockTitle>Produits les plus populaires ici</BlockTitle>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {topDrinks.map((r, i) => (
-              <div key={r.drinkId} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span><strong>{i + 1}.</strong> {topDrinkNames[r.drinkId] || "…"}</span>
-                <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px" }}>{r.quantity} verre{r.quantity > 1 ? "s" : ""}</span>
-              </div>
-            ))}
+            {/* Le rond du produit (photo, sinon emoji, sinon la bouteille) à la place du numéro de classement, et le nombre seul à droite, sans « verres » (Mehdi, 2026-11-24). L'ordre reste celui du classement. */}
+            {topDrinks.map((r) => {
+              const info = topDrinkInfo[r.drinkId];
+              return (
+                <div key={r.drinkId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", fontSize: "14px" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+                    <span style={{ display: "flex", flexShrink: 0 }}>
+                      <EntityAvatar photoUrl={info?.photoUrl} photoEmoji={info?.avatarEmoji} size={40} fallbackIcon="bottle" />
+                    </span>
+                    <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{info?.name || "…"}</span>
+                  </span>
+                  <span style={{ fontFamily: "'Urbanist', sans-serif", color: COLORS.inkSoft, fontSize: "13px", flexShrink: 0 }}>{r.quantity}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
