@@ -16,6 +16,7 @@ import { PulsePostScreen } from "./PulsePostScreen.jsx";
 import { PulseTagPills, postTagsOf, usePostTagEntities } from "./PulseTags.jsx";
 import { PulseProductCard, PulseDrinkLine, usePulseProducersById, pulseDrinkIdsOf } from "./PulseProductCard.jsx";
 import { PulseVenueCard, usePulseVenueRatingsById } from "./PulseVenueCard.jsx";
+import { PulseShopCard, usePulseShopsById } from "./PulseShopCard.jsx";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import placeCheckIconUrl from "../assets/brand/place-check-lieux.svg";
 import bibAtlasIconUrl from "../assets/brand/bibatlas-carte.svg";
@@ -32,6 +33,7 @@ import { loadActiveAds, AD_DEFAULT_EVERY_N } from "../data/ads.js";
 function resolveObject(entry, directories) {
   if (!entry.objectType || !entry.objectId) return null;
   if (entry.objectType === "venue") return directories.venuesById[entry.objectId] || null;
+  if (entry.objectType === "shop") return directories.shopsById?.[entry.objectId] || null;
   const map = { drink: directories.drinksDirectory, producer: directories.breweriesDirectory, brand: directories.brandsDirectory };
   return (map[entry.objectType] || []).find((x) => x.id === entry.objectId) || null;
 }
@@ -250,7 +252,7 @@ const PULSE_BAND_NAME_SIZE = "15px"; // taille du prénom + nom sur le bandeau (
 const PULSE_BAND_AVATAR = 48; // rond de profil de l'auteur sur le bandeau (px)
 const PULSE_HEADER_BAND = PULSE_BAND_SOLID ? COLORS.amber : `rgba(57, 255, 102, ${PULSE_BAND_STRENGTH})`;
 
-export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, separatorColor = COLORS.paperAlt, headerBand = false, hideProduct }, ref) {
+export const PulseCard = React.forwardRef(function PulseCard({ entry, directories, myUserId, myBibroCode, onOpenVenue, onOpenTagged, onOpenDrink, onOpenBrand, onOpenProducer, onOpenShop, onOpenProfile, onOpenClub, onUpdate, onDeleted, initialShowComments, highlighted, flat, separatorColor = COLORS.paperAlt, headerBand = false, hideProduct }, ref) {
   const [showReactors, setShowReactors] = useState(false);
   const [reactorsTab, setReactorsTab] = useState("bix");
   const [reactors, setReactors] = useState(null);
@@ -273,7 +275,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // PlaceCheck) — inutile de la remontrer dans chaque carte.
   const showProductBlock = !!obj && !hideProduct;
 
-  const canOpenObject = obj && ((entry.objectType === "venue" && onOpenVenue) || (entry.objectType === "drink" && onOpenDrink));
+  const canOpenObject = obj && ((entry.objectType === "venue" && onOpenVenue) || (entry.objectType === "drink" && onOpenDrink) || (entry.objectType === "shop" && onOpenShop));
   // Lieu où le check a été fait (produit checké dans un lieu) : affiché à la suite du produit.
   const checkVenue = entry.objectType !== "venue" && entry.venueId ? directories.venuesById[entry.venueId] || null : null;
   const checkVenueName = entry.objectType !== "venue" && entry.venueId ? SPECIAL_VENUE_LABELS[entry.venueId] || checkVenue?.name || null : null;
@@ -282,6 +284,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
     ? () => {
         if (entry.objectType === "venue") onOpenVenue(obj.id);
         if (entry.objectType === "drink") onOpenDrink(obj.id);
+        if (entry.objectType === "shop") onOpenShop(obj.id);
       }
     : null;
 
@@ -307,10 +310,10 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   // PlaceCheck (check d'un lieu sans produit, `venue_visit`) : même présentation que le DrinkCheck — « PlaceCheck » avec l'icône du check
   // de lieu, puis la fiche du lieu en petit.
   const isPlaceCheck = entry.eventType === "venue_visit";
-  // Contribution à BibAtlas (ajout d'un PRODUIT ou d'un LIEU à la base, `database_contribution`) : même présentation que le DrinkCheck et le
+  // Contribution à BibAtlas (ajout d'un PRODUIT, d'un LIEU ou d'un SHOP à la base, `database_contribution`) : même présentation que le DrinkCheck et le
   // PlaceCheck — ligne « Contribution à BibAtlas » avec l'icône de BibAtlas, puis la fiche ajoutée en petit. Les ajouts de marque et de
   // producteur n'existent pas (un utilisateur ne peut pas en ajouter, voulu) : la ligne « Ajout @ nom » a été supprimée le 2026-11-20.
-  const isContribution = entry.eventType === "database_contribution" && (entry.objectType === "drink" || entry.objectType === "venue");
+  const isContribution = entry.eventType === "database_contribution" && (entry.objectType === "drink" || entry.objectType === "venue" || entry.objectType === "shop");
   // Lancement d'un BibaRoom (`room_launched`, nouvelle carte) : même présentation que les autres cartes refaites — ligne « Lancement d'un BibaRoom »
   // avec l'icône BibaGo, puis la fiche du salon en petit (nom, lieu, date et heure ; jamais le code du salon, qui est la clé d'accès).
   const isRoomLaunch = entry.eventType === "room_launched";
@@ -689,6 +692,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           )}
           {showProductBlock && isDrinkCheck && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
           {showProductBlock && (isPlaceCheck || (isContribution && entry.objectType === "venue")) && <PulseVenueCard venue={obj} rating={directories.venueRatingsById?.[obj.id] || null} onOpen={openObject || undefined} />}
+          {showProductBlock && isContribution && entry.objectType === "shop" && <PulseShopCard shop={obj} onOpen={openObject || undefined} />}
           {showProductBlock && isContribution && entry.objectType === "drink" && <PulseProductCard drink={obj} producers={(obj.producerIds || []).map((id) => directories.producersById?.[id]).filter(Boolean)} onOpen={openObject || undefined} />}
           {/* Photo et commentaire de l'auteur : un sous-bloc juste sous le bloc du produit, même cadre que lui (voir PulseNoteBlock). */}
           {(checkNote.photoUrl || checkNote.comment || placeInteraction) && (
@@ -986,6 +990,7 @@ export function BibaPulseScreen({
   onOpenDrink,
   onOpenBrand,
   onOpenProducer,
+  onOpenShop,
   onOpenClub,
   focusEntryId,
   openCommentsOnFocus,
@@ -1090,8 +1095,10 @@ export function BibaPulseScreen({
   // Producteurs des produits checkés (ligne « Producteur » de la fiche produit des cartes DrinkCheck).
   const producersById = usePulseProducersById(entries, drinksDirectory);
   const venueRatingsById = usePulseVenueRatingsById(entries);
+  // Shops des cartes « Contribution à BibAtlas » (une lecture groupée, voir PulseShopCard).
+  const shopsById = usePulseShopsById(entries);
 
-  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities, producersById, venueRatingsById };
+  const directories = { venuesById, drinksDirectory, breweriesDirectory, brandsDirectory, tagEntities, producersById, venueRatingsById, shopsById };
 
   useEffect(() => {
     loadPulseFeed().then(attachPulseAuthorLines).then((data) => {
@@ -1142,7 +1149,7 @@ export function BibaPulseScreen({
   React.useLayoutEffect(() => {
     if (!keepAligning.current || !focusedCardRef.current) return;
     focusedCardRef.current.scrollIntoView({ block: "start" });
-  }, [entries, drinksDirectory, venuesById, producersById, venueRatingsById]);
+  }, [entries, drinksDirectory, venuesById, producersById, venueRatingsById, shopsById]);
   useEffect(() => {
     if (!keepAligning.current) return undefined;
     const stop = () => {
@@ -1313,6 +1320,7 @@ export function BibaPulseScreen({
               onOpenDrink={rememberThen(entry.id, onOpenDrink)}
               onOpenBrand={rememberThen(entry.id, onOpenBrand)}
               onOpenProducer={rememberThen(entry.id, onOpenProducer)}
+              onOpenShop={rememberThen(entry.id, onOpenShop)}
               onOpenClub={rememberThen(entry.id, onOpenClub)}
               onOpenProfile={entry.actorId === myUserId ? rememberThen(entry.id, goToProfile, { profile: true }) : (code) => openProfileFrom(entry.id, code)}
               onUpdate={(patch) => updateEntry(entry.id, patch)}

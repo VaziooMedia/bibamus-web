@@ -4017,6 +4017,11 @@ export default function App() {
                   setViewedBreweryId(id);
                   setScreen("breweryDetail");
                 }}
+                onOpenShop={(id) => {
+                  setScreenBeforeShopDetail("bibaPulse");
+                  setViewedShopId(id);
+                  setScreen("shopDetail");
+                }}
                 storiesEnabled={featureFlags.stories_enabled !== false}
                 onShareStory={(draft) => {
                   // Publication libre partagée en Story : l'éditeur s'ouvre avec sa photo et ses tags, retour sur BibaPulse.
