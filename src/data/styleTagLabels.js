@@ -1,7 +1,7 @@
 // ============================================================
 // Vrais libellés des tags de style — copiés fidèlement depuis
 // les vraies listes de référence côté plateforme de gestion
-// (src/data/beerCiderStyles.js et src/data/wineStyles.js ; les Spiritueux, de src/data/spiritStyles.js, passent par le fichier généré spiritStyleLabels.js).
+// (src/data/beerCiderStyles.js ; les Spiritueux, de src/data/spiritStyles.js, passent par le fichier généré spiritStyleLabels.js, et les Vins & Bulles, de src/data/wineStyles.js, par le fichier généré otherStyleLabels.js).
 // Utilisé uniquement pour afficher les tags déjà choisis sur
 // une fiche produit ; la vraie sélection se fait côté admin.
 // ============================================================
@@ -397,85 +397,20 @@ export const BEER_CIDER_STYLE_GROUPS = [
 ];
 
 
-export const WINE_STYLE_GROUPS = [
-  {
-    title: "Style",
-    tags: [
-      { code: "demi_sec", fr: "Demi-sec" },
-      { code: "doux", fr: "Doux" },
-      { code: "liquoreux", fr: "Liquoreux" },
-      { code: "moelleux", fr: "Moelleux" },
-      { code: "primeur_nouveau", fr: "Primeur / Nouveau" },
-      { code: "sec", fr: "Sec" },
-      { code: "vendanges_tardives", fr: "Vendanges tardives" },
-      { code: "vin_de_glace", fr: "Vin de glace" },
-      { code: "vin_de_paille", fr: "Vin de paille" },
-      { code: "vin_doux_naturel", fr: "Vin doux naturel" },
-      { code: "vin_fortifie", fr: "Vin fortifié" },
-      { code: "vin_oxydatif", fr: "Vin oxydatif" },
-    ],
-  },
-  {
-    title: "Labels",
-    tags: [
-      { code: "biodynamique", fr: "Biodynamique" },
-      { code: "bio", fr: "Bio" },
-      { code: "nature", fr: "Nature" },
-    ],
-  },
-];
-
-// Caractéristiques spécifiques au vin effervescent — groupe séparé de WINE_STYLE_GROUPS,
-// utilisé uniquement quand beverageSubtype === "vin_effervescent".
-export const WINE_EFFERVESCENT_STYLE_GROUPS = [
-  {
-    title: "Style / Dosage",
-    tags: [
-      { code: "brut", fr: "Brut" },
-      { code: "brut_nature", fr: "Brut nature" },
-      { code: "demi_sec", fr: "Demi-sec" },
-      { code: "doux", fr: "Doux" },
-      { code: "extra_brut", fr: "Extra brut" },
-      { code: "extra_dry", fr: "Extra dry" },
-      { code: "sec", fr: "Sec" },
-    ],
-  },
-  {
-    title: "Style de cuvée",
-    tags: [
-      { code: "blanc_de_blancs", fr: "Blanc de Blancs" },
-      { code: "blanc_de_noirs", fr: "Blanc de Noirs" },
-      { code: "rose", fr: "Rosé" },
-    ],
-  },
-  {
-    title: "Méthode",
-    tags: [
-      { code: "gazeifie", fr: "Gazéifié" },
-      { code: "methode_ancestrale", fr: "Méthode ancestrale" },
-      { code: "methode_charmat_cuve_close", fr: "Méthode Charmat / Cuve close" },
-      { code: "methode_traditionnelle", fr: "Méthode traditionnelle" },
-    ],
-  },
-  {
-    title: "Labels",
-    tags: [
-      { code: "biodynamique", fr: "Biodynamique" },
-      { code: "bio", fr: "Bio" },
-      { code: "nature", fr: "Nature" },
-    ],
-  },
-];
+// Les styles des Vins & Bulles (Wine, Sparkling Wine) ne sont plus recopiés ici : comme ceux des Softs & Eaux, des Boissons chaudes et des
+// Cocktails / Mocktails, ils sont dans le fichier généré otherStyleLabels.js (node scripts/generate-other-style-labels.mjs), car leur liste se
+// modifie depuis la gestion (clés « wine_style » et « sparkling_wine_style » de custom_list_items). Avant le 2026-11-24, leurs codes n'avaient pas
+// de préfixe (« sec », « brut »…) ; ils s'appellent maintenant « wine_… » et « sparkling_… ».
 
 // Couleurs disponibles selon la sous-catégorie — même 4 choix, mais un ordre d'affichage
 // différent selon qu'il s'agit d'un vin tranquille ou d'un vin effervescent.
 
-const ALL_STYLE_GROUPS = [...BEER_CIDER_STYLE_GROUPS, ...WINE_STYLE_GROUPS, ...WINE_EFFERVESCENT_STYLE_GROUPS, ...Object.values(SPIRIT_STYLE_GROUPS_BY_SUBTYPE).flat()];
+const ALL_STYLE_GROUPS = [...BEER_CIDER_STYLE_GROUPS, ...Object.values(SPIRIT_STYLE_GROUPS_BY_SUBTYPE).flat()];
 
-// Styles des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails : une simple table code → nom (voir
+// Styles des Vins & Bulles, des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails : une simple table code → nom (voir
 // otherStyleLabels.js, importé en tête de fichier), à part des groupes ci-dessus qui, eux, servent à ranger des listes de choix.
 
-// Libellés venus de la base (table custom_beer_cider_styles), modifiés depuis la plateforme de gestion :
+// Libellés venus de la base (tables custom_beer_cider_styles et custom_list_items), modifiés depuis la plateforme de gestion :
 //   - les styles ajoutés à la main, que l'app ne connaît pas à la compilation ;
 //   - les styles de la liste de départ renommés (même code, nouveau nom), qui l'emportent sur le nom figé.
 // L'app les charge à la demande (voir la fiche produit) et les mémorise ici. Une Map : un code comme

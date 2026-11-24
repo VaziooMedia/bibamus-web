@@ -103,7 +103,7 @@ async function assertNoClash(entries) {
     console.warn(`⚠ Contrôle des codes des autres boissons ignoré (fichier illisible : ${e.message.split("\n")[0]}).`);
     return;
   }
-  const groups = [beersWines.BEER_CIDER_STYLE_GROUPS, beersWines.WINE_STYLE_GROUPS, beersWines.WINE_EFFERVESCENT_STYLE_GROUPS].flat().filter(Boolean);
+  const groups = [beersWines.BEER_CIDER_STYLE_GROUPS].flat().filter(Boolean);
   const taken = new Set([...groups.flatMap((g) => g.tags.map((t) => t.code)), ...others.OTHER_STYLE_LABELS.keys()]);
   const clashes = entries.filter(([code]) => taken.has(code)).map(([code]) => code);
   if (clashes.length > 0) stop(`Code(s) déjà utilisé(s) par des styles de bières, de cidres, de vins ou d'autres boissons : ${clashes.slice(0, 8).join(", ")}${clashes.length > 8 ? "…" : ""}.`);

@@ -25,8 +25,8 @@ const BEER_CIDER_SUBTYPES = [
   { code: "poire", fr: "Poiré" },
 ];
 const WINE_SUBTYPES = [
-  { code: "vin", fr: "Vin" },
-  { code: "vin_effervescent", fr: "Vin effervescent" },
+  { code: "vin", fr: "Wine" },
+  { code: "vin_effervescent", fr: "Sparkling Wine" },
 ];
 
 function StepShell({ step, totalSteps, title, onBack, onPrevious, children, footer }) {

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // ============================================================
-// Régénère src/data/otherStyleLabels.js : les noms des styles des Softs & Eaux, des Boissons chaudes et des
-// Cocktails / Mocktails, copiés depuis les listes de départ de la plateforme de gestion (dépôt Bibamus-Management :
-// src/data/softStyles.js, hotStyles.js et cocktailStyles.js).
+// Régénère src/data/otherStyleLabels.js : les noms des styles des Vins & Bulles (Wine, Sparkling Wine), des Softs & Eaux, des
+// Boissons chaudes et des Cocktails / Mocktails, copiés depuis les listes de départ de la plateforme de gestion (dépôt
+// Bibamus-Management : src/data/wineStyles.js, softStyles.js, hotStyles.js et cocktailStyles.js).
 //
 // À lancer quand un style de DÉPART change dans le code de la gestion (ajouté, renommé, supprimé). Un style
 // ajouté ou renommé depuis la fiche produit de la gestion, lui, passe par la base (custom_list_items) : rien à faire ici.
@@ -29,6 +29,8 @@ const OUT = path.join(ROOT, "src/data/otherStyleLabels.js");
 // Une liste de plus dans la gestion se déclare ici ; si sa catégorie est nouvelle, elle va aussi dans OTHER_STYLE_TYPES
 // (modèle ci-dessous) et dans le chargement de la fiche produit (DrinkDetailScreen.jsx).
 const LISTS = [
+  ["wine_style", "Wine", "wineStyles.js", "WINE_STYLE_GROUPS"],
+  ["sparkling_wine_style", "Sparkling Wine", "wineStyles.js", "WINE_EFFERVESCENT_STYLE_GROUPS"],
   ["water_style", "Eau", "softStyles.js", "WATER_STYLES"],
   ["soda_style", "Soda", "softStyles.js", "SODA_STYLE_GROUPS"],
   ["juice_style", "Jus", "softStyles.js", "JUICE_STYLE_GROUPS"],
@@ -45,9 +47,10 @@ const LISTS = [
   ["cereal_chicory_style", "Céréales & Chicorée", "hotStyles.js", "CEREAL_CHICORY_STYLE_GROUPS"],
   ["cocktail_style", "Cocktails", "cocktailStyles.js", "COCKTAIL_STYLE_GROUPS"],
   ["mocktail_style", "Mocktails", "cocktailStyles.js", "MOCKTAIL_STYLE_GROUPS"],
+  ["rtd_style", "Ready-to-Drink", "cocktailStyles.js", "RTD_STYLES"],
 ];
 const SOURCE_FILES = [...new Set(LISTS.map((l) => l[2]))];
-const OTHER_STYLE_TYPES = ["Softs & Eaux", "Boissons chaudes", "Cocktails / Mocktails"];
+const OTHER_STYLE_TYPES = ["Vins & Bulles", "Softs & Eaux", "Boissons chaudes", "Cocktails / Mocktails"];
 
 class Stop extends Error {}
 const stop = (message) => {
@@ -110,7 +113,7 @@ async function readManagement(dir) {
   return { entries, lists: LISTS.map(([key, title, file, exportName]) => ({ key, title, count: (modules[file][exportName][0]?.tags ? modules[file][exportName].flatMap((g) => g.tags) : modules[file][exportName]).length })) };
 }
 
-// Les codes des bières, cidres et vins de l'app : un code repris ici ne doit pas en faire partie (l'app donnerait alors le nom de la bière).
+// Les codes des bières, cidres et spiritueux de l'app : un code repris ici ne doit pas en faire partie (l'app donnerait alors le nom de la bière).
 async function assertNoClashWithBeersAndWines(entries) {
   let mod;
   try {
@@ -120,10 +123,10 @@ async function assertNoClashWithBeersAndWines(entries) {
     return;
   }
   const spirits = Object.values(mod.SPIRIT_STYLE_GROUPS_BY_SUBTYPE || {}).flat();
-  const groups = [mod.BEER_CIDER_STYLE_GROUPS, mod.WINE_STYLE_GROUPS, mod.WINE_EFFERVESCENT_STYLE_GROUPS].flat().filter(Boolean).concat(spirits);
+  const groups = [mod.BEER_CIDER_STYLE_GROUPS].flat().filter(Boolean).concat(spirits);
   const taken = new Set(groups.flatMap((g) => g.tags.map((t) => t.code)));
   const clashes = entries.filter(([code]) => taken.has(code)).map(([code]) => code);
-  if (clashes.length > 0) stop(`Code(s) déjà utilisé(s) par des styles de bières, de cidres, de vins ou de spiritueux : ${clashes.slice(0, 8).join(", ")}${clashes.length > 8 ? "…" : ""}.`);
+  if (clashes.length > 0) stop(`Code(s) déjà utilisé(s) par des styles de bières, de cidres ou de spiritueux : ${clashes.slice(0, 8).join(", ")}${clashes.length > 8 ? "…" : ""}.`);
 }
 
 // ---------- le fichier ----------
@@ -141,9 +144,9 @@ function render(entries, lists) {
   }
   const keys = LISTS.map((l) => `  ${JSON.stringify(l[0])},`).join("\n");
   return `// ============================================================
-// Noms des styles des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails — copiés fidèlement
-// depuis les listes de départ de la plateforme de gestion (src/data/softStyles.js, hotStyles.js et
-// cocktailStyles.js ; ${total} styles en ${LISTS.length} listes). Les Snacks n'ont pas de styles.
+// Noms des styles des Vins & Bulles, des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails — copiés
+// fidèlement depuis les listes de départ de la plateforme de gestion (src/data/wineStyles.js, softStyles.js,
+// hotStyles.js et cocktailStyles.js ; ${total} styles en ${LISTS.length} listes). Les Snacks n'ont pas de styles.
 //
 // FICHIER GÉNÉRÉ — ne pas le modifier à la main : node scripts/generate-other-style-labels.mjs
 // (sans option pour le réécrire, avec --check pour vérifier qu'il est à jour).

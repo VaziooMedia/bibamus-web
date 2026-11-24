@@ -1,7 +1,7 @@
 // ============================================================
-// Noms des styles des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails — copiés fidèlement
-// depuis les listes de départ de la plateforme de gestion (src/data/softStyles.js, hotStyles.js et
-// cocktailStyles.js ; 1014 styles en 16 listes). Les Snacks n'ont pas de styles.
+// Noms des styles des Vins & Bulles, des Softs & Eaux, des Boissons chaudes et des Cocktails / Mocktails — copiés
+// fidèlement depuis les listes de départ de la plateforme de gestion (src/data/wineStyles.js, softStyles.js,
+// hotStyles.js et cocktailStyles.js ; 1055 styles en 19 listes). Les Snacks n'ont pas de styles.
 //
 // FICHIER GÉNÉRÉ — ne pas le modifier à la main : node scripts/generate-other-style-labels.mjs
 // (sans option pour le réécrire, avec --check pour vérifier qu'il est à jour).
@@ -14,6 +14,8 @@
 
 // Clés de ces listes dans custom_list_items (list_key).
 export const OTHER_STYLE_LIST_KEYS = [
+  "wine_style",
+  "sparkling_wine_style",
   "water_style",
   "soda_style",
   "juice_style",
@@ -30,13 +32,50 @@ export const OTHER_STYLE_LIST_KEYS = [
   "cereal_chicory_style",
   "cocktail_style",
   "mocktail_style",
+  "rtd_style",
 ];
 
 // Types de produit (tels que l'app les nomme) dont les styles viennent de ces listes.
-export const OTHER_STYLE_TYPES = ["Softs & Eaux", "Boissons chaudes", "Cocktails / Mocktails"];
+export const OTHER_STYLE_TYPES = ["Vins & Bulles", "Softs & Eaux", "Boissons chaudes", "Cocktails / Mocktails"];
 
 // code → nom. Une Map : un code comme « constructor » ne doit jamais tomber sur une propriété d'objet.
 export const OTHER_STYLE_LABELS = new Map([
+  // Wine (15) — liste « wine_style »
+  ["wine_demi_sec", "Demi-sec"],
+  ["wine_doux", "Doux"],
+  ["wine_liquoreux", "Liquoreux"],
+  ["wine_moelleux", "Moelleux"],
+  ["wine_primeur_nouveau", "Primeur / Nouveau"],
+  ["wine_sec", "Sec"],
+  ["wine_vendanges_tardives", "Vendanges tardives"],
+  ["wine_vin_de_glace", "Vin de glace"],
+  ["wine_vin_de_paille", "Vin de paille"],
+  ["wine_vin_doux_naturel", "Vin doux naturel"],
+  ["wine_vin_fortifie", "Vin fortifié"],
+  ["wine_vin_oxydatif", "Vin oxydatif"],
+  ["wine_biodynamique", "Biodynamique"],
+  ["wine_bio", "Bio"],
+  ["wine_nature", "Nature"],
+
+  // Sparkling Wine (17) — liste « sparkling_wine_style »
+  ["sparkling_brut", "Brut"],
+  ["sparkling_brut_nature", "Brut nature"],
+  ["sparkling_demi_sec", "Demi-sec"],
+  ["sparkling_doux", "Doux"],
+  ["sparkling_extra_brut", "Extra brut"],
+  ["sparkling_extra_dry", "Extra dry"],
+  ["sparkling_sec", "Sec"],
+  ["sparkling_blanc_de_blancs", "Blanc de Blancs"],
+  ["sparkling_blanc_de_noirs", "Blanc de Noirs"],
+  ["sparkling_rose", "Rosé"],
+  ["sparkling_gazeifie", "Gazéifié"],
+  ["sparkling_methode_ancestrale", "Méthode ancestrale"],
+  ["sparkling_methode_charmat_cuve_close", "Méthode Charmat / Cuve close"],
+  ["sparkling_methode_traditionnelle", "Méthode traditionnelle"],
+  ["sparkling_biodynamique", "Biodynamique"],
+  ["sparkling_bio", "Bio"],
+  ["sparkling_nature", "Nature"],
+
   // Eau (5) — liste « water_style »
   ["eau_still", "Still"],
   ["eau_lightly_sparkling", "Lightly Sparkling"],
@@ -1082,4 +1121,15 @@ export const OTHER_STYLE_LABELS = new Map([
   ["mocktail_texture_shaken", "Shaken"],
   ["mocktail_texture_stirred", "Stirred"],
   ["mocktail_texture_muddled", "Muddled"],
+
+  // Ready-to-Drink (9) — liste « rtd_style »
+  ["rtd_classic_cocktail", "Classic Cocktail RTD"],
+  ["rtd_long_drink", "Long Drink RTD"],
+  ["rtd_spritz", "Spritz RTD"],
+  ["rtd_hard_seltzer", "Hard Seltzer"],
+  ["rtd_hard_lemonade", "Hard Lemonade"],
+  ["rtd_hard_tea", "Hard Tea"],
+  ["rtd_hard_soda", "Hard Soda"],
+  ["rtd_mocktail", "Mocktail RTD"],
+  ["rtd_other", "Other RTD"],
 ]);
