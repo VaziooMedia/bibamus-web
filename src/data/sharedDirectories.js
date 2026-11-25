@@ -4555,7 +4555,10 @@ function rowToShop(row) {
     id: row.id,
     name: row.name,
     subtitle: row.subtitle,
-    aliases: [],
+    // Autres noms (colonnes `aliases`, `alternate_name`, `translations`, saisies dans la plateforme de gestion) : cherchés par l'annuaire des Shops (`shopSearchTexts`).
+    aliases: row.aliases || [],
+    alternateName: row.alternate_name,
+    translations: row.translations || [],
     hasStore: row.has_store ?? true,
     hasOnline: !!row.has_online,
     categories: row.shop_categories || [],
