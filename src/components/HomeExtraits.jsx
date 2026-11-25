@@ -105,7 +105,11 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
   const isPlaceCheck = type === "venue_visit";
   const isDrinkEvent = type === "drink_checked" || type === "product_discovered" || (type === "database_contribution" && entry.objectType === "drink");
   const isKnownCheck = isPlaceCheck || isDrinkEvent || type === "database_contribution";
-  const objName = obj?.name || (isPlaceCheck ? "un établissement" : type === "database_contribution" ? "une fiche" : "un produit");
+  // Contribution à BibAtlas dont la fiche n'est plus là (supprimée ou refusée) ou n'est pas lue (shop) : pas de « a ajouté une fiche » (Mehdi, 2026-11-25 : « ça n'est pas très beau et compréhensible »),
+  // mais « a contribué à BibAtlas ».
+  const isContribution = type === "database_contribution";
+  const contributionWithoutFiche = isContribution && !obj?.name;
+  const objName = obj?.name || (isPlaceCheck ? "un établissement" : "un produit");
   const clubName = isClubJoin ? pulseClubName(entry) : null;
   const roomName = isRoom && typeof meta.room_name === "string" ? meta.room_name : "";
   const postText = isPost && typeof meta.comment === "string" ? meta.comment.replace(/\s+/g, " ").trim() : "";
@@ -132,7 +136,9 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
   const photoUrl = isPost && typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null;
   const rating = isDrinkEvent && typeof meta.rating === "number" ? String(meta.rating).replace(".", ",") : null;
   let thumb = null;
-  if (isDrinkEvent) thumb = <EntityAvatar photoUrl={obj?.photoUrl} photoEmoji={obj?.avatarEmoji} size={EXTRAIT_THUMB} fallbackIcon="bottle" />;
+  // Contribution sans fiche (supprimée, refusée, shop) : pas de miniature — une bouteille ou une épingle générique laisserait croire qu'une fiche existe (Mehdi, 2026-11-25 : « Oui »).
+  if (contributionWithoutFiche) thumb = null;
+  else if (isDrinkEvent) thumb = <EntityAvatar photoUrl={obj?.photoUrl} photoEmoji={obj?.avatarEmoji} size={EXTRAIT_THUMB} fallbackIcon="bottle" />;
   else if (isPlaceCheck || (type === "database_contribution" && entry.objectType === "venue")) thumb = <EntityAvatar photoUrl={obj?.profilePhotoUrl} photoEmoji={obj?.avatarEmoji} size={EXTRAIT_THUMB} fallbackIcon="map-pin" />;
   else if (isRoom) thumb = <SalonAvatar event={{ isHome: entry.venueId === "@home", venueId: entry.venueId === "@event" ? "@event" : null }} venue={venue} size={EXTRAIT_THUMB} />;
   else if (photoUrl)
@@ -185,6 +191,8 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
             <>a rejoint le BibaRoom {strong(roomName || "sans titre")}</>
           ) : isPost ? (
             postText
+          ) : contributionWithoutFiche ? (
+            <>a contribué à {strong("BibAtlas")}</>
           ) : isKnownCheck ? (
             <>
               {verb} {strong(objName)}
