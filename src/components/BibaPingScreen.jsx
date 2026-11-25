@@ -413,9 +413,9 @@ export function BibaPingScreen({ myUserId, myBibroCode, bibros = [], onBack, onC
                 await clearConversation(target.id);
                 refresh();
               }}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.wine, cursor: "pointer", textAlign: "left" }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", padding: "14px 6px", fontSize: "15px", fontWeight: 600, color: COLORS.pinkFluo, cursor: "pointer", textAlign: "left" }}
             >
-              <NavIcon name="x" size={20} color={COLORS.wine} />
+              <NavIcon name="x" size={20} color={COLORS.pinkFluo} />
               {confirmClear ? "Confirmer la suppression ?" : "Supprimer"}
             </button>
             {confirmClear && (

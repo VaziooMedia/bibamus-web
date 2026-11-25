@@ -84,17 +84,17 @@ export function MyPhotosScreen({ onBack, otherUserId, otherName, embedded = fals
                   alignItems: "center",
                   gap: "8px",
                   background: "none",
-                  border: `2px solid ${COLORS.wine}`,
+                  border: `2px solid ${COLORS.pinkFluo}`,
                   borderRadius: "999px",
                   padding: "10px 20px",
                   fontSize: "13.5px",
                   fontWeight: 700,
-                  color: COLORS.wine,
+                  color: COLORS.pinkFluo,
                   cursor: "pointer",
                   opacity: deleting ? 0.6 : 1,
                 }}
               >
-                <NavIcon name="trash" size={16} color={COLORS.wine} />
+                <NavIcon name="trash" size={16} color={COLORS.pinkFluo} />
                 {deleting ? "Suppression..." : "Supprimer"}
               </button>
             )}

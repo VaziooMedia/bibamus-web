@@ -177,7 +177,7 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
               <button
                 onClick={handleRemovePhoto}
                 disabled={uploadingPhoto}
-                style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "8px 14px", fontWeight: 600, fontSize: "13px", color: COLORS.wine, cursor: "pointer" }}
+                style={{ background: "none", border: `2px solid ${COLORS.paperAlt}`, borderRadius: "8px", padding: "8px 14px", fontWeight: 600, fontSize: "13px", color: COLORS.pinkFluo, cursor: "pointer" }}
               >
                 Supprimer la photo
               </button>

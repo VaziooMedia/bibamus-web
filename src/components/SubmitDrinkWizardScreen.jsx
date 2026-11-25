@@ -210,7 +210,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
 
   const handleAbandon = async () => {
     if (drinkId) {
-      if (!(await askConfirm({ title: "Abandonner la création de ce produit ?", message: "Rien ne sera enregistré.", confirmLabel: "Abandonner", danger: true }))) return;
+      if (!(await askConfirm({ title: "Abandonner la création de ce produit ?", message: "Rien ne sera enregistré.", confirmLabel: "Abandonner", cancelLabel: "Continuer la création", danger: true }))) return;
       await deleteDrink(drinkId);
     }
     onCancel();
