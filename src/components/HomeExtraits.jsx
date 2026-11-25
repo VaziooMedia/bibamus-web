@@ -136,7 +136,9 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
   const photoUrl = isPost && typeof meta.photo_url === "string" && meta.photo_url.startsWith("https://") ? meta.photo_url : null;
   const rating = isDrinkEvent && typeof meta.rating === "number" ? String(meta.rating).replace(".", ",") : null;
   let thumb = null;
-  if (isDrinkEvent) thumb = <EntityAvatar photoUrl={obj?.photoUrl} photoEmoji={obj?.avatarEmoji} size={EXTRAIT_THUMB} fallbackIcon="bottle" />;
+  // Contribution sans fiche (supprimée, refusée, shop) : pas de miniature — une bouteille ou une épingle générique laisserait croire qu'une fiche existe (Mehdi, 2026-11-25 : « Oui »).
+  if (contributionWithoutFiche) thumb = null;
+  else if (isDrinkEvent) thumb = <EntityAvatar photoUrl={obj?.photoUrl} photoEmoji={obj?.avatarEmoji} size={EXTRAIT_THUMB} fallbackIcon="bottle" />;
   else if (isPlaceCheck || (type === "database_contribution" && entry.objectType === "venue")) thumb = <EntityAvatar photoUrl={obj?.profilePhotoUrl} photoEmoji={obj?.avatarEmoji} size={EXTRAIT_THUMB} fallbackIcon="map-pin" />;
   else if (isRoom) thumb = <SalonAvatar event={{ isHome: entry.venueId === "@home", venueId: entry.venueId === "@event" ? "@event" : null }} venue={venue} size={EXTRAIT_THUMB} />;
   else if (photoUrl)
