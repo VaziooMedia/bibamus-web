@@ -105,7 +105,11 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
   const isPlaceCheck = type === "venue_visit";
   const isDrinkEvent = type === "drink_checked" || type === "product_discovered" || (type === "database_contribution" && entry.objectType === "drink");
   const isKnownCheck = isPlaceCheck || isDrinkEvent || type === "database_contribution";
-  const objName = obj?.name || (isPlaceCheck ? "un établissement" : type === "database_contribution" ? "une fiche" : "un produit");
+  // Contribution à BibAtlas dont la fiche n'est plus là (supprimée ou refusée) ou n'est pas lue (shop) : pas de « a ajouté une fiche » (Mehdi, 2026-11-25 : « ça n'est pas très beau et compréhensible »),
+  // mais « a contribué à BibAtlas ».
+  const isContribution = type === "database_contribution";
+  const contributionWithoutFiche = isContribution && !obj?.name;
+  const objName = obj?.name || (isPlaceCheck ? "un établissement" : "un produit");
   const clubName = isClubJoin ? pulseClubName(entry) : null;
   const roomName = isRoom && typeof meta.room_name === "string" ? meta.room_name : "";
   const postText = isPost && typeof meta.comment === "string" ? meta.comment.replace(/\s+/g, " ").trim() : "";
@@ -185,6 +189,8 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
             <>a rejoint le BibaRoom {strong(roomName || "sans titre")}</>
           ) : isPost ? (
             postText
+          ) : contributionWithoutFiche ? (
+            <>a contribué à {strong("BibAtlas")}</>
           ) : isKnownCheck ? (
             <>
               {verb} {strong(objName)}
