@@ -52,6 +52,7 @@ import { EntityPulseSection } from "./EntityPulseSection.jsx";
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
+import { notify } from "./MessageToast.jsx";
 
 // Mes Bibax : trois pages à pastilles — « Bibax » (la liste de mes Bibax), « Suggestions » (la liste des suggestions) et « Demandes » (reçues et envoyées), décision de Mehdi du 2026-11-18.
 // Les demandes sont lues au niveau de la page : la pastille « Demandes » affiche ainsi le nombre de demandes reçues quel que soit l'onglet ouvert.
@@ -95,7 +96,7 @@ function useBibaxRequests(onBibaxAdded) {
     const result = await respondBibaxRequest(relationshipId, accept);
     setBusyId(null);
     if (result.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     if (accept) onBibaxAdded();
@@ -107,11 +108,11 @@ function useBibaxRequests(onBibaxAdded) {
     const result = await cancelBibaxRequest(relationshipId);
     setBusyId(null);
     if (result.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     if (result.alreadyAccepted) {
-      alert("Trop tard — cette demande vient d'être confirmée par l'autre personne. Vous êtes déjà Bibax.");
+      notify("Trop tard — cette demande vient d'être confirmée par l'autre personne. Vous êtes déjà Bibax.", "info");
       onBibaxAdded();
     }
     refresh();
@@ -865,14 +866,14 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
   const [openConversation, setOpenConversation] = useState(null);
   const handleOpenConversation = async () => {
     if (!bibro?.userId) {
-      alert("Impossible d'ouvrir une conversation avec ce Bibax pour l'instant.");
+      notify("Impossible d'ouvrir une conversation avec ce Bibax pour l'instant.");
       return;
     }
     setOpeningConversation(true);
     const result = await openDirectConversation(bibro.userId);
     setOpeningConversation(false);
     if (result?.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setOpenConversation({ id: result.id, kind: "direct", memberIds: [myUserId, bibro.userId] });
@@ -897,7 +898,7 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
     const result = await toggleNotifyPulse(bibro.code);
     setTogglingNotify(false);
     if (result?.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setNotifyPulse(result.notifyPulse);
@@ -1244,7 +1245,7 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
               <span style={{ position: "relative", display: "flex", alignItems: "center" }}>
                 <img src={bibaxIconUrl} alt="" style={{ width: "22px", height: "22px" }} />
                 <span style={{ position: "absolute", top: "-4px", right: "-8px" }}>
-                  <NavIcon name="x" size={13} color={COLORS.wine} />
+                  <NavIcon name="x" size={13} color={COLORS.pinkFluo} />
                 </span>
               </span>
               Retirer de mes Bibax
@@ -1694,11 +1695,11 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                 const result = await onAdd(code.trim(), foundName, "", foundSocials);
                 if (result?.error) return;
                 if (result?.status === "pending") {
-                  alert(`Demande envoyée à ${foundName} — en attente de sa confirmation.`);
+                  notify(`Demande envoyée à ${foundName} — en attente de sa confirmation.`, "info");
                 } else if (result?.status === "already_bibax") {
-                  alert(`Vous êtes déjà Bibax avec ${foundName}.`);
+                  notify(`Vous êtes déjà Bibax avec ${foundName}.`, "info");
                 } else if (result?.status === "accepted") {
-                  alert(`${foundName} avait déjà envoyé une demande — vous êtes maintenant Bibax !`);
+                  notify(`${foundName} avait déjà envoyé une demande — vous êtes maintenant Bibax !`, "info");
                 }
                 onCancel();
               }}

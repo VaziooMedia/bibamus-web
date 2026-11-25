@@ -169,6 +169,7 @@ import { completeSpotifyAuth } from "./data/spotify.js";
 import { useUsernameDeepLink } from "./hooks/useUsernameDeepLink.js";
 import { randomCode, todayISO, normalizeEvent, myShareOfEvent, nextId, resolveMenuItem, resolveVenueMenuForEvent, genderAgree, directoryDrinkIdsConsumedBy, buildHomeServe, withHomeServe, withoutHomeDrink, buildDrinkCheck, withDrinkCheck, withVenueChange, roundOrderRows, personalDrinkRecord, personalRoundId, safeServingMode } from "./utils.js";
 import { BEER_TYPES, COUNTRY_ISO_CODES } from "./constants.js";
+import { notify } from "./components/MessageToast.jsx";
 
 // ---------- Données personnelles (restent sur cet appareil, pas partagées) ----------
 function loadLocal(key, fallback) {
@@ -432,9 +433,9 @@ export default function App() {
       if (returnEventId) setActiveEventId(returnEventId);
       if (returnScreen) setScreen(returnScreen);
       if (result.ok) {
-        alert(`Compte Spotify connecté${result.displayName ? ` : ${result.displayName}` : ""} !`);
+        notify(`Compte Spotify connecté${result.displayName ? ` : ${result.displayName}` : ""} !`, "info");
       } else if (result.error) {
-        alert(result.error);
+        notify(result.error);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1315,7 +1316,7 @@ export default function App() {
     if (created) {
       emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: created.id });
     } else {
-      alert("La création de l'établissement a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
+      notify("La création de l'établissement a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
       return;
     }
     setScreen("venueDirectory");
@@ -1324,7 +1325,7 @@ export default function App() {
   const uploadPhotoForDrink = async (drinkId, file) => {
     const result = await uploadDrinkPhoto(drinkId, file);
     if (result.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     updateDrink(drinkId, { photoUrl: result.url });
@@ -1341,7 +1342,7 @@ export default function App() {
     if (created) {
       emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: created.id });
     } else {
-      alert("La création du produit a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
+      notify("La création du produit a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
       return;
     }
     setScreen("drinksDirectory");
@@ -1507,7 +1508,7 @@ export default function App() {
     const result = await toggleWishlistDrinkServer(id);
     if (result?.error) {
       setWishlisted(id, was);
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setWishlisted(id, !!result.wishlist);
@@ -1632,7 +1633,7 @@ export default function App() {
     const result = await toggleFavoriteVenue(venueId);
     if (result?.error) {
       setVenueFavorite(venueId, wasFavorite);
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setVenueFavorite(venueId, !!result.favorite);
@@ -1745,7 +1746,7 @@ export default function App() {
     },
     onOpenBibax: (code) => openBibaxProfile(code),
     onOpenMyProfile: () => setScreen("profile"),
-    onNotFound: () => alert("Cette page n'existe pas ou n'est plus disponible."),
+    onNotFound: () => notify("Cette page n'existe pas ou n'est plus disponible.", "info"),
   });
 
   // Version simplifiée : ne touche pas aux statistiques personnelles par lieu (ce système n'existe
@@ -1979,7 +1980,7 @@ export default function App() {
       if (ratingResult && ratingResult.error) {
         ratingFailed = true;
         if (onRatingFailed) onRatingFailed();
-        alert("Ton check-in est enregistré, mais ton avis n'a pas pu l'être. Tu pourras le donner lors d'un prochain check.");
+        notify("Ton check-in est enregistré, mais ton avis n'a pas pu l'être. Tu pourras le donner lors d'un prochain check.");
       }
     }
     // Le produit ajouté compte dans les statistiques, comme un check de ce produit dans ce lieu.
@@ -2098,7 +2099,7 @@ export default function App() {
   const addBibro = async (code, name, alias, socials) => {
     const result = await sendBibaxRequest(code);
     if (result.error) {
-      alert(result.error);
+      notify(result.error);
       return { error: result.error };
     }
     if (result.status === "accepted" || result.status === "already_bibax") {
@@ -2129,7 +2130,7 @@ export default function App() {
     const result = await toggleFavoriteDrink(id);
     if (result?.error) {
       setDrinkFavorite(id, wasFavorite);
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setDrinkFavorite(id, !!result.favorite);
@@ -2142,7 +2143,7 @@ export default function App() {
     const result = await toggleFavoriteBibax(bibro.userId);
     if (result?.error) {
       setBibaxFavorite(bibro.userId, wasFavorite);
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setBibaxFavorite(bibro.userId, !!result.favorite);
@@ -3796,7 +3797,7 @@ export default function App() {
                 onBlock={async (userId) => {
                   const result = await blockUser(userId);
                   if (result?.error) {
-                    alert(result.error);
+                    notify(result.error);
                     return;
                   }
                   setBibros((prev) => prev.filter((b) => b.userId !== userId));
@@ -4082,7 +4083,7 @@ export default function App() {
                   if (story) {
                     setViewedStoryAuthor([story]);
                   } else {
-                    alert("Cette Story n'est plus disponible.");
+                    notify("Cette Story n'est plus disponible.", "info");
                   }
                 }}
                 onOpenPulseEntry={(entryId, openComments) => {

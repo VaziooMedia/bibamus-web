@@ -26,6 +26,7 @@ import { formatCount } from "../utils.js";
 import { FINE_PILL } from "./PillTabs.jsx";
 import { AdBanner } from "./AdBanner.jsx";
 import { loadActiveAds, AD_DEFAULT_EVERY_N } from "../data/ads.js";
+import { notify } from "./MessageToast.jsx";
 
 // Résout l'objet concerné (produit/établissement/marque/producteur) depuis les répertoires déjà
 // chargés en mémoire — jamais de duplication de la donnée métier dans BibaPulse lui-même,
@@ -445,7 +446,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
     const result = await postPulseComment(entry.id, body);
     setPosting(false);
     if (result.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setCommentInput("");

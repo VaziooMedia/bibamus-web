@@ -212,7 +212,7 @@ export function DrinkCheckInModal({ drinkName, drinkPhotoUrl, drinkEmoji, myRati
                 }}
                 style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: COLORS.inkSoft, fontWeight: 600, fontSize: "12.5px", cursor: "pointer", padding: "16px 0 0 0", textAlign: "left" }}
               >
-                <NavIcon name="x" size={13} color={COLORS.wine} />
+                <NavIcon name="x" size={13} color={COLORS.pinkFluo} />
                 Retirer ma note
               </button>
             )}

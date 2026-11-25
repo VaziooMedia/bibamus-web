@@ -386,7 +386,7 @@ export function PredictGameScreen({ game, myBibroCode, onBack, onStart, onLaunch
                   <button
                     onClick={() => onRemoveParticipant(p.code)}
                     title="Retirer ce participant"
-                    style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "13px", cursor: "pointer", padding: "2px 6px" }}
+                    style={{ background: "none", border: "none", color: COLORS.pinkFluo, fontSize: "13px", cursor: "pointer", padding: "2px 6px" }}
                   >
                     ✕
                   </button>

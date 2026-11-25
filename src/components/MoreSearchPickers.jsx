@@ -439,7 +439,7 @@ export function VenuePositionPicker({ lat, lng, onChange, verified = true }) {
         <div style={{ display: "flex", alignItems: "center", gap: "16px", padding: "8px 0 0 0" }}>
           <button
             onClick={() => onChange(null, null)}
-            style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: 0 }}
+            style={{ background: "none", border: "none", color: COLORS.pinkFluo, fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: 0 }}
           >
             Retirer la position
           </button>

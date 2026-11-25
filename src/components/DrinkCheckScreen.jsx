@@ -10,6 +10,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, EntityAvatar } from "./ui.jsx";
 import { DrinkCheckInModal } from "./DrinkCheckInModal.jsx";
 import { loadDrinksByIds } from "../data/sharedDirectories.js";
+import { notify } from "./MessageToast.jsx";
 
 // onCheckDrink (facultatif) : quand il est fourni, la fenêtre de check est la même que sur les fiches
 // produit et depuis l'accueil — avec photo, commentaire, visibilité, Bibax tagués — et la confirmation
@@ -79,7 +80,7 @@ export function DrinkCheckScreen({ drinkIds, presetVenue = null, myBibroCode, on
     });
     // La note est enregistrée ; seule la publication dans BibaPulse a échoué.
     if (pulseResult && pulseResult.error) {
-      alert("Ton check est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
+      notify("Ton check est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
     }
   };
 

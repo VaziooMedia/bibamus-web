@@ -31,6 +31,7 @@ import wifiIconUrl from "../assets/brand/wifi-free.svg";
 import pmrIconUrl from "../assets/brand/acces-pmr.svg";
 import danceIconUrl from "../assets/brand/danser.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
+import { notify } from "./MessageToast.jsx";
 
 // Liste « Produits les plus populaires ici » (onglet Biba360 d'un lieu). Chaque ligne est un bouton qui ouvre le produit (le retour ramène sur cet onglet : voir `returnTab`).
 // Mise en page décidée par Mehdi (2026-11-24, « style A ») : liste aérée, un trait fin entre les lignes ; à gauche le rond du produit (40 px : photo, sinon emoji, sinon la
@@ -142,7 +143,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
     const result = await toggleFollowVenue(venue.id);
     setTogglingFollow(false);
     if (result?.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setIsFollowed(result.following);
@@ -269,7 +270,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
     // Si l'enregistrement de l'avis échoue, App prévient déjà la personne (le check, lui, est bien enregistré) : on n'annonce alors pas d'avis.
     let ratingFailed = false;
     const pulseResult = await onCheckIn({ publishToPulse: result.publishToPulse, visibility: result.visibility, content: result.content, drink: result.drink, ratingChange: result.ratingChange, venueRating: result.venueRating, discovery: result.discovery, onRatingFailed: () => { ratingFailed = true; } });
-    if (pulseResult && pulseResult.error) alert("Ton check-in est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
+    if (pulseResult && pulseResult.error) notify("Ton check-in est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
     // La confirmation rose (dessinée par App) annonce le check, et l'avis s'il a été donné, modifié ou retiré.
     const detail = result.ratingChange && !ratingFailed ? (result.ratingChange.value == null ? "Avis retiré" : "Avis confirmé") : null;
     if (inHomeCheckFlow) finishHomeFlow({ name: venue.name, published: !!result.publishToPulse && !(pulseResult && pulseResult.error), detail });

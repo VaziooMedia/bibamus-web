@@ -26,6 +26,7 @@ import { normalizeUrl, buildWhatsAppLink, formatCount } from "../utils.js";
 import snapchatIconUrl from "../assets/brand/snapchat.svg";
 import internetIconUrl from "../assets/brand/internet.svg";
 import youtubeIconUrl from "../assets/brand/youtube.svg";
+import { notify } from "./MessageToast.jsx";
 
 // Icônes de l'en-tête des fiches Marque et Producteur : « Partager » | cloche « Suivre sur Pulse » | cœur « Favoris », comme le bloc de la fiche
 // Produit (mêmes emplacement, taille de 24 px et séparateurs verticaux). « Partager » n'apparaît que si le partage natif existe sur l'appareil.
@@ -127,7 +128,7 @@ function useEntityEngagement(entity, api, onRatingConfirmed) {
     const result = await api.toggleFollow(entity.id);
     setFollowBusy(false);
     if (!result || result.error) {
-      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      notify(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
       return;
     }
     setIsFollowed(!!result.following);
@@ -137,7 +138,7 @@ function useEntityEngagement(entity, api, onRatingConfirmed) {
     const result = await api.toggleFavorite(entity.id);
     setFavoriteBusy(false);
     if (!result || result.error) {
-      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      notify(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
       return;
     }
     setIsFavorite(!!result.favorite);

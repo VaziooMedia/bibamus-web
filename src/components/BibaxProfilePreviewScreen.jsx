@@ -44,6 +44,7 @@ import { loadBibaxCount, loadMyProfileStats, sendBibaxRequest, cancelBibaxReques
 import bibaxIconUrl from "../assets/brand/bibax.svg";
 import birthdayIconUrl from "../assets/brand/birthday-icon.png";
 import residenceIconUrl from "../assets/brand/residence-icon.png";
+import { notify } from "./MessageToast.jsx";
 
 export function BibaxProfilePreviewScreen({ bibroCode, onBack, myUserId, myBibroCode, onOpenVenue, onOpenDrink, onOpenBrand, onOpenProducer, pulseReturnEntryId = null, onRememberPulseEntry, withScrollToTop = false }) {
   // `withScrollToTop` : la flèche « Remonter en haut » sur tous les onglets du profil (ouvert depuis le fil BibaPulse) ; sinon elle n'est que sur l'onglet BibaPulse (EntityPulseSection).
@@ -85,7 +86,7 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack, myUserId, myBibro
     else if (relation.status === "received") result = await respondBibaxRequest(relation.relationshipId, true);
     await refreshRelation();
     setBusy(false);
-    if (result?.error) alert(result.error);
+    if (result?.error) notify(result.error);
   };
 
   const relationLabel = {

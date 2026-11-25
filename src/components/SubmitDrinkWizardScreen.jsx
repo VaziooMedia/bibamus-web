@@ -15,6 +15,7 @@ import { normalizeForDuplicateCheck, makeSearchMatcher, entityNames, drinkSummar
 import { findSimilarNames } from "../similarNames.js";
 import { DuplicateBox, ExistingEntityRow, NotSameCheckbox, duplicateNoteStyle } from "./DuplicateWarning.jsx";
 import { askConfirm } from "./ConfirmDialog.jsx";
+import { notify } from "./MessageToast.jsx";
 
 // Détails d'une fiche existante dans les avertissements de doublon : sous-catégorie · degré · producteur (la catégorie seulement si la
 // fiche n'a pas de sous-catégorie, comme ailleurs dans l'app).
@@ -238,7 +239,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
     });
     setSubmitting(false);
     if (!ok) {
-      alert("La création du produit a échoué — merci de réessayer.");
+      notify("La création du produit a échoué — merci de réessayer.");
       return;
     }
     setDrinkId(newId);
@@ -282,7 +283,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
     if (result.error) {
       const message = await describeVariantError(result.error, fields.barcode);
       setSubmitting(false);
-      alert(message);
+      notify(message);
       return;
     }
     setSavedVariant({ id: savedVariant ? savedVariant.id : result.variant.id, key });

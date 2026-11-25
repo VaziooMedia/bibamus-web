@@ -32,6 +32,7 @@ import { loadCustomBeerCiderStylesOnce, loadCustomListStyleLabelsOnce, loadMyDri
 import { loadBibroCodes } from "../data/profiles.js";
 import beerCheckIconUrl from "../assets/brand/beer-check-profil.png";
 import atpIconUrl from "../assets/brand/atp.svg";
+import { notify } from "./MessageToast.jsx";
 
 // Rangée de tuiles chiffrées de l'onglet Biba360 (« Checks », « Unique Checkers »…). Une valeur absente
 // (lecture en cours ou échouée) s'affiche en tiret.
@@ -189,7 +190,7 @@ export function DrinkDetailScreen({
     const result = await toggleFollowDrink(drink.id);
     setTogglingFollow(false);
     if (result?.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setIsFollowed(result.following);
@@ -485,7 +486,7 @@ export function DrinkDetailScreen({
     setMyCheckCount((n) => (n == null ? 1 : n + 1));
     // Le check lui-même est enregistré ; seule la publication dans BibaPulse a échoué.
     if (pulseResult && pulseResult.error) {
-      alert("Ton check est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
+      notify("Ton check est enregistré, mais sa publication dans BibaPulse a échoué : " + pulseResult.error);
     }
     if (inHomeCheckFlow) {
       setInHomeCheckFlow(false);

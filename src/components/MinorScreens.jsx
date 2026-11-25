@@ -15,6 +15,7 @@ import { settingsAfterPlacePick } from "../utils.js";
 import { loadMyStories, upsertPushSubscription } from "../data/sharedDirectories.js";
 import { loadSalonTokEnabled, setSalonTokEnabled } from "../data/toks.js";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
+import { notify } from "./MessageToast.jsx";
 
 export function SettingsScreen({ myName, profile, myUserId, onOpenMyStory, onBack, onLogout, goToCategory }) {
   const [activeStories, setActiveStories] = useState([]);
@@ -141,7 +142,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
     const result = await setSalonTokEnabled(event.salonCode, value);
     if (result?.error) {
       setTokEnabled(!value);
-      alert("Le réglage n'a pas pu être enregistré. Réessaie.");
+      notify("Le réglage n'a pas pu être enregistré. Réessaie.");
     }
   };
 
@@ -388,7 +389,7 @@ export function WaterAlertSettingsScreen({ event, onSave, onBack }) {
     if (token) {
       await upsertPushSubscription(token, "web");
     } else if (Notification?.permission === "denied") {
-      alert("Notifications refusées — le rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.");
+      notify("Notifications refusées — le rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.", "info");
     }
     onSave({
       enabled: true,

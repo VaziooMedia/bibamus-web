@@ -4,6 +4,7 @@ import { NavIcon } from "./icons.jsx";
 import { PageHeader } from "./ui.jsx";
 import { ScreenTitle } from "./MyFavoritesScreen.jsx";
 import { loadMyMediaAssets, deleteMyMediaAsset, loadBibaxMediaAssets } from "../data/sharedDirectories.js";
+import { askConfirm } from "./ConfirmDialog.jsx";
 
 // Galerie personnelle — agrège les photos déjà envoyées par l'utilisateur (Stories, contributions
 // de fiches) via media_assets, sans dupliquer aucun stockage. Les photos de Stories restent
@@ -28,6 +29,7 @@ export function MyPhotosScreen({ onBack, otherUserId, otherName, embedded = fals
 
   const handleDelete = async () => {
     if (!viewed || readOnly) return;
+    if (!(await askConfirm({ title: "Supprimer cette photo ?", confirmLabel: "Supprimer", danger: true }))) return;
     setDeleting(true);
     await deleteMyMediaAsset(viewed.id);
     setPhotos((prev) => prev.filter((p) => p.id !== viewed.id));

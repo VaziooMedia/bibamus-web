@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.jsx";
 import { ConfirmDialogHost } from "./components/ConfirmDialog.jsx";
+import { MessageToastHost } from "./components/MessageToast.jsx";
 
 // Désactive la correction automatique / les suggestions de mots (la barre "Je / Tu /
 // C'est" au-dessus du clavier iPhone) sur tous les champs de saisie, présents et futurs —
@@ -27,6 +28,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <ErrorBoundary>
       <App />
       <ConfirmDialogHost />
+      <MessageToastHost />
     </ErrorBoundary>
   </React.StrictMode>
 );

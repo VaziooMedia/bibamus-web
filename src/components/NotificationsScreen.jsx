@@ -34,6 +34,7 @@ import { PageHeader, PageFooterNav } from "./ui.jsx";
 import { PageTitleWithBar } from "./AccountScreen.jsx";
 import { requestNotificationPermissionAndGetToken } from "../firebaseClient.js";
 import { upsertPushSubscription, hasActivePushSubscription, deleteMyPushSubscriptions } from "../data/sharedDirectories.js";
+import { notify } from "./MessageToast.jsx";
 
 function NotifRow({ icon, title, subtitle, checked, onChange, disabled, badge }) {
   return (
@@ -141,7 +142,7 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
                   // Un compte qui avait coupé l'ancien interrupteur général le retrouve actif.
                   if (p.notifEnabled === false) update({ notifEnabled: true });
                 } else if (Notification?.permission === "denied") {
-                  alert("Notifications refusées — active-les dans les réglages de ton navigateur ou de ton téléphone pour Bibamus.");
+                  notify("Notifications refusées — active-les dans les réglages de ton navigateur ou de ton téléphone pour Bibamus.", "info");
                 }
               } else {
                 await deleteMyPushSubscriptions();

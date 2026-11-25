@@ -12,6 +12,7 @@ import { loadMyNotifications, markAllNotificationsRead, loadPendingBibaxRequests
 import { loadBibroCodes } from "../data/profiles.js";
 import { BibaxProfilePreviewScreen } from "./BibaxProfilePreviewScreen.jsx";
 import { ProfileNavContext } from "../contexts.js";
+import { notify } from "./MessageToast.jsx";
 
 const TYPE_LABELS = (myGender) => ({
   pulse_bix: "a Bixé votre publication",
@@ -120,7 +121,7 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
     if (!result?.error) await respondNotification(n.id, accept);
     setBusyId(null);
     if (result?.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setRespondedIds((prev) => ({ ...prev, [n.id]: accept ? "accepted" : "declined" }));
