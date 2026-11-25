@@ -34,6 +34,7 @@ import {
   updateClubPhoto,
 } from "../data/sharedDirectories.js";
 import { formatCount } from "../utils.js";
+import { askConfirm } from "./ConfirmDialog.jsx";
 
 function timeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -120,7 +121,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
 
   const handleMakeAdmin = async (member) => {
     const name = [member.name, member.lastName].filter(Boolean).join(" ") || "cette personne";
-    if (!window.confirm(`Nommer ${name} administrateur du club ? Elle pourra gérer les membres et nommer d'autres administrateurs.`)) return;
+    if (!(await askConfirm({ title: `Nommer ${name} administrateur du club ?`, message: "Elle pourra gérer les membres et nommer d'autres administrateurs.", confirmLabel: "Nommer" }))) return;
     setMemberActionError(null);
     const result = await setClubAdmin(clubId, member.userId);
     if (result.error) {
@@ -134,7 +135,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
   // retirerait la personne aussitôt).
   const handleRemoveMember = async (member) => {
     const name = [member.name, member.lastName].filter(Boolean).join(" ") || "cette personne";
-    if (!window.confirm(`Retirer ${name} du club ? Cette personne ne sera plus membre.`)) return;
+    if (!(await askConfirm({ title: `Retirer ${name} du club ?`, message: "Cette personne ne sera plus membre.", confirmLabel: "Retirer", danger: true }))) return;
     await removeClubMember(clubId, member.userId);
     refreshMembers();
   };
@@ -149,7 +150,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
     if (alone) {
       const pending = list.filter((m) => m.status === "pending" && m.userId !== myUserId).length;
       const extra = pending > 0 ? " et les demandes d'entrée en attente" : "";
-      if (!window.confirm(`Vous êtes la seule personne de ce club : le quitter le supprimera définitivement, avec ses publications${extra}. Continuer ?`)) return;
+      if (!(await askConfirm({ title: "Vous êtes la seule personne de ce club", message: `Le quitter le supprimera définitivement, avec ses publications${extra}.`, confirmLabel: "Continuer", danger: true }))) return;
     }
     const result = await leaveClub(clubId);
     if (result.error) {

@@ -14,6 +14,7 @@ import { createDrinkQuiet, updateDrink, deleteDrink, createDrinkVariantChecked, 
 import { normalizeForDuplicateCheck, makeSearchMatcher, entityNames, drinkSummaryParts, drinkTypeLabel } from "../utils.js";
 import { findSimilarNames } from "../similarNames.js";
 import { DuplicateBox, ExistingEntityRow, NotSameCheckbox, duplicateNoteStyle } from "./DuplicateWarning.jsx";
+import { askConfirm } from "./ConfirmDialog.jsx";
 
 // Détails d'une fiche existante dans les avertissements de doublon : sous-catégorie · degré · producteur (la catégorie seulement si la
 // fiche n'a pas de sous-catégorie, comme ailleurs dans l'app).
@@ -209,7 +210,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
 
   const handleAbandon = async () => {
     if (drinkId) {
-      if (!window.confirm("Abandonner la création de ce produit ? Rien ne sera enregistré.")) return;
+      if (!(await askConfirm({ title: "Abandonner la création de ce produit ?", message: "Rien ne sera enregistré.", confirmLabel: "Abandonner", danger: true }))) return;
       await deleteDrink(drinkId);
     }
     onCancel();

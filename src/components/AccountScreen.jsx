@@ -13,6 +13,7 @@ import { formatDDMMYYYY } from "../utils.js";
 import { loadMyStories, checkMyUsername, setMyUsername } from "../data/sharedDirectories.js";
 import { shareEntity, canShareEntity } from "../shareEntity.js";
 import { usernameLinkUrl } from "../usernameLinks.js";
+import { askConfirm } from "./ConfirmDialog.jsx";
 
 const FLUO_BLUE = "#2E9EFF";
 const FLUO_RED = "#FF3B3B";
@@ -803,8 +804,8 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
   const [croppingFile, setCroppingFile] = useState(null);
   const fileInputRef = useRef(null);
   // Supprimer la photo : retour à l'icône par défaut. On demande confirmation avant d'agir.
-  const handleRemovePhoto = () => {
-    if (!window.confirm("Supprimer ta photo de profil ? L'icône par défaut sera utilisée à la place.")) return;
+  const handleRemovePhoto = async () => {
+    if (!(await askConfirm({ title: "Supprimer ta photo de profil ?", message: "L'icône par défaut sera utilisée à la place.", confirmLabel: "Supprimer", danger: true }))) return;
     setPhotoError(null);
     setAvatarUrl(null);
     onSaveProfile({ avatarUrl: null });

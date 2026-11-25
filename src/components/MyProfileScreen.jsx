@@ -9,6 +9,7 @@ import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
 import { redirectToSpotifyAuth, getMySpotifyStatus, disconnectSpotify } from "../data/spotify.js";
+import { askConfirm } from "./ConfirmDialog.jsx";
 
 export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, onUploadPhoto, onLogout, onBack, myUserId }) {
   const [spotifyStatus, setSpotifyStatus] = useState(null);
@@ -29,8 +30,8 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
   const [croppingFile, setCroppingFile] = useState(null);
   const fileInputRef = useRef(null);
   // Supprimer la photo : retour à l'icône par défaut. On demande confirmation avant d'agir.
-  const handleRemovePhoto = () => {
-    if (!window.confirm("Supprimer ta photo de profil ? L'icône par défaut sera utilisée à la place.")) return;
+  const handleRemovePhoto = async () => {
+    if (!(await askConfirm({ title: "Supprimer ta photo de profil ?", message: "L'icône par défaut sera utilisée à la place.", confirmLabel: "Supprimer", danger: true }))) return;
     setPhotoError(null);
     setAvatarUrl(null);
     onSaveProfile({ avatarUrl: null });
