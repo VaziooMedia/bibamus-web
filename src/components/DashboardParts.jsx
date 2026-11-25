@@ -1022,7 +1022,7 @@ export function SplitBillCard({ event, updateEvent }) {
                 />
               </div>
               <span style={{ fontSize: "12.5px", color: COLORS.inkSoft }}>€</span>
-              <button onClick={() => removeParticipant(p.name)} style={{ background: "none", border: "none", color: COLORS.wine, fontSize: "18px", cursor: "pointer", padding: "0 2px 0 6px", lineHeight: 1 }}>
+              <button onClick={() => removeParticipant(p.name)} style={{ background: "none", border: "none", color: COLORS.pinkFluo, fontSize: "18px", cursor: "pointer", padding: "0 2px 0 6px", lineHeight: 1 }}>
                 ×
               </button>
             </div>

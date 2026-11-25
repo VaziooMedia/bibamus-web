@@ -73,7 +73,7 @@ export function ConfirmDialogHost() {
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
       aria-describedby={message ? "confirm-dialog-message" : undefined}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 3000 }}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 3200 }}
       onClick={() => answer(false)}
     >
       <div

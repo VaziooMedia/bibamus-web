@@ -16,6 +16,7 @@ import { ReportModal, ReportIcon } from "./ReportModal.jsx";
 import { loadShopById, loadShopListsOnce, loadShopFavoriteStatus, toggleFavoriteShop } from "../data/sharedDirectories.js";
 import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
 import { useWrappedTitleExtra } from "../hooks/useWrappedTitleExtra.js";
+import { notify } from "./MessageToast.jsx";
 
 // Carte « Infos » d'un shop. Les pastilles disent d'abord le type (Magasin / En ligne : un shop peut avoir les deux), puis les catégories.
 // Un magasin a une adresse (le « B- » devant le code postal n'est mis que pour la Belgique) ; une boutique en ligne seule n'en a pas. Les pays desservis
@@ -173,7 +174,7 @@ export function ShopDetailScreen({ shopId, myBibroCode, onBack }) {
     const result = await toggleFavoriteShop(shopId);
     setFavoriteBusy(false);
     if (!result || result.error) {
-      alert(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      notify(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
       return;
     }
     setIsFavorite(!!result.favorite);

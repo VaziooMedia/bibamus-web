@@ -26,6 +26,7 @@ import {
   REACTION_EMOJIS,
 } from "../data/messaging.js";
 import bibaPingIconUrl from "../assets/brand/bibaping.svg";
+import { notify } from "./MessageToast.jsx";
 
 const PAGE_SIZE = 40;
 
@@ -180,7 +181,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
     if (!target) return;
     const result = await setMessageReaction(target.id, emoji, myReactionFor(target.id));
     if (result?.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     refreshReactions();
@@ -214,7 +215,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
         const uploaded = await uploadMessagePhoto(conversation.id, pendingPhoto.file);
         if (uploaded?.error) {
           setSending(false);
-          alert(uploaded.error);
+          notify(uploaded.error);
           return;
         }
         photoPath = uploaded.path;
@@ -224,7 +225,7 @@ export function ConversationScreen({ conversation, myUserId, title, photoUrl, on
     const result = await sendMessage(conversation.id, text, photoPath);
     setSending(false);
     if (result?.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setDraft("");

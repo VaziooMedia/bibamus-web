@@ -15,6 +15,7 @@ import { orderedList, VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY } from "../venueList
 import { normalizeForDuplicateCheck } from "../utils.js";
 import { findSimilarNames } from "../similarNames.js";
 import { DuplicateBox, ExistingEntityRow, NotSameCheckbox, duplicateNoteStyle } from "./DuplicateWarning.jsx";
+import { notify } from "./MessageToast.jsx";
 
 // Le serveur compare des mots entiers : « Le Pavé » doit se chercher « Pavé » (même règle que la vérification d'adresse plus bas).
 const stripArticleForSearch = (s) => (s || "").trim().replace(/^(le|la|les|l')\s*/i, "");
@@ -163,7 +164,7 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
         normalizeForDuplicateCheck(v.streetNumber || "") === normalizeForDuplicateCheck(trimmedStreetNumber)
     );
     if (duplicate) {
-      alert(`Alerte :\n"${duplicate.name}, ${duplicate.streetName}, ${duplicate.streetNumber} - ${duplicate.postalCode} ${duplicate.city}" existe déjà.\nVous ne pouvez pas le rajouter.`);
+      notify(`Alerte :\n"${duplicate.name}, ${duplicate.streetName}, ${duplicate.streetNumber} - ${duplicate.postalCode} ${duplicate.city}" existe déjà.\nVous ne pouvez pas le rajouter.`);
       return;
     }
     if (!sameAddressNotSame) {
@@ -242,7 +243,7 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
     });
     if (!created) {
       setSaving(false);
-      alert("La création du lieu a échoué — merci de réessayer.");
+      notify("La création du lieu a échoué — merci de réessayer.");
       return;
     }
     if (lat != null && lng != null) {

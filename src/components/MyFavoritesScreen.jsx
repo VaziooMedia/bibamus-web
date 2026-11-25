@@ -13,6 +13,7 @@ import { CountryFlagImg, COUNTRY_ISO_CODES, NavIcon } from "./icons.jsx";
 import { venueStreetLine, venuePostalCityLine, formatCount } from "../utils.js";
 import { flagPart, abvPart, bioPart, glutenFreePart } from "./DrinkRowParts.jsx";
 import { loadMyFavorites, loadVenuesByIds, loadBrandsByIds, loadBreweriesByIds, loadShopsByIds, loadDrinksByIds, loadMyFavoriteBibaxDetails, toggleFavoriteBrand, toggleFavoriteProducer, toggleFavoriteShop } from "../data/sharedDirectories.js";
+import { notify } from "./MessageToast.jsx";
 
 const AMBER_DOT = <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLORS.amber, display: "inline-block", flexShrink: 0 }} />;
 
@@ -324,7 +325,7 @@ export function MyFavoritesListScreen({ screenId, mainScrollRef, kind, bibros = 
     const result = await apiToggle(id);
     if (result?.error) {
       setHeartOff((prev) => ({ ...prev, [key]: !wasOn }));
-      alert(result.error);
+      notify(result.error);
       return;
     }
     setHeartOff((prev) => ({ ...prev, [key]: !result.favorite }));

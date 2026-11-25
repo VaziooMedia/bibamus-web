@@ -15,6 +15,7 @@ import {
   getSpotifyPlaylistOrder,
   reorderSpotifyPlaylistItem,
 } from "../data/spotify.js";
+import { notify } from "./MessageToast.jsx";
 
 // Ne fait défiler le texte que s'il dépasse réellement la largeur disponible — sinon, reste
 // simplement affiché tel quel, sans animation inutile. La vitesse est calculée à partir de la
@@ -348,13 +349,13 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     const token = await ensureFreshSpotifyToken(myUserId);
     if (!token) {
       setCreatingPlaylist(false);
-      alert("Connexion Spotify indisponible — reconnectez votre compte depuis Mes infos.");
+      notify("Connexion Spotify indisponible — reconnectez votre compte depuis Mes infos.");
       return;
     }
     const result = await createSpotifyPlaylist(token, `Bibamus — ${event.name}`);
     setCreatingPlaylist(false);
     if (result.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     updateEvent(event.id, (e) => ({ ...e, spotifyPlaylistId: result.playlistId, spotifyPlaylistUrl: result.playlistUrl }));
@@ -366,13 +367,13 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     const token = await ensureFreshSpotifyToken(myUserId);
     if (!token) {
       setAddingId(null);
-      alert("Connexion Spotify indisponible — reconnectez votre compte depuis Mes infos.");
+      notify("Connexion Spotify indisponible — reconnectez votre compte depuis Mes infos.");
       return;
     }
     const result = await addTrackToSpotifyPlaylist(token, event.spotifyPlaylistId, song.spotifyUri);
     setAddingId(null);
     if (result.error) {
-      alert(result.error);
+      notify(result.error);
       return;
     }
     updateEvent(event.id, (e) => ({ ...e, playlist: (e.playlist || []).map((s) => (s.id === song.id ? { ...s, addedToPlaylist: true } : s)) }));

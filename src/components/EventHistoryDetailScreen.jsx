@@ -208,7 +208,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
                     <button
                       onClick={() => (confirmDeleteRoundId === r.id ? onDeleteRound(r.id) : setConfirmDeleteRoundId(r.id))}
                       aria-label="Supprimer la tournée"
-                      style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px -4px -4px auto", color: COLORS.wine, fontSize: "12px", fontWeight: 600 }}
+                      style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px -4px -4px auto", color: COLORS.pinkFluo, fontSize: "12px", fontWeight: 600 }}
                     >
                       {confirmDeleteRoundId === r.id ? "Confirmer ?" : <NavIcon name="x" size={14} color={COLORS.paperAlt} />}
                     </button>

@@ -27,6 +27,7 @@ import { SHOP_CATEGORY_LIST_KEY } from "../shopLists.js";
 import { normalizeForDuplicateCheck, formatAddress } from "../utils.js";
 import { findSimilarNames } from "../similarNames.js";
 import { DuplicateBox, ExistingEntityRow, NotSameCheckbox, duplicateNoteStyle } from "./DuplicateWarning.jsx";
+import { notify } from "./MessageToast.jsx";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -250,7 +251,7 @@ export function SubmitShopWizardScreen({ initialName = "", onDone, onCancel, onO
     });
     if (!created) {
       setSaving(false);
-      alert("La création du shop a échoué — merci de réessayer.");
+      notify("La création du shop a échoué — merci de réessayer.");
       return;
     }
     setSaving(false);

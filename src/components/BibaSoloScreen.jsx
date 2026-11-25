@@ -57,6 +57,7 @@ import { derivativeName, kcalPer100mlWithVariant, volumeAfterVariantChange } fro
 import { ServicePill, DerivativePill, serviceLabelOf } from "./ServiceTag.jsx";
 import { slashWhite, periodLabel, PeriodBarMark } from "./PeriodBar.jsx";
 import { askConfirm } from "./ConfirmDialog.jsx";
+import { notify } from "./MessageToast.jsx";
 
 // La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
 // seule soirée. `current` = début de la période en cours (le dernier 6 h passé), `previous` = début de la période d'avant.
@@ -985,7 +986,7 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, checkinCount, onSave
     if (token) {
       await upsertPushSubscription(token, "web");
     } else if (Notification?.permission === "denied") {
-      alert("Notifications refusées — le rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.");
+      notify("Notifications refusées — le rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.", "info");
     }
     const next = {
       enabled: true,
@@ -2379,7 +2380,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           onActivate={async (tolerance, pin) => {
             const result = await activateBibaZeroSolo(myUserId, tolerance, pin);
             if (result?.error) {
-              alert(result.error);
+              notify(result.error);
               return;
             }
             setBibaBobModalMode(null);
@@ -2388,7 +2389,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
           onDeactivate={async () => {
             const result = await deactivateBibaZeroSolo(myUserId, bibaZero?.pin);
             if (result?.error) {
-              alert(result.error);
+              notify(result.error);
               return;
             }
             setBibaBobModalMode(null);
