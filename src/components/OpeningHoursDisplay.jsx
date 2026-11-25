@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants.js";
 import { loadEstablishmentOpeningHours } from "../data/sharedDirectories.js";
 import { NavIcon } from "./icons.jsx";
+import { resolveOpenNow } from "../openingHoursNow.js";
 
 function timeToMinutes(t) {
   if (!t) return 0;
@@ -122,17 +123,19 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
   const DAY_NAMES_FR = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
   const todayName = DAY_NAMES_FR[new Date().getDay()];
   const todayEntry = businessDays?.find((d) => d.dayLabel?.toLowerCase().startsWith(todayName)) || null;
+  // « Ouvert » / « Fermé » : calculé à chaque affichage d'après les horaires et l'heure de l'appareil (pas la valeur figée du cache) — voir `openingHoursNow.js`.
+  const openNow = resolveOpenNow(hours);
 
   return (
     <div
       onClick={() => setExpanded((e) => !e)}
       style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", cursor: "pointer" }}
     >
-      {hours?.isOpenNow != null && (
+      {openNow != null && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: hours.isOpenNow ? COLORS.amber : COLORS.redFluo, display: "inline-block", flexShrink: 0 }} />
-            <span style={{ fontWeight: 700, fontSize: "14px", color: hours.isOpenNow ? COLORS.amber : COLORS.redFluo }}>{hours.isOpenNow ? "Ouvert" : "Fermé"}</span>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: openNow ? COLORS.amber : COLORS.redFluo, display: "inline-block", flexShrink: 0 }} />
+            <span style={{ fontWeight: 700, fontSize: "14px", color: openNow ? COLORS.amber : COLORS.redFluo }}>{openNow ? "Ouvert" : "Fermé"}</span>
             {!expanded && todayEntry && (
               <span style={{ fontSize: "11px", color: COLORS.inkSoft }}>
                 — {todayEntry.closed ? "toute la journée" : todayEntry.periods.map((p) => `${p.open} - ${p.close || "?"}`).join(", ")}
