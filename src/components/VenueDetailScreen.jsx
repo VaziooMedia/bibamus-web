@@ -34,7 +34,7 @@ import internetIconUrl from "../assets/brand/internet.svg";
 
 // Liste « Produits les plus populaires ici » (onglet Biba360 d'un lieu). Chaque ligne est un bouton qui ouvre le produit (le retour ramène sur cet onglet : voir `returnTab`).
 // Mise en page décidée par Mehdi (2026-11-24, « style A ») : liste aérée, un trait fin entre les lignes ; à gauche le rond du produit (40 px : photo, sinon emoji, sinon la
-// bouteille ; un anneau vert fluo autour du n° 1 seulement) ; au milieu le nom puis un sous-texte (sous-catégorie, drapeau du pays — seulement pour les catégories où le pays est
+// bouteille ; sans anneau, pour aucun produit — retiré le 2026-11-25) ; au milieu le nom puis un sous-texte (sous-catégorie, drapeau du pays — seulement pour les catégories où le pays est
 // affiché ailleurs dans l'app — et degré d'alcool « 6.2% ABV », même écriture et même règle que PulseProductCard et les listes du BibAtlas, séparés par un petit point vert fluo ;
 // une donnée absente n'est pas affichée) ; un trait vertical fin, puis le nombre en vert fluo et un chevron « › ». Le sous-texte remplace l'ancienne ligne « producteur ».
 function TopDrinksList({ rows, info, onOpen }) {
@@ -75,7 +75,7 @@ function TopDrinksList({ rows, info, onOpen }) {
               padding: "10px 0",
             }}
           >
-            <span style={{ display: "flex", flexShrink: 0, borderRadius: "50%", boxShadow: i === 0 ? `0 0 0 2px ${COLORS.amber}` : "none" }}>
+            <span style={{ display: "flex", flexShrink: 0 }}>
               <EntityAvatar photoUrl={d?.photoUrl} photoEmoji={d?.avatarEmoji} size={40} fallbackIcon="bottle" />
             </span>
             <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
