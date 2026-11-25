@@ -917,7 +917,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Supprimer ce check de Pulse ?"
+          aria-label="Supprimer ce check de BibaPulse ?"
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 300 }}
           onClick={() => {
             if (!deleting) setCheckDialog(null);
@@ -929,7 +929,9 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           >
             <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.ink, margin: "0 0 14px", display: "flex", alignItems: "center", gap: "10px" }}>
               <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
-              Supprimer ce check de Pulse ?
+              <span>
+                Supprimer ce check de Biba<span style={{ color: COLORS.amber }}>Pulse</span> ?
+              </span>
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {checkDialog.withStats ? (
@@ -937,14 +939,14 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                   <button
                     onClick={() => confirmDeleteCheck(false)}
                     disabled={deleting}
-                    style={{ background: "none", border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: COLORS.wine, cursor: deleting ? "default" : "pointer", opacity: deleting && checkDialog.choice !== "pulse" ? 0.4 : 1 }}
+                    style={{ background: "none", border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: COLORS.pinkFluo, cursor: deleting ? "default" : "pointer", opacity: deleting && checkDialog.choice !== "pulse" ? 0.4 : 1 }}
                   >
                     {checkDialog.choice === "pulse" ? "Suppression..." : "Supprimer de Pulse seulement"}
                   </button>
                   <button
                     onClick={() => confirmDeleteCheck(true)}
                     disabled={deleting}
-                    style={{ background: COLORS.wine, border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: "#fff", cursor: deleting ? "default" : "pointer", opacity: deleting && checkDialog.choice !== "stats" ? 0.4 : 1 }}
+                    style={{ background: COLORS.pinkFluo, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: "#fff", cursor: deleting ? "default" : "pointer", opacity: deleting && checkDialog.choice !== "stats" ? 0.4 : 1 }}
                   >
                     {checkDialog.choice === "stats" ? "Suppression..." : "Supprimer de Pulse et de mes statistiques"}
                   </button>
@@ -953,7 +955,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                 <button
                   onClick={() => confirmDeleteCheck(false)}
                   disabled={deleting}
-                  style={{ background: COLORS.wine, border: `2px solid ${COLORS.wine}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: "#fff", cursor: deleting ? "default" : "pointer" }}
+                  style={{ background: COLORS.pinkFluo, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: "#fff", cursor: deleting ? "default" : "pointer" }}
                 >
                   {checkDialog.choice === "pulse" ? "Suppression..." : "Supprimer"}
                 </button>
