@@ -297,7 +297,7 @@ export function StoryViewer({ stories, myUserId, onClose, onChanged, onOpenTag, 
                 {story.sharedToPulse ? "Retirer de BibaPulse" : "Partager dans BibaPulse"}
               </button>
             )}
-            <button onClick={remove} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "12px 0", fontSize: "14px", fontWeight: 700, color: COLORS.wine, cursor: "pointer" }}>
+            <button onClick={remove} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "12px 0", fontSize: "14px", fontWeight: 700, color: COLORS.pinkFluo, cursor: "pointer" }}>
               Supprimer
             </button>
           </div>

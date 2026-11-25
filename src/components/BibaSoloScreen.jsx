@@ -56,6 +56,7 @@ import { useBeerDerivatives, useBeerDerivativeList } from "../hooks/useBeerDeriv
 import { derivativeName, kcalPer100mlWithVariant, volumeAfterVariantChange } from "../beerDerivatives.js";
 import { ServicePill, DerivativePill, serviceLabelOf } from "./ServiceTag.jsx";
 import { slashWhite, periodLabel, PeriodBarMark } from "./PeriodBar.jsx";
+import { askConfirm } from "./ConfirmDialog.jsx";
 
 // La « journée » BibaSolo ne change pas à minuit mais à 6 h du matin (heure du téléphone) : une sortie de 22 h à 4 h est une
 // seule soirée. `current` = début de la période en cours (le dernier 6 h passé), `previous` = début de la période d'avant.
@@ -1837,7 +1838,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
   const handleArchive = async () => {
     const ids = [...(checkins || []), ...(previousCheckins || [])].map((c) => c.id);
     if (ids.length === 0) return;
-    if (!window.confirm("Archiver les listes affichées ? Les compteurs BibaSolo repartent à zéro, mais tout reste compté dans Mes Statistiques.")) return;
+    if (!(await askConfirm({ title: "Archiver les listes affichées ?", message: "Les compteurs BibaSolo repartent à zéro, mais tout reste compté dans Mes Statistiques.", confirmLabel: "Archiver" }))) return;
     setCheckins([]);
     setPreviousCheckins([]);
     await archiveSoloCheckins(ids);

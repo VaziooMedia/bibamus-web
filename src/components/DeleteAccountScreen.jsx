@@ -74,7 +74,7 @@ export function DeleteAccountScreen({ onBack, onAccountDeleted }) {
             style={{ padding: "13px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", outline: "none", marginBottom: "12px", width: "100%", boxSizing: "border-box" }}
           />
           {error && <p style={{ color: COLORS.wine, fontSize: "13px", marginBottom: "12px" }}>{error}</p>}
-          <PrimaryButton onClick={handleDelete} disabled={deleting || !password} style={{ width: "100%", background: COLORS.wine }}>
+          <PrimaryButton onClick={handleDelete} disabled={deleting || !password} style={{ width: "100%", background: COLORS.pinkFluo, ...(deleting || !password ? {} : { color: "#fff" }) }}>
             {deleting ? "Suppression..." : "Supprimer définitivement mon compte"}
           </PrimaryButton>
         </>
