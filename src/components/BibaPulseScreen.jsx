@@ -339,19 +339,28 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
   const placeInteraction = isPlaceCheck ? PLACE_INTERACTIONS.find((i) => i.code === entry.metadata?.interaction) || null : null;
   const tagHandlers = { drink: onOpenDrink, venue: onOpenVenue, brand: onOpenBrand, producer: onOpenProducer };
 
-  const handleDelete = async () => {
+  // Suppression d'une publication libre ou d'une carte BibaRoom : la même fenêtre que pour un check (plus de boîte du navigateur : l'app ne sera
+  // plus dans un navigateur — Mehdi, 2026-11-25), avec un seul bouton « Supprimer ».
+  const handleDelete = () => {
     if (deleteLock.current) return;
-    if (!window.confirm("Supprimer cette publication ? Ses réactions et ses commentaires seront supprimés aussi.")) return;
+    setCheckDialog({ kind: "publication", withStats: false, choice: null });
+  };
+
+  const confirmDeletePublication = async () => {
+    if (deleteLock.current) return;
     deleteLock.current = true;
     setDeleting(true);
     setDeleteError("");
+    setCheckDialog((d) => (d ? { ...d, choice: "pulse" } : d));
     const result = isRoomCard ? await deleteMyPulseCheck(entry.id, { alsoStats: false }) : await deleteMyPulsePost(entry.id);
     if (result.error) {
       deleteLock.current = false;
       setDeleting(false);
+      setCheckDialog(null);
       setDeleteError("La publication n'a pas pu être supprimée. Réessaie dans un instant.");
       return;
     }
+    setCheckDialog(null);
     // La carte disparaît du fil (le parent la retire de sa liste).
     if (onDeleted) onDeleted(entry.id);
   };
@@ -917,7 +926,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Supprimer ce check de BibaPulse ?"
+          aria-label={`${checkDialog.kind === "publication" ? "Supprimer cette publication" : "Supprimer ce check"} de BibaPulse ?`}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 300 }}
           onClick={() => {
             if (!deleting) setCheckDialog(null);
@@ -930,9 +939,12 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
             <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", color: COLORS.ink, margin: "0 0 14px", display: "flex", alignItems: "center", gap: "10px" }}>
               <span style={{ width: "4px", height: "18px", background: COLORS.amber, borderRadius: "2px", display: "inline-block" }} />
               <span>
-                Supprimer ce check de Biba<span style={{ color: COLORS.amber }}>Pulse</span> ?
+                {checkDialog.kind === "publication" ? "Supprimer cette publication" : "Supprimer ce check"} de Biba<span style={{ color: COLORS.amber }}>Pulse</span> ?
               </span>
             </h2>
+            {checkDialog.kind === "publication" && (
+              <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: "-6px 0 14px", lineHeight: 1.4 }}>Ses réactions et ses commentaires seront supprimés aussi.</p>
+            )}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {checkDialog.withStats ? (
                 <>
@@ -953,7 +965,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
                 </>
               ) : (
                 <button
-                  onClick={() => confirmDeleteCheck(false)}
+                  onClick={() => (checkDialog.kind === "publication" ? confirmDeletePublication() : confirmDeleteCheck(false))}
                   disabled={deleting}
                   style={{ background: COLORS.pinkFluo, border: `2px solid ${COLORS.pinkFluo}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, color: "#fff", cursor: deleting ? "default" : "pointer" }}
                 >
