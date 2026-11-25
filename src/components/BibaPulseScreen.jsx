@@ -776,7 +776,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           </button>
         </div>
 
-        {deleteError && <p style={{ color: COLORS.wine, fontSize: "12px", margin: "8px 0 0" }}>{deleteError}</p>}
+        {deleteError && <p style={{ color: COLORS.pinkFluo, fontSize: "12px", margin: "8px 0 0", paddingRight: "30px" }}>{deleteError}</p>}
 
         {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
         liste complète des personnes concernées. */}
