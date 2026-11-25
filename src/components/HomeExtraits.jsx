@@ -16,7 +16,8 @@
 // hauteur de la plus haute page (3 bandes de 3 lignes = 207 px ; une bande à 4 lignes est plus haute), donc la hauteur de l'accueil ne change pas en balayant ni avec le nombre d'extraits. Les points de page, l'un à côté de l'autre (4 avec 12 extraits), sont dans la ligne de titre, à gauche de la
 // flèche, sans en changer la hauteur. Ordre chronologique du fil. Avec 3 extraits ou moins : pas de défilement ni de points.
 //
-// Repère « nouveau » : un petit point vert sur le coin du rond de profil. Un extrait est nouveau s'il est arrivé après la première ouverture de l'accueil sur cet appareil, qu'il
+// Repère « nouveau » : une barre vert fluo de 4 px au bord gauche de la bande (Mehdi, 2026-11-25 : le petit point vert sur le rond de profil faisait penser à « en ligne » ; option B choisie parmi une pastille « Nouveau »,
+// la barre, l'heure en vert et aucun repère). Un extrait est nouveau s'il est arrivé après la première ouverture de l'accueil sur cet appareil, qu'il
 // n'est pas de moi, et que je ne l'ai pas encore ouvert (appui sur la bande) ni ouvert la page BibaPulse par le titre ou la flèche (qui marque tous les extraits affichés comme vus).
 // L'état est gardé sur l'appareil (localStorage, par compte) : `{ since, ids }`.
 //
@@ -161,15 +162,15 @@ function ExtraitBand({ entry, obj, venue, isNew, onOpen }) {
           onOpen(entry);
         }
       }}
-      style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "7px 14px", height: `${bandH}px`, flexShrink: 0, display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", boxSizing: "border-box" }}
+      style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderLeft: "none", borderRight: "none", borderRadius: 0, padding: "7px 14px", height: `${bandH}px`, flexShrink: 0, display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", boxSizing: "border-box", ...(isNew ? { boxShadow: `inset 4px 0 0 ${COLORS.amber}` } : {}) }}
     >
       <span style={{ position: "relative", display: "flex", flexShrink: 0, margin: `${-(EXTRAIT_ROUND - EXTRAIT_BASE) / 2}px 0 ${-(EXTRAIT_ROUND - EXTRAIT_BASE) / 2}px ${-(EXTRAIT_ROUND - EXTRAIT_BASE)}px` }}>
         <EntityAvatar photoUrl={entry.actorAvatarUrl} size={EXTRAIT_ROUND} />
-        {isNew && <span role="img" aria-label="Nouveau" style={{ position: "absolute", top: "1px", right: "-1px", width: "11px", height: "11px", borderRadius: "50%", background: COLORS.amber, border: `2px solid ${COLORS.surface}`, boxSizing: "content-box" }} />}
       </span>
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: "5px", minWidth: 0, lineHeight: 1.2 }}>
+          {isNew && <span style={{ position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap" }}>Nouveau : </span>}
           <span style={{ fontSize: "13.5px", fontWeight: 700, color: COLORS.ink, minWidth: 0, ...ellipsis }}>{fullName}</span>
           <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, flexShrink: 0, whiteSpace: "nowrap" }}>· {timeShort(entry.createdAt)}</span>
         </div>
