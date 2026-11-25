@@ -243,6 +243,11 @@ export const resolveMenuItem =(item, drinksDirectory) => {
     bio: master.bio,
     isGeneric: master.isGeneric,
     countsAsDrinkId: master.countsAsDrinkId || null,
+    // Autres noms de la fiche : la recherche dans une carte (`entityNames`) trouve le produit par son nom alternatif, ses alias ou ses traductions.
+    // `undefined` quand la fiche n'en a pas : rien n'est enregistré dans la carte d'un salon, et un ancien nom disparu de la fiche ne reste pas dans la copie.
+    alternateName: master.alternateName || undefined,
+    aliases: master.aliases && master.aliases.length > 0 ? master.aliases : undefined,
+    translations: master.translations && master.translations.length > 0 ? master.translations : undefined,
   };
 };
 
