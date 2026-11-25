@@ -112,7 +112,7 @@ function useBibaxRequests(onBibaxAdded) {
       return;
     }
     if (result.alreadyAccepted) {
-      notify("Trop tard — cette demande vient d'être confirmée par l'autre personne. Vous êtes déjà Bibax.", "info");
+      notify("Trop tard — cette demande vient d'être confirmée par l'autre personne. Vous êtes déjà Bibax.", "error");
       onBibaxAdded();
     }
     refresh();

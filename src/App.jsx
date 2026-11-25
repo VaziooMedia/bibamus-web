@@ -975,8 +975,9 @@ export default function App() {
     recordRoundOrders([rec.order], { venueId: realVenueId, eventId: ev.id, roundId: rec.roundId, currency: ev.currency, paid: true });
   };
 
-  // Le « − » : delete_round_orders ne supprime que MES lignes, donc un verre de quelqu'un d'autre (ou un
-  // verre venu d'une tournée, jamais enregistré sous cet identifiant) n'est jamais touché.
+  // Le « − » : delete_round_orders supprime toutes les lignes de la tournée dont on lui donne l'identifiant (dès que j'en ai une). Ici l'identifiant
+  // est propre à ce verre (une seule ligne, la mienne), donc un verre de quelqu'un d'autre (ou un verre venu d'une tournée, jamais enregistré sous
+  // cet identifiant) n'est jamais touché.
   const removePersonalDrinkRecord = (orderId) => deleteRoundOrders(personalRoundId(orderId));
 
   const createEvent = async (name, currency, date, jetonUnitValue, venueId, mode, participants, clubId, invitedBibros = [], publishToPulse = false) => {
@@ -1746,7 +1747,7 @@ export default function App() {
     },
     onOpenBibax: (code) => openBibaxProfile(code),
     onOpenMyProfile: () => setScreen("profile"),
-    onNotFound: () => notify("Cette page n'existe pas ou n'est plus disponible.", "info"),
+    onNotFound: () => notify("Cette page n'existe pas ou n'est plus disponible.", "error"),
   });
 
   // Version simplifiée : ne touche pas aux statistiques personnelles par lieu (ce système n'existe
@@ -4083,7 +4084,7 @@ export default function App() {
                   if (story) {
                     setViewedStoryAuthor([story]);
                   } else {
-                    notify("Cette Story n'est plus disponible.", "info");
+                    notify("Cette Story n'est plus disponible.", "error");
                   }
                 }}
                 onOpenPulseEntry={(entryId, openComments) => {
