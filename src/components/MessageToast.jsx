@@ -8,8 +8,9 @@ import { COLORS } from "../constants.js";
 // barre basse.
 //
 // Usage (le composant `MessageToastHost` est monté une seule fois, dans `main.jsx`) :
-//   notify("La création du lieu a échoué — merci de réessayer.");            // erreur (cadre rose fluo, le défaut)
-//   notify("Demande envoyée à Marie.", "info");                                // information (cadre vert fluo)
+//   notify("La création du lieu a échoué — merci de réessayer.");            // échec ou indisponible (cadre rose fluo, le défaut)
+//   notify("Demande envoyée à Marie.", "info");                                // réussite (cadre vert fluo)
+// Règle (Mehdi, 2026-11-25) : rose fluo = ce qui n'a pas marché ou n'est plus disponible ; vert fluo = ce qui a réussi.
 // Le message disparaît seul (de 6 à 10 s selon sa longueur) ou d'un toucher ; plusieurs messages s'empilent (3 au plus, les plus anciens partent).
 // Les retours à la ligne du texte sont conservés. Un texte vide ou absent n'affiche rien.
 // ============================================================
