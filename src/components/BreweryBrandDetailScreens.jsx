@@ -543,6 +543,9 @@ function CardTitle({ children }) {
   );
 }
 
+// Taille des ronds des lignes « Ses marques » (fiche Producteur) et « Ses produits » (fiches Producteur et Marque) : 40 px, comme les ronds de « Produits les plus populaires ici » (Biba360 d'un Lieu).
+const RELATED_ROW_AVATAR_SIZE = 40;
+
 // Carte « Ses produits » des fiches Marque et Producteur : titre à barre verte et lignes imbriquées. Les produits sont regroupés par sous-catégorie
 // (« Bière », « Cidre », « Soda »… : SUBTYPE_LABELS), dans l'ordre du répertoire (catégorie, puis ordre des sous-catégories). Un produit sans
 // sous-catégorie nommée (les Spiritueux) est rangé sous le nom de sa catégorie. Une seule sous-catégorie = pas d'intertitre.
@@ -586,7 +589,7 @@ function RelatedDrinksCard({ drinks, emptyText, onOpenDrink }) {
                     onClick={() => onOpenDrink(d.id)}
                     style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
                   >
-                    <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={28} />
+                    <EntityAvatar photoUrl={d.photoUrl} photoEmoji={d.avatarEmoji} size={RELATED_ROW_AVATAR_SIZE} />
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                         {d.name}
@@ -758,7 +761,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
                 onClick={() => onOpenBrand(b.id)}
                 style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left", background: COLORS.surfaceAlt, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "10px", padding: "10px 14px", cursor: "pointer", width: "100%" }}
               >
-                <EntityAvatar photoUrl={b.logoUrl} size={28} />
+                <EntityAvatar photoUrl={b.logoUrl} size={RELATED_ROW_AVATAR_SIZE} />
                 <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: "14px" }}>{b.name}</span>
                 <CertificationIcon level={b.certificationLevel} size={15} />
               </button>
