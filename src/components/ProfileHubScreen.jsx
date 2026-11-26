@@ -34,7 +34,6 @@ export function ProfileHubScreen({
   initialTab = "infos",
   onTabConsumed,
   onBack,
-  goToMyInfo,
   goToBibros,
   goToProducts,
   goToDrinkChecks,

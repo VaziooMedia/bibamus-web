@@ -1,7 +1,7 @@
 // ============================================================
 // Écran "Compte" — accessible depuis Paramètres. Liste des
 // informations du profil, chacune ouvrant un petit éditeur dédié
-// (au lieu du grand formulaire d'un seul tenant de MyProfileScreen).
+// (au lieu de l'ancien grand formulaire d'un seul tenant, `MyProfileScreen`, retiré du code le 2026-11-26).
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS, COUNTRIES, PHONE_PREFIXES, COUNTRY_FLAGS } from "../constants.js";
