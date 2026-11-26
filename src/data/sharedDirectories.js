@@ -2347,7 +2347,9 @@ function venueToRow(v, partial = false) {
     postal_code: v.postalCode,
     city: v.city,
     village: v.village,
-    country: v.country,
+    // L'assistant d'ajout de lieu garde le libellé du pays (« Belgique ») ; la base stocke le code
+    // (« belgique »), comme pour les boutiques et les brasseries.
+    country: COUNTRY_LABEL_TO_CODE[v.country] || v.country,
     phone: v.phone,
     email: v.email,
     website: v.website,
