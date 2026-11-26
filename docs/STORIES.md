@@ -1,7 +1,7 @@
 # STORIES — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-10-22 (création depuis une publication BibaPulse) ; reste : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de la table `stories`, de `story_bix` et de la plupart des fonctions de lecture), donc non revérifié.
+> Dernière mise à jour : 2026-11-26 (**Photos de Story : plafond de 20 envois par 24 h** (Mehdi, 2026-11-26 ; voir `SECURITY.md`)) ; 2026-10-22 (création depuis une publication BibaPulse) ; reste : 2026-10-13. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient (c'est le cas de la table `stories`, de `story_bix` et de la plupart des fonctions de lecture), donc non revérifié.
 
 ---
 
@@ -50,7 +50,7 @@ Table `story_bix`, une ligne par réaction (`story_id`, `user_id`) en écriture 
 
 ## Stockage média
 
-L'app n'écrit pas directement dans le bucket : l'image part en base64 vers la fonction Edge `moderate-and-upload-photo` (bucket `stories`, vérification de contenu), nommée `<id auteur>-<horodatage>.jpg`. Images JPEG uniquement ; l'éditeur d'image mobile (`MobileImageEditor`) sort du **720 × 1280, JPEG qualité 0,9**, après recadrage, couleur de fond, appareil photo ou galerie. Les photos de Stories restent consultables, même expirées, dans « Mes photos ». Configuration du bucket et source de la fonction Edge : **(base)**.
+L'app n'écrit pas directement dans le bucket : l'image part en base64 vers la fonction Edge `moderate-and-upload-photo` (bucket `stories`, vérification de contenu), nommée `<id auteur>-<horodatage>.jpg`. Images JPEG uniquement ; l'éditeur d'image mobile (`MobileImageEditor`) sort du **720 × 1280, JPEG qualité 0,9**, après recadrage, couleur de fond, appareil photo ou galerie. Les photos de Stories restent consultables, même expirées, dans « Mes photos ». Configuration du bucket et source de la fonction Edge : **(base)**. **Plafond (2026-11-26)** : 20 photos par compte et par 24 h glissantes, tous dossiers confondus ; au-delà, la publication s'arrête sur une notification rose fluo « Tu as atteint la limite de photos envoyées sur 24 heures. Réessaie plus tard. » (voir `SECURITY.md`).
 
 ## Création (`StoryCreateScreen`)
 

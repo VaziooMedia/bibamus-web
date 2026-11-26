@@ -5,6 +5,7 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS, COUNTRIES, PHONE_PREFIXES, COUNTRY_FLAGS } from "../constants.js";
+import { notify } from "./MessageToast.jsx";
 import { NavIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton } from "./ui.jsx";
 import { PhotoCropModal } from "./PhotoCropModal.jsx";
@@ -884,7 +885,9 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
             const result = await onUploadPhoto(blob);
             setUploadingPhoto(false);
             if (result.error) {
-              setPhotoError(result.error);
+              // Plafond de photos atteint : notification rose fluo ; toute autre erreur reste sous la photo.
+              if (result.limit) notify(result.error);
+              else setPhotoError(result.error);
               return;
             }
             setAvatarUrl(result.url);

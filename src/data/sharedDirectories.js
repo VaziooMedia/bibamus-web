@@ -36,6 +36,20 @@ async function extractFunctionError(error) {
   return error?.message || "Une erreur est survenue.";
 }
 
+// Comme extractFunctionError, mais pour les envois de photos : garde aussi l'information « plafond de photos atteint » (code « daily_limit » de
+// la fonction moderate-and-upload-photo, 2026-11-26) pour que l'écran puisse l'afficher en notification (rose fluo) au lieu du texte habituel.
+async function photoUploadFailure(error) {
+  if (error?.context) {
+    try {
+      const body = await error.context.json();
+      if (body?.error) return { error: body.error, limit: body.code === "daily_limit" };
+    } catch {
+      // le corps n'était pas du JSON exploitable — on retombe sur le message générique
+    }
+  }
+  return { error: error?.message || "Une erreur est survenue." };
+}
+
 /* ---------------- AUTHENTIFICATION ---------------- */
 
 // Vrais comptes (Supabase Auth) — remplace la génération locale du code Bibax. Le profil
@@ -1505,7 +1519,7 @@ export async function uploadMyAvatarPhoto(userId, blob) {
   const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
     body: { bucket: "bibax-avatars", path, imageBase64, contentType: "image/jpeg", entityType: "profile", entityId: userId, kind: "avatar" },
   });
-  if (error) return { error: await extractFunctionError(error) };
+  if (error) return await photoUploadFailure(error);
   if (data?.error) return { error: data.error };
   return { url: data.url };
 }
@@ -1518,7 +1532,7 @@ export async function uploadClubPhoto(userId, blob) {
   const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
     body: { bucket: "biba-clubs", path, imageBase64, contentType: "image/jpeg", entityType: "club", entityId: userId, kind: "club-photo" },
   });
-  if (error) return { error: await extractFunctionError(error) };
+  if (error) return await photoUploadFailure(error);
   if (data?.error) return { error: data.error };
   return { url: data.url };
 }
@@ -1989,7 +2003,7 @@ export async function uploadStoryMedia(userId, blob) {
   const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
     body: { bucket: "stories", path, imageBase64, contentType: "image/jpeg", entityType: "story", entityId: userId, kind: "story" },
   });
-  if (error) return { error: await extractFunctionError(error) };
+  if (error) return await photoUploadFailure(error);
   if (data?.error) return { error: data.error };
   return { url: data.url };
 }

@@ -8,6 +8,7 @@
 // ============================================================
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
+import { notify } from "./MessageToast.jsx";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { PillTabs } from "./PillTabs.jsx";
@@ -183,7 +184,9 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
     const uploaded = await uploadClubPhoto(myUserId, blob);
     if (uploaded.error) {
       setUploadingPhoto(false);
-      setPhotoError(uploaded.error);
+      // Plafond de photos atteint : notification rose fluo ; toute autre erreur reste sous la photo.
+      if (uploaded.limit) notify(uploaded.error);
+      else setPhotoError(uploaded.error);
       return;
     }
     const saved = await updateClubPhoto(clubId, uploaded.url);

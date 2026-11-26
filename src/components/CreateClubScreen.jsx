@@ -4,6 +4,7 @@
 // ============================================================
 import React, { useState, useRef } from "react";
 import { COLORS } from "../constants.js";
+import { notify } from "./MessageToast.jsx";
 import { NavIcon } from "./icons.jsx";
 import { PageHeader, PageFooterNav, PrimaryButton, EntityAvatar } from "./ui.jsx";
 import { uploadClubPhoto, createClub } from "../data/sharedDirectories.js";
@@ -45,7 +46,9 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
     const result = await uploadClubPhoto(myUserId, blob);
     setUploadingPhoto(false);
     if (result.error) {
-      setError(result.error);
+      // Plafond de photos atteint : notification rose fluo ; toute autre erreur reste dans le texte du formulaire.
+      if (result.limit) notify(result.error);
+      else setError(result.error);
       return;
     }
     setPhotoUrl(result.url);
