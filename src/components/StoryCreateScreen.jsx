@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS } from "../constants.js";
+import { notify } from "./MessageToast.jsx";
 import { NavIcon } from "./icons.jsx";
 import { uploadStoryMedia, createStory, searchBibaxForTagging, searchVenues, searchDrinks, searchBrands, searchBreweries, sendNotification } from "../data/sharedDirectories.js";
 import { MobileImageEditor } from "./MobileImageEditor.jsx";
@@ -227,7 +228,9 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
       }
       const uploadResult = await uploadStoryMedia(myUserId, blob);
       if (uploadResult.error) {
-        setError(uploadResult.error);
+        // Plafond de photos atteint : notification rose fluo ; toute autre erreur reste dans le texte de l'écran.
+        if (uploadResult.limit) notify(uploadResult.error);
+        else setError(uploadResult.error);
         return;
       }
       const result = await createStory({

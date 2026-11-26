@@ -4,6 +4,7 @@
 // ============================================================
 import React, { useState, useRef, useEffect } from "react";
 import { COLORS, COUNTRIES, LANGUAGES, CITIES_BY_COUNTRY } from "../constants.js";
+import { notify } from "./MessageToast.jsx";
 import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, WhatsappIcon, XIcon, ThreadsIcon, LinkedinIcon, NavIcon } from "./icons.jsx";
 import { PageHeader, BackFooterLink, PrimaryButton } from "./ui.jsx";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
@@ -211,7 +212,9 @@ export function MyProfileScreen({ myName, onRenameMe, profile, onSaveProfile, on
             const result = await onUploadPhoto(blob);
             setUploadingPhoto(false);
             if (result.error) {
-              setPhotoError(result.error);
+              // Plafond de photos atteint : notification rose fluo ; toute autre erreur reste sous la photo.
+              if (result.limit) notify(result.error);
+              else setPhotoError(result.error);
               return;
             }
             setAvatarUrl(result.url);
