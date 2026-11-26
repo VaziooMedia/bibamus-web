@@ -281,6 +281,19 @@ export async function reportCrash({ message, stack, source, screen, bibroCode })
   }
 }
 
+// Supabase Auth refuse un mot de passe trouvé dans une liste de mots de passe volés (réglage
+// « Prevent use of leaked passwords ») avec l'erreur « weak_password » et la raison « pwned » ;
+// son texte est en anglais, on le remplace donc ici. Toute autre erreur garde le texte de Supabase.
+function authPasswordErrorText(error) {
+  if (error.code === "weak_password") {
+    const reasons = Array.isArray(error.reasons) ? error.reasons : [];
+    if (reasons.length === 0 || reasons.includes("pwned")) {
+      return "Ce mot de passe est apparu dans des fuites de données : choisis-en un autre.";
+    }
+  }
+  return error.message;
+}
+
 export async function signUp(email, password, { firstName, lastName, nickname, birthDate, country }) {
   // Les informations passent en métadonnées Supabase Auth — c'est le déclencheur côté base de
   // données (handle_new_user) qui crée ensuite la ligne de profil, jamais ce code client
@@ -298,7 +311,7 @@ export async function signUp(email, password, { firstName, lastName, nickname, b
       },
     },
   });
-  if (error) return { error: error.message };
+  if (error) return { error: authPasswordErrorText(error) };
   // Supabase renvoie un succès apparent même si l'email existe déjà (pour ne pas révéler quels
   // emails sont enregistrés) — mais le tableau "identities" reste vide dans ce cas précis,
   // contrairement à une vraie nouvelle inscription. C'est le seul signal fiable pour distinguer
@@ -1119,7 +1132,7 @@ export async function resetPassword(email) {
 
 export async function updatePassword(newPassword) {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
-  if (error) return { error: error.message };
+  if (error) return { error: authPasswordErrorText(error) };
   return { ok: true };
 }
 
