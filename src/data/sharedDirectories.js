@@ -1127,6 +1127,7 @@ export async function resetPassword(email) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
   });
+  if (error?.code === "over_email_send_rate_limit") return { error: "Trop d'envois d'emails pour le moment : réessaie dans quelques minutes." };
   if (error) return { error: error.message };
   return { ok: true };
 }
