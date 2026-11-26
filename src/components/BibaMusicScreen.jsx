@@ -349,7 +349,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     const token = await ensureFreshSpotifyToken(myUserId);
     if (!token) {
       setCreatingPlaylist(false);
-      notify("Connexion Spotify indisponible — reconnectez votre compte depuis Mes infos.");
+      notify("Connexion Spotify indisponible — reconnectez votre compte depuis Paramètres → Connecter.");
       return;
     }
     const result = await createSpotifyPlaylist(token, `Bibamus — ${event.name}`);
@@ -367,7 +367,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
     const token = await ensureFreshSpotifyToken(myUserId);
     if (!token) {
       setAddingId(null);
-      notify("Connexion Spotify indisponible — reconnectez votre compte depuis Mes infos.");
+      notify("Connexion Spotify indisponible — reconnectez votre compte depuis Paramètres → Connecter.");
       return;
     }
     const result = await addTrackToSpotifyPlaylist(token, event.spotifyPlaylistId, song.spotifyUri);
