@@ -38,7 +38,12 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
     postalAutocomplete.on("select", (result) => {
       const props = result?.properties;
       if (!props) return;
-      if (props.postcode) onPostalCodeChange(props.postcode);
+      if (props.postcode) {
+        onPostalCodeChange(props.postcode);
+        // La bibliothèque vient d'écrire le texte complet de la suggestion (« 4950 Robertville,
+        // Belgique ») dans le champ : il ne garde que le code postal.
+        postalAutocomplete.setValue?.(props.postcode);
+      }
       if (communeOf(props)) onCityChange(communeOf(props));
     });
     postalAutocompleteRef.current = postalAutocomplete;
