@@ -291,6 +291,7 @@ function authPasswordErrorText(error) {
       return "Ce mot de passe est apparu dans des fuites de données : choisis-en un autre.";
     }
   }
+  if (error.code === "same_password") return "Choisis un mot de passe différent de l'actuel.";
   return error.message;
 }
 
@@ -1142,7 +1143,8 @@ export async function getSession() {
 }
 
 export function onAuthStateChange(callback) {
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => callback(session));
+  // Le second argument (l'événement) sert à reconnaître l'arrivée par le lien de réinitialisation du mot de passe (« PASSWORD_RECOVERY »).
+  const { data } = supabase.auth.onAuthStateChange((event, session) => callback(session, event));
   return data.subscription;
 }
 

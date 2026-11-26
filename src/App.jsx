@@ -22,7 +22,7 @@ import { LoadingScreen } from "./components/LoadingScreen.jsx";
 import { HomeTour, shouldShowHomeTour } from "./components/HomeTour.jsx";
 import { BibaGoTour, shouldShowBibaGoTour } from "./components/BibaGoTour.jsx";
 import { COLORS } from "./constants.js";
-import { AuthScreen } from "./components/AuthScreen.jsx";
+import { AuthScreen, ResetPasswordScreen } from "./components/AuthScreen.jsx";
 import { PublicLinkGate } from "./components/PublicCardScreen.jsx";
 import { SessionHubScreen, RepertoireHubScreen, ComingSoonScreen } from "./components/HubScreens.jsx";
 import { BibaxDirectoryScreen } from "./components/BibaxDirectoryScreen.jsx";
@@ -280,6 +280,10 @@ export default function App() {
   // connecté. authChecked distingue "en cours de vérification" de "vérifié, pas connecté".
   const [session, setSession] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  // Arrivée par le lien de l'e-mail « Mot de passe oublié » : bibamus.app/reset-password (ou, si cette adresse n'est pas autorisée dans Supabase, la page d'accueil avec « type=recovery »
+  // dans l'adresse). Le lien ouvre une session ; on garde l'écran « Choisis ton nouveau mot de passe » devant l'app tant que le mot de passe n'est pas enregistré.
+  // L'adresse n'est pas modifiée ici : la bibliothèque Supabase doit encore y lire les jetons ; elle est nettoyée à la fin.
+  const [recovery, setRecovery] = useState(() => window.location.pathname === "/reset-password" || /[#&]type=recovery(&|$)/.test(window.location.hash));
   // Au démarrage, l'écran de chargement reste au moins le temps que l'animation de la bouteille
   // arrive à son terme, même si l'app est prête avant.
   const [splashDone, setSplashDone] = useState(false);
@@ -450,7 +454,10 @@ export default function App() {
       setSession(s);
       setAuthChecked(true);
     });
-    const subscription = onAuthStateChange((s) => setSession(s));
+    const subscription = onAuthStateChange((s, event) => {
+      setSession(s);
+      if (event === "PASSWORD_RECOVERY") setRecovery(true);
+    });
     return () => subscription?.unsubscribe();
   }, []);
 
@@ -2183,6 +2190,24 @@ export default function App() {
 
   if (!authChecked || !splashDone) {
     return <LoadingScreen />;
+  }
+
+  if (recovery) {
+    const leaveRecovery = () => {
+      setRecovery(false);
+      window.history.replaceState(null, "", "/");
+    };
+    return (
+      <ResetPasswordScreen
+        hasSession={!!session}
+        onDone={() => {
+          leaveRecovery();
+          setScreen("home");
+          notify("Mot de passe mis à jour.", "info");
+        }}
+        onBackToSignIn={leaveRecovery}
+      />
+    );
   }
 
   if (!session) {

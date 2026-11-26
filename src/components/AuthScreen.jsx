@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { COLORS, PROFILE_COUNTRIES, COUNTRY_ISO_CODES } from "../constants.js";
-import { signUp, signIn, resetPassword, getMinimumAge, detectCurrentCountryCode } from "../data/sharedDirectories.js";
+import { signUp, signIn, resetPassword, updatePassword, getMinimumAge, detectCurrentCountryCode } from "../data/sharedDirectories.js";
 import { BibamusLogo } from "./BibamusLogo.jsx";
 import { AccountCreatedScreen } from "./AccountCreatedScreen.jsx";
 
@@ -188,6 +188,82 @@ function ConfirmEmailScreen({ email, onBackToSignIn }) {
       <button onClick={onBackToSignIn} style={buttonStyle}>
         Connexion
       </button>
+    </div>
+  );
+}
+
+// Écran où l'on arrive en cliquant sur le lien de l'e-mail « Mot de passe oublié » (bibamus.app/reset-password) : le lien ouvre une session, on choisit ici le nouveau mot de passe.
+// Sans session (lien déjà utilisé ou trop ancien), on l'explique et on renvoie vers la connexion, où « Mot de passe oublié ? » envoie un nouveau lien.
+export function ResetPasswordScreen({ hasSession, onDone, onBackToSignIn }) {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 6) {
+      setError("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Les deux mots de passe ne correspondent pas.");
+      return;
+    }
+    setSaving(true);
+    const result = await updatePassword(password);
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    onDone();
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
+      <style>{AUTH_STYLES}</style>
+      <BibamusLogo width={140} style={{ margin: "0 auto 22px" }} />
+      {hasSession ? (
+        <>
+          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 22px", textAlign: "center" }}>
+            Choisis ton nouveau{" "}
+            <br />
+            mot de passe
+          </h1>
+          <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div>
+              <label style={labelStyle}>Nouveau mot de passe</label>
+              <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+            </div>
+            <div>
+              <label style={labelStyle}>Confirme ton nouveau mot de passe</label>
+              <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
+            </div>
+            {error && (
+              <p key={error} role="alert" className="biba-auth-error" style={{ color: "#D64545", fontSize: "13px", margin: 0 }}>
+                {error}
+              </p>
+            )}
+            <button type="submit" className="biba-auth-btn" disabled={saving} style={{ ...buttonStyle, opacity: saving ? 0.6 : 1 }}>
+              {saving ? "..." : "Enregistrer"}
+            </button>
+          </form>
+        </>
+      ) : (
+        <>
+          <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 8px", textAlign: "center" }}>Ce lien n'est plus valable</h1>
+          <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, lineHeight: 1.5, margin: "0 0 22px", textAlign: "center" }}>
+            Il a peut-être déjà servi, ou il est trop ancien.
+            <br />
+            Sur l'écran de connexion, touche «&nbsp;Mot de passe oublié&nbsp;?&nbsp;» pour en recevoir un nouveau.
+          </p>
+          <button type="button" className="biba-auth-btn" onClick={onBackToSignIn} style={buttonStyle}>
+            Connexion
+          </button>
+        </>
+      )}
     </div>
   );
 }
