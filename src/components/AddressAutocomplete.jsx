@@ -46,6 +46,11 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       }
       if (communeOf(props)) onCityChange(communeOf(props));
     });
+    // Texte de chaque suggestion : « 4950 Waimes » (code postal + commune), pas le village.
+    postalAutocomplete.setPostprocessHook((feature) => {
+      const props = feature?.properties || {};
+      return [props.postcode, communeOf(props)].filter(Boolean).join(" ") || props.formatted || "";
+    });
     postalAutocompleteRef.current = postalAutocomplete;
 
     const cityAutocomplete = new GeocoderAutocomplete(cityRef.current, GEOAPIFY_API_KEY, {
