@@ -268,10 +268,80 @@ export function ResetPasswordScreen({ hasSession, onDone, onBackToSignIn }) {
   );
 }
 
+// Après « Envoyer le lien » du mot de passe oublié : même parcours que la confirmation d'inscription. Le mail peut tarder ; Supabase refuse un second envoi
+// dans la minute qui suit, d'où le bouton « Renvoyer le lien » grisé avec un décompte.
+const RESET_RESEND_SECONDS = 60;
+
+function ResetSentScreen({ email, onBackToSignIn }) {
+  const [secondsLeft, setSecondsLeft] = useState(RESET_RESEND_SECONDS);
+  const [resending, setResending] = useState(false);
+  const [error, setError] = useState(null);
+  const [resent, setResent] = useState(false);
+
+  useEffect(() => {
+    if (secondsLeft <= 0) return undefined;
+    const timer = setTimeout(() => setSecondsLeft((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [secondsLeft]);
+
+  const handleResend = async () => {
+    setError(null);
+    setResent(false);
+    setResending(true);
+    const result = await resetPassword(email);
+    setResending(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    setResent(true);
+    setSecondsLeft(RESET_RESEND_SECONDS);
+  };
+
+  const waiting = secondsLeft > 0 || resending;
+
+  return (
+    <div style={{ minHeight: "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 24px", background: COLORS.paper }}>
+      <style>{AUTH_STYLES}</style>
+      <BibamusLogo width={140} style={{ margin: "0 auto 22px" }} />
+      <MailIcon />
+      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 8px", textAlign: "center" }}>Vérifie ta boîte mail</h1>
+      <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, lineHeight: 1.5, margin: "0 0 12px", textAlign: "center" }}>
+        Un email vient de partir vers
+        <br />
+        <strong style={{ color: COLORS.ink, wordBreak: "break-all" }}>{email}</strong>
+      </p>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, lineHeight: 1.5, margin: "0 0 22px", textAlign: "center" }}>
+        Il peut mettre quelques minutes à arriver.
+        <br />
+        Regarde aussi tes courriers indésirables.
+      </p>
+      {error && (
+        <p key={error} role="alert" className="biba-auth-error" style={{ color: "#D64545", fontSize: "13px", margin: "0 0 12px", textAlign: "center" }}>
+          {error}
+        </p>
+      )}
+      {resent && !error && (
+        <p role="status" style={{ color: COLORS.amber, fontSize: "13px", fontWeight: 700, margin: "0 0 12px", textAlign: "center" }}>
+          Nouveau lien envoyé.
+        </p>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <button type="button" className="biba-auth-btn" onClick={handleResend} disabled={waiting} style={{ ...buttonStyle, opacity: waiting ? 0.5 : 1, cursor: waiting ? "default" : "pointer" }}>
+          {resending ? "..." : secondsLeft > 0 ? `Renvoyer le lien dans ${secondsLeft} s` : "Renvoyer le lien"}
+        </button>
+        <button type="button" className="biba-auth-btn" onClick={onBackToSignIn} style={{ ...secondaryButtonStyle, width: "100%" }}>
+          Connexion
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Un seul écran, trois modes — inscription, connexion, mot de passe oublié. Bloque l'accès au
 // reste de l'app tant qu'aucune session n'est active (compte réel désormais requis).
 export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
-  const [mode, setMode] = useState("signin"); // "signin" | "signup" | "forgot"
+  const [mode, setMode] = useState("signin"); // "signin" | "signup" | "forgot" | "resetSent" | "confirmEmail"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -300,7 +370,6 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
   }, [mode]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
 
   // Le contrôle des champs d'une étape de l'inscription : le message à afficher, ou null si tout est bon.
   const signupStepError = (n) => {
@@ -345,14 +414,13 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    setMessage(null);
 
     if (mode === "forgot") {
       setLoading(true);
       const result = await resetPassword(email);
       setLoading(false);
       if (result.error) setError(result.error);
-      else setMessage("Un email t'a été envoyé pour réinitialiser ton mot de passe.");
+      else setMode("resetSent");
       return;
     }
 
@@ -443,6 +511,10 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
     // vraies apps App Store / Google Play disponibles, la confirmation par email restera mais
     // n'aura alors plus besoin de ces instructions de retour manuel vers l'écran d'accueil.
     return <ConfirmEmailScreen email={email} onBackToSignIn={() => setMode("signin")} />;
+  }
+
+  if (mode === "resetSent") {
+    return <ResetSentScreen email={email} onBackToSignIn={() => setMode("signin")} />;
   }
 
   const isSignup = mode === "signup";
@@ -538,7 +610,6 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
             {error}
           </p>
         )}
-        {message && <p style={{ color: COLORS.sage, fontSize: "13px", margin: 0 }}>{message}</p>}
 
         <div style={{ display: "flex", gap: "10px" }}>
           {isSignup && step > 1 && (
