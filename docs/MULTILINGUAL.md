@@ -1,7 +1,7 @@
 # MULTILINGUE / I18N — Documentation as-built
 
 > Documente l'état réel du code tel qu'implémenté, pas un historique de conversation. À mettre à jour quand l'implémentation change.
-> Dernière mise à jour : 2026-11-25 (**Shops : alias vérifiés de bout en bout sur la vraie base** (Mehdi, 2026-11-25 : saisie dans Gestion → `search_text` → recherche de l'app ; voir `DATABASE.md`)) ; 2026-11-25 (**L'ancien `src/beerCiderStyles.js`, jamais importé, est supprimé** (Mehdi, 2026-11-25 : « Oui » à la revue des fichiers inutilisés ; la liste réelle est `src/data/beerCiderStyles.js`)) ; 2026-11-25 (**Où l'app cherche les autres noms d'une fiche** : l'annuaire Shops et la recherche dans une carte les trouvent désormais, voir « Lecture et recherche ») ; 2026-10-09. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
+> Dernière mise à jour : 2026-11-26 (**L'écran vestige `MyProfileScreen` est retiré du code** (Mehdi, 2026-11-26 : « 2- Oui » ; sa liste « Langue préférée » disparaît avec lui ; voir `PROFILE.md`)) ; 2026-11-25 (**Shops : alias vérifiés de bout en bout sur la vraie base** (Mehdi, 2026-11-25 : saisie dans Gestion → `search_text` → recherche de l'app ; voir `DATABASE.md`)) ; 2026-11-25 (**L'ancien `src/beerCiderStyles.js`, jamais importé, est supprimé** (Mehdi, 2026-11-25 : « Oui » à la revue des fichiers inutilisés ; la liste réelle est `src/data/beerCiderStyles.js`)) ; 2026-11-25 (**Où l'app cherche les autres noms d'une fiche** : l'annuaire Shops et la recherche dans une carte les trouvent désormais, voir « Lecture et recherche ») ; 2026-10-09. Vérifié contre le code de l'app (`src/`) et les scripts SQL livrés. La mention **(base)** signale ce qui ne se lit que dans Supabase : aucun script livré ne le contient, donc non revérifié.
 >
 > **Correction importante par rapport à la version du 7 octobre.** L'ancienne version décrivait un miroir `taxonomy_terms` / `taxonomy_terms_translations` et quatre tables `*_translations` (`product_`, `brand_`, `producer_`, `establishment_`). **Ces six tables n'existent nulle part dans le code ni dans les scripts livrés** (zéro occurrence dans `src/`, dans les `.sql` et dans les fonctions Edge). Le mécanisme réellement utilisé est décrit ci-dessous. Si ces tables existent bien dans Supabase, elles ne sont lues par aucune partie du code livré.
 
@@ -49,7 +49,7 @@ Lecture et recherche :
 ### 3. Langue de l'utilisateur : rien de branché
 
 - Aucune lecture de la langue du navigateur (`navigator.language` n'apparaît nulle part).
-- **Trois noms de colonne coexistent** pour la langue d'un profil : `language` (lu par l'écran orphelin `MyProfileScreen`, mais jamais chargé : `loadMyProfile` ne lit aucune colonne de langue, donc la valeur retombe toujours sur `fr`), `app_language` (lu et écrit par le panneau utilisateur de la plateforme de gestion) et `main_language` (créée par `bibamus-sql-fix-main-language.sql`, parce que la liste des utilisateurs de la plateforme de gestion la réclamait). Laquelle existe réellement en base : **(base)**.
+- **Trois noms de colonne coexistent** pour la langue d'un profil : `language` (lue autrefois par l'écran orphelin `MyProfileScreen`, retiré du code le 2026-11-26 ; `loadMyProfile` ne lit aucune colonne de langue), `app_language` (lu et écrit par le panneau utilisateur de la plateforme de gestion) et `main_language` (créée par `bibamus-sql-fix-main-language.sql`, parce que la liste des utilisateurs de la plateforme de gestion la réclamait). Laquelle existe réellement en base : **(base)**.
 - **Deux listes de langues non alignées**, de l'aveu du code : 4 valeurs pour `app_language` (`fr`, `nl`, `en`, `de`) et 9 pour `translations[].lang`.
 - La plateforme de gestion peut déjà attribuer une `app_language` à un utilisateur ; l'app n'en tient pas compte.
 - Langues codées en dur : `fr` pour l'autocomplétion d'adresse Geoapify et pour le géocodage inverse BigDataCloud (voir `GEOLOCATION.md`).
@@ -57,7 +57,7 @@ Lecture et recherche :
 
 ## Sélecteurs de langue
 
-Deux contrôles existent et sont **désactivés** : la liste « Langue préférée » de l'écran orphelin `MyProfileScreen` (une seule option, « D'autres langues arriveront plus tard ») et la ligne « Langue de l'app » de `PreferencesScreen` (valeur Français, grisée). Un écran de choix existe dans `App.jsx` (option `fr` seule) mais aucun contrôle actif n'y mène. Il n'y a **aucun sélecteur fonctionnel**.
+Un contrôle existe et est **désactivé** : la ligne « Langue de l'app » de `PreferencesScreen` (valeur Français, grisée) ; la liste « Langue préférée » de l'ancien écran orphelin `MyProfileScreen` (une seule option) a disparu avec cet écran, retiré du code le 2026-11-26. Un écran de choix existe dans `App.jsx` (option `fr` seule) mais aucun contrôle actif n'y mène. Il n'y a **aucun sélecteur fonctionnel**.
 
 Les préférences d'unités (distance, température, volume, poids) sont enregistrées mais non appliquées ; seule l'unité d'énergie (kcal / Cal) l'est (voir `PROFILE.md`).
 
