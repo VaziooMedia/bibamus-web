@@ -4,6 +4,11 @@ import { COLORS } from "../constants.js";
 
 const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY || "";
 
+// Geoapify met le village dans « city » et la commune dans « municipality » (code postal 4950 :
+// city = Robertville, municipality = Waimes) ; il ne garde qu'un seul village par code postal.
+// « Commune » reçoit la commune ; si Geoapify n'en renvoie pas, on garde la ville, comme avant.
+const communeOf = (props) => props.municipality || props.city;
+
 // Deux champs (code postal + ville) qui se remplissent l'un l'autre automatiquement à la
 // sélection — évite les doublons linguistiques (Waimes/Weismes) puisque Geoapify renvoie le
 // nom dans la langue demandée (lang: "fr"), pas les deux variantes à la fois.
@@ -34,7 +39,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       const props = result?.properties;
       if (!props) return;
       if (props.postcode) onPostalCodeChange(props.postcode);
-      if (props.city) onCityChange(props.city);
+      if (communeOf(props)) onCityChange(communeOf(props));
     });
     postalAutocompleteRef.current = postalAutocomplete;
 
@@ -47,7 +52,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
     cityAutocomplete.on("select", (result) => {
       const props = result?.properties;
       if (!props) return;
-      if (props.city) onCityChange(props.city);
+      if (communeOf(props)) onCityChange(communeOf(props));
       if (props.postcode) onPostalCodeChange(props.postcode);
     });
     cityAutocompleteRef.current = cityAutocomplete;
