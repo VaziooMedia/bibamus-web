@@ -6,6 +6,11 @@
 <meta name="color-scheme" content="dark">
 <meta name="supported-color-schemes" content="dark">
 <title>Confirme ton adresse e-mail Bibamus</title>
+<style>
+  :root { color-scheme: dark; supported-color-schemes: dark; }
+  /* Outlook (web et appli) : garde la barre verte fluo en mode sombre */
+  [data-ogsb] .biba-vert { background-color: #39FF66 !important; }
+</style>
 </head>
 <body style="margin:0;padding:0;background-color:#08131F;-webkit-text-size-adjust:100%;">
 <!-- Texte d'aperçu affiché par la messagerie à côté du sujet -->
@@ -23,15 +28,19 @@
           <td bgcolor="#16273D" style="background-color:#16273D;border-radius:16px;padding:36px 24px;font-family:Urbanist,'Segoe UI',Helvetica,Arial,sans-serif;">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px auto;">
               <tr>
-                <td bgcolor="#39FF66" style="background-color:#39FF66;border-radius:999px;padding:7px 16px;font-family:Urbanist,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1;font-weight:800;letter-spacing:1.5px;color:#08131F;">BIENVENUE</td>
+                <td align="center" style="font-size:0;line-height:0;">
+                  <img src="https://bibamus.app/email/pastille-bienvenue.png" width="118" height="26" alt="BIENVENUE" style="display:block;width:118px;height:26px;border:0;outline:none;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:26px;font-weight:bold;letter-spacing:1.5px;color:#39FF66;text-align:center;">
+                </td>
               </tr>
             </table>
             <h1 style="margin:0 0 14px 0;font-family:Urbanist,'Segoe UI',Helvetica,Arial,sans-serif;font-size:20px;line-height:1.25;font-weight:800;color:#F2F2E8;text-align:center;">Bienvenue parmi nous !</h1>
             <p style="margin:0 0 28px 0;font-size:16px;line-height:1.55;color:#F2F2E8;text-align:center;">Confirme ton adresse e-mail pour activer ton compte Bibamus.</p>
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
               <tr>
-                <td align="center" bgcolor="#39FF66" style="background-color:#39FF66;border-radius:12px;">
-                  <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:15px 34px;font-family:Urbanist,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:800;line-height:1;color:#08131F;text-decoration:none;border-radius:12px;">Confirmer mon e-mail</a>
+                <td align="center" style="font-size:0;line-height:0;">
+                  <a href="{{ .ConfirmationURL }}" target="_blank" style="display:block;text-decoration:none;color:#39FF66;">
+                    <img src="https://bibamus.app/email/bouton-confirmer.png" width="234" height="46" alt="Confirmer mon e-mail" style="display:block;width:234px;height:46px;border:0;outline:none;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:46px;font-weight:bold;color:#39FF66;text-align:center;">
+                  </a>
                 </td>
               </tr>
             </table>
@@ -40,7 +49,14 @@
         <tr>
           <td align="center" style="padding:22px 12px 0 12px;font-family:Urbanist,'Segoe UI',Helvetica,Arial,sans-serif;">
             <p style="margin:0 0 8px 0;font-size:12.5px;line-height:1.55;color:#8792A6;">Tu n'as pas créé de compte Bibamus ?<br>Ignore simplement ce message :<br>sans confirmation, aucun compte n'est activé.</p>
-            <p style="margin:0;font-size:12px;line-height:1.5;color:#8792A6;">&reg; 2027 Bibamus App - Produit opéré par VaziooMedia</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0 0 0;">
+              <tr>
+                <td class="biba-vert" height="1" bgcolor="#39FF66" style="background-color:#39FF66;background-image:linear-gradient(#39FF66,#39FF66);height:1px;font-size:1px;line-height:1px;mso-line-height-rule:exactly;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td align="center" style="padding:16px 0 0 0;font-family:Urbanist,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#8792A6;">&reg; 2027 Bibamus App - Produit opéré par VaziooMedia</td>
+              </tr>
+            </table>
           </td>
         </tr>
       </table>
