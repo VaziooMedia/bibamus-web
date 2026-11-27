@@ -986,7 +986,7 @@ function WaterAlertSoloSettingsScreen({ myUserId, settings, checkinCount, onSave
     if (token) {
       await upsertPushSubscription(token, "web");
     } else if (Notification?.permission === "denied") {
-      notify("Notifications refusées — le rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.", "error");
+      notify("Notifications refusées.\nLe rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.", "error");
     }
     const next = {
       enabled: true,
@@ -1484,7 +1484,7 @@ function SoloJetonsBlock({ balance, spent, busy, error, onAdjust, onBuy }) {
           </div>
         </div>
       )}
-      {error && <p style={{ fontSize: "12px", color: "#FF3B3B", margin: "10px 0 0" }}>{error}</p>}
+      {error && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: "#FF3B3B", margin: "10px 0 0" }}>{error}</p>}
     </div>
   );
 }
@@ -1723,7 +1723,7 @@ export function BibaSoloScreen({ myUserId, myBibroCode, onRateDrink, onUnrateDri
     setJetonError("");
     const result = await addJetonMovement(myUserId, kind, jetons, amountEur);
     if (result.error) {
-      setJetonError("Impossible d'enregistrer les jetons pour le moment. Réessaie dans un instant.");
+      setJetonError("Impossible d'enregistrer les jetons pour le moment.\nRéessaie dans un instant.");
       setJetonBusy(false);
       return false;
     }

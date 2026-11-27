@@ -358,7 +358,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       deleteLock.current = false;
       setDeleting(false);
       setCheckDialog(null);
-      setDeleteError("La publication n'a pas pu être supprimée. Réessaie dans un instant.");
+      setDeleteError("La publication n'a pas pu être supprimée.\nRéessaie dans un instant.");
       return;
     }
     setCheckDialog(null);
@@ -377,7 +377,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
     if (preview.error) {
       deleteLock.current = false;
       setDeleting(false);
-      setDeleteError("Le check n'a pas pu être supprimé. Réessaie dans un instant.");
+      setDeleteError("Le check n'a pas pu être supprimé.\nRéessaie dans un instant.");
       return;
     }
     if (!preview.exists) {
@@ -400,7 +400,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
       deleteLock.current = false;
       setDeleting(false);
       setCheckDialog(null);
-      setDeleteError("Le check n'a pas pu être supprimé. Réessaie dans un instant.");
+      setDeleteError("Le check n'a pas pu être supprimé.\nRéessaie dans un instant.");
       return;
     }
     setCheckDialog(null);
@@ -777,7 +777,7 @@ export const PulseCard = React.forwardRef(function PulseCard({ entry, directorie
           </button>
         </div>
 
-        {deleteError && <p style={{ color: COLORS.pinkFluo, fontSize: "12px", margin: "8px 0 0", paddingRight: "30px" }}>{deleteError}</p>}
+        {deleteError && <p style={{ whiteSpace: "pre-line", color: COLORS.pinkFluo, fontSize: "12px", margin: "8px 0 0", paddingRight: "30px" }}>{deleteError}</p>}
 
         {/* Résumé façon Instagram — plus facile à toucher qu'un petit nombre isolé, et ouvre la
         liste complète des personnes concernées. */}

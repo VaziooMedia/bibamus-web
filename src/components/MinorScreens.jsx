@@ -142,7 +142,7 @@ export function EventSettingsScreen({ event, onSave, onBack, venues = [], onReso
     const result = await setSalonTokEnabled(event.salonCode, value);
     if (result?.error) {
       setTokEnabled(!value);
-      notify("Le réglage n'a pas pu être enregistré. Réessaie.");
+      notify("Le réglage n'a pas pu être enregistré.\nRéessaie.");
     }
   };
 
@@ -389,7 +389,7 @@ export function WaterAlertSettingsScreen({ event, onSave, onBack }) {
     if (token) {
       await upsertPushSubscription(token, "web");
     } else if (Notification?.permission === "denied") {
-      notify("Notifications refusées — le rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.", "error");
+      notify("Notifications refusées.\nLe rappel s'affichera quand même à l'écran tant que l'app est ouverte, mais pas en notification.", "error");
     }
     onSave({
       enabled: true,

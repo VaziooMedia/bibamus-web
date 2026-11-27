@@ -50,7 +50,7 @@ export async function redirectToSpotifyAuth(returnScreen = "connectSpotify", ret
 // jeton d'accès, puis enregistre tout sur le profil du compte connecté.
 export async function completeSpotifyAuth(code, userId) {
   const verifier = localStorage.getItem("bibamus-spotify-verifier");
-  if (!verifier) return { error: "Session de connexion expirée — réessayez." };
+  if (!verifier) return { error: "Session de connexion expirée.\nRéessaie." };
 
   try {
     const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {
@@ -66,7 +66,7 @@ export async function completeSpotifyAuth(code, userId) {
     });
     localStorage.removeItem("bibamus-spotify-verifier");
 
-    if (!tokenResponse.ok) return { error: "La connexion Spotify a échoué — réessayez." };
+    if (!tokenResponse.ok) return { error: "La connexion Spotify a échoué.\nRéessaie." };
     const tokenData = await tokenResponse.json();
 
     const profileResponse = await fetch("https://api.spotify.com/v1/me", {
@@ -88,7 +88,7 @@ export async function completeSpotifyAuth(code, userId) {
     if (error) return { error: error.message };
     return { ok: true, displayName: spotifyProfile?.display_name };
   } catch (e) {
-    return { error: "La connexion Spotify a échoué — réessayez." };
+    return { error: "La connexion Spotify a échoué.\nRéessaie." };
   }
 }
 
@@ -217,7 +217,7 @@ export async function createSpotifyPlaylist(accessToken, playlistName) {
 // /items — l'ancien /tracks a été renommé lors de la même migration de février 2026 qui a
 // aussi retiré /users/{id}/playlists pour la création.
 export async function addTrackToSpotifyPlaylist(accessToken, playlistId, spotifyUri) {
-  if (!spotifyUri) return { error: "Ce morceau n'a pas d'identifiant Spotify — impossible à ajouter." };
+  if (!spotifyUri) return { error: "Ce morceau n'a pas d'identifiant Spotify.\nImpossible de l'ajouter." };
   try {
     const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/items`, {
       method: "POST",
@@ -231,7 +231,7 @@ export async function addTrackToSpotifyPlaylist(accessToken, playlistId, spotify
     }
     return { ok: true };
   } catch (e) {
-    return { error: "L'ajout à la playlist a échoué — réessayez." };
+    return { error: "L'ajout à la playlist a échoué.\nRéessaie." };
   }
 }
 

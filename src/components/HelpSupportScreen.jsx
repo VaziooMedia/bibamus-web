@@ -112,7 +112,7 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
 
   const handleSubmit = async () => {
     if (!message.trim()) {
-      setError("Merci de décrire votre message.");
+      setError("Merci de décrire ton message.");
       return;
     }
     setSending(true);

@@ -142,7 +142,7 @@ export function NotificationsScreen({ profile, onSaveProfile, onBack, goToEmailS
                   // Un compte qui avait coupé l'ancien interrupteur général le retrouve actif.
                   if (p.notifEnabled === false) update({ notifEnabled: true });
                 } else if (Notification?.permission === "denied") {
-                  notify("Notifications refusées — active-les dans les réglages de ton navigateur ou de ton téléphone pour Bibamus.", "error");
+                  notify("Notifications refusées.\nActive-les dans les réglages de ton navigateur ou de ton téléphone pour Bibamus.", "error");
                 }
               } else {
                 await deleteMyPushSubscriptions();

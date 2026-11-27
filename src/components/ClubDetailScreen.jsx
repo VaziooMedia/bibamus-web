@@ -151,7 +151,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
     if (alone) {
       const pending = list.filter((m) => m.status === "pending" && m.userId !== myUserId).length;
       const extra = pending > 0 ? " et les demandes d'entrée en attente" : "";
-      if (!(await askConfirm({ title: "Vous êtes la seule personne de ce club", message: `Le quitter le supprimera définitivement, avec ses publications${extra}.`, confirmLabel: "Continuer", danger: true }))) return;
+      if (!(await askConfirm({ title: "Tu es la seule personne de ce club", message: `Le quitter le supprimera définitivement, avec ses publications${extra}.`, confirmLabel: "Continuer", danger: true }))) return;
     }
     const result = await leaveClub(clubId);
     if (result.error) {

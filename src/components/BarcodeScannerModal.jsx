@@ -284,7 +284,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink, onAddD
       });
       if (run !== captureRunRef.current) return;
       if (!res.ok) {
-        if (res.code !== "cancelled") setCaptureError("Impossible de capturer l'image. Réessayez.");
+        if (res.code !== "cancelled") setCaptureError("Impossible de capturer l'image.\nRéessaie.");
         return;
       }
       setLabelFrame(new File([res.blob], "etiquette.jpg", { type: "image/jpeg" }));
@@ -407,7 +407,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink, onAddD
             <AiIcon size={22} tone="dark" />
             {capturing ? "Capture…" : "Lire l'étiquette"}
           </button>
-          {captureError && <p style={{ color: COLORS.inkSoft, fontSize: "12.5px", margin: "8px 0 0", textAlign: "center" }}>{captureError}</p>}
+          {captureError && <p style={{ whiteSpace: "pre-line", color: COLORS.inkSoft, fontSize: "12.5px", margin: "8px 0 0", textAlign: "center" }}>{captureError}</p>}
           {BARCODE_SCAN_ENABLED && (
             <button
               onClick={() => setPhase("manualEntry")}

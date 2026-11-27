@@ -105,7 +105,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
     try {
       await onCreate(name.trim(), currency, date, parseFloat(jetonUnitValue) || 0, selectedVenueId, eventMode, participants, selectedClubId, isSalon ? invitedBibros : [], isSalon && publishToPulse);
     } catch (e) {
-      setError("Un problème est survenu. Réessayez.");
+      setError("Un problème est survenu.\nRéessaie.");
       setLoading(false);
     }
   };
@@ -360,7 +360,7 @@ export function NewEventScreen({ mode: screenKind = "solo", onCreate, onCancel, 
         </div>
       )}
 
-      {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginTop: "12px" }}>{error}</p>}
+      {error && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.wine, marginTop: "12px" }}>{error}</p>}
 
       {isSalon && (
         <>

@@ -164,7 +164,7 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
         normalizeForDuplicateCheck(v.streetNumber || "") === normalizeForDuplicateCheck(trimmedStreetNumber)
     );
     if (duplicate) {
-      notify(`Alerte :\n"${duplicate.name}, ${duplicate.streetName}, ${duplicate.streetNumber} - ${duplicate.postalCode} ${duplicate.city}" existe déjà.\nVous ne pouvez pas le rajouter.`);
+      notify(`Alerte :\n"${duplicate.name}, ${duplicate.streetName}, ${duplicate.streetNumber}, ${duplicate.postalCode} ${duplicate.city}" existe déjà.\nTu ne peux pas le rajouter.`);
       return;
     }
     if (!sameAddressNotSame) {
@@ -243,7 +243,7 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
     });
     if (!created) {
       setSaving(false);
-      notify("La création du lieu a échoué — merci de réessayer.");
+      notify("La création du lieu a échoué.\nRéessaie.");
       return;
     }
     if (lat != null && lng != null) {

@@ -1323,7 +1323,7 @@ export default function App() {
     if (created) {
       emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "venue", entityId: created.id });
     } else {
-      notify("La création de l'établissement a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
+      notify("La création de l'établissement a échoué.\nRéessaie ou contacte le support si le problème persiste.");
       return;
     }
     setScreen("venueDirectory");
@@ -1349,7 +1349,7 @@ export default function App() {
     if (created) {
       emitEvent(EVENT_TYPES.PRODUCT_ADDED, { actorBibroCode: profile.myBibroCode, entityType: "drink", entityId: created.id });
     } else {
-      notify("La création du produit a échoué — merci de réessayer ou de contacter le support si le problème persiste.");
+      notify("La création du produit a échoué.\nRéessaie ou contacte le support si le problème persiste.");
       return;
     }
     setScreen("drinksDirectory");
@@ -1987,7 +1987,7 @@ export default function App() {
       if (ratingResult && ratingResult.error) {
         ratingFailed = true;
         if (onRatingFailed) onRatingFailed();
-        notify("Ton check-in est enregistré, mais ton avis n'a pas pu l'être. Tu pourras le donner lors d'un prochain check.");
+        notify("Ton check-in est enregistré, mais ton avis n'a pas pu l'être.\nTu pourras le donner lors d'un prochain check.");
       }
     }
     // Le produit ajouté compte dans les statistiques, comme un check de ce produit dans ce lieu.

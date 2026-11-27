@@ -97,7 +97,7 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub: onOpenClubPr
       if (seq !== searchSeq.current) return; // une recherche plus récente a pris le relais
       setSearchBusy(false);
       if (result.error) {
-        setSearchError("La recherche a échoué. Réessayez dans un instant.");
+        setSearchError("La recherche a échoué.\nRéessaie dans un instant.");
         setSearchResults(null);
         return;
       }
@@ -171,7 +171,7 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub: onOpenClubPr
           autoCorrect="off"
           style={inputStyle}
         />
-        {searchError && <p style={{ fontSize: "12px", color: "#FF3B3B", margin: "10px 0 0 0" }}>{searchError}</p>}
+        {searchError && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: "#FF3B3B", margin: "10px 0 0 0" }}>{searchError}</p>}
         {searchBusy && <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "10px 0 0 0" }}>Recherche...</p>}
         {!searchBusy && searchResults && searchResults.length === 0 && (
           <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "10px 0 0 0" }}>Aucun club public ne correspond.</p>

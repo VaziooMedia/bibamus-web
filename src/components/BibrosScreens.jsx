@@ -112,7 +112,7 @@ function useBibaxRequests(onBibaxAdded) {
       return;
     }
     if (result.alreadyAccepted) {
-      notify("Trop tard — cette demande vient d'être confirmée par l'autre personne. Vous êtes déjà Bibax.", "error");
+      notify("Trop tard, cette demande vient d'être confirmée par l'autre personne.\nTu es déjà Bibax avec elle.", "error");
       onBibaxAdded();
     }
     refresh();
@@ -1695,11 +1695,11 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
                 const result = await onAdd(code.trim(), foundName, "", foundSocials);
                 if (result?.error) return;
                 if (result?.status === "pending") {
-                  notify(`Demande envoyée à ${foundName} — en attente de sa confirmation.`, "info");
+                  notify(`Demande envoyée à ${foundName}.\nEn attente de sa confirmation.`, "info");
                 } else if (result?.status === "already_bibax") {
-                  notify(`Vous êtes déjà Bibax avec ${foundName}.`, "info");
+                  notify(`Tu es déjà Bibax avec ${foundName}.`, "info");
                 } else if (result?.status === "accepted") {
-                  notify(`${foundName} avait déjà envoyé une demande — vous êtes maintenant Bibax !`, "info");
+                  notify(`${foundName} avait déjà envoyé une demande.\nTu es maintenant Bibax avec cette personne !`, "info");
                 }
                 onCancel();
               }}
