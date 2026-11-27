@@ -108,7 +108,7 @@ export function PotCard({ event, updateEvent, myName }) {
       </div>
       {balance < potTotal * 0.15 && potTotal > 0 && (
         <div style={{ fontSize: "12px", color: balance <= 0 ? "#e08585" : "#ef007c", fontWeight: 700, marginTop: "8px" }}>
-          {balance <= 0 ? "⚠️ La cagnotte est à sec — pensez à remettre au pot !" : "Cagnotte presque vide"}
+          {balance <= 0 ? "⚠️ La cagnotte est à sec. Pense à remettre au pot !" : "Cagnotte presque vide"}
         </div>
       )}
 
@@ -563,7 +563,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
             fontWeight: 600,
             cursor: "pointer",
           }}
-          title="S'absenter un moment sans quitter le BibaRoom — bloque ton nom dans les tournées le temps de ta pause"
+          title="S'absenter un moment sans quitter le BibaRoom : bloque ton nom dans les tournées le temps de ta pause"
         >
           <NavIcon name={myEntry && myEntry.paused ? "play" : "pause"} size={13} color={COLORS.amber} />
           {myEntry && myEntry.paused ? "Je reviens" : "Ma pause"}
@@ -578,7 +578,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
             }
           }}
           disabled={isAlone}
-          title={isAlone ? "Tu es seul·e ici — utilise « Fin » pour clôturer le salon" : undefined}
+          title={isAlone ? "Tu es seul·e ici : utilise « Fin » pour clôturer le salon" : undefined}
           style={{
             display: "flex",
             alignItems: "center",
@@ -601,7 +601,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
         <button
           onClick={() => isAlone && (confirmClose ? onCloseEvent?.() : setConfirmClose(true))}
           disabled={!isAlone}
-          title={!isAlone ? "D'autres personnes sont encore dans ce salon — quitte plutôt avec « Quitter »" : undefined}
+          title={!isAlone ? "D'autres personnes sont encore dans ce salon : quitte plutôt avec « Quitter »" : undefined}
           style={{
             display: "flex",
             alignItems: "center",
@@ -1201,7 +1201,7 @@ export function WaterAlertModal({ onClose }) {
           <span style={{ color: COLORS.ink }}>Water</span><span style={{ color: COLORS.amber }}>Alert</span>
         </h2>
         <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
-          Pensez à boire un verre d'eau entre deux verres d'alcool.
+          Pense à boire un verre d'eau entre deux verres d'alcool.
         </p>
         <button
           onClick={onClose}

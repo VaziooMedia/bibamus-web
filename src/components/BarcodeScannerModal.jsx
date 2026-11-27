@@ -427,7 +427,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink, onAddD
 
       {phase === "manualEntry" && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 30px" }}>
-          <p style={{ color: COLORS.ink, fontSize: "14px", marginBottom: "14px", textAlign: "center" }}>Tapez les chiffres sous le code-barres</p>
+          <p style={{ color: COLORS.ink, fontSize: "14px", marginBottom: "14px", textAlign: "center" }}>Tape les chiffres sous le code-barres</p>
           <input
             value={manualCode}
             onChange={(e) => setManualCode(e.target.value.replace(/[^0-9]/g, ""))}
@@ -449,7 +449,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink, onAddD
       {phase === "error" && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 30px", textAlign: "center" }}>
           <p style={{ color: COLORS.ink, fontSize: "14px", marginBottom: "8px" }}>Impossible d'accéder à la caméra.</p>
-          <p style={{ color: COLORS.inkSoft, fontSize: "13px" }}>Vérifiez que vous avez bien autorisé l'accès à la caméra pour ce site.</p>
+          <p style={{ color: COLORS.inkSoft, fontSize: "13px" }}>Vérifie que tu as bien autorisé l'accès à la caméra pour ce site.</p>
         </div>
       )}
 
@@ -457,7 +457,7 @@ export function BarcodeScannerModal({ myBibroCode, onClose, onFoundDrink, onAddD
         <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 20px 20px 20px", overflow: "hidden" }}>
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
             <p style={{ fontSize: "13px", color: COLORS.ink, margin: 0 }}>
-              Code <strong>{scannedCode}</strong> pas encore connu de <BibAtlas />. Quelle boisson venez-vous de scanner ?
+              Code <strong>{scannedCode}</strong> pas encore connu de <BibAtlas />. Quelle boisson viens-tu de scanner ?
             </p>
           </div>
           <button

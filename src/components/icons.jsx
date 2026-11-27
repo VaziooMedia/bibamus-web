@@ -1287,7 +1287,7 @@ export function TiktokIcon({ size = 22 }) {
   );
 }
 
-export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé — jamais visible par tes Bibax" }) {
+export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé : jamais visible par tes Bibax" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" role="img" aria-label={title}>
       <title>{title}</title>

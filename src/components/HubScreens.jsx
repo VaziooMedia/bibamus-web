@@ -73,7 +73,7 @@ export function SessionHubScreen({ onBack, goToNewSalon, goToJoinSalon, goToBibA
               <span style={{ color: COLORS.amber }}>Solo</span>
             </span>
           </div>
-          <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 12px 0" }}>Comptez vos verres et vos calories, sans salon ni tracas</p>
+          <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 12px 0" }}>Compte tes verres et tes calories, sans salon ni tracas</p>
           <button onClick={goToBibaSolo} style={{ width: "100%", background: COLORS.amber, border: "none", borderRadius: "8px", padding: "9px 12px", fontWeight: 700, fontSize: "13.5px", color: COLORS.paper, cursor: "pointer" }}>
             Ouvrir
           </button>

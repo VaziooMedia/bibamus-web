@@ -123,9 +123,9 @@ export function ConnectScreen({ onBack, goToSpotify }) {
         >
           <NavIcon name="lock" size={17} color={COLORS.amber} />
         </span>
-        <p style={{ fontSize: "13.5px", fontWeight: 700, margin: 0 }}>Vos données sont en sécurité</p>
+        <p style={{ fontSize: "13.5px", fontWeight: 700, margin: 0 }}>Tes données sont en sécurité</p>
         <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px", marginBottom: 0 }}>
-          Bibamus ne publie rien sans votre autorisation. Vous pouvez déconnecter un service à tout moment.
+          Bibamus ne publie rien sans ton autorisation. Tu peux déconnecter un service à tout moment.
         </p>
       </div>
 

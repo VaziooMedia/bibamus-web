@@ -418,8 +418,8 @@ export function SubmitVenueWizardScreen({ initialName = "", onDone, onCancel, on
           {!geocoding && <NavIcon name="map-pin" size={17} color={COLORS.amber} />}
           {geocoding ? "Géocodage..." : "Géocoder automatiquement"}
         </button>
-        {geocodeNotFound && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "10px" }}>Adresse introuvable — vérifiez les pages précédentes, ou placez le repère manuellement ci-dessous.</p>}
-        {!geocodeNotFound && geocodeStatus && <p style={{ fontSize: "12px", color: COLORS.amber, marginBottom: "10px" }}>✓ Position géocodée — vérifiez ou ajustez ci-dessous si besoin.</p>}
+        {geocodeNotFound && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.wine, marginBottom: "10px" }}>{"Adresse introuvable.\nVérifie les pages précédentes, ou place le repère manuellement ci-dessous."}</p>}
+        {!geocodeNotFound && geocodeStatus && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.amber, marginBottom: "10px" }}>{"✓ Position géocodée.\nVérifie ou ajuste ci-dessous si besoin."}</p>}
 
         <label style={labelStyle}>Vérification sur la carte</label>
         <VenuePositionPicker lat={lat} lng={lng} onChange={handlePositionChange} verified={["verified", "exact", "manual"].includes(geocodeStatus)} />

@@ -233,7 +233,7 @@ export function EventHistoryDetailScreen({ event, myBibroCode, displayTotal, rou
                       <p style={{ fontSize: "12px", color: COLORS.ink, fontStyle: "italic", marginTop: "6px" }}>"{r.offeredBy.label}"</p>
                     )}
                     {r.offeredBy && (
-                      <p style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "6px" }}>Montant informatif — ne compte dans aucun total d'argent dépensé.</p>
+                      <p style={{ fontSize: "11px", color: COLORS.inkSoft, marginTop: "6px" }}>Montant informatif : ne compte dans aucun total d'argent dépensé.</p>
                     )}
                   </div>
                 )}

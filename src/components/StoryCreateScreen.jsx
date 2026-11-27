@@ -563,7 +563,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {tagPositions.caption && (
                 <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: 0 }}>
-                  Un doigt pour déplacer la légende sur l'image, deux doigts pour la redimensionner et la faire pivoter — tapez dessus pour en régler la couleur.
+                  Un doigt pour déplacer la légende sur l'image, deux doigts pour la redimensionner et la faire pivoter. Tape dessus pour en régler la couleur.
                 </p>
               )}
 

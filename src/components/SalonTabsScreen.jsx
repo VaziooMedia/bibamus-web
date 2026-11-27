@@ -119,12 +119,12 @@ export function SalonPulse({ feed }) {
                 <strong style={{ color: COLORS.amber }}>Tournée {item.roundNumber}</strong>
                 {item.offeredBy
                   ? item.offeredBy.type === "venue"
-                    ? " — offerte par la maison"
-                    : " — offerte par un tiers"
+                    ? " (offerte par la maison)"
+                    : " (offerte par un tiers)"
                   : item.paidByPot
-                  ? " — payée par la cagnotte"
+                  ? " (payée par la cagnotte)"
                   : item.buyerName
-                  ? ` — offerte par ${item.buyerName}`
+                  ? ` (offerte par ${item.buyerName})`
                   : ""}
                 {item.drinkCount > 0 && (
                   <span style={{ color: COLORS.inkSoft }}>

@@ -10,19 +10,19 @@ import { loadDrinksByIds, loadBreweriesByIds } from "./sharedDirectories.js";
 const READ_TIMEOUT_MS = 45000;
 
 const ERROR_MESSAGES = {
-  unauthorized: "Votre session a expiré. Reconnectez-vous, puis réessayez.",
-  daily_limit: "Vous avez atteint la limite de lectures d'étiquettes pour aujourd'hui. Réessayez demain, ou cherchez le produit à la main.",
-  too_large: "La photo est trop lourde. Reprenez-la.",
-  bad_image: "Ce fichier n'est pas une photo exploitable. Reprenez la photo.",
-  provider_error: "Le service de lecture est momentanément indisponible. Réessayez dans un instant.",
-  invalid_output: "La lecture a échoué. Réessayez, ou reprenez la photo.",
-  timeout: "La lecture prend trop de temps. Réessayez.",
-  network: "Connexion impossible. Vérifiez votre réseau, puis réessayez.",
-  prepare: "Cette photo n'a pas pu être traitée. Reprenez-la.",
-  search: "La recherche a échoué. Réessayez.",
+  unauthorized: "Ta session a expiré.\nReconnecte-toi, puis réessaie.",
+  daily_limit: "Tu as atteint la limite de lectures d'étiquettes pour aujourd'hui.\nRéessaie demain, ou cherche le produit à la main.",
+  too_large: "La photo est trop lourde.\nReprends-la.",
+  bad_image: "Ce fichier n'est pas une photo exploitable.\nReprends la photo.",
+  provider_error: "Le service de lecture est momentanément indisponible.\nRéessaie dans un instant.",
+  invalid_output: "La lecture a échoué.\nRéessaie, ou reprends la photo.",
+  timeout: "La lecture prend trop de temps.\nRéessaie.",
+  network: "Connexion impossible.\nVérifie ton réseau, puis réessaie.",
+  prepare: "Cette photo n'a pas pu être traitée.\nReprends-la.",
+  search: "La recherche a échoué.\nRéessaie.",
 };
 export function labelErrorMessage(code) {
-  return ERROR_MESSAGES[code] || "Une erreur est survenue. Réessayez.";
+  return ERROR_MESSAGES[code] || "Une erreur est survenue.\nRéessaie.";
 }
 
 // Lit l'étiquette. Retourne { ok: true, reading, suggestedQuery, suggestedAbv, remaining } ou { ok: false, code }.
@@ -313,16 +313,16 @@ export function uncertainFieldLabels(reading) {
 // Conseil de prise de vue quand l'IA signale une photo difficile.
 export function photoAdvice(reading) {
   const w = reading?.warnings || [];
-  if (w.includes("blur")) return "La photo semble floue : si le texte lu est incomplet, reprenez-la plus nette.";
-  if (w.includes("glare")) return "Un reflet gêne la lecture : si le texte lu est incomplet, reprenez la photo en évitant le reflet.";
-  if (w.includes("low_light")) return "La photo semble sombre : si le texte lu est incomplet, reprenez-la mieux éclairée.";
-  if (w.includes("partial_label")) return "L'étiquette n'est que partiellement visible : si le texte lu est incomplet, reprenez la photo.";
+  if (w.includes("blur")) return "La photo semble floue : si le texte lu est incomplet, reprends-la plus nette.";
+  if (w.includes("glare")) return "Un reflet gêne la lecture : si le texte lu est incomplet, reprends la photo en évitant le reflet.";
+  if (w.includes("low_light")) return "La photo semble sombre : si le texte lu est incomplet, reprends-la mieux éclairée.";
+  if (w.includes("partial_label")) return "L'étiquette n'est que partiellement visible : si le texte lu est incomplet, reprends la photo.";
   return null;
 }
 
 // Message quand la photo n'est pas exploitable (statut de l'image rendu par l'IA).
 export function unusablePhotoMessage(status) {
-  if (status === "multiple_products") return "Plusieurs produits apparaissent sur la photo. Photographiez une seule bouteille ou canette à la fois.";
+  if (status === "multiple_products") return "Plusieurs produits apparaissent sur la photo.\nPhotographie une seule bouteille ou canette à la fois.";
   if (status === "no_label") return "Aucune étiquette n'est visible sur cette photo.";
   return "L'étiquette n'est pas lisible sur cette photo.";
 }

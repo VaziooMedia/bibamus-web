@@ -93,7 +93,7 @@ export function BibaxProfilePreviewScreen({ bibroCode, onBack, myUserId, myBibro
     none: "Ajouter en Bibax",
     sent: "Demande envoyée",
     received: "Confirmer la demande",
-    accepted: "Vous êtes Bibax",
+    accepted: "Tu es Bibax avec cette personne",
   }[relation.status];
 
   const age = identity && identity.shareAge !== false ? computeAgeFromBirthDate(identity.birthDate) : null;

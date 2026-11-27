@@ -1073,7 +1073,7 @@ export default function App() {
   const joinSalon = async (code, { publishToPulse = true } = {}) => {
     const salonData = await loadSalon(code);
     if (!salonData) {
-      throw new Error("Salon introuvable — vérifie le code.");
+      throw new Error("Salon introuvable.\nVérifie le code.");
     }
     const normalized = normalizeEvent(salonData);
     const participants = normalized.participants || [];
@@ -1173,7 +1173,7 @@ export default function App() {
 
   const joinPredictGameFn = async (code) => {
     const gameData = await loadPredictGame(code);
-    if (!gameData) throw new Error("Partie introuvable — vérifie le code.");
+    if (!gameData) throw new Error("Partie introuvable.\nVérifie le code.");
     const participants = gameData.participants || [];
     const alreadyIn = participants.some((p) => p.code === profile.myBibroCode);
     const withMe = alreadyIn
@@ -2241,13 +2241,13 @@ export default function App() {
         <p style={{ fontSize: "14px", color: "#8792A6", marginBottom: "20px", maxWidth: "320px", lineHeight: 1.6 }}>
           {profile.blockedUntil ? (
             <>
-              Votre compte a été suspendu par Bibamus jusqu'au{" "}
+              Ton compte a été suspendu par Bibamus jusqu'au{" "}
               <strong style={{ color: "#F2F2E8" }}>{new Date(profile.blockedUntil).toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" })}</strong>.
               <br />
               Il redeviendra actif automatiquement à cette date.
             </>
           ) : (
-            "Votre accès à Bibamus a été suspendu définitivement par un administrateur."
+            "Ton accès à Bibamus a été suspendu définitivement par un administrateur."
           )}
           {profile.blockedReason && (
             <>
@@ -4185,7 +4185,7 @@ export default function App() {
             )}
             {!["home", "sessionHub", "repertoireHub", "venueDirectory", "bibaMap", "breweryDirectory", "brandDirectory", "shopDirectory", "shopDetail", "bibaPulse", "bibaPing", "bibaxProfilePreview", "storyCreate", "games", "predictHub", "predictGame", "bibaMeet", "newSalonEvent", "joinSalon", "eventDashboard", "drinkCheck", "bibaMusic", "roundCompose", "roundTicket", "menuSetup", "drinksDirectory", "submitVenue", "submitDrink", "venueDetail", "venueMenuCategories", "venueCategoryDrinks", "drinkDetail", "drinkBibaxChecks", "profile", "myPhotos", "bibaxPhotos", "myStatsWrapped", "settings", "settingsCategory", "features", "featuresClubs", "notifications", "notificationsEmailSummary", "appearance", "connect", "connectSpotify", "help", "helpContact", "helpReport", "helpAbout", "search", "atlasSearch", "bibaxDirectory", "notificationsFeed", "bibaSolo", "bibaClubsList", "createClub", "clubDetail", "preferences", "preferencesStorySettings", "preferencesVolumeWeight", "preferencesChoice", "account", "accountField", "accountLocation", "accountEmail", "accountUsername", "accountPhone", "accountSocial", "accountPhoto", "accountDeactivate", "security", "securityPassword", "securityEmailVerify", "securityResetSessions", "securityDataExport", "securityMyStats", "securityPublicProfile", "securityStoryTagsPrivacy", "securityBlockedUsers", "securityPermissions", "securityComingSoon", "eventHistory", "eventHistoryDetail", "myProducts", "myFavorites", "myFavoritesVenues", "myFavoritesDrinks", "myFavoritesBrands", "myFavoritesProducers", "myFavoritesShops", "myFavoritesBibax", "myProductsToTry", "myProductsTasted", "myProductsRated", "myPlaceChecks", "myDrinkChecks", "eventSettings", "waterAlertSettings", "bibrosList", "bibroDetail", "bibroClub", "mutualBibax", "bibroBibaxList", "bibroDrinkChecks", "bibroPlaceChecks", "addBibro", "deleteAccount", "breweryDetail", "brandDetail"].includes(screen) && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#8792A6" }}>
-                Écran "{screen}" — à venir dans un prochain bloc.
+                Écran "{screen}" à venir dans un prochain bloc.
                 <br />
                 <button onClick={() => setScreen("home")} style={{ marginTop: "16px", background: "#39FF66", border: "none", borderRadius: "8px", padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>
                   Retour à l'accueil

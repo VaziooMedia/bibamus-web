@@ -63,9 +63,9 @@ export function MyProductsHubScreen({ onBack, goToToTry, goToTasted, goToRated }
 }
 
 const LIST_TEXTS = {
-  toTry: { title: "À goûter", empty: "Aucun produit à goûter. Touche l'icône liste sur la fiche d'un produit pour le mettre de côté.", error: "Impossible de charger ta liste." },
-  tasted: { title: "Déjà goûtés", empty: "Aucun produit checké pour l'instant. Fais un DrinkCheck depuis la fiche d'un produit.", error: "Impossible de charger ta liste." },
-  rated: { title: "Notés", empty: "Aucun produit noté. Note un produit depuis sa fiche.", error: "Impossible de charger tes notes." },
+  toTry: { title: "À goûter", empty: "Aucun produit à goûter.\nTouche l'icône liste sur la fiche d'un produit pour le mettre de côté.", error: "Impossible de charger ta liste." },
+  tasted: { title: "Déjà goûtés", empty: "Aucun produit checké pour l'instant.\nFais un DrinkCheck depuis la fiche d'un produit.", error: "Impossible de charger ta liste." },
+  rated: { title: "Notés", empty: "Aucun produit noté.\nNote un produit depuis sa fiche.", error: "Impossible de charger tes notes." },
 };
 
 // Ligne d'un produit — celle de DrinkChecks (`CheckRow`) : rond de 48 px à gauche (il déborde vers la gauche et en hauteur, le texte ne bouge pas), le nom (gras) et une ligne de détails —
@@ -213,7 +213,7 @@ export function MyProductsListScreen({ screenId, mainScrollRef, kind, onBack, on
             </button>
           </p>
         ) : allEntries.length === 0 ? (
-          <p data-product-empty style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" }}>
+          <p data-product-empty style={{ whiteSpace: "pre-line", fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", lineHeight: 1.5, margin: "0 0 4px" }}>
             {texts.empty}
           </p>
         ) : (

@@ -320,7 +320,7 @@ export function VenueDetailScreen({ venue, myBibroCode, myUserId, onToggleLike, 
             <button
               onClick={handleToggleFollow}
               disabled={togglingFollow}
-              title={isFollowed ? "Suivi sur Pulse — ses activités apparaissent" : "Suivre sur Pulse"}
+              title={isFollowed ? "Suivi sur Pulse : ses activités apparaissent" : "Suivre sur Pulse"}
               style={{ background: "none", border: "none", cursor: togglingFollow ? "default" : "pointer", padding: 0, display: "flex" }}
             >
               <NavIcon name="bell" size={24} color={COLORS.amber} filled={isFollowed} />

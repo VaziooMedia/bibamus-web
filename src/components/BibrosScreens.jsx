@@ -492,7 +492,7 @@ export function BibrosListScreen({ myName, profile, checkIns, myBibroCode, bibro
           {/* Classement de la liste : prénom (au départ), nom de famille, nom d'utilisateur (Mehdi, 2026-11-18). Inutile avec un seul Bibax. */}
           {bibros.length > 1 && <PillTabs tabs={BIBAX_SORTS} active={sort} onChange={setSort} fine marginBottom="14px" />}
 
-          {bibros.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "16px" }}>Pas encore de Bibax — ajoutez-en un avec son code.</p>}
+          {bibros.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "16px" }}>Pas encore de Bibax. Ajoute-en un avec son code.</p>}
           {bibros.length > 0 && alphaBibros.length === 0 && <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic", marginBottom: "16px" }}>Aucun Bibax ne correspond à cette recherche.</p>}
           {searching && alphaBibros.length > 0 && (
             <p data-bibax-result-count style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "0 0 12px" }}>
@@ -966,7 +966,7 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
         <button
           onClick={handleToggleNotify}
           disabled={togglingNotify || !notifyLoaded}
-          title={notifyPulse ? "Suivi sur Pulse — toutes ses activités apparaissent" : "Suivre sur Pulse"}
+          title={notifyPulse ? "Suivi sur Pulse : toutes ses activités apparaissent" : "Suivre sur Pulse"}
           style={{
             position: "absolute",
             top: "12px",
@@ -1326,8 +1326,8 @@ export function BibroDetailScreen({ bibro, myUserId, myBibroCode, onBack, previe
 
       {onBlock && confirmingBlock && (
         <div style={{ marginTop: "18px" }}>
-          <p style={{ fontSize: "13px", color: "#FF3B3B", marginBottom: "10px", textAlign: "center" }}>
-            Bloquer {bibro.name} {bibro.lastName} ? Ton lien Bibax sera supprimé et vous ne pourrez plus vous ajouter mutuellement.
+          <p style={{ whiteSpace: "pre-line", fontSize: "13px", color: "#FF3B3B", marginBottom: "10px", textAlign: "center" }}>
+            {`Bloquer ${bibro.name} ${bibro.lastName} ?\nTon lien Bibax sera supprimé.\nTu ne pourras plus l'ajouter, et cette personne ne pourra plus t'ajouter.`}
           </p>
           <div style={{ display: "flex", gap: "10px" }}>
             <button
@@ -1661,7 +1661,7 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
           onClose={() => setScanning(false)}
           onScanned={handleScanned}
           title="Scanner un QR code Bibax"
-          instruction="Visez le QR code affiché sur le profil d'un Bibax"
+          instruction="Vise le QR code affiché sur le profil d'un Bibax"
         />
       )}
 

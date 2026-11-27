@@ -152,7 +152,7 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
       >
         {done ? (
           <>
-            <p style={{ fontSize: "15px", color: COLORS.ink, fontWeight: 700, marginBottom: "8px" }}>Merci, votre signalement a bien été transmis.</p>
+            <p style={{ fontSize: "15px", color: COLORS.ink, fontWeight: 700, marginBottom: "8px" }}>Merci, ton signalement a bien été transmis.</p>
             <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "20px" }}>Un membre de l'équipe va l'examiner.</p>
             <button
               onClick={onClose}

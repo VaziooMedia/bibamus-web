@@ -325,8 +325,8 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
         <div style={{ width: "100%", maxWidth: "420px" }}>
           {phase === "capture" && (
             <div style={{ textAlign: "center", paddingTop: "24px" }}>
-              <p style={{ color: COLORS.ink, fontSize: "15px", fontWeight: 700, margin: "0 0 10px" }}>Photographiez l'étiquette de la boisson</p>
-              <p style={noteStyle}>Une seule bouteille ou canette, étiquette de face. Évitez les reflets et les ombres, et rapprochez-vous si le texte est petit.</p>
+              <p style={{ color: COLORS.ink, fontSize: "15px", fontWeight: 700, margin: "0 0 10px" }}>Photographie l'étiquette de la boisson</p>
+              <p style={noteStyle}>Une seule bouteille ou canette, étiquette de face. Évite les reflets et les ombres, et rapproche-toi si le texte est petit.</p>
               <div style={{ marginTop: "22px" }}>
                 <button onClick={() => cameraRef.current?.click()} style={primaryBtn}>
                   <NavIcon name="camera" size={18} color={COLORS.paper} />
@@ -364,7 +364,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
           {phase === "retake" && (
             <div style={{ textAlign: "center", paddingTop: "24px" }}>
               {photoUrl && <img src={photoUrl} alt="Photo de l'étiquette" style={{ height: "120px", borderRadius: "12px", objectFit: "cover", marginBottom: "14px" }} />}
-              <p style={{ color: COLORS.ink, fontSize: "14px", margin: "0 0 8px" }}>{unusablePhotoMessage(reading?.image_status)}</p>
+              <p style={{ whiteSpace: "pre-line", color: COLORS.ink, fontSize: "14px", margin: "0 0 8px" }}>{unusablePhotoMessage(reading?.image_status)}</p>
               {advice && <p style={noteStyle}>{advice}</p>}
               <div style={{ marginTop: "18px" }}>
                 <button onClick={retake} style={primaryBtn}>
@@ -378,13 +378,13 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
             <div style={{ paddingTop: "8px" }}>
               <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
                 {photoUrl && <img src={photoUrl} alt="Photo de l'étiquette" style={{ height: "84px", borderRadius: "10px", objectFit: "cover", flexShrink: 0 }} />}
-                <p style={{ color: COLORS.ink, fontSize: "14px", fontWeight: 700, margin: 0 }}>Vérifiez ce qui a été lu sur l'étiquette</p>
+                <p style={{ color: COLORS.ink, fontSize: "14px", fontWeight: 700, margin: 0 }}>Vérifie ce qui a été lu sur l'étiquette</p>
               </div>
               <label htmlFor="label-text" style={labelStyle}>
-                Texte lu (corrigez-le si besoin)
+                Texte lu (corrige-le si besoin)
               </label>
               <input id="label-text" value={query} onChange={(e) => setQuery(e.target.value)} style={inputStyle} />
-              {!query.trim() && <p style={{ ...noteStyle, color: COLORS.amber }}>Aucun texte n'a pu être lu : saisissez le nom du produit.</p>}
+              {!query.trim() && <p style={{ ...noteStyle, whiteSpace: "pre-line", color: COLORS.amber }}>{"Aucun texte n'a pu être lu.\nSaisis le nom du produit."}</p>}
               {abvOpen || abvText.trim() ? (
                 <>
                   <label htmlFor="label-abv" style={labelStyle}>
@@ -490,7 +490,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                       ))}
                     </>
                   )}
-                  {scannedBarcode && <p style={{ ...noteStyle, margin: "14px 0 0" }}>Le code-barres que vous venez de scanner sera associé au produit choisi.</p>}
+                  {scannedBarcode && <p style={{ ...noteStyle, margin: "14px 0 0" }}>Le code-barres que tu viens de scanner sera associé au produit choisi.</p>}
                 </>
               )}
               {(candidates.length > 0 || moreCandidates.length > 0) && <div data-separator="1" style={separator} />}
@@ -508,7 +508,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
 
           {phase === "error" && (
             <div style={{ textAlign: "center", paddingTop: "24px" }}>
-              <p style={{ color: COLORS.ink, fontSize: "14px", margin: "0 0 8px" }}>{labelErrorMessage(errorCode)}</p>
+              <p style={{ whiteSpace: "pre-line", color: COLORS.ink, fontSize: "14px", margin: "0 0 8px" }}>{labelErrorMessage(errorCode)}</p>
               <div style={{ marginTop: "18px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                 {errorCode !== "daily_limit" && errorCode !== "unauthorized" && (
                   <button onClick={() => (errorBack === "capture" && onRetake ? onRetake() : setPhase(errorBack))} style={primaryBtn}>

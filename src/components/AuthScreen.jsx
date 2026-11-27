@@ -393,7 +393,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
   // L'âge minimum du pays choisi (piloté depuis la plateforme de gestion) : le message à afficher si la date de naissance est trop récente, sinon null.
   const signupAgeError = async () => {
     const minimumAge = await getMinimumAge(country);
-    return ageFromBirthDate(birthDate) < minimumAge ? `Bibamus concerne des boissons alcoolisées — un âge minimum de ${minimumAge} ans est requis pour ce pays.` : null;
+    return ageFromBirthDate(birthDate) < minimumAge ? `Bibamus concerne des boissons alcoolisées. Un âge minimum de ${minimumAge} ans est requis pour ce pays.` : null;
   };
 
   const moveToStep = (n) => {
@@ -551,7 +551,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
                 <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={inputStyle} autoComplete="nickname" />
               </div>
               <p style={{ fontSize: "11px", color: COLORS.inkSoft, margin: "-4px 0 0" }}>
-                Ton prénom, ton nom et ton surnom pourront être affichés aux autres Bibax — tu choisiras ce qui est visible dans tes paramètres.
+                Ton prénom, ton nom et ton surnom pourront être affichés aux autres Bibax. Tu choisiras ce qui est visible dans tes paramètres.
               </p>
             </>
           )}

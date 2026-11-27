@@ -10,8 +10,8 @@ import { EntityAvatar } from "./ui.jsx";
 import { respondClubInvitation } from "../data/sharedDirectories.js";
 
 const OUTCOME_TEXT = {
-  active: "Bienvenue ! Vous avez rejoint le club.",
-  pending: "Invitation acceptée : un administrateur du club doit encore valider votre entrée.",
+  active: "Bienvenue ! Tu as rejoint le club.",
+  pending: "Invitation acceptée : un administrateur du club doit encore valider ton entrée.",
   declined: "Invitation refusée.",
   expired: "Cette invitation n'est plus valable.",
 };
@@ -34,7 +34,7 @@ export function ClubInvitationCard({ invitation, onOpenClub, onResponded, compac
     if (onResponded) onResponded(invitation, result.status);
   };
 
-  const inviter = invitation.inviterName || "Un de vos Bibax";
+  const inviter = invitation.inviterName || "Un de tes Bibax";
   const subtitle = [invitation.clubCategory, `Invité par ${inviter}`].filter(Boolean).join(" · ");
   const header = compact ? (
     <span style={{ flex: 1, minWidth: 0, textAlign: "left", fontSize: "13.5px" }}>

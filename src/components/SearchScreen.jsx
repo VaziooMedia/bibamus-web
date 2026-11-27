@@ -558,7 +558,7 @@ export function SearchScreen({
           </div>
         </>
       ) : !hasQuery ? (
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Tapez au moins 2 caractères pour lancer la recherche.</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, textAlign: "center", marginTop: "40px" }}>Tape au moins 2 caractères pour lancer la recherche.</p>
       ) : (
         <>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px", marginBottom: "16px" }}>

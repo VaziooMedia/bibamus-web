@@ -92,7 +92,7 @@ export function BibazardModal({ menu, friendName, onConfirm, onClose }) {
 
         {phase === "selecting" && (
           <>
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", margin: "10px 0 16px 0" }}>Choisissez les catégories dans lesquelles le hasard peut piocher.</p>
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, textAlign: "center", margin: "10px 0 16px 0" }}>Choisis les catégories dans lesquelles le hasard peut piocher.</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center", marginBottom: "18px" }}>
               {availableCategories.map((cat) => (
                 <button

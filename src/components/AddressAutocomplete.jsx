@@ -106,7 +106,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
   if (!GEOAPIFY_API_KEY) {
     return (
       <p style={{ fontSize: "11px", color: COLORS.inkSoft, gridColumn: "1 / -1" }}>
-        Auto-complétion non configurée (clé Geoapify manquante) — les champs restent modifiables à la main ci-dessous.
+        Auto-complétion non configurée (clé Geoapify manquante). Les champs restent modifiables à la main ci-dessous.
       </p>
     );
   }

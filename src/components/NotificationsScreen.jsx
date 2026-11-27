@@ -317,7 +317,7 @@ export function EmailSummaryScreen({ profile, onSaveProfile, onBack }) {
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="at" size={22} color={COLORS.amber} />}>Récapitulatif par e-mail</PageTitleWithBar>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Recevoir un récapitulatif de vos activités.</p>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Recevoir un récapitulatif de tes activités.</p>
 
       <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Fréquence</label>
       <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
@@ -346,7 +346,7 @@ export function EmailSummaryScreen({ profile, onSaveProfile, onBack }) {
         ))}
       </div>
 
-      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>E-mail de réception (optionnel, différent de votre e-mail de connexion)</label>
+      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>E-mail de réception (optionnel, différent de ton e-mail de connexion)</label>
       <div style={{ position: "relative" }}>
         <input
           type="email"
@@ -355,7 +355,7 @@ export function EmailSummaryScreen({ profile, onSaveProfile, onBack }) {
           onBlur={() => {
             if (isValid) update({ notifEmailSummaryAddress: address });
           }}
-          placeholder={profile.email || "vous@exemple.com"}
+          placeholder={profile.email || ""}
           style={{
             width: "100%",
             boxSizing: "border-box",

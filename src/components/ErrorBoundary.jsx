@@ -42,8 +42,8 @@ export class ErrorBoundary extends React.Component {
         >
           <div style={{ fontSize: "44px", marginBottom: "16px" }}>⚠️</div>
           <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: "0 0 12px" }}>Un problème est survenu</h1>
-          <p style={{ fontSize: "14px", color: COLORS.inkSoft, lineHeight: 1.6, marginBottom: "24px", maxWidth: "320px" }}>
-            L'incident a été transmis automatiquement à notre équipe. Essayez de recharger l'app — si le problème persiste, revenez un peu plus tard.
+          <p style={{ whiteSpace: "pre-line", fontSize: "14px", color: COLORS.inkSoft, lineHeight: 1.6, marginBottom: "24px", maxWidth: "320px" }}>
+            {"L'incident a été transmis automatiquement à notre équipe.\nEssaie de recharger l'app. Si le problème persiste, reviens un peu plus tard."}
           </p>
           <button
             onClick={() => window.location.reload()}

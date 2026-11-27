@@ -1751,7 +1751,7 @@ export async function pushClubInvitation(invitationId, inviterName, clubName) {
       return false;
     }
     if (!code) return false;
-    await sendPushNotification([code], "BibaClub", `${inviterName || "Un de vos Bibax"} vous invite à rejoindre le BibaClub « ${clubName || "sans nom"} »`);
+    await sendPushNotification([code], "BibaClub", `${inviterName || "Un de tes Bibax"} t'invite à rejoindre le BibaClub « ${clubName || "sans nom"} »`);
     return true;
   } catch (e) {
     console.error("pushClubInvitation:", e);

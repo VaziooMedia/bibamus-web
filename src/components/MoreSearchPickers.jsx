@@ -394,7 +394,7 @@ export function VenuePositionPicker({ lat, lng, onChange, verified = true }) {
     <div>
       {status === "error" && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "8px" }}>La carte n'a pas pu se charger.</p>}
       <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginBottom: "8px" }}>
-        {lat != null ? "Glissez le repère pour ajuster, ou touchez ailleurs pour le déplacer." : "Touchez la carte à l'emplacement de l'établissement."}
+        {lat != null ? "Glisse le repère pour ajuster, ou touche ailleurs pour le déplacer." : "Touche la carte à l'emplacement de l'établissement."}
       </p>
       <style>{`
         .leaflet-control-zoom { border: none !important; box-shadow: none !important; }

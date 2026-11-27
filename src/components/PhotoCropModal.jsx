@@ -67,7 +67,7 @@ export function PhotoCropModal({ file, onCancel, onConfirm }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(13,27,42,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 200, padding: "24px" }}>
-      <p style={{ color: COLORS.chalkWhite, fontSize: "14px", fontWeight: 700, marginBottom: "16px" }}>Ajustez votre photo</p>
+      <p style={{ color: COLORS.chalkWhite, fontSize: "14px", fontWeight: 700, marginBottom: "16px" }}>Ajuste ta photo</p>
 
       <div
         onPointerDown={handlePointerDown}
@@ -114,7 +114,7 @@ export function PhotoCropModal({ file, onCancel, onConfirm }) {
         onChange={(e) => setZoom(parseFloat(e.target.value))}
         style={{ width: `${VIEWPORT}px`, marginTop: "20px", accentColor: COLORS.amber }}
       />
-      <p style={{ color: COLORS.inkSoft, fontSize: "11.5px", marginTop: "4px" }}>Glissez pour repositionner, le curseur pour zoomer</p>
+      <p style={{ color: COLORS.inkSoft, fontSize: "11.5px", marginTop: "4px" }}>Glisse pour repositionner, le curseur pour zoomer</p>
 
       <div style={{ display: "flex", gap: "10px", marginTop: "24px", width: `${VIEWPORT}px` }}>
         <button

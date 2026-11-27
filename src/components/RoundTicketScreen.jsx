@@ -106,7 +106,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                         setBuyerId(f.id);
                         setOfferedByType(null);
                       }}
-                      title={isPaused ? "En pause — ne peut pas se voir attribuer une tournée" : undefined}
+                      title={isPaused ? "En pause : ne peut pas se voir attribuer une tournée" : undefined}
                       style={{
                         background: !offeredByType && buyerId === f.id && !isPaused ? COLORS.amber : "transparent",
                         color: !offeredByType && buyerId === f.id && !isPaused ? COLORS.paper : COLORS.chalkWhite,
@@ -179,7 +179,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
             )}
             {offeredByType && (
               <p style={{ fontSize: "11px", opacity: 0.65, marginTop: "6px", marginBottom: 0 }}>
-                Cette tournée ne comptera dans aucun total d'argent dépensé — juste une trace du geste.
+                Cette tournée ne comptera dans aucun total d'argent dépensé. C'est juste une trace du geste.
               </p>
             )}
           </div>
@@ -274,7 +274,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                     </div>
                     <div style={{ fontSize: "11px", marginTop: "6px", color: hasUndefinedPrice ? COLORS.alert : COLORS.chalkWhite, opacity: hasUndefinedPrice ? 1 : 0.6, fontWeight: hasUndefinedPrice ? 700 : 400 }}>
                       {hasUndefinedPrice ? (
-                        "⚠️ Montant incorrect : une ou plusieurs boissons n'ont pas de prix défini ci-dessus. Vérifiez le montant réel avant de valider."
+                        "⚠️ Montant incorrect : une ou plusieurs boissons n'ont pas de prix défini ci-dessus. Vérifie le montant réel avant de valider."
                       ) : (
                         <>
                           {estimatedTotal > 0 && <div>- Pré-rempli avec l'estimation du menu.</div>}
@@ -354,8 +354,8 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                   {!settledDirectly && (
                     <p style={{ fontSize: "11px", opacity: 0.55, marginTop: "4px" }}>
                       {isCagnotte
-                        ? "Ce montant ne comptera pas encore dans ce que la cagnotte a dépensé — il attend la note finale."
-                        : "Ce montant ne comptera pas dans tes tournées déjà réglées — il attend la note finale."}
+                        ? "Ce montant ne comptera pas encore dans ce que la cagnotte a dépensé. Il attend la note finale."
+                        : "Ce montant ne comptera pas dans tes tournées déjà réglées. Il attend la note finale."}
                     </p>
                   )}
                 </>
@@ -373,7 +373,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                   return (
                     <p style={{ fontSize: "12.5px", marginTop: "10px", color: balanceAfter < 0 ? COLORS.alert : COLORS.chalkWhite, opacity: balanceAfter < 0 ? 1 : 0.75, fontWeight: balanceAfter < 0 ? 700 : 400 }}>
                       {balanceAfter < 0
-                        ? `⚠️ La cagnotte n'a plus assez — il manquerait ${formatMoney(Math.abs(balanceAfter), "euro")}.`
+                        ? `⚠️ La cagnotte n'a plus assez. Il manquerait ${formatMoney(Math.abs(balanceAfter), "euro")}.`
                         : `Solde de la cagnotte après cette tournée : ${formatMoney(balanceAfter, "euro")}.`}
                     </p>
                   );
@@ -477,7 +477,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
             <div>
               {hasUndefinedPrice && (
                 <p style={{ fontSize: "11px", color: COLORS.alert, fontWeight: 700, marginTop: "6px" }}>
-                  ⚠️ Montant incorrect : une ou plusieurs boissons n'ont pas de prix défini. Corrigez-le dans "Gérer les boissons".
+                  ⚠️ Montant incorrect : une ou plusieurs boissons n'ont pas de prix défini. Corrige-le dans "Gérer les boissons".
                 </p>
               )}
               {isCagnotte &&
@@ -488,8 +488,8 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                   return (
                     <p style={{ fontSize: "12.5px", marginTop: "10px", color: balanceAfter < 0 ? COLORS.alert : COLORS.chalkWhite, opacity: balanceAfter < 0 ? 1 : 0.75, fontWeight: balanceAfter < 0 ? 700 : 400 }}>
                       {balanceAfter < 0
-                        ? `⚠️ La cagnotte n'a plus assez — il manquerait ${formatMoney(Math.abs(balanceAfter), "jeton")}.`
-                        : `Payée par la cagnotte — il restera ${formatMoney(balanceAfter, "jeton")}.`}
+                        ? `⚠️ La cagnotte n'a plus assez. Il manquerait ${formatMoney(Math.abs(balanceAfter), "jeton")}.`
+                        : `Payée par la cagnotte. Il restera ${formatMoney(balanceAfter, "jeton")}.`}
                     </p>
                   );
                 })()}

@@ -89,14 +89,14 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseK
           }}
         >
           <NavIcon name="map-pin" size={14} color={COLORS.amber} />
-          Voir les lieux près de vous
+          Voir les lieux près de toi
         </button>
       );
     }
     if (collapsed && picked) {
       return (
         <div style={{ marginBottom: "12px" }}>
-          <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>Près de vous :</p>
+          <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>Près de toi :</p>
           <div
             style={{
               display: "flex",
@@ -126,7 +126,7 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseK
     }
     return (
       <div style={{ marginBottom: "12px" }}>
-        <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>Près de vous :</p>
+        <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginBottom: "8px" }}>Près de toi :</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {venues.map((v) => {
             const isSelected = v.id === selectedVenueId;
@@ -200,7 +200,7 @@ export function NearbyVenueSuggestions({ onPick, selectedVenueId, forceCollapseK
           Suggérer des lieux autour de moi
         </span>
       )}
-      {status === "denied" && <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>Position refusée — activez-la dans les réglages de votre navigateur pour réessayer.</span>}
+      {status === "denied" && <span style={{ whiteSpace: "pre-line", display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>{"Position refusée.\nActive-la dans les réglages de ton navigateur pour réessayer."}</span>}
       {status === "unavailable" && <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>Géolocalisation non disponible sur cet appareil.</span>}
     </button>
   );

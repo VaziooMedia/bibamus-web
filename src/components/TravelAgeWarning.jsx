@@ -47,7 +47,7 @@ export function TravelAgeWarning({ profile }) {
     >
       <NavIcon name="no-entry" size={18} color="#FF3B3B" />
       <p style={{ flex: 1, fontSize: "12.5px", color: COLORS.ink, margin: 0, lineHeight: 1.4 }}>
-        L'âge légal pour la consommation d'alcool est de {warning.minimumAge} ans dans le pays où vous vous trouvez actuellement.
+        L'âge légal pour la consommation d'alcool est de {warning.minimumAge} ans dans le pays où tu te trouves actuellement.
       </p>
       <button onClick={() => setDismissed(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
         <NavIcon name="x" size={16} color={COLORS.inkSoft} />

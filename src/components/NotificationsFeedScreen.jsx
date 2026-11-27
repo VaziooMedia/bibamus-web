@@ -15,17 +15,17 @@ import { ProfileNavContext } from "../contexts.js";
 import { notify } from "./MessageToast.jsx";
 
 const TYPE_LABELS = (myGender) => ({
-  pulse_bix: "a Bixé votre publication",
-  pulse_comment: "a commenté votre publication",
-  pulse_sante: "a dit Cheers à votre publication",
-  bibax_request: "vous a envoyé une demande Bibax",
-  bibax_accepted: "a accepté votre demande Bibax",
+  pulse_bix: "a Bixé ta publication",
+  pulse_comment: "a commenté ta publication",
+  pulse_sante: "a dit Cheers à ta publication",
+  bibax_request: "t'a envoyé une demande Bibax",
+  bibax_accepted: "a accepté ta demande Bibax",
   salon_invite: "t'invite à rejoindre un BibaRoom",
   salon_invite_accepted: "a rejoint ton BibaRoom",
-  club_invitation: "vous invite à rejoindre un BibaClub",
+  club_invitation: "t'invite à rejoindre un BibaClub",
   // La vraie conjugaison suit le vrai genre du destinataire (celui qui reçoit et lit la
   // notification), pas celui de l'auteur du tag.
-  story_tag: `vous a ${myGender === "female" ? "taguée" : "tagué"} dans une Story`,
+  story_tag: `t'a ${myGender === "female" ? "taguée" : "tagué"} dans une Story`,
 });
 
 // Notifications qui parlent d'une personne plutôt que d'une publication : y toucher ouvre sa
@@ -239,8 +239,8 @@ export function NotificationsFeedScreen({ onBack, onOpenPulseEntry, onOpenBibaxP
               const clubState = clubEntry?.state;
               let clubInfo = null;
               if (isClubInvite && clubInv !== null) {
-                if (clubState === "joined") clubInfo = { text: "Vous avez rejoint le club.", strong: true };
-                else if (clubState === "requested") clubInfo = { text: "Demande envoyée : un administrateur doit valider votre arrivée.", strong: true };
+                if (clubState === "joined") clubInfo = { text: "Tu as rejoint le club.", strong: true };
+                else if (clubState === "requested") clubInfo = { text: "Demande envoyée : un administrateur doit valider ton arrivée.", strong: true };
                 else if (clubState === "declined") clubInfo = { text: "Invitation refusée.", strong: false };
                 else if (clubState !== "pending") clubInfo = { text: "Cette invitation n'est plus en attente.", strong: false };
               }

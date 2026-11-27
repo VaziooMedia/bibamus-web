@@ -422,8 +422,8 @@ export function SubmitShopWizardScreen({ initialName = "", onDone, onCancel, onO
           {!geocoding && <NavIcon name="map-pin" size={17} color={COLORS.amber} />}
           {geocoding ? "Géocodage..." : "Géocoder automatiquement"}
         </button>
-        {geocodeNotFound && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "10px" }}>Adresse introuvable — vérifiez les pages précédentes, ou placez le repère manuellement ci-dessous.</p>}
-        {!geocodeNotFound && geocodeStatus && <p style={{ fontSize: "12px", color: COLORS.amber, marginBottom: "10px" }}>✓ Position géocodée — vérifiez ou ajustez ci-dessous si besoin.</p>}
+        {geocodeNotFound && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.wine, marginBottom: "10px" }}>{"Adresse introuvable.\nVérifie les pages précédentes, ou place le repère manuellement ci-dessous."}</p>}
+        {!geocodeNotFound && geocodeStatus && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.amber, marginBottom: "10px" }}>{"✓ Position géocodée.\nVérifie ou ajuste ci-dessous si besoin."}</p>}
         <label style={labelStyle}>Vérification sur la carte</label>
         <VenuePositionPicker lat={lat} lng={lng} onChange={handlePositionChange} verified={["verified", "exact", "manual"].includes(geocodeStatus)} />
       </StepShell>
@@ -483,7 +483,7 @@ export function SubmitShopWizardScreen({ initialName = "", onDone, onCancel, onO
           style={hasOnline ? requiredStyle(websiteOk) : inputStyle}
           autoFocus
         />
-        {websiteValue && !isValidWebsite(websiteValue) && <p style={{ fontSize: "12px", color: COLORS.wine, margin: "8px 0 0 0" }}>Adresse invalide — par exemple https://www.exemple.be</p>}
+        {websiteValue && !isValidWebsite(websiteValue) && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.wine, margin: "8px 0 0 0" }}>{"Adresse invalide.\nElle doit commencer par https://"}</p>}
         {sameSiteShops.length > 0 && (
           <DuplicateBox title="Un shop en ligne a déjà ce site :" style={{ marginTop: "20px" }}>
             {sameSiteShops.map((s) => (

@@ -154,14 +154,14 @@ export function BibaClubsListScreen({ myUserId, onBack, onOpenClub: onOpenClubPr
         </div>
       ) : (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "24px" }}>
-          Vous n'êtes membre d'aucun BibaClub pour l'instant. Créez le vôtre, ou attendez l'invitation d'un de vos Bibax.
+          Tu n'es membre d'aucun BibaClub pour l'instant. Crée le tien, ou attends l'invitation d'un de tes Bibax.
         </p>
       )}
 
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
         <div style={{ fontSize: "14.5px", fontWeight: 700, marginBottom: "4px" }}>Découvrir des clubs publics</div>
         <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 10px 0" }}>
-          Cherchez par nom (2 lettres au minimum). Un club privé n'apparaît jamais ici : on n'y entre que sur invitation d'un Bibax membre.
+          Cherche par nom (2 lettres au minimum). Un club privé n'apparaît jamais ici : on n'y entre que sur invitation d'un Bibax membre.
         </p>
         <input
           value={searchInput}
