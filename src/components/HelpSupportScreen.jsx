@@ -69,7 +69,7 @@ export function HelpSupportScreen({ onBack, goToContact, goToReport, goToAbout }
         <HelpRow icon={<NavIcon name="activity" size={17} color={COLORS.amber} />} title="État des services" disabled last />
       </HelpGroup>
 
-      <HelpGroup title="Contactez-nous">
+      <HelpGroup title="Contacte-nous">
         <HelpRow icon={<NavIcon name="message-square" size={17} color={COLORS.amber} />} title="Nous écrire" onClick={goToContact} />
         <HelpRow
           icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}

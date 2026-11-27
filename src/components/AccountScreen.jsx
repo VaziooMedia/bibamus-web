@@ -402,7 +402,7 @@ export function SocialLinkEditScreen({ field, profile, onSaveProfile, onBack }) 
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={net.icon}>{net.label}</PageTitleWithBar>
 
-      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Votre lien {net.label}</label>
+      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Ton lien {net.label}</label>
 
       <div
         style={{

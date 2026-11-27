@@ -397,7 +397,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                   Ajouter le degré (facultatif)
                 </button>
               )}
-              {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
+              {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifie-le.</p>}
               {reading?.container_volume_ml != null && <p style={noteStyle}>Volume lu : {String(reading.container_volume_ml / 10).replace(".", ",")} cl (à vérifier).</p>}
               {advice && <p style={noteStyle}>{advice}</p>}
               <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
@@ -431,7 +431,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                   <NavIcon name="pencil" size={18} color={COLORS.amber} />
                 </button>
               </div>
-              {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber, margin: "0 0 30px" }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
+              {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber, margin: "0 0 30px" }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifie-le.</p>}
               {candidates.length === 0 && moreCandidates.length === 0 ? (
                 // Rien ne correspond vraiment au texte lu (la recherche ne renvoie plus de produits sans rapport) : « Aucun résultat ». Que l'IA
                 // n'ait rien trouvé ne prouve pas que le produit n'est pas dans BibAtlas (Mehdi, 2026-11-27) : on propose d'abord « Rechercher
