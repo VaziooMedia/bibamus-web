@@ -251,7 +251,7 @@ export function SubmitShopWizardScreen({ initialName = "", onDone, onCancel, onO
     });
     if (!created) {
       setSaving(false);
-      notify("La création du shop a échoué — merci de réessayer.");
+      notify("La création du shop a échoué.\nRéessaie.");
       return;
     }
     setSaving(false);

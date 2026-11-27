@@ -291,7 +291,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
       await saveSalon(code, updated);
       updateEvent(event.id, (e) => ({ ...e, salonCode: code, participants: updated.participants }));
     } catch (e) {
-      setError("Impossible de créer le BibaRoom. Réessayez.");
+      setError("Impossible de créer le BibaRoom.\nRéessaie.");
     }
     setLoading(false);
   };
@@ -304,7 +304,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
     try {
       const existing = await loadSalon(code);
       if (!existing) {
-        setError("Code introuvable. Vérifie auprès de tes amis.");
+        setError("Code introuvable.\nVérifie auprès de tes amis.");
         setLoading(false);
         return;
       }
@@ -323,7 +323,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
       updateEvent(event.id, () => ({ ...existing, participants: nextParticipants }));
       setMode(null);
     } catch (e) {
-      setError("Impossible de rejoindre le BibaRoom. Réessayez.");
+      setError("Impossible de rejoindre le BibaRoom.\nRéessaie.");
     }
     setLoading(false);
   };
@@ -404,7 +404,7 @@ export function SalonSection({ event, updateEvent, myName, profile, myBibroCode,
             </div>
           </div>
         )}
-        {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginTop: "8px" }}>{error}</p>}
+        {error && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.wine, marginTop: "8px" }}>{error}</p>}
       </div>
     );
   }
@@ -1258,12 +1258,12 @@ export function BibaBobModal({ friendName, storedPin, mode, onActivate, onDeacti
 
   const submit = () => {
     if (!/^\d{4}$/.test(code)) {
-      setError("Entrez les 4 chiffres.");
+      setError("Entre les 4 chiffres.");
       return;
     }
     if (mode === "activate") {
       if (!tolerance) {
-        setError("Choisissez une option.");
+        setError("Choisis une option.");
         return;
       }
       onActivate(tolerance, code.trim());

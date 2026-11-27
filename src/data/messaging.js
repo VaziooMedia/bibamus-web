@@ -325,7 +325,7 @@ export async function sendMessage(conversationId, body, mediaUrl = null) {
     // devenus Bibax, ou l'un des deux a bloqué l'autre. Message explicite
     // plutôt qu'un jargon Postgres.
     if (error.code === "42501") {
-      return { error: "Tu ne peux plus écrire dans cette conversation. Ajoutez-vous en Bibax pour continuer à discuter." };
+      return { error: "Tu ne peux plus écrire dans cette conversation.\nAjoute cette personne en Bibax pour continuer à discuter." };
     }
     return { error: error.message };
   }

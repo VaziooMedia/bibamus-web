@@ -129,7 +129,7 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
     const result = await submitReport(entityType, entityId, reason, comment, myBibroCode, isDuplicate ? duplicateTarget : null);
     setSending(false);
     if (result.error) {
-      setError("Une erreur est survenue — merci de réessayer.");
+      setError("Une erreur est survenue.\nRéessaie.");
       return;
     }
     trackEvent("report_submitted", entityType, myBibroCode, { reason });
@@ -277,7 +277,7 @@ export function ReportModal({ entityType, entityId, myBibroCode, directory = [],
               }}
             />
 
-            {error && <p style={{ color: COLORS.wine, fontSize: "13px", marginBottom: "12px" }}>{error}</p>}
+            {error && <p style={{ whiteSpace: "pre-line", color: COLORS.wine, fontSize: "13px", marginBottom: "12px" }}>{error}</p>}
 
             <button
               onClick={handleSubmit}

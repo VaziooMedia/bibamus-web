@@ -223,7 +223,7 @@ export function TokModal({ salonCode, targets, pending, replies = [], myName, on
               })}
             </div>
 
-            {error && <p style={{ fontSize: "12.5px", color: COLORS.wine, margin: "0 0 8px" }}>{error}</p>}
+            {error && <p style={{ whiteSpace: "pre-line", fontSize: "12.5px", color: COLORS.wine, margin: "0 0 8px" }}>{error}</p>}
 
             {targets.length === 0 ? (
               <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontStyle: "italic", padding: "12px 0", margin: 0 }}>

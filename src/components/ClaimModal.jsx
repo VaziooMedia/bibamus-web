@@ -36,7 +36,7 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
     );
     setSending(false);
     if (result.error) {
-      setError("Une erreur est survenue — merci de réessayer.");
+      setError("Une erreur est survenue.\nRéessaie.");
       return;
     }
     setDone(true);
@@ -199,7 +199,7 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
               }}
             />
 
-            {error && <p style={{ color: COLORS.wine, fontSize: "13px", marginBottom: "12px" }}>{error}</p>}
+            {error && <p style={{ whiteSpace: "pre-line", color: COLORS.wine, fontSize: "13px", marginBottom: "12px" }}>{error}</p>}
 
             <button
               onClick={handleSubmit}

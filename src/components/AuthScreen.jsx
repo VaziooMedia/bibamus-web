@@ -606,7 +606,7 @@ export function AuthScreen({ onAuthenticated, signupsEnabled = true }) {
         </div>
 
         {error && (
-          <p key={error} role="alert" className="biba-auth-error" style={{ color: "#D64545", fontSize: "13px", margin: 0 }}>
+          <p key={error} role="alert" className="biba-auth-error" style={{ whiteSpace: "pre-line", color: "#D64545", fontSize: "13px", margin: 0 }}>
             {error}
           </p>
         )}

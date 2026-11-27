@@ -239,7 +239,7 @@ export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, 
     });
     setSubmitting(false);
     if (!ok) {
-      notify("La création du produit a échoué — merci de réessayer.");
+      notify("La création du produit a échoué.\nRéessaie.");
       return;
     }
     setDrinkId(newId);

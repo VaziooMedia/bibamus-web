@@ -57,7 +57,7 @@ export function getDrinkBadgeItems(drink, { hideCountry = false, size = 11 } = {
       key: "generic",
       label: <img src={genericIconUrl} alt="Générique" style={{ width: `${size + 3}px`, height: `${size + 3}px`, display: "block" }} />,
       icon: true,
-      title: "Produit générique — sans marque précise",
+      title: "Produit générique, sans marque précise",
       filter: { kind: "generic" },
     });
   }

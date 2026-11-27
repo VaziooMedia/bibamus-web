@@ -151,7 +151,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
     if (alone) {
       const pending = list.filter((m) => m.status === "pending" && m.userId !== myUserId).length;
       const extra = pending > 0 ? " et les demandes d'entrée en attente" : "";
-      if (!(await askConfirm({ title: "Vous êtes la seule personne de ce club", message: `Le quitter le supprimera définitivement, avec ses publications${extra}.`, confirmLabel: "Continuer", danger: true }))) return;
+      if (!(await askConfirm({ title: "Tu es la seule personne de ce club", message: `Le quitter le supprimera définitivement, avec ses publications${extra}.`, confirmLabel: "Continuer", danger: true }))) return;
     }
     const result = await leaveClub(clubId);
     if (result.error) {
@@ -278,7 +278,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
         </div>
         {isAdmin && <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoChosen} style={{ display: "none" }} />}
       </div>
-      {isAdmin && photoError && <p style={{ fontSize: "12.5px", color: COLORS.wine, margin: "-6px 0 14px" }}>{photoError}</p>}
+      {isAdmin && photoError && <p style={{ whiteSpace: "pre-line", fontSize: "12.5px", color: COLORS.wine, margin: "-6px 0 14px" }}>{photoError}</p>}
       {club.description && <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>{club.description}</p>}
 
       {!isMember && (

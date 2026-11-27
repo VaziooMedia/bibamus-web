@@ -50,7 +50,7 @@ export function InviteBibaxPanel({ clubId, clubName, myName }) {
     if (id !== reqRef.current) return;
     setSearching(false);
     if (result.error) {
-      setLoadError("Impossible de charger vos Bibax. Réessayez dans un instant.");
+      setLoadError("Impossible de charger tes Bibax.\nRéessaie dans un instant.");
       return;
     }
     nextOffsetRef.current = result.received;
@@ -68,7 +68,7 @@ export function InviteBibaxPanel({ clubId, clubName, myName }) {
     if (id !== reqRef.current) return;
     setLoadingMore(false);
     if (result.error) {
-      setLoadError("Impossible de charger la suite. Réessayez dans un instant.");
+      setLoadError("Impossible de charger la suite.\nRéessaie dans un instant.");
       return;
     }
     nextOffsetRef.current += result.received;
@@ -133,7 +133,7 @@ export function InviteBibaxPanel({ clubId, clubName, myName }) {
 
       {open && (
         <div style={{ marginTop: "10px" }}>
-          {loadError && <p style={{ fontSize: "12px", color: "#FF3B3B", margin: "0 0 6px" }}>{loadError}</p>}
+          {loadError && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: "#FF3B3B", margin: "0 0 6px" }}>{loadError}</p>}
           {!loadError && list === null && <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>Chargement...</p>}
           {list !== null && list.length === 0 && activeTerm === "" && query === "" && (
             <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>

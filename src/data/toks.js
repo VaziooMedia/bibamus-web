@@ -63,9 +63,9 @@ export async function sendTok(salonCode, targetUserIds, action = "SMALL_SIP") {
     console.error("sendTok:", error);
     // Le serveur renvoie des raisons courtes ; on les traduit ici plutôt que d'afficher
     // un message technique.
-    if (error.message?.includes("cooldown")) return { error: "Tu viens déjà de leur envoyer un Tok — laisse-leur une minute." };
+    if (error.message?.includes("cooldown")) return { error: "Tu viens déjà de leur envoyer un Tok.\nLaisse-leur une minute." };
     if (error.message?.includes("destinataire indisponible")) return { error: "Personne de sélectionné ne peut recevoir de Tok pour l'instant." };
-    return { error: "Le Tok n'est pas parti. Réessaie." };
+    return { error: "Le Tok n'est pas parti.\nRéessaie." };
   }
   // Volontairement sans await : l'animation ne doit pas attendre la notification.
   notifyTok("get_tok_push_targets", data);
@@ -77,7 +77,7 @@ export async function respondTok(tokId, accept) {
   const { data, error } = await supabase.rpc("respond_tok", { p_tok_id: tokId, p_accept: accept });
   if (error) {
     console.error("respondTok:", error);
-    return { error: "Réponse impossible. Réessaie." };
+    return { error: "Réponse impossible.\nRéessaie." };
   }
   // Prévenir l'expéditeur, qui sinon ne saurait jamais que son Tok a été accepté.
   if (data === "ACCEPTED") notifyTok("get_tok_reply_push_target", tokId);
