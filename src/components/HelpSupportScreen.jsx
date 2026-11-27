@@ -134,7 +134,7 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
           <NavIcon name="check" size={28} color={COLORS.amber} />
           <p style={{ fontSize: "14px", fontWeight: 700, margin: "10px 0 0" }}>Message envoyé</p>
-          <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "6px 0 0" }}>Merci — nous reviendrons vers vous si nécessaire.</p>
+          <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: "6px 0 0" }}>Merci, nous reviendrons vers toi si nécessaire.</p>
         </div>
         <PageFooterNav onBack={onBack} />
       </div>
@@ -147,18 +147,18 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
       <PageTitleWithBar icon={<NavIcon name={isReport ? "alert-triangle" : "message-square"} size={22} color={COLORS.amber} />}>{isReport ? "Signaler un problème" : "Nous écrire"}</PageTitleWithBar>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
         {isReport ? (
-          <>Décrivez le problème rencontré.<br />Plus vous êtes précis, plus vite nous pourrons y remédier.</>
+          <>Décris le problème rencontré.<br />Plus tu es précis, plus vite nous pourrons y remédier.</>
         ) : (
-          <>Une question, une suggestion ?<br />Écrivez-nous, nous vous répondrons dans les plus brefs délais.</>
+          <>Une question, une suggestion ?<br />Écris-nous, nous te répondrons dans les plus brefs délais.</>
         )}
       </p>
 
-      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Votre message</label>
+      <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.inkSoft, marginBottom: "6px", display: "block" }}>Ton message</label>
       <textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         rows={6}
-        placeholder={isReport ? "Ce qui s'est passé, sur quel écran..." : "Votre message"}
+        placeholder={isReport ? "Ce qui s'est passé, sur quel écran..." : "Ton message"}
         style={{ width: "100%", boxSizing: "border-box", padding: "12px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px", resize: "vertical", fontFamily: "inherit" }}
       />
 
@@ -167,7 +167,6 @@ export function ContactFormScreen({ type, myUserId, profile, onBack }) {
         type="email"
         value={contactEmail}
         onChange={(e) => setContactEmail(e.target.value)}
-        placeholder="votre@email.com"
         style={{ width: "100%", boxSizing: "border-box", padding: "12px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "14px" }}
       />
 
@@ -192,7 +191,7 @@ export function AboutScreen({ onBack }) {
       </div>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "24px" }}>Version {APP_VERSION}</p>
       <p style={{ fontSize: "13.5px", color: COLORS.ink, textAlign: "center", maxWidth: "320px", lineHeight: 1.5 }}>
-        Bibamus est une application belge dédiée aux amateurs de bonnes boissons — check-ins, découvertes, et moments partagés entre Bibax.
+        Bibamus est une application belge dédiée aux amateurs de bonnes boissons : check-ins, découvertes et moments partagés entre Bibax.
       </p>
       <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "24px" }}>© {new Date().getFullYear()} Bibamus</p>
       <div style={{ marginTop: "auto", width: "100%" }}>

@@ -535,7 +535,7 @@ export function HomeScreen({
       {(() => {
         const tiles = [
           { key: "club", name: "Club", subtitle: "Tes Clubs privés et publics", onClick: goToBibaClubs },
-          { key: "cal", name: "Cal", subtitle: "Agenda des events autour de vous" },
+          { key: "cal", name: "Cal", subtitle: "Agenda des events autour de toi" },
           { key: "play", name: "Play", subtitle: "Jeux et défis autour d'un verre", onClick: goToGames },
           { key: "meet", name: "Meet", subtitle: "Découvrir et rencontrer des Bibax", onClick: goToBibaMeet },
           { key: "care", name: "Care", subtitle: "Suivi santé" },

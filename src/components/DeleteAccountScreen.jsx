@@ -35,27 +35,27 @@ export function DeleteAccountScreen({ onBack, onAccountDeleted }) {
         <p style={{ fontSize: "13.5px", color: COLORS.ink, margin: "0 0 10px 0", fontWeight: 700 }}>Cette action est définitive et irréversible. Voici ce qui va se passer :</p>
         <p style={{ fontSize: "13px", color: COLORS.ink, margin: "0 0 4px 0", fontWeight: 700 }}>Supprimé définitivement</p>
         <ul style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0, paddingLeft: "18px", lineHeight: 1.6 }}>
-          <li>Votre profil, votre email, votre code Bibax et votre photo de profil</li>
-          <li>Vous ne pourrez plus vous reconnecter avec ce compte</li>
-          <li>Votre journal (bières goûtées, check-ins, scans d'étiquettes)</li>
-          <li>Vos activités BibaPulse (cartes, photos, réactions, commentaires), vos Stories et vos réactions</li>
-          <li>Vos relations (Bibax, blocages, suivis) et vos notifications</li>
+          <li>Ton profil, ton email, ton code Bibax et ta photo de profil</li>
+          <li>Tu ne pourras plus te reconnecter avec ce compte</li>
+          <li>Ton journal (bières goûtées, check-ins, scans d'étiquettes)</li>
+          <li>Tes activités BibaPulse (cartes, photos, réactions, commentaires), tes Stories et tes réactions</li>
+          <li>Tes relations (Bibax, blocages, suivis) et tes notifications</li>
           <li>
-            Vos messages envoyés, <strong>y compris chez leurs destinataires</strong>, avec leurs photos
+            Tes messages envoyés, <strong>y compris chez leurs destinataires</strong>, avec leurs photos
           </li>
           <li>
-            Vos publications et votre place dans vos BibaClubs. Si vous êtes le seul membre actif d'un club, ce club est supprimé avec vous. Si vous en êtes le seul administrateur et qu'il compte
-            d'autres membres actifs, vous devez d'abord nommer un autre administrateur.
+            Tes publications et ta place dans tes BibaClubs. Si tu es le seul membre actif d'un club, ce club est supprimé avec toi. Si tu en es le seul administrateur et qu'il compte
+            d'autres membres actifs, tu dois d'abord nommer un autre administrateur.
           </li>
         </ul>
         <p style={{ fontSize: "13px", color: COLORS.ink, margin: "12px 0 4px 0", fontWeight: 700 }}>Conservé</p>
         <ul style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0, paddingLeft: "18px", lineHeight: 1.6 }}>
           <li>
-            Les établissements, produits ou marques que vous avez ajoutés à la Database, avec leurs photos, <strong>restent visibles</strong> (utiles à la communauté) mais ne sont plus liés à votre
+            Les établissements, produits ou marques que tu as ajoutés à la Database, avec leurs photos, <strong>restent visibles</strong> (utiles à la communauté) mais ne sont plus liés à ton
             compte
           </li>
-          <li>Vos signalements restent, sans lien avec votre compte</li>
-          <li>Un journal de sécurité interne (qui a modifié quelle fiche, et quand) est conservé 12 mois à des fins de sécurité et peut contenir votre identifiant pendant cette durée</li>
+          <li>Tes signalements restent, sans lien avec ton compte</li>
+          <li>Un journal de sécurité interne (qui a modifié quelle fiche, et quand) est conservé 12 mois à des fins de sécurité et peut contenir ton identifiant pendant cette durée</li>
         </ul>
       </div>
 
@@ -66,7 +66,7 @@ export function DeleteAccountScreen({ onBack, onAccountDeleted }) {
 
       {confirmed && (
         <>
-          <label style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px", display: "block" }}>Confirmez votre mot de passe</label>
+          <label style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px", display: "block" }}>Confirme ton mot de passe</label>
           <input
             type="password"
             value={password}

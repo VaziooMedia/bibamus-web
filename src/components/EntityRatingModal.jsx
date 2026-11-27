@@ -80,8 +80,8 @@ export function EntityRatingModal({ title, entityName, myRating, onSave, onRemov
         />
 
         {error && (
-          <p role="alert" style={{ color: COLORS.wine, fontSize: "13px", margin: "14px 0 0 0" }}>
-            Une erreur est survenue — merci de réessayer.
+          <p role="alert" style={{ whiteSpace: "pre-line", color: COLORS.wine, fontSize: "13px", margin: "14px 0 0 0" }}>
+            {"Une erreur est survenue.\nRéessaie."}
           </p>
         )}
 

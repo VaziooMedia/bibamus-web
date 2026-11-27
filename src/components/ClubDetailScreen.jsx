@@ -284,7 +284,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
       {!isMember && (
         myMembership?.status === "pending" ? (
           <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
-            <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Votre entrée est en attente de validation par un administrateur du club.</p>
+            <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Ton entrée est en attente de validation par un administrateur du club.</p>
           </div>
         ) : invitation ? (
           <ClubInvitationCard invitation={invitation} onResponded={handleInvitationResponded} compact />
@@ -453,7 +453,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
               )}
               {myMembership?.role === "admin" && !otherActiveAdminExists && otherActiveMemberExists && (
                 <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "18px 0 0" }}>
-                  Vous êtes le seul administrateur : nommez d'abord un autre administrateur pour pouvoir quitter le club.
+                  Tu es le seul administrateur : nomme d'abord un autre administrateur pour pouvoir quitter le club.
                 </p>
               )}
             </div>

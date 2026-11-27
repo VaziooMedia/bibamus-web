@@ -76,8 +76,8 @@ export function SecurityScreen({ session, onBack, goToSubScreen }) {
       <PageTitleWithBar icon={<NavIcon name="lock" size={22} color={COLORS.amber} />}>Sécurité & confidentialité</PageTitleWithBar>
 
       <SecurityGroup title="Sécurité">
-        <SecurityRow icon={<NavIcon name="lock" size={17} color={COLORS.amber} />} title="Mot de passe" subtitle="Modifier votre mot de passe" onClick={() => goToSubScreen("password")} />
-        <SecurityRow icon={<NavIcon name="faceid" size={17} color={COLORS.amber} />} title="Connexion biométrique" subtitle="Face ID / empreinte — prévu sur l'app native" disabled badge="App native" />
+        <SecurityRow icon={<NavIcon name="lock" size={17} color={COLORS.amber} />} title="Mot de passe" subtitle="Modifier ton mot de passe" onClick={() => goToSubScreen("password")} />
+        <SecurityRow icon={<NavIcon name="faceid" size={17} color={COLORS.amber} />} title="Connexion biométrique" subtitle="Face ID / empreinte : prévu sur l'app native" disabled badge="App native" />
         <div style={{ borderBottom: "none" }}>
           <SecurityRow
             icon={<NavIcon name="mail" size={17} color={COLORS.amber} />}
@@ -171,7 +171,7 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="bar-chart" size={22} color={COLORS.amber} />}>Mes Statistiques</PageTitleWithBar>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "10px" }}>Choisissez ce que vos Bibax peuvent voir de vos statistiques.</p>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "10px" }}>Choisis ce que tes Bibax peuvent voir de tes statistiques.</p>
       <div style={{ background: COLORS.surfaceAlt, borderRadius: "10px", padding: "10px 14px", marginBottom: "18px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
         <span style={{ marginTop: "1px", flexShrink: 0 }}>
           <NavIcon name="alert-triangle" size={16} color={COLORS.amber} />
@@ -179,7 +179,7 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
         <p style={{ fontSize: "12px", color: COLORS.chalkWhite, margin: 0 }}>
           Les statistiques financières et sur les calories restent toujours privées.
           <br />
-          Elles sont uniquement visibles par vous.
+          Elles sont uniquement visibles par toi.
         </p>
       </div>
 
@@ -188,7 +188,7 @@ export function MyStatsPrivacyScreen({ profile, onSaveProfile, onBack }) {
         <CategoryRow title="Records" description="Ton lieu le plus visité, tes plus grosses sorties, ta plus longue série." field="shareStatsRecords" />
         <CategoryRow title="Boissons" description="Ta boisson préférée, ta catégorie la plus consommée et la liste de tes DrinkChecks." field="shareStatsDrinks" />
         <CategoryRow title="Lieux" description="Ton QG, tes villes visitées, ton type de lieu préféré et la liste de tes PlaceChecks." field="shareStatsVenues" />
-        <CategoryRow title="Social" description="Nombre de Bibax rencontrés et taille moyenne de tes sorties — jamais de nom." field="shareStatsSocial" />
+        <CategoryRow title="Social" description="Nombre de Bibax rencontrés et taille moyenne de tes sorties : jamais de nom." field="shareStatsSocial" />
         <div style={{ borderBottom: "none" }}>
           <CategoryRow title="Liste de Bibax" description="La liste de tes Bibax (noms, villes), que tes Bibax ouvrent depuis le bloc « Bibax » de ton profil." field="shareBibaxList" />
         </div>
@@ -326,7 +326,7 @@ export function BlockedUsersScreen({ onBack }) {
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, fontStyle: "italic" }}>Chargement...</p>
       ) : blocked.length === 0 ? (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
-          <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>Vous n'avez bloqué personne pour l'instant.</p>
+          <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>Tu n'as bloqué personne pour l'instant.</p>
         </div>
       ) : (
         <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
@@ -440,15 +440,15 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
         </PermRow>
         {geoStatus === "denied" && consents.consentLocation === true && (
           <p style={{ fontSize: "11px", color: "#FF3B3B", margin: "-8px 14px 8px 54px" }}>
-            Bibamus est autorisé dans vos réglages, mais votre navigateur a refusé l'accès — à modifier dans ses réglages.
+            Bibamus est autorisé dans tes réglages, mais ton navigateur a refusé l'accès. À modifier dans ses réglages.
           </p>
         )}
         <PermRow icon={<NavIcon name="camera" size={17} color={COLORS.amber} />} title="Appareil photo" subtitle="Scanner, ajouter des photos" disabled badge="App native" />
         <PermRow icon={<NavIcon name="images" size={17} color={COLORS.amber} />} title="Photos" subtitle="Ajouter ou enregistrer des visuels" disabled badge="App native" />
         <PermRow icon={<NavIcon name="microphone" size={17} color={COLORS.amber} />} title="Microphone" subtitle="Notes vocales ou contenu audio" disabled badge="App native" />
-        <PermRow icon={<img src={bibaxIconUrl} alt="" style={{ width: "17px", height: "17px" }} />} title="Contacts" subtitle="Trouver des Bibax dans vos contacts" disabled badge="App native" />
+        <PermRow icon={<img src={bibaxIconUrl} alt="" style={{ width: "17px", height: "17px" }} />} title="Contacts" subtitle="Trouver des Bibax dans tes contacts" disabled badge="App native" />
         <div style={{ borderBottom: "none" }}>
-          <PermRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Calendrier" subtitle="Ajouter vos évènements Bibamus" disabled badge="App native" />
+          <PermRow icon={<NavIcon name="calendar" size={17} color={COLORS.amber} />} title="Calendrier" subtitle="Ajouter tes évènements Bibamus" disabled badge="App native" />
         </div>
       </div>
 
@@ -464,7 +464,7 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
           <MiniToggle checked={consents.consentPartnerComms === true} onChange={(v) => updateConsent("consentPartnerComms", v)} />
         </PermRow>
         <div style={{ borderBottom: "none" }}>
-          <PermRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Études & sondages" subtitle="Invitations à donner votre avis">
+          <PermRow icon={<NavIcon name="bar-chart" size={17} color={COLORS.amber} />} title="Études & sondages" subtitle="Invitations à donner ton avis">
             <MiniToggle checked={consents.consentSurveys === true} onChange={(v) => updateConsent("consentSurveys", v)} />
           </PermRow>
         </div>
@@ -484,7 +484,7 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
           </span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: "14px" }}>Télécharger mes données</div>
-            <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Exporter vos données Bibamus</div>
+            <div style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "2px" }}>Exporter tes données Bibamus</div>
           </span>
           <NavIcon name="chevron-right" size={14} color={COLORS.inkSoft} />
         </button>
@@ -511,9 +511,9 @@ export function PermissionsScreen({ profile, onSaveProfile, onBack, goToDataExpo
         >
           <NavIcon name="lock" size={17} color={COLORS.amber} />
         </span>
-        <p style={{ fontSize: "13.5px", fontWeight: 700, margin: 0 }}>Vos données restent sous votre contrôle</p>
+        <p style={{ fontSize: "13.5px", fontWeight: 700, margin: 0 }}>Tes données restent sous ton contrôle</p>
         <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px", marginBottom: 0 }}>
-          Vous pouvez modifier vos permissions à tout moment et consulter notre politique de confidentialité.
+          Tu peux modifier tes permissions à tout moment et consulter notre politique de confidentialité.
         </p>
       </div>
 
@@ -627,7 +627,7 @@ export function EmailVerifyScreen({ session, onBack }) {
           {sending ? "Envoi..." : "Renvoyer l'e-mail de confirmation"}
         </PrimaryButton>
       )}
-      {sent && <p style={{ fontSize: "13px", color: COLORS.amber, textAlign: "center" }}>E-mail renvoyé — vérifiez votre boîte de réception.</p>}
+      {sent && <p style={{ whiteSpace: "pre-line", fontSize: "13px", color: COLORS.amber, textAlign: "center" }}>{"E-mail renvoyé.\nVérifie ta boîte de réception."}</p>}
       {error && <p style={{ fontSize: "12.5px", color: FLUO_RED, marginTop: "10px" }}>{error}</p>}
 
       <PageFooterNav onBack={onBack} />
@@ -657,7 +657,7 @@ export function ResetSessionsScreen({ onBack }) {
       <PageTitleWithBar icon={<NavIcon name="trash" size={22} color={COLORS.amber} />}>Réinitialiser les sessions</PageTitleWithBar>
 
       <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
-        Déconnecte tous les autres appareils actuellement connectés à votre compte — celui-ci reste connecté.
+        Déconnecte tous les autres appareils actuellement connectés à ton compte. Celui-ci reste connecté.
       </p>
 
       {done ? (
@@ -708,7 +708,7 @@ export function DataExportScreen({ profile, onBack }) {
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="download" size={22} color={COLORS.amber} />}>Télécharger mes données</PageTitleWithBar>
       <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, marginBottom: "20px" }}>
-        Exporte les informations de votre profil dans un fichier JSON téléchargeable. L'export de l'historique complet (check-ins, dégustations, Stories) arrivera dans une prochaine version.
+        Exporte les informations de ton profil dans un fichier JSON téléchargeable. L'export de l'historique complet (check-ins, dégustations, Stories) arrivera dans une prochaine version.
       </p>
       <PrimaryButton onClick={handleExport} style={{ width: "100%" }}>
         Télécharger mes données

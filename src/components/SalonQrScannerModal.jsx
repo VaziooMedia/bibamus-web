@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants.js";
 
-export function SalonQrScannerModal({ onClose, onScanned, title = "Scanner le QR code", instruction = "Visez le QR code affiché par un participant du BibaRoom" }) {
+export function SalonQrScannerModal({ onClose, onScanned, title = "Scanner le QR code", instruction = "Vise le QR code affiché par un participant du BibaRoom" }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
   const streamRef = useRef(null);
@@ -110,7 +110,7 @@ export function SalonQrScannerModal({ onClose, onScanned, title = "Scanner le QR
       {phase === "error" && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 30px", textAlign: "center" }}>
           <p style={{ color: COLORS.ink, fontSize: "14px", marginBottom: "8px" }}>Impossible d'accéder à la caméra.</p>
-          <p style={{ color: COLORS.inkSoft, fontSize: "13px" }}>Vérifiez que vous avez bien autorisé l'accès à la caméra pour ce site, ou entrez le code manuellement.</p>
+          <p style={{ color: COLORS.inkSoft, fontSize: "13px" }}>Vérifie que tu as bien autorisé l'accès à la caméra pour ce site, ou entre le code manuellement.</p>
         </div>
       )}
     </div>

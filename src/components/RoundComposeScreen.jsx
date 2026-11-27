@@ -645,7 +645,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
             <div
               key={f.id}
               onClick={() => !isPaused && setActiveFriendId(isActive ? null : f.id)}
-              title={isPaused ? "En pause — reprendra plus tard depuis le BibaRoom" : undefined}
+              title={isPaused ? "En pause : reprendra plus tard depuis le BibaRoom" : undefined}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -797,7 +797,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
                 width: "100%",
               }}
             >
-              {jokerUnlockedFor === activeFriendId ? "Joker en cours — choisissez le verre exceptionnel" : "Utiliser le joker (1 verre exceptionnel)"}
+              {jokerUnlockedFor === activeFriendId ? "Joker en cours : choisis le verre exceptionnel" : "Utiliser le joker (1 verre exceptionnel)"}
             </button>
           )}
         </div>
@@ -925,7 +925,7 @@ export function RoundComposeScreen({ event, mainScrollRef, draftFriends, setDraf
         {/* La carte d'un lieu n'est jamais garantie à 100% à jour — BibAtlas (le répertoire
             global) comble ce trou pour un produit absent de cette carte précise. */}
         <div style={{ marginTop: "4px", paddingTop: "16px", borderTop: `1px solid ${COLORS.paperAlt}`, marginBottom: "16px" }}>
-          <div style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "8px" }}>Produit absent de la carte ? Cherchez-le dans BibAtlas</div>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: COLORS.inkSoft, marginBottom: "8px" }}>Produit absent de la carte ? Cherche-le dans BibAtlas</div>
           <input
             value={bibAtlasQuery}
             onChange={(e) => setBibAtlasQuery(e.target.value)}

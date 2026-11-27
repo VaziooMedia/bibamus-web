@@ -73,12 +73,12 @@ async function describeVariantError(error, barcode) {
       ownerName = owner?.name || null;
     }
     const who = ownerName ? `au produit « ${ownerName} »` : "à un autre produit";
-    return `Ce code-barre est déjà associé ${who}. Un code-barre ne peut désigner qu'un seul produit : si c'est le même, abandonnez cet ajout ; sinon vérifiez le code, ou laissez le champ code-barre vide pour continuer sans.`;
+    return `Ce code-barre est déjà associé ${who}.\nUn code-barre ne peut désigner qu'un seul produit : si c'est le même, abandonne cet ajout. Sinon, vérifie le code, ou laisse le champ code-barre vide pour continuer sans.`;
   }
   if (error.code === "42501") {
-    return "Le conditionnement n'a pas pu être enregistré : droits insuffisants pour cette écriture. Vous pouvez laisser le champ code-barre vide pour continuer.";
+    return "Le conditionnement n'a pas pu être enregistré : droits insuffisants pour cette écriture.\nTu peux laisser le champ code-barre vide pour continuer.";
   }
-  return `Le conditionnement n'a pas pu être enregistré (${error.code || "erreur"} — ${error.message}). Vous pouvez laisser le champ code-barre vide pour continuer.`;
+  return `Le conditionnement n'a pas pu être enregistré (${error.code || "erreur"}, ${error.message}).\nTu peux laisser le champ code-barre vide pour continuer.`;
 }
 
 export function SubmitDrinkWizardScreen({ initialName = "", breweriesDirectory, brandsDirectory, onDone, onCancel, onOpenExisting }) {

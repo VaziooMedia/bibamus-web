@@ -174,7 +174,7 @@ export function ShopDetailScreen({ shopId, myBibroCode, onBack }) {
     const result = await toggleFavoriteShop(shopId);
     setFavoriteBusy(false);
     if (!result || result.error) {
-      notify(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      notify(result?.error || "Une erreur est survenue.\nRéessaie dans un instant.");
       return;
     }
     setIsFavorite(!!result.favorite);

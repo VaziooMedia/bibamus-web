@@ -236,8 +236,8 @@ export function ShopDirectoryScreen({ onBack, onOpenShop: onOpenShopProp, goToMa
                 )}
               </div>
               {geoStatus === "denied" && (
-                <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
-                  Position refusée — activez-la dans les réglages de votre navigateur pour réessayer.
+                <span style={{ whiteSpace: "pre-line", display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
+                  {"Position refusée.\nActive-la dans les réglages de ton navigateur pour réessayer."}
                 </span>
               )}
               {geoStatus === "unavailable" && (

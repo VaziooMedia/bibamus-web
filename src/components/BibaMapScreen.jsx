@@ -456,7 +456,7 @@ export function BibaMapScreen({ onBack, onOpenItem, initialView = null, startKin
     pins === null || shownCount > 0
       ? null
       : enabledLayers.length === 0
-        ? "Cochez une catégorie pour voir ses repères."
+        ? "Coche une catégorie pour voir ses repères."
         : enabledLayers.length === 1
           ? enabledLayers[0].none
           : "Aucun repère localisé pour l'instant.";

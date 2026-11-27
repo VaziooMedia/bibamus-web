@@ -352,7 +352,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
       notify("Connexion Spotify indisponible.\nReconnecte ton compte depuis Paramètres -\u2060-\u2060>\u00a0Connecter");
       return;
     }
-    const result = await createSpotifyPlaylist(token, `Bibamus — ${event.name}`);
+    const result = await createSpotifyPlaylist(token, `Bibamus : ${event.name}`);
     setCreatingPlaylist(false);
     if (result.error) {
       notify(result.error);
@@ -409,7 +409,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
         <p style={{ margin: 0, fontSize: "12px", color: COLORS.inkSoft }}>
           {event.djCode
             ? isDJ
-              ? "Vous êtes le MC de ce BibaRoom."
+              ? "Tu es le MC de ce BibaRoom."
               : `MC : ${(event.participants || []).find((p) => p.code === event.djCode)?.name || "quelqu'un"}`
             : "Aucun MC pour l'instant."}
         </p>
@@ -606,7 +606,7 @@ export function BibaMusicScreen({ event, updateEvent, myBibroCode, myName, myUse
             if (spotifyConnected) runSearch(e.target.value);
           }}
           onKeyDown={(e) => e.key === "Enter" && !spotifyConnected && proposeManual()}
-          placeholder={spotifyConnected ? "Chercher un titre sur Spotify ..." : "Titre — Artiste"}
+          placeholder={spotifyConnected ? "Chercher un titre sur Spotify ..." : ""}
           style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", background: COLORS.surface, color: COLORS.ink, outline: "none" }}
         />
         <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "6px", marginBottom: 0 }}>

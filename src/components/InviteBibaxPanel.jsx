@@ -137,20 +137,20 @@ export function InviteBibaxPanel({ clubId, clubName, myName }) {
           {!loadError && list === null && <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>Chargement...</p>}
           {list !== null && list.length === 0 && activeTerm === "" && query === "" && (
             <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>
-              Aucun de vos Bibax n'est invitable pour l'instant. Pour inviter quelqu'un dans le club, ajoutez-le d'abord comme Bibax.
+              Aucun de tes Bibax n'est invitable pour l'instant. Pour inviter quelqu'un dans le club, ajoute-le d'abord comme Bibax.
             </p>
           )}
           {list !== null && (list.length > 0 || showSearch) && (
             <>
               <p style={{ fontSize: "11.5px", color: COLORS.inkSoft, margin: "0 0 8px" }}>
-                Seuls vos Bibax peuvent être invités. La personne choisit d'accepter ou de refuser.
+                Seuls tes Bibax peuvent être invités. La personne choisit d'accepter ou de refuser.
               </p>
               {showSearch && (
                 <input
                   value={query}
                   onChange={(e) => onType(e.target.value)}
-                  placeholder="Chercher parmi vos Bibax"
-                  aria-label="Chercher parmi vos Bibax"
+                  placeholder="Chercher parmi tes Bibax"
+                  aria-label="Chercher parmi tes Bibax"
                   maxLength={60}
                   autoCorrect="off"
                   style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.paper, color: COLORS.ink, fontSize: "13.5px", marginBottom: "6px" }}

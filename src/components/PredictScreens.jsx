@@ -81,7 +81,7 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
     try {
       await onCreate(testMode);
     } catch (e) {
-      setError(e.message || "Impossible de créer la partie — réessaie.");
+      setError(e.message || "Impossible de créer la partie.\nRéessaie.");
       setLoading(false);
     }
   };
@@ -94,7 +94,7 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
     try {
       await onJoin(finalCode.toUpperCase());
     } catch (e) {
-      setError(e.message || "Code introuvable. Vérifie auprès de tes amis.");
+      setError(e.message || "Code introuvable.\nVérifie auprès de tes amis.");
       setLoading(false);
     }
   };
@@ -125,7 +125,7 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
         </span>
         <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Predict</h1>
       </div>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "22px" }}>Pronostics entre amis, sans argent réel — juste des points et un classement.</p>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "22px" }}>Pronostics entre amis, sans argent réel : juste des points et un classement.</p>
 
       {mode !== "join" ? (
         <>
@@ -203,7 +203,7 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
               <div style={{ fontSize: "12px", color: COLORS.inkSoft }}>Un ami a déjà créé la partie</div>
             </div>
           </button>
-          {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginTop: "12px" }}>{error}</p>}
+          {error && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.wine, marginTop: "12px" }}>{error}</p>}
         </>
       ) : (
         <>
@@ -249,7 +249,7 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
               <NavIcon name="scan-line" size={20} color={COLORS.amber} />
             </button>
           </div>
-          {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "12px" }}>{error}</p>}
+          {error && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.wine, marginBottom: "12px" }}>{error}</p>}
           <PrimaryButton onClick={() => handleJoin()} disabled={!code.trim() || loading} badgeIcon={loading ? undefined : "door-enter"} style={{ width: "100%" }}>
             {loading ? "..." : "Rejoindre"}
           </PrimaryButton>
@@ -261,7 +261,7 @@ export function PredictHubScreen({ onBack, onCreate, onJoin }) {
           onClose={() => setScanning(false)}
           onScanned={handleScanned}
           title="Rejoindre une partie Predict"
-          instruction="Visez le QR code affiché par l'hôte de la partie"
+          instruction="Vise le QR code affiché par l'hôte de la partie"
         />
       )}
     </div>

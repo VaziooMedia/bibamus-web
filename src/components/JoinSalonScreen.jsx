@@ -24,7 +24,7 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
     try {
       await onJoin(finalCode.toUpperCase(), { publishToPulse });
     } catch (e) {
-      setError(e.message || "Code introuvable. Vérifie auprès de tes amis.");
+      setError(e.message || "Code introuvable.\nVérifie auprès de tes amis.");
       setLoading(false);
     }
   };
@@ -45,9 +45,9 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
         </h1>
       </div>
       <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "22px" }}>
-        Entrez le code à 6 caractères ou scannez le QR code du BibaRoom.
+        Entre le code à 6 caractères ou scanne le QR code du BibaRoom.
         <br />
-        Vous rejoindrez la session en tant que <strong style={{ color: COLORS.amber }}>{myName}</strong>.
+        Tu rejoindras la session en tant que <strong style={{ color: COLORS.amber }}>{myName}</strong>.
       </p>
       <div
         style={{
@@ -91,7 +91,7 @@ export function JoinSalonScreen({ onJoin, onCancel, myName }) {
           <NavIcon name="scan-line" size={20} color={COLORS.amber} />
         </button>
       </div>
-      {error && <p style={{ fontSize: "12px", color: COLORS.wine, marginBottom: "12px" }}>{error}</p>}
+      {error && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.wine, marginBottom: "12px" }}>{error}</p>}
       <div style={{ marginTop: "auto" }}>
         <div style={{ height: "1px", background: COLORS.paperAlt, margin: "18px 0 16px" }} />
         <button

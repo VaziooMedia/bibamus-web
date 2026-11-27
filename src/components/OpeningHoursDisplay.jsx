@@ -66,7 +66,7 @@ export function OpeningHoursDisplay({ googlePlaceId, noGooglePresence, noFixedHo
   if (noFixedHours) {
     return (
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px" }}>
-        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Pas d'horaire fixe — fonctionne sur réservation ou événementiel.</p>
+        <p style={{ fontSize: "13px", color: COLORS.inkSoft, margin: 0 }}>Pas d'horaire fixe : fonctionne sur réservation ou événementiel.</p>
       </div>
     );
   }

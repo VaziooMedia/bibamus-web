@@ -59,9 +59,9 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
       >
         {done ? (
           <>
-            <p style={{ fontSize: "15px", color: COLORS.ink, fontWeight: 700, marginBottom: "8px" }}>Votre demande a bien été transmise à nos équipes.</p>
+            <p style={{ fontSize: "15px", color: COLORS.ink, fontWeight: 700, marginBottom: "8px" }}>Ta demande a bien été transmise à nos équipes.</p>
             <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "20px" }}>
-              Après examen et si elle est approuvée, nous vous recontacterons pour créer votre compte Business.
+              Après examen et si elle est approuvée, nous te recontacterons pour créer ton compte Business.
             </p>
             <button
               onClick={onClose}
@@ -82,12 +82,12 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
               </button>
             </div>
             <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>
-              Vous représentez officiellement <strong>{entityName}</strong> ?
+              Tu représentes officiellement <strong>{entityName}</strong> ?
               <br />
-              Ces informations nous permettent de vérifier votre demande.
+              Ces informations nous permettent de vérifier ta demande.
             </p>
 
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Nom de la société (ou votre nom, si personne physique) *</p>
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Nom de la société (ou ton nom, si personne physique) *</p>
             <input
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
@@ -178,7 +178,7 @@ export function ClaimModal({ entityType, entityId, entityName, myBibroCode, myUs
               style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: `2px solid ${COLORS.paperAlt}`, fontSize: "14px", color: COLORS.ink, background: "none", boxSizing: "border-box", marginBottom: "14px" }}
             />
 
-            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Quel est votre lien avec cette fiche ? *</p>
+            <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, fontWeight: 600, marginBottom: "6px" }}>Quel est ton lien avec cette fiche ? *</p>
             <textarea
               value={justification}
               onChange={(e) => setJustification(e.target.value)}

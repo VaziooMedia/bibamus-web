@@ -566,7 +566,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                 padding: "0 5px",
                 boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
               }}
-              title={`Cet établissement affiche ses prix en ${venue.defaultCurrency === "euro" ? "euros" : "jetons"}, mais cet événement est en ${event.currency === "euro" ? "euros" : "jetons"} — les montants copiés sont probablement à corriger.`}
+              title={`Cet établissement affiche ses prix en ${venue.defaultCurrency === "euro" ? "euros" : "jetons"}, mais cet événement est en ${event.currency === "euro" ? "euros" : "jetons"}. Les montants copiés sont probablement à corriger.`}
             >
               ⚠
             </span>
@@ -777,7 +777,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
           <NavIcon name="bibamusic" size={13} color={COLORS.inkSoft} />
           <span style={{ fontSize: "11.5px", color: COLORS.inkSoft, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {event.nowPlayingTrack.title}
-            {event.nowPlayingTrack.artist && ` — ${event.nowPlayingTrack.artist}`}
+            {event.nowPlayingTrack.artist && ` (${event.nowPlayingTrack.artist})`}
           </span>
         </div>
       )}
@@ -864,7 +864,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                               setInviteError(null);
                               setTimeout(() => setInvitedBibaxName(null), 3000);
                             } else {
-                              setInviteError(`Impossible d'inviter ${b.alias || b.name} — réessaie.`);
+                              setInviteError(`Impossible d'inviter ${b.alias || b.name}.\nRéessaie.`);
                               setTimeout(() => setInviteError(null), 4000);
                             }
                           }
@@ -874,7 +874,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                   {invitedBibaxName && (
                     <p style={{ fontSize: "12px", color: COLORS.amber, marginTop: "8px", fontWeight: 600 }}>Invitation envoyée à {invitedBibaxName}.</p>
                   )}
-                  {inviteError && <p style={{ fontSize: "12px", color: COLORS.wine, marginTop: "8px", fontWeight: 600 }}>{inviteError}</p>}
+                  {inviteError && <p style={{ whiteSpace: "pre-line", fontSize: "12px", color: COLORS.wine, marginTop: "8px", fontWeight: 600 }}>{inviteError}</p>}
                 </div>
               )}
             </>
@@ -907,7 +907,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             {myClubsForPicker === null ? (
               <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>Chargement...</p>
             ) : myClubsForPicker.length === 0 ? (
-              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>Vous n'êtes membre d'aucun BibaClub pour l'instant.</p>
+              <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, margin: 0 }}>Tu n'es membre d'aucun BibaClub pour l'instant.</p>
             ) : (
               myClubsForPicker.map((c) => (
                 <button
@@ -955,7 +955,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             {amIPaused && (
               <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: COLORS.bobYellow, marginBottom: "8px" }}>
                 <NavIcon name="pause" size={12} color={COLORS.bobYellow} />
-                Tu es en pause — reprends depuis le BibaRoom pour pouvoir t'ajouter une boisson.
+                Tu es en pause. Reprends depuis le BibaRoom pour pouvoir t'ajouter une boisson.
               </p>
             )}
             <input
@@ -1045,7 +1045,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
               onClick={onManageMenu}
               style={{ background: "none", border: "none", color: "#ef007c", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0 }}
             >
-              Valeur du jeton non définie — la renseigner
+              Valeur du jeton non définie : la renseigner
             </button>
           )}
 
@@ -1065,7 +1065,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
             </button>
             <button
               onClick={() => addPurchase(true)}
-              title="Jetons obtenus sans les payer — reportés, donnés par un autre Bibax, trouvés par terre... peu importe la source"
+              title="Jetons obtenus sans les payer : reportés, donnés par un autre Bibax, trouvés par terre... peu importe la source"
               style={{ background: "#00C8FF", border: "none", borderRadius: "8px", padding: "9px 10px", fontWeight: 700, fontSize: "12px", cursor: "pointer", color: "#000" }}
             >
               Gratuit
@@ -1171,7 +1171,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
               <button
                 onClick={() => setCaloriesHidden((h) => !h)}
                 style={{ display: "flex", alignItems: "center", background: "none", border: "none", color: COLORS.inkSoft, cursor: "pointer", padding: 0 }}
-                title={caloriesHidden ? "Afficher les calories" : "Masquer les calories — certains préfèrent ne pas les voir défiler en direct"}
+                title={caloriesHidden ? "Afficher les calories" : "Masquer les calories : certains préfèrent ne pas les voir défiler en direct"}
               >
                 <NavIcon name={caloriesHidden ? "eye-off" : "eye"} size={11} color={COLORS.inkSoft} />
               </button>
@@ -1721,7 +1721,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                             {isAddition ? (isRoundPaidInAddition(r) ? "Payée" : "En attente du partage") : r.settledDirectly === false ? "Sur la note" : "Réglée directement"}
                           </span>
                         ) : r.offeredBy ? (
-                          <span style={{ color: COLORS.inkSoft, fontWeight: 400 }}>Montant informatif — ne compte dans aucun total d'argent dépensé.</span>
+                          <span style={{ color: COLORS.inkSoft, fontWeight: 400 }}>Montant informatif : ne compte dans aucun total d'argent dépensé.</span>
                         ) : null}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
@@ -1760,7 +1760,7 @@ export function EventDashboardScreen({ event, venue, onNewRound, onServeHomeDrin
                                 setEditBuyerId(f.id);
                                 setEditOfferedByType(null);
                               }}
-                              title={isPaused ? "En pause — ne peut pas se voir attribuer une tournée" : undefined}
+                              title={isPaused ? "En pause : ne peut pas se voir attribuer une tournée" : undefined}
                               style={{
                                 display: "flex",
                                 alignItems: "center",

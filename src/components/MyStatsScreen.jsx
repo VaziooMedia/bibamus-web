@@ -429,14 +429,14 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
 
   const BEHAVIOR_PROFILES = {
     aventurier: { emoji: "✈️", label: "Aventurier", description: "Tu aimes explorer différentes villes, pas juste différents bars." },
-    social: { emoji: "🤝", label: "Social", description: "Ton réseau de Bibax est large — tu sors avec plein de monde différent." },
+    social: { emoji: "🤝", label: "Social", description: "Ton réseau de Bibax est large : tu sors avec plein de monde différent." },
     habitue: { emoji: "🏠", label: "Habitué", description: "Tu as tes lieux de prédilection, et tu y reviens fidèlement." },
     explorateur: { emoji: "🧭", label: "Explorateur", description: "Tu adores découvrir de nouveaux lieux plutôt que revenir toujours au même." },
     degustateur: { emoji: "🍷", label: "Dégustateur", description: "Tu aimes varier les plaisirs et goûter à tout ce qui passe." },
     curieux: { emoji: "🔍", label: "Curieux", description: "En ce moment, tu es du genre à tester plein de nouveaux produits." },
     decouvreur: { emoji: "🆕", label: "Découvreur", description: "Tu es du genre à dénicher régulièrement de nouveaux lieux." },
     fetard: { emoji: "🎉", label: "Fêtard", description: "Tu sors souvent, et tu ne t'arrêtes pas en si bon chemin." },
-    local: { emoji: "📍", label: "Local", description: "Tu restes fidèle à ta ville — pas besoin d'aller loin pour bien s'amuser." },
+    local: { emoji: "📍", label: "Local", description: "Tu restes fidèle à ta ville : pas besoin d'aller loin pour bien s'amuser." },
   };
 
   let profileKey = null;
@@ -607,7 +607,7 @@ export function MyStatsContent({ events, bibros, alcoholFreeDays, onToggleAlcoho
         <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", fontStyle: "italic" }}>Chargement...</p>
       ) : !hasAnyData ? (
         <p style={{ color: COLORS.inkSoft, fontSize: "14px", fontStyle: "italic" }}>
-          Tes statistiques prendront vie après tes premières sorties — reviens vite les découvrir ! 🍻
+          Tes statistiques prendront vie après tes premières sorties. Reviens vite les découvrir ! 🍻
         </p>
       ) : (
         <>

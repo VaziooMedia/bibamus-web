@@ -203,7 +203,7 @@ export function HomeServeSheet({ event, myBibroCode, myPaused, zeroMode, onServe
           </div>
 
           {myPaused && (
-            <p style={{ fontSize: "12px", color: COLORS.bobYellow, margin: "0 0 12px 0" }}>Tu es en pause — reprends depuis le BibaRoom pour pouvoir te servir.</p>
+            <p style={{ fontSize: "12px", color: COLORS.bobYellow, margin: "0 0 12px 0" }}>Tu es en pause. Reprends depuis le BibaRoom pour pouvoir te servir.</p>
           )}
           {zeroMode && !myPaused && (
             <p style={{ fontSize: "12px", color: COLORS.bobYellow, margin: "0 0 12px 0" }}>BibaZERO actif : les boissons alcoolisées ne sont pas proposées.</p>

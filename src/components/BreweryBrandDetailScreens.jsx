@@ -32,7 +32,7 @@ import { notify } from "./MessageToast.jsx";
 // Produit (mêmes emplacement, taille de 24 px et séparateurs verticaux). « Partager » n'apparaît que si le partage natif existe sur l'appareil.
 // La cloche et le cœur sont pleins quand ils sont actifs. Pour l'instant, ils sont seulement enregistrés (l'effet sur le fil Pulse viendra après).
 // followedTitle : l'infobulle de la cloche allumée, qui s'accorde avec la fiche (« Suivie » pour une marque, « Suivi » pour un producteur).
-function EntityHeaderIcons({ name, username, extraTop = 0, isFollowed, followBusy, onToggleFollow, isFavorite, favoriteBusy, onToggleFavorite, followedTitle = "Suivie sur Pulse — ses activités apparaissent" }) {
+function EntityHeaderIcons({ name, username, extraTop = 0, isFollowed, followBusy, onToggleFollow, isFavorite, favoriteBusy, onToggleFavorite, followedTitle = "Suivie sur Pulse : ses activités apparaissent" }) {
   const divider = <span aria-hidden="true" style={{ width: "1px", height: "18px", background: COLORS.chalkWhite, opacity: 0.4 }} />;
   const iconButton = { background: "none", border: "none", padding: 0, display: "flex" };
   return (
@@ -128,7 +128,7 @@ function useEntityEngagement(entity, api, onRatingConfirmed) {
     const result = await api.toggleFollow(entity.id);
     setFollowBusy(false);
     if (!result || result.error) {
-      notify(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      notify(result?.error || "Une erreur est survenue.\nRéessaie dans un instant.");
       return;
     }
     setIsFollowed(!!result.following);
@@ -138,7 +138,7 @@ function useEntityEngagement(entity, api, onRatingConfirmed) {
     const result = await api.toggleFavorite(entity.id);
     setFavoriteBusy(false);
     if (!result || result.error) {
-      notify(result?.error || "Une erreur est survenue. Réessaie dans un instant.");
+      notify(result?.error || "Une erreur est survenue.\nRéessaie dans un instant.");
       return;
     }
     setIsFavorite(!!result.favorite);
@@ -704,7 +704,7 @@ export function BreweryDetailScreen({ brewery, breweriesDirectory = [], myBibroC
             name={brewery.name}
             username={brewery.username}
             extraTop={titleExtra}
-            followedTitle="Suivi sur Pulse — ses activités apparaissent"
+            followedTitle="Suivi sur Pulse : ses activités apparaissent"
             isFollowed={engagement.isFollowed}
             followBusy={engagement.followBusy}
             onToggleFollow={engagement.handleToggleFollow}

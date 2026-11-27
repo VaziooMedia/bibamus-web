@@ -49,7 +49,7 @@ export function MyPhotosScreen({ onBack, otherUserId, otherName, embedded = fals
       ) : photos.length === 0 ? (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
           <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>
-            {readOnly ? "Aucune photo pour l'instant." : "Aucune photo pour l'instant. Vos Stories et vos contributions à la Database apparaîtront ici."}
+            {readOnly ? "Aucune photo pour l'instant." : "Aucune photo pour l'instant. Tes Stories et tes contributions à la Database apparaîtront ici."}
           </p>
         </div>
       ) : (

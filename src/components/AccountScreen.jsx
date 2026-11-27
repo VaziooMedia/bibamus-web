@@ -454,7 +454,7 @@ export function EmailViewScreen({ profile, onBack }) {
         <p style={{ fontSize: "16px", fontWeight: 700, margin: 0 }}>{profile.email || "—"}</p>
       </div>
       <p style={{ fontSize: "12.5px", color: COLORS.inkSoft, marginTop: "12px" }}>
-        C'est l'e-mail utilisé pour se connecter à Bibamus — il ne peut pas être modifié ici pour l'instant. Un système de changement d'e-mail de connexion est prévu séparément.
+        C'est l'e-mail utilisé pour se connecter à Bibamus. Il ne peut pas être modifié ici pour l'instant. Un système de changement d'e-mail de connexion est prévu séparément.
       </p>
       <PageFooterNav onBack={onBack} />
     </div>
@@ -783,7 +783,7 @@ export function LocationEditScreen({ profile, onSaveProfile, onBack }) {
         value={city}
         onChange={setCity}
         country={country}
-        placeholder={country ? "Rechercher une commune..." : "Choisissez d'abord un pays"}
+        placeholder={country ? "Rechercher une commune..." : "Choisis d'abord un pays"}
         style={{ width: "100%", boxSizing: "border-box", padding: "14px", borderRadius: "12px", border: `2px solid ${COLORS.paperAlt}`, background: COLORS.surface, color: COLORS.ink, fontSize: "16px" }}
       />
       {!country && <p style={{ fontSize: "12px", color: COLORS.inkSoft, marginTop: "6px" }}>Le pays doit être renseigné avant la commune.</p>}
@@ -967,7 +967,7 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
     <div style={{ padding: "8px 20px 28px", display: "flex", flexDirection: "column", flex: 1 }}>
       <PageHeader onBack={onBack} />
       <PageTitleWithBar icon={<NavIcon name="eye" size={22} color={COLORS.amber} />}>Profil public</PageTitleWithBar>
-      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisissez ce que les autres utilisateurs peuvent voir sur votre profil.</p>
+      <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "18px" }}>Choisis ce que les autres utilisateurs peuvent voir sur ton profil.</p>
 
       <div style={{ margin: "0 -20px", borderTop: `1px solid ${COLORS.paperAlt}` }}>
         <VisibilityRow icon={<NavIcon name="tag" size={17} color={COLORS.amber} />} title="Surnom">
@@ -1068,7 +1068,7 @@ export function PublicProfileScreen({ profile, onSaveProfile, onBack }) {
       <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", margin: "22px 0 8px 2px" }}>Affichage dans les salons (BibaRoom)</h2>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "14px 16px" }}>
         <p style={{ fontSize: "12px", color: COLORS.inkSoft, margin: "0 0 12px 0" }}>
-          En cas de doublon avec un autre participant du même salon, l'initiale de votre nom de famille s'ajoute automatiquement.
+          En cas de doublon avec un autre participant du même salon, l'initiale de ton nom de famille s'ajoute automatiquement.
         </p>
         <div style={{ display: "flex", gap: "8px" }}>
           {[
@@ -1110,7 +1110,7 @@ export function DeactivateAccountScreen({ onBack }) {
       <PageTitleWithBar icon={<NavIcon name="pause" size={22} color={COLORS.amber} />}>Désactiver mon compte</PageTitleWithBar>
       <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
         <p style={{ fontSize: "13.5px", color: COLORS.inkSoft, margin: 0 }}>
-          Cette fonctionnalité n'existe pas encore — seule la suppression définitive du compte est disponible pour l'instant.
+          Cette fonctionnalité n'existe pas encore. Seule la suppression définitive du compte est disponible pour l'instant.
         </p>
       </div>
       <PageFooterNav onBack={onBack} />

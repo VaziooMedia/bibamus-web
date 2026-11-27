@@ -1309,7 +1309,7 @@ export function BibaPulseScreen({
       ) : entries.length === 0 ? (
         <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "20px", textAlign: "center" }}>
           <p style={{ color: COLORS.inkSoft, fontSize: "13.5px", margin: 0 }}>
-            Aucune activité pour l'instant. Suivez d'autres Bibax ou attendez vos premières découvertes !
+            Aucune activité pour l'instant. Suis d'autres Bibax ou attends tes premières découvertes !
           </p>
         </div>
       ) : (

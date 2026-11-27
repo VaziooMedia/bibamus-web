@@ -263,7 +263,7 @@ export function VenueDirectoryScreen({ myBibroCode, addIntent, onBack, onOpenVen
       </div>
       {!activeCity && !activeCountry && !searching && addIntent && (
         <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>
-          Vérifie d'abord s'il existe déjà, pour éviter les doublons — sinon tu pourras le créer en bas de cette page.
+          Vérifie d'abord s'il existe déjà, pour éviter les doublons. Sinon, tu pourras le créer en bas de cette page.
         </p>
       )}
 
@@ -308,8 +308,8 @@ export function VenueDirectoryScreen({ myBibroCode, addIntent, onBack, onOpenVen
                 )}
               </div>
               {geoStatus === "denied" && (
-                <span style={{ display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
-                  Position refusée — activez-la dans les réglages de votre navigateur pour réessayer.
+                <span style={{ whiteSpace: "pre-line", display: "block", fontSize: "11px", color: COLORS.inkSoft, fontWeight: 500, marginTop: "4px" }}>
+                  {"Position refusée.\nActive-la dans les réglages de ton navigateur pour réessayer."}
                 </span>
               )}
               {geoStatus === "unavailable" && (
