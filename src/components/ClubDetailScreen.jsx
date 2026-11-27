@@ -278,7 +278,7 @@ export function ClubDetailScreen({ clubId, myUserId, myName, onBack, onOpenProfi
         </div>
         {isAdmin && <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoChosen} style={{ display: "none" }} />}
       </div>
-      {isAdmin && photoError && <p style={{ fontSize: "12.5px", color: COLORS.wine, margin: "-6px 0 14px" }}>{photoError}</p>}
+      {isAdmin && photoError && <p style={{ whiteSpace: "pre-line", fontSize: "12.5px", color: COLORS.wine, margin: "-6px 0 14px" }}>{photoError}</p>}
       {club.description && <p style={{ fontSize: "13px", color: COLORS.inkSoft, marginBottom: "16px" }}>{club.description}</p>}
 
       {!isMember && (

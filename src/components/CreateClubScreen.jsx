@@ -192,7 +192,7 @@ export function CreateClubScreen({ myUserId, onBack, onCreated }) {
           : "Les arrivées sont directes."}
       </p>
 
-      {error && <p style={{ fontSize: "12.5px", color: "#FF3B3B", marginBottom: "12px" }}>{error}</p>}
+      {error && <p style={{ whiteSpace: "pre-line", fontSize: "12.5px", color: "#FF3B3B", marginBottom: "12px" }}>{error}</p>}
 
       <PrimaryButton onClick={handleCreate} disabled={!name.trim() || saving} style={{ width: "100%", marginTop: "auto" }}>
         {saving ? "Création..." : "Créer le club"}

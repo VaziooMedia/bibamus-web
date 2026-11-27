@@ -281,7 +281,7 @@ export function StoryCreateScreen({ contextType, contextId, venueName, myUserId,
           Nouvelle Story
         </h1>
 
-        {error && <p style={{ fontSize: "12.5px", color: COLORS.wine, marginBottom: "10px" }}>{error}</p>}
+        {error && <p style={{ whiteSpace: "pre-line", fontSize: "12.5px", color: COLORS.wine, marginBottom: "10px" }}>{error}</p>}
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "36px", marginTop: "48px" }}>
           {/* Ouvre le vrai sélecteur natif du téléphone, sans capture — c'est lui qui affiche

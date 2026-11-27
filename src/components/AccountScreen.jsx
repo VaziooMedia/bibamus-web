@@ -872,7 +872,7 @@ export function PhotoEditScreen({ profile, onUploadPhoto, onSaveProfile, onBack 
             setCroppingFile(file);
           }}
         />
-        {photoError && <p style={{ fontSize: "12.5px", color: COLORS.wine }}>{photoError}</p>}
+        {photoError && <p style={{ whiteSpace: "pre-line", fontSize: "12.5px", color: COLORS.wine }}>{photoError}</p>}
       </div>
 
       {croppingFile && (
