@@ -5,7 +5,7 @@
 // (optionnel), et c'est tout. Récapitulatif du jour visible en
 // direct au-dessus de la liste.
 // ============================================================
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { flushSync } from "react-dom";
 import { COLORS, VOLUME_DISPLAY_TYPES, MENU_CATEGORIES, SERVING_MODE_LABELS } from "../constants.js";
 import { NavIcon, CountryFlagImg, WaterAlertIcon, TokenPinkIcon, TokenGreenIcon } from "./icons.jsx";
@@ -1233,11 +1233,65 @@ export function SoloCheckinRow({ c, drink, venue, isLast, onOpenDrink, onDelete,
   );
 }
 
+// Un chiffre des blocs de l'Historique : 18 px, réduit d'un pixel à la fois (jusqu'à 11 px) tant qu'il dépasse du bloc, pour ne jamais déborder
+// (1.234,50 € ou 12 345 kcal sur un petit écran). Mesuré après chaque affichage.
+function SoloFitNumber({ children }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let size = 18;
+    el.style.fontSize = `${size}px`;
+    while (size > 11 && el.scrollWidth > el.clientWidth) {
+      size -= 1;
+      el.style.fontSize = `${size}px`;
+    }
+  });
+  return (
+    <div ref={ref} style={{ fontSize: "18px", fontWeight: 800, color: COLORS.amber, whiteSpace: "nowrap" }}>
+      {children}
+    </div>
+  );
+}
+
+// Les trois chiffres d'une période dans l'Historique (Mehdi, 2026-11-27) : Verres, Dépensé, Kcal, trois petits blocs du même style que ceux de BibaSolo.
+// `euro` = null quand les jetons achetés n'ont pas pu être lus (le Dépensé serait faux) : « — ». Pas de petit œil ici : les kcal sont toujours visibles (décidé par Mehdi).
+function SoloHistoryTotals({ totals }) {
+  const tile = { flex: 1, minWidth: 0, background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "10px 6px", textAlign: "center" };
+  const label = { fontSize: "11px", color: COLORS.inkSoft, marginTop: "2px" };
+  return (
+    <div data-solo-history-totals="1" style={{ display: "flex", gap: "10px", margin: "0 0 12px" }}>
+      <div data-solo-history-count="1" style={tile}>
+        <SoloFitNumber>{formatCount(totals.count)}</SoloFitNumber>
+        <div style={label}>{totals.count <= 1 ? "Verre" : "Verres"}</div>
+      </div>
+      <div data-solo-history-spent="1" style={tile}>
+        <SoloFitNumber>
+          {totals.euro == null ? (
+            "—"
+          ) : (
+            <>
+              {formatSoloEuro(totals.euro)}
+              <span style={{ fontSize: "0.7em", color: COLORS.inkSoft, fontWeight: 600, marginLeft: "3px" }}>€</span>
+            </>
+          )}
+        </SoloFitNumber>
+        <div style={label}>Dépensé</div>
+      </div>
+      <div data-solo-history-kcal="1" style={tile}>
+        <SoloFitNumber>{formatCount(totals.kcal)}</SoloFitNumber>
+        <div style={label}>Kcal</div>
+      </div>
+    </div>
+  );
+}
+
 // Écran « Historique » : tous les verres, archivés compris, du plus récent au plus ancien, regroupés par période (6 h → 6 h) sous une
-// barre datée, par pages de HISTORY_PAGE_SIZE. En lecture seule : pas de croix de suppression.
+// barre datée, par pages de HISTORY_PAGE_SIZE. En lecture seule : pas de croix de suppression. Sous chaque barre : les trois chiffres de la période.
 export const HISTORY_PAGE_SIZE = 40;
 function SoloHistoryScreen({ onBack, onOpenDrink }) {
   const [rows, setRows] = useState(null); // null = chargement de la première page
+  const [jetonMovements, setJetonMovements] = useState(undefined); // undefined = lecture en cours, null = erreur : les jetons achetés entrent dans le Dépensé de leur période
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
@@ -1259,8 +1313,13 @@ function SoloHistoryScreen({ onBack, onOpenDrink }) {
   };
   useEffect(() => {
     loadPage(0);
+    loadMyJetonMovements().then(setJetonMovements);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Dérivés (Mazout, Coca, Citron…) : même lecture que sur l'écran BibaSolo, pour des kcal identiques.
+  const variantDrinkIds = useMemo(() => (rows || []).filter((c) => c.variantCode).map((c) => String(c.drinkId)), [rows]);
+  const { forProduct: derivativesOf } = useBeerDerivatives(variantDrinkIds);
 
   // Produits et lieux des verres affichés : seulement ceux qu'on n'a pas encore demandés.
   useEffect(() => {
@@ -1299,6 +1358,31 @@ function SoloHistoryScreen({ onBack, onOpenDrink }) {
     }
     return out;
   }, [rows]);
+  // Les trois chiffres de chaque période, calculés comme sur l'écran BibaSolo : Dépensé = euros des verres + euros offerts + euros payés pour acheter des jetons
+  // (archivés compris, ce sont des verres et des achats passés) ; Kcal = énergie du produit (ou du dérivé) pour le volume bu. Une période n'a pas de total tant
+  // qu'elle peut être incomplète (la dernière, quand « Voir plus » reste possible) ou que ses produits ne sont pas encore lus : un chiffre faux vaut moins que pas de chiffre.
+  const groupTotals = useMemo(() => {
+    const purchasesByPeriod = new Map();
+    if (Array.isArray(jetonMovements)) {
+      for (const m of jetonMovements) {
+        if (m.kind !== "achat") continue;
+        const key = soloPeriodStartOf(m.createdAt).getTime();
+        purchasesByPeriod.set(key, (purchasesByPeriod.get(key) || 0) + (m.amountEur || 0));
+      }
+    }
+    return groups.map((g, gi) => {
+      const complete = gi < groups.length - 1 || !hasMore;
+      if (!complete || jetonMovements === undefined || !g.items.every((c) => String(c.drinkId) in drinksById)) return null;
+      let euro = 0;
+      let kcal = 0;
+      for (const c of g.items) {
+        euro += c.currency === "jeton" ? 0 : (c.price || 0) + (c.offeredPrice || 0);
+        const drink = drinksById[String(c.drinkId)];
+        if (drink) kcal += drinkCalories({ ...drink, kcalPer100ml: kcalPer100mlWithVariant(drink.kcalPer100ml, String(drink.id), c.variantCode) }, c.volumeCl);
+      }
+      return { count: g.items.length, euro: jetonMovements === null ? null : euro + (purchasesByPeriod.get(g.key) || 0), kcal };
+    });
+  }, [groups, hasMore, drinksById, jetonMovements, derivativesOf]);
   const currentKey = soloPeriodStartOf(new Date()).getTime();
   const thisYear = new Date().getFullYear();
   const groupLabel = (g) => {
@@ -1328,6 +1412,7 @@ function SoloHistoryScreen({ onBack, onOpenDrink }) {
                 <span data-solo-history-label="1" style={SOLO_BAR_LABEL_STYLE}>{periodLabel(groupLabel(g))}</span>
                 <div style={SOLO_BAR_LINE_STYLE} />
               </div>
+              {groupTotals[gi] && <SoloHistoryTotals totals={groupTotals[gi]} />}
               <div style={{ background: COLORS.surface, border: `2px solid ${COLORS.paperAlt}`, borderRadius: "12px", padding: "0 14px" }}>
                 {g.items.map((c, i) => (
                   <SoloCheckinRow
