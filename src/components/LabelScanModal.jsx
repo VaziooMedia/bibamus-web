@@ -397,7 +397,7 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                   Ajouter le degré (facultatif)
                 </button>
               )}
-              {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
+              {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifie-le.</p>}
               {reading?.container_volume_ml != null && <p style={noteStyle}>Volume lu : {String(reading.container_volume_ml / 10).replace(".", ",")} cl (à vérifier).</p>}
               {advice && <p style={noteStyle}>{advice}</p>}
               <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
@@ -431,13 +431,22 @@ export function LabelScanModal({ onClose, onFoundDrink, scannedBarcode = null, m
                   <NavIcon name="pencil" size={18} color={COLORS.amber} />
                 </button>
               </div>
-              {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber, margin: "0 0 30px" }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifiez-le.</p>}
+              {uncertain.length > 0 && <p style={{ ...noteStyle, color: COLORS.amber, margin: "0 0 30px" }}>La lecture hésite sur : {uncertain.join(", ")}. Vérifie-le.</p>}
               {candidates.length === 0 && moreCandidates.length === 0 ? (
-                // Rien ne correspond vraiment au texte lu (la recherche ne renvoie plus de produits sans rapport) : « Aucun résultat », puis le
-                // même cadre rose « Ce produit n'est pas encore présent sur BibAtlas ? » que partout ailleurs dans l'app (AddAfterSearch).
+                // Rien ne correspond vraiment au texte lu (la recherche ne renvoie plus de produits sans rapport) : « Aucun résultat ». Que l'IA
+                // n'ait rien trouvé ne prouve pas que le produit n'est pas dans BibAtlas (Mehdi, 2026-11-27) : on propose d'abord « Rechercher
+                // manuellement » (l'écran où le texte lu se corrige). Le cadre rose « Ce produit n'est pas encore présent sur BibAtlas ? »
+                // (AddAfterSearch) n'apparaît qu'après une recherche manuelle (searched.manual) qui n'a rien donné non plus.
                 <div data-empty="1" style={{ textAlign: "center", padding: "10px 0 4px" }}>
                   <p style={{ ...sectionTitle, margin: "0 0 16px" }}>Aucun résultat</p>
-                  {onAddDrink && <AddAfterSearch query="" onAdd={addProduct} noun="produit" label="Ajouter le produit" />}
+                  {searched.manual ? (
+                    onAddDrink && <AddAfterSearch query="" onAdd={addProduct} noun="produit" label="Ajouter le produit" />
+                  ) : (
+                    <button onClick={() => setPhase("confirm")} style={{ ...primaryBtn, width: "100%" }}>
+                      <NavIcon name="search" size={18} color={COLORS.paper} />
+                      Rechercher manuellement
+                    </button>
+                  )}
                 </div>
               ) : (
                 <>

@@ -38,7 +38,7 @@ export function ClubInvitationCard({ invitation, onOpenClub, onResponded, compac
   const subtitle = [invitation.clubCategory, `Invité par ${inviter}`].filter(Boolean).join(" · ");
   const header = compact ? (
     <span style={{ flex: 1, minWidth: 0, textAlign: "left", fontSize: "13.5px" }}>
-      <strong>{inviter}</strong> vous invite à rejoindre ce club.
+      <strong>{inviter}</strong> t'invite à rejoindre ce club.
     </span>
   ) : (
     <>

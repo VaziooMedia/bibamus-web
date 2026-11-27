@@ -318,7 +318,7 @@ export function RoundTicketScreen({ event, draftFriends, draftOrders, onEdit, on
                   <div key={f.id} style={{ borderBottom: `1px dashed ${COLORS.chalkWhite}25`, paddingBottom: "8px" }}>
                     <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", marginBottom: "2px" }}>
                       {f.name}
-                      {f.isSelf && <span style={{ fontSize: "13px", fontWeight: 500, color: COLORS.inkSoft }}> (vous)</span>}
+                      {f.isSelf && <span style={{ fontSize: "13px", fontWeight: 500, color: COLORS.inkSoft }}> (toi)</span>}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                       {Object.entries(counts).map(([id, n]) => (
