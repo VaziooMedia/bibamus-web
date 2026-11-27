@@ -14,7 +14,7 @@
 import { supabase } from "../supabaseClient.js";
 import { COUNTRY_CODE_TO_LABEL, COUNTRY_LABEL_TO_CODE } from "../countryLabels.js";
 import { searchTokens, searchRank, distanceMeters, displayedAbv } from "../utils.js";
-import { DERIVATIVE_LIST_KEYS, buildCombinedDerivativeList, cleanDerivativeKcal, cleanDerivativeVolumes, rememberDerivativeKcal, rememberDerivativeList, rememberDerivativeVolumes, rememberedDerivativeList } from "../beerDerivatives.js";
+import { DERIVATIVE_COMMON_LIST_KEYS, DERIVATIVE_LISTS_OR_FILTER, buildCombinedDerivativeList, cleanDerivativeKcal, cleanDerivativeVolumes, rememberDerivativeKcal, rememberDerivativeList, rememberDerivativeVolumes, rememberedDerivativeList } from "../beerDerivatives.js";
 import { VENUE_TYPE_LIST_KEY, AMENITY_LIST_KEY, cleanListRows, cleanOrder, registerVenueTypeNames, venueTypeDisplayName } from "../venueLists.js";
 import { PRODUCER_TYPE_LIST_KEY, PRODUCER_PROFILE_LIST_KEY } from "../producerLists.js";
 import { BRAND_TYPE_LIST_KEY, BRAND_CLASSIFICATION_LIST_KEY } from "../brandLists.js";
@@ -3106,18 +3106,59 @@ function onceLoader(keys, label) {
 
 // ============================================================
 // Dérivés des bières (Mazout, Tango…), des spiritueux (Coca, Tonic…) et des thés / infusions (citron, lait…) : voir beerDerivatives.js. Deux lectures, toutes deux mémorisées pour la session :
-//   - les listes communes (custom_list_items, clés « beer_derivative », « spirit_derivative » et « tea_derivative », le nom seul : l'énergie est propre à chaque produit)
-//     et leur ordre, lues d'un coup et réunies en une seule liste ;
+//   - les listes de dérivés (custom_list_items) et leur ordre, lues d'un coup et réunies en une seule liste : les trois listes communes (« beer_derivative »,
+//     « spirit_derivative », « tea_derivative », le nom seul) et, depuis le 2026-11-27, les listes par sous-catégorie (« derivative_whisky »…), qui portent en plus
+//     les Kcal/100ml du dérivé seul, sa part dans le verre (%) et le volume du verre par défaut (colonnes derivative_share_pct et derivative_volume) ;
 //   - les dérivés activés pour chaque produit (drinks_directory.derivatives, avec leurs volumes et leurs énergies), demandés seulement pour les produits dont on a besoin.
 // Un échec de lecture n'est pas mémorisé (le prochain écran réessaie) et n'empêche rien : sans dérivés, la carte reste celle d'avant.
 // ============================================================
+// Les lignes de toutes les listes de dérivés, par pages de 1000 (une ligne par dérivé et par liste : les listes par sous-catégorie peuvent dépasser une page).
+// Trois essais, du plus complet au plus prudent, pour qu'un souci sur les listes par sous-catégorie ne fasse jamais disparaître les dérivés d'avant :
+//   1. toutes les listes, avec les colonnes des valeurs par défaut ;
+//   2. toutes les listes, sans ces colonnes (si elles n'existent pas encore dans la base) : les dérivés gardent l'énergie du produit ;
+//   3. les trois listes communes seulement (si le filtre « toutes les listes » était refusé).
+const DERIVATIVE_ITEM_ATTEMPTS = [
+  { columns: "list_key, code, fr, hidden, kcal_per_100ml, derivative_share_pct, derivative_volume", all: true },
+  { columns: "list_key, code, fr, hidden", all: true },
+  { columns: "list_key, code, fr, hidden", all: false },
+];
+async function readDerivativeListItems() {
+  let lastError = null;
+  for (const attempt of DERIVATIVE_ITEM_ATTEMPTS) {
+    const rows = [];
+    let error = null;
+    for (let from = 0; ; from += 1000) {
+      let q = supabase.from("custom_list_items").select(attempt.columns);
+      q = attempt.all ? q.or(DERIVATIVE_LISTS_OR_FILTER) : q.in("list_key", DERIVATIVE_COMMON_LIST_KEYS);
+      const res = await q.order("list_key").order("code").range(from, from + 999);
+      if (res.error || !Array.isArray(res.data)) {
+        error = res.error || new Error("réponse illisible");
+        break;
+      }
+      rows.push(...res.data);
+      if (res.data.length < 1000) break;
+    }
+    if (!error) return { data: rows, error: null, allLists: attempt.all };
+    lastError = error;
+    console.error("loadBeerDerivativeList (essai " + (DERIVATIVE_ITEM_ATTEMPTS.indexOf(attempt) + 1) + "):", error);
+  }
+  return { data: null, error: lastError || new Error("lecture impossible") };
+}
+// L'ordre des listes : toutes les listes, ou les trois communes seulement quand la lecture des éléments a dû s'y limiter.
+async function readDerivativeListOrder(allLists) {
+  if (allLists) {
+    const res = await supabase.from("custom_list_order").select("list_key, codes").or(DERIVATIVE_LISTS_OR_FILTER);
+    if (!res.error) return res;
+    console.error("loadBeerDerivativeList (ordre, toutes les listes):", res.error);
+  }
+  return supabase.from("custom_list_order").select("list_key, codes").in("list_key", DERIVATIVE_COMMON_LIST_KEYS);
+}
+
 let beerDerivativeListOnce = null;
 export function loadBeerDerivativeListOnce() {
   if (!beerDerivativeListOnce) {
-    beerDerivativeListOnce = Promise.all([
-      supabase.from("custom_list_items").select("list_key, code, fr, hidden").in("list_key", DERIVATIVE_LIST_KEYS),
-      supabase.from("custom_list_order").select("list_key, codes").in("list_key", DERIVATIVE_LIST_KEYS),
-    ])
+    beerDerivativeListOnce = readDerivativeListItems()
+      .then(async (items) => [items, items.error ? { data: null, error: null } : await readDerivativeListOrder(items.allLists)])
       .then(([items, order]) => {
         if (items.error || !Array.isArray(items.data)) {
           console.error("loadBeerDerivativeList:", items.error);
