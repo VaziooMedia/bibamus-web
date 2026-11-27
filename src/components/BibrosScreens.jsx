@@ -1763,8 +1763,8 @@ export function AddBibroScreen({ onAdd, onLookup, onCancel, myBibroCode, bibros 
       )}
 
       {status === "notFound" && (
-        <p style={{ fontSize: "13px", color: COLORS.wine, marginBottom: 0 }}>
-          Code introuvable. Vérifie qu'il·elle a bien ouvert l'app et configuré son profil.
+        <p style={{ whiteSpace: "pre-line", fontSize: "13px", color: COLORS.wine, marginBottom: 0 }}>
+          {"Code introuvable.\nVérifie qu'il·elle a bien ouvert l'app et configuré son profil."}
         </p>
       )}
 
